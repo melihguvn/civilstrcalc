@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circular Column — Verification Test</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; padding: 28px; font-size: 13px; color: #2c3a4a; }
+  h1 { font-size: 1.25rem; margin-bottom: 4px; }
+  .subtitle { color: #5a6a7a; font-size: .82rem; margin-bottom: 28px; }
+  .test-card { background: #fff; border: 1px solid #dde2e8; border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+  .test-hdr { background: #1a2332; color: #fff; padding: 10px 18px; display: flex; align-items: center; gap: 14px; }
+  .test-hdr h2 { font-size: .9rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin: 0; }
+  .test-hdr .src { font-size: .7rem; background: rgba(255,255,255,.12); border-radius: 3px; padding: 2px 9px; opacity: .85; }
+  .test-body { padding: 16px 20px; }
+  .params-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .param { background: #f4f6f9; border: 1px solid #dde2e8; border-radius: 5px; padding: 7px 11px; }
+  .param-label { font-size: .63rem; color: #8898aa; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+  .param-value { font-size: .85rem; font-weight: 600; color: #2c3a4a; font-family: 'Consolas', monospace; }
+  h3 { font-size: .77rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8898aa; border-left: 3px solid #1a6db5; padding-left: 7px; margin: 14px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; margin-bottom: 8px; }
+  th { background: #f0f4f8; padding: 7px 12px; text-align: left; font-weight: 600; color: #5a6a7a; border-bottom: 1px solid #dde2e8; }
+  td { padding: 6px 12px; border-bottom: 1px solid #f0f4f8; }
+  tr:last-child td { border-bottom: none; }
+  .val-hand { font-family: 'Consolas', monospace; font-weight: 600; color: #1a6db5; }
+  .val-code { font-family: 'Consolas', monospace; font-weight: 600; color: #1a8a5a; }
+  .val-err  { font-family: 'Consolas', monospace; font-weight: 600; color: #c0392b; }
+  .diff { font-family: 'Consolas', monospace; font-size: .75rem; }
+  .ok   { color: #1a8a5a; }
+  .warn { color: #e07000; }
+  .bad  { color: #c0392b; }
+  .result-row td { background: #f9fbff; font-weight: 500; }
+  .formula { background: #f0f4f8; border-left: 3px solid #1a6db5; padding: 8px 12px; font-family: 'Consolas', monospace; font-size: .78rem; color: #2c3a4a; margin: 8px 0; border-radius: 0 4px 4px 0; line-height: 1.9; }
+  .source-box { background: #fff8ed; border: 1px solid #f4c97a; border-radius: 5px; padding: 9px 13px; font-size: .77rem; color: #6b5000; margin-bottom: 12px; }
+  .note { background: #eef4fb; border: 1px solid #b8d0eb; border-radius: 5px; padding: 8px 12px; font-size: .76rem; color: #1a4270; margin-top: 10px; }
+  .status-banner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 5px; font-size: .8rem; font-weight: 600; margin-top: 12px; }
+  .status-banner.ok  { background: #e8f7ee; border: 1px solid #a8e0c0; color: #1a6a40; }
+  .status-banner.bad { background: #fde8e6; border: 1px solid #f4b0a8; color: #8b1a10; }
+  canvas { display: block; margin: 10px auto 0; border: 1px solid #dde2e8; border-radius: 6px; background: #fff; }
+  .flex2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  @media(max-width:720px){ .flex2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Circular Reinforced Concrete Column — Verification Tests</h1>
+<p class="subtitle">
+  3 independent test cases verifying the PMM engine in <strong>column.html</strong>.
+  Hand calculations are performed from first principles (ACI 318-25 §22.4 / EN 1992-1-1 §3.1).
+  Code results are computed live in this page using the same engine functions.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════ TEST 1 ═══ -->
+<div class="test-card">
+  <div class="test-hdr">
+    <h2>Test 1 — ACI 318-25 · Pure Compression & Tension Limits</h2>
+    <span class="src">Source: ACI 318-25 §22.4.2 + hand calc</span>
+  </div>
+  <div class="test-body">
+    <div class="source-box">
+      <strong>Reference:</strong> First-principles ACI 318-25 calculation.
+      P₀ (tied) = φ × 0.80 × [0.85·f'c·(Ag−Ast) + fy·Ast], φ = 0.65.
+      Pt = −φt × fy × Ast, φt = 0.90.
+      Balanced point computed from strain compatibility (εcu = 0.003, β₁ = 0.85 for f'c ≤ 28 MPa).
+    </div>
+
+    <div class="params-grid">
+      <div class="param"><div class="param-label">Diameter D</div><div class="param-value">500 mm</div></div>
+      <div class="param"><div class="param-label">Bars</div><div class="param-value">8 × Ø20 mm</div></div>
+      <div class="param"><div class="param-label">Cover to bar ℄</div><div class="param-value">50 mm</div></div>
+      <div class="param"><div class="param-label">f'c</div><div class="param-value">28 MPa</div></div>
+      <div class="param"><div class="param-label">fy</div><div class="param-value">420 MPa</div></div>
+      <div class="param"><div class="param-label">φ (tied)</div><div class="param-value">0.65</div></div>
+    </div>
+
+    <h3>Hand Calculation — Key Quantities</h3>
+    <div class="formula">
+Ag  = π/4 × 500²         = 196,349.5 mm²
+Ast = 8 × π/4 × 20²      =   2,513.3 mm²
+ρg  = Ast / Ag            =     1.280 %
+
+fc_eff = 0.85 × f'c       =   23.800 MPa  (ACI stress block)
+
+P₀ (nom) = 0.85×f'c×(Ag−Ast) + fy×Ast
+         = 23.8 × 193,836.2 + 420 × 2,513.3
+         = 4,613,302 + 1,055,586 = 5,668,888 N
+
+φP₀ (tied) = φ × 0.80 × P₀(nom)
+           = 0.65 × 0.80 × 5,668,888 = 2,947,821 N  →  2,948 kN
+
+Pt = −φt × fy × Ast = −0.90 × 420 × 2,513.3 = −950,030 N  →  −950 kN
+
+Balanced point (neutral axis c_bal from comp. face):
+  c_bal = εcu / (εcu + εy) × D
+        = 0.003 / (0.003 + 420/200000) × 500
+        = 0.003 / (0.003 + 0.0021) × 500 = 0.588 × 500 = 294.1 mm
+  a_bal = β₁ × c_bal = 0.85 × 294.1 = 249.9 mm
+    </div>
+
+    <div class="flex2">
+      <div>
+        <h3>Comparison Table</h3>
+        <table id="t1-table">
+          <tr><th>Quantity</th><th>Hand Calc</th><th>Code Result</th><th>Δ%</th></tr>
+          <tr class="result-row">
+            <td>P₀ (kN)</td>
+            <td class="val-hand">2 948</td>
+            <td class="val-code" id="t1-P0">—</td>
+            <td class="diff" id="t1-P0-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>Pt (kN)</td>
+            <td class="val-hand">−950</td>
+            <td class="val-code" id="t1-Pt">—</td>
+            <td class="diff" id="t1-Pt-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>ρg (%)</td>
+            <td class="val-hand">1.280</td>
+            <td class="val-code" id="t1-rho">—</td>
+            <td class="diff" id="t1-rho-d">—</td>
+          </tr>
+        </table>
+        <div id="t1-status" class="status-banner ok" style="display:none;"></div>
+      </div>
+      <canvas id="c1" width="280" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TEST 2 ═══ -->
+<div class="test-card">
+  <div class="test-hdr">
+    <h2>Test 2 — ACI 318-25 · TheConstructor.org — Spiral Column (Original Values)</h2>
+    <span class="src">Source: theconstructor.org/structural-engg/design-axially-loaded-circular-columns/551968</span>
+  </div>
+  <div class="test-body">
+    <div class="source-box">
+      <strong>Reference:</strong> TheConstructor.org — "Design of Axially Loaded Circular Columns as per ACI 318-19."
+      D=450 mm, 6×Ø22, cover to bar centreline=56 mm (40 mm to spiral + 10 mm spiral + 11 mm = ~56 mm to bar ℄),
+      f'c=35 MPa, fy=420 MPa, <strong>spiral column: φ=0.75, factor=0.85</strong>.
+      The source states the design is for P_u = 3,580 kN, which equals φP₀ — so P₀ is the design capacity.
+    </div>
+
+    <div class="params-grid">
+      <div class="param"><div class="param-label">Diameter D</div><div class="param-value">450 mm</div></div>
+      <div class="param"><div class="param-label">Bars</div><div class="param-value">6 × Ø22 mm</div></div>
+      <div class="param"><div class="param-label">Cover to bar ℄</div><div class="param-value">56 mm</div></div>
+      <div class="param"><div class="param-label">f'c</div><div class="param-value">35 MPa</div></div>
+      <div class="param"><div class="param-label">fy</div><div class="param-value">420 MPa</div></div>
+      <div class="param"><div class="param-label">Type</div><div class="param-value">Spiral (φ=0.75)</div></div>
+    </div>
+
+    <h3>Hand Calculation</h3>
+    <div class="formula">
+Ag  = π/4 × 450²         = 159,043.1 mm²
+Ast = 6 × π/4 × 22²      =   2,280.8 mm²   (source: 2,280.79 mm² ✓)
+ρg  = 2280.8 / 159043.1  =     1.434 %
+
+fc_eff = 0.85 × 35        =   29.750 MPa
+
+P₀(nom) = 29.75 × (159043.1−2280.8) + 420 × 2280.8
+        = 4,663,680 + 957,936 = 5,621,616 N
+
+φP₀ (SPIRAL: φ=0.75, k=0.85) = 0.75 × 0.85 × 5,621,616
+                               = 3,583,780 N  →  3,584 kN
+
+TheConstructor.org P_u = 3,580 kN  →  Δ = −0.11%  ✓
+    </div>
+
+    <div class="flex2">
+      <div>
+        <h3>Comparison Table (Spiral, φ=0.75)</h3>
+        <table>
+          <tr><th>Quantity</th><th>Hand Calc</th><th>Code Result</th><th>Δ%</th></tr>
+          <tr class="result-row">
+            <td>P₀ spiral (kN)</td>
+            <td class="val-hand">3 584</td>
+            <td class="val-code" id="t2-P0">—</td>
+            <td class="diff" id="t2-P0-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>vs source (3 580 kN)</td>
+            <td class="val-hand">3 580</td>
+            <td class="val-code" id="t2-src">—</td>
+            <td class="diff" id="t2-src-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>Ast (mm²)</td>
+            <td class="val-hand">2 281</td>
+            <td class="val-code" id="t2-Ast">—</td>
+            <td class="diff" id="t2-Ast-d">—</td>
+          </tr>
+        </table>
+        <div id="t2-status" class="status-banner ok" style="display:none;"></div>
+      </div>
+      <canvas id="c2" width="280" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TEST 3 ═══ -->
+<div class="test-card">
+  <div class="test-hdr">
+    <h2>Test 3 — Eurocode 2 (EN 1992-1-1) · Pure Compression & Moment Capacity</h2>
+    <span class="src">Source: EN 1992-1-1:2004 §3.1.7 + §5.8.3 + hand calc</span>
+  </div>
+  <div class="test-body">
+    <div class="source-box">
+      <strong>Reference:</strong> First-principles EN 1992-1-1 calculation.
+      N₀ = fcd × (Ag − Ast) + fyd × Ast, where fcd = fck/γc, fyd = fyk/γs.
+      EC2 parabolic-rectangular block: λ=0.80 (fck≤50), η=1.0, εcu=0.0035. No φ factor (γ already in fcd/fyd).
+    </div>
+
+    <div class="params-grid">
+      <div class="param"><div class="param-label">Diameter D</div><div class="param-value">500 mm</div></div>
+      <div class="param"><div class="param-label">Bars</div><div class="param-value">8 × Ø20 mm</div></div>
+      <div class="param"><div class="param-label">Cover to bar ℄</div><div class="param-value">45 mm</div></div>
+      <div class="param"><div class="param-label">fck</div><div class="param-value">25 MPa</div></div>
+      <div class="param"><div class="param-label">fyk</div><div class="param-value">500 MPa</div></div>
+      <div class="param"><div class="param-label">γc / γs</div><div class="param-value">1.50 / 1.15</div></div>
+    </div>
+
+    <h3>Hand Calculation</h3>
+    <div class="formula">
+Ag  = π/4 × 500²              = 196,349.5 mm²
+Ast = 8 × π/4 × 20²           =   2,513.3 mm²
+ρg  = 2513.3 / 196349.5       =     1.280 %
+
+fcd = fck / γc = 25 / 1.50    =  16.667 MPa
+fyd = fyk / γs = 500 / 1.15   = 434.783 MPa
+
+EC2 stress block: λ = 0.80, η = 1.00 (fck ≤ 50 MPa)
+fc_eff = η × fcd              =  16.667 MPa
+
+N₀ = fc_eff×(Ag−Ast) + fyd×Ast
+   = 16.667 × (196349.5 − 2513.3) + 434.783 × 2513.3
+   = 16.667 × 193,836.2 + 434.783 × 2513.3
+   = 3,230,769   +  1,093,172
+   = 4,323,941 N  →  4,324 kN
+
+Nt (pure tension) = −fyd × Ast = −434.783 × 2513.3 = −1,093,172 N  →  −1,093 kN
+
+Balanced neutral axis depth (εcu=0.0035, εyd=fyd/Es=434.783/200000=0.002174):
+  c_bal = εcu/(εcu+εyd) × D
+        = 0.0035/(0.0035+0.002174) × 500 = 0.617 × 500 = 308.7 mm
+    </div>
+
+    <div class="flex2">
+      <div>
+        <h3>Comparison Table</h3>
+        <table>
+          <tr><th>Quantity</th><th>Hand Calc</th><th>Code Result</th><th>Δ%</th></tr>
+          <tr class="result-row">
+            <td>N₀ (kN)</td>
+            <td class="val-hand">4 324</td>
+            <td class="val-code" id="t3-P0">—</td>
+            <td class="diff" id="t3-P0-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>Nt (kN)</td>
+            <td class="val-hand">−1 093</td>
+            <td class="val-code" id="t3-Pt">—</td>
+            <td class="diff" id="t3-Pt-d">—</td>
+          </tr>
+          <tr class="result-row">
+            <td>fcd (MPa)</td>
+            <td class="val-hand">16.667</td>
+            <td class="val-code" id="t3-fcd">—</td>
+            <td class="diff" id="t3-fcd-d">—</td>
+          </tr>
+        </table>
+        <div id="t3-status" class="status-banner ok" style="display:none;"></div>
+      </div>
+      <canvas id="c3" width="280" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ SUMMARY ═══ -->
+<div class="test-card">
+  <div class="test-hdr">
+    <h2>Summary</h2>
+  </div>
+  <div class="test-body">
+    <table>
+      <tr><th>#</th><th>Test</th><th>Key Check</th><th>Hand Calc</th><th>Code</th><th>Δ%</th><th>Status</th></tr>
+      <tr><td>1</td><td>ACI 318-25 · D=500 · 8Ø20 · Tied</td><td>P₀ (kN)</td><td class="val-hand">2 948</td><td id="s1-P0" class="val-code">—</td><td id="s1-d" class="diff">—</td><td id="s1-st">—</td></tr>
+      <tr><td>2</td><td>ACI 318-25 · D=450 · 6Ø22 · Spiral</td><td>P₀ (kN)</td><td class="val-hand">3 584</td><td id="s2-P0" class="val-code">—</td><td id="s2-d" class="diff">—</td><td id="s2-st">—</td></tr>
+      <tr><td>2b</td><td>vs TheConstructor source (3 580 kN)</td><td>P₀ (kN)</td><td class="val-hand">3 580</td><td id="s2b-P0" class="val-code">—</td><td id="s2b-d" class="diff">—</td><td id="s2b-st">—</td></tr>
+      <tr><td>3</td><td>EC2 · D=500 · 8Ø20</td><td>N₀ (kN)</td><td class="val-hand">4 324</td><td id="s3-P0" class="val-code">—</td><td id="s3-d" class="diff">—</td><td id="s3-st">—</td></tr>
+    </table>
+    <div class="note" style="margin-top:12px;">
+      <strong>Tolerance:</strong> Results within ±0.5% are considered exact (numerical integration rounding).
+      Results within ±1.0% are acceptable (due to fiber strip discretization in moment capacity).
+      Results beyond ±1.0% indicate a bug.<br><br>
+      <strong>Known limitation:</strong> The column.html engine uses the <em>tied</em> column factor (0.80) for all
+      circular columns. ACI 318 §22.4.2.1 permits factor 0.85 for <em>spirally reinforced</em> columns (φ=0.75).
+      Spiral column results should be verified separately or the factor updated in buildCurveCirc().
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// SAME ENGINE AS column.html — pasted verbatim for isolation
+// ══════════════════════════════════════════════════════════
+function getBarsCirc(D, cover, dbar, n) {
+  const Rs = D/2 - cover - dbar/2;
+  const bars = [];
+  for(let i=0; i<n; i++){
+    const a = 2*Math.PI*i/n;
+    bars.push({ dx: Rs*Math.cos(a), dy: Rs*Math.sin(a), A: Math.PI*dbar*dbar/4 });
+  }
+  return bars;
+}
+
+function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min, spiral=false) {
+  const ecu = isEC2 ? 0.0035 : 0.003;
+  const fy_use = isEC2 ? fyd : fy;
+  const R = D/2;
+  let lam, fc_eff;
+  if(isEC2){
+    lam = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
+    const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
+    fc_eff = eta*fcd;
+  } else {
+    lam = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
+    fc_eff = 0.85*fc;
+  }
+  const Ag = Math.PI*R*R;
+  const bars = getBarsCirc(D, cover, dbar, n);
+  const Ast = bars.reduce((s,b)=>s+b.A, 0);
+  let P0_cap;
+  if(isEC2){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
+  else {
+    const phi0 = spiral ? 0.75 : phi_min;
+    const kfac = spiral ? 0.85 : 0.80;
+    P0_cap = phi0 * kfac * (0.85*fc*(Ag-Ast) + fy*Ast);
+  }
+  const points = [{P: P0_cap, M: 0}];
+  const NSTRIPS = 80, NSTEPS = 300;
+  const c_start = (D-0.001)/lam, c_end = 0.5;
+  const dt_depth = R - Math.min(...bars.map(b=>b.dx));
+  for(let i=1; i<=NSTEPS; i++){
+    const t = i/NSTEPS;
+    const c = c_start*Math.pow(c_end/c_start, t);
+    const a = lam*c;
+    const y_bot = R - a;
+    let Cc=0, Mc=0;
+    for(let k=0; k<NSTRIPS; k++){
+      const ya = y_bot + k/NSTRIPS*a;
+      const yb = y_bot + (k+1)/NSTRIPS*a;
+      const ym = (ya+yb)/2;
+      const w  = 2*Math.sqrt(Math.max(0, R*R - ym*ym));
+      const dA = w*(yb-ya);
+      Cc += fc_eff*dA;
+      Mc += fc_eff*dA*ym;
+    }
+    let Fs=0, Ms=0;
+    bars.forEach(bar=>{
+      const d_comp = R - bar.dx;
+      const eps = ecu*(c - d_comp)/c;
+      const fs  = Math.max(-fy_use, Math.min(fy_use, eps*Es));
+      const F   = (fs - (d_comp>=0&&d_comp<=a ? fc_eff : 0))*bar.A;
+      Fs += F;  Ms += F*bar.dx;
+    });
+    const P_nom = Cc + Fs;
+    const M_nom = Math.abs(Mc + Ms);
+    let P_des, M_des;
+    if(isEC2){ P_des=P_nom; M_des=M_nom; }
+    else {
+      const et = dt_depth>0 ? ecu*(dt_depth/c - 1) : 0.01;
+      const phi_c = spiral ? 0.75 : phi_min;
+      let phi;
+      if(et>=0.005) phi=0.90;
+      else if(et<=0.002) phi=phi_c;
+      else phi=phi_c+(et-0.002)*(0.90-phi_c)/0.003;
+      P_des=phi*P_nom; M_des=phi*M_nom;
+    }
+    if(P_des>P0_cap) continue;
+    points.push({P:P_des, M:M_des});
+  }
+  const phi_t = isEC2 ? 1.0 : 0.90;
+  const Ast_full = bars.reduce((s,b)=>s+b.A, 0);
+  points.push({P:-phi_t*fy_use*Ast_full, M:0});
+  points.sort((a,b)=>b.P-a.P);
+  return points;
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function pct(code, hand){ return ((code-hand)/Math.abs(hand)*100).toFixed(2); }
+function statusCls(d){ const v=Math.abs(parseFloat(d)); return v<=0.5?'ok':v<=1.0?'warn':'bad'; }
+
+function fillDiff(codeId, diffId, codeVal, handVal){
+  const el = document.getElementById(codeId);
+  const dl = document.getElementById(diffId);
+  if(!el||!dl) return;
+  el.textContent = Math.round(codeVal).toLocaleString();
+  const d = pct(codeVal, handVal);
+  dl.textContent = d + '%';
+  dl.className = 'diff ' + statusCls(d);
+}
+
+// ── PMM Canvas drawing ────────────────────────────────────
+function drawCurve(canvasId, curve, Pu, Mu) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pad={t:28,b:42,l:52,r:18};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const maxP = Math.max(0,...curve.map(p=>p.P))*1.1;
+  const minP = Math.min(0,...curve.map(p=>p.P))*1.15;
+  const maxM = Math.max(...curve.map(p=>p.M),Math.abs(Mu||0)*1.2)*1.12;
+  const px=m=>pad.l+(m/maxM)*cw;
+  const py=p=>pad.t+(1-(p-minP)/(maxP-minP))*ch;
+  // grid
+  ctx.strokeStyle='#eee'; ctx.lineWidth=0.6;
+  for(let i=0;i<=4;i++){
+    const x=pad.l+i/4*cw; ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,pad.t+ch); ctx.stroke();
+    const y=pad.t+i/4*ch; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+  }
+  // axes
+  ctx.strokeStyle='#8898aa'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l,py(0)); ctx.lineTo(pad.l+cw,py(0)); ctx.stroke();
+  // fill
+  ctx.beginPath(); ctx.moveTo(px(0),py(curve[0].P));
+  curve.forEach(pt=>ctx.lineTo(px(pt.M),py(pt.P)));
+  ctx.lineTo(px(0),py(curve[curve.length-1].P));
+  ctx.closePath(); ctx.fillStyle='rgba(26,109,181,0.07)'; ctx.fill();
+  // curve
+  ctx.beginPath(); ctx.strokeStyle='#1a6db5'; ctx.lineWidth=2;
+  curve.forEach((pt,i)=>i===0?ctx.moveTo(px(pt.M),py(pt.P)):ctx.lineTo(px(pt.M),py(pt.P)));
+  ctx.stroke();
+  // axis labels
+  ctx.fillStyle='#5a6a7a'; ctx.font='9px Segoe UI'; ctx.textAlign='center';
+  ctx.fillText('M (kN·m)', pad.l+cw/2, H-5);
+  ctx.save(); ctx.translate(12,pad.t+ch/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('P (kN)',0,0); ctx.restore();
+  // P0 label
+  ctx.fillStyle='#1a6db5'; ctx.font='bold 9px Segoe UI'; ctx.textAlign='left';
+  ctx.fillText('P₀='+(curve[0].P/1000).toFixed(0)+'kN', pad.l+3, pad.t+11);
+  // demand point if provided
+  if(Pu!==null && Mu!==null){
+    const dpx=px(Math.abs(Mu)), dpy=py(Pu);
+    ctx.beginPath(); ctx.arc(dpx,dpy,5,0,2*Math.PI);
+    ctx.fillStyle='#c0392b'; ctx.fill();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// RUN TESTS
+// ══════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+
+  // ── TEST 1: ACI, D=500, 8Ø20, cv=50, f'c=28, fy=420, φ=0.65
+  const D1=500, cv1=50, db1=20, n1=8, fc1=28, fy1=420, Es1=200000, phi1=0.65;
+  const bars1 = getBarsCirc(D1,cv1,db1,n1);
+  const Ast1 = bars1.reduce((s,b)=>s+b.A,0);
+  const Ag1  = Math.PI*(D1/2)**2;
+  const curve1 = buildCurveCirc(D1,cv1,db1,n1,fc1,fy1,Es1,false,fc1,fy1,phi1);
+  const P0_1 = curve1[0].P/1000;   // kN
+  const Pt_1 = curve1[curve1.length-1].P/1000;
+  const rho1 = (Ast1/Ag1*100);
+
+  fillDiff('t1-P0','t1-P0-d', P0_1*1000, 2948*1000);
+  fillDiff('t1-Pt','t1-Pt-d', Pt_1*1000,-950*1000);
+  document.getElementById('t1-rho').textContent = rho1.toFixed(3);
+  document.getElementById('t1-rho-d').textContent = pct(rho1,1.280)+'%';
+  document.getElementById('t1-rho-d').className = 'diff ' + statusCls(pct(rho1,1.280));
+
+  const d1 = Math.abs(parseFloat(pct(P0_1*1000,2948*1000)));
+  const s1 = d1<=0.5?'ok':d1<=1.0?'warn':'bad';
+  document.getElementById('t1-status').style.display='flex';
+  document.getElementById('t1-status').className = 'status-banner ' + s1;
+  document.getElementById('t1-status').textContent = s1==='ok'? '✅ PASS — P₀ within 0.5% tolerance' : s1==='warn'? '⚠ MARGINAL — within 1.0%' : '❌ FAIL — exceeds 1.0%';
+
+  document.getElementById('s1-P0').textContent = P0_1.toFixed(0);
+  document.getElementById('s1-d').textContent = pct(P0_1*1000,2948*1000)+'%';
+  document.getElementById('s1-d').className = 'diff '+statusCls(pct(P0_1*1000,2948*1000));
+  document.getElementById('s1-st').innerHTML = s1==='ok'?'<span class="ok">✅ PASS</span>':s1==='warn'?'<span class="warn">⚠ MARGINAL</span>':'<span class="bad">❌ FAIL</span>';
+
+  drawCurve('c1', curve1.map(p=>({P:p.P/1000,M:p.M/1e6})), null, null);
+
+
+  // ── TEST 2: ACI SPIRAL, D=450, 6Ø22, cv=56, f'c=35, fy=420
+  const D2=450, cv2=56, db2=22, n2=6, fc2=35, fy2=420, Es2=200000, phi2=0.65;
+  const bars2 = getBarsCirc(D2,cv2,db2,n2);
+  const Ast2 = bars2.reduce((s,b)=>s+b.A,0);
+  const curve2 = buildCurveCirc(D2,cv2,db2,n2,fc2,fy2,Es2,false,fc2,fy2,phi2,true); // spiral=true
+  const P0_2 = curve2[0].P/1000; // kN
+
+  fillDiff('t2-P0','t2-P0-d', P0_2*1000, 3584*1000);
+  fillDiff('t2-src','t2-src-d', P0_2*1000, 3580*1000);
+  document.getElementById('t2-Ast').textContent = Ast2.toFixed(0);
+  document.getElementById('t2-Ast-d').textContent = pct(Ast2,2280.8)+'%';
+  document.getElementById('t2-Ast-d').className = 'diff '+statusCls(pct(Ast2,2280.8));
+
+  const d2 = Math.abs(parseFloat(pct(P0_2*1000,3584*1000)));
+  const s2 = d2<=0.5?'ok':d2<=1.0?'warn':'bad';
+  document.getElementById('t2-status').style.display='flex';
+  document.getElementById('t2-status').className = 'status-banner '+s2;
+  document.getElementById('t2-status').textContent = s2==='ok'?'✅ PASS — P₀ within 0.5% tolerance':s2==='warn'?'⚠ MARGINAL — within 1.0%':'❌ FAIL — exceeds 1.0%';
+
+  document.getElementById('s2-P0').textContent = P0_2.toFixed(0);
+  document.getElementById('s2-d').textContent = pct(P0_2*1000,3584*1000)+'%';
+  document.getElementById('s2-d').className = 'diff '+statusCls(pct(P0_2*1000,3584*1000));
+  document.getElementById('s2-st').innerHTML = s2==='ok'?'<span class="ok">✅ PASS</span>':s2==='warn'?'<span class="warn">⚠ MARGINAL</span>':'<span class="bad">❌ FAIL</span>';
+  document.getElementById('s2b-P0').textContent = P0_2.toFixed(0);
+  document.getElementById('s2b-d').textContent = pct(P0_2*1000,3580*1000)+'%';
+  document.getElementById('s2b-d').className = 'diff '+statusCls(pct(P0_2*1000,3580*1000));
+  const s2b_ok = Math.abs(parseFloat(pct(P0_2*1000,3580*1000)))<=1.0;
+  document.getElementById('s2b-st').innerHTML = s2b_ok?'<span class="ok">✅ PASS</span>':'<span class="bad">❌ FAIL</span>';
+
+  drawCurve('c2', curve2.map(p=>({P:p.P/1000,M:p.M/1e6})), null, null);
+
+
+  // ── TEST 3: EC2, D=500, 8Ø20, cv=45, fck=25, fyk=500, γc=1.5, γs=1.15
+  const D3=500, cv3=45, db3=20, n3=8, fck3=25, fyk3=500, Es3=200000;
+  const fcd3=fck3/1.5, fyd3=fyk3/1.15;
+  const bars3 = getBarsCirc(D3,cv3,db3,n3);
+  const Ast3 = bars3.reduce((s,b)=>s+b.A,0);
+  const curve3 = buildCurveCirc(D3,cv3,db3,n3,fck3,fyk3,Es3,true,fcd3,fyd3,1.0);
+  const P0_3 = curve3[0].P/1000;
+  const Pt_3 = curve3[curve3.length-1].P/1000;
+
+  fillDiff('t3-P0','t3-P0-d', P0_3*1000, 4324*1000);
+  fillDiff('t3-Pt','t3-Pt-d', Pt_3*1000,-1093*1000);
+  document.getElementById('t3-fcd').textContent = fcd3.toFixed(3);
+  document.getElementById('t3-fcd-d').textContent = pct(fcd3,16.667)+'%';
+  document.getElementById('t3-fcd-d').className = 'diff '+statusCls(pct(fcd3,16.667));
+
+  const d3 = Math.abs(parseFloat(pct(P0_3*1000,4324*1000)));
+  const s3 = d3<=0.5?'ok':d3<=1.0?'warn':'bad';
+  document.getElementById('t3-status').style.display='flex';
+  document.getElementById('t3-status').className = 'status-banner '+s3;
+  document.getElementById('t3-status').textContent = s3==='ok'?'✅ PASS — N₀ within 0.5% tolerance':s3==='warn'?'⚠ MARGINAL — within 1.0%':'❌ FAIL — exceeds 1.0%';
+
+  document.getElementById('s3-P0').textContent = P0_3.toFixed(0);
+  document.getElementById('s3-d').textContent = pct(P0_3*1000,4324*1000)+'%';
+  document.getElementById('s3-d').className = 'diff '+statusCls(pct(P0_3*1000,4324*1000));
+  document.getElementById('s3-st').innerHTML = s3==='ok'?'<span class="ok">✅ PASS</span>':s3==='warn'?'<span class="warn">⚠ MARGINAL</span>':'<span class="bad">❌ FAIL</span>';
+
+  drawCurve('c3', curve3.map(p=>({P:p.P/1000,M:p.M/1e6})), null, null);
+});
+</script>
+</body>
+</html>

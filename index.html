@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CivilStrCalc - Free Structural Engineering Calculators | ACI 318 & Eurocode 2</title>
+<meta name="description" content="Free structural engineering calculators for concrete and steel design. ACI 318-25 and Eurocode 2 standards. Beam, column, shear, rebar design tools.">
+<meta name="keywords" content="structural engineering, concrete design, ACI 318, Eurocode 2, beam calculator, column design, civil engineering">
+<meta property="og:title" content="CivilStrCalc - Structural Engineering Calculators">
+<meta property="og:description" content="Free online calculators for concrete and steel design - ACI 318 & Eurocode 2">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582"
+     crossorigin="anonymous"></script>
+<!-- Font Preload -->
+<link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  :root { --hh: 68px; --sw: 232px; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { display: flex; flex-direction: column; font-family: var(--sans); background: var(--bg); }
+
+  /* ── TOP HEADER ── */
+  .top-header {
+    height: var(--hh);
+    background: #1a2332;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    flex-shrink: 0;
+    border-bottom: 2px solid #2a3a52;
+    z-index: 300;
+    gap: 0;
+  }
+
+  /* LOGO — exactly sidebar width */
+  .logo-area {
+    width: var(--sw);
+    flex-shrink: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    cursor: pointer;
+    /* Short separator: only middle 36px visible, not full height */
+    box-shadow: inset -1px 0 0 0 rgba(255,255,255,0.0);
+    position: relative;
+  }
+  .logo-area::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 32px;
+    background: rgba(255,255,255,0.18);
+  }
+  .logo-area img {
+    height: 50px;
+    width: auto;
+    display: block;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  .logo-fallback {
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .lf-box {
+    width: 34px; height: 34px;
+    background: #3a8fd4;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .lf-name {
+    font-family: 'IBM Plex Sans Condensed', sans-serif;
+    font-weight: 700; font-size: 1rem; color: #fff; line-height: 1.2;
+  }
+  .lf-name small {
+    display: block; font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300; font-size: 0.6rem;
+    color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  /* TAGLINE area */
+  .hdr-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+  }
+  .hdr-tagline {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-left: 0;
+  }
+  .hdr-tagline .tl-main {
+    font-family: 'IBM Plex Sans Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.95);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .hdr-tagline .tl-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.57rem;
+    color: rgba(255,255,255,0.32);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* ── BODY LAYOUT ── */
+  .body-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sw);
+    background: #1f2d40;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+  .sb-sec-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.24);
+    padding: 14px 16px 5px;
+  }
+  .sb-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.14s;
+    border-left: 3px solid transparent;
+    color: rgba(255,255,255,0.56);
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+  .sb-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.88); }
+  .sb-item.active {
+    background: rgba(58,143,212,0.14);
+    border-left-color: #3a8fd4;
+    color: #fff;
+    font-weight: 500;
+  }
+  .sb-item .ic { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+  .sb-group-hdr .ic { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+  .sb-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 5px 14px; }
+  .sb-footer {
+    margin-top: auto;
+    padding: 14px 16px;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.18);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    line-height: 1.75;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── COLLAPSIBLE GROUP ── */
+  .sb-group-hdr {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.14s;
+    border-left: 3px solid transparent;
+    color: rgba(255,255,255,0.56);
+    font-size: 0.8rem;
+    user-select: none;
+  }
+  .sb-group-hdr:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.88); }
+  .sb-group.open .sb-group-hdr {
+    color: rgba(255,255,255,0.88);
+    border-left-color: rgba(58,143,212,0.5);
+  }
+  .sb-arrow { margin-left: auto; font-size: 10px; transition: transform 0.18s; display: inline-block; }
+  .sb-group.open .sb-arrow { transform: rotate(0deg); }
+  .sb-group:not(.open) .sb-arrow { transform: rotate(-90deg); }
+  .sb-group-body { display: none; }
+  .sb-group.open .sb-group-body { display: block; }
+  .sb-sub {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px 6px 38px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.44);
+    font-size: 0.76rem;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background 0.14s;
+  }
+  .sb-sub:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.78); }
+  .sb-sub.active {
+    background: rgba(58,143,212,0.12);
+    border-left-color: #3a8fd4;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* ── IFRAME ── */
+  .content-area { flex: 1; overflow: hidden; }
+  .page-frame { width: 100%; height: 100%; border: none; display: block; }
+
+  /* ── HAMBURGER BUTTON ── */
+  .hamburger {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1001;
+    background: #1a2332;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 7px;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    padding: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 2px;
+    transition: all 0.25s;
+  }
+  .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.active span:nth-child(2) { opacity: 0; }
+  .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── SIDEBAR OVERLAY ── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.52);
+    z-index: 999;
+  }
+  .sidebar-overlay.show { display: block; }
+
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 768px) {
+    :root { --sw: 260px; --hh: 56px; }
+
+    .hamburger { display: flex; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: calc(-1 * var(--sw));
+      height: 100dvh;
+      z-index: 1000;
+      transition: left 0.28s ease;
+      overflow-y: auto;
+    }
+    .sidebar.open { left: 0; }
+
+    .body-layout { margin-left: 0; }
+    .content-area { width: 100%; }
+
+    /* Header: hide tagline on small screens, show hamburger space */
+    .logo-area { width: auto; padding: 0 16px 0 68px; }
+    .logo-area::after { display: none; }
+    .hdr-tagline .tl-sub { display: none; }
+    .hdr-tagline .tl-main { font-size: 0.85rem; }
+  }
+
+  @media (max-width: 480px) {
+    :root { --hh: 52px; }
+    .hdr-tagline .tl-main { font-size: 0.78rem; letter-spacing: 0.03em; }
+    .logo-area img { height: 38px; }
+  }
+</style>
+</head>
+<body>
+<a href="#content-frame" class="skip-link">Skip to main content</a>
+
+<!-- ══ HAMBURGER BUTTON ══ -->
+<button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<!-- ══ SIDEBAR OVERLAY ══ -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ══ TOP HEADER ══ -->
+<header class="top-header">
+
+  <!-- LOGO — same width as sidebar, click → home -->
+  <div class="logo-area" onclick="goHome()" title="Go to Home">
+    <img
+      src="Images/Logos/Logo-Smaller.png"
+      alt="CivilStrCalc.com"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+    >
+    <div class="logo-fallback">
+      <div class="lf-box">⬛</div>
+      <div class="lf-name">CivilStrCalc<small>Structural Calculations</small></div>
+    </div>
+  </div>
+
+  <!-- TAGLINE -->
+  <div class="hdr-right">
+    <div class="hdr-tagline">
+      <span class="tl-main">Structural Engineering Tools</span>
+      <span class="tl-sub">Free · Open · Educational</span>
+    </div>
+  </div>
+
+</header>
+
+<!-- ══ BODY ══ -->
+<div class="body-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sb-sec-label">Concrete Design</div>
+
+    <!-- ▾ Beam Design group -->
+    <div class="sb-group" id="grp-beam">
+      <div class="sb-group-hdr" onclick="toggleGroup('grp-beam')">
+        <span class="ic"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c12 6 12 6 24 0M4 20c12 6 12 6 24 0"/><path d="M4 12v8M28 12v8" opacity="0.5"/><path d="M16 8v4"/><path d="M14 10l2-2 2 2"/><path d="M16 24v-4"/><path d="M14 22l2 2 2-2"/></svg></span> Beam Design <span class="sb-arrow">▾</span>
+      </div>
+      <div class="sb-group-body">
+        <a class="sb-sub" id="sub-flexdesign" href="pages/beam.html#flexdesign" onclick="setSub(this);return false;">Flexural Design</a>
+        <a class="sb-sub" id="sub-flexcap" href="pages/beam.html#flexcap" onclick="setSub(this);return false;">Flexural Capacity</a>
+        <a class="sb-sub" id="sub-shear" href="pages/shear.html" onclick="setSub(this);return false;">Shear Design</a>
+        <a class="sb-sub" id="sub-torsion" href="pages/beam.html#torsion" onclick="setSub(this);return false;">Torsion Design</a>
+      </div>
+    </div>
+
+    <a class="sb-item" data-page="column" href="pages/column.html" target="content-frame">
+      <span class="ic"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="20" height="20" rx="1.5"/><circle cx="10" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="22" r="1.5" fill="currentColor" stroke="none"/><path d="M9 9h14v14H9z" stroke-width="1.2" opacity="0.45"/></svg></span> Column Design
+    </a>
+
+    <div class="sb-divider"></div>
+    <div class="sb-sec-label">Reference Tables</div>
+    <a class="sb-item" data-page="steel" href="pages/steel.html" target="content-frame">
+      <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 3v18"/></svg></span> Steel Sections
+    </a>
+    <a class="sb-item" data-page="rebar" href="pages/rebar.html" target="content-frame">
+      <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18"/><path d="M7 6l10-2M7 11l10-2M7 16l10-2M7 21l10-2"/></svg></span> Rebar Sizes
+    </a>
+    <a class="sb-item" data-page="concrete" href="pages/concrete.html" target="content-frame">
+      <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><circle cx="12" cy="12" r="0.7" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="0.7" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="0.7" fill="currentColor" stroke="none"/></svg></span> Concrete Classes
+    </a>
+
+    <div class="sb-footer">
+      ACI 318 · Eurocode 2<br>AISC · EN 10365
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 8px;">
+        <a href="privacy.html" target="_top" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:.58rem;transition:color .13s;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Privacy</a>
+        <span style="color:rgba(255,255,255,.15);">·</span>
+        <a href="terms.html" target="_top" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:.58rem;transition:color .13s;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Terms</a>
+        <span style="color:rgba(255,255,255,.15);">·</span>
+        <a href="cookies.html" target="_top" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:.58rem;transition:color .13s;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Cookies</a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+    <iframe
+      name="content-frame"
+      id="content-frame"
+      class="page-frame"
+      title="Calculation content"
+      src="pages/home.html">
+    </iframe>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.sb-item').forEach(link => {
+    link.addEventListener('click', function () {
+      document.querySelectorAll('.sb-item').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.sb-sub').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  function toggleGroup(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function setSub(el) {
+    document.querySelectorAll('.sb-item').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.sb-sub').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    const grp = el.closest('.sb-group');
+    if (grp) grp.classList.add('open');
+
+    // Navigate the iframe, and if beam.html is already loaded switch tab directly
+    const href = el.getAttribute('href');
+    if (!href) return;
+    const frame = document.getElementById('content-frame');
+    const hash = href.includes('#') ? href.split('#')[1] : '';
+    const base = href.split('#')[0];
+    const frameSrc = (frame.contentDocument && frame.contentDocument.location && frame.contentDocument.location.href) || frame.src || '';
+    const sameBase = frameSrc.includes(base.replace(/^pages\//,'').replace(/^\.\.\//,''));
+
+    if (hash && sameBase) {
+      // Same page already in frame — call modTab directly and update hash
+      try {
+        const iw = frame.contentWindow;
+        const tabBtn = iw.document.getElementById('mtab-' + hash);
+        if (tabBtn) { iw.modTab(tabBtn, 'mod-' + hash); return; }
+      } catch(e) {}
+    }
+    frame.src = href;
+  }
+
+  function goHome() {
+    document.getElementById('content-frame').src = 'pages/home.html';
+    document.querySelectorAll('.sb-item').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.sb-sub').forEach(l => l.classList.remove('active'));
+    closeSidebar();
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('hamburger-btn');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+    btn.classList.toggle('active');
+  }
+
+  function closeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('hamburger-btn');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    btn.classList.remove('active');
+  }
+
+  // Close sidebar when a nav item is clicked on mobile
+  document.querySelectorAll('.sb-item, .sb-sub').forEach(el => {
+    el.addEventListener('click', () => {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+</script>
+</body>
+</html>

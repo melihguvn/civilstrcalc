@@ -1,0 +1,2319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concrete Beam Design Calculator - ACI 318 & EC2 | CivilStrCalc</title>
+<meta name="description" content="Calculate concrete beam flexural capacity and shear strength. Supports ACI 318-25 and Eurocode 2 standards. Free online structural engineering tool.">
+<meta name="keywords" content="concrete beam, flexural design, shear design, ACI 318, Eurocode 2, moment capacity">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582"
+     crossorigin="anonymous"></script>
+<!-- Font Preload -->
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+/* ── REMOVE NUMBER SPINNERS ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+input[type=number] { -moz-appearance:textfield; appearance:textfield; }
+
+/* ── MODULE TABS ── */
+.mod-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--white);padding:0 28px;flex-wrap:wrap;margin:16px -28px 28px;}
+.mod-tab{background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-family:var(--sans);font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.mod-tab:hover{color:var(--text);}
+.mod-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.mod-pane{display:none;}
+.mod-pane.active{display:block;}
+
+@media print {
+  @page{margin:10mm 12mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:8.5pt!important;padding:0!important;}
+  body>div{padding:0!important;}
+  .no-print{display:none!important;}
+  .print-only{display:flex!important;}
+  .bg-section,.sub-tabs,.mod-tabs,.page-title,.unit-switcher{display:none!important;}
+  .sub-pane:not(.active){display:none!important;}
+  .mod-pane:not(.active){display:none!important;}
+  .calc-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
+  .report-hdr{padding:8px 14px!important;background:#1a2332!important;border-radius:0!important;}
+  .report-body{padding:8px 14px!important;}
+  .result-box{padding:8px 10px!important;gap:5px!important;margin-bottom:8px!important;background:#f0f5fb!important;}
+  .fl-rb{background:#f0f5fb!important;margin-bottom:8px!important;}
+  .fl-col{padding:8px 6px!important;}
+  .ri-value{font-size:.92rem!important;}
+  .ri-label{font-size:.58rem!important;}
+  .rpt-sec{margin-bottom:7px!important;padding-bottom:7px!important;}
+  .rpt-sec-title{padding:2px 8px!important;font-size:.58rem!important;margin-bottom:5px!important;}
+  .inp-tbl td{padding:3px 6px!important;font-size:7.8pt!important;}
+  .steps-table td{padding:4px 4px!important;}
+  .step-desc{font-size:7.5pt!important;}
+  .step-formula{font-size:6.8pt!important;}
+  .step-val{font-size:7.5pt!important;}
+  .step-num{width:16px!important;height:16px!important;font-size:.55rem!important;}
+  .report-warn{padding:5px 9px!important;font-size:.7rem!important;margin-bottom:6px!important;}
+  .dcr-banner{padding:7px 10px!important;margin-bottom:8px!important;border-radius:5px!important;}
+  .dcr-text strong{font-size:.78rem!important;}
+  .print-footer{display:flex!important;}
+  .print-disclaimer{display:block!important;}
+  footer{display:none!important;}
+}
+.print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
+.ph-title{font-family:var(--cond);font-weight:700;font-size:1rem;}
+.ph-sub{font-size:.75rem;color:#666;}
+.ph-date{margin-left:auto;font-size:.72rem;color:#888;font-family:var(--mono);}
+.print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
+.print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
+
+/* ── UNIT SWITCHER (inside card) ── */
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap;}
+.unit-switcher label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0;white-space:nowrap;}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap;}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--mono);font-size:.68rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
+
+/* ── LIMIT WARNING ── */
+.limit-warn{display:none;background:#fff8ed;border:1px solid #f4c97a;border-radius:5px;padding:7px 11px;font-size:.75rem;color:#7a5000;margin-top:4px;line-height:1.5;}
+.limit-warn.show{display:block;}
+
+/* ── REPORT CARD ── */
+.report-card{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.report-hdr{background:#1a2332;color:white;padding:13px 20px;display:flex;align-items:center;gap:10px;}
+.report-hdr h4{font-family:var(--cond);font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;}
+.rh-code{font-family:var(--mono);font-size:.62rem;background:rgba(255,255,255,.15);border-radius:3px;padding:2px 8px;}
+.print-btn{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;font-family:var(--sans);font-size:.74rem;font-weight:500;padding:5px 12px;border-radius:4px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:5px;}
+.print-btn:hover{background:rgba(255,255,255,.28);}
+.report-body{padding:20px;}
+
+/* ── RESULT BOX ── */
+.result-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;padding:16px;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;}
+
+/* ── FLEXDESIGN 3-COL RESULT ── */
+.fl-rb{display:grid;grid-template-columns:1fr 1fr 1fr;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.fl-col{padding:15px 10px;text-align:center;position:relative;}
+.fl-col+.fl-col::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:1px;background:#b8d0eb;}
+.fl-lbl{font-size:.67rem;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;font-family:var(--sans);font-weight:500;}
+.fl-val{font-family:var(--mono);font-size:1.25rem;font-weight:600;color:var(--accent);line-height:1.1;}
+.fl-val.mid{font-size:1rem;}
+.fl-val.ok{color:var(--green);}
+.fl-val.warn{color:var(--orange);}
+.fl-val.err{color:var(--red);}
+.fl-unit{font-size:.68rem;color:var(--text-dim);margin-top:3px;font-family:var(--sans);}
+.fl-sub{font-size:.72rem;color:var(--text-dim);text-align:center;padding:4px 0 14px;font-family:var(--sans);}
+.fl-sub b{color:var(--text-mid);font-weight:500;}
+.result-item{text-align:center;}
+.ri-label{font-size:.68rem;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;font-family:var(--sans);font-weight:500;}
+.ri-value{font-family:var(--mono);font-size:1.2rem;font-weight:600;color:var(--accent);line-height:1.1;}
+.ri-unit{font-size:.7rem;color:var(--text-dim);margin-top:2px;font-family:var(--sans);}
+.result-item.warn .ri-value{color:var(--orange);}
+.result-item.err  .ri-value{color:var(--red);}
+.result-item.ok   .ri-value{color:var(--green);}
+
+/* ── INPUT SUMMARY TABLE ── */
+.inp-tbl{width:100%;border-collapse:collapse;}
+.inp-tbl tr{border-bottom:1px solid var(--border);}
+.inp-tbl tr:last-child{border-bottom:none;}
+.inp-tbl td{padding:7px 8px;font-size:.81rem;font-family:var(--sans);}
+.inp-tbl td:first-child{color:var(--text-mid);width:60%;}
+.inp-tbl td:last-child{font-weight:500;color:var(--text);text-align:right;}
+
+/* ── WARNING BANNER IN REPORT ── */
+.report-warn{display:flex;gap:9px;align-items:flex-start;background:#fff8ed;border:1px solid #f4c97a;border-radius:6px;padding:9px 13px;font-size:.78rem;color:#7a5000;margin-bottom:14px;line-height:1.55;}
+.report-warn b{font-weight:600;}
+
+/* ── CALC STEPS ── */
+.rpt-sec{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.rpt-sec-title{font-family:var(--sans);font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:4px 10px;margin-bottom:12px;}
+
+.steps-table{width:100%;border-collapse:collapse;}
+.steps-table tr{border-bottom:1px solid var(--border);}
+.steps-table tr:last-child{border-bottom:none;}
+.steps-table tr:hover{background:var(--bg);}
+.steps-table td{padding:8px 6px;font-size:.8rem;vertical-align:middle;}
+.step-num{width:22px;height:22px;background:#1a2332;color:white;border-radius:50%;font-family:var(--mono);font-size:.63rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:600;}
+.step-desc{color:var(--text);font-weight:500;font-size:.81rem;font-family:var(--sans);}
+.step-formula{color:var(--text-dim);font-family:var(--mono);font-size:.71rem;margin-top:2px;}
+.step-val{font-family:var(--mono);font-weight:600;font-size:.83rem;text-align:right;white-space:nowrap;color:var(--text);}
+.step-val.ok{color:var(--green);}
+.step-val.warn{color:var(--orange);}
+.step-val.err{color:var(--red);}
+.step-val.hl{color:var(--accent);font-size:.93rem;}
+.step-check{font-size:.72rem;padding:2px 7px;border-radius:3px;font-family:var(--sans);font-weight:500;margin-left:5px;white-space:nowrap;}
+.chk-ok{background:var(--green-bg);color:var(--green);}
+.chk-warn{background:var(--orange-bg);color:var(--orange);}
+.chk-err{background:var(--red-bg);color:var(--red);}
+
+/* ── BACKGROUND SECTION ── */
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden;}
+.bg-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 20px;}
+.bg-hdr h3{font-family:var(--cond);font-weight:700;font-size:.9rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text);}
+.bg-tabs{display:flex;border-bottom:2px solid var(--border);padding:0 20px;background:var(--white);flex-wrap:wrap;}
+.bg-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 14px;font-family:var(--sans);font-size:.78rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.bg-tab:hover{color:var(--text);}
+.bg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.bg-pane{display:none;padding:22px;}.bg-pane.active{display:block;}
+.tb{max-width:800px;}
+.tb h4{font-family:var(--cond);font-weight:700;font-size:.98rem;color:var(--text);margin:18px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.tb h4:first-child{margin-top:0;}
+.tb p{font-size:.82rem;color:var(--text-mid);line-height:1.78;margin-bottom:9px;}
+.tb ul{margin:6px 0 10px 18px;font-size:.82rem;color:var(--text-mid);line-height:1.8;}
+.rtag{display:inline-block;font-family:var(--mono);font-size:.63rem;background:var(--accent-lt);color:var(--accent);border:1px solid #b8d0eb;border-radius:3px;padding:1px 6px;margin-right:4px;vertical-align:middle;}
+.fml-blk{background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:13px 16px;margin:10px 0;font-family:var(--mono);font-size:.78rem;color:var(--text-mid);line-height:2.0;}
+.fml-blk .ft{font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;font-family:var(--sans);}
+.fml-blk b{color:var(--accent);}
+.fml-blk .fn{font-size:.71rem;color:var(--text-dim);margin-top:5px;font-family:var(--sans);font-style:italic;}
+.lim-tbl{width:100%;border-collapse:collapse;font-size:.79rem;margin:10px 0;}
+.lim-tbl th{background:var(--bg2);padding:8px 11px;font-family:var(--cond);font-weight:700;font-size:.67rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);text-align:left;border-bottom:2px solid var(--border2);}
+.lim-tbl td{padding:7px 11px;border-bottom:1px solid var(--border);color:var(--text-mid);font-size:.76rem;}
+.lim-tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--text);}
+.lim-tbl tr:last-child td{border-bottom:none;}
+.ref-list{list-style:none;margin-top:6px;}
+.ref-list li{padding:9px 0;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text-mid);display:flex;gap:10px;line-height:1.6;}
+.ref-list li:last-child{border-bottom:none;}
+.ref-num{font-family:var(--mono);font-size:.7rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
+</style>
+<!-- Google Funding Choices (Cookie Consent) -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
+<script>(function(){function signalGooglefcPresent(){if(!window.frames['googlefcPresent']){if(document.body){const iframe=document.createElement('iframe');iframe.style='width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;';iframe.style.display='none';iframe.name='googlefcPresent';document.body.appendChild(iframe);}else{setTimeout(signalGooglefcPresent,0);}}}signalGooglefcPresent();})();</script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+  <div class="page-title no-print">
+    <h1>Beam Design</h1>
+    <p>Flexural design, flexural capacity, and torsion design for rectangular RC beams.</p>
+  </div>
+
+  <!-- ═══ MODULE TABS ═══ -->
+  <div class="mod-tabs no-print">
+    <button class="mod-tab active" id="mtab-flexdesign" onclick="modTab(this,'mod-flexdesign')">Flexural Design</button>
+    <button class="mod-tab" id="mtab-flexcap" onclick="modTab(this,'mod-flexcap')">Flexural Capacity</button>
+    <button class="mod-tab" id="mtab-shear" onclick="try{top.setSub(top.document.getElementById('sub-shear'));top.document.getElementById('content-frame').src='pages/shear.html';}catch(e){window.location.href='shear.html';}">Shear Design</button>
+    <button class="mod-tab" id="mtab-torsion" onclick="modTab(this,'mod-torsion')">Torsion Design</button>
+  </div>
+
+  <!-- ═══════════════ MODULE: FLEXURAL DESIGN ═══════════════ -->
+  <div class="mod-pane active" id="mod-flexdesign">
+
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="stab(this,'beam','aci')">ACI 318-25</button>
+    <button class="sub-tab" onclick="stab(this,'beam','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+  </div>
+
+  <!-- ═══════════════ ACI 318-25 ═══════════════ -->
+  <div class="sub-pane active" id="beam-aci">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="aci-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-aci-b">[m]</span></label>
+              <div class="iw"><input type="number" id="b_aci" value="0.300" step="0.001"><span class="us" id="u-aci-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-aci-h">[m]</span></label>
+              <div class="iw"><input type="number" id="h_aci" value="0.600" step="0.001"><span class="us" id="u-aci-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Clear Cover <span class="lu" id="lu-aci-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="cv_aci" value="0.040" step="0.001"><span class="us" id="u-aci-cv">m</span></div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c — Concrete <span class="lu" id="lu-aci-fc">[MPa]</span></label>
+              <div class="iw"><input type="number" id="fc_aci" value="28" oninput="checkLimitsACI()"><span class="us" id="u-aci-fc">MPa</span></div>
+              <div class="limit-warn" id="warn-aci-fc"></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>y</sub> — Rebar <span class="lu" id="lu-aci-fy">[MPa]</span></label>
+              <div class="iw"><input type="number" id="fy_aci" value="420" oninput="checkLimitsACI()"><span class="us" id="u-aci-fy">MPa</span></div>
+              <div class="limit-warn" id="warn-aci-fy"></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Compression Reinforcement (optional)</div></div>
+          <div style="margin-bottom:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;">
+              <input type="checkbox" id="dbl_aci" onchange="toggleDbl('aci')">
+              Include compression steel A'<sub>s</sub>
+            </label>
+          </div>
+          <div id="dbl_inputs_aci" style="display:none">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Bar Diameter <span class="lu" id="lu-aci-dbc">[mm]</span></label>
+                <div class="iw"><input type="number" id="dbc_aci" value="16" step="1"><span class="us" id="u-aci-dbc">mm</span></div>
+              </div>
+              <div class="form-group">
+                <label>Number of Bars</label>
+                <div class="iw"><input type="number" id="nbc_aci" value="2" step="1" min="1"><span class="us">bars</span></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Cover to comp. bars d' <span class="lu" id="lu-aci-dprime">[m]</span></label>
+              <div class="iw"><input type="number" id="dprime_aci" value="0.050" step="0.001"><span class="us" id="u-aci-dprime">m</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Resistance Factor</div></div>
+          <div class="form-group">
+            <label>φ — Flexure (tension-controlled)</label>
+            <div class="iw"><input type="number" id="phi_aci" value="0.90" step="0.01" min="0.65" max="0.90"><span class="us">—</span></div>
+            <div style="font-size:.69rem;color:var(--text-dim);margin-top:3px;">ACI 318-25 §21.2.2: φ = 0.90 for tension-controlled sections (ε<sub>t</sub> ≥ 0.005)</div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+          <div class="form-group">
+            <label>Factored Moment M<sub>u</sub> <span class="lu" id="lu-aci-mu">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="mu_aci" value="250"><span class="us" id="u-aci-mu">kN·m</span></div>
+          </div>
+
+          <button class="btn-calc" onclick="calcACI()">▶ Calculate</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="res-empty" id="aci_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="aci_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="aci-rh-code">ACI 318-25 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="aci_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ EUROCODE 2 ═══════════════ -->
+  <div class="sub-pane" id="beam-ec2">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="ec2-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-ec2-b">[m]</span></label>
+              <div class="iw"><input type="number" id="b_ec2" value="0.300" step="0.001"><span class="us" id="u-ec2-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-ec2-h">[m]</span></label>
+              <div class="iw"><input type="number" id="h_ec2" value="0.600" step="0.001"><span class="us" id="u-ec2-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nominal Cover <span class="lu" id="lu-ec2-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="cv_ec2" value="0.035" step="0.001"><span class="us" id="u-ec2-cv">m</span></div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f<sub>ck</sub> — Concrete [MPa]</label>
+              <div class="iw"><input type="number" id="fck_ec2" value="25" oninput="checkLimitsEC2()"><span class="us">MPa</span></div>
+              <div class="limit-warn" id="warn-ec2-fck"></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>yk</sub> — Rebar [MPa]</label>
+              <div class="iw"><input type="number" id="fyk_ec2" value="500" oninput="checkLimitsEC2()"><span class="us">MPa</span></div>
+              <div class="limit-warn" id="warn-ec2-fyk"></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Partial Safety Factors</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>γ<sub>c</sub> — Concrete</label>
+              <input type="number" id="gc_ec2" value="1.5" step="0.05">
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">Recommended: 1.50 (persistent)</div>
+            </div>
+            <div class="form-group">
+              <label>γ<sub>s</sub> — Steel</label>
+              <input type="number" id="gs_ec2" value="1.15" step="0.05">
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">Recommended: 1.15</div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Compression Reinforcement (optional)</div></div>
+          <div style="margin-bottom:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;">
+              <input type="checkbox" id="dbl_ec2" onchange="toggleDbl('ec2')">
+              Include compression steel A'<sub>s</sub>
+            </label>
+          </div>
+          <div id="dbl_inputs_ec2" style="display:none">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Bar Diameter <span class="lu" id="lu-ec2-dbc">[mm]</span></label>
+                <div class="iw"><input type="number" id="dbc_ec2" value="16" step="1"><span class="us" id="u-ec2-dbc">mm</span></div>
+              </div>
+              <div class="form-group">
+                <label>Number of Bars</label>
+                <div class="iw"><input type="number" id="nbc_ec2" value="2" step="1" min="1"><span class="us">bars</span></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Cover to comp. bars d' <span class="lu" id="lu-ec2-dprime">[m]</span></label>
+              <div class="iw"><input type="number" id="dprime_ec2" value="0.050" step="0.001"><span class="us" id="u-ec2-dprime">m</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+          <div class="form-group">
+            <label>Design Moment M<sub>Ed</sub> <span class="lu" id="lu-ec2-med">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="me_ec2" value="250"><span class="us" id="u-ec2-med">kN·m</span></div>
+          </div>
+
+          <button class="btn-calc" onclick="calcEC2()">▶ Calculate</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="res-empty" id="ec2_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="ec2_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="ec2-rh-code">EN 1992-1-1 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="ec2_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /mod-flexdesign -->
+
+  <!-- ═══════════════ MODULE: FLEXURAL CAPACITY ═══════════════ -->
+  <div class="mod-pane" id="mod-flexcap">
+
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="stab(this,'cap','aci')">ACI 318-25</button>
+    <button class="sub-tab" onclick="stab(this,'cap','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+  </div>
+
+  <!-- CAP ACI -->
+  <div class="sub-pane active" id="cap-aci">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="cap-aci-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-cap-aci-b">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_b_aci" value="0.300" step="0.001"><span class="us" id="u-cap-aci-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-cap-aci-h">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_h_aci" value="0.600" step="0.001"><span class="us" id="u-cap-aci-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Clear Cover <span class="lu" id="lu-cap-aci-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="cap_cv_aci" value="0.040" step="0.001"><span class="us" id="u-cap-aci-cv">m</span></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c — Concrete <span class="lu" id="lu-cap-aci-fc">[MPa]</span></label>
+              <div class="iw"><input type="number" id="cap_fc_aci" value="28"><span class="us" id="u-cap-aci-fc">MPa</span></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>y</sub> — Rebar <span class="lu" id="lu-cap-aci-fy">[MPa]</span></label>
+              <div class="iw"><input type="number" id="cap_fy_aci" value="420"><span class="us" id="u-cap-aci-fy">MPa</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Resistance Factor</div></div>
+          <div class="form-group">
+            <label>φ — Flexure</label>
+            <div class="iw"><input type="number" id="cap_phi_aci" value="0.90" step="0.01" min="0.65" max="0.90"><span class="us">—</span></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Tension Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-cap-aci-dbt">[mm]</span></label>
+              <div class="iw"><input type="number" id="cap_dbt_aci" value="20" step="1"><span class="us" id="u-cap-aci-dbt">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="cap_nbt_aci" value="4" step="1" min="1"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Compression Reinforcement (optional)</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-cap-aci-dbc">[mm]</span></label>
+              <div class="iw"><input type="number" id="cap_dbc_aci" value="0" step="1" min="0" placeholder="0 = none"><span class="us" id="u-cap-aci-dbc">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="cap_nbc_aci" value="0" step="1" min="0"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;">
+              <input type="checkbox" id="cap_row2_aci" onchange="toggleRow2('aci')">
+              Second row of tension bars
+            </label>
+          </div>
+          <div id="cap_row2_inputs_aci" style="display:none">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Row 2 Bar Dia. <span class="lu" id="lu-cap-aci-db2">[mm]</span></label>
+                <div class="iw"><input type="number" id="cap_db2_aci" value="20" step="1"><span class="us" id="u-cap-aci-db2">mm</span></div>
+              </div>
+              <div class="form-group">
+                <label>Row 2 Bar Count</label>
+                <div class="iw"><input type="number" id="cap_nb2_aci" value="2" step="1" min="1"><span class="us">bars</span></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Row Spacing (c-to-c) <span class="lu" id="lu-cap-aci-rs">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_rs_aci" value="0.060" step="0.001"><span class="us" id="u-cap-aci-rs">m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Loading (optional — for D/C)</div></div>
+          <div class="form-group">
+            <label>Applied Moment M<sub>u</sub> <span class="lu" id="lu-cap-aci-mu">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="cap_mu_aci" value="0" placeholder="0 = skip D/C"><span class="us" id="u-cap-aci-mu">kN·m</span></div>
+          </div>
+          <button class="btn-calc" onclick="calcCapACI()">▶ Calculate</button>
+        </div>
+      </div>
+      <div>
+        <div class="res-empty" id="cap_aci_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="cap_aci_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="cap-aci-rh-code">ACI 318-25 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="cap_aci_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAP EC2 -->
+  <div class="sub-pane" id="cap-ec2">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="cap-ec2-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-cap-ec2-b">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_b_ec2" value="0.300" step="0.001"><span class="us" id="u-cap-ec2-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-cap-ec2-h">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_h_ec2" value="0.600" step="0.001"><span class="us" id="u-cap-ec2-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nominal Cover <span class="lu" id="lu-cap-ec2-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="cap_cv_ec2" value="0.035" step="0.001"><span class="us" id="u-cap-ec2-cv">m</span></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f<sub>ck</sub> — Concrete [MPa]</label>
+              <div class="iw"><input type="number" id="cap_fck_ec2" value="25"><span class="us">MPa</span></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>yk</sub> — Rebar [MPa]</label>
+              <div class="iw"><input type="number" id="cap_fyk_ec2" value="500"><span class="us">MPa</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Partial Safety Factors</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>γ<sub>c</sub> — Concrete</label>
+              <input type="number" id="cap_gc_ec2" value="1.5" step="0.05">
+            </div>
+            <div class="form-group">
+              <label>γ<sub>s</sub> — Steel</label>
+              <input type="number" id="cap_gs_ec2" value="1.15" step="0.05">
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Tension Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-cap-ec2-dbt">[mm]</span></label>
+              <div class="iw"><input type="number" id="cap_dbt_ec2" value="20" step="1"><span class="us" id="u-cap-ec2-dbt">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="cap_nbt_ec2" value="4" step="1" min="1"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Compression Reinforcement (optional)</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-cap-ec2-dbc">[mm]</span></label>
+              <div class="iw"><input type="number" id="cap_dbc_ec2" value="0" step="1" min="0" placeholder="0 = none"><span class="us" id="u-cap-ec2-dbc">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="cap_nbc_ec2" value="0" step="1" min="0"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;">
+              <input type="checkbox" id="cap_row2_ec2" onchange="toggleRow2('ec2')">
+              Second row of tension bars
+            </label>
+          </div>
+          <div id="cap_row2_inputs_ec2" style="display:none">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Row 2 Bar Dia. <span class="lu" id="lu-cap-ec2-db2">[mm]</span></label>
+                <div class="iw"><input type="number" id="cap_db2_ec2" value="20" step="1"><span class="us" id="u-cap-ec2-db2">mm</span></div>
+              </div>
+              <div class="form-group">
+                <label>Row 2 Bar Count</label>
+                <div class="iw"><input type="number" id="cap_nb2_ec2" value="2" step="1" min="1"><span class="us">bars</span></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Row Spacing (c-to-c) <span class="lu" id="lu-cap-ec2-rs">[m]</span></label>
+              <div class="iw"><input type="number" id="cap_rs_ec2" value="0.060" step="0.001"><span class="us" id="u-cap-ec2-rs">m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Loading (optional — for D/C)</div></div>
+          <div class="form-group">
+            <label>Applied Moment M<sub>Ed</sub> <span class="lu" id="lu-cap-ec2-mu">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="cap_mu_ec2" value="0" placeholder="0 = skip D/C"><span class="us" id="u-cap-ec2-mu">kN·m</span></div>
+          </div>
+          <button class="btn-calc" onclick="calcCapEC2()">▶ Calculate</button>
+        </div>
+      </div>
+      <div>
+        <div class="res-empty" id="cap_ec2_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="cap_ec2_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="cap-ec2-rh-code">EN 1992-1-1 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="cap_ec2_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /mod-flexcap -->
+
+  <!-- ═══════════════ MODULE: TORSION DESIGN ═══════════════ -->
+  <div class="mod-pane" id="mod-torsion">
+
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="stab(this,'tor','aci')">ACI 318-25</button>
+    <button class="sub-tab" onclick="stab(this,'tor','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+  </div>
+
+  <!-- TOR ACI -->
+  <div class="sub-pane active" id="tor-aci">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="tor-aci-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b<sub>w</sub> <span class="lu" id="lu-tor-aci-b">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_b_aci" value="0.300" step="0.001"><span class="us" id="u-tor-aci-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-tor-aci-h">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_h_aci" value="0.600" step="0.001"><span class="us" id="u-tor-aci-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Clear Cover <span class="lu" id="lu-tor-aci-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="tor_cv_aci" value="0.040" step="0.001"><span class="us" id="u-tor-aci-cv">m</span></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c <span class="lu" id="lu-tor-aci-fc">[MPa]</span></label>
+              <div class="iw"><input type="number" id="tor_fc_aci" value="28"><span class="us" id="u-tor-aci-fc">MPa</span></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>y</sub> (stirrups) <span class="lu" id="lu-tor-aci-fy">[MPa]</span></label>
+              <div class="iw"><input type="number" id="tor_fy_aci" value="420"><span class="us" id="u-tor-aci-fy">MPa</span></div>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f<sub>yl</sub> (long. bars) <span class="lu" id="lu-tor-aci-fyl">[MPa]</span></label>
+              <div class="iw"><input type="number" id="tor_fyl_aci" value="420"><span class="us" id="u-tor-aci-fyl">MPa</span></div>
+            </div>
+            <div class="form-group">
+              <label>λ — Density factor</label>
+              <div class="iw"><input type="number" id="tor_lam_aci" value="1.00" step="0.05" min="0.75" max="1.00"><span class="us">—</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>φ — Torsion/Shear</label>
+            <div class="iw"><input type="number" id="tor_phi_aci" value="0.75" step="0.01" min="0.65" max="0.85"><span class="us">—</span></div>
+            <div style="font-size:.69rem;color:var(--text-dim);margin-top:3px;">ACI 318-25: φ = 0.75 for shear/torsion</div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Actions</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Shear V<sub>u</sub> <span class="lu" id="lu-tor-aci-vu">[kN]</span></label>
+              <div class="iw"><input type="number" id="tor_vu_aci" value="150"><span class="us" id="u-tor-aci-vu">kN</span></div>
+            </div>
+            <div class="form-group">
+              <label>Torsion T<sub>u</sub> <span class="lu" id="lu-tor-aci-tu">[kN·m]</span></label>
+              <div class="iw"><input type="number" id="tor_tu_aci" value="30"><span class="us" id="u-tor-aci-tu">kN·m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Stirrups)</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Stirrup Diameter <span class="lu" id="lu-tor-aci-dst">[mm]</span></label>
+              <div class="iw"><input type="number" id="tor_dst_aci" value="10" step="1"><span class="us" id="u-tor-aci-dst">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Stirrup Spacing <span class="lu" id="lu-tor-aci-s">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_s_aci" value="0.150" step="0.001"><span class="us" id="u-tor-aci-s">m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Longitudinal Torsion Bars</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-tor-aci-dl">[mm]</span></label>
+              <div class="iw"><input type="number" id="tor_dl_aci" value="16" step="1"><span class="us" id="u-tor-aci-dl">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="tor_nl_aci" value="6" step="1" min="0"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <button class="btn-calc" onclick="calcTorACI()">▶ Calculate</button>
+        </div>
+      </div>
+      <div>
+        <div class="res-empty" id="tor_aci_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="tor_aci_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="tor-aci-rh-code">ACI 318-25 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="tor_aci_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOR EC2 -->
+  <div class="sub-pane" id="tor-ec2">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="tor-ec2-unit-tag">kN-m · m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setUnit('knm',this)">kN-m &amp; m</button>
+              <button class="unit-btn" onclick="setUnit('nmm',this)">N-mm</button>
+              <button class="unit-btn" onclick="setUnit('us',this)">US (kip·ft, in, psi)</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-tor-ec2-b">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_b_ec2" value="0.300" step="0.001"><span class="us" id="u-tor-ec2-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth h <span class="lu" id="lu-tor-ec2-h">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_h_ec2" value="0.600" step="0.001"><span class="us" id="u-tor-ec2-h">m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nominal Cover <span class="lu" id="lu-tor-ec2-cv">[m]</span></label>
+            <div class="iw"><input type="number" id="tor_cv_ec2" value="0.035" step="0.001"><span class="us" id="u-tor-ec2-cv">m</span></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f<sub>ck</sub> [MPa]</label>
+              <div class="iw"><input type="number" id="tor_fck_ec2" value="25"><span class="us">MPa</span></div>
+            </div>
+            <div class="form-group">
+              <label>f<sub>yk</sub> [MPa]</label>
+              <div class="iw"><input type="number" id="tor_fyk_ec2" value="500"><span class="us">MPa</span></div>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>γ<sub>c</sub> — Concrete</label>
+              <input type="number" id="tor_gc_ec2" value="1.5" step="0.05">
+            </div>
+            <div class="form-group">
+              <label>γ<sub>s</sub> — Steel</label>
+              <input type="number" id="tor_gs_ec2" value="1.15" step="0.05">
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Actions</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Shear V<sub>Ed</sub> <span class="lu" id="lu-tor-ec2-vu">[kN]</span></label>
+              <div class="iw"><input type="number" id="tor_vu_ec2" value="150"><span class="us" id="u-tor-ec2-vu">kN</span></div>
+            </div>
+            <div class="form-group">
+              <label>Torsion T<sub>Ed</sub> <span class="lu" id="lu-tor-ec2-tu">[kN·m]</span></label>
+              <div class="iw"><input type="number" id="tor_tu_ec2" value="30"><span class="us" id="u-tor-ec2-tu">kN·m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Stirrups)</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Stirrup Diameter <span class="lu" id="lu-tor-ec2-dst">[mm]</span></label>
+              <div class="iw"><input type="number" id="tor_dst_ec2" value="10" step="1"><span class="us" id="u-tor-ec2-dst">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Stirrup Spacing <span class="lu" id="lu-tor-ec2-s">[m]</span></label>
+              <div class="iw"><input type="number" id="tor_s_ec2" value="0.150" step="0.001"><span class="us" id="u-tor-ec2-s">m</span></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Longitudinal Torsion Bars</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter <span class="lu" id="lu-tor-ec2-dl">[mm]</span></label>
+              <div class="iw"><input type="number" id="tor_dl_ec2" value="16" step="1"><span class="us" id="u-tor-ec2-dl">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="tor_nl_ec2" value="6" step="1" min="0"><span class="us">bars</span></div>
+            </div>
+          </div>
+          <button class="btn-calc" onclick="calcTorEC2()">▶ Calculate</button>
+          <div style="margin-top:12px;display:flex;gap:9px;align-items:flex-start;background:#eef4fb;border:1px solid #b8d0eb;border-radius:6px;padding:10px 13px;font-size:.76rem;color:#1a4270;line-height:1.65;">
+            <span style="flex-shrink:0;font-size:1rem;margin-top:1px;">ℹ️</span>
+            <div><strong>Equilibrium vs Compatibility Torsion (EC2 §6.3.1):</strong> If this is <em>equilibrium torsion</em> (statically determinate — cannot be redistributed), full design is required. If this is <em>compatibility torsion</em> (statically indeterminate — can be redistributed), EC2 §6.3.1 permits neglecting torsion in ULS design provided cracking is acceptable and minimum reinforcement is provided. Do not neglect equilibrium torsion.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="res-empty" id="tor_ec2_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="tor_ec2_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code" id="tor-ec2-rh-code">EN 1992-1-1 · kN-m · mm</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="tor_ec2_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /mod-torsion -->
+
+  <!-- ═══════════════ DESIGN BACKGROUND ═══════════════ -->
+  <div class="bg-section">
+    <div class="bg-hdr"><h3>📚 Design Background & Code References</h3></div>
+    <div class="bg-tabs">
+      <button class="bg-tab active" onclick="bgTab(this,'bg-theory')">Theory</button>
+      <button class="bg-tab" onclick="bgTab(this,'bg-aci')">ACI 318-25</button>
+      <button class="bg-tab" onclick="bgTab(this,'bg-ec2')">Eurocode 2</button>
+      <button class="bg-tab" onclick="bgTab(this,'bg-limits')">Limits & Comparison</button>
+      <button class="bg-tab" onclick="bgTab(this,'bg-refs')">References</button>
+    </div>
+
+    <div class="bg-pane active" id="bg-theory">
+      <div class="tb">
+        <h4>Flexural Behaviour of Reinforced Concrete Beams</h4>
+        <p>A reinforced concrete beam resists bending through an internal force couple: compression carried by concrete in the compression zone, and tension carried by the steel reinforcement. At the ultimate limit state (ULS), the concrete is assumed to have reached its limiting compressive strain while the tension steel has yielded.</p>
+        <p>Both ACI 318 and Eurocode 2 are based on the <strong>Bernoulli-Euler hypothesis</strong> — plane sections remain plane after bending — with full strain compatibility between concrete and steel.</p>
+        <h4>Key Assumptions at ULS</h4>
+        <ul>
+          <li>Tensile strength of concrete is <strong>neglected</strong> — only steel resists tension.</li>
+          <li>Concrete reaches its limiting compressive strain: <strong>ε<sub>cu</sub> = 0.003</strong> (ACI) or <strong>0.0035</strong> (EC2 for f<sub>ck</sub> ≤ 50 MPa).</li>
+          <li>Stress distribution idealised as a <strong>rectangular (Whitney) stress block</strong>.</li>
+          <li>Steel has yielded: σ<sub>s</sub> = f<sub>y</sub> (ACI) or f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub> (EC2).</li>
+          <li>Section is <strong>singly-reinforced</strong> — compression steel neglected.</li>
+        </ul>
+        <h4>Effective Depth</h4>
+        <div class="fml-blk">
+          <div class="ft">Effective Depth</div>
+          d = h − c<sub>clear</sub> − d<sub>bar</sub>/2
+          <div class="fn">h = total depth · c = clear cover to main bar face · d<sub>bar</sub> = main bar diameter (assumed 20 mm / 0.75 in). Stirrup thickness is conservatively included in the clear cover input.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="bg-aci">
+      <div class="tb">
+        <h4><span class="rtag">ACI 318-25</span> Strength Design Method</h4>
+        <p>ACI 318-25 uses <strong>Load and Resistance Factor Design (LRFD)</strong>. The design requirement is φM<sub>n</sub> ≥ M<sub>u</sub>, where φ is the strength reduction factor and M<sub>n</sub> is the nominal moment capacity.</p>
+        <div class="fml-blk">
+          <div class="ft">Strength Reduction Factor φ — ACI 318-25 Table 21.2.2</div>
+          φ = 0.90 &nbsp;&nbsp; tension-controlled (ε<sub>t</sub> ≥ 0.005)<br>
+          φ = 0.65 → 0.90 &nbsp;&nbsp; transition zone (0.002 &lt; ε<sub>t</sub> &lt; 0.005)<br>
+          φ = 0.65 &nbsp;&nbsp; compression-controlled (ε<sub>t</sub> ≤ 0.002)
+          <div class="fn">For beams under pure flexure, φ = 0.90 applies when ρ ≤ 0.75ρ<sub>bal</sub>.</div>
+        </div>
+        <h4><span class="rtag">ACI 318-25 §22.2</span> Stress Block &amp; Reinforcement</h4>
+        <div class="fml-blk">
+          <div class="ft">Stress Block Factor β₁</div>
+          β₁ = 0.85 &nbsp; (f'c ≤ 28 MPa) &nbsp;&nbsp; β₁ ≥ 0.65 (minimum)<br>
+          β₁ = 0.85 − 0.05·(f'c − 28)/7 &nbsp; (f'c > 28 MPa)
+        </div>
+        <div class="fml-blk">
+          <div class="ft">Required Steel Area</div>
+          R<sub>n</sub> = M<sub>u</sub>/(φ·b·d²)<br>
+          ρ = (0.85f'c/f<sub>y</sub>)·[1−√(<b>1−2R<sub>n</sub>/0.85f'c</b>)]<br>
+          A<sub>s</sub> = ρ·b·d
+        </div>
+        <h4><span class="rtag">ACI 318-25 §9.6.1.2</span> Minimum &amp; Maximum Reinforcement</h4>
+        <div class="fml-blk">
+          <div class="ft">Reinforcement Limits</div>
+          ρ<sub>min</sub> = max(0.25√f'c/f<sub>y</sub> , 1.4/f<sub>y</sub>) &nbsp; [MPa]<br>
+          ρ<sub>max</sub> = 0.75·ρ<sub>bal</sub> &nbsp; (ensures ε<sub>t</sub> ≥ 0.005)
+        </div>
+        <h4><span class="rtag">ACI 318-25</span> Material Limits</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th><th>Reference</th></tr></thead>
+          <tbody>
+            <tr><td>Concrete f'c</td><td>17 MPa (2500 psi)</td><td>70 MPa (10000 psi)*</td><td>§19.2.1</td></tr>
+            <tr><td>Rebar f<sub>y</sub></td><td>280 MPa (40 ksi)</td><td>550 MPa (80 ksi)</td><td>§20.2.2</td></tr>
+            <tr><td>Strength factor φ</td><td>0.65</td><td>0.90</td><td>Table 21.2.2</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.75rem;color:var(--text-dim);">* Higher f'c permitted with special provisions per §19.2.1.3</p>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="bg-ec2">
+      <div class="tb">
+        <h4><span class="rtag">EN 1992-1-1</span> Partial Factor Method</h4>
+        <div class="fml-blk">
+          <div class="ft">Design Material Strengths</div>
+          f<sub>cd</sub> = α<sub>cc</sub>·f<sub>ck</sub>/γ<sub>c</sub> &nbsp;&nbsp; [α<sub>cc</sub>=1.0 recommended; γ<sub>c</sub>=1.5]<br>
+          f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [γ<sub>s</sub>=1.15]
+          <div class="fn">γ<sub>c</sub> and γ<sub>s</sub> are Nationally Defined Parameters (NDPs) and may vary by country.</div>
+        </div>
+        <h4><span class="rtag">EN 1992-1-1 §6.1</span> Flexural Design</h4>
+        <div class="fml-blk">
+          <div class="ft">Design Procedure</div>
+          K = M<sub>Ed</sub>/(b·d²·f<sub>cd</sub>)<br>
+          K' = 0.167 &nbsp; [limiting K, δ=1.0, no redistribution]<br>
+          z = d·[0.5+√(<b>0.25−K/1.134</b>)] ≤ 0.95d<br>
+          A<sub>s</sub> = M<sub>Ed</sub>/(f<sub>yd</sub>·z)
+        </div>
+        <h4><span class="rtag">EN 1992-1-1</span> Material Limits</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th><th>Reference</th></tr></thead>
+          <tbody>
+            <tr><td>Concrete f<sub>ck</sub></td><td>12 MPa (C12/15)</td><td>90 MPa (C90/105)</td><td>Table 3.1</td></tr>
+            <tr><td>Rebar f<sub>yk</sub></td><td>400 MPa</td><td>600 MPa</td><td>§3.2.2</td></tr>
+            <tr><td>Partial factor γ<sub>c</sub></td><td>1.0 (accidental)</td><td>1.5 (persistent)</td><td>Table 2.1N</td></tr>
+            <tr><td>Partial factor γ<sub>s</sub></td><td>1.0 (accidental)</td><td>1.15 (persistent)</td><td>Table 2.1N</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="bg-limits">
+      <div class="tb">
+        <h4>Design Limits Comparison — ACI 318-25 vs. Eurocode 2</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Parameter</th><th>ACI 318-25</th><th>Eurocode 2</th></tr></thead>
+          <tbody>
+            <tr><td>Concrete strain at ULS</td><td>ε<sub>cu</sub> = 0.003</td><td>ε<sub>cu</sub> = 0.0035</td></tr>
+            <tr><td>Resistance / partial factor</td><td>φ = 0.90 (flexure)</td><td>γ<sub>c</sub>=1.5 · γ<sub>s</sub>=1.15</td></tr>
+            <tr><td>Stress block depth factor</td><td>β₁ = 0.85 → 0.65</td><td>λ = 0.8 (f<sub>ck</sub> ≤ 50 MPa)</td></tr>
+            <tr><td>Stress block intensity</td><td>0.85·f'c</td><td>η·f<sub>cd</sub>, η=1.0</td></tr>
+            <tr><td>Minimum reinforcement</td><td>max(0.25√f'c/f<sub>y</sub>, 1.4/f<sub>y</sub>)·b·d</td><td>max(0.26f<sub>ctm</sub>/f<sub>yk</sub>, 0.0013)·b·d</td></tr>
+            <tr><td>Maximum reinforcement</td><td>ρ ≤ 0.75·ρ<sub>bal</sub></td><td>K ≤ K' = 0.167</td></tr>
+            <tr><td>Maximum lever arm</td><td>Not explicitly limited</td><td>z ≤ 0.95d</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="bg-refs">
+      <div class="tb">
+        <h4>References</h4>
+        <ul class="ref-list">
+          <li><span class="ref-num">[1]</span><div><strong>ACI 318-25</strong> — Building Code Requirements for Structural Concrete and Commentary. American Concrete Institute, 2025. §9.6, §21.2.2, §22.2.</div></li>
+          <li><span class="ref-num">[2]</span><div><strong>EN 1992-1-1:2004</strong> — Eurocode 2: Design of Concrete Structures. CEN, Brussels. §6.1, §9.2.1.</div></li>
+          <li><span class="ref-num">[3]</span><div><strong>MacGregor, J.G. & Wight, J.K.</strong> — Reinforced Concrete: Mechanics and Design, 7th Ed. Pearson, 2016.</div></li>
+          <li><span class="ref-num">[4]</span><div><strong>Mosley, Bungey & Hulse</strong> — Reinforced Concrete Design to Eurocode 2, 7th Ed. Palgrave Macmillan, 2012.</div></li>
+          <li><span class="ref-num">[5]</span><div><strong>Whitney, C.S.</strong> — Plastic Theory of Reinforced Concrete Design. Trans. ASCE, Vol. 107, 1942.</div></li>
+        </ul>
+        <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:11px 14px;font-size:.79rem;color:var(--text-mid);margin-top:16px;line-height:1.7;">
+          <strong>Disclaimer:</strong> For educational and preliminary design only. All results must be verified by a licensed structural engineer. Always refer to the current edition of the applicable code.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- FOOTER -->
+<footer style="margin-top:36px;padding:16px 0 8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+  <div style="display:flex;gap:10px;align-items:flex-start;background:#fff8ed;border:1px solid #f4c97a;border-radius:6px;padding:11px 14px;font-size:.77rem;color:#6b5000;line-height:1.65;">
+    <span style="flex-shrink:0;margin-top:1px;">⚠️</span>
+    <div>These tools are for <strong>educational and preliminary design purposes only</strong>. All results must be verified by a licensed structural engineer before use in any real project.</div>
+  </div>
+  <div style="font-size:.72rem;color:var(--text-dim);text-align:center;padding-top:4px;">
+    Found an error or have a suggestion? Write to us at <a href="mailto:info@civilstrcalc.com" style="color:var(--accent);text-decoration:none;">info@civilstrcalc.com</a>
+  </div>
+  <div class="footer-legal">
+    © 2026 CivilStrCalc.com &nbsp;·&nbsp;
+    <a href="../privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+    <a href="../terms.html">Terms of Use</a> &nbsp;·&nbsp;
+    <a href="../cookies.html">Cookie Policy</a>
+  </div>
+</footer>
+
+</main>
+<script src="../js/nav.js"></script>
+<script>
+// ══ MODULE TAB SWITCH ══
+function modTab(btn, id) {
+  document.querySelectorAll('.mod-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mod-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══ UNIT SYSTEM ══
+let curUnit = 'knm';
+const UNITS = {
+  knm:{ bU:'m', hU:'m', cvU:'m', fcU:'MPa', fyU:'MPa', muU:'kN·m', vuU:'kN', tuU:'kN·m', dbU:'mm', rsU:'m',
+        bV:0.300, hV:0.600, cvV:0.040, fcV:28, fyV:420, muV:250, vuV:150, tuV:30, sV:0.150, rsV:0.060,
+        tag:'kN-m · m', dbar:0.020,
+        lenScale:1000,   // input → mm
+        momScale:1e6,    // kN·m → N·mm
+        forceScale:1e3,  // kN → N
+        fcMin:17, fcMax:70, fyMin:280, fyMax:550,
+        fcMinL:'17 MPa', fcMaxL:'70 MPa', fyMinL:'280 MPa', fyMaxL:'550 MPa' },
+  nmm:{ bU:'mm', hU:'mm', cvU:'mm', fcU:'MPa', fyU:'MPa', muU:'N·mm', vuU:'N', tuU:'N·mm', dbU:'mm', rsU:'mm',
+        bV:300, hV:600, cvV:40, fcV:28, fyV:420, muV:250e6, vuV:150e3, tuV:30e6, sV:150, rsV:60,
+        tag:'N-mm', dbar:20,
+        lenScale:1, momScale:1, forceScale:1,
+        fcMin:17, fcMax:70, fyMin:280, fyMax:550,
+        fcMinL:'17 MPa', fcMaxL:'70 MPa', fyMinL:'280 MPa', fyMaxL:'550 MPa' },
+  us:{  bU:'in', hU:'in', cvU:'in', fcU:'psi', fyU:'psi', muU:'kip·ft', vuU:'kip', tuU:'kip·ft', dbU:'in', rsU:'in',
+        bV:12, hV:24, cvV:1.5, fcV:4000, fyV:60000, muV:184, vuV:33.7, tuV:22.1, sV:6, rsV:2.5,
+        tag:'US Customary', dbar:0.75,
+        lenScale:25.4, momScale:1.356e6, forceScale:4448.2,
+        fcMin:2500, fcMax:10000, fyMin:40000, fyMax:80000,
+        fcMinL:'2500 psi', fcMaxL:'10000 psi', fyMinL:'40000 psi', fyMaxL:'80000 psi' }
+};
+
+function su(id, val){ const e=document.getElementById(id); if(e) e.textContent=val; }
+function sv(id, val){ const e=document.getElementById(id); if(e) e.value=val; }
+
+function setUnit(unit, btn) {
+  curUnit = unit;
+  const U = UNITS[unit];
+  const isKnm = unit==='knm';
+  const bFmt  = isKnm ? U.bV.toFixed(2)  : String(U.bV);
+  const hFmt  = isKnm ? U.hV.toFixed(2)  : String(U.hV);
+  const cvFmt = isKnm ? U.cvV.toFixed(3) : String(U.cvV);
+  const sFmt  = isKnm ? U.sV.toFixed(3)  : String(U.sV);
+  const rsFmt = isKnm ? U.rsV.toFixed(3) : String(U.rsV);
+
+  // ── Flexural Design tab ──
+  ['b','h','cv'].forEach(f => {
+    su('lu-aci-'+f,'['+U[f+'U']+']'); su('u-aci-'+f,U[f+'U']);
+    su('lu-ec2-'+f,'['+U[f+'U']+']'); su('u-ec2-'+f,U[f+'U']);
+  });
+  su('lu-aci-fc','['+U.fcU+']'); su('u-aci-fc',U.fcU);
+  su('lu-aci-fy','['+U.fyU+']'); su('u-aci-fy',U.fyU);
+  su('lu-aci-mu','['+U.muU+']'); su('u-aci-mu',U.muU);
+  su('lu-ec2-med','['+U.muU+']'); su('u-ec2-med',U.muU);
+  // Compression rebar inputs (flexdesign tab)
+  ['aci','ec2'].forEach(c=>{
+    su('lu-'+c+'-dbc','['+U.dbU+']'); su('u-'+c+'-dbc',U.dbU);
+    su('lu-'+c+'-dprime','['+U.bU+']'); su('u-'+c+'-dprime',U.bU);
+    sv('dbc_'+c, curUnit==='us'?'0.625':'16');
+    sv('dprime_'+c, isKnm?'0.050':curUnit==='nmm'?'50':'2.0');
+  });
+  sv('b_aci',bFmt); sv('h_aci',hFmt); sv('cv_aci',cvFmt);
+  sv('fc_aci',U.fcV); sv('fy_aci',U.fyV); sv('mu_aci',U.muV);
+  sv('b_ec2',bFmt); sv('h_ec2',hFmt); sv('cv_ec2',cvFmt);
+  sv('me_ec2',U.muV); sv('fck_ec2',25); sv('fyk_ec2',500);
+  su('aci-unit-tag',U.tag); su('ec2-unit-tag',U.tag);
+  su('aci-rh-code','ACI 318-25 · '+U.tag);
+  su('ec2-rh-code','EN 1992-1-1 · '+U.tag);
+
+  // ── Flexural Capacity tab ──
+  ['b','h','cv'].forEach(f => {
+    su('lu-cap-aci-'+f,'['+U[f+'U']+']'); su('u-cap-aci-'+f,U[f+'U']);
+    su('lu-cap-ec2-'+f,'['+U[f+'U']+']'); su('u-cap-ec2-'+f,U[f+'U']);
+  });
+  su('lu-cap-aci-fc','['+U.fcU+']'); su('u-cap-aci-fc',U.fcU);
+  su('lu-cap-aci-fy','['+U.fyU+']'); su('u-cap-aci-fy',U.fyU);
+  su('lu-cap-aci-mu','['+U.muU+']'); su('u-cap-aci-mu',U.muU);
+  su('lu-cap-ec2-mu','['+U.muU+']'); su('u-cap-ec2-mu',U.muU);
+  // bar diameters & row spacing
+  const dbFmt = unit==='us' ? '0.75' : '20';
+  ['aci','ec2'].forEach(c=>{
+    su('lu-cap-'+c+'-dbt','['+U.dbU+']'); su('u-cap-'+c+'-dbt',U.dbU);
+    su('lu-cap-'+c+'-dbc','['+U.dbU+']'); su('u-cap-'+c+'-dbc',U.dbU);
+    su('lu-cap-'+c+'-db2','['+U.dbU+']'); su('u-cap-'+c+'-db2',U.dbU);
+    su('lu-cap-'+c+'-rs','['+U[c==='aci'?'bU':'bU']+']'); su('u-cap-'+c+'-rs',U.bU);
+    sv('cap_b_'+c,bFmt); sv('cap_h_'+c,hFmt); sv('cap_cv_'+c,cvFmt);
+    sv('cap_mu_'+c,0);
+    if(unit==='us'){ sv('cap_dbt_'+c,'0.75'); sv('cap_dbt_'+c,'0.75'); sv('cap_db2_'+c,'0.75'); sv('cap_dbc_'+c,'0'); sv('cap_rs_'+c,rsFmt); }
+    else { sv('cap_dbt_'+c,'20'); sv('cap_db2_'+c,'20'); sv('cap_dbc_'+c,'0'); sv('cap_rs_'+c,rsFmt); }
+  });
+  sv('cap_fc_aci',U.fcV); sv('cap_fy_aci',U.fyV);
+  sv('cap_fck_ec2',25); sv('cap_fyk_ec2',500);
+  su('cap-aci-unit-tag',U.tag); su('cap-ec2-unit-tag',U.tag);
+  su('cap-aci-rh-code','ACI 318-25 · '+U.tag);
+  su('cap-ec2-rh-code','EN 1992-1-1 · '+U.tag);
+
+  // ── Torsion Design tab ──
+  ['b','h','cv'].forEach(f => {
+    su('lu-tor-aci-'+f,'['+U[f+'U']+']'); su('u-tor-aci-'+f,U[f+'U']);
+    su('lu-tor-ec2-'+f,'['+U[f+'U']+']'); su('u-tor-ec2-'+f,U[f+'U']);
+  });
+  su('lu-tor-aci-fc','['+U.fcU+']'); su('u-tor-aci-fc',U.fcU);
+  su('lu-tor-aci-fy','['+U.fyU+']'); su('u-tor-aci-fy',U.fyU);
+  su('lu-tor-aci-fyl','['+U.fyU+']'); su('u-tor-aci-fyl',U.fyU);
+  su('lu-tor-aci-vu','['+U.vuU+']'); su('u-tor-aci-vu',U.vuU);
+  su('lu-tor-aci-tu','['+U.tuU+']'); su('u-tor-aci-tu',U.tuU);
+  su('lu-tor-ec2-vu','['+U.vuU+']'); su('u-tor-ec2-vu',U.vuU);
+  su('lu-tor-ec2-tu','['+U.tuU+']'); su('u-tor-ec2-tu',U.tuU);
+  su('lu-tor-aci-s','['+U.bU+']'); su('u-tor-aci-s',U.bU);
+  su('lu-tor-ec2-s','['+U.bU+']'); su('u-tor-ec2-s',U.bU);
+  su('lu-tor-aci-dst','['+U.dbU+']'); su('u-tor-aci-dst',U.dbU);
+  su('lu-tor-ec2-dst','['+U.dbU+']'); su('u-tor-ec2-dst',U.dbU);
+  su('lu-tor-aci-dl','['+U.dbU+']'); su('u-tor-aci-dl',U.dbU);
+  su('lu-tor-ec2-dl','['+U.dbU+']'); su('u-tor-ec2-dl',U.dbU);
+  const dstFmt = unit==='us' ? '0.375' : '10';
+  const dlFmt  = unit==='us' ? '0.625' : '16';
+  ['aci','ec2'].forEach(c=>{
+    sv('tor_b_'+c,bFmt); sv('tor_h_'+c,hFmt); sv('tor_cv_'+c,cvFmt);
+    sv('tor_vu_'+c,U.vuV); sv('tor_tu_'+c,U.tuV);
+    sv('tor_s_'+c,sFmt);
+    sv('tor_dst_'+c,dstFmt); sv('tor_dl_'+c,dlFmt);
+  });
+  sv('tor_fc_aci',U.fcV); sv('tor_fy_aci',U.fyV); sv('tor_fyl_aci',U.fyV);
+  sv('tor_fck_ec2',25); sv('tor_fyk_ec2',500);
+  su('tor-aci-unit-tag',U.tag); su('tor-ec2-unit-tag',U.tag);
+  su('tor-aci-rh-code','ACI 318-25 · '+U.tag);
+  su('tor-ec2-rh-code','EN 1992-1-1 · '+U.tag);
+
+  // sync all unit-switcher buttons
+  document.querySelectorAll('.unit-btn').forEach(b => {
+    const fn = b.getAttribute('onclick');
+    if(fn && fn.includes("'"+unit+"'")) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+  clearResults();
+  clearWarnings();
+}
+
+function clearResults() {
+  ['aci','ec2','cap_aci','cap_ec2','tor_aci','tor_ec2'].forEach(id => {
+    const e=document.getElementById(id+'_empty'); if(e) e.style.display='';
+    const c=document.getElementById(id+'_card');  if(c) c.style.display='none';
+  });
+}
+
+function toggleRow2(code) {
+  const cb = document.getElementById('cap_row2_'+code);
+  document.getElementById('cap_row2_inputs_'+code).style.display = cb.checked ? '' : 'none';
+}
+
+function toggleDbl(code) {
+  const cb = document.getElementById('dbl_'+code);
+  document.getElementById('dbl_inputs_'+code).style.display = cb.checked ? '' : 'none';
+}
+
+function toForce(v){ return v * UNITS[curUnit].forceScale; } // input → N
+function fmtForce(N){
+  if(curUnit==='knm') return (N/1e3).toFixed(2)+' kN';
+  if(curUnit==='nmm') return N.toFixed(0)+' N';
+  return (N/4448.2).toFixed(2)+' kip';
+}
+function fmtTorque(Nmm){
+  if(curUnit==='knm') return (Nmm/1e6).toFixed(2)+' kN·m';
+  if(curUnit==='nmm') return Nmm.toFixed(0)+' N·mm';
+  return (Nmm/1.356e6).toFixed(2)+' kip·ft';
+}
+function fmtArea2(mm2_per_mm){ // mm²/mm → display
+  if(curUnit==='us') return (mm2_per_mm*25.4/645.16).toFixed(4)+' in²/in';
+  return mm2_per_mm.toFixed(4)+' mm²/mm';
+}
+
+function clearWarnings() {
+  ['warn-aci-fc','warn-aci-fy','warn-ec2-fck','warn-ec2-fyk'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el){ el.className='limit-warn'; el.textContent=''; }
+  });
+}
+
+// ══ LIMIT CHECKS ══
+function checkLimitsACI() {
+  const U = UNITS[curUnit];
+  const fc = parseFloat(document.getElementById('fc_aci').value)||0;
+  const fy = parseFloat(document.getElementById('fy_aci').value)||0;
+  const wFC = document.getElementById('warn-aci-fc');
+  const wFY = document.getElementById('warn-aci-fy');
+  if(fc < U.fcMin || fc > U.fcMax){
+    wFC.textContent = `⚠ ACI 318-25 §19.2.1: f'c should be between ${U.fcMinL} and ${U.fcMaxL}. Calculation will proceed but verify applicability.`;
+    wFC.className='limit-warn show';
+  } else { wFC.className='limit-warn'; }
+  if(fy < U.fyMin || fy > U.fyMax){
+    wFY.textContent = `⚠ ACI 318-25 §20.2.2: fy should be between ${U.fyMinL} and ${U.fyMaxL}. Calculation will proceed but verify applicability.`;
+    wFY.className='limit-warn show';
+  } else { wFY.className='limit-warn'; }
+}
+
+function checkLimitsEC2() {
+  const fck = parseFloat(document.getElementById('fck_ec2').value)||0;
+  const fyk = parseFloat(document.getElementById('fyk_ec2').value)||0;
+  const wFCK = document.getElementById('warn-ec2-fck');
+  const wFYK = document.getElementById('warn-ec2-fyk');
+  if(fck < 12 || fck > 90){
+    wFCK.textContent = '⚠ EN 1992-1-1 Table 3.1: fck should be between 12 MPa (C12/15) and 90 MPa (C90/105). Calculation will proceed.';
+    wFCK.className='limit-warn show';
+  } else { wFCK.className='limit-warn'; }
+  if(fyk < 400 || fyk > 600){
+    wFYK.textContent = '⚠ EN 1992-1-1 §3.2.2: fyk should be between 400 MPa and 600 MPa. Calculation will proceed.';
+    wFYK.className='limit-warn show';
+  } else { wFYK.className='limit-warn'; }
+}
+
+// ══ UNIT CONVERSIONS ══
+function toNmm(v){ return v * UNITS[curUnit].momScale; }
+function toMPa(v){ return curUnit==='us' ? v*0.006895 : v; }
+function toMM(v){ return v * UNITS[curUnit].lenScale; }  // input → mm
+function fmtLen(mm){
+  const U=UNITS[curUnit];
+  if(curUnit==='knm') return (mm/1000).toFixed(3)+' m';
+  if(curUnit==='us')  return (mm/25.4).toFixed(2)+' in';
+  return mm.toFixed(1)+' mm';
+}
+function fmtAs(mm2){ return curUnit==='us' ? (mm2/645.16).toFixed(3)+' in²' : mm2.toFixed(0)+' mm²'; }
+function fmtStress(MPa){ return curUnit==='us' ? (MPa/0.006895).toFixed(0)+' psi' : MPa.toFixed(2)+' MPa'; }
+function fmtMom(Nmm){
+  if(curUnit==='knm') return (Nmm/1e6).toFixed(1)+' kN·m';
+  if(curUnit==='nmm') return Nmm.toFixed(0)+' N·mm';
+  return (Nmm/1.356e6).toFixed(1)+' kip·ft';
+}
+function splitVal(str){ const p=str.lastIndexOf(' '); return p>0?[str.slice(0,p),str.slice(p+1)]:[str,'']; }
+
+// ══ BACKGROUND TAB ══
+function bgTab(btn,id){
+  btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.bg-section').querySelectorAll('.bg-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══ REPORT BUILDER ══
+function buildReport(inputs, results, steps, warnings, customResHTML){
+  const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const warnHTML = warnings.length
+    ? warnings.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')
+    : '';
+  const inpHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>
+    <table class="inp-tbl">${inputs.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('')}</table></div>`;
+  const resHTML = customResHTML != null ? customResHTML :
+    `<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="result-box">${results.map(r=>`
+      <div class="result-item${r.cls?' '+r.cls:''}">
+        <div class="ri-label">${r.label}</div>
+        <div class="ri-value">${r.value}</div>
+        ${r.unit?`<div class="ri-unit">${r.unit}</div>`:''}
+      </div>`).join('')}
+    </div></div>`;
+  const stepsHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Steps</div>
+    <table class="steps-table">${steps.map((s,i)=>`
+      <tr>
+        <td style="width:34px;padding-right:10px"><div class="step-num">${i+1}</div></td>
+        <td>
+          <div class="step-desc">${s.desc}</div>
+          ${s.formula?`<div class="step-formula">${s.formula}</div>`:''}
+        </td>
+        <td style="width:190px;text-align:right">
+          <span class="step-val ${s.cls||''}">${s.val}</span>
+          ${s.check?`<span class="step-check ${s.check.type==='ok'?'chk-ok':s.check.type==='warn'?'chk-warn':'chk-err'}">${s.check.label}</span>`:''}
+        </td>
+      </tr>`).join('')}
+    </table></div>`;
+  const footer=`<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ACI 318-25 / EN 1992-1-1</span></div>`;
+  const disclaimer=`<div class="print-disclaimer">⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.</div>`;
+  return `<div class="print-only"><div><div class="ph-title">Beam Flexural Design</div><div class="ph-sub">civilstrcalc.com · ${UNITS[curUnit].tag}</div></div><div class="ph-date">${date}</div></div>
+    ${warnHTML}${inpHTML}${resHTML}${stepsHTML}${disclaimer}${footer}`;
+}
+
+// ══ ACI 318-25 ══
+function calcACI(){
+  if(!validateACI())return;
+  checkLimitsACI();
+  const U=UNITS[curUnit];
+  const b=toMM(ri('b_aci')), h=toMM(ri('h_aci')), cv=toMM(ri('cv_aci'));
+  const fc=toMPa(ri('fc_aci')), fy=toMPa(ri('fy_aci'));
+  const Mu=toNmm(ri('mu_aci'));
+  const phi=parseFloat(document.getElementById('phi_aci').value)||0.90;
+  const dbar=U.dbar*U.lenScale; // convert to mm
+  const d=h-cv-dbar/2;
+  const b1=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);
+  const rbal=0.85*b1*(fc/fy)*(600/(600+fy));
+  const rmax=0.75*rbal;
+  const rmin=Math.max(1.4/fy,0.25*Math.sqrt(fc)/fy);
+  const Asmin=rmin*b*d;
+  const Es=200000;
+
+  // Compression steel
+  const hasDbl = document.getElementById('dbl_aci').checked;
+  const dbc_raw = hasDbl ? ri('dbc_aci') : 0;
+  const nbc     = hasDbl ? ri('nbc_aci') : 0;
+  const dprime  = hasDbl ? toMM(ri('dprime_aci')) : 0;
+  const dbc_mm  = (hasDbl && curUnit==='us') ? dbc_raw*25.4 : dbc_raw;
+  const Asp = (hasDbl && nbc>0 && dbc_mm>0) ? nbc*Math.PI/4*dbc_mm*dbc_mm : 0;
+
+  let As, a, c, et, rreq, ruse, fps=0, over, minGov;
+  const warns=[];
+  const steps=[];
+
+  if(hasDbl && Asp>0){
+    // ── DOUBLY REINFORCED DESIGN ──
+    const Mn=Mu/phi;
+    let fps_iter=fy;
+    for(let it=0;it<30;it++){
+      const m=Asp*(fps_iter-0.85*fc);
+      const k=0.85*fc*b;
+      const val=Mn-m*(d-dprime);
+      const disc_q=d*d-2*val/k;
+      if(disc_q<0){showErr('aci','Section over-stressed even with compression steel. Increase section size.'); return;}
+      a=d-Math.sqrt(disc_q);
+      c=a/b1;
+      const eps_s=0.003*(c-dprime)/c;
+      fps=Math.min(fy, Math.max(0, Es*eps_s));
+      if(Math.abs(fps-fps_iter)<0.01) break;
+      fps_iter=fps;
+    }
+    As=(0.85*fc*b*a + Asp*(fps-0.85*fc))/fy;
+    et=0.003*(d-c)/c;
+    // For D/C: effective net tension ratio
+    const rp=Asp/(b*d);
+    const rnet=(As-Asp*fps/fy)/(b*d);
+    rreq=rnet; ruse=Math.max(rnet,rmin);
+    const As_singly=Math.max(As,Asmin);
+    As=Math.max(As,Asmin);
+    over=rnet>rmax; minGov=rnet<rmin;
+    const eps_s=0.003*(c-dprime)/c;
+    if(eps_s<0) warns.push(`<b>Compression steel strain:</b> ε'<sub>s</sub> < 0. Compression steel (d' = ${fmtLen(dprime)}) may be in tension — verify geometry.`);
+    // fps < fy noted in calculation steps (Compression steel stress row) — not repeated as a top-level warning
+    steps.push(
+      {desc:'Compression steel area A\'<sub>s</sub>',formula:'n\'·π/4·d\'<sub>b</sub>²',val:fmtAs(Asp)},
+      {desc:'Compression steel strain ε\'<sub>s</sub>',formula:'ε\'<sub>s</sub> = ε<sub>cu</sub>·(c−d\')/c',val:(0.003*(c-dprime)/c).toFixed(4)},
+      {desc:'Compression steel stress f\'<sub>s</sub>',formula:'min(f<sub>y</sub>, E<sub>s</sub>·ε\'<sub>s</sub>)',val:fmtStress(fps)},
+      {desc:'Stress block depth a (quadratic solution)',formula:'0.85f\'c·b·a·(d−a/2) + A\'<sub>s</sub>(f\'<sub>s</sub>−0.85f\'c)(d−d\') = M<sub>u</sub>/φ',val:fmtLen(a)},
+      {desc:'Neutral axis depth c = a/β₁',formula:'',val:fmtLen(c)},
+      {desc:'Net tensile strain ε<sub>t</sub>',formula:'ε<sub>t</sub> = 0.003·(d−c)/c',val:et.toFixed(4),cls:et>=0.005?'ok':et>=0.004?'warn':'err',
+        check:et>=0.005?{type:'ok',label:'tension-controlled ✓'}:et>=0.004?{type:'warn',label:'transition ⚠'}:{type:'err',label:'comp.-controlled ✗'}},
+      {desc:'Required tension steel A<sub>s</sub>',formula:'(0.85f\'c·b·a + A\'<sub>s</sub>·f\'<sub>s</sub>) / f<sub>y</sub>',val:fmtAs(As),cls:'hl'}
+    );
+  } else {
+    // ── SINGLY REINFORCED DESIGN ──
+    const Rn=Mu/(phi*b*d*d);
+    const disc=1-2*Rn/(0.85*fc);
+    if(disc<0){showErr('aci','Section too small — concrete is over-stressed. Increase b or h.'); return;}
+    rreq=(0.85*fc/fy)*(1-Math.sqrt(disc));
+    ruse=Math.max(rreq,rmin);
+    As=ruse*b*d;
+    a=As*fy/(0.85*fc*b); c=a/b1;
+    et=0.003*(d-c)/c;
+    over=rreq>rmax; minGov=rreq<rmin;
+    steps.push(
+      {desc:'Stress block factor β₁',formula:'β₁ = 0.85 for f\'c ≤ 28 MPa; decreases 0.05 per 7 MPa above 28; min 0.65',val:b1.toFixed(3)},
+      {desc:'Flexural coefficient R<sub>n</sub>',formula:'R<sub>n</sub> = M<sub>u</sub> / (φ · b · d²)',val:fmtStress(Rn)},
+      {desc:'Minimum reinforcement ratio ρ<sub>min</sub>',formula:'max(0.25√f\'c / f<sub>y</sub> , 1.4 / f<sub>y</sub>)',val:rmin.toFixed(5),check:minGov?{type:'warn',label:'governs'}:null},
+      {desc:'Maximum reinforcement ratio ρ<sub>max</sub>',formula:'ρ<sub>max</sub> = 0.75 · ρ<sub>bal</sub>',val:rmax.toFixed(5),check:over?{type:'err',label:'exceeded'}:{type:'ok',label:'OK'}},
+      {desc:'Required reinforcement ratio ρ',formula:'ρ = (0.85f\'c/f<sub>y</sub>)·[1−√(1−2R<sub>n</sub>/0.85f\'c)]',val:rreq.toFixed(5),cls:over?'err':minGov?'warn':''},
+      {desc:'Design ratio ρ<sub>use</sub> = max(ρ<sub>req</sub> , ρ<sub>min</sub>)',formula:'',val:ruse.toFixed(5)},
+      {desc:'Required steel area',formula:'A<sub>s</sub> = ρ<sub>use</sub> · b · d',val:fmtAs(As),cls:'hl'},
+      {desc:'Stress block depth a',formula:'a = A<sub>s</sub> · f<sub>y</sub> / (0.85 · f\'c · b)',val:fmtLen(a)},
+      {desc:'Neutral axis depth c = a / β₁',formula:'',val:fmtLen(c)},
+      {desc:'Net tensile strain ε<sub>t</sub>',formula:'ε<sub>t</sub> = 0.003 · (d − c) / c',val:et.toFixed(4),cls:et>=0.005?'ok':'warn',
+        check:et>=0.005?{type:'ok',label:'tension-controlled ✓'}:{type:'warn',label:'check φ value'}}
+    );
+  }
+
+  // Warnings
+  if(over) warns.push(`<b>Over-reinforced section:</b> Net ρ (${rreq.toFixed(5)}) exceeds ρ<sub>max</sub> (${rmax.toFixed(5)}). Increase section dimensions or add/increase compression steel.`);
+  if(minGov) warns.push(`<b>Minimum reinforcement governs:</b> Net ρ (${rreq.toFixed(5)}) &lt; ρ<sub>min</sub> (${rmin.toFixed(5)}). A<sub>s,min</sub> is used.`);
+  if(et<0.004) warns.push(`<b>Compression-controlled:</b> ε<sub>t</sub> = ${et.toFixed(4)} < 0.004. Section behaviour is compression-controlled — not permitted for beams per ACI 318-25.`);
+  if(phi<0.90&&et>=0.005) warns.push(`<b>Note:</b> Section is tension-controlled (ε<sub>t</sub> ≥ 0.005). ACI 318-25 permits φ = 0.90.`);
+  const fc_raw=ri('fc_aci'),fy_raw=ri('fy_aci');
+  if(fc_raw<U.fcMin||fc_raw>U.fcMax) warns.push(`<b>Material limit:</b> f'c = ${fc_raw} ${U.fcU} is outside ACI 318-25 range (${U.fcMinL} – ${U.fcMaxL}).`);
+  if(fy_raw<U.fyMin||fy_raw>U.fyMax) warns.push(`<b>Material limit:</b> f<sub>y</sub> = ${fy_raw} ${U.fyU} is outside ACI 318-25 range (${U.fyMinL} – ${U.fyMaxL}).`);
+
+  const [asV,asUn]=splitVal(fmtAs(As));
+  const [amV,amUn]=splitVal(fmtAs(Asmin));
+
+  const rRatio=rreq/rmax;
+  const rRatioCls=rRatio<0.75?'ok':rRatio<=1.0?'warn':'err';
+  const minGovStatus=minGov?'<span style="color:var(--orange)">governs</span>':'<span style="color:var(--green)">satisfied</span>';
+
+  const aci_customRes=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="fl-rb">
+      <div class="fl-col">
+        <div class="fl-lbl">Required A<sub>s</sub></div>
+        <div class="fl-val${over?' err':''}">${asV}</div>
+        <div class="fl-unit">${asUn}</div>
+      </div>
+      <div class="fl-col">
+        <div class="fl-lbl">A<sub>s,min</sub></div>
+        <div class="fl-val mid">${amV}</div>
+        <div class="fl-unit">${amUn}</div>
+        <div style="font-size:.65rem;margin-top:4px;">${minGovStatus}</div>
+      </div>
+      <div class="fl-col">
+        <div class="fl-lbl">${hasDbl&&Asp>0?'ρ<sub>net</sub>/ρ<sub>max</sub>':'ρ/ρ<sub>max</sub>'}</div>
+        <div class="fl-val ${rRatioCls}">${rRatio.toFixed(3)}</div>
+        <div class="fl-unit">≤ 1.0</div>
+      </div>
+    </div>
+  </div>`;
+
+  const allSteps=[
+    {desc:'Effective depth',formula:'d = h − c<sub>cover</sub> − d<sub>bar</sub>/2',val:fmtLen(d)},
+    ...steps
+  ];
+
+  document.getElementById('aci_empty').style.display='none';
+  document.getElementById('aci_card').style.display='';
+  document.getElementById('aci_body').innerHTML=buildReport(
+    [["Section (b × h)", `${ri('b_aci')} × ${ri('h_aci')} ${U.bU}`],
+     ["Clear cover", `${ri('cv_aci')} ${U.cvU}`],
+     ["Concrete strength f'c", `${ri('fc_aci')} ${U.fcU}`],
+     ["Rebar yield strength fy", `${ri('fy_aci')} ${U.fyU}`],
+     ["Strength reduction factor φ", phi.toFixed(2)],
+     ...(hasDbl&&Asp>0?[["Compression steel A's", `${nbc}×Ø${ri('dbc_aci')} ${U.dbU}, d'=${ri('dprime_aci')} ${U.bU}`]]:[]),
+     ["Factored moment Mu", `${ri('mu_aci')} ${U.muU}`]],
+    null,
+    allSteps,
+    warns,
+    aci_customRes
+  );
+}
+
+// ══ EUROCODE 2 ══
+function calcEC2(){
+  if(!validateEC2beam())return;
+  checkLimitsEC2();
+  const U=UNITS[curUnit];
+  const b=toMM(ri('b_ec2')), h=toMM(ri('h_ec2')), cv=toMM(ri('cv_ec2'));
+  const fck=parseFloat(document.getElementById('fck_ec2').value)||25;
+  const fyk=parseFloat(document.getElementById('fyk_ec2').value)||500;
+  const gc=ri('gc_ec2'), gs=ri('gs_ec2');
+  const MEd=toNmm(ri('me_ec2'));
+  const dbar=U.dbar*U.lenScale; // convert to mm
+  const fcd=fck/gc, fyd=fyk/gs;
+  const lam=fck<=50?0.8:0.8-(fck-50)/400;
+  const eta=fck<=50?1.0:1.0-(fck-50)/200;
+  const Es=200000, ecu=0.0035;
+  const d=h-cv-dbar/2;
+  const K=MEd/(b*d*d*fcd), Kl=0.167;
+
+  // Compression steel inputs
+  const hasDbl=document.getElementById('dbl_ec2').checked;
+  const dbc_raw=hasDbl?ri('dbc_ec2'):0;
+  const nbc_val=hasDbl?ri('nbc_ec2'):0;
+  const dprime=hasDbl?toMM(ri('dprime_ec2')):0;
+  const dbc_mm=(hasDbl&&curUnit==='us')?dbc_raw*25.4:dbc_raw;
+  const Asp=(hasDbl&&nbc_val>0&&dbc_mm>0)?nbc_val*Math.PI/4*dbc_mm*dbc_mm:0;
+
+  const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+  const Asmin=Math.max(0.26*fctm/fyk,0.0013)*b*d;
+  const warns=[];
+  const steps=[];
+
+  if(K>0.5){showErr('ec2','Section heavily over-stressed (K = '+K.toFixed(3)+'). Increase section dimensions significantly.'); return;}
+
+  if(K<=Kl || !hasDbl || Asp===0){
+    // ── SINGLY REINFORCED ──
+    const z=Math.min(d*(0.5+Math.sqrt(Math.max(0,0.25-K/1.134))),0.95*d);
+    const xu=(d-z)/0.4;
+    const As=MEd/(fyd*z);
+    const Asdes=Math.max(As,Asmin);
+    const over=K>Kl, minGov=As<Asmin;
+
+    if(over) warns.push(`<b>K > K':</b> K = ${K.toFixed(4)} > 0.167. Compression reinforcement is required or increase section size.`);
+    if(minGov) warns.push(`<b>Minimum reinforcement governs:</b> A<sub>s,req</sub> (${fmtAs(As)}) &lt; A<sub>s,min</sub> (${fmtAs(Asmin)}). Design value is A<sub>s,min</sub>.`);
+    if(fck<12||fck>90) warns.push(`<b>Material limit:</b> f<sub>ck</sub> = ${fck} MPa outside EN 1992-1-1 range (12–90 MPa).`);
+    if(fyk<400||fyk>600) warns.push(`<b>Material limit:</b> f<sub>yk</sub> = ${fyk} MPa outside EN 1992-1-1 range (400–600 MPa).`);
+
+    const kRatio=K/Kl;
+    const kRatioCls=kRatio<0.75?'ok':kRatio<=1.0?'warn':'err';
+    const minStatusEc2=minGov?'<span style="color:var(--orange)">governs</span>':'<span style="color:var(--green)">satisfied</span>';
+    const [asV,asUn]=splitVal(fmtAs(Asdes));
+    const ec2_customRes=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Required A<sub>s</sub></div>
+          <div class="fl-val${over?' err':''}">${asV}</div>
+          <div class="fl-unit">${asUn}</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">K</div>
+          <div class="fl-val mid">${K.toFixed(4)}</div>
+          <div class="fl-unit">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">K / K'</div>
+          <div class="fl-val ${kRatioCls}">${kRatio.toFixed(3)}</div>
+          <div class="fl-unit">≤ 1.0</div>
+        </div>
+      </div>
+      <div class="fl-sub"><b>A<sub>s,min</sub> = ${fmtAs(Asmin)}</b> &nbsp;—&nbsp; ${minStatusEc2}</div>
+    </div>`;
+
+    document.getElementById('ec2_empty').style.display='none';
+    document.getElementById('ec2_card').style.display='';
+    document.getElementById('ec2_body').innerHTML=buildReport(
+      [["Section (b × h)",`${ri('b_ec2')} × ${ri('h_ec2')} ${U.bU}`],
+       ["Nominal cover",`${ri('cv_ec2')} ${U.cvU}`],
+       ["f<sub>ck</sub> / f<sub>yk</sub>",`${fck} / ${fyk} MPa`],
+       ["γ<sub>c</sub> / γ<sub>s</sub>",`${gc.toFixed(2)} / ${gs.toFixed(2)}`],
+       ["Design moment M<sub>Ed</sub>",`${ri('me_ec2')} ${U.muU}`]],
+      null,
+      [{desc:'f<sub>cd</sub> / f<sub>yd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub> · f<sub>yk</sub>/γ<sub>s</sub>',val:`${fcd.toFixed(2)} / ${fyd.toFixed(2)} MPa`},
+       {desc:'Effective depth d',formula:'h − c<sub>nom</sub> − d<sub>bar</sub>/2',val:fmtLen(d)},
+       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:K>Kl?'err':'ok',
+         check:K>Kl?{type:'err',label:"K > K' ✗"}:{type:'ok',label:"K ≤ K' ✓"}},
+       {desc:"Limiting coefficient K'",formula:'0.167 (δ = 1.0)',val:'0.167'},
+       {desc:'Lever arm z',formula:'d·[0.5+√(0.25−K/1.134)] ≤ 0.95d',val:fmtLen(z)},
+       {desc:'x<sub>u</sub>/d',formula:'(d−z)/0.4 / d',val:(xu/d).toFixed(3),
+         cls:xu/d<=0.45?'ok':'warn',check:xu/d<=0.45?{type:'ok',label:'≤ 0.45 ✓'}:{type:'warn',label:'> 0.45 ⚠'}},
+       {desc:'Required tension A<sub>s,req</sub>',formula:'M<sub>Ed</sub> / (f<sub>yd</sub>·z)',val:fmtAs(As),cls:'hl'},
+       {desc:'A<sub>s,min</sub>',formula:'max(0.26·f<sub>ctm</sub>/f<sub>yk</sub>, 0.0013)·b·d',val:fmtAs(Asmin),
+         check:minGov?{type:'warn',label:'governs'}:null},
+       {desc:'Design area A<sub>s,design</sub>',formula:'max(A<sub>s,req</sub>, A<sub>s,min</sub>)',val:fmtAs(Asdes),cls:'hl'}],
+      warns,
+      ec2_customRes
+    );
+
+  } else {
+    // ── DOUBLY REINFORCED (K > K', compression steel provided) ──
+    // Lever arm and neutral axis at K' limit
+    const z_lim=Math.min(d*(0.5+Math.sqrt(Math.max(0,0.25-Kl/1.134))),0.95*d);
+    const xu_lim=(d-z_lim)/0.4;
+
+    // Compression steel strain & stress at xu_lim
+    const eps_sc=ecu*(xu_lim-dprime)/xu_lim;
+    const fsc=Math.min(fyd, Math.max(0, Es*eps_sc)); // compression = positive
+    const fsc_eff=fsc-eta*fcd; // net effective stress (deduct displaced concrete)
+
+    // Extra moment beyond K' limit
+    const deltaM=MEd-Kl*b*d*d*fcd;
+
+    // Required compression steel
+    const lever_comp=d-dprime;
+    const Asp_req=fsc_eff>0.001?deltaM/(fsc_eff*lever_comp):Infinity;
+    const compOK=Asp>=Asp_req;
+    const compRatio=Asp_req>0?(Asp/Asp_req):1;
+
+    // Tension steel
+    // Part 1: singly-reinforced at K' moment
+    const As1=Kl*b*d*d*fcd/(fyd*z_lim);
+    // Part 2: extra tension to balance the required compression force (based on deltaM, not Asp_prov)
+    // Using Asp_prov here would cause As_req to grow when excess compression steel is added — incorrect.
+    const deltaAs=deltaM/(fyd*lever_comp);   // = Asp_req·fsc_eff/fyd
+    const As_req=As1+deltaAs;
+    const Asdes=Math.max(As_req,Asmin);
+    const minGov=As_req<Asmin;
+
+    if(dprime>=xu_lim) warns.push(`<b>Compression steel may be in tension:</b> d' = ${fmtLen(dprime)} ≥ x<sub>u,lim</sub> = ${fmtLen(xu_lim)}. Verify bar position.`);
+    if(!compOK) warns.push(`<b>Compression steel insufficient:</b> A'<sub>s,prov</sub> = ${fmtAs(Asp)} < A'<sub>s,req</sub> = ${fmtAs(Asp_req)}. Increase compression steel.`);
+    if(minGov) warns.push(`<b>Minimum reinforcement governs:</b> A<sub>s,req</sub> = ${fmtAs(As_req)} < A<sub>s,min</sub> = ${fmtAs(Asmin)}.`);
+    if(fck<12||fck>90) warns.push(`<b>Material limit:</b> f<sub>ck</sub> = ${fck} MPa outside EN 1992-1-1 range (12–90 MPa).`);
+    if(fyk<400||fyk>600) warns.push(`<b>Material limit:</b> f<sub>yk</sub> = ${fyk} MPa outside EN 1992-1-1 range (400–600 MPa).`);
+
+    const compRatioCls=compRatio>=1?'ok':compRatio>=0.85?'warn':'err';
+    const [asV,asUn]=splitVal(fmtAs(Asdes));
+    const [aspReqV,aspReqUn]=splitVal(fmtAs(Asp_req));
+    const minStatusEc2=minGov?'<span style="color:var(--orange)">governs</span>':'<span style="color:var(--green)">satisfied</span>';
+
+    const ec2_customRes=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result — Doubly Reinforced</div>
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Required A<sub>s</sub> (tension)</div>
+          <div class="fl-val">${asV}</div>
+          <div class="fl-unit">${asUn}</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Required A'<sub>s</sub> (comp.)</div>
+          <div class="fl-val mid${compOK?'':' err'}">${aspReqV}</div>
+          <div class="fl-unit">${aspReqUn}</div>
+          <div style="font-size:.65rem;margin-top:4px;">${compOK?'<span style="color:var(--green)">prov. OK ✓</span>':'<span style="color:var(--red)">insufficient ✗</span>'}</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">K / K'</div>
+          <div class="fl-val" style="color:${compOK?'var(--text-mid)':'var(--red)'};font-size:1rem">${(K/Kl).toFixed(3)}</div>
+          <div class="fl-unit" style="color:var(--text-dim)">doubly reinforced</div>
+          <div style="font-size:.65rem;margin-top:4px;color:${compOK?'var(--green)':'var(--red)'}">A'<sub>s</sub> ${compOK?'provided ✓':'insufficient ✗'}</div>
+        </div>
+      </div>
+      <div class="fl-sub"><b>A<sub>s,min</sub> = ${fmtAs(Asmin)}</b> &nbsp;—&nbsp; ${minStatusEc2}</div>
+    </div>`;
+
+    document.getElementById('ec2_empty').style.display='none';
+    document.getElementById('ec2_card').style.display='';
+    document.getElementById('ec2_body').innerHTML=buildReport(
+      [["Section (b × h)",`${ri('b_ec2')} × ${ri('h_ec2')} ${U.bU}`],
+       ["Nominal cover",`${ri('cv_ec2')} ${U.cvU}`],
+       ["f<sub>ck</sub> / f<sub>yk</sub>",`${fck} / ${fyk} MPa`],
+       ["γ<sub>c</sub> / γ<sub>s</sub>",`${gc.toFixed(2)} / ${gs.toFixed(2)}`],
+       ["Compression steel A'<sub>s</sub>",`${nbc_val}×Ø${ri('dbc_ec2')} ${U.dbU}, d' = ${ri('dprime_ec2')} ${U.bU}`],
+       ["Design moment M<sub>Ed</sub>",`${ri('me_ec2')} ${U.muU}`]],
+      null,
+      [{desc:'f<sub>cd</sub> / f<sub>yd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub> · f<sub>yk</sub>/γ<sub>s</sub>',val:`${fcd.toFixed(2)} / ${fyd.toFixed(2)} MPa`},
+       {desc:'Effective depth d',formula:'h − c<sub>nom</sub> − d<sub>bar</sub>/2',val:fmtLen(d)},
+       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:'err',
+         check:{type:'err',label:"K > K' — doubly reinforced"}},
+       {desc:"Limiting coefficient K'",formula:'0.167 (δ = 1.0)',val:'0.167'},
+       {desc:'Lever arm at limit z<sub>lim</sub>',formula:'d·[0.5+√(0.25−K\'/1.134)]',val:fmtLen(z_lim)},
+       {desc:'Neutral axis at limit x<sub>u,lim</sub>',formula:'(d−z<sub>lim</sub>) / 0.4',val:fmtLen(xu_lim)},
+       {desc:"Comp. steel strain ε'<sub>s</sub>",formula:"ε<sub>cu</sub>·(x<sub>u,lim</sub>−d') / x<sub>u,lim</sub>",val:eps_sc.toFixed(4)},
+       {desc:"Comp. steel stress f'<sub>s</sub>",formula:"min(f<sub>yd</sub>, E<sub>s</sub>·ε'<sub>s</sub>)",val:fmtStress(fsc)},
+       {desc:"Net effective stress (f'<sub>s</sub> − η·f<sub>cd</sub>)",formula:'Deducting displaced concrete',val:fmtStress(fsc_eff)},
+       {desc:"Extra moment ΔM",formula:"M<sub>Ed</sub> − K'·b·d²·f<sub>cd</sub>",val:fmtMom(deltaM)},
+       {desc:"Required A'<sub>s</sub>",formula:"ΔM / [(f'<sub>s</sub>−η·f<sub>cd</sub>)·(d−d')]",val:fmtAs(Asp_req),cls:compOK?'ok':'err',
+         check:compOK?{type:'ok',label:'Provided OK ✓'}:{type:'err',label:'Insufficient ✗'}},
+       {desc:"Provided A'<sub>s</sub>",formula:`${nbc_val}×π/4·d²`,val:fmtAs(Asp)},
+       {desc:'Tension As₁ (for K\' moment)',formula:"K'·b·d²·f<sub>cd</sub> / (f<sub>yd</sub>·z<sub>lim</sub>)",val:fmtAs(As1)},
+       {desc:'Extra tension ΔA<sub>s</sub> (for ΔM)',formula:"ΔM / (f<sub>yd</sub>·(d−d'))",val:fmtAs(deltaAs)},
+       {desc:'Total required tension A<sub>s,req</sub>',formula:'A<sub>s1</sub> + ΔA<sub>s</sub>',val:fmtAs(As_req),cls:'hl'},
+       {desc:'A<sub>s,min</sub>',formula:'max(0.26·f<sub>ctm</sub>/f<sub>yk</sub>, 0.0013)·b·d',val:fmtAs(Asmin),
+         check:minGov?{type:'warn',label:'governs'}:null},
+       {desc:'Design tension area',formula:'max(A<sub>s,req</sub>, A<sub>s,min</sub>)',val:fmtAs(Asdes),cls:'hl'}],
+      warns,
+      ec2_customRes
+    );
+  }
+}
+
+function showErr(id,msg){
+  document.getElementById(id+'_empty').style.display='none';
+  document.getElementById(id+'_card').style.display='';
+  document.getElementById(id+'_body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--red-bg);border:1.5px solid #f4b0a8;border-radius:6px;">
+      <span style="font-size:1.3rem">❌</span>
+      <div><div style="font-weight:600;color:var(--red);font-size:.85rem;margin-bottom:2px">Input Error</div>
+      <div style="font-size:.78rem;color:var(--text-mid)">${msg}</div></div>
+    </div>`;
+}
+
+// ══ FLEXURAL CAPACITY — ACI 318-25 ══
+function calcCapACI(){
+  if(!validateCapACI())return;
+  const U=UNITS[curUnit];
+  const b=toMM(ri('cap_b_aci')), h=toMM(ri('cap_h_aci')), cv=toMM(ri('cap_cv_aci'));
+  const fc=toMPa(ri('cap_fc_aci')), fy=toMPa(ri('cap_fy_aci'));
+  const phi=parseFloat(document.getElementById('cap_phi_aci').value)||0.90;
+  const dbt = curUnit==='us' ? ri('cap_dbt_aci')*25.4 : ri('cap_dbt_aci');
+  const nbt = ri('cap_nbt_aci');
+  const dbc_raw = curUnit==='us' ? ri('cap_dbc_aci')*25.4 : ri('cap_dbc_aci');
+  const nbc = ri('cap_nbc_aci');
+  const hasComp = dbc_raw>0 && nbc>0;
+  const dbc = hasComp ? dbc_raw : 0;
+  const hasRow2 = document.getElementById('cap_row2_aci').checked;
+  const db2 = hasRow2 ? (curUnit==='us'?ri('cap_db2_aci')*25.4:ri('cap_db2_aci')) : 0;
+  const nb2 = hasRow2 ? ri('cap_nb2_aci') : 0;
+  const rs  = hasRow2 ? toMM(ri('cap_rs_aci')) : 0;
+  const Mu  = ri('cap_mu_aci')>0 ? toNmm(ri('cap_mu_aci')) : 0;
+
+  // Steel areas
+  const As  = nbt * Math.PI/4 * dbt*dbt;
+  const As2 = nb2 * Math.PI/4 * db2*db2;
+  const AsTotal = As + As2;
+  const Asp = hasComp ? nbc * Math.PI/4 * dbc*dbc : 0;
+
+  // Effective depth: tension centroid
+  // d1 = h - cv - dbt/2; d2 = d1 - rs
+  const d1 = h - cv - dbt/2;
+  const d2 = hasRow2 ? d1 - rs : d1;
+  const d  = hasRow2 ? (As*d1 + As2*d2)/AsTotal : d1;
+  const d_prime = cv + dbc/2; // compression steel depth
+
+  const b1 = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
+  const Es = 200000; // MPa
+  const ecu = 0.003;
+
+  // Iterate for doubly-reinforced
+  let c, fps, iter=0;
+  c = AsTotal*fy / (0.85*fc*b + (hasComp?Asp*fy:0)); // initial guess
+  for(; iter<50; iter++){
+    const eps = ecu*(c-d_prime)/c;
+    fps = hasComp ? Math.min(fy, Math.max(-fy, Es*eps)) : 0;
+    const cNew = (AsTotal*fy - (hasComp?Asp*fps:0)) / (0.85*fc*b1*b/b1);
+    // note: a = b1*c → C=0.85*fc*b*a, equilibrium: 0.85*fc*b*b1*c + Asp*fps = AsTotal*fy
+    const cNew2 = (AsTotal*fy - (hasComp?Asp*fps:0)) / (0.85*fc*b*b1);
+    if(Math.abs(cNew2-c)<0.01){ c=cNew2; break; }
+    c=cNew2;
+  }
+  const eps_s = ecu*(c-d_prime)/c;
+  fps = hasComp ? Math.min(fy, Math.max(0, Es*eps_s)) : 0;
+  const a = b1*c;
+  const et = ecu*(d-c)/c;
+  const Mn = 0.85*fc*b*a*(d-a/2) + (hasComp?Asp*fps*(d-d_prime):0);
+  const phiMn = phi*Mn;
+  const dc = Mu>0 ? Mu/phiMn : null;
+
+  const [mnV,mnUn]=splitVal(fmtMom(phiMn));
+  const [asV,asUn]=splitVal(fmtAs(AsTotal));
+  const [dV,dUn]=splitVal(fmtLen(d));
+
+  const aciCapWarns=[];
+  if(et<0.004) aciCapWarns.push(`<b>Compression-controlled section (ACI §21.2.2):</b> ε<sub>t</sub> = ${et.toFixed(4)} < 0.004. Section is over-reinforced — reduce tension steel or increase section.`);
+  else if(et<0.005) aciCapWarns.push(`<b>Transition zone (ACI §21.2.2):</b> ε<sub>t</sub> = ${et.toFixed(4)}. φ should be interpolated between 0.65 and 0.90.`);
+  if(hasComp && eps_s<0) aciCapWarns.push(`<b>Compression steel in tension:</b> ε'<sub>s</sub> = ${eps_s.toFixed(4)} < 0. Bar at d' is above the neutral axis — verify cover and bar placement.`);
+  if(dc!==null && dc>1.0) aciCapWarns.push(`<b>Capacity exceeded:</b> φM<sub>n</sub> = ${fmtMom(phiMn)} < M<sub>u</sub> = ${fmtMom(Mu)}.`);
+  const aciCapWarnHTML = aciCapWarns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('');
+
+  const aciCapResHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="result-box">
+      <div class="result-item${dc!==null&&dc>1?' err':''}"><div class="ri-label">φMₙ</div><div class="ri-value">${mnV}</div><div class="ri-unit">${mnUn}</div></div>
+      <div class="result-item"><div class="ri-label">Tension Aₛ</div><div class="ri-value">${asV}</div><div class="ri-unit">${asUn}</div></div>
+      <div class="result-item"><div class="ri-label">Eff. Depth d</div><div class="ri-value">${dV}</div><div class="ri-unit">${dUn}</div></div>
+      ${dc!==null?`<div class="result-item${dc>1?' err':dc>0.85?' warn':''}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dc.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>`:''}
+    </div>
+    ${aciCapWarnHTML}
+  </div>`;
+
+  document.getElementById('cap_aci_empty').style.display='none';
+  document.getElementById('cap_aci_card').style.display='';
+  document.getElementById('cap_aci_body').innerHTML=buildReport(
+    [['Section (b × h)',`${ri('cap_b_aci')} × ${ri('cap_h_aci')} ${U.bU}`],
+     ['Clear cover',`${ri('cap_cv_aci')} ${U.cvU}`],
+     ["f'c",`${ri('cap_fc_aci')} ${U.fcU}`],
+     ['f<sub>y</sub>',`${ri('cap_fy_aci')} ${U.fyU}`],
+     ['Tension steel',`${nbt}×Ø${ri('cap_dbt_aci')} ${U.dbU}${hasRow2?' + '+nb2+'×Ø'+ri('cap_db2_aci')+' '+U.dbU+' (row 2)':''}`],
+     ...(hasComp?[['Compression steel',`${nbc}×Ø${ri('cap_dbc_aci')} ${U.dbU}`]]:[]),
+     ...(Mu>0?[['Applied M<sub>u</sub>',`${ri('cap_mu_aci')} ${U.muU}`]]:[]),
+     ['φ',phi.toFixed(2)]],
+    [],
+    [{desc:'Tension steel area A<sub>s</sub>',formula:'n·π/4·d<sub>b</sub>²',val:fmtAs(AsTotal)},
+     ...(hasComp?[{desc:"Comp. steel area A's",formula:"n'·π/4·d'<sub>b</sub>²",val:fmtAs(Asp)}]:[]),
+     {desc:'Eff. depth d (centroid of tension steel)',formula:hasRow2?'d=(A<sub>s1</sub>·d₁+A<sub>s2</sub>·d₂)/A<sub>s,tot</sub>':'d=h−c<sub>v</sub>−d<sub>b</sub>/2',val:fmtLen(d)},
+     {desc:'Stress block factor β₁',formula:'',val:b1.toFixed(3)},
+     {desc:'Neutral axis depth c (equilibrium)',formula:'Iterate: 0.85·f\'c·b·β₁·c + A\'<sub>s</sub>·f\'<sub>s</sub> = A<sub>s</sub>·f<sub>y</sub>',val:fmtLen(c)},
+     {desc:'Stress block depth a = β₁·c',formula:'',val:fmtLen(a)},
+     ...(hasComp?[{desc:"Comp. steel strain ε's",formula:"ε's = ε<sub>cu</sub>·(c−d')/c",val:eps_s.toFixed(4)},{desc:"Comp. steel stress f's",formula:"min(f<sub>y</sub>, E<sub>s</sub>·ε's)",val:fmtStress(fps)}]:[]),
+     {desc:'Net tensile strain ε<sub>t</sub>',formula:'ε<sub>t</sub> = 0.003·(d−c)/c',val:et.toFixed(4),cls:et>=0.005?'ok':et>=0.004?'warn':'err',
+       check:et>=0.005?{type:'ok',label:'tension-controlled ✓'}:et>=0.004?{type:'warn',label:'transition ⚠'}:{type:'err',label:'comp.-controlled ✗'}},
+     {desc:'Nominal moment M<sub>n</sub>',formula:'C·jd + A\'<sub>s</sub>·f\'<sub>s</sub>·(d−d\')',val:fmtMom(Mn)},
+     {desc:'Design moment capacity φM<sub>n</sub>',formula:'φ·M<sub>n</sub>',val:fmtMom(phiMn),cls:'hl'},
+     ...(dc!==null?[{desc:'Demand/Capacity ratio',formula:'M<sub>u</sub> / φM<sub>n</sub>',val:dc.toFixed(3),cls:dc>1?'err':dc>0.85?'warn':'ok',
+       check:dc<=1?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}}]:[])],
+    [],
+    aciCapResHTML
+  );
+}
+
+// ══ FLEXURAL CAPACITY — EUROCODE 2 ══
+function calcCapEC2(){
+  if(!validateCapEC2())return;
+  const U=UNITS[curUnit];
+  const b=toMM(ri('cap_b_ec2')), h=toMM(ri('cap_h_ec2')), cv=toMM(ri('cap_cv_ec2'));
+  const fck=parseFloat(document.getElementById('cap_fck_ec2').value)||25;
+  const fyk=parseFloat(document.getElementById('cap_fyk_ec2').value)||500;
+  const gc=ri('cap_gc_ec2'), gs=ri('cap_gs_ec2');
+  const fcd=fck/gc, fyd=fyk/gs;
+  const lam = fck<=50 ? 0.8 : 0.8-(fck-50)/400;
+  const eta = fck<=50 ? 1.0 : 1.0-(fck-50)/200;
+
+  const dbt = curUnit==='us' ? ri('cap_dbt_ec2')*25.4 : ri('cap_dbt_ec2');
+  const nbt = ri('cap_nbt_ec2');
+  const dbc_raw = curUnit==='us' ? ri('cap_dbc_ec2')*25.4 : ri('cap_dbc_ec2');
+  const nbc = ri('cap_nbc_ec2');
+  const hasComp = dbc_raw>0 && nbc>0;
+  const dbc = hasComp ? dbc_raw : 0;
+  const hasRow2 = document.getElementById('cap_row2_ec2').checked;
+  const db2 = hasRow2 ? (curUnit==='us'?ri('cap_db2_ec2')*25.4:ri('cap_db2_ec2')) : 0;
+  const nb2 = hasRow2 ? ri('cap_nb2_ec2') : 0;
+  const rs  = hasRow2 ? toMM(ri('cap_rs_ec2')) : 0;
+  const MEd_in = ri('cap_mu_ec2');
+  const MEd = MEd_in>0 ? toNmm(MEd_in) : 0;
+
+  const As  = nbt * Math.PI/4 * dbt*dbt;
+  const As2 = nb2 * Math.PI/4 * db2*db2;
+  const AsTotal = As + As2;
+  const Asp = hasComp ? nbc * Math.PI/4 * dbc*dbc : 0;
+  const d1 = h - cv - dbt/2;
+  const d2 = hasRow2 ? d1 - rs : d1;
+  const d  = hasRow2 ? (As*d1 + As2*d2)/AsTotal : d1;
+  const d_prime = cv + dbc/2;
+
+  const Es = 200000;
+  const ecu = 0.0035;
+
+  // Equilibrium iteration — accounts for tension steel not yielding and compression steel stress
+  let x, fps=0, fst=fyd;
+  x = AsTotal*fyd / (eta*fcd*lam*b);
+  for(let i=0; i<50; i++){
+    const eps_comp = ecu*(x-d_prime)/x;
+    fps = hasComp ? Math.min(fyd, Math.max(0, Es*eps_comp)) : 0;
+    const eps_tens = x>0 ? ecu*(d-x)/x : fyd/Es;
+    fst = Math.min(fyd, Math.max(-fyd, Es*eps_tens));
+    const xNew = (AsTotal*fst - (hasComp?Asp*fps:0)) / (eta*fcd*lam*b);
+    if(Math.abs(xNew-x)<0.01){ x=xNew; break; }
+    x=xNew;
+  }
+  const eps_s = ecu*(x-d_prime)/x;
+  fps = hasComp ? Math.min(fyd, Math.max(0, Es*eps_s)) : 0;
+  const eps_t = x>0 ? ecu*(d-x)/x : fyd/Es;
+  fst = Math.min(fyd, Math.max(-fyd, Es*eps_t));
+  const a_ec2 = lam*x; // depth of stress block
+  const MRd = eta*fcd*b*a_ec2*(d-a_ec2/2) + (hasComp?Asp*fps*(d-d_prime):0);
+  const xud = x/d;
+  const eyd = fyd/Es;
+  const steelYields = eps_t >= eyd;
+  const dc = MEd>0 ? MEd/MRd : null;
+
+  const As_max = 0.04*b*h;
+
+  const [mrV,mrUn]=splitVal(fmtMom(MRd));
+  const [asV,asUn]=splitVal(fmtAs(AsTotal));
+  const [dV,dUn]=splitVal(fmtLen(d));
+
+  const ec2CapWarns=[];
+  if(AsTotal > As_max) ec2CapWarns.push(`<b>Maximum tension reinforcement exceeded (EC2 §9.2.1.1):</b> A<sub>s</sub> = ${fmtAs(AsTotal)} > A<sub>s,max</sub> = 0.04·A<sub>c</sub> = ${fmtAs(As_max)}.`);
+  if(hasComp && Asp > As_max) ec2CapWarns.push(`<b>Maximum compression reinforcement exceeded (EC2 §9.2.1.1):</b> A'<sub>s</sub> = ${fmtAs(Asp)} > A'<sub>s,max</sub> = 0.04·A<sub>c</sub> = ${fmtAs(As_max)}.`);
+  if(!steelYields) ec2CapWarns.push(`<b>Tension steel has not yielded:</b> ε<sub>s</sub> = ${eps_t.toFixed(4)} < ε<sub>yd</sub> = ${eyd.toFixed(4)}. Section is over-reinforced — reduce tension steel or increase section.`);
+  if(xud>0.45) ec2CapWarns.push(`<b>Ductility limit:</b> x/d = ${xud.toFixed(3)} > 0.45. Reduce tension steel or increase section (EC2 §5.5).`);
+  if(dc!==null && dc>1.0) ec2CapWarns.push(`<b>Capacity exceeded:</b> M<sub>Rd</sub> = ${fmtMom(MRd)} < M<sub>Ed</sub> = ${fmtMom(MEd)}.`);
+  const ec2CapWarnHTML = ec2CapWarns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('');
+
+  const ec2CapResHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="result-box">
+      <div class="result-item${dc!==null&&dc>1?' err':''}"><div class="ri-label">M<sub>Rd</sub></div><div class="ri-value">${mrV}</div><div class="ri-unit">${mrUn}</div></div>
+      <div class="result-item"><div class="ri-label">Tension Aₛ</div><div class="ri-value">${asV}</div><div class="ri-unit">${asUn}</div></div>
+      <div class="result-item"><div class="ri-label">Eff. Depth d</div><div class="ri-value">${dV}</div><div class="ri-unit">${dUn}</div></div>
+      ${dc!==null?`<div class="result-item${dc>1?' err':dc>0.85?' warn':''}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dc.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>`:''}
+    </div>
+    ${ec2CapWarnHTML}
+  </div>`;
+
+  document.getElementById('cap_ec2_empty').style.display='none';
+  document.getElementById('cap_ec2_card').style.display='';
+  document.getElementById('cap_ec2_body').innerHTML=buildReport(
+    [['Section (b × h)',`${ri('cap_b_ec2')} × ${ri('cap_h_ec2')} ${U.bU}`],
+     ['Nominal cover',`${ri('cap_cv_ec2')} ${U.cvU}`],
+     ['f<sub>ck</sub>',`${fck} MPa`],
+     ['f<sub>yk</sub>',`${fyk} MPa`],
+     ['γ<sub>c</sub> / γ<sub>s</sub>',`${gc.toFixed(2)} / ${gs.toFixed(2)}`],
+     ['Tension steel',`${nbt}×Ø${ri('cap_dbt_ec2')} ${U.dbU}${hasRow2?' + '+nb2+'×Ø'+ri('cap_db2_ec2')+' '+U.dbU+' (row 2)':''}`],
+     ...(hasComp?[['Compression steel',`${nbc}×Ø${ri('cap_dbc_ec2')} ${U.dbU}`]]:[]),
+     ...(MEd>0?[['Applied M<sub>Ed</sub>',`${ri('cap_mu_ec2')} ${U.muU}`]]:[])],
+    [],
+    [{desc:'Design strengths f<sub>cd</sub> / f<sub>yd</sub>',formula:'f<sub>cd</sub>=f<sub>ck</sub>/γ<sub>c</sub> · f<sub>yd</sub>=f<sub>yk</sub>/γ<sub>s</sub>',val:`${fcd.toFixed(2)} / ${fyd.toFixed(2)} MPa`},
+     {desc:'Stress block factors λ, η',formula:'λ=0.8 (f<sub>ck</sub>≤50), η=1.0',val:`${lam.toFixed(3)}, ${eta.toFixed(3)}`},
+     {desc:'Tension steel area A<sub>s</sub>',formula:'',val:fmtAs(AsTotal)},
+     ...(hasComp?[{desc:"Comp. steel area A's",formula:'',val:fmtAs(Asp)}]:[]),
+     {desc:'Eff. depth d',formula:'',val:fmtLen(d)},
+     {desc:'Neutral axis depth x (iteration)',formula:'η·f<sub>cd</sub>·λ·b·x + A\'<sub>s</sub>·f\'<sub>s</sub> = A<sub>s</sub>·f<sub>s</sub>',val:fmtLen(x)},
+     {desc:'x/d ratio',formula:'',val:xud.toFixed(3),cls:xud<=0.45?'ok':xud<=0.60?'warn':'err',
+       check:xud<=0.45?{type:'ok',label:'≤ 0.45 ✓'}:{type:'warn',label:'> 0.45 ⚠'}},
+     {desc:'Tension steel strain ε<sub>s</sub>',formula:'ε<sub>cu</sub>·(d−x)/x',val:eps_t.toFixed(5),
+       cls:steelYields?'ok':'err',check:steelYields?{type:'ok',label:'≥ ε<sub>yd</sub> — yielded ✓'}:{type:'err',label:'< ε<sub>yd</sub> — not yielded ✗'}},
+     {desc:'Tension steel stress f<sub>s</sub>',formula:'min(f<sub>yd</sub>, E<sub>s</sub>·ε<sub>s</sub>)',val:fmtStress(fst)},
+     ...(hasComp?[{desc:"Comp. steel stress f'<sub>s</sub>",formula:"ε's=ε<sub>cu</sub>·(x−d')/x",val:fmtStress(fps)}]:[]),
+     {desc:'Moment resistance M<sub>Rd</sub>',formula:'η·f<sub>cd</sub>·b·a·(d−a/2) + A\'<sub>s</sub>·f\'<sub>s</sub>·(d−d\')',val:fmtMom(MRd),cls:'hl'},
+     ...(dc!==null?[{desc:'Demand/Capacity ratio',formula:'M<sub>Ed</sub>/M<sub>Rd</sub>',val:dc.toFixed(3),cls:dc>1?'err':dc>0.85?'warn':'ok',
+       check:dc<=1?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}}]:[])],
+    [],
+    ec2CapResHTML
+  );
+}
+
+// ══ TORSION — ACI 318-25 §22.7 ══
+function calcTorACI(){
+  if(!validateTorACI())return;
+  const U=UNITS[curUnit];
+  const b=toMM(ri('tor_b_aci')), h=toMM(ri('tor_h_aci')), cv=toMM(ri('tor_cv_aci'));
+  const fc=toMPa(ri('tor_fc_aci')), fy=toMPa(ri('tor_fy_aci')), fyl=toMPa(ri('tor_fyl_aci'));
+  const lam=parseFloat(document.getElementById('tor_lam_aci').value)||1.0;
+  const phi=parseFloat(document.getElementById('tor_phi_aci').value)||0.75;
+  const Vu=toForce(ri('tor_vu_aci'));    // N
+  const Tu=toNmm(ri('tor_tu_aci'));      // N·mm
+  const dst=curUnit==='us'?ri('tor_dst_aci')*25.4:ri('tor_dst_aci'); // mm
+  const s=toMM(ri('tor_s_aci'));          // mm
+  const dl=curUnit==='us'?ri('tor_dl_aci')*25.4:ri('tor_dl_aci');   // mm
+  const nl=ri('tor_nl_aci');
+
+  // Section properties
+  const Acp = b*h;           // mm²
+  const Pcp = 2*(b+h);       // mm
+  const x1 = b - 2*cv;      // inner dims for Aoh
+  const y1 = h - 2*cv;
+  const Aoh = x1*y1;         // mm²
+  const Ph  = 2*(x1+y1);    // mm
+  const Ao  = 0.85*Aoh;      // mm²
+  const tef = Acp/Pcp;       // effective wall thickness
+
+  // Threshold torsion §22.7.4
+  const Tth = phi * 0.083*lam*Math.sqrt(fc)*Acp*Acp/Pcp; // N·mm
+  const neglect = Tu <= Tth;
+
+  // Shear contribution of concrete §22.5.5 (simplified, ρ=0.01 est.)
+  const d = h - cv - dst/2 - dl/2; // approx effective depth
+  const rho_est = 0.01;
+  const Vc = 0.66*lam*Math.pow(rho_est,1/3)*Math.sqrt(fc)*b*d;
+
+  // Stirrup area per leg from torsion: At/s = Tu/(2*Ao*fy*phi*cot(theta)) per leg
+  // Using theta=45° (cot=1) per ACI §22.7.6
+  const cot_theta = 1.0;
+  const At_s = Tu / (phi * 2 * Ao * fy * cot_theta); // mm²/mm per leg (one side)
+
+  // Required Av/s for shear (both legs)
+  const Av_s_req = Math.max(Vu/(phi*fy*d) - Vc/(fy*d), 0);
+  const Avmin_s = Math.max(0.062*Math.sqrt(fc)*b/fy, 0.35*b/fy);
+
+  // Combined: provided Av/s (both legs) + 2*At/s ≥ required
+  const Avt_prov = 2*(Math.PI/4*dst*dst)/s; // 2 legs per stirrup
+  const At_prov  = (Math.PI/4*dst*dst)/s;   // one leg per stirrup
+  const combined_req = Av_s_req + 2*At_s;
+  const combined_prov = Avt_prov;
+
+  // Max shear per §22.5.1.2 (with torsion)
+  const Vs = Avt_prov * fy * d; // both stirrup legs for shear
+  const Vn_check = Math.sqrt(Math.pow(Vu/phi,2) + Math.pow(Tu*Ph/(1.7*Aoh*Aoh),2));
+  const Vn_max = Vc + 0.66*Math.sqrt(fc)*b*d;
+  const dc_section = Vn_check / Vn_max;
+
+  // Longitudinal torsion steel required §22.7.6.1
+  const Al_req = At_s * Ph * fy/fyl * cot_theta*cot_theta;
+  const Al_min = Math.max(0.42*Math.sqrt(fc)*Acp/fyl - At_s*Ph*fy/fyl, 0);
+  const Al_prov = nl * Math.PI/4 * dl*dl;
+  const dc_tor_s = At_prov > 0 ? At_s/At_prov : (At_s > 0 ? Infinity : 0);
+  const dc_combined_stir = combined_prov > 0 ? combined_req/combined_prov : (combined_req > 0 ? Infinity : 0);
+  const AlReqEff = Math.max(Al_req, Al_min);
+  const dc_tor_l = Al_prov > 0 ? AlReqEff/Al_prov : (AlReqEff > 0 ? Infinity : 0);
+  const dc = Math.min(99, Math.max(Vu/(phi*(Vc+Avt_prov*fy*d)) || 0, dc_combined_stir, dc_section, dc_tor_l));
+
+  const warns=[];
+  if(neglect) warns.push(`<b>Torsion may be neglected:</b> T<sub>u</sub> = ${fmtTorque(Tu)} ≤ φT<sub>th</sub> = ${fmtTorque(Tth)} (ACI §22.7.4).`);
+  if(dc_section>1.0) warns.push(`<b>Section size exceeded:</b> Combined V+T check D/C = ${dc_section.toFixed(3)} > 1.0. Increase section dimensions.`);
+  if(Al_prov < AlReqEff) warns.push(`<b>Longitudinal steel insufficient (strength${Al_min>Al_req?' + min':''}): </b> A<sub>l,prov</sub> = ${fmtAs(Al_prov)} < A<sub>l,req</sub> = ${fmtAs(AlReqEff)}${Al_min>Al_req?' (minimum governs)':''} §22.7.6.1.`);
+  if(At_prov < At_s) warns.push(`<b>Stirrup insufficient (torsion strength):</b> A<sub>t</sub>/s prov = ${fmtArea2(At_prov)} < req = ${fmtArea2(At_s)} §22.7.6.1. Reduce spacing or increase stirrup diameter.`);
+  if(s > Math.min(Ph/8, 300)) warns.push(`<b>Max stirrup spacing:</b> s = ${fmtLen(s)} > min(P<sub>h</sub>/8, 300 mm) = ${fmtLen(Math.min(Ph/8,300))} (ACI §9.7.6.3.3).`);
+  if(U.fcV<17||U.fcV>70) warns.push(`<b>Material limit:</b> f'c outside ACI 318-25 range (${U.fcMinL} – ${U.fcMaxL}).`);
+
+  const [torV,torUn]=splitVal(fmtTorque(Tu));
+  const [tthV,tthUn]=splitVal(fmtTorque(Tth));
+  const [vcV,vcUn]=splitVal(fmtForce(phi*Vc));
+
+  document.getElementById('tor_aci_empty').style.display='none';
+  document.getElementById('tor_aci_card').style.display='';
+  document.getElementById('tor_aci_body').innerHTML=buildReport(
+    [['Section (b×h)',`${ri('tor_b_aci')}×${ri('tor_h_aci')} ${U.bU}`],
+     ['Clear cover',`${ri('tor_cv_aci')} ${U.cvU}`],
+     ["f'c / f<sub>y</sub>",`${ri('tor_fc_aci')} / ${ri('tor_fy_aci')} ${U.fcU}`],
+     ['φ / λ',`${phi} / ${lam}`],
+     ['V<sub>u</sub>',`${ri('tor_vu_aci')} ${U.vuU}`],
+     ['T<sub>u</sub>',`${ri('tor_tu_aci')} ${U.tuU}`],
+     ['Stirrups',`Ø${ri('tor_dst_aci')} ${U.dbU} @ ${ri('tor_s_aci')} ${U.bU}`],
+     ['Long. bars',`${nl}×Ø${ri('tor_dl_aci')} ${U.dbU}`]],
+    [{label:'T<sub>u</sub>',value:torV,unit:torUn,cls:neglect?'ok':''},
+     {label:'φT<sub>th</sub>',value:tthV,unit:tthUn,cls:neglect?'ok':'warn'},
+     {label:'φV<sub>c</sub>',value:vcV,unit:vcUn},
+     {label:'D/C Ratio',value:dc.toFixed(3),unit:'≤ 1.0',cls:dc>1?'err':dc>0.85?'warn':'ok'}],
+    [{desc:'Section properties A<sub>cp</sub>, P<sub>cp</sub>',formula:'A<sub>cp</sub>=b·h, P<sub>cp</sub>=2(b+h)',val:`${Acp.toFixed(0)} mm², ${Pcp.toFixed(0)} mm`},
+     {desc:'Closed-hoop area A<sub>oh</sub>, perimeter P<sub>h</sub>',formula:'A<sub>oh</sub>=(b−2c)(h−2c), P<sub>h</sub>=2[(b−2c)+(h−2c)]',val:`${Aoh.toFixed(0)} mm², ${Ph.toFixed(0)} mm`},
+     {desc:'Torsion strut area A<sub>o</sub> = 0.85·A<sub>oh</sub>',formula:'',val:`${Ao.toFixed(0)} mm²`},
+     {desc:'Threshold torsion φT<sub>th</sub>',formula:'φ·0.083λ√f\'c·A²<sub>cp</sub>/P<sub>cp</sub>',val:fmtTorque(Tth),cls:neglect?'ok':'warn',
+       check:neglect?{type:'ok',label:'T<sub>u</sub> ≤ φT<sub>th</sub> ✓'}:{type:'warn',label:'Design required'}},
+     {desc:'Concrete shear V<sub>c</sub>',formula:'0.66λρ<sub>w</sub><sup>1/3</sup>√f\'c·b<sub>w</sub>·d (ρ=0.01 est.)',val:fmtForce(Vc)},
+     {desc:'Required A<sub>t</sub>/s (per leg, torsion)',formula:'T<sub>u</sub>/(φ·2A<sub>o</sub>·f<sub>y</sub>·cot θ)',val:fmtArea2(At_s)},
+     {desc:'Provided A<sub>t</sub>/s (one leg)',formula:'(π/4·d²<sub>st</sub>)/s',val:fmtArea2(At_prov),cls:At_prov>=At_s?'ok':'err',
+       check:At_prov>=At_s?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Combined (A<sub>v</sub>+2A<sub>t</sub>)/s required',formula:'A<sub>v</sub>/s + 2·A<sub>t</sub>/s',val:fmtArea2(combined_req)},
+     {desc:'Combined provided (2-leg stirrup)',formula:'2·(π/4·d²<sub>st</sub>)/s',val:fmtArea2(combined_prov),cls:combined_prov>=combined_req?'ok':'err',
+       check:combined_prov>=combined_req?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Required long. area A<sub>l</sub>',formula:'(A<sub>t</sub>/s)·P<sub>h</sub>·(f<sub>y</sub>/f<sub>yl</sub>)·cot²θ',val:fmtAs(Math.max(Al_req,Al_min))},
+     {desc:'Provided long. area A<sub>l</sub>',formula:`${nl}×π/4·d²<sub>l</sub>`,val:fmtAs(Al_prov),cls:Al_prov>=Math.max(Al_req,Al_min)?'ok':'err',
+       check:Al_prov>=Math.max(Al_req,Al_min)?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Section V+T check (ACI §22.7.7.2)',formula:'√[(V<sub>u</sub>/φbw·d)²+(T<sub>u</sub>P<sub>h</sub>/1.7A²<sub>oh</sub>)²] ≤ V<sub>c</sub>/bw·d+0.66√f\'c',val:dc_section.toFixed(3),cls:dc_section<=1?'ok':'err',
+       check:dc_section<=1?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}}],
+    warns
+  );
+}
+
+// ══ TORSION — EUROCODE 2 §6.3 ══
+function calcTorEC2(){
+  if(!validateTorEC2())return;
+  const U=UNITS[curUnit];
+  const b=toMM(ri('tor_b_ec2')), h=toMM(ri('tor_h_ec2')), cv=toMM(ri('tor_cv_ec2'));
+  const fck=parseFloat(document.getElementById('tor_fck_ec2').value)||25;
+  const fyk=parseFloat(document.getElementById('tor_fyk_ec2').value)||500;
+  const gc=ri('tor_gc_ec2'), gs=ri('tor_gs_ec2');
+  const fcd=fck/gc, fyd=fyk/gs;
+  const nu = 0.6*(1-fck/250); // strut strength reduction factor
+  const VEd=toForce(ri('tor_vu_ec2'));     // N
+  const TEd=toNmm(ri('tor_tu_ec2'));       // N·mm
+  const dst=curUnit==='us'?ri('tor_dst_ec2')*25.4:ri('tor_dst_ec2');
+  const s=toMM(ri('tor_s_ec2'));
+  const dl=curUnit==='us'?ri('tor_dl_ec2')*25.4:ri('tor_dl_ec2');
+  const nl=ri('tor_nl_ec2');
+
+  const Acp = b*h;
+  const Pcp = 2*(b+h);
+  const tef  = Math.max(Acp/Pcp, 2*cv); // EC2 §6.3.2(1)
+  const Ak   = (b-tef)*(h-tef);         // area enclosed by centreline of wall
+  const uk   = 2*((b-tef)+(h-tef));     // perimeter of Ak
+  const theta = Math.PI/4; // 45°
+  const cot_t = 1/Math.tan(theta);
+  const tan_t = Math.tan(theta);
+
+  // Threshold torsion T_Rd,c §6.3.2(5) (simplified: TRdc/TRdc,max interaction)
+  const fctm = fck<=50 ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
+  const Tth = 2*fctm*tef*Ak; // approx cracking torsion
+  const neglect_check = TEd <= Tth;
+
+  // Max torsion capacity §6.3.2(4)
+  const TRd_max = 2*nu*fcd*Ak*tef*Math.sin(theta)*Math.cos(theta);
+
+  // Required At/s (per leg) from torsion §6.3.2(2)
+  const At_s = TEd / (2*Ak*fyd*cot_t); // mm²/mm one leg — wait, EC2: At/s = TEd/(2*Ak*fyd), cot already in formula
+  // EC2 §6.3.2: A_sw/s = T_Ed / (2·A_k·f_ywd·cot θ)  — per leg on one side
+  const At_s_ec2 = TEd / (2*Ak*fyd*cot_t);
+
+  // Shear: VRd,c (no stirrups) §6.2.2
+  const d = h - cv - dst/2 - dl/2;
+  const rho_l = Math.min(0.02, 0.01); // assumed
+  const k = Math.min(2.0, 1+Math.sqrt(200/d));
+  const VRd_c = Math.max((0.18/gc)*k*Math.pow(rho_l*fck,1/3)*b*d, (0.035*Math.pow(k,1.5)*Math.sqrt(fck))*b*d);
+  const VRd_s = (2*(Math.PI/4*dst*dst)/s) * fyd * d * cot_t;
+  const VRd_max = nu*fcd*b*d / (cot_t + tan_t);
+
+  // Combined check §6.3.2(4): TEd/TRd,max + VEd/VRd,max ≤ 1
+  const dc_combined = TEd/TRd_max + VEd/VRd_max;
+
+  // Al required §6.3.2(3): Al = (At/s)*uk*(fyd/fyd)*cot²θ = At_s*uk*cot²θ
+  const Al_req = At_s_ec2 * uk * cot_t*cot_t;
+  const Al_prov = nl * Math.PI/4 * dl*dl;
+  const At_prov = (Math.PI/4*dst*dst)/s;
+  const dc_t = At_s_ec2 > 0 ? (At_prov > 0 ? At_s_ec2/At_prov : Infinity) : 0;
+  const dc_l = Al_req > 0 ? (Al_prov > 0 ? Al_req/Al_prov : Infinity) : 0;
+  const dc_v = VEd > VRd_c ? VEd/VRd_s : VEd/VRd_c;
+  const dc = Math.min(99, Math.max(dc_combined, dc_v, dc_t, dc_l));
+
+  const warns=[];
+  if(dc_combined>1.0) warns.push(`<b>Section size insufficient:</b> T<sub>Ed</sub>/T<sub>Rd,max</sub> + V<sub>Ed</sub>/V<sub>Rd,max</sub> = ${dc_combined.toFixed(3)} > 1.0. Increase dimensions.`);
+  if(Al_prov<Al_req) warns.push(`<b>Longitudinal steel insufficient (strength):</b> A<sub>sl,prov</sub> = ${fmtAs(Al_prov)} < A<sub>sl,req</sub> = ${fmtAs(Al_req)} §6.3.2(3). Increase bar count or diameter.`);
+  if(At_prov<At_s_ec2) warns.push(`<b>Stirrup insufficient (strength):</b> A<sub>sw</sub>/s prov = ${fmtArea2(At_prov)} < req = ${fmtArea2(At_s_ec2)} §6.3.2(2). Reduce spacing or increase stirrup diameter.`);
+
+  const [trdV,trdUn]=splitVal(fmtTorque(TRd_max));
+  const [tedV,tedUn]=splitVal(fmtTorque(TEd));
+
+  document.getElementById('tor_ec2_empty').style.display='none';
+  document.getElementById('tor_ec2_card').style.display='';
+  document.getElementById('tor_ec2_body').innerHTML=buildReport(
+    [['Section (b×h)',`${ri('tor_b_ec2')}×${ri('tor_h_ec2')} ${U.bU}`],
+     ['Nominal cover',`${ri('tor_cv_ec2')} ${U.cvU}`],
+     ['f<sub>ck</sub> / f<sub>yk</sub>',`${fck} / ${fyk} MPa`],
+     ['γ<sub>c</sub> / γ<sub>s</sub>',`${gc.toFixed(2)} / ${gs.toFixed(2)}`],
+     ['V<sub>Ed</sub>',`${ri('tor_vu_ec2')} ${U.vuU}`],
+     ['T<sub>Ed</sub>',`${ri('tor_tu_ec2')} ${U.tuU}`],
+     ['Stirrups',`Ø${ri('tor_dst_ec2')} ${U.dbU} @ ${ri('tor_s_ec2')} ${U.bU}`],
+     ['Long. bars',`${nl}×Ø${ri('tor_dl_ec2')} ${U.dbU}`]],
+    [{label:'T<sub>Rd,max</sub>',value:trdV,unit:trdUn},
+     {label:'T<sub>Ed</sub>',value:tedV,unit:tedUn,cls:dc_combined>1?'err':''},
+     {label:'V+T D/C',value:dc_combined.toFixed(3),unit:'≤ 1.0',cls:dc_combined>1?'err':dc_combined>0.85?'warn':'ok'},
+     {label:'Overall D/C',value:dc.toFixed(3),unit:'≤ 1.0',cls:dc>1?'err':dc>0.85?'warn':'ok'}],
+    [{desc:'Wall thickness t<sub>ef</sub>',formula:'max(A<sub>cp</sub>/P<sub>cp</sub>, 2c)',val:fmtLen(tef)},
+     {desc:'Enclosed area A<sub>k</sub>',formula:'(b−t<sub>ef</sub>)·(h−t<sub>ef</sub>)',val:`${Ak.toFixed(0)} mm²`},
+     {desc:'Perimeter u<sub>k</sub>',formula:'2·[(b−t<sub>ef</sub>)+(h−t<sub>ef</sub>)]',val:`${uk.toFixed(0)} mm`},
+     {desc:'Strut factor ν',formula:'0.6·(1−f<sub>ck</sub>/250)',val:nu.toFixed(3)},
+     {desc:'Max torsion T<sub>Rd,max</sub>',formula:'2ν·f<sub>cd</sub>·A<sub>k</sub>·t<sub>ef</sub>·sin θ·cos θ',val:fmtTorque(TRd_max)},
+     {desc:'Max shear V<sub>Rd,max</sub>',formula:'ν·f<sub>cd</sub>·b·d/(cot θ+tan θ)',val:fmtForce(VRd_max)},
+     {desc:'Section V+T check §6.3.2(4)',formula:'T<sub>Ed</sub>/T<sub>Rd,max</sub> + V<sub>Ed</sub>/V<sub>Rd,max</sub>',val:dc_combined.toFixed(3),cls:dc_combined<=1?'ok':'err',
+       check:dc_combined<=1?{type:'ok',label:'≤ 1.0 ✓'}:{type:'err',label:'> 1.0 ✗'}},
+     {desc:'Required A<sub>sw</sub>/s (per leg) §6.3.2(2)',formula:'T<sub>Ed</sub>/(2·A<sub>k</sub>·f<sub>yd</sub>·cot θ)',val:fmtArea2(At_s_ec2)},
+     {desc:'Provided A<sub>sw</sub>/s (one leg)',formula:'(π/4·d²<sub>st</sub>)/s',val:fmtArea2(At_prov),cls:At_prov>=At_s_ec2?'ok':'err',
+       check:At_prov>=At_s_ec2?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Required long. A<sub>sl</sub> §6.3.2(3)',formula:'(A<sub>sw</sub>/s)·u<sub>k</sub>·cot²θ',val:fmtAs(Al_req)},
+     {desc:'Provided long. A<sub>sl</sub>',formula:`${nl}×π/4·d²<sub>l</sub>`,val:fmtAs(Al_prov),cls:Al_prov>=Al_req?'ok':'err',
+       check:Al_prov>=Al_req?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Concrete shear V<sub>Rd,c</sub> §6.2.2',formula:'(0.18/γ<sub>c</sub>)·k·(ρ<sub>l</sub>·f<sub>ck</sub>)<sup>1/3</sup>·b·d',val:fmtForce(VRd_c)},
+     {desc:'Stirrup shear V<sub>Rd,s</sub> (provided)',formula:'(2·A<sub>sw</sub>/s)·f<sub>yd</sub>·d·cot θ',val:fmtForce(VRd_s),cls:VRd_s>=VEd||VEd<=VRd_c?'ok':'err'},
+     {desc:'<span style="color:var(--text-dim);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase">D/C Summary</span>',formula:'',val:''},
+     {desc:'<b>V+T D/C</b> — Strut interaction §6.3.2(4)',
+       formula:'T<sub>Ed</sub>/T<sub>Rd,max</sub> + V<sub>Ed</sub>/V<sub>Rd,max</sub> ≤ 1.0 &nbsp;<i>(concrete strut capacity — governs section size)</i>',
+       val:dc_combined.toFixed(3),cls:dc_combined<=1?'ok':'err',
+       check:dc_combined<=1?{type:'ok',label:'≤ 1.0 ✓'}:{type:'err',label:'> 1.0 ✗ — enlarge section'}},
+     {desc:'<b>Overall D/C</b> — worst of: strut + shear + stirrup + longitudinal',
+       formula:'max( T<sub>Ed</sub>/T<sub>Rd,max</sub>+V<sub>Ed</sub>/V<sub>Rd,max</sub> ; &nbsp;V<sub>Ed</sub>/V<sub>Rd</sub> ; &nbsp;A<sub>sw,req</sub>/A<sub>sw,prov</sub> ; &nbsp;A<sub>sl,req</sub>/A<sub>sl,prov</sub> )',
+       val:dc.toFixed(3),cls:dc<=1?'ok':dc<=0.85?'warn':'err',
+       check:dc<=1?{type:'ok',label:'≤ 1.0 ✓'}:{type:'err',label:'> 1.0 ✗'}}],
+    warns
+  );
+}
+
+window.addEventListener('load',()=>{
+  const fmt=(id,dec)=>{const e=document.getElementById(id);if(e&&e.value)e.value=parseFloat(e.value).toFixed(dec);};
+  ['aci','ec2'].forEach(pfx=>{
+    fmt('b_'+pfx,2); fmt('h_'+pfx,2); fmt('cv_'+pfx,3);
+    fmt('cap_b_'+pfx,2); fmt('cap_h_'+pfx,2); fmt('cap_cv_'+pfx,3);
+    fmt('cap_rs_'+pfx,3);
+    fmt('tor_b_'+pfx,2); fmt('tor_h_'+pfx,2); fmt('tor_cv_'+pfx,3);
+    fmt('tor_s_'+pfx,3);
+  });
+  applyHash();
+});
+
+function applyHash() {
+  const hash = location.hash.replace('#','');
+  if(hash==='flexcap'){
+    modTab(document.getElementById('mtab-flexcap'),'mod-flexcap');
+  } else if(hash==='torsion'){
+    modTab(document.getElementById('mtab-torsion'),'mod-torsion');
+  } else {
+    modTab(document.getElementById('mtab-flexdesign'),'mod-flexdesign');
+  }
+}
+
+window.addEventListener('hashchange', applyHash);
+
+// ══ AUTO-CALCULATE ON INPUT ══
+let autoCalcTimer;
+function debounceCalc(fn) {
+  clearTimeout(autoCalcTimer);
+  autoCalcTimer = setTimeout(fn, 600);
+}
+document.querySelectorAll('#beam-aci input[type="number"], #beam-aci select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcACI));
+});
+document.querySelectorAll('#beam-ec2 input[type="number"], #beam-ec2 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcEC2));
+});
+document.querySelectorAll('#cap-aci input[type="number"], #cap-aci select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcCapACI));
+});
+document.querySelectorAll('#cap-ec2 input[type="number"], #cap-ec2 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcCapEC2));
+});
+document.querySelectorAll('#tor-aci input[type="number"], #tor-aci select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcTorACI));
+});
+document.querySelectorAll('#tor-ec2 input[type="number"], #tor-ec2 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcTorEC2));
+});
+</script>
+
+<!-- Validation helpers -->
+<script>
+function _valClear(ids){
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('val-err');});
+  document.querySelectorAll('.val-banner').forEach(el=>el.remove());
+}
+function _valShow(containerId, errors){
+  const wrap=document.getElementById(containerId);
+  if(!wrap)return;
+  const box=document.createElement('div');
+  box.className='val-banner';
+  box.setAttribute('role','alert');
+  box.setAttribute('aria-live','assertive');
+  box.innerHTML='<span>⚠️</span><div><strong>Please check the following:</strong><ul>'+
+    errors.map(e=>'<li>'+e+'</li>').join('')+'</ul></div>';
+  wrap.insertBefore(box, wrap.firstChild);
+}
+function _valMark(id){const el=document.getElementById(id);if(el)el.classList.add('val-err');}
+
+// ── BEAM (ACI) ──
+function validateACI(){
+  const U=UNITS[curUnit];
+  const b=toMM(ri('b_aci')), h=toMM(ri('h_aci')), cv=toMM(ri('cv_aci'));
+  const fc=toMPa(ri('fc_aci')), fy=toMPa(ri('fy_aci')), Mu=toNmm(ri('mu_aci'));
+  const ids=['b_aci','h_aci','cv_aci','fc_aci','fy_aci','mu_aci'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('b_aci');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('h_aci');}
+  if(b&&h&&cv&&cv>=h-50){e.push("Cover too large relative to h");_valMark('cv_aci');}
+  if(!fc||fc<17||fc>100){e.push("f'c: 17–100 MPa (ACI 318)");_valMark('fc_aci');}
+  if(!fy||fy<240||fy>600){e.push("fy: 240–600 MPa");_valMark('fy_aci');}
+  if(!Mu||Mu<=0){e.push("Applied moment Mu must be > 0");_valMark('mu_aci');}
+  if(e.length){_valShow('beam-aci',e);return false;}
+  return true;
+}
+
+// ── BEAM (EC2) ──
+function validateEC2beam(){
+  const b=toMM(ri('b_ec2')), h=toMM(ri('h_ec2')), cv=toMM(ri('cv_ec2'));
+  const fck=parseFloat(document.getElementById('fck_ec2').value)||0;
+  const fyk=parseFloat(document.getElementById('fyk_ec2').value)||0;
+  const MEd=toNmm(ri('me_ec2'));
+  const ids=['b_ec2','h_ec2','cv_ec2','fck_ec2','fyk_ec2','me_ec2'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('b_ec2');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('h_ec2');}
+  if(b&&h&&cv&&cv>=h-50){e.push("Cover too large relative to h");_valMark('cv_ec2');}
+  if(!fck||fck<12||fck>90){e.push("fck: 12–90 MPa (EC2)");_valMark('fck_ec2');}
+  if(!fyk||fyk<240||fyk>600){e.push("fyk: 240–600 MPa");_valMark('fyk_ec2');}
+  if(!MEd||MEd<=0){e.push("Applied moment MEd must be > 0");_valMark('me_ec2');}
+  if(e.length){_valShow('beam-ec2',e);return false;}
+  return true;
+}
+
+// ── CAP ACI ──
+function validateCapACI(){
+  const b=toMM(ri('cap_b_aci')), h=toMM(ri('cap_h_aci'));
+  const fc=toMPa(ri('cap_fc_aci')), fy=toMPa(ri('cap_fy_aci'));
+  const ids=['cap_b_aci','cap_h_aci','cap_fc_aci','cap_fy_aci'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('cap_b_aci');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('cap_h_aci');}
+  if(!fc||fc<17||fc>100){e.push("f'c: 17–100 MPa");_valMark('cap_fc_aci');}
+  if(!fy||fy<240||fy>600){e.push("fy: 240–600 MPa");_valMark('cap_fy_aci');}
+  if(e.length){_valShow('cap-aci',e);return false;}
+  return true;
+}
+
+// ── CAP EC2 ──
+function validateCapEC2(){
+  const b=toMM(ri('cap_b_ec2')), h=toMM(ri('cap_h_ec2'));
+  const fck=parseFloat(document.getElementById('cap_fck_ec2').value)||0;
+  const fyk=parseFloat(document.getElementById('cap_fyk_ec2').value)||0;
+  const ids=['cap_b_ec2','cap_h_ec2','cap_fck_ec2','cap_fyk_ec2'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('cap_b_ec2');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('cap_h_ec2');}
+  if(!fck||fck<12||fck>90){e.push("fck: 12–90 MPa");_valMark('cap_fck_ec2');}
+  if(!fyk||fyk<240||fyk>600){e.push("fyk: 240–600 MPa");_valMark('cap_fyk_ec2');}
+  if(e.length){_valShow('cap-ec2',e);return false;}
+  return true;
+}
+
+// ── TORSION ACI ──
+function validateTorACI(){
+  const b=toMM(ri('tor_b_aci')), h=toMM(ri('tor_h_aci'));
+  const fc=toMPa(ri('tor_fc_aci')), fy=toMPa(ri('tor_fy_aci'));
+  const ids=['tor_b_aci','tor_h_aci','tor_fc_aci','tor_fy_aci'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('tor_b_aci');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('tor_h_aci');}
+  if(!fc||fc<17||fc>100){e.push("f'c: 17–100 MPa");_valMark('tor_fc_aci');}
+  if(!fy||fy<240||fy>600){e.push("fy: 240–600 MPa");_valMark('tor_fy_aci');}
+  if(e.length){_valShow('tor-aci',e);return false;}
+  return true;
+}
+
+// ── TORSION EC2 ──
+function validateTorEC2(){
+  const b=toMM(ri('tor_b_ec2')), h=toMM(ri('tor_h_ec2'));
+  const fck=parseFloat(document.getElementById('tor_fck_ec2').value)||0;
+  const fyk=parseFloat(document.getElementById('tor_fyk_ec2').value)||0;
+  const ids=['tor_b_ec2','tor_h_ec2','tor_fck_ec2','tor_fyk_ec2'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('tor_b_ec2');}
+  if(!h||h<200||h>2000){e.push("Height h: 200–2000 mm");_valMark('tor_h_ec2');}
+  if(!fck||fck<12||fck>90){e.push("fck: 12–90 MPa");_valMark('tor_fck_ec2');}
+  if(!fyk||fyk<240||fyk>600){e.push("fyk: 240–600 MPa");_valMark('tor_fyk_ec2');}
+  if(e.length){_valShow('tor-ec2',e);return false;}
+  return true;
+}
+</script>
+
+<!-- AdBlock Notice -->
+<div class="adblock-notice" id="adblockNotice">
+  <div class="adblock-notice-content">
+    <span class="adblock-notice-icon">ℹ️</span>
+    <span class="adblock-notice-text">We noticed you're using an ad blocker. This site is free and ad-supported — please consider disabling it to support us.</span>
+  </div>
+  <button class="adblock-notice-close" onclick="dismissAdBlockNotice()">✕ Dismiss</button>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
+  const testAd=document.createElement('div');
+  testAd.className='ad adsbox adsbygoogle';
+  testAd.style.cssText='position:absolute;width:1px;height:1px;top:-9999px;left:-9999px;';
+  document.body.appendChild(testAd);
+  setTimeout(function(){
+    if(testAd.offsetHeight===0||window.getComputedStyle(testAd).display==='none'){
+      const n=document.getElementById('adblockNotice');
+      if(n) n.classList.add('show');
+    }
+    testAd.remove();
+  },200);
+})();
+function dismissAdBlockNotice(){
+  const n=document.getElementById('adblockNotice');
+  if(n) n.classList.remove('show');
+  localStorage.setItem('adblockNoticeDismissed','true');
+}
+</script>
+</body>
+</html>

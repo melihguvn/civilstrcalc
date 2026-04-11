@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Test Runner</title></head>
+<body>
+<pre id="out"></pre>
+<script>
+'use strict';
+const lines = [];
+const _log = s => { lines.push(String(s)); };
+// Override console.log
+const origLog = console.log;
+console.log = _log;
+
+let totalPassed = 0, totalFailed = 0;
+const suiteResults = [];
+
+function runSuite(name, fn) {
+  lines.push('\n════════════════════════════════════════');
+  lines.push('FILE: ' + name);
+  lines.push('════════════════════════════════════════');
+  const before_p = totalPassed, before_f = totalFailed;
+  try { fn(); } catch(e) { lines.push('  !! ERROR: ' + e.message); }
+  const p = totalPassed - before_p, f = totalFailed - before_f;
+  suiteResults.push({name, passed: p, failed: f});
+}
+
+// Shared check functions that accumulate into totalPassed/totalFailed
+const TOL = 0.015;
+function check(label, computed, expected, tol) {
+  tol = tol || TOL;
+  const denom = Math.abs(expected) < 1e-9 ? 1 : expected;
+  const err = Math.abs((computed - expected) / denom);
+  const ok = err <= tol;
+  console.log('  ' + (ok ? '✓ PASS' : '✗ FAIL') + '  ' + label);
+  if (!ok) console.log('           computed=' + computed.toFixed(5) + '  expected=' + expected.toFixed(5) + '  err=' + (err * 100).toFixed(3) + '%');
+  ok ? totalPassed++ : totalFailed++;
+}
+function checkBool(label, computed, expected) {
+  const ok = computed === expected;
+  console.log('  ' + (ok ? '✓ PASS' : '✗ FAIL') + '  ' + label + '  (' + computed + ')');
+  ok ? totalPassed++ : totalFailed++;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 1. ACI FLEXURAL DESIGN
+// ══════════════════════════════════════════════════════════════════════
+runSuite('ACI Flexural Design', function() {
+  const U = {
+    knm: { lenScale:1000, momScale:1e6, fcScale:1, dbar:0.020 },
+    nmm: { lenScale:1,    momScale:1,   fcScale:1, dbar:20 },
+    us:  { lenScale:25.4, momScale:1.356e6, fcScale:0.006895, dbar:0.75 },
+  };
+  function designACI({b,h,cv,fc,fy,Mu,phi,dbar}) {
+    phi = phi||0.90; dbar = dbar||20;
+    const d = h-cv-dbar/2;
+    const b1 = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
+    const rbal = 0.85*b1*(fc/fy)*(600/(600+fy));
+    const rmax = 0.75*rbal;
+    const rmin = Math.max(1.4/fy, 0.25*Math.sqrt(fc)/fy);
+    const Asmin = rmin*b*d;
+    const Rn = Mu/(phi*b*d*d);
+    const disc = 1-2*Rn/(0.85*fc);
+    const rreq = (0.85*fc/fy)*(1-Math.sqrt(disc));
+    const ruse = Math.max(rreq, rmin);
+    const As = ruse*b*d;
+    const a = As*fy/(0.85*fc*b);
+    const c = a/b1;
+    const et = 0.003*(d-c)/c;
+    const over = rreq>rmax, minGov = rreq<rmin;
+    return {d,b1,rbal,rmax,rmin,rreq,ruse,As,a,c,et,over,minGov};
+  }
+  function designFromUnit(unit, {b,h,cv,fc,fy,Mu,phi}) {
+    const U2 = U[unit];
+    return designACI({
+      b:b*U2.lenScale, h:h*U2.lenScale, cv:cv*U2.lenScale,
+      fc:fc*U2.fcScale, fy:fy*U2.fcScale,
+      Mu:Mu*U2.momScale, phi,
+      dbar:U2.dbar*U2.lenScale,
+    });
+  }
+
+  // P1: b300h500 fc28 fy420 Mu200kNm
+  const P1={knm:{b:0.3,h:0.5,cv:0.04,fc:28,fy:420,Mu:200,phi:0.9},
+            nmm:{b:300,h:500,cv:40,fc:28,fy:420,Mu:200e6,phi:0.9},
+            us:{b:300/25.4,h:500/25.4,cv:40/25.4,fc:28/0.006895,fy:420/0.006895,Mu:200e6/1.356e6,phi:0.9}};
+  const P1exp={d:450,b1:0.85,As:1283.4,a:22.54,c:26.52,et:0.01249};
+  // Recalculate expected precisely
+  {
+    const r=designFromUnit('nmm',P1.nmm);
+    console.log('\n── P1 singly (nmm) ──'); check('d',r.d,450,0.015); // cv=40, dbar=20 → d=500-40-10=450
+    // Actually let me just run all 3 units and verify they match nmm
+  }
+  for(const unit of ['knm','nmm','us']){
+    console.log('\n── P1 ('+unit+') ──');
+    const r=designFromUnit(unit,P1[unit]);
+    check('d',r.d,450,0.01);
+    check('b1',r.b1,0.85,0.001);
+    check('rmin_gov',r.minGov?0:1,1,0); // minGov should be false → result=1
+    checkBool('minGov false',r.minGov,false);
+    check('et>0.005',r.et>0.005?1:0,1,0.001);
+  }
+  // P2: ρmin governs b350h600 fc25 fy420 Mu80kNm
+  const P2={knm:{b:0.35,h:0.6,cv:0.04,fc:25,fy:420,Mu:80,phi:0.9},
+            nmm:{b:350,h:600,cv:40,fc:25,fy:420,Mu:80e6,phi:0.9},
+            us:{b:350/25.4,h:600/25.4,cv:40/25.4,fc:25/0.006895,fy:420/0.006895,Mu:80e6/1.356e6,phi:0.9}};
+  for(const unit of ['knm','nmm','us']){
+    console.log('\n── P2 rhomin ('+unit+') ──');
+    const r=designFromUnit(unit,P2[unit]);
+    check('d',r.d,550,0.01);
+    checkBool('minGov true',r.minGov,true);
+  }
+  // P3: fc35 beta1=0.80 b300h600 Mu450kNm
+  const P3={knm:{b:0.3,h:0.6,cv:0.04,fc:35,fy:420,Mu:450,phi:0.9},
+            nmm:{b:300,h:600,cv:40,fc:35,fy:420,Mu:450e6,phi:0.9},
+            us:{b:300/25.4,h:600/25.4,cv:40/25.4,fc:35/0.006895,fy:420/0.006895,Mu:450e6/1.356e6,phi:0.9}};
+  for(const unit of ['knm','nmm','us']){
+    console.log('\n── P3 fc35 ('+unit+') ──');
+    const r=designFromUnit(unit,P3[unit]);
+    check('d',r.d,550,0.01);
+    check('b1',r.b1,0.80,0.01);
+    checkBool('not over',r.over,false);
+  }
+  // unit consistency
+  console.log('\n── unit consistency ──');
+  for(const P of [P1,P2,P3]){
+    const rk=designFromUnit('knm',P.knm), rn=designFromUnit('nmm',P.nmm), ru=designFromUnit('us',P.us);
+    check('d knm==nmm',rk.d,rn.d); check('d us==nmm',ru.d,rn.d);
+    check('As knm==nmm',rk.As,rn.As); check('As us==nmm',ru.As,rn.As);
+    check('et knm==nmm',rk.et,rn.et); check('et us==nmm',ru.et,rn.et);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 2. EC2 FLEXURAL DESIGN
+// ══════════════════════════════════════════════════════════════════════
+runSuite('EC2 Flexural Design', function() {
+  const U = {
+    knm:{lenScale:1000,momScale:1e6,dbar:0.020},
+    nmm:{lenScale:1,momScale:1,dbar:20},
+    us:{lenScale:25.4,momScale:1.356e6,dbar:0.75},
+  };
+  function designEC2Singly({b,h,cv,fck,fyk,gc,gs,MEd,dbar}) {
+    dbar=dbar||20;
+    const fcd=fck/gc, fyd=fyk/gs;
+    const lam=fck<=50?0.8:0.8-(fck-50)/400;
+    const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+    const d=h-cv-dbar/2;
+    const K=MEd/(b*d*d*fcd);
+    const Kl=0.167;
+    const Asmin=Math.max(0.26*fctm/fyk,0.0013)*b*d;
+    const z=Math.min(d*(0.5+Math.sqrt(Math.max(0,0.25-K/1.134))),0.95*d);
+    const As_req=MEd/(fyd*z);
+    const Asdes=Math.max(As_req,Asmin);
+    const minGov=As_req<Asmin, over=K>Kl;
+    return {d,fcd,fyd,fctm,lam,K,z,As_req,Asmin,Asdes,minGov,over};
+  }
+  function designEC2Doubly({b,h,cv,fck,fyk,gc,gs,MEd,dprime,Asp,dbar}) {
+    dbar=dbar||20;
+    const fcd=fck/gc, fyd=fyk/gs;
+    const eta=fck<=50?1.0:1.0-(fck-50)/200;
+    const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+    const Es=200000, ecu=0.0035, Kl=0.167;
+    const d=h-cv-dbar/2;
+    const Asmin=Math.max(0.26*fctm/fyk,0.0013)*b*d;
+    const z_lim=Math.min(d*(0.5+Math.sqrt(Math.max(0,0.25-Kl/1.134))),0.95*d);
+    const xu_lim=(d-z_lim)/0.4;
+    const eps_sc=ecu*(xu_lim-dprime)/xu_lim;
+    const fsc=Math.min(fyd,Math.max(0,Es*eps_sc));
+    const fsc_eff=fsc-eta*fcd;
+    const deltaM=MEd-Kl*b*d*d*fcd;
+    const Asp_req=fsc_eff>0.001?deltaM/(fsc_eff*(d-dprime)):Infinity;
+    const compOK=Asp>=Asp_req;
+    const As1=Kl*b*d*d*fcd/(fyd*z_lim);
+    const deltaAs=Asp*Math.max(fsc_eff,0)/fyd;
+    const As_req=As1+deltaAs;
+    return {d,fcd,fyd,z_lim,xu_lim,eps_sc,fsc,fsc_eff,deltaM,Asp_req,compOK,As1,deltaAs,As_req,Asmin};
+  }
+  function fromUnit(unit,{b,h,cv,fck,fyk,gc,gs,MEd},singly,doublyExtra) {
+    const ls=U[unit].lenScale, ms=U[unit].momScale, db=U[unit].dbar*U[unit].lenScale;
+    const p={b:b*ls,h:h*ls,cv:cv*ls,fck,fyk,gc,gs,MEd:MEd*ms,dbar:db};
+    if(singly!==false) return designEC2Singly(p);
+    return designEC2Doubly({...p,dprime:doublyExtra.dprime*ls,Asp:doublyExtra.Asp});
+  }
+
+  // P1: singly b300h500 fck25 MEd=120kNm
+  for(const unit of ['knm','nmm','us']){
+    console.log('\n── EC2 P1 singly ('+unit+') ──');
+    const inp={knm:{b:0.3,h:0.5,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120},
+               nmm:{b:300,h:500,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120e6},
+               us:{b:300/25.4,h:500/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120e6/1.356e6}};
+    const r=fromUnit(unit,inp[unit]);
+    check('d',r.d,460,0.01);
+    check('K',r.K,0.11341,0.01);
+    check('z',r.z,408.1,0.01);
+    check('As_req',r.As_req,676.3,0.01);
+    checkBool('minGov false',r.minGov,false);
+  }
+  // P2: rhomin b350h600 fck25 MEd=60kNm
+  for(const unit of ['knm','nmm','us']){
+    console.log('\n── EC2 P2 rhomin ('+unit+') ──');
+    const inp={knm:{b:0.35,h:0.6,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:60},
+               nmm:{b:350,h:600,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:60e6},
+               us:{b:350/25.4,h:600/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:60e6/1.356e6}};
+    const r=fromUnit(unit,inp[unit]);
+    check('d',r.d,560,0.01);
+    check('K',r.K,0.03279,0.01);
+    check('z',r.z,532.0,0.01);
+    check('As_req',r.As_req,259.4,0.01);
+    checkBool('minGov true',r.minGov,true);
+  }
+  // P3: doubly b250h450 fck25 MEd=200kNm Asp=2xO16
+  {
+    const Asp=2*Math.PI/4*16*16;
+    const dprimeM=0.050, dprimeN=50, dprimeU=50/25.4;
+    for(const [unit,inp,dprime] of [
+      ['knm',{b:0.25,h:0.45,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:200},dprimeM],
+      ['nmm',{b:250,h:450,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:200e6},dprimeN],
+      ['us', {b:250/25.4,h:450/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:200e6/1.356e6},dprimeU],
+    ]){
+      console.log('\n── EC2 P3 doubly ('+unit+') ──');
+      const r=fromUnit(unit,inp,false,{dprime,Asp});
+      check('d',r.d,410,0.01);
+      check('Asp_req',r.Asp_req,551.3,0.015);
+      checkBool('compOK false',r.compOK,false);
+      check('As_req',r.As_req,1186.4,0.015);
+    }
+  }
+  // unit consistency
+  console.log('\n── EC2 unit consistency ──');
+  {
+    const I1={knm:{b:0.3,h:0.5,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120},
+              nmm:{b:300,h:500,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120e6},
+              us:{b:300/25.4,h:500/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,MEd:120e6/1.356e6}};
+    const rk=fromUnit('knm',I1.knm),rn=fromUnit('nmm',I1.nmm),ru=fromUnit('us',I1.us);
+    check('d knm==nmm',rk.d,rn.d); check('d us==nmm',ru.d,rn.d);
+    check('As_req knm==nmm',rk.As_req,rn.As_req); check('As_req us==nmm',ru.As_req,rn.As_req);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 3. FLEXURAL CAPACITY ACI
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Flexural Capacity ACI', function() {
+  const U={knm:{lenScale:1000,momScale:1e6,fcScale:1},nmm:{lenScale:1,momScale:1,fcScale:1},us:{lenScale:25.4,momScale:1.356e6,fcScale:0.006895}};
+  function capACI({b,h,cv,fc,fy,phi,dbt,nbt,hasRow2,db2,nb2,rs,hasComp,dbc,nbc}) {
+    phi=phi||0.9; hasRow2=hasRow2||false; hasComp=hasComp||false;
+    db2=db2||0; nb2=nb2||0; rs=rs||0; dbc=dbc||0; nbc=nbc||0;
+    const Es=200000,ecu=0.003;
+    const b1=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);
+    const As=nbt*Math.PI/4*dbt*dbt;
+    const As2=hasRow2?nb2*Math.PI/4*db2*db2:0;
+    const AsT=As+As2;
+    const Asp=hasComp?nbc*Math.PI/4*dbc*dbc:0;
+    const d1=h-cv-dbt/2, d2=hasRow2?d1-rs:d1;
+    const d=hasRow2?(As*d1+As2*d2)/AsT:d1;
+    const d_prime=hasComp?cv+dbc/2:0;
+    let c=AsT*fy/(0.85*fc*b*b1+(hasComp?Asp*fy/b1:0)),fps=0;
+    for(let i=0;i<50;i++){
+      const eps=hasComp?ecu*(c-d_prime)/c:0;
+      fps=hasComp?Math.min(fy,Math.max(0,Es*eps)):0;
+      const cN=(AsT*fy-(hasComp?Asp*fps:0))/(0.85*fc*b*b1);
+      if(Math.abs(cN-c)<0.01){c=cN;break;}c=cN;
+    }
+    const eps_s=hasComp?ecu*(c-d_prime)/c:0;
+    fps=hasComp?Math.min(fy,Math.max(0,Es*eps_s)):0;
+    const a=b1*c, et=ecu*(d-c)/c;
+    const Mn=0.85*fc*b*a*(d-a/2)+(hasComp?Asp*fps*(d-d_prime):0);
+    const phiMn=phi*Mn;
+    return {d,d_prime,As,AsT,Asp,b1,c,a,fps,et,Mn,phiMn};
+  }
+  function capFromUnit(unit,inp){
+    const ls=U[unit].lenScale, fs=U[unit].fcScale;
+    return capACI({
+      b:inp.b*ls,h:inp.h*ls,cv:inp.cv*ls,fc:inp.fc*fs,fy:inp.fy*fs,phi:inp.phi||0.9,
+      dbt:unit==='us'?inp.dbt*25.4:inp.dbt, nbt:inp.nbt,
+      hasRow2:inp.hasRow2||false, db2:unit==='us'?(inp.db2||0)*25.4:(inp.db2||0), nb2:inp.nb2||0,
+      rs:(inp.rs||0)*ls, hasComp:inp.hasComp||false,
+      dbc:unit==='us'?(inp.dbc||0)*25.4:(inp.dbc||0), nbc:inp.nbc||0,
+    });
+  }
+  // P1 singly 4xO20 b300h500 cv40 fc28 fy420
+  const P1ref=capACI({b:300,h:500,cv:40,fc:28,fy:420,phi:0.9,dbt:20,nbt:4});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.5,cv:0.04,fc:28,fy:420,dbt:20,nbt:4},
+               nmm:{b:300,h:500,cv:40,fc:28,fy:420,dbt:20,nbt:4},
+               us:{b:300/25.4,h:500/25.4,cv:40/25.4,fc:28/0.006895,fy:420/0.006895,dbt:20/25.4,nbt:4}};
+    console.log('\n── Cap ACI P1 singly ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P1ref.d,0.01); check('a',r.a,P1ref.a,0.01); check('et',r.et,P1ref.et,0.01); check('phiMn',r.phiMn,P1ref.phiMn,0.01);
+  }
+  // P2 two-row 4+2xO22 b300h600 cv40 rs60
+  const P2ref=capACI({b:300,h:600,cv:40,fc:28,fy:420,phi:0.9,dbt:22,nbt:4,hasRow2:true,db2:22,nb2:2,rs:60});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.6,cv:0.04,fc:28,fy:420,dbt:22,nbt:4,hasRow2:true,db2:22,nb2:2,rs:0.060},
+               nmm:{b:300,h:600,cv:40,fc:28,fy:420,dbt:22,nbt:4,hasRow2:true,db2:22,nb2:2,rs:60},
+               us:{b:300/25.4,h:600/25.4,cv:40/25.4,fc:28/0.006895,fy:420/0.006895,dbt:22/25.4,nbt:4,hasRow2:true,db2:22/25.4,nb2:2,rs:60/25.4}};
+    console.log('\n── Cap ACI P2 two-row ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P2ref.d,0.01); check('AsT',r.AsT,P2ref.AsT,0.01); check('phiMn',r.phiMn,P2ref.phiMn,0.01);
+  }
+  // P3 doubly 5xO25+2xO16 b300h600 cv40
+  const P3ref=capACI({b:300,h:600,cv:40,fc:28,fy:420,phi:0.9,dbt:25,nbt:5,hasComp:true,dbc:16,nbc:2});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.6,cv:0.04,fc:28,fy:420,dbt:25,nbt:5,hasComp:true,dbc:16,nbc:2},
+               nmm:{b:300,h:600,cv:40,fc:28,fy:420,dbt:25,nbt:5,hasComp:true,dbc:16,nbc:2},
+               us:{b:300/25.4,h:600/25.4,cv:40/25.4,fc:28/0.006895,fy:420/0.006895,dbt:25/25.4,nbt:5,hasComp:true,dbc:16/25.4,nbc:2}};
+    console.log('\n── Cap ACI P3 doubly ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P3ref.d,0.01); check('c',r.c,P3ref.c,0.01); check('fps',r.fps,P3ref.fps,0.01); check('phiMn',r.phiMn,P3ref.phiMn,0.01);
+  }
+  // unit consistency
+  console.log('\n── Cap ACI unit consistency ──');
+  {
+    const I={knm:{b:0.3,h:0.5,cv:0.04,fc:28,fy:420,dbt:20,nbt:4},
+             nmm:{b:300,h:500,cv:40,fc:28,fy:420,dbt:20,nbt:4},
+             us:{b:300/25.4,h:500/25.4,cv:40/25.4,fc:28/0.006895,fy:420/0.006895,dbt:20/25.4,nbt:4}};
+    const rk=capFromUnit('knm',I.knm),rn=capFromUnit('nmm',I.nmm),ru=capFromUnit('us',I.us);
+    check('phiMn knm==nmm',rk.phiMn,rn.phiMn); check('phiMn us==nmm',ru.phiMn,rn.phiMn);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 4. FLEXURAL CAPACITY EC2
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Flexural Capacity EC2', function() {
+  const U={knm:{lenScale:1000,momScale:1e6},nmm:{lenScale:1,momScale:1},us:{lenScale:25.4,momScale:1.356e6}};
+  function capEC2({b,h,cv,fck,fyk,gc,gs,dbt,nbt,hasComp,dbc,nbc}) {
+    gc=gc||1.5;gs=gs||1.15;hasComp=hasComp||false;dbc=dbc||0;nbc=nbc||0;
+    const fcd=fck/gc,fyd=fyk/gs,lam=fck<=50?0.8:0.8-(fck-50)/400,eta=fck<=50?1:1-(fck-50)/200;
+    const Es=200000,ecu=0.0035;
+    const As=nbt*Math.PI/4*dbt*dbt,Asp=hasComp?nbc*Math.PI/4*dbc*dbc:0;
+    const AsT=As;
+    const d=h-cv-dbt/2,d_prime=hasComp?cv+dbc/2:0;
+    let x=AsT*fyd/(eta*fcd*lam*b),fps=0;
+    for(let i=0;i<50;i++){
+      const eps=hasComp?ecu*(x-d_prime)/x:0;
+      fps=hasComp?Math.min(fyd,Math.max(0,Es*eps)):0;
+      const xN=(AsT*fyd-(hasComp?Asp*fps:0))/(eta*fcd*lam*b);
+      if(Math.abs(xN-x)<0.01){x=xN;break;}x=xN;
+    }
+    const a=lam*x,xud=x/(h-cv-dbt/2);
+    const MRd=eta*fcd*b*a*(d-a/2)+(hasComp?Asp*fps*(d-d_prime):0);
+    return {d,d_prime,As,AsT,Asp,fcd,fyd,lam,eta,x,a,xud,fps,MRd};
+  }
+  function capFromUnit(unit,inp){
+    const ls=U[unit].lenScale;
+    return capEC2({
+      b:inp.b*ls,h:inp.h*ls,cv:inp.cv*ls,fck:inp.fck,fyk:inp.fyk,gc:inp.gc||1.5,gs:inp.gs||1.15,
+      dbt:unit==='us'?inp.dbt*25.4:inp.dbt,nbt:inp.nbt,
+      hasComp:inp.hasComp||false,
+      dbc:unit==='us'?(inp.dbc||0)*25.4:(inp.dbc||0),nbc:inp.nbc||0,
+    });
+  }
+  // P1 singly 4xO20 b300h500 cv30 fck25
+  const P1ref=capEC2({b:300,h:500,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:4});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.5,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:4},
+               nmm:{b:300,h:500,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:4},
+               us:{b:300/25.4,h:500/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20/25.4,nbt:4}};
+    console.log('\n── Cap EC2 P1 ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P1ref.d,0.01); check('x',r.x,P1ref.x,0.01); check('MRd',r.MRd,P1ref.MRd,0.01);
+  }
+  // P2 singly 5xO25 b300h600 cv40 fck40
+  const P2ref=capEC2({b:300,h:600,cv:40,fck:40,fyk:500,gc:1.5,gs:1.15,dbt:25,nbt:5});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.6,cv:0.04,fck:40,fyk:500,gc:1.5,gs:1.15,dbt:25,nbt:5},
+               nmm:{b:300,h:600,cv:40,fck:40,fyk:500,gc:1.5,gs:1.15,dbt:25,nbt:5},
+               us:{b:300/25.4,h:600/25.4,cv:40/25.4,fck:40,fyk:500,gc:1.5,gs:1.15,dbt:25/25.4,nbt:5}};
+    console.log('\n── Cap EC2 P2 fck40 ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P2ref.d,0.01); check('x',r.x,P2ref.x,0.01); check('MRd',r.MRd,P2ref.MRd,0.01);
+  }
+  // P3 doubly 6xO20+2xO16 b300h600 cv40
+  const P3ref=capEC2({b:300,h:600,cv:40,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:6,hasComp:true,dbc:16,nbc:2});
+  for(const unit of ['knm','nmm','us']){
+    const inp={knm:{b:0.3,h:0.6,cv:0.04,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:6,hasComp:true,dbc:16,nbc:2},
+               nmm:{b:300,h:600,cv:40,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:6,hasComp:true,dbc:16,nbc:2},
+               us:{b:300/25.4,h:600/25.4,cv:40/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20/25.4,nbt:6,hasComp:true,dbc:16/25.4,nbc:2}};
+    console.log('\n── Cap EC2 P3 doubly ('+unit+') ──');
+    const r=capFromUnit(unit,inp[unit]);
+    check('d',r.d,P3ref.d,0.01); check('x',r.x,P3ref.x,0.01); check('fps',r.fps,P3ref.fps,0.01); check('MRd',r.MRd,P3ref.MRd,0.01);
+  }
+  console.log('\n── Cap EC2 unit consistency ──');
+  {
+    const I={knm:{b:0.3,h:0.5,cv:0.03,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:4},
+             nmm:{b:300,h:500,cv:30,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20,nbt:4},
+             us:{b:300/25.4,h:500/25.4,cv:30/25.4,fck:25,fyk:500,gc:1.5,gs:1.15,dbt:20/25.4,nbt:4}};
+    const rk=capFromUnit('knm',I.knm),rn=capFromUnit('nmm',I.nmm),ru=capFromUnit('us',I.us);
+    check('MRd knm==nmm',rk.MRd,rn.MRd); check('MRd us==nmm',ru.MRd,rn.MRd);
+    check('x knm==nmm',rk.x,rn.x); check('x us==nmm',ru.x,rn.x);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 5. SHEAR ACI
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Shear Design ACI', function() {
+  const U={knm:{lenS:1000,forceS:1000},nmm:{lenS:1,forceS:1},us:{lenS:25.4,forceS:4448.2}};
+  function shearACI({bw,h,cv,db,legs,s,fc,fyt,phi,lam,Asl,Vu}) {
+    phi=phi||0.75;lam=lam||1.0;Asl=Asl||0;
+    const d=h-cv-db/2, rho_w=Math.min(Math.max(Asl/(bw*d),0.001),0.04);
+    const Av=legs*Math.PI*db*db/4;
+    const Vc=0.66*lam*Math.pow(rho_w,1/3)*Math.sqrt(fc)*bw*d;
+    const phiVc=phi*Vc;
+    const Vs_prov=s>0?Av*fyt*d/s:0;
+    const phiVn=phi*(Vc+Vs_prov);
+    const dc=phiVn>0?Vu/phiVn:999;
+    const Vs_req=Vu/phi-Vc;
+    const s_req=Vs_req>0?Av*fyt*d/Vs_req:Infinity;
+    const Vs_lim=0.33*Math.sqrt(fc)*bw*d;
+    const Vs_max=0.66*Math.sqrt(fc)*bw*d;
+    const s_max_code=Vs_prov<=Vs_lim?Math.min(d/2,600):Math.min(d/4,300);
+    const Avs_min=Math.max(0.062*Math.sqrt(fc)*bw/fyt,0.35*bw/fyt);
+    const s_max=Math.min(s_max_code,Av/Avs_min);
+    return {d,Vc,phiVc,Vs_prov,phiVn,dc,s_req,s_max,Vs_lim};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return shearACI({bw:inp.bw*U2.lenS,h:inp.h*U2.lenS,cv:inp.cv*U2.lenS,
+      db:inp.db,legs:inp.legs,s:inp.s*U2.lenS,fc:inp.fc,fyt:inp.fyt,
+      phi:inp.phi||0.75,lam:inp.lam||1.0,Asl:inp.Asl||0,Vu:inp.Vu*U2.forceS});
+  }
+  const cases=[
+    {b:{bw:300,h:500,cv:40,db:10,legs:2,s:200,fc:28,fyt:420,Asl:1520,Vu:200000}},
+    {b:{bw:250,h:450,cv:35,db:10,legs:2,s:200,fc:25,fyt:420,Asl:1100,Vu:150000}},
+    {b:{bw:350,h:600,cv:45,db:12,legs:2,s:140,fc:35,fyt:420,Asl:2400,Vu:380000}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=shearACI({...si,phi:0.75,lam:1.0});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Shear ACI P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{bw:si.bw/1000,h:si.h/1000,cv:si.cv/1000,s:si.s/1000,fc:si.fc,fyt:si.fyt,db:si.db,legs:si.legs,Asl:si.Asl,Vu:si.Vu/1000});
+      else if(unit==='nmm') Object.assign(inp,{bw:si.bw,h:si.h,cv:si.cv,s:si.s,fc:si.fc,fyt:si.fyt,db:si.db,legs:si.legs,Asl:si.Asl,Vu:si.Vu});
+      else Object.assign(inp,{bw:si.bw/25.4,h:si.h/25.4,cv:si.cv/25.4,s:si.s/25.4,fc:si.fc,fyt:si.fyt,db:si.db,legs:si.legs,Asl:si.Asl,Vu:si.Vu/4448.2});
+      const r=fromUnit(unit,inp);
+      check('d',r.d,ref.d); check('Vc',r.Vc,ref.Vc); check('phiVn',r.phiVn,ref.phiVn); check('dc',r.dc,ref.dc); check('s_req',r.s_req,ref.s_req);
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 6. SHEAR EC2
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Shear Design EC2', function() {
+  const U={knm:{lenS:1000,forceS:1000},nmm:{lenS:1,forceS:1},us:{lenS:25.4,forceS:4448.2}};
+  function shearEC2({bw,h,cv,db,legs,s,fck,fywk,gc,gs,Asl,VEd}) {
+    gc=gc||1.5;gs=gs||1.15;Asl=Asl||0;
+    const d=h-cv-db/2,Av=legs*Math.PI*db*db/4;
+    const fcd=fck/gc,fywd=fywk/gs,z=0.9*d;
+    const CRdc=0.18/gc,k=Math.min(1+Math.sqrt(200/d),2.0);
+    const rho_l=Math.min(Asl/(bw*d),0.02);
+    const VRdc=Math.max(CRdc*k*Math.pow(100*rho_l*fck,1/3)*bw*d,(0.035*Math.pow(k,1.5)*Math.sqrt(fck))*bw*d);
+    const nu1=0.6*(1-fck/250);
+    const VRdmax=bw*z*nu1*fcd/2;
+    const VRds_prov=Av*z*fywd/s;
+    const dc_c=VEd/VRdc,dc_s=VEd/VRds_prov,dc_max=VEd/VRdmax;
+    const dc=VEd<=VRdc?dc_c:Math.max(dc_s,dc_max);
+    const Asws_req=VEd/(z*fywd),s_req=Av/Asws_req;
+    const s_max=Math.min(Math.min(0.75*d,600),Av/(0.08*Math.sqrt(fck)/fywk*bw));
+    return {d,k,VRdc,VRdmax,VRds_prov,dc,s_req,s_max};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return shearEC2({bw:inp.bw*U2.lenS,h:inp.h*U2.lenS,cv:inp.cv*U2.lenS,
+      db:inp.db,legs:inp.legs,s:inp.s*U2.lenS,fck:inp.fck,fywk:inp.fywk,
+      gc:inp.gc||1.5,gs:inp.gs||1.15,Asl:inp.Asl||0,VEd:inp.VEd*U2.forceS});
+  }
+  const cases=[
+    {b:{bw:300,h:500,cv:40,db:10,legs:2,s:200,fck:25,fywk:500,Asl:1520,VEd:160000}},
+    {b:{bw:250,h:450,cv:35,db:10,legs:2,s:200,fck:25,fywk:500,Asl:1100,VEd:120000}},
+    {b:{bw:350,h:600,cv:45,db:12,legs:2,s:150,fck:35,fywk:500,Asl:2400,VEd:320000}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=shearEC2({...si,gc:1.5,gs:1.15});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Shear EC2 P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{bw:si.bw/1000,h:si.h/1000,cv:si.cv/1000,s:si.s/1000,fck:si.fck,fywk:si.fywk,db:si.db,legs:si.legs,Asl:si.Asl,VEd:si.VEd/1000,gc:1.5,gs:1.15});
+      else if(unit==='nmm') Object.assign(inp,{bw:si.bw,h:si.h,cv:si.cv,s:si.s,fck:si.fck,fywk:si.fywk,db:si.db,legs:si.legs,Asl:si.Asl,VEd:si.VEd,gc:1.5,gs:1.15});
+      else Object.assign(inp,{bw:si.bw/25.4,h:si.h/25.4,cv:si.cv/25.4,s:si.s/25.4,fck:si.fck,fywk:si.fywk,db:si.db,legs:si.legs,Asl:si.Asl,VEd:si.VEd/4448.2,gc:1.5,gs:1.15});
+      const r=fromUnit(unit,inp);
+      check('d',r.d,ref.d); check('VRdc',r.VRdc,ref.VRdc); check('VRds_prov',r.VRds_prov,ref.VRds_prov); check('dc',r.dc,ref.dc); check('s_req',r.s_req,ref.s_req);
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 7. TORSION ACI
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Torsion ACI', function() {
+  const U={knm:{lenScale:1000,forceScale:1e3,momScale:1e6,fcScale:1},nmm:{lenScale:1,forceScale:1,momScale:1,fcScale:1},us:{lenScale:25.4,forceScale:4448.2,momScale:1.356e6,fcScale:0.006895}};
+  function torACI({b,h,cv,fc,fy,fyl,lam,phi,Vu,Tu,dst,s,dl,nl}) {
+    lam=lam||1.0;phi=phi||0.75;
+    const Acp=b*h,Pcp=2*(b+h),x1=b-2*cv,y1=h-2*cv,Aoh=x1*y1,Ph=2*(x1+y1),Ao=0.85*Aoh;
+    const Tth=phi*0.083*lam*Math.sqrt(fc)*Acp*Acp/Pcp;
+    const neglect=Tu<=Tth;
+    const d=h-cv-dst/2-dl/2;
+    const Vc=0.66*lam*Math.pow(0.01,1/3)*Math.sqrt(fc)*b*d;
+    const At_s=Tu/(phi*2*Ao*fy);
+    const Av_s_req=Math.max(Vu/(phi*fy*d)-Vc/(fy*d),0);
+    const Avt_prov=2*(Math.PI/4*dst*dst)/s,At_prov=(Math.PI/4*dst*dst)/s;
+    const combined_req=Av_s_req+2*At_s,combined_prov=Avt_prov;
+    const Vn_check=Math.sqrt(Math.pow(Vu/phi,2)+Math.pow(Tu*Ph/(1.7*Aoh*Aoh),2));
+    const Vn_max=Vc+0.66*Math.sqrt(fc)*b*d;
+    const dc_section=Vn_check/Vn_max;
+    const Al_req=At_s*Ph*fy/fyl;
+    const Al_min=Math.max(0.42*Math.sqrt(fc)*Acp/fyl-At_s*Ph*fy/fyl,0);
+    const Al_prov=nl*Math.PI/4*dl*dl;
+    const AlReqEff=Math.max(Al_req,Al_min);
+    const dc_combined_stir=combined_prov>0?combined_req/combined_prov:(combined_req>0?999:0);
+    const dc_tor_l=Al_prov>0?AlReqEff/Al_prov:(AlReqEff>0?999:0);
+    const dc_shear=(phi*(Vc+Avt_prov*fy*d))>0?Vu/(phi*(Vc+Avt_prov*fy*d)):0;
+    const dc=Math.min(99,Math.max(dc_shear,dc_combined_stir,dc_section,dc_tor_l));
+    return {Aoh,Ph,Ao,Tth,neglect,d,Vc,At_s,At_prov,combined_req,combined_prov,Vn_check,Vn_max,dc_section,Al_req,Al_min,Al_prov,AlReqEff,dc};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return torACI({b:inp.b*U2.lenScale,h:inp.h*U2.lenScale,cv:inp.cv*U2.lenScale,
+      fc:inp.fc*U2.fcScale,fy:inp.fy*U2.fcScale,fyl:inp.fyl*U2.fcScale,
+      lam:inp.lam||1.0,phi:inp.phi||0.75,
+      Vu:inp.Vu*U2.forceScale,Tu:inp.Tu*U2.momScale,
+      dst:unit==='us'?inp.dst*25.4:inp.dst,s:inp.s*U2.lenScale,
+      dl:unit==='us'?inp.dl*25.4:inp.dl,nl:inp.nl});
+  }
+  const cases=[
+    {b:{b:300,h:500,cv:40,fc:28,fy:420,fyl:420,Vu:100000,Tu:25e6,dst:10,s:150,dl:16,nl:6}},
+    {b:{b:350,h:600,cv:40,fc:28,fy:420,fyl:420,Vu:150000,Tu:50e6,dst:12,s:200,dl:18,nl:8}},
+    {b:{b:300,h:500,cv:40,fc:35,fy:420,fyl:420,Vu:180000,Tu:40e6,dst:12,s:150,dl:16,nl:8}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=torACI({...si,lam:1.0,phi:0.75});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Torsion ACI P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{b:si.b/1000,h:si.h/1000,cv:si.cv/1000,fc:si.fc,fy:si.fy,fyl:si.fyl,Vu:si.Vu/1000,Tu:si.Tu/1e6,dst:si.dst,s:si.s/1000,dl:si.dl,nl:si.nl});
+      else if(unit==='nmm') Object.assign(inp,{b:si.b,h:si.h,cv:si.cv,fc:si.fc,fy:si.fy,fyl:si.fyl,Vu:si.Vu,Tu:si.Tu,dst:si.dst,s:si.s,dl:si.dl,nl:si.nl});
+      else Object.assign(inp,{b:si.b/25.4,h:si.h/25.4,cv:si.cv/25.4,fc:si.fc/0.006895,fy:si.fy/0.006895,fyl:si.fyl/0.006895,Vu:si.Vu/4448.2,Tu:si.Tu/1.356e6,dst:si.dst/25.4,s:si.s/25.4,dl:si.dl/25.4,nl:si.nl});
+      const r=fromUnit(unit,inp);
+      check('Aoh',r.Aoh,ref.Aoh); check('At_s',r.At_s,ref.At_s); check('Al_req',r.Al_req,ref.Al_req); check('dc_section',r.dc_section,ref.dc_section); check('dc',r.dc,ref.dc);
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 8. TORSION EC2
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Torsion EC2', function() {
+  const U={knm:{lenScale:1000,forceScale:1e3,momScale:1e6},nmm:{lenScale:1,forceScale:1,momScale:1},us:{lenScale:25.4,forceScale:4448.2,momScale:1.356e6}};
+  function torEC2({b,h,cv,fck,fyk,gc,gs,VEd,TEd,dst,s,dl,nl}) {
+    gc=gc||1.5;gs=gs||1.15;
+    const fcd=fck/gc,fyd=fyk/gs,nu=0.6*(1-fck/250);
+    const Acp=b*h,Pcp=2*(b+h);
+    const tef=Math.max(Acp/Pcp,2*cv);
+    const Ak=(b-tef)*(h-tef),uk=2*((b-tef)+(h-tef));
+    const cot_t=1,tan_t=1;
+    const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+    const TRd_max=2*nu*fcd*Ak*tef*Math.sin(Math.PI/4)*Math.cos(Math.PI/4);
+    const At_s_ec2=TEd/(2*Ak*fyd*cot_t);
+    const d=h-cv-dst/2-dl/2;
+    const rho_l=0.01,k=Math.min(2.0,1+Math.sqrt(200/d));
+    const VRd_c=Math.max((0.18/gc)*k*Math.pow(rho_l*fck,1/3)*b*d,(0.035*Math.pow(k,1.5)*Math.sqrt(fck))*b*d);
+    const VRd_s=(2*(Math.PI/4*dst*dst)/s)*fyd*d*cot_t;
+    const VRd_max=nu*fcd*b*d/(cot_t+tan_t);
+    const dc_combined=TEd/TRd_max+VEd/VRd_max;
+    const Al_req=At_s_ec2*uk*cot_t*cot_t;
+    const Al_prov=nl*Math.PI/4*dl*dl;
+    const At_prov=(Math.PI/4*dst*dst)/s;
+    const dc_t=At_s_ec2>0?(At_prov>0?At_s_ec2/At_prov:999):0;
+    const dc_l=Al_req>0?(Al_prov>0?Al_req/Al_prov:999):0;
+    const dc_v=VEd>VRd_c?VEd/VRd_s:VEd/VRd_c;
+    const dc=Math.min(99,Math.max(dc_combined,dc_v,dc_t,dc_l));
+    return {tef,Ak,uk,TRd_max,At_s_ec2,d,k,VRd_c,VRd_max,VRd_s,dc_combined,Al_req,Al_prov,At_prov,dc_t,dc_l,dc_v,dc};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return torEC2({b:inp.b*U2.lenScale,h:inp.h*U2.lenScale,cv:inp.cv*U2.lenScale,
+      fck:inp.fck,fyk:inp.fyk,gc:inp.gc||1.5,gs:inp.gs||1.15,
+      VEd:inp.VEd*U2.forceScale,TEd:inp.TEd*U2.momScale,
+      dst:unit==='us'?inp.dst*25.4:inp.dst,s:inp.s*U2.lenScale,
+      dl:unit==='us'?inp.dl*25.4:inp.dl,nl:inp.nl});
+  }
+  const cases=[
+    {b:{b:300,h:500,cv:40,fck:25,fyk:500,VEd:100000,TEd:30e6,dst:10,s:150,dl:16,nl:6}},
+    {b:{b:350,h:600,cv:40,fck:30,fyk:500,VEd:150000,TEd:60e6,dst:12,s:200,dl:18,nl:8}},
+    {b:{b:300,h:500,cv:35,fck:35,fyk:500,VEd:180000,TEd:45e6,dst:12,s:150,dl:16,nl:8}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=torEC2({...si,gc:1.5,gs:1.15});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Torsion EC2 P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{b:si.b/1000,h:si.h/1000,cv:si.cv/1000,fck:si.fck,fyk:si.fyk,gc:1.5,gs:1.15,VEd:si.VEd/1000,TEd:si.TEd/1e6,dst:si.dst,s:si.s/1000,dl:si.dl,nl:si.nl});
+      else if(unit==='nmm') Object.assign(inp,{b:si.b,h:si.h,cv:si.cv,fck:si.fck,fyk:si.fyk,gc:1.5,gs:1.15,VEd:si.VEd,TEd:si.TEd,dst:si.dst,s:si.s,dl:si.dl,nl:si.nl});
+      else Object.assign(inp,{b:si.b/25.4,h:si.h/25.4,cv:si.cv/25.4,fck:si.fck,fyk:si.fyk,gc:1.5,gs:1.15,VEd:si.VEd/4448.2,TEd:si.TEd/1.356e6,dst:si.dst/25.4,s:si.s/25.4,dl:si.dl/25.4,nl:si.nl});
+      const r=fromUnit(unit,inp);
+      check('tef',r.tef,ref.tef); check('TRd_max',r.TRd_max,ref.TRd_max); check('At_s_ec2',r.At_s_ec2,ref.At_s_ec2); check('dc_combined',r.dc_combined,ref.dc_combined); check('Al_req',r.Al_req,ref.Al_req); check('dc',r.dc,ref.dc);
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 9. COLUMN ACI
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Column ACI', function() {
+  const U={knm:{lenS:1000,forceS:1000,momS:1e6},nmm:{lenS:1,forceS:1,momS:1},us:{lenS:25.4,forceS:4448.2,momS:1.356e6}};
+  function getBars(b,h,cover,dbar,nb,nh){
+    const bars=[],seen=new Set();
+    const add=(dx,dy)=>{const k=dx.toFixed(2)+','+dy.toFixed(2);if(!seen.has(k)){seen.add(k);bars.push({dx,dy,A:Math.PI*dbar*dbar/4});}};
+    const Rh=h/2-cover,Rb=b/2-cover;
+    for(let i=0;i<nb;i++){const dy=(nb>1)?-Rb+i*(2*Rb/(nb-1)):0;add(+Rh,dy);add(-Rh,dy);}
+    for(let j=0;j<nh;j++){const dx=(nh>1)?-Rh+j*(2*Rh/(nh-1)):0;add(dx,+Rb);add(dx,-Rb);}
+    return bars;
+  }
+  function buildCurve(b,h,cover,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,axis){
+    const ecu=isEC2?0.0035:0.003,fy_use=isEC2?fyd:fy;
+    let lam,fc_eff;
+    if(isEC2){lam=fc<=50?0.8:Math.max(0.4,0.8-(fc-50)/400);const eta=fc<=50?1:Math.max(0.6,1-(fc-50)/200);fc_eff=eta*fcd;}
+    else{lam=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);fc_eff=0.85*fc;}
+    const D=axis==='x'?h:b,Bw=axis==='x'?b:h;
+    const allBars=getBars(b,h,cover,dbar,nb,nh);
+    const barD=allBars.map(bar=>({d:axis==='x'?bar.dx:bar.dy,A:bar.A}));
+    const Ast=barD.reduce((s,b)=>s+b.A,0),Ag=b*h;
+    const d_min=Math.min(...barD.map(b=>b.d)),dt=D/2-d_min;
+    let P0_cap;
+    if(isEC2) P0_cap=fc_eff*(Ag-Ast)+fy_use*Ast;
+    else P0_cap=phi_min*0.80*(0.85*fc*(Ag-Ast)+fy*Ast);
+    const points=[{P:P0_cap,M:0}];
+    const c_start=(D-0.001)/lam,c_end=0.5,NSTEPS=300;
+    for(let i=1;i<=NSTEPS;i++){
+      const t=i/NSTEPS,c=c_start*Math.pow(c_end/c_start,t),a=lam*c;
+      const Cc=fc_eff*Bw*a,yC=D/2-a/2;
+      let Fs_sum=0,Ms_sum=0;
+      barD.forEach(bar=>{
+        const dfc=D/2-bar.d,eps=ecu*(1-dfc/c);
+        const fs=Math.max(-fy_use,Math.min(fy_use,eps*Es));
+        const fc_sub=(dfc>=0&&dfc<=a)?fc_eff:0;
+        const Fb=(fs-fc_sub)*bar.A;Fs_sum+=Fb;Ms_sum+=Fb*bar.d;
+      });
+      const P_nom=Cc+Fs_sum,M_nom=Cc*yC+Ms_sum;
+      let P_des,M_des;
+      if(isEC2){P_des=P_nom;M_des=M_nom;}
+      else{const et=dt>0?ecu*(dt/c-1):0.01;let phi;if(et>=0.005)phi=0.9;else if(et<=0.002)phi=phi_min;else phi=phi_min+(et-0.002)*(0.9-phi_min)/0.003;P_des=phi*P_nom;M_des=phi*M_nom;}
+      if(P_des>P0_cap)continue;points.push({P:P_des,M:M_des});
+    }
+    const phi_t=isEC2?1:0.9;points.push({P:-phi_t*fy_use*Ast,M:0});
+    points.sort((a,b)=>b.P-a.P);return points;
+  }
+  function getM0(P,curve){
+    for(let i=0;i<curve.length-1;i++){if(curve[i].P>=P&&curve[i+1].P<=P){const t=(P-curve[i].P)/(curve[i+1].P-curve[i].P);return curve[i].M+t*(curve[i+1].M-curve[i].M);}}
+    if(P>curve[0].P)return 0;return 0;
+  }
+  function colACI({b,h,cv,dbar,nb,nh,fc,fy,Es,phi_min,Pu,Mx,My}){
+    nb=Math.max(2,Math.round(nb));nh=Math.max(2,Math.round(nh));Es=Es||200000;phi_min=phi_min||0.65;
+    const bars=getBars(b,h,cv,dbar,nb,nh),Ast=bars.reduce((s,b)=>s+b.A,0),Ag=b*h;
+    const cx=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,false,fc,fy,phi_min,'x');
+    const cy=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,false,fc,fy,phi_min,'y');
+    const P0=cx[0].P,M0x=getM0(Pu,cx),M0y=getM0(Pu,cy);
+    const dcr_x=M0x>0?Math.abs(Mx)/M0x:(Math.abs(Mx)>0?999:0);
+    const dcr_y=M0y>0?Math.abs(My)/M0y:(Math.abs(My)>0?999:0);
+    let dcr_bi=0;
+    if(M0x>0&&M0y>0){const pR=Math.max(0,Math.min(1,Pu/P0));const alpha=1+pR;dcr_bi=Math.pow(Math.abs(Mx/M0x),alpha)+Math.pow(Math.abs(My/M0y),alpha);}
+    else if(M0x>0)dcr_bi=Math.abs(Mx/M0x);else if(M0y>0)dcr_bi=Math.abs(My/M0y);
+    return {Ast,Ag,P0,M0x,M0y,dcr_x,dcr_y,dcr_bi,dcr_gov:Math.max(dcr_x,dcr_y,dcr_bi)};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return colACI({b:inp.b*U2.lenS,h:inp.h*U2.lenS,cv:inp.cv*U2.lenS,dbar:inp.dbar,nb:inp.nb,nh:inp.nh,
+      fc:inp.fc,fy:inp.fy,phi_min:inp.phi_min||0.65,Pu:inp.Pu*U2.forceS,Mx:inp.Mx*U2.momS,My:inp.My*U2.momS});
+  }
+  const cases=[
+    {b:{b:400,h:400,cv:50,dbar:20,nb:3,nh:3,fc:28,fy:420,phi_min:0.65,Pu:1200000,Mx:120e6,My:0}},
+    {b:{b:400,h:400,cv:50,dbar:22,nb:4,nh:4,fc:28,fy:420,phi_min:0.65,Pu:1500000,Mx:100e6,My:80e6}},
+    {b:{b:400,h:600,cv:50,dbar:25,nb:4,nh:4,fc:35,fy:420,phi_min:0.65,Pu:2000000,Mx:200e6,My:80e6}},
+    {b:{b:500,h:500,cv:50,dbar:25,nb:5,nh:5,fc:28,fy:420,phi_min:0.65,Pu:4000000,Mx:150e6,My:150e6}},
+    {b:{b:300,h:500,cv:50,dbar:20,nb:3,nh:3,fc:28,fy:420,phi_min:0.65,Pu:600000,Mx:80e6,My:60e6}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=colACI({...si});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Col ACI P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{b:si.b/1000,h:si.h/1000,cv:si.cv/1000,dbar:si.dbar,nb:si.nb,nh:si.nh,fc:si.fc,fy:si.fy,phi_min:si.phi_min,Pu:si.Pu/1000,Mx:si.Mx/1e6,My:si.My/1e6});
+      else if(unit==='nmm') Object.assign(inp,{b:si.b,h:si.h,cv:si.cv,dbar:si.dbar,nb:si.nb,nh:si.nh,fc:si.fc,fy:si.fy,phi_min:si.phi_min,Pu:si.Pu,Mx:si.Mx,My:si.My});
+      else Object.assign(inp,{b:si.b/25.4,h:si.h/25.4,cv:si.cv/25.4,dbar:si.dbar,nb:si.nb,nh:si.nh,fc:si.fc,fy:si.fy,phi_min:si.phi_min,Pu:si.Pu/4448.2,Mx:si.Mx/1.356e6,My:si.My/1.356e6});
+      const r=fromUnit(unit,inp);
+      check('Ast',r.Ast,ref.Ast); check('P0',r.P0,ref.P0); check('M0x',r.M0x,ref.M0x); check('M0y',r.M0y,ref.M0y); check('dcr_gov',r.dcr_gov,ref.dcr_gov);
+    }
+  }
+  // P0 hand check P1
+  console.log('\n── Col ACI P0 hand check ──');
+  {const r=colACI({b:400,h:400,cv:50,dbar:20,nb:3,nh:3,fc:28,fy:420,phi_min:0.65,Pu:1200000,Mx:120e6,My:0});
+   const Ast_exp=8*Math.PI/4*400;
+   const P0_exp=0.65*0.80*(0.85*28*(160000-Ast_exp)+420*Ast_exp);
+   check('Ast hand',r.Ast,Ast_exp,0.001); check('P0 hand',r.P0,P0_exp,0.005);}
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// 10. COLUMN EC2
+// ══════════════════════════════════════════════════════════════════════
+runSuite('Column EC2', function() {
+  const U={knm:{lenS:1000,forceS:1000,momS:1e6},nmm:{lenS:1,forceS:1,momS:1},us:{lenS:25.4,forceS:4448.2,momS:1.356e6}};
+  function getBars(b,h,cover,dbar,nb,nh){
+    const bars=[],seen=new Set();
+    const add=(dx,dy)=>{const k=dx.toFixed(2)+','+dy.toFixed(2);if(!seen.has(k)){seen.add(k);bars.push({dx,dy,A:Math.PI*dbar*dbar/4});}};
+    const Rh=h/2-cover,Rb=b/2-cover;
+    for(let i=0;i<nb;i++){const dy=(nb>1)?-Rb+i*(2*Rb/(nb-1)):0;add(+Rh,dy);add(-Rh,dy);}
+    for(let j=0;j<nh;j++){const dx=(nh>1)?-Rh+j*(2*Rh/(nh-1)):0;add(dx,+Rb);add(dx,-Rb);}
+    return bars;
+  }
+  function buildCurve(b,h,cover,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,axis){
+    const ecu=isEC2?0.0035:0.003,fy_use=isEC2?fyd:fy;
+    let lam,fc_eff;
+    if(isEC2){lam=fc<=50?0.8:Math.max(0.4,0.8-(fc-50)/400);const eta=fc<=50?1:Math.max(0.6,1-(fc-50)/200);fc_eff=eta*fcd;}
+    else{lam=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);fc_eff=0.85*fc;}
+    const D=axis==='x'?h:b,Bw=axis==='x'?b:h;
+    const allBars=getBars(b,h,cover,dbar,nb,nh);
+    const barD=allBars.map(bar=>({d:axis==='x'?bar.dx:bar.dy,A:bar.A}));
+    const Ast=barD.reduce((s,b)=>s+b.A,0),Ag=b*h;
+    const d_min=Math.min(...barD.map(b=>b.d)),dt=D/2-d_min;
+    let P0_cap;
+    if(isEC2) P0_cap=fc_eff*(Ag-Ast)+fy_use*Ast;
+    else P0_cap=phi_min*0.80*(0.85*fc*(Ag-Ast)+fy*Ast);
+    const points=[{P:P0_cap,M:0}];
+    const c_start=(D-0.001)/lam,c_end=0.5,NSTEPS=300;
+    for(let i=1;i<=NSTEPS;i++){
+      const t=i/NSTEPS,c=c_start*Math.pow(c_end/c_start,t),a=lam*c;
+      const Cc=fc_eff*Bw*a,yC=D/2-a/2;
+      let Fs_sum=0,Ms_sum=0;
+      barD.forEach(bar=>{
+        const dfc=D/2-bar.d,eps=ecu*(1-dfc/c);
+        const fs=Math.max(-fy_use,Math.min(fy_use,eps*Es));
+        const fc_sub=(dfc>=0&&dfc<=a)?fc_eff:0;
+        const Fb=(fs-fc_sub)*bar.A;Fs_sum+=Fb;Ms_sum+=Fb*bar.d;
+      });
+      const P_nom=Cc+Fs_sum,M_nom=Cc*yC+Ms_sum;
+      let P_des=P_nom,M_des=M_nom;
+      if(P_des>P0_cap)continue;points.push({P:P_des,M:M_des});
+    }
+    points.push({P:-fy_use*Ast,M:0});
+    points.sort((a,b)=>b.P-a.P);return points;
+  }
+  function getM0(P,curve){
+    for(let i=0;i<curve.length-1;i++){if(curve[i].P>=P&&curve[i+1].P<=P){const t=(P-curve[i].P)/(curve[i+1].P-curve[i].P);return curve[i].M+t*(curve[i+1].M-curve[i].M);}}
+    if(P>curve[0].P)return 0;return 0;
+  }
+  function colEC2({b,h,cv,dbar,nb,nh,fck,fyk,gc,gs,Es,NEd,Mx,My}){
+    nb=Math.max(2,Math.round(nb));nh=Math.max(2,Math.round(nh));gc=gc||1.5;gs=gs||1.15;Es=Es||200000;
+    const fcd=fck/gc,fyd=fyk/gs;
+    const bars=getBars(b,h,cv,dbar,nb,nh),Ast=bars.reduce((s,b)=>s+b.A,0),Ag=b*h;
+    const cx=buildCurve(b,h,cv,dbar,nb,nh,fck,fyk,Es,true,fcd,fyd,1,'x');
+    const cy=buildCurve(b,h,cv,dbar,nb,nh,fck,fyk,Es,true,fcd,fyd,1,'y');
+    const P0=cx[0].P,M0x=getM0(NEd,cx),M0y=getM0(NEd,cy);
+    const dcr_x=M0x>0?Math.abs(Mx)/M0x:(Math.abs(Mx)>0?999:0);
+    const dcr_y=M0y>0?Math.abs(My)/M0y:(Math.abs(My)>0?999:0);
+    let dcr_bi=0;
+    if(M0x>0&&M0y>0){const pR=Math.max(0,Math.min(1,NEd/P0));const alpha=1+pR;dcr_bi=Math.pow(Math.abs(Mx/M0x),alpha)+Math.pow(Math.abs(My/M0y),alpha);}
+    else if(M0x>0)dcr_bi=Math.abs(Mx/M0x);else if(M0y>0)dcr_bi=Math.abs(My/M0y);
+    return {Ast,Ag,fcd,fyd,P0,M0x,M0y,dcr_x,dcr_y,dcr_bi,dcr_gov:Math.max(dcr_x,dcr_y,dcr_bi)};
+  }
+  function fromUnit(unit,inp){
+    const U2=U[unit];
+    return colEC2({b:inp.b*U2.lenS,h:inp.h*U2.lenS,cv:inp.cv*U2.lenS,dbar:inp.dbar,nb:inp.nb,nh:inp.nh,
+      fck:inp.fck,fyk:inp.fyk,gc:inp.gc||1.5,gs:inp.gs||1.15,NEd:inp.NEd*U2.forceS,Mx:inp.Mx*U2.momS,My:inp.My*U2.momS});
+  }
+  const cases=[
+    {b:{b:400,h:400,cv:50,dbar:20,nb:3,nh:3,fck:25,fyk:500,gc:1.5,gs:1.15,NEd:1200000,Mx:120e6,My:0}},
+    {b:{b:400,h:400,cv:50,dbar:22,nb:4,nh:4,fck:25,fyk:500,gc:1.5,gs:1.15,NEd:1500000,Mx:100e6,My:80e6}},
+    {b:{b:400,h:600,cv:50,dbar:25,nb:4,nh:4,fck:35,fyk:500,gc:1.5,gs:1.15,NEd:2000000,Mx:200e6,My:80e6}},
+    {b:{b:500,h:500,cv:50,dbar:25,nb:5,nh:5,fck:30,fyk:500,gc:1.5,gs:1.15,NEd:4500000,Mx:150e6,My:150e6}},
+    {b:{b:300,h:500,cv:50,dbar:20,nb:3,nh:3,fck:25,fyk:500,gc:1.5,gs:1.15,NEd:600000,Mx:80e6,My:60e6}},
+  ];
+  for(let i=0;i<cases.length;i++){
+    const si=cases[i].b;
+    const ref=colEC2({...si});
+    for(const unit of ['knm','nmm','us']){
+      console.log('\n── Col EC2 P'+(i+1)+' ('+unit+') ──');
+      const inp={};
+      if(unit==='knm') Object.assign(inp,{b:si.b/1000,h:si.h/1000,cv:si.cv/1000,dbar:si.dbar,nb:si.nb,nh:si.nh,fck:si.fck,fyk:si.fyk,gc:si.gc,gs:si.gs,NEd:si.NEd/1000,Mx:si.Mx/1e6,My:si.My/1e6});
+      else if(unit==='nmm') Object.assign(inp,{b:si.b,h:si.h,cv:si.cv,dbar:si.dbar,nb:si.nb,nh:si.nh,fck:si.fck,fyk:si.fyk,gc:si.gc,gs:si.gs,NEd:si.NEd,Mx:si.Mx,My:si.My});
+      else Object.assign(inp,{b:si.b/25.4,h:si.h/25.4,cv:si.cv/25.4,dbar:si.dbar,nb:si.nb,nh:si.nh,fck:si.fck,fyk:si.fyk,gc:si.gc,gs:si.gs,NEd:si.NEd/4448.2,Mx:si.Mx/1.356e6,My:si.My/1.356e6});
+      const r=fromUnit(unit,inp);
+      check('Ast',r.Ast,ref.Ast); check('P0',r.P0,ref.P0); check('M0x',r.M0x,ref.M0x); check('M0y',r.M0y,ref.M0y); check('dcr_gov',r.dcr_gov,ref.dcr_gov);
+    }
+  }
+  // P0 hand check P1
+  console.log('\n── Col EC2 P0 hand check ──');
+  {const r=colEC2({b:400,h:400,cv:50,dbar:20,nb:3,nh:3,fck:25,fyk:500,gc:1.5,gs:1.15,NEd:1200000,Mx:120e6,My:0});
+   const Ast_exp=8*Math.PI/4*400;
+   const fcd_exp=25/1.5,fyd_exp=500/1.15;
+   const P0_exp=fcd_exp*(160000-Ast_exp)+fyd_exp*Ast_exp;
+   check('Ast hand',r.Ast,Ast_exp,0.001); check('fcd hand',r.fcd,fcd_exp,0.001); check('P0 hand',r.P0,P0_exp,0.005);}
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// SUMMARY
+// ══════════════════════════════════════════════════════════════════════
+let sumHtml = '<h2>TEST SUITE SUMMARY</h2><table border=1 style="border-collapse:collapse;font-family:monospace;font-size:13px"><tr><th>Suite</th><th>Passed</th><th>Failed</th><th>Status</th></tr>';
+let totP=0,totF=0;
+for(const r of suiteResults){
+  totP+=r.passed;totF+=r.failed;
+  const st=r.failed===0?'✅ PASS':'❌ FAIL';
+  const color=r.failed===0?'#d4edda':'#f8d7da';
+  sumHtml+=`<tr style="background:${color}"><td>${r.name}</td><td>${r.passed}</td><td>${r.failed}</td><td>${st}</td></tr>`;
+}
+sumHtml+=`<tr style="font-weight:bold"><td>TOTAL</td><td>${totP}</td><td>${totF}</td><td>${totF===0?'✅ ALL PASS':'❌ '+totF+' FAILED'}</td></tr></table>`;
+
+document.getElementById('out').textContent = lines.join('\n');
+document.body.insertAdjacentHTML('afterbegin', sumHtml);
+</script>
+</body></html>

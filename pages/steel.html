@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steel Section Tables - AISC & European Profiles | CivilStrCalc</title>
+<meta name="description" content="Comprehensive steel section property tables. W-shapes, I-beams, channels, angles, and European profiles.">
+<meta name="keywords" content="steel sections, W shapes, I beam, steel profiles, section properties, AISC">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582"
+     crossorigin="anonymous"></script>
+<!-- Font Preload -->
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+/* ── STEEL PAGE EXTRA ── */
+.std-switch{display:flex;gap:6px;padding:0 0 16px;}
+.std-btn{flex:0 0 auto;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;color:var(--text-mid);font-family:'Open Sans',sans-serif !important;font-weight:700;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;padding:7px 18px;cursor:pointer;transition:all .18s;}
+.std-btn:hover{border-color:var(--accent);color:var(--accent);}
+.std-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.type-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.type-btn{background:var(--bg2);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:'Open Sans',sans-serif !important;font-weight:600;font-size:.78rem;letter-spacing:.03em;padding:5px 14px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.type-btn:hover{border-color:var(--accent);color:var(--accent);}
+.type-btn.active{background:var(--accent-lt);border-color:var(--accent);color:var(--accent);}
+
+.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-dim);pointer-events:none;}
+input.si{height:34px;padding:0 10px 0 30px;border:1.5px solid var(--border2);border-radius:5px;font-family:'Open Sans',sans-serif !important;font-size:.82rem;color:var(--text);background:var(--white);outline:none;width:100%;}
+input.si:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,109,181,.1);}
+
+/* ── DETAIL PANEL (top card) ── */
+.det-top{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.det-titlebar{background:#1a2332;padding:10px 18px;display:flex;align-items:center;gap:12px;}
+.det-secname{font-family:'Open Sans',sans-serif !important;font-weight:700;font-size:1.15rem;color:#fff;letter-spacing:.02em;}
+.det-unitbtn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:4px;color:rgba(255,255,255,0.55);font-family:'Open Sans',sans-serif !important;font-size:.72rem;padding:3px 10px;cursor:pointer;transition:all .15s;margin-left:auto;}
+.det-unitbtn.active{background:rgba(58,143,212,0.35);border-color:#3a8fd4;color:#fff;}
+.det-body{display:grid;grid-template-columns:1fr auto 1fr;gap:0;}
+.det-col{padding:10px 14px;}
+.det-col+.det-col{border-left:1px solid var(--border);}
+.det-diag{padding:12px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-left:1px solid var(--border);border-right:1px solid var(--border);}
+.det-grp{margin-bottom:7px;}
+.det-grp:last-child{margin-bottom:0;}
+.det-grp-lbl{font-family:'Open Sans',sans-serif !important;font-size:.57rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;border-left:3px solid var(--accent);padding-left:6px;}
+.det-row{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px solid var(--bg2);}
+.det-row:last-child{border-bottom:none;}
+.det-lbl{font-size:.76rem;color:var(--text-mid);font-family:'Open Sans',sans-serif !important;line-height:1.4;}
+.det-val{font-family:'Open Sans',sans-serif !important;font-size:.8rem;font-weight:400;color:var(--text);font-feature-settings:"tnum" 1;}
+.det-val.hl{color:var(--accent);font-weight:400;}
+.det-unit{font-family:'Open Sans',sans-serif !important;font-size:.62rem;color:var(--text-dim);margin-left:3px;}
+
+/* LEGEND */
+.det-legend{padding:7px 14px;font-size:.65rem;color:var(--text-dim);border-top:1px solid var(--border);background:var(--bg2);line-height:1.9;font-family:'Open Sans',sans-serif !important;}
+
+/* TABLE UNIT TOGGLE */
+.tbl-unit-btn{background:var(--bg2);border:1.5px solid var(--border2);border-radius:4px;color:var(--text-mid);font-family:'Open Sans',sans-serif !important;font-size:.68rem;font-weight:500;padding:4px 10px;cursor:pointer;transition:all .15s;}
+.tbl-unit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tbl-unit-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sec-select{height:32px;padding:0 8px;border:1.5px solid var(--border2);border-radius:5px;font-family:'Open Sans',sans-serif !important;font-size:.79rem;color:var(--text);background:var(--white);outline:none;cursor:pointer;min-width:140px;max-width:200px;}
+.sec-select:focus{border-color:var(--accent);}
+table.dt thead th .th-unit{font-weight:400;opacity:0.5;font-size:.82em;letter-spacing:0;}
+/* superheader row */
+#th-euro .superrow th, #th-amer .superrow th{font-family:'Open Sans',sans-serif !important;font-size:.60rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#f4f6f9;color:#8898aa;padding:3px 6px !important;border-bottom:1px solid #dde3ea !important;box-shadow:none !important;text-align:center;border-right:1px solid #dde3ea;}
+#th-euro .superrow th:first-child, #th-amer .superrow th:first-child{background:#f4f6f9;color:#aab4c0;border-right:1px solid #dde3ea;text-align:left !important;padding-left:8px !important;}
+/* tooltip custom only */
+.col-tip{position:fixed;z-index:9999;background:#1a2332;color:#fff;font-family:'Open Sans',sans-serif;font-size:.72rem;padding:5px 10px;border-radius:5px;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3);display:none;}
+
+/* CUSTOM SECTION */
+.custom-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:start;}
+@media(max-width:900px){.custom-grid{grid-template-columns:1fr;}}
+.cust-svg-wrap{display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:205px;min-height:235px;}
+.shape-picker{display:flex;flex-wrap:nowrap;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+.shape-opt{background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:5px 9px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--text-mid);white-space:nowrap;flex-shrink:0;}
+.shape-opt svg{width:20px;height:15px;flex-shrink:0;}
+.shape-opt:hover{border-color:var(--accent);color:var(--accent);}
+.shape-opt.active{background:var(--accent-lt);border-color:var(--accent);color:var(--accent);font-weight:500;}
+.custom-inputs{display:none;}.custom-inputs.show{display:block;}
+.custom-svg-preview{display:flex;justify-content:center;padding:20px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);margin-bottom:14px;}
+.det-top { font-family: 'Open Sans',sans-serif !important; }
+.det-val { font-feature-settings: "tnum" 1; }
+table.dt { font-family: 'Open Sans',sans-serif !important; }
+#tb-euro td, #tb-amer td { font-family: 'Open Sans',sans-serif !important; font-size: 0.74rem; color: #5a6a7a; padding: 6px 5px !important; font-feature-settings:"tnum" 1; text-align: center !important; }
+#tb-euro td:first-child, #tb-amer td:first-child { font-family: 'Open Sans',sans-serif !important; font-weight: 600; font-size: 0.78rem; color: #2c3a4a; padding-left:8px !important; text-align:left !important; }
+#th-euro th, #th-amer th { font-family: 'Open Sans',sans-serif !important; font-weight: 700; font-size: 0.80rem !important; color: #2c3a4a; text-transform: none; letter-spacing: 0.01em; padding: 7px 5px !important; white-space: nowrap; border-bottom: 1px solid var(--border) !important; box-shadow: 0 1px 0 var(--border2) !important; text-align:center; }
+#th-euro th:first-child, #th-amer th:first-child { text-align:left !important; padding-left:8px !important; }
+.pr-name { font-family: 'Open Sans',sans-serif !important; font-size: 0.78rem; color: #5a6a7a; font-weight: 400; line-height: 1.4; }
+.pr-val { font-family: 'Open Sans',sans-serif !important; font-size: 0.78rem; font-weight: 400; color: #2c3a4a; font-feature-settings:"tnum" 1; }
+.pr-val.hl { color: #1a6db5; }
+.pg-lbl { font-family: 'Open Sans',sans-serif !important; font-size: 0.57rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #8898aa; border-left: 3px solid #1a6db5; padding-left: 6px; margin-bottom: 4px; }
+.sec-title { font-family: 'Open Sans',sans-serif !important; font-weight: 700; font-size: 1.0rem; color: #2c3a4a; }
+.col-legend { margin-top: 10px; padding: 9px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; font-family: 'Open Sans',sans-serif !important; font-size: 0.73rem; color: #5a6a7a; line-height: 1.85; }
+.col-legend b { color: #2c3a4a; font-weight: 600; }
+</style>
+<!-- Google Funding Choices (Cookie Consent) -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
+<script>(function(){function signalGooglefcPresent(){if(!window.frames['googlefcPresent']){if(document.body){const iframe=document.createElement('iframe');iframe.style='width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;';iframe.style.display='none';iframe.name='googlefcPresent';document.body.appendChild(iframe);}else{setTimeout(signalGooglefcPresent,0);}}}signalGooglefcPresent();})();</script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="col-tip" class="col-tip"></div>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+  <div class="page-title">
+    <h1>Steel Section Properties</h1>
+    <p>European (EN 10365) and American (AISC) standard section databases, plus custom section calculator.</p>
+  </div>
+
+  <!-- STANDARD SWITCH -->
+  <div class="std-switch">
+    <button class="std-btn active" onclick="setStd('euro',this)" style="display:inline-flex;align-items:center;gap:7px;"><svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><rect width="22" height="15" fill="#003399"/><g fill="#FFCC00"><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(11,3.0)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(13.25,3.62)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(14.89,5.75)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(15.5,7.5)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(14.89,9.25)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(13.25,11.38)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(11,12.0)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(8.75,11.38)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(7.11,9.25)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(6.5,7.5)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(7.11,5.75)"/><polygon points="0,-1.2 0.36,-0.41 1.14,-0.37 0.58,0.16 0.71,0.97 0,0.56 -0.71,0.97 -0.58,0.16 -1.14,-0.37 -0.36,-0.41" transform="translate(8.75,3.62)"/></g></svg>European (EN 10365)</button>
+    <button class="std-btn" onclick="setStd('amer',this)" style="display:inline-flex;align-items:center;gap:7px;"><svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><rect width="22" height="15" fill="#fff"/><rect width="22" height="1.15" y="0" fill="#B22234"/><rect width="22" height="1.15" y="2.31" fill="#B22234"/><rect width="22" height="1.15" y="4.62" fill="#B22234"/><rect width="22" height="1.15" y="6.92" fill="#B22234"/><rect width="22" height="1.15" y="9.23" fill="#B22234"/><rect width="22" height="1.15" y="11.54" fill="#B22234"/><rect width="22" height="1.15" y="13.85" fill="#B22234"/><rect width="9" height="8.08" fill="#3C3B6E"/></svg>American (AISC)</button>
+    <button class="std-btn" onclick="setStd('custom',this)">✏️ Custom Section</button>
+  </div>
+
+  <!-- ══ EURO & AMER PANELS ══ -->
+  <div id="panel-euro">
+    <div class="type-bar" id="type-bar-euro">
+      <button class="type-btn active" onclick="loadType('IPE',this,'euro')">IPE</button>
+      <button class="type-btn" onclick="loadType('IPN',this,'euro')">IPN</button>
+      <button class="type-btn" onclick="loadType('HEA',this,'euro')">HEA</button>
+      <button class="type-btn" onclick="loadType('HEB',this,'euro')">HEB</button>
+      <button class="type-btn" onclick="loadType('HEM',this,'euro')">HEM</button>
+      <button class="type-btn" onclick="loadType('HD',this,'euro')">HD</button>
+      <button class="type-btn" onclick="loadType('UPN',this,'euro')">UPN</button>
+      <button class="type-btn" onclick="loadType('UPE',this,'euro')">UPE</button>
+      <button class="type-btn" onclick="loadType('L_EU',this,'euro')">L — Equal Angles</button>
+      <button class="type-btn" onclick="loadType('SHS',this,'euro')">SHS</button>
+      <button class="type-btn" onclick="loadType('RHS',this,'euro')">RHS</button>
+      <button class="type-btn" onclick="loadType('CHS',this,'euro')">CHS</button>
+    </div>
+    <div id="tbl-hdr-euro" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <span id="tbl-desc-euro" style="font-size:.76rem;color:var(--text-mid);flex:1;min-width:100px;"></span>
+      <label for="sec-select-euro" class="sr-only">Select European profile</label>
+      <select id="sec-select-euro" class="sec-select" onchange="if(this.value)showDetail(this.value,curTypeE,'euro')">
+        <option value="">— select profile —</option>
+      </select>
+      <div class="search-wrap" style="max-width:170px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <label for="search-euro" class="sr-only">Search European sections</label>
+        <input class="si" type="text" id="search-euro" placeholder="Search…" oninput="renderTable('euro')">
+      </div>
+      <div style="display:flex;gap:3px;">
+        <button class="tbl-unit-btn unit-tgl-euro active" data-unit="mm" onclick="setDetUnit('euro','mm')">mm</button>
+        <button class="tbl-unit-btn unit-tgl-euro" data-unit="in" onclick="setDetUnit('euro','in')">in</button>
+      </div>
+    </div>
+    <div id="det-euro" style="display:none;margin-bottom:18px;"></div>
+    <div class="card" style="overflow:hidden;">
+      <div class="tbl-wrap"><table class="dt"><caption>European steel section properties — EN 10365</caption><thead id="th-euro"></thead><tbody id="tb-euro"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="panel-amer" style="display:none">
+    <div class="type-bar" id="type-bar-amer">
+      <button class="type-btn active" onclick="loadType('W',this,'amer')">W Shapes</button>
+      <button class="type-btn" onclick="loadType('S',this,'amer')">S Shapes</button>
+      <button class="type-btn" onclick="loadType('HP',this,'amer')">HP Piles</button>
+      <button class="type-btn" onclick="loadType('C',this,'amer')">C Channels</button>
+      <button class="type-btn" onclick="loadType('MC',this,'amer')">MC Channels</button>
+      <button class="type-btn" onclick="loadType('L_US',this,'amer')">L Angles</button>
+      <button class="type-btn" onclick="loadType('HSS_R',this,'amer')">HSS Round</button>
+      <button class="type-btn" onclick="loadType('HSS_SQ',this,'amer')">HSS Square</button>
+      <button class="type-btn" onclick="loadType('HSS_RECT',this,'amer')">HSS Rect.</button>
+    </div>
+    <div id="tbl-hdr-amer" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <span id="tbl-desc-amer" style="font-size:.76rem;color:var(--text-mid);flex:1;min-width:100px;"></span>
+      <label for="sec-select-amer" class="sr-only">Select American profile</label>
+      <select id="sec-select-amer" class="sec-select" onchange="if(this.value)showDetail(this.value,curTypeA,'amer')">
+        <option value="">— select profile —</option>
+      </select>
+      <div class="search-wrap" style="max-width:170px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <label for="search-amer" class="sr-only">Search American sections</label>
+        <input class="si" type="text" id="search-amer" placeholder="Search…" oninput="renderTable('amer')">
+      </div>
+      <div style="display:flex;gap:3px;">
+        <button class="tbl-unit-btn unit-tgl-amer" data-unit="mm" onclick="setDetUnit('amer','mm')">mm</button>
+        <button class="tbl-unit-btn unit-tgl-amer active" data-unit="in" onclick="setDetUnit('amer','in')">in</button>
+      </div>
+    </div>
+    <div id="det-amer" style="display:none;margin-bottom:18px;"></div>
+    <div class="card" style="overflow:hidden;">
+      <div class="tbl-wrap"><table class="dt"><caption>American steel section properties — AISC</caption><thead id="th-amer"></thead><tbody id="tb-amer"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ══ CUSTOM SECTION ══ -->
+  <div id="panel-custom" style="display:none">
+    <div class="card">
+      <div class="card-hdr"><h3>Custom Section Calculator</h3><span class="ctag">User Defined</span></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <p style="font-size:.79rem;color:var(--text-mid);margin:0;flex:1">Select a section type, enter dimensions, and get full mechanical properties.</p>
+          <div style="display:flex;gap:3px;flex-shrink:0;">
+            <button class="tbl-unit-btn active" id="cust-mm" onclick="setCustUnit('mm',this)">mm</button>
+            <button class="tbl-unit-btn" id="cust-in" onclick="setCustUnit('in',this)">in</button>
+          </div>
+        </div>
+
+        <div class="shape-picker">
+          <div class="shape-opt active" onclick="setShape('I',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="2" y="1" width="20" height="3.5" fill="currentColor" rx=".5"/><rect x="10.5" y="4.5" width="3" height="9" fill="currentColor"/><rect x="2" y="13.5" width="20" height="3.5" fill="currentColor" rx=".5"/></svg>I-Section
+          </div>
+          <div class="shape-opt" onclick="setShape('BOX',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="2" y="1" width="20" height="16" rx="1" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>Box / RHS
+          </div>
+          <div class="shape-opt" onclick="setShape('CIRCLE',this)">
+            <svg viewBox="0 0 24 18" fill="none"><circle cx="12" cy="9" r="7" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>CHS / Pipe
+          </div>
+          <div class="shape-opt" onclick="setShape('RECT',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="2" y="2" width="20" height="14" fill="currentColor" rx="1"/></svg>Solid Rect.
+          </div>
+          <div class="shape-opt" onclick="setShape('CIRC_SOLID',this)">
+            <svg viewBox="0 0 24 18" fill="none"><circle cx="12" cy="9" r="7" fill="currentColor"/></svg>Solid Circle
+          </div>
+          <div class="shape-opt" onclick="setShape('T',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="2" y="1" width="20" height="3.5" fill="currentColor" rx=".5"/><rect x="10.5" y="4.5" width="3" height="12" fill="currentColor"/></svg>T-Section
+          </div>
+          <div class="shape-opt" onclick="setShape('CHANNEL',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="3" y="1" width="18" height="3.5" fill="currentColor" rx=".5"/><rect x="3" y="4.5" width="3" height="12" fill="currentColor"/><rect x="3" y="13.5" width="18" height="3.5" fill="currentColor" rx=".5"/></svg>Channel
+          </div>
+          <div class="shape-opt" onclick="setShape('L_CUST',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="3" y="1" width="3.5" height="16" fill="currentColor" rx=".5"/><rect x="3" y="14.5" width="18" height="2.5" fill="currentColor" rx=".5"/></svg>L-Section
+          </div>
+          <div class="shape-opt" onclick="setShape('DL_CUST',this)">
+            <svg viewBox="0 0 24 18" fill="none"><rect x="9" y="1" width="2.5" height="14" fill="currentColor" rx=".3"/><rect x="1" y="13.5" width="10.5" height="2.5" fill="currentColor" rx=".3"/><rect x="12.5" y="1" width="2.5" height="14" fill="currentColor" rx=".3"/><rect x="12.5" y="13.5" width="10.5" height="2.5" fill="currentColor" rx=".3"/></svg>Double-L
+          </div>
+        </div>
+
+        <div class="custom-grid">
+          <!-- INPUTS -->
+          <div>
+            <!-- I-SECTION -->
+            <div class="custom-inputs show" id="inp-I">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ci_h" value="300" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Flange Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ci_b" value="150" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><label>Flange thick. tf <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ci_tf" value="12" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Web thick. tw <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ci_tw" value="8" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+            <!-- BOX -->
+            <div class="custom-inputs" id="inp-BOX">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cbox_h" value="200" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cbox_b" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-group"><label>Wall thickness t <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cbox_t" value="6" oninput="calcCustom()"><span class="us">mm</span></div></div>
+            </div>
+            <!-- CIRCLE (hollow) -->
+            <div class="custom-inputs" id="inp-CIRCLE">
+              <div class="form-row-2">
+                <div class="form-group"><label>Outer Dia. D <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cch_D" value="168.3" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Wall thick. t <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cch_t" value="10" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+            <!-- SOLID RECT -->
+            <div class="custom-inputs" id="inp-RECT">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cr_h" value="200" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cr_b" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+            <!-- SOLID CIRCLE -->
+            <div class="custom-inputs" id="inp-CIRC_SOLID">
+              <div class="form-group"><label>Diameter D <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ccs_D" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+            </div>
+            <!-- T SECTION -->
+            <div class="custom-inputs" id="inp-T">
+              <div class="form-row-2">
+                <div class="form-group"><label>Total Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ct_h" value="300" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Flange Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ct_b" value="150" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><label>Flange thick. tf <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ct_tf" value="12" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Web thick. tw <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="ct_tw" value="8" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+            <!-- CHANNEL -->
+            <div class="custom-inputs" id="inp-CHANNEL">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cc_h" value="200" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Flange Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cc_b" value="80" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><label>Flange thick. tf <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cc_tf" value="10" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Web thick. tw <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cc_tw" value="7" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+            <!-- L-SECTION (angle) -->
+            <div class="custom-inputs" id="inp-L_CUST">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cl_h" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cl_b" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-group"><label>Thickness t <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cl_t" value="10" oninput="calcCustom()"><span class="us">mm</span></div></div>
+            </div>
+            <!-- DOUBLE-L (back-to-back angles) -->
+            <div class="custom-inputs" id="inp-DL_CUST">
+              <div class="form-row-2">
+                <div class="form-group"><label>Height h <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cdl_h" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Width b <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cdl_b" value="100" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><label>Thickness t <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cdl_t" value="10" oninput="calcCustom()"><span class="us">mm</span></div></div>
+                <div class="form-group"><label>Gap g <span class="lu">[mm]</span></label><div class="iw"><input type="number" id="cdl_g" value="10" oninput="calcCustom()"><span class="us">mm</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SVG PREVIEW (middle) -->
+          <div class="cust-svg-wrap" id="cust-svg-wrap"></div>
+
+          <!-- RESULTS -->
+          <div>
+            <div class="res-card">
+              <div class="res-hdr"><h4>Section Properties</h4></div>
+              <div class="res-body" id="custom_out">
+                <div class="res-empty"><div class="ri">📐</div>Results update automatically.</div>
+              </div>
+            </div>
+            <div class="note-box" style="margin-top:12px">
+              <strong>Note:</strong> Results are for ideal (sharp-cornered) sections. Fillet radii, weld sizes, and manufacturing tolerances are not considered.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- FOOTER -->
+<footer style="margin-top:36px;padding:16px 0 8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+  <div style="display:flex;gap:10px;align-items:flex-start;background:#fff8ed;border:1px solid #f4c97a;border-radius:6px;padding:11px 14px;font-size:.77rem;color:#6b5000;line-height:1.65;">
+    <span style="flex-shrink:0;margin-top:1px;">⚠️</span>
+    <div>These tools are for <strong>educational and preliminary design purposes only</strong>. All results must be verified by a licensed structural engineer before use in any real project.</div>
+  </div>
+  <div style="font-size:.72rem;color:var(--text-dim);text-align:center;padding-top:4px;">
+    Found an error or have a suggestion? Write to us at <a href="mailto:info@civilstrcalc.com" style="color:var(--accent);text-decoration:none;">info@civilstrcalc.com</a>
+  </div>
+  <div class="footer-legal">
+    © 2026 CivilStrCalc.com &nbsp;·&nbsp;
+    <a href="../privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+    <a href="../terms.html">Terms of Use</a> &nbsp;·&nbsp;
+    <a href="../cookies.html">Cookie Policy</a>
+  </div>
+</footer>
+
+</main>
+
+<script src="../js/nav.js"></script>
+<script>
+// ══════════════════════════════════════
+// DATA — same as before, condensed
+// ══════════════════════════════════════
+const DB = {
+IPE:{std:'euro',desc:'Parallel flange I-beam. EN 10365.',shape:'I',
+  cols:['Section','h','b','tw','tf','r','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)','Iw (cm⁶)'],
+  data:[['IPE 80',80,46,3.8,5.2,5,7.64,6.0,80.1,20.0,23.2,3.24,8.49,3.69,5.82,1.05,0.673,0.122],['IPE 100',100,55,4.1,5.7,7,10.3,8.1,171,34.2,39.4,4.07,15.9,5.79,9.15,1.24,1.153,0.352],['IPE 120',120,64,4.4,6.3,7,13.2,10.4,318,53.0,60.7,4.90,27.7,8.65,13.6,1.45,1.689,0.889],['IPE 140',140,73,4.7,6.9,7,16.4,12.9,541,77.3,88.3,5.74,44.9,12.3,19.2,1.65,2.401,1.98],['IPE 160',160,82,5.0,7.4,9,20.1,15.8,869,109,123,6.58,68.3,16.7,26.1,1.84,3.53,3.96],['IPE 180',180,91,5.3,8.0,9,23.9,18.8,1317,146,166,7.42,101,22.2,34.6,2.05,4.723,7.43],['IPE 200',200,100,5.6,8.5,12,28.5,22.4,1943,194,221,8.26,142,28.5,44.6,2.24,6.846,12.99],['IPE 220',220,110,5.9,9.2,12,33.4,26.2,2772,252,285,9.11,205,37.3,58.1,2.48,8.982,22.7],['IPE 240',240,120,6.2,9.8,15,39.1,30.7,3892,324,367,9.97,284,47.3,73.9,2.69,12.74,37.4],['IPE 270',270,135,6.6,10.2,15,45.9,36.1,5790,429,484,11.2,420,62.2,97.0,3.02,15.71,70.6],['IPE 300',300,150,7.1,10.7,15,53.8,42.2,8356,557,628,12.5,604,80.5,125,3.35,19.75,126],['IPE 330',330,160,7.5,11.5,18,62.6,49.1,11770,713,804,13.7,788,98.5,154,3.55,27.59,199],['IPE 360',360,170,8.0,12.7,18,72.7,57.1,16270,904,1019,15.0,1043,123,191,3.79,37.08,313],['IPE 400',400,180,8.6,13.5,21,84.5,66.3,23130,1156,1307,16.5,1318,146,229,3.95,50.41,490],['IPE 450',450,190,9.4,14.6,21,98.8,77.6,33740,1500,1702,18.5,1676,176,276,4.12,66.05,791],['IPE 500',500,200,10.2,16.0,21,116,91.0,48200,1928,2194,20.4,2142,214,336,4.31,88.62,1249],['IPE 550',550,210,11.1,17.2,24,134,106,67120,2441,2787,22.3,2668,254,401,4.45,121.7,1926],['IPE 600',600,220,12.0,19.0,24,156,122,92080,3069,3512,24.3,3387,308,486,4.66,164.6,2985]]},
+IPN:{std:'euro',desc:'Taper flange I-beam. DIN 1025-1.',shape:'I',
+  cols:['Section','h','b','tw','tf','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','iz (cm)','It (cm⁴)'],
+  data:[['IPN 80',80,42,3.9,5.9,7.58,5.9,77.8,19.5,22.2,3.20,6.29,3.00,0.91,0.37],['IPN 100',100,50,4.5,6.8,10.6,8.3,171,34.2,39.8,4.01,12.2,4.88,1.07,0.70],['IPN 120',120,58,5.1,7.7,14.2,11.1,328,54.7,63.9,4.81,21.5,7.41,1.23,1.23],['IPN 140',140,66,5.7,8.6,18.2,14.3,573,81.9,95.4,5.61,35.2,10.7,1.40,2.04],['IPN 160',160,74,6.3,9.5,22.8,17.9,935,117,136,6.40,54.7,14.8,1.55,3.18],['IPN 180',180,82,6.9,10.4,27.9,21.9,1450,161,188,7.20,81.3,19.8,1.71,4.79],['IPN 200',200,90,7.5,11.3,33.4,26.2,2140,214,250,8.00,117,26.0,1.87,7.02],['IPN 220',220,98,8.1,12.2,39.5,31.1,3060,278,325,8.80,162,33.1,2.02,10.0],['IPN 240',240,106,8.7,13.1,46.1,36.2,4250,354,415,9.59,221,41.7,2.19,13.9],['IPN 260',260,113,9.4,14.1,53.3,41.9,5740,442,519,10.4,288,51.0,2.32,19.2],['IPN 280',280,119,10.1,15.2,61.0,47.9,7590,542,637,11.1,364,61.2,2.44,26.4],['IPN 300',300,125,10.8,16.2,69.0,54.2,9800,654,771,11.9,451,72.2,2.56,35.2],['IPN 320',320,131,11.5,17.3,77.7,61.0,12510,782,924,12.7,555,84.7,2.67,46.5],['IPN 340',340,137,12.2,18.3,86.7,68.0,15700,923,1092,13.5,674,98.4,2.79,60.5],['IPN 360',360,143,13.0,19.5,97.0,76.1,19610,1090,1290,14.2,818,114,2.90,79.0],['IPN 400',400,155,14.4,21.6,118,92.4,29210,1460,1740,15.7,1160,150,3.13,126],['IPN 450',450,170,16.2,24.3,147,115,45850,2040,2430,17.7,1730,203,3.43,216],['IPN 500',500,185,18.0,27.0,179,141,68740,2750,3290,19.6,2480,268,3.72,348],['IPN 550',550,200,19.0,30.0,212,166,99180,3610,4330,21.6,3490,349,4.06,530],['IPN 600',600,215,21.6,32.4,254,199,139000,4630,5570,23.4,4670,435,4.29,771]]},
+HEA:{std:'euro',desc:'Wide flange H-section, light series. EN 10365.',shape:'H',
+  cols:['Section','h','b','tw','tf','r','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)','Iw (cm⁶)'],
+  data:[['HEA 100',96,100,5.0,8.0,12,21.2,16.7,349,72.8,83.0,4.06,134,26.8,41.1,2.51,5.24,3.88],['HEA 120',114,120,5.0,8.0,12,25.3,19.9,606,106,119,4.89,231,38.5,58.8,3.02,5.99,8.13],['HEA 140',133,140,5.5,8.5,12,31.4,24.7,1033,155,173,5.73,389,55.6,84.9,3.52,8.13,17.7],['HEA 160',152,160,6.0,9.0,15,38.8,30.4,1673,220,245,6.57,616,77.0,117,3.98,11.0,34.2],['HEA 180',171,180,6.0,9.5,15,45.3,35.5,2510,294,325,7.45,925,103,156,4.52,14.8,60.3],['HEA 200',190,200,6.5,10.0,18,53.8,42.3,3692,389,429,8.28,1336,134,204,4.98,20.6,105],['HEA 220',210,220,7.0,11.0,18,64.3,50.5,5410,515,568,9.17,1955,178,270,5.51,28.5,182],['HEA 240',230,240,7.5,12.0,21,76.8,60.3,7763,675,744,10.1,2769,231,351,6.00,41.6,312],['HEA 260',250,260,7.5,12.5,24,86.8,68.2,10450,836,919,10.97,3668,282,430,6.50,52.4,497],['HEA 280',270,280,8.0,13.0,24,97.3,76.4,13670,1013,1112,11.9,4763,340,518,6.99,67.2,763],['HEA 300',290,300,8.5,14.0,27,112,88.3,18260,1260,1383,12.8,6310,421,641,7.49,96.2,1199],['HEA 320',310,300,9.0,15.5,27,124,98.0,22930,1479,1628,13.6,6985,466,709,7.52,116,1503],['HEA 340',330,300,9.5,16.5,27,133,105,27690,1679,1852,14.4,7436,496,754,7.46,134,1776],['HEA 360',350,300,10.0,17.5,27,143,112,33090,1891,2088,15.2,7887,526,799,7.43,154,2066],['HEA 400',390,300,11.0,19.0,27,159,125,45070,2311,2562,16.8,8564,571,868,7.34,196,2726],['HEA 450',440,300,11.5,21.0,27,178,140,63720,2896,3216,18.9,9465,631,959,7.29,266,3667],['HEA 500',490,300,12.0,23.0,27,198,155,86970,3550,3949,21.0,10370,691,1050,7.24,352,4813],['HEA 550',540,300,12.5,24.0,27,212,166,111900,4146,4622,23.0,10820,721,1098,7.15,428,5984],['HEA 600',590,300,13.0,25.0,27,226,178,141200,4787,5350,25.0,11270,751,1145,7.07,513,7321],['HEA 700',690,300,14.5,27.0,27,260,204,215300,6241,7032,28.8,12180,812,1241,6.84,734,10480],['HEA 800',790,300,15.0,28.0,30,285,224,303400,7682,8699,32.7,12640,843,1291,6.66,1002,13340],['HEA 900',890,300,16.0,30.0,30,321,252,422100,9485,10800,36.3,13550,903,1383,6.50,1450,17420],['HEA 1000',990,300,16.5,31.0,30,347,272,553800,11190,12790,39.9,14000,933,1432,6.35,1845,21750]]},
+HEB:{std:'euro',desc:'Wide flange H-section, medium series. EN 10365.',shape:'H',
+  cols:['Section','h','b','tw','tf','r','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)','Iw (cm⁶)'],
+  data:[['HEB 100',100,100,6.0,10.0,12,26.0,20.4,450,90.0,104,4.16,167,33.5,51.4,2.53,9.25,5.27],['HEB 120',120,120,6.5,11.0,12,34.0,26.7,864,144,165,5.04,318,52.9,80.9,3.06,13.0,12.6],['HEB 140',140,140,7.0,12.0,12,43.0,33.7,1509,216,245,5.93,550,78.5,120,3.58,20.1,28.9],['HEB 160',160,160,8.0,13.0,15,54.3,42.6,2492,311,354,6.78,889,111,170,4.05,31.2,59.9],['HEB 180',180,180,8.5,14.0,15,65.3,51.2,3831,426,481,7.66,1363,151,231,4.57,42.2,116],['HEB 200',200,200,9.0,15.0,18,78.1,61.3,5696,570,642,8.54,2003,200,305,5.07,59.3,200],['HEB 220',220,220,9.5,16.0,18,91.0,71.5,8091,736,827,9.43,2843,258,394,5.59,76.6,331],['HEB 240',240,240,10.0,17.0,21,106,83.2,11260,938,1053,10.3,3923,327,498,6.08,102,527],['HEB 260',260,260,10.0,17.5,24,118,93.0,14920,1148,1283,11.2,5135,395,602,6.58,124,788],['HEB 280',280,280,10.5,18.0,24,131,103,19270,1376,1534,12.1,6595,471,717,7.09,143,1130],['HEB 300',300,300,11.0,19.0,27,149,117,25170,1678,1869,13.0,8563,571,870,7.58,185,1688],['HEB 320',320,300,11.5,20.5,27,161,127,30820,1926,2149,13.8,9239,616,939,7.57,225,2069],['HEB 340',340,300,12.0,21.5,27,171,134,36660,2156,2408,14.6,9690,646,985,7.53,260,2387],['HEB 360',360,300,12.5,22.5,27,181,142,43190,2400,2683,15.5,10140,676,1032,7.49,293,2757],['HEB 400',400,300,13.5,24.0,27,198,155,57680,2884,3232,17.1,10820,721,1104,7.40,356,3582],['HEB 450',450,300,14.0,26.0,27,218,171,79890,3551,3982,19.1,11720,782,1198,7.33,481,4762],['HEB 500',500,300,14.5,28.0,27,239,188,107200,4287,4815,21.2,12620,842,1292,7.27,625,6129],['HEB 550',550,300,15.0,29.0,27,254,199,136700,4971,5591,23.2,13080,872,1341,7.17,739,7608],['HEB 600',600,300,15.5,30.0,27,270,212,171000,5701,6425,25.2,13530,902,1391,7.08,878,9219],['HEB 700',700,300,17.0,32.0,27,306,240,256900,7340,8327,29.0,14440,963,1491,6.87,1230,13120],['HEB 800',800,300,17.5,33.0,30,334,262,359100,8977,10230,32.8,14900,993,1540,6.68,1681,17140],['HEB 900',900,300,18.5,35.0,30,371,291,494100,10980,12580,36.5,15820,1050,1631,6.53,2399,22660],['HEB 1000',1000,300,19.0,36.0,30,400,314,644700,12890,14860,40.2,16280,1080,1680,6.38,3000,28100]]},
+HEM:{std:'euro',desc:'Wide flange H-section, heavy series. EN 10365.',shape:'H',
+  cols:['Section','h','b','tw','tf','r','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)'],
+  data:[['HEM 100',120,106,12.0,20.0,12,53.2,41.8,1143,190,235,4.64,399,75.4,116,2.74,51.3],['HEM 120',140,126,12.5,21.0,12,66.4,52.1,2018,288,351,5.51,703,112,172,3.26,75.7],['HEM 140',160,146,13.0,22.0,12,80.6,63.3,3291,411,499,6.39,1144,157,241,3.77,107],['HEM 160',180,166,14.0,23.0,15,97.1,76.2,5098,566,688,7.24,1759,212,325,4.25,149],['HEM 180',200,186,14.5,24.0,15,113,89,7483,748,909,8.13,2580,277,424,4.77,199],['HEM 200',220,206,15.0,25.0,18,131,103,10640,967,1175,9.01,3651,355,542,5.28,265],['HEM 220',240,226,15.5,26.0,18,149,117,14600,1217,1479,9.90,5012,444,678,5.80,344],['HEM 240',270,248,18.0,32.0,21,200,157,24290,1799,2174,11.0,8153,658,1001,6.39,692],['HEM 260',290,268,18.0,32.5,24,220,172,31310,2159,2600,11.9,10450,780,1188,6.89,788],['HEM 280',310,288,18.5,33.0,24,240,188,39550,2551,3061,12.8,13160,915,1392,7.40,922],['HEM 300',340,310,21.0,39.0,27,303,238,59200,3482,4078,14.0,19400,1252,1874,8.00,1408],['HEM 320',359,309,21.0,40.0,27,312,245,68130,3798,4435,14.8,19710,1277,1913,7.95,1510],['HEM 340',377,309,21.0,40.0,27,316,248,76370,4052,4718,15.5,19710,1277,1913,7.90,1520],['HEM 360',395,308,21.0,40.0,27,320,251,84870,4297,5007,16.3,19520,1268,1901,7.81,1530],['HEM 400',432,307,21.0,40.0,27,326,256,104100,4823,5632,17.9,19280,1257,1884,7.69,1540],['HEM 450',478,307,21.0,40.0,27,335,263,131500,5501,6431,19.8,19280,1257,1884,7.58,1560],['HEM 500',524,306,21.0,40.0,27,344,270,161900,6183,7238,21.7,19090,1248,1871,7.45,1580],['HEM 550',572,306,21.0,40.0,27,354,278,198000,6924,8117,23.7,19090,1248,1871,7.34,1600],['HEM 600',620,305,21.0,40.0,27,364,286,237400,7660,8985,25.5,18900,1239,1858,7.20,1620],['HEM 700',716,304,21.0,40.0,27,384,302,329300,9200,10820,29.3,18720,1232,1847,6.98,1660]]},
+HD:{std:'euro',desc:'Wide flange columns HD. Heavy-duty, near-square cross-section. EN 10365.',shape:'H',
+  cols:['Section','h (mm)','b (mm)','tw (mm)','tf (mm)','r (mm)','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)'],
+  data:[
+    ['HD 260×54.1',254,260,6.4,10.0,24,68.8,54.1,5135,404,450,8.63,3668,282,430,7.30,24.0],
+    ['HD 260×68.2',260,260,7.1,12.5,24,86.8,68.2,6930,533,599,8.93,3960,305,465,6.75,46.9],
+    ['HD 260×93',266,260,8.0,17.5,24,118,93.0,9980,750,845,9.19,4340,334,509,6.07,115],
+    ['HD 260×114',271,262,9.7,21.0,24,145,114,12670,935,1060,9.35,5550,424,645,6.19,195],
+    ['HD 320×74.2',306,300,8.0,11.0,24,94.4,74.2,17010,1113,1240,13.4,8110,541,823,9.27,57.5],
+    ['HD 320×97.6',312,300,8.9,14.5,24,124,97.6,22500,1442,1613,13.5,8710,581,885,8.38,114],
+    ['HD 320×127',320,300,10.0,19.5,24,162,127,30530,1908,2148,13.7,9790,653,996,7.77,234],
+    ['HD 320×158',328,300,11.0,25.0,24,201,158,39160,2388,2710,14.0,10850,724,1104,7.34,429],
+    ['HD 320×198',339,309,16.5,29.5,24,252,198,52020,3070,3553,14.4,14820,959,1461,7.67,726],
+    ['HD 320×245',350,309,18.5,36.5,24,312,245,66360,3792,4441,14.6,17640,1142,1741,7.52,1344],
+    ['HD 320×300',359,309,19.5,45.0,24,382,300,82200,4581,5428,14.7,21230,1375,2099,7.45,2460],
+    ['HD 400×187',380,400,13.5,27.0,27,238,187,112700,5935,6654,21.8,56280,2814,4273,15.4,582],
+    ['HD 400×216',390,400,14.4,31.0,27,275,216,131500,6745,7607,21.9,62480,3124,4751,15.1,882],
+    ['HD 400×262',400,400,16.5,36.0,27,334,262,161900,8097,9173,22.0,73380,3669,5584,14.8,1400],
+    ['HD 400×314',408,400,18.0,43.0,27,400,314,196100,9609,10960,22.1,85200,4260,6510,14.6,2340],
+    ['HD 400×382',417,400,20.0,51.5,27,487,382,243100,11660,13390,22.3,100200,5010,7680,14.3,3910],
+    ['HD 400×463',427,401,22.0,62.0,27,590,463,302200,14150,16340,22.6,121500,6060,9320,14.3,6810],
+    ['HD 400×551',437,401,24.0,73.5,27,702,551,367100,16800,19510,22.9,142300,7100,10960,14.2,11200],
+    ['HD 400×634',446,402,26.0,82.0,27,808,634,426700,19130,22280,23.0,160400,7980,12380,14.1,15600],
+  ]},
+UPN:{std:'euro',desc:'Parallel flange channel. EN 10365.',shape:'C',
+  cols:['Section','h','b','tw','tf','r','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','iz (cm)','It (cm⁴)'],
+  data:[['UPN 50',50,38,5.0,7.0,7,7.12,5.59,26.4,10.6,13.8,1.92,8.52,3.55,1.09,1.00],['UPN 80',80,45,6.0,8.0,8,11.0,8.64,106,26.5,35.2,3.10,19.4,6.36,1.33,2.09],['UPN 100',100,50,6.0,8.5,9,13.5,10.6,206,41.2,55.1,3.91,29.3,8.49,1.47,2.81],['UPN 120',120,55,7.0,9.0,9,17.0,13.4,364,60.7,81.5,4.63,43.2,11.1,1.59,4.15],['UPN 140',140,60,7.0,10.0,10,20.4,16.0,605,86.4,116,5.45,62.7,14.8,1.75,6.24],['UPN 160',160,65,7.5,10.5,11,24.0,18.8,925,116,156,6.21,85.3,18.3,1.89,8.42],['UPN 180',180,70,8.0,11.0,11,28.0,22.0,1350,150,203,6.95,114,22.4,2.02,11.2],['UPN 200',200,75,8.5,11.5,12,32.2,25.3,1910,191,258,7.70,148,27.0,2.14,14.6],['UPN 220',220,80,9.0,12.5,12,37.4,29.4,2690,245,331,8.48,197,33.4,2.30,20.9],['UPN 240',240,85,9.5,13.0,13,42.3,33.2,3600,300,406,9.22,248,39.6,2.42,27.0],['UPN 260',260,90,10.0,14.0,14,48.3,37.9,4820,371,504,9.99,317,47.7,2.56,37.4],['UPN 280',280,95,10.0,15.0,15,53.3,41.8,6280,448,610,10.9,399,57.2,2.74,51.8],['UPN 300',300,100,10.0,16.0,16,58.8,46.2,8030,535,731,11.7,495,67.8,2.90,68.3],['UPN 320',320,100,14.0,17.5,16,75.8,59.5,10870,679,940,12.0,597,79.6,2.81,130],['UPN 380',380,102,13.5,16.0,16,80.4,63.1,15760,830,1170,14.0,615,79.2,2.77,134],['UPN 400',400,110,14.0,18.0,18,91.5,71.8,20350,1020,1440,14.9,846,102,3.04,189]]},
+UPE:{std:'euro',desc:'Parallel flange channel, thin web. EN 10365.',shape:'C',
+  cols:['Section','h','b','tw','tf','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','iz (cm)','It (cm⁴)'],
+  data:[['UPE 80',80,50,4.0,7.0,8.71,6.84,117,29.3,34.9,3.67,22.5,7.05,1.61,1.84],['UPE 100',100,55,4.5,7.5,10.9,8.55,247,49.5,58.2,4.77,34.6,9.73,1.78,2.59],['UPE 120',120,60,5.0,8.0,13.2,10.4,460,76.7,90.4,5.91,51.0,13.0,1.97,3.55],['UPE 140',140,65,5.5,9.0,16.2,12.7,781,112,132,6.94,73.3,17.4,2.13,5.67],['UPE 160',160,70,6.0,9.5,19.2,15.1,1220,153,179,7.98,101,22.0,2.29,7.85],['UPE 180',180,75,6.5,10.0,22.4,17.6,1840,204,239,9.06,135,27.3,2.45,10.6],['UPE 200',200,80,7.0,11.0,26.2,20.6,2710,271,317,10.2,176,33.3,2.59,15.3],['UPE 220',220,85,7.5,11.5,30.0,23.6,3800,345,404,11.2,222,39.6,2.72,20.1],['UPE 240',240,90,8.0,12.0,34.0,26.7,5200,433,506,12.4,275,46.5,2.84,26.3],['UPE 270',270,95,8.5,12.0,37.8,29.7,7630,565,659,14.2,325,52.0,2.93,29.4],['UPE 300',300,100,9.0,12.0,41.5,32.6,10670,711,827,16.0,380,57.8,3.03,32.8],['UPE 360',360,110,10.0,13.0,50.9,40.0,19450,1080,1255,19.5,520,72.4,3.19,44.4],['UPE 400',400,115,11.0,14.0,57.5,45.2,27350,1368,1588,21.8,625,83.8,3.30,54.6]]},
+L_EU:{std:'euro',desc:'Equal leg angles. EN 10056-1.',shape:'L',
+  cols:['Section','a×b×t','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','iy (cm)','Iu (cm⁴)','iv (cm)','It (cm⁴)'],
+  data:[['L 40×40×4','40×40×4',3.08,2.42,4.36,1.52,1.19,6.91,0.77,0.164],['L 50×50×5','50×50×5',4.80,3.77,10.5,2.93,1.48,16.7,0.95,0.400],['L 60×60×6','60×60×6',6.91,5.42,21.5,5.07,1.76,34.2,1.13,0.830],['L 70×70×7','70×70×7',9.40,7.38,39.4,7.87,2.05,62.7,1.32,1.55],['L 80×80×8','80×80×8',12.3,9.63,67.8,11.9,2.35,108,1.51,2.60],['L 90×90×9','90×90×9',15.5,12.2,117,18.3,2.75,186,1.72,4.62],['L 100×100×10','100×100×10',19.2,15.1,217,30.0,3.36,345,2.11,7.20],['L 100×100×12','100×100×12',22.7,17.8,253,35.4,3.34,403,2.08,12.2],['L 120×120×10','120×120×10',23.2,18.2,381,44.4,4.05,605,2.55,8.70],['L 120×120×12','120×120×12',27.5,21.6,447,52.6,4.03,712,2.52,14.8],['L 150×150×12','150×150×12',34.8,27.3,899,83.5,5.08,1430,3.20,18.7],['L 150×150×15','150×150×15',43.0,33.8,1100,103,5.06,1750,3.17,36.2],['L 200×200×16','200×200×16',62.5,49.1,3340,230,7.31,5310,4.28,48.9],['L 200×200×20','200×200×20',77.3,60.7,4090,285,7.27,6510,4.24,94.5]]},
+SHS:{std:'euro',desc:'Square hollow section. EN 10210/10219.',shape:'SHS',
+  cols:['Section','a (mm)','t (mm)','A (cm²)','G (kg/m)','AL (m²/m)','Iy=Iz (cm⁴)','Wely (cm³)','Wply (cm³)','iy=iz (cm)','It (cm⁴)','Ct (cm³)'],
+  data:[['SHS 40×40×3',40,3,4.39,3.45,0.155,8.60,4.30,5.41,1.40,13.4,6.54],['SHS 50×50×4',50,4,7.24,5.68,0.192,22.0,8.78,11.1,1.74,34.5,13.5],['SHS 60×60×4',60,4,8.84,6.94,0.232,39.0,13.0,16.3,2.10,61.4,20.1],['SHS 80×80×5',80,5,14.7,11.5,0.308,114,28.6,35.8,2.79,181,44.6],['SHS 100×100×5',100,5,18.7,14.7,0.388,230,46.0,57.5,3.51,366,71.9],['SHS 100×100×6',100,6,22.1,17.4,0.384,267,53.4,67.0,3.47,426,84.1],['SHS 120×120×6',120,6,26.9,21.1,0.464,474,78.9,98.5,4.20,757,124],['SHS 140×140×6',140,6,31.7,24.9,0.544,768,109,137,4.92,1228,172],['SHS 150×150×8',150,8,44.4,34.9,0.576,1214,162,204,5.23,1948,256],['SHS 160×160×8',160,8,47.6,37.4,0.616,1490,186,234,5.60,2393,294],['SHS 180×180×8',180,8,54.1,42.5,0.696,2165,240,301,6.32,3477,381],['SHS 200×200×8',200,8,60.6,47.5,0.776,3016,302,376,7.06,4843,477],['SHS 200×200×10',200,10,74.5,58.5,0.768,3660,366,458,7.01,5893,583],['SHS 250×250×10',250,10,94.5,74.2,0.968,7320,585,728,8.80,11810,934],['SHS 300×300×10',300,10,114,89.6,1.168,12750,850,1055,10.6,20520,1348],['SHS 300×300×12',300,12,136,107,1.160,15060,1004,1251,10.5,24300,1597]]},
+RHS:{std:'euro',desc:'Rectangular hollow section. EN 10210/10219.',shape:'RHS',
+  cols:['Section','h (mm)','b (mm)','t (mm)','A (cm²)','G (kg/m)','Iy (cm⁴)','Wely (cm³)','Wply (cm³)','iy (cm)','Iz (cm⁴)','Welz (cm³)','Wplz (cm³)','iz (cm)','It (cm⁴)','Ct (cm³)'],
+  data:[['RHS 60×40×4',60,40,4,6.96,5.46,34.5,11.5,14.9,2.22,15.3,7.65,10.0,1.48,30.4,15.3],['RHS 80×40×4',80,40,4,8.56,6.72,79.0,19.8,25.8,3.04,16.6,8.28,11.1,1.39,37.4,16.7],['RHS 100×60×5',100,60,5,14.6,11.5,213,42.5,54.5,3.82,80.5,26.8,34.3,2.35,183,44.9],['RHS 120×80×5',120,80,5,18.7,14.7,415,69.2,87.6,4.71,199,49.8,62.7,3.27,408,82.7],['RHS 150×100×6',150,100,6,28.1,22.0,985,131,166,5.92,459,91.7,116,4.04,960,154],['RHS 160×80×6',160,80,6,26.9,21.1,1050,131,167,6.25,253,63.2,80.4,3.07,572,109],['RHS 200×100×6',200,100,6,34.1,26.8,2228,223,281,8.09,498,99.5,126,3.82,1161,171],['RHS 200×120×6',200,120,6,37.3,29.3,2470,247,311,8.14,799,133,167,4.63,1730,229],['RHS 200×150×6',200,150,6,41.3,32.4,2758,276,346,8.16,1498,200,249,6.02,3183,341],['RHS 250×150×8',250,150,8,60.6,47.6,6808,545,684,10.6,2200,293,370,6.02,4836,510],['RHS 300×200×8',300,200,8,77.6,60.9,14260,950,1185,13.6,6620,662,827,9.23,17020,1110],['RHS 300×200×10',300,200,10,96.0,75.4,17380,1159,1452,13.5,8040,804,1011,9.15,20820,1360],['RHS 400×200×10',400,200,10,116,91.0,39360,1968,2468,18.4,8600,860,1086,8.62,22590,1430]]},
+CHS:{std:'euro',desc:'Circular hollow section. EN 10210/10219.',shape:'CHS',
+  cols:['Section','D (mm)','T (mm)','A (cm²)','G (kg/m)','AL (m²/m)','Iy=Iz (cm⁴)','Wely (cm³)','Wply (cm³)','iy=iz (cm)','It (cm⁴)','Ct (cm³)'],
+  data:[['CHS 42.4×4.0',42.4,4.0,4.83,3.79,0.131,6.59,3.11,4.41,1.17,13.2,6.22],['CHS 60.3×4.0',60.3,4.0,7.07,5.55,0.188,21.5,7.12,10.0,1.74,42.9,14.2],['CHS 76.1×5.0',76.1,5.0,11.2,8.77,0.235,53.9,14.2,19.9,2.20,108,28.3],['CHS 88.9×5.0',88.9,5.0,13.2,10.3,0.275,87.3,19.6,27.4,2.57,175,39.3],['CHS 101.6×5.0',101.6,5.0,15.3,12.0,0.315,133,26.1,36.4,2.95,265,52.2],['CHS 114.3×6.3',114.3,6.3,21.4,16.8,0.354,232,40.6,57.0,3.29,465,81.3],['CHS 139.7×6.3',139.7,6.3,26.5,20.8,0.434,430,61.5,85.7,4.03,861,123],['CHS 168.3×6.3',168.3,6.3,32.1,25.2,0.524,762,90.6,126,4.87,1524,181],['CHS 168.3×10.0',168.3,10.0,49.7,39.0,0.517,1143,136,191,4.79,2286,272],['CHS 168.3×12.5',168.3,12.5,61.2,48.0,0.529,1368,163,230,4.73,2736,326],['CHS 219.1×8.0',219.1,8.0,53.4,41.9,0.683,2132,195,271,6.32,4264,390],['CHS 219.1×12.5',219.1,12.5,82.0,64.4,0.677,3211,293,412,6.26,6422,587],['CHS 273.0×10.0',273.0,10.0,83.6,65.6,0.852,5194,381,531,7.88,10390,762],['CHS 323.9×10.0',323.9,10.0,99.9,78.4,1.014,8776,542,755,9.37,17550,1084],['CHS 355.6×12.5',355.6,12.5,137,107,1.110,14430,812,1135,10.3,28870,1623],['CHS 406.4×12.5',406.4,12.5,157,123,1.270,21750,1071,1495,11.8,43500,2141],['CHS 457.0×12.5',457.0,12.5,177,139,1.428,31230,1368,1906,13.3,62460,2735],['CHS 508.0×12.5',508.0,12.5,197,155,1.591,43040,1695,2357,14.8,86080,3389]]},
+W:{std:'amer',desc:'Wide flange shapes. AISC / ASTM A992.',shape:'H',
+  cols:['Section','d (in)','bf (in)','tf (in)','tw (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','Zx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','Zy (in³)','ry (in)','J (in⁴)','Cw (in⁶)'],
+  data:[['W36×256',36.7,16.6,1.44,0.960,75.4,256,16800,917,1040,14.9,528,63.5,98.0,2.65,28.6,68500],['W36×150',35.9,17.0,0.940,0.625,44.3,150,9040,504,581,14.3,270,31.8,48.8,2.47,6.52,17700],['W33×130',33.1,11.5,0.855,0.580,38.3,130,6710,406,467,13.2,218,38.0,56.1,2.38,4.57,10800],['W30×108',29.8,10.5,0.760,0.545,31.7,108,4470,299,346,11.9,146,27.9,43.9,2.15,2.70,7560],['W27×84',26.7,10.0,0.640,0.460,24.7,84,2850,213,244,10.7,106,21.2,33.2,2.07,1.83,5380],['W24×76',23.9,8.99,0.680,0.440,22.4,76,2100,176,200,9.69,82.5,18.4,28.6,1.92,2.68,4580],['W24×55',23.6,7.00,0.505,0.395,16.2,55,1350,114,130,9.11,29.1,8.30,13.3,1.34,0.985,1560],['W21×62',21.0,8.24,0.615,0.400,18.3,62,1330,127,144,8.54,57.5,13.9,21.7,1.77,1.83,3160],['W18×50',18.0,7.50,0.570,0.355,14.7,50,800,88.9,101,7.38,40.1,10.7,16.6,1.65,1.14,1590],['W14×82',14.3,10.1,0.855,0.510,24.0,82,882,123,139,6.05,148,29.3,44.8,2.48,5.07,5640],['W14×53',13.9,7.99,0.660,0.370,15.6,53,541,77.8,87.1,5.89,57.7,14.4,22.0,1.92,1.56,1710],['W14×38',14.1,6.77,0.515,0.310,11.2,38,385,54.6,61.5,5.87,26.7,7.88,12.1,1.55,0.798,803],['W14×22',13.7,5.00,0.335,0.230,6.49,22,199,29.0,33.2,5.54,7.00,2.80,4.39,1.04,0.208,241],['W12×40',11.9,8.01,0.515,0.295,11.7,40,307,51.5,57.0,5.13,44.1,11.0,16.8,1.94,0.785,1390],['W10×33',9.73,7.96,0.435,0.290,9.71,33,171,35.0,38.8,4.19,36.6,9.20,13.9,1.94,0.583,942],['W8×31',8.00,8.00,0.435,0.285,9.13,31,110,27.5,30.4,3.47,37.1,9.27,14.1,2.02,0.536,795],['W6×25',6.38,6.08,0.455,0.320,7.34,25,53.4,16.7,18.9,2.70,17.1,5.61,8.56,1.52,0.461,295]]},
+S:{std:'amer',desc:'American standard I-beams. AISC.',shape:'I',
+  cols:['Section','d (in)','bf (in)','tf (in)','tw (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','ry (in)'],
+  data:[['S24×121',24.5,8.05,1.09,0.800,35.6,121,3160,258,9.43,83.3,20.7,1.53],['S24×80',24.0,7.00,0.871,0.615,23.5,80,2100,175,9.47,42.2,12.1,1.34],['S20×96',20.3,7.20,0.920,0.800,28.2,96,1670,165,7.71,49.9,13.9,1.33],['S20×75',20.0,6.39,0.795,0.635,22.0,75,1280,128,7.62,29.8,9.32,1.16],['S18×70',18.0,6.25,0.691,0.711,20.6,70,926,103,6.71,24.1,7.72,1.08],['S15×50',15.0,5.64,0.622,0.550,14.7,50,486,64.8,5.75,15.7,5.57,1.03],['S12×35',12.0,5.08,0.544,0.428,10.3,35,229,38.2,4.72,9.87,3.89,0.980],['S10×35',10.0,4.94,0.491,0.594,10.3,35,147,29.4,3.78,8.36,3.38,0.901],['S8×23',8.00,4.17,0.426,0.441,6.77,23,64.9,16.2,3.10,4.31,2.07,0.798]]},
+HP:{std:'amer',desc:'Bearing pile shapes. AISC.',shape:'H',
+  cols:['Section','d (in)','bf (in)','tf (in)','tw (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','ry (in)'],
+  data:[['HP18×204',18.3,18.1,1.22,1.22,60.1,204,6600,721,10.5,2110,233,5.93],['HP16×183',16.5,16.3,1.13,1.13,53.8,183,4660,565,9.31,1570,192,5.40],['HP16×101',16.0,16.0,0.665,0.665,29.8,101,2400,299,8.97,834,104,5.29],['HP14×117',14.2,14.9,0.805,0.805,34.4,117,1220,172,5.96,443,59.5,3.59],['HP14×73',13.6,14.6,0.505,0.505,21.4,73,729,107,5.84,261,35.8,3.49],['HP12×84',12.3,12.3,0.685,0.685,24.6,84,650,105,5.14,213,34.7,2.94],['HP10×57',9.99,10.2,0.565,0.565,16.8,57,294,58.9,4.18,101,19.8,2.45],['HP8×36',8.02,8.16,0.445,0.445,10.6,36,119,29.8,3.36,40.3,9.88,1.95]]},
+C:{std:'amer',desc:'American standard channels. AISC.',shape:'C',
+  cols:['Section','d (in)','bf (in)','tf (in)','tw (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','ry (in)'],
+  data:[['C15×50',15.0,3.72,0.650,0.716,14.7,50,404,53.8,5.24,11.0,3.78,0.867],['C12×30',12.0,3.17,0.501,0.510,8.82,30,162,27.0,4.29,5.14,2.06,0.763],['C10×30',10.0,3.03,0.436,0.673,8.82,30,103,20.7,3.42,3.94,1.65,0.669],['C10×20',10.0,2.74,0.436,0.379,5.88,20,78.9,15.8,3.66,2.81,1.32,0.692],['C9×20',9.00,2.65,0.413,0.448,5.88,20,60.9,13.5,3.22,2.42,1.17,0.642],['C8×18.75',8.00,2.53,0.390,0.487,5.51,18.75,44.0,11.0,2.82,1.98,1.01,0.599],['C6×13',6.00,2.16,0.343,0.437,3.83,13,17.4,5.80,2.13,1.05,0.642,0.524],['C5×9',5.00,1.89,0.320,0.325,2.64,9,8.90,3.56,1.83,0.632,0.450,0.489],['C4×7.25',4.00,1.72,0.296,0.321,2.13,7.25,4.59,2.29,1.47,0.432,0.343,0.450]]},
+MC:{std:'amer',desc:'Miscellaneous channels. AISC.',shape:'C',
+  cols:['Section','d (in)','bf (in)','tf (in)','tw (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','ry (in)'],
+  data:[['MC18×58',18.0,4.20,0.625,0.700,17.1,58,554,61.5,5.69,17.6,5.48,1.02],['MC13×50',13.0,4.41,0.610,0.787,14.7,50,314,48.3,4.62,16.7,4.94,1.07],['MC12×50',12.0,3.94,0.700,0.835,14.7,50,269,44.9,4.28,14.9,4.74,1.01],['MC12×35',12.0,3.77,0.700,0.600,10.3,35,216,36.0,4.58,11.2,3.72,1.04],['MC10×41.1',10.0,4.32,0.575,0.796,12.1,41.1,158,31.5,3.62,12.6,3.91,1.02],['MC8×22.8',8.00,3.50,0.525,0.427,6.70,22.8,63.8,16.0,3.08,6.33,2.45,0.972],['MC6×18',6.00,3.50,0.475,0.379,5.29,18,29.7,9.91,2.37,5.93,2.28,1.06]]},
+L_US:{std:'amer',desc:'Equal leg angles. AISC.',shape:'L',
+  cols:['Section','a×b×t (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','ry (in)'],
+  data:[['L8×8×1','8×8×1',15.0,51.0,89.0,15.8,2.44,89.0,15.8,2.44],['L8×8×3/4','8×8×3/4',11.5,39.0,69.7,12.2,2.47,69.7,12.2,2.47],['L6×6×3/4','6×6×3/4',8.44,28.7,28.2,6.66,1.83,28.2,6.66,1.83],['L5×5×1/2','5×5×1/2',4.75,16.2,11.3,3.16,1.54,11.3,3.16,1.54],['L4×4×1/2','4×4×1/2',3.75,12.8,5.56,1.97,1.22,5.56,1.97,1.22],['L4×4×3/8','4×4×3/8',2.86,9.8,4.36,1.52,1.23,4.36,1.52,1.23],['L3×3×1/2','3×3×1/2',2.75,9.4,2.22,1.07,0.898,2.22,1.07,0.898],['L3×3×3/8','3×3×3/8',2.11,7.2,1.76,0.833,0.913,1.76,0.833,0.913],['L2×2×3/8','2×2×3/8',1.36,4.7,0.479,0.351,0.594,0.479,0.351,0.594]]},
+HSS_R:{std:'amer',desc:'Round hollow structural sections. AISC / ASTM A500.',shape:'CHS',
+  cols:['Section','OD (in)','t (in)','A (in²)','W (lb/ft)','Ix=Iy (in⁴)','Sx=Sy (in³)','Zx=Zy (in³)','rx=ry (in)','J (in⁴)','C (in³)'],
+  data:[['HSS16.000×0.500',16.0,0.465,22.6,76.9,479,59.9,80.3,4.61,959,120],['HSS12.750×0.500',12.75,0.465,18.0,61.5,241,37.8,50.7,3.66,482,75.5],['HSS10.750×0.500',10.75,0.465,15.2,51.8,143,26.6,35.8,3.07,286,53.2],['HSS8.625×0.500',8.625,0.465,12.2,41.4,74.3,17.2,23.3,2.46,149,34.5],['HSS8.625×0.375',8.625,0.349,9.24,31.4,57.5,13.3,17.9,2.50,115,26.6],['HSS6.625×0.375',6.625,0.349,7.15,24.3,26.0,7.85,10.7,1.91,52.1,15.7],['HSS5.000×0.375',5.0,0.349,5.19,17.7,8.62,3.45,4.80,1.29,17.2,6.89],['HSS4.000×0.375',4.0,0.349,4.13,14.1,4.33,2.17,3.06,1.02,8.66,4.33],['HSS3.000×0.300',3.0,0.279,2.42,8.24,1.27,0.848,1.23,0.723,2.54,1.70]]},
+HSS_SQ:{std:'amer',desc:'Square hollow structural sections. AISC / ASTM A500.',shape:'SHS',
+  cols:['Section','B (in)','t (in)','A (in²)','W (lb/ft)','Ix=Iy (in⁴)','Sx=Sy (in³)','Zx=Zy (in³)','rx=ry (in)','J (in⁴)','C (in³)'],
+  data:[['HSS16×16×1/2',16.0,0.465,28.3,96.7,775,96.9,113,5.23,1360,155],['HSS12×12×1/2',12.0,0.465,21.1,72.0,322,53.7,62.7,3.91,560,86.3],['HSS10×10×3/8',10.0,0.349,13.3,45.4,143,28.6,33.4,3.28,244,45.5],['HSS8×8×3/8',8.0,0.349,10.7,36.4,66.4,16.6,19.7,2.50,113,26.4],['HSS6×6×3/8',6.0,0.349,7.96,27.1,25.6,8.54,10.3,1.79,43.8,13.6],['HSS6×6×1/4',6.0,0.233,5.44,18.5,18.0,6.01,7.18,1.82,30.6,9.54],['HSS5×5×3/8',5.0,0.349,6.56,22.4,14.5,5.79,7.12,1.49,24.6,9.28],['HSS4×4×1/4',4.0,0.233,3.65,12.4,4.98,2.49,3.14,1.17,8.45,3.96],['HSS3×3×1/4',3.0,0.233,2.70,9.2,2.10,1.40,1.83,0.882,3.62,2.25]]},
+HSS_RECT:{std:'amer',desc:'Rectangular hollow structural sections. AISC / ASTM A500.',shape:'RHS',
+  cols:['Section','H (in)','B (in)','t (in)','A (in²)','W (lb/ft)','Ix (in⁴)','Sx (in³)','Zx (in³)','rx (in)','Iy (in⁴)','Sy (in³)','Zy (in³)','ry (in)','J (in⁴)','C (in³)'],
+  data:[['HSS20×12×1/2',20.0,12.0,0.465,27.6,94.0,1140,114,132,6.43,449,74.9,87.2,4.03,1040,134],['HSS16×8×5/8',16.0,8.0,0.581,26.7,91.0,530,66.3,79.4,4.46,166,41.5,49.7,2.49,394,71.2],['HSS14×10×1/2',14.0,10.0,0.465,21.5,73.1,396,56.5,66.3,4.30,224,44.8,52.5,3.23,449,77.8],['HSS12×8×1/2',12.0,8.0,0.465,18.1,61.7,224,37.3,44.3,3.52,120,30.0,35.7,2.57,261,52.3],['HSS10×6×3/8',10.0,6.0,0.349,11.8,40.3,96.1,19.2,23.3,2.86,44.1,14.7,18.0,1.93,95.5,27.0],['HSS8×6×3/8',8.0,6.0,0.349,9.82,33.5,55.2,13.8,16.9,2.37,34.3,11.4,13.9,1.87,73.2,22.0],['HSS6×4×3/8',6.0,4.0,0.349,7.38,25.2,24.0,8.01,10.1,1.80,11.8,5.90,7.37,1.26,26.7,11.0],['HSS4×3×5/16',4.0,3.0,0.291,3.92,13.3,6.36,3.18,4.12,1.27,3.53,2.35,3.03,0.949,9.01,5.70]]}
+};
+
+// ══ DYNAMIC SECTION SVG ══
+function drawSectionSVG(row, type) {
+  const d = DB[type];
+  const cols = d.cols;
+  const shape = d.shape;
+  const isEuro = d.std === 'euro';
+  const VW=200, VH=240, PAD=22;
+  const aW=VW-2*PAD, aH=VH-2*PAD;
+  const FILL='#d0e4f5', STR='#1a6db5', SW=1.2;
+  const DC='#8898aa', DT='#6a7a8a', YC='#1a8a5a', ZC='#e03a3a';
+  const MF="'Open Sans',sans-serif";
+  const FS=8;
+  const cx=VW/2, cy=VH/2;
+  function gi(i){return row[i]||0;}
+  function f(n){return n.toFixed(1);}
+  function ln(x1,y1,x2,y2,col,sw=0.8,dash=''){
+    return `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${col}" stroke-width="${sw}"${dash?` stroke-dasharray="${dash}"`:''}/>`;
+  }
+  function tx(x,y,s,ta='middle',col=DT,sz=FS){
+    return `<text x="${f(x)}" y="${f(y)}" text-anchor="${ta}" font-family="${MF}" font-size="${sz}" fill="${col}">${s}</text>`;
+  }
+  function txs(x,y,main,sub,ta='start',col=DT,sz=FS){
+    return `<text x="${f(x)}" y="${f(y)}" text-anchor="${ta}" font-family="${MF}" font-size="${sz}" fill="${col}">${main}<tspan baseline-shift="sub" font-size="${sz*0.8}">${sub}</tspan></text>`;
+  }
+  function dimV(x,y1,y2,lbl,lx){
+    return ln(x,y1,x,y2,DC)+ln(x-3,y1,x+3,y1,DC)+ln(x-3,y2,x+3,y2,DC)+tx(lx,(y1+y2)/2+3,lbl,'end',DT,FS);
+  }
+  function dimH(x1,x2,y,lbl,ly){
+    return ln(x1,y,x2,y,DC)+ln(x1,y-3,x1,y+3,DC)+ln(x2,y-3,x2,y+3,DC)+tx((x1+x2)/2,ly,lbl,'middle',DT,FS);
+  }
+  function axes(x0,y0,x1,y1){
+    const mx=(x0+x1)/2, my=(y0+y1)/2, e=10;
+    return ln(x0-e,my,x1+e,my,ZC,1,'4 3')+ln(mx,y0-e,mx,y1+e,YC,1,'4 3')+
+      tx(x1+e+4,my+3,'z','start',ZC,FS)+tx(x0-e-4,my+3,'z','end',ZC,FS)+
+      tx(mx,y0-e-3,'y','middle',YC,FS)+tx(mx,y1+e+9,'y','middle',YC,FS);
+  }
+  let s=`<svg viewBox="0 0 ${VW} ${VH}" width="185" height="215" style="display:block;">`;
+
+  if(shape==='I'||shape==='H'){
+    const h=gi(1),b=gi(2),tw_=isEuro?gi(3):gi(4),tf_=isEuro?gi(4):gi(3);
+    // fillet radius: index 5 for euro sections that have r column, else 0
+    const rIdx = isEuro ? (cols.indexOf('r') >= 0 ? cols.indexOf('r') : -1) : -1;
+    const rVal = rIdx >= 0 ? (row[rIdx] || 0) : 0;
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,twS=Math.max(tw_*sc,1.5),tfS=Math.max(tf_*sc,2);
+    const rS=Math.min(rVal*sc, Math.min(tfS*0.8, twS*0.8)); // scaled fillet
+    const x0=cx-bS/2,y0=cy-hS/2;
+    const x1=cx-twS/2,x2=cx+twS/2;
+    const fl=x0,fr=x0+bS,yt=y0,ytb=y0+tfS,ybb=y0+hS-tfS,yb=y0+hS;
+    // Build path with fillets at the 4 web-flange junctions if r > 0
+    let p;
+    if(rS > 0.5) {
+      // 4 junctions: top-flange/web on left and right (2 inner corners each), bottom same
+      // Top inner left: corner at (x1, ytb) — from flange going right to web going down
+      // Top inner right: corner at (x2, ytb)
+      // Bottom inner left: corner at (x1, ybb)
+      // Bottom inner right: corner at (x2, ybb)
+      p = `M${f(fl)},${f(yt)} H${f(fr)} V${f(ytb)}`
+        // right side top: fillet at (x2, ytb) — going from right flange edge left to web
+        + ` H${f(x2+rS)} Q${f(x2)},${f(ytb)} ${f(x2)},${f(ytb+rS)}`
+        + ` V${f(ybb-rS)} Q${f(x2)},${f(ybb)} ${f(x2+rS)},${f(ybb)}`
+        // bottom right flange
+        + ` H${f(fr)} V${f(yb)} H${f(fl)} V${f(ybb)}`
+        // bottom left fillet at (x1, ybb)
+        + ` H${f(x1-rS)} Q${f(x1)},${f(ybb)} ${f(x1)},${f(ybb-rS)}`
+        + ` V${f(ytb+rS)} Q${f(x1)},${f(ytb)} ${f(x1-rS)},${f(ytb)}`
+        + ` H${f(fl)} Z`;
+    } else {
+      p=`M${f(fl)},${f(yt)} H${f(fr)} V${f(ytb)} H${f(x2)} V${f(ybb)} H${f(fr)} V${f(yb)} H${f(fl)} V${f(ybb)} H${f(x1)} V${f(ytb)} H${f(fl)} Z`;
+    }
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(fl,yt,fr,yb);
+    s+=dimV(fl-14,yt,yb,'h',fl-17);
+    s+=dimH(fl,fr,yt-12,'b',yt-16);
+    s+=ln(fr+2,ytb,fr+10,ytb-5,DC,0.7)+txs(fr+11,ytb-2,'t','f','start',DT,7.5);
+    s+=ln(x2+2,cy-2,x2+10,cy-7,DC,0.7)+txs(x2+11,cy-4,'t','w','start',DT,7.5);
+    if(rS>0.5) s+=ln(x2+rS/2+1,ytb+rS/2+1,x2+10,ytb+10,DC,0.7)+tx(x2+12,ytb+14,'r','start',DT,7.5);
+
+  }else if(shape==='C'){
+    const h=gi(1),b=gi(2),tf_=isEuro?gi(4):gi(3),tw_=isEuro?gi(3):gi(4);
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,twS=Math.max(tw_*sc,1.5),tfS=Math.max(tf_*sc,2);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    const fl=x0,fr=x0+bS,yt=y0,yb=y0+hS,wr=fl+twS;
+    const p=`M${f(fl)},${f(yt)} H${f(fr)} V${f(yt+tfS)} H${f(wr)} V${f(yb-tfS)} H${f(fr)} V${f(yb)} H${f(fl)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(fl,yt,fr,yb);
+    s+=dimV(fr+12,yt,yb,'h',fr+20);
+    s+=dimH(fl,fr,yt-12,'b',yt-16);
+    s+=ln(wr+2,cy,wr+10,cy-5,DC,0.7)+txs(wr+11,cy-3,'t','w','start',DT,7.5);
+
+  }else if(shape==='L'){
+    const str=String(row[1]||'');
+    const pts=str.split('×').map(parseFloat);
+    const a=pts[0]||100,b=pts[1]||a,t=pts[2]||10;
+    const sc=Math.min((aW-8)/Math.max(a,b),(aH-8)/Math.max(a,b));
+    const aS=a*sc,bS=b*sc,tS=Math.max(t*sc,2.5);
+    const x0=cx-bS/2,y0=cy-aS/2;
+    // correct L: vertical leg on left, horizontal leg at bottom
+    const p=`M${f(x0)},${f(y0)} H${f(x0+tS)} V${f(y0+aS-tS)} H${f(x0+bS)} V${f(y0+aS)} H${f(x0)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(x0,y0,x0+bS,y0+aS);
+    s+=dimV(x0-14,y0,y0+aS,'a',x0-17);
+    s+=dimH(x0,x0+bS,y0+aS+10,'b',y0+aS+20);
+    s+=ln(x0+tS+2,y0+aS-tS-2,x0+tS+10,y0+aS-tS-8,DC,0.7)+txs(x0+tS+11,y0+aS-tS-5,'t','','start',DT,7.5);
+
+  }else if(shape==='SHS'){
+    const a=gi(1),t=gi(2);
+    if(!a){return s+'</svg>';}
+    const sc=Math.min(aW/a,aH/a);
+    const aS=a*sc,tS=Math.max(t*sc,1.5);
+    const x0=cx-aS/2,y0=cy-aS/2;
+    s+=`<rect x="${f(x0)}" y="${f(y0)}" width="${f(aS)}" height="${f(aS)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=`<rect x="${f(x0+tS)}" y="${f(y0+tS)}" width="${f(aS-2*tS)}" height="${f(aS-2*tS)}" fill="white" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=axes(x0,y0,x0+aS,y0+aS);
+    s+=dimV(x0-14,y0,y0+aS,'a',x0-17);
+    s+=ln(x0+2,y0+2,x0+tS-2,y0+tS-2,DC,0.7)+tx(x0+tS+3,y0+2,'t','start',DT,7.5);
+
+  }else if(shape==='RHS'){
+    const h=gi(1),b=gi(2),t=gi(3);
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,tS=Math.max(t*sc,1.5);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    s+=`<rect x="${f(x0)}" y="${f(y0)}" width="${f(bS)}" height="${f(hS)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=`<rect x="${f(x0+tS)}" y="${f(y0+tS)}" width="${f(bS-2*tS)}" height="${f(hS-2*tS)}" fill="white" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=axes(x0,y0,x0+bS,y0+hS);
+    s+=dimV(x0-14,y0,y0+hS,'h',x0-17);
+    s+=dimH(x0,x0+bS,y0-12,'b',y0-16);
+
+  }else if(shape==='CHS'){
+    const D=gi(1),t=gi(2);
+    if(!D){return s+'</svg>';}
+    const sc=Math.min(aW/D,aH/D);
+    const DS=D*sc,tS=Math.max(t*sc,1.5),r0=DS/2,ri=r0-tS;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r0)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(Math.max(ri,0.5))}" fill="white" stroke="${STR}" stroke-width="${SW}"/>`;
+    const e=10;
+    s+=ln(cx-r0-e,cy,cx+r0+e,cy,ZC,1,'4 3')+ln(cx,cy-r0-e,cx,cy+r0+e,YC,1,'4 3');
+    s+=tx(cx+r0+e+4,cy+3,'z','start',ZC,FS)+tx(cx-r0-e-4,cy+3,'z','end',ZC,FS);
+    s+=tx(cx,cy-r0-e-3,'y','middle',YC,FS)+tx(cx,cy+r0+e+9,'y','middle',YC,FS);
+    s+=dimH(cx-r0,cx+r0,cy+r0+12,'D',cy+r0+20);
+    const ang=Math.PI/4,dx=r0*Math.cos(ang),dy=r0*Math.sin(ang);
+    s+=ln(cx,cy,cx+dx,cy-dy,DC,0.8)+tx(cx+dx/2+4,cy-dy/2-2,'t','start',DT,7.5);
+  }
+  s+='</svg>';
+  return s;
+}
+
+// ══ CUSTOM SECTION SVG ══
+function drawCustomSVG(shape) {
+  const VW=200, VH=240, PAD=22;
+  const aW=VW-2*PAD, aH=VH-2*PAD;
+  const FILL='#d0e4f5', STR='#1a6db5', SW=1.2;
+  const DC='#8898aa', DT='#6a7a8a', YC='#1a8a5a', ZC='#e03a3a';
+  const MF="'Open Sans',sans-serif";
+  const FS=8;
+  const cx=VW/2, cy=VH/2;
+  function f(n){return n.toFixed(1);}
+  function ln(x1,y1,x2,y2,col,sw=0.8,dash=''){
+    return `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${col}" stroke-width="${sw}"${dash?` stroke-dasharray="${dash}"`:''}/>`;
+  }
+  function tx(x,y,s,ta='middle',col=DT,sz=FS){
+    return `<text x="${f(x)}" y="${f(y)}" text-anchor="${ta}" font-family="${MF}" font-size="${sz}" fill="${col}">${s}</text>`;
+  }
+  function txs(x,y,main,sub,ta='start',col=DT,sz=FS){
+    return `<text x="${f(x)}" y="${f(y)}" text-anchor="${ta}" font-family="${MF}" font-size="${sz}" fill="${col}">${main}<tspan baseline-shift="sub" font-size="${sz*0.8}">${sub}</tspan></text>`;
+  }
+  function dimV(x,y1,y2,lbl,lx){
+    return ln(x,y1,x,y2,DC)+ln(x-3,y1,x+3,y1,DC)+ln(x-3,y2,x+3,y2,DC)+tx(lx,(y1+y2)/2+3,lbl,'end',DT,FS);
+  }
+  function dimH(x1,x2,y,lbl,ly){
+    return ln(x1,y,x2,y,DC)+ln(x1,y-3,x1,y+3,DC)+ln(x2,y-3,x2,y+3,DC)+tx((x1+x2)/2,ly,lbl,'middle',DT,FS);
+  }
+  function axes(x0,y0,x1,y1){
+    const mx=(x0+x1)/2, my=(y0+y1)/2, e=10;
+    return ln(x0-e,my,x1+e,my,ZC,1,'4 3')+ln(mx,y0-e,mx,y1+e,YC,1,'4 3')+
+      tx(x1+e+4,my+3,'z','start',ZC,FS)+tx(x0-e-4,my+3,'z','end',ZC,FS)+
+      tx(mx,y0-e-3,'y','middle',YC,FS)+tx(mx,y1+e+9,'y','middle',YC,FS);
+  }
+  let s=`<svg viewBox="0 0 ${VW} ${VH}" width="185" height="215" style="display:block;">`;
+
+  if(shape==='I'){
+    const pfx='ci';
+    const h=g(pfx+'_h'), b=g(pfx+'_b'), tf=g(pfx+'_tf'), tw=g(pfx+'_tw');
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,twS=Math.max(tw*sc,1.5),tfS=Math.max(tf*sc,2);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    const x1=cx-twS/2,x2=cx+twS/2;
+    const fl=x0,fr=x0+bS,yt=y0,ytb=y0+tfS,ybb=y0+hS-tfS,yb=y0+hS;
+    const p=`M${f(fl)},${f(yt)} H${f(fr)} V${f(ytb)} H${f(x2)} V${f(ybb)} H${f(fr)} V${f(yb)} H${f(fl)} V${f(ybb)} H${f(x1)} V${f(ytb)} H${f(fl)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(fl,yt,fr,yb);
+    s+=dimV(fl-14,yt,yb,'h',fl-17);
+    s+=dimH(fl,fr,yt-12,'b',yt-16);
+    s+=ln(fr+2,ytb,fr+10,ytb-5,DC,0.7)+txs(fr+11,ytb-2,'t','f','start',DT,7.5);
+    s+=ln(x2+2,cy-2,x2+10,cy-7,DC,0.7)+txs(x2+11,cy-4,'t','w','start',DT,7.5);
+
+  }else if(shape==='BOX'){
+    const h=g('cbox_h'), b=g('cbox_b'), t=g('cbox_t');
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,tS=Math.max(t*sc,1.5);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    s+=`<rect x="${f(x0)}" y="${f(y0)}" width="${f(bS)}" height="${f(hS)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=`<rect x="${f(x0+tS)}" y="${f(y0+tS)}" width="${f(bS-2*tS)}" height="${f(hS-2*tS)}" fill="white" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=axes(x0,y0,x0+bS,y0+hS);
+    s+=dimV(x0-14,y0,y0+hS,'h',x0-17);
+    s+=dimH(x0,x0+bS,y0-12,'b',y0-16);
+    s+=ln(x0+2,y0+2,x0+tS-2,y0+tS-2,DC,0.7)+tx(x0+tS+3,y0+2,'t','start',DT,7.5);
+
+  }else if(shape==='CIRCLE'){
+    const D=g('cch_D'), t=g('cch_t');
+    if(!D){return s+'</svg>';}
+    const sc=Math.min(aW/D,aH/D);
+    const DS=D*sc,tS=Math.max(t*sc,1.5),r0=DS/2,ri=r0-tS;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r0)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(Math.max(ri,0.5))}" fill="white" stroke="${STR}" stroke-width="${SW}"/>`;
+    const e=10;
+    s+=ln(cx-r0-e,cy,cx+r0+e,cy,ZC,1,'4 3')+ln(cx,cy-r0-e,cx,cy+r0+e,YC,1,'4 3');
+    s+=tx(cx+r0+e+4,cy+3,'z','start',ZC,FS)+tx(cx-r0-e-4,cy+3,'z','end',ZC,FS);
+    s+=tx(cx,cy-r0-e-3,'y','middle',YC,FS)+tx(cx,cy+r0+e+9,'y','middle',YC,FS);
+    s+=dimH(cx-r0,cx+r0,cy+r0+12,'D',cy+r0+20);
+    const ang=Math.PI/4,dx=r0*Math.cos(ang),dy=r0*Math.sin(ang);
+    s+=ln(cx,cy,cx+dx,cy-dy,DC,0.8)+tx(cx+dx/2+4,cy-dy/2-2,'t','start',DT,7.5);
+
+  }else if(shape==='RECT'){
+    const h=g('cr_h'), b=g('cr_b');
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc;
+    const x0=cx-bS/2,y0=cy-hS/2;
+    s+=`<rect x="${f(x0)}" y="${f(y0)}" width="${f(bS)}" height="${f(hS)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    s+=axes(x0,y0,x0+bS,y0+hS);
+    s+=dimV(x0-14,y0,y0+hS,'h',x0-17);
+    s+=dimH(x0,x0+bS,y0-12,'b',y0-16);
+
+  }else if(shape==='CIRC_SOLID'){
+    const D=g('ccs_D');
+    if(!D){return s+'</svg>';}
+    const sc=Math.min(aW/D,aH/D);
+    const r0=D*sc/2;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r0)}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}"/>`;
+    const e=10;
+    s+=ln(cx-r0-e,cy,cx+r0+e,cy,ZC,1,'4 3')+ln(cx,cy-r0-e,cx,cy+r0+e,YC,1,'4 3');
+    s+=tx(cx+r0+e+4,cy+3,'z','start',ZC,FS)+tx(cx-r0-e-4,cy+3,'z','end',ZC,FS);
+    s+=tx(cx,cy-r0-e-3,'y','middle',YC,FS)+tx(cx,cy+r0+e+9,'y','middle',YC,FS);
+    s+=dimH(cx-r0,cx+r0,cy+r0+12,'D',cy+r0+20);
+
+  }else if(shape==='T'){
+    const h=g('ct_h'), b=g('ct_b'), tf=g('ct_tf'), tw=g('ct_tw');
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,twS=Math.max(tw*sc,1.5),tfS=Math.max(tf*sc,2);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    const x1=cx-twS/2,x2=cx+twS/2;
+    const fl=x0,fr=x0+bS,yt=y0,ytb=y0+tfS,yb=y0+hS;
+    const p=`M${f(fl)},${f(yt)} H${f(fr)} V${f(ytb)} H${f(x2)} V${f(yb)} H${f(x1)} V${f(ytb)} H${f(fl)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(fl,yt,fr,yb);
+    s+=dimV(fl-14,yt,yb,'h',fl-17);
+    s+=dimH(fl,fr,yt-12,'b',yt-16);
+    s+=ln(fr+2,ytb,fr+10,ytb-5,DC,0.7)+txs(fr+11,ytb-2,'t','f','start',DT,7.5);
+    s+=ln(x2+2,(ytb+yb)/2,x2+10,(ytb+yb)/2-5,DC,0.7)+txs(x2+11,(ytb+yb)/2-3,'t','w','start',DT,7.5);
+
+  }else if(shape==='CHANNEL'){
+    const h=g('cc_h'), b=g('cc_b'), tf=g('cc_tf'), tw=g('cc_tw');
+    if(!h||!b){return s+'</svg>';}
+    const sc=Math.min(aW/b,aH/h);
+    const hS=h*sc,bS=b*sc,twS=Math.max(tw*sc,1.5),tfS=Math.max(tf*sc,2);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    const fl=x0,fr=x0+bS,yt=y0,yb=y0+hS,wr=fl+twS;
+    const p=`M${f(fl)},${f(yt)} H${f(fr)} V${f(yt+tfS)} H${f(wr)} V${f(yb-tfS)} H${f(fr)} V${f(yb)} H${f(fl)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(fl,yt,fr,yb);
+    s+=dimV(fr+12,yt,yb,'h',fr+20);
+    s+=dimH(fl,fr,yt-12,'b',yt-16);
+    s+=ln(wr+2,cy,wr+10,cy-5,DC,0.7)+txs(wr+11,cy-3,'t','w','start',DT,7.5);
+    s+=ln(fl+2,yt+tfS+2,fl+10,yt+tfS+8,DC,0.7)+txs(fl+11,yt+tfS+10,'t','f','start',DT,7.5);
+
+  }else if(shape==='L_CUST'){
+    const h=g('cl_h'), b=g('cl_b'), t=g('cl_t');
+    if(!h||!b){return s+'</svg>';}
+    const maxD=Math.max(h,b);
+    const sc=Math.min((aW-10)/b,(aH-10)/h);
+    const hS=h*sc,bS=b*sc,tS=Math.max(t*sc,2.5);
+    const x0=cx-bS/2,y0=cy-hS/2;
+    // vertical leg on left, horizontal leg at bottom
+    const p=`M${f(x0)},${f(y0)} H${f(x0+tS)} V${f(y0+hS-tS)} H${f(x0+bS)} V${f(y0+hS)} H${f(x0)} Z`;
+    s+=`<path d="${p}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=axes(x0,y0,x0+bS,y0+hS);
+    s+=dimV(x0-14,y0,y0+hS,'h',x0-17);
+    s+=dimH(x0,x0+bS,y0+hS+10,'b',y0+hS+20);
+    s+=ln(x0+tS+2,y0+hS-tS-2,x0+tS+10,y0+hS-tS-8,DC,0.7)+txs(x0+tS+11,y0+hS-tS-5,'t','','start',DT,7.5);
+
+  }else if(shape==='DL_CUST'){
+    // Back-to-back (sırt sırta): vertical legs in center near gap, horizontal flanges pointing outward
+    const h=g('cdl_h'), b=g('cdl_b'), t=g('cdl_t'), gap=g('cdl_g')||0;
+    if(!h||!b){return s+'</svg>';}
+    const totalW=2*b+gap;
+    const sc=Math.min((aW-4)/totalW,(aH-10)/h);
+    const hS=h*sc,bS=b*sc,tS=Math.max(t*sc,2.5),gS=(gap||0)*sc;
+    const y0=cy-hS/2;
+    // Left angle: vertical leg on right side (near gap), horizontal flange extends LEFT
+    const lx1=cx-gS/2-tS, lx2=cx-gS/2; // vertical leg x: lx1=outer, lx2=inner(gap)
+    const p1=`M${f(lx2)},${f(y0)} H${f(lx1)} V${f(y0+hS-tS)} H${f(lx2-bS)} V${f(y0+hS)} H${f(lx2)} Z`;
+    // Right angle: vertical leg on left side (near gap), horizontal flange extends RIGHT
+    const rx1=cx+gS/2, rx2=cx+gS/2+tS; // vertical leg x: rx1=inner(gap), rx2=outer
+    const p2=`M${f(rx1)},${f(y0)} H${f(rx2)} V${f(y0+hS-tS)} H${f(rx1+bS)} V${f(y0+hS)} H${f(rx1)} Z`;
+    s+=`<path d="${p1}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    s+=`<path d="${p2}" fill="${FILL}" stroke="${STR}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+    // gap indicator
+    if(gS>2) s+=ln(cx-gS/2,y0+hS/2,cx+gS/2,y0+hS/2,DC,0.8,'2 2');
+    const x0=lx2-bS, x1=rx1+bS;
+    s+=axes(x0,y0,x1,y0+hS);
+    s+=dimV(x0-14,y0,y0+hS,'h',x0-17);
+    s+=dimH(x0,x0+bS,y0+hS+10,'b',y0+hS+20);
+    if(gS>3) s+=tx(cx,y0+hS*0.4,'g','middle',DC,7.5);
+  }
+
+  s+='</svg>';
+  const wrap=document.getElementById('cust-svg-wrap');
+  if(wrap) wrap.innerHTML=s;
+}
+
+// ══ STATE ══
+let curStd = 'euro', curTypeE = 'IPE', curTypeA = 'W', sortCol = 0, sortDir = 1;
+
+function setStd(std, btn) {
+  curStd = std;
+  document.getElementById('panel-euro').style.display = std==='euro' ? '' : 'none';
+  document.getElementById('panel-amer').style.display = std==='amer' ? '' : 'none';
+  document.getElementById('panel-custom').style.display = std==='custom' ? '' : 'none';
+  document.querySelectorAll('.std-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (std==='custom') calcCustom();
+}
+
+function loadType(type, btn, panel) {
+  sortCol=0; sortDir=1;  // default: sort by section name ascending (preserves DB order = small→large)
+  const bar = document.getElementById('type-bar-'+panel);
+  bar.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (panel==='euro') curTypeE = type;
+  else curTypeA = type;
+  document.getElementById('search-'+panel).value = '';
+  document.getElementById('tbl-desc-'+panel).textContent = DB[type]?.desc || '';
+  // Populate dropdown
+  const sel = document.getElementById('sec-select-'+panel);
+  if (sel && DB[type]) {
+    sel.innerHTML = '<option value="">— select profile —</option>' +
+      DB[type].data.map(r => `<option value="${r[0].replace(/"/g,'&quot;')}">${r[0]}</option>`).join('');
+  }
+  renderTable(panel);
+  const detEl = document.getElementById('det-'+panel);
+  detEl.style.display = 'none';
+  detEl.innerHTML = '';
+  _detState[panel] = null;
+}
+
+function fmtPropName(s) {
+  return s
+    .replace(/Wely/g,'W<sub>el,y</sub>').replace(/Welz/g,'W<sub>el,z</sub>')
+    .replace(/Wply/g,'W<sub>pl,y</sub>').replace(/Wplz/g,'W<sub>pl,z</sub>')
+    .replace(/Iy=Iz/g,'I<sub>y</sub>=I<sub>z</sub>').replace(/iy=iz/g,'i<sub>y</sub>=i<sub>z</sub>')
+    .replace(/\bIy\b/g,'I<sub>y</sub>').replace(/\bIz\b/g,'I<sub>z</sub>')
+    .replace(/\bIx\b/g,'I<sub>x</sub>').replace(/\bIt\b/g,'I<sub>t</sub>')
+    .replace(/\bIw\b/g,'I<sub>w</sub>').replace(/\bIu\b/g,'I<sub>u</sub>')
+    .replace(/\biy\b/g,'i<sub>y</sub>').replace(/\biz\b/g,'i<sub>z</sub>')
+    .replace(/\biu\b/g,'i<sub>u</sub>').replace(/\biv\b/g,'i<sub>v</sub>')
+    .replace(/\bSx\b/g,'S<sub>x</sub>').replace(/\bSy\b/g,'S<sub>y</sub>')
+    .replace(/\bZx\b/g,'Z<sub>x</sub>').replace(/\bZy\b/g,'Z<sub>y</sub>')
+    .replace(/\brx\b/g,'r<sub>x</sub>').replace(/\bry\b/g,'r<sub>y</sub>')
+    .replace(/\bCt\b/g,'C<sub>t</sub>').replace(/\bCw\b/g,'C<sub>w</sub>')
+    .replace(/\bAL\b/g,'A<sub>L</sub>')
+    .replace(/\btw\b/g,'t<sub>w</sub>').replace(/\btf\b/g,'t<sub>f</sub>');
+}
+
+// Format a numeric property value with consistent decimal places
+function fmtPropVal(v, key) {
+  if (typeof v !== 'number') return v;
+  // Geometry (mm): 1 decimal
+  if (/^(h|b|d|tw|tf|r|t|T|D|a|B|H|OD)\b/.test(key)) return v.toFixed(1);
+  // Area (cm²/in²): 2 decimals
+  if (/^A /.test(key)) return v.toFixed(2);
+  // Weight (kg/m or lb/ft): 2 decimals
+  if (/^G /.test(key)) return v.toFixed(2);
+  // Second moment (cm⁴): 1 decimal for large, 2 for small
+  if (/^(Iy|Iz|Ix|It|Iw|Iu)\b/.test(key)) return v >= 100 ? v.toFixed(1) : v.toFixed(2);
+  // Section modulus (cm³): 2 decimals
+  if (/^(Wely|Welz|Wply|Wplz|Sx|Sy|Zx|Zy)\b/.test(key)) return v.toFixed(2);
+  // Radius of gyration (cm): 2 decimals
+  if (/^(iy|iz|ix|iu|iv|rx|ry)\b/.test(key)) return v.toFixed(2);
+  // Torsion warping (cm⁶): 1 decimal
+  if (/^(Ct|Cw)\b/.test(key)) return v.toFixed(1);
+  // Default: 2 decimals for small, integer for large
+  return v >= 1000 ? Math.round(v).toLocaleString() : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+}
+
+function getColUnit(colName, isEuro, uMode) {
+  const k = colName.replace(/\s*\(.*\)$/, '').trim();
+  if (isEuro) {
+    if (/^(h|b|d|tw|tf|r|t|T|D|a|B|H|OD)\b/.test(k)) return uMode==='in' ? 'in' : 'mm';
+    if (colName.includes('cm²')) return uMode==='in' ? 'in²' : 'mm²';
+    if (colName.includes('kg/m')) return uMode==='in' ? 'lb/ft' : 'kg/m';
+    if (colName.includes('cm⁶')) return uMode==='in' ? 'in⁶' : 'mm⁶';
+    if (colName.includes('cm⁴')) return uMode==='in' ? 'in⁴' : 'mm⁴';
+    if (colName.includes('cm³')) return uMode==='in' ? 'in³' : 'mm³';
+    if (colName.includes('(cm)')) return uMode==='in' ? 'in' : 'mm';
+    if (colName.includes('m²/m')) return uMode==='in' ? 'ft²/ft' : 'm²/m';
+  } else {
+    if (/^(d|bf|tf|tw|kdes|T|OD|ID|B|H|h|b|t|r|a)\b/.test(k)) return uMode==='mm' ? 'mm' : 'in';
+    if (colName.includes('in²')) return uMode==='mm' ? 'cm²' : 'in²';
+    if (colName.includes('lb/ft')) return uMode==='mm' ? 'kg/m' : 'lb/ft';
+    if (colName.includes('in⁶')) return uMode==='mm' ? 'cm⁶' : 'in⁶';
+    if (colName.includes('in⁴')) return uMode==='mm' ? 'cm⁴' : 'in⁴';
+    if (colName.includes('in³')) return uMode==='mm' ? 'cm³' : 'in³';
+    if (colName.includes('(in)')) return uMode==='mm' ? 'cm' : 'in';
+  }
+  return '';
+}
+
+// Compute surface area per meter (m²/m) from section data row
+// Returns value in m²/m or null if not applicable
+function computeSurfaceArea(row, d) {
+  const isEuro = d.std === 'euro';
+  const shape = d.shape;
+  const cols = d.cols;
+  function gc(name) {
+    const idx = cols.findIndex(c => c === name || c.startsWith(name+' ') || c.startsWith(name+'('));
+    return idx >= 0 ? (row[idx] || 0) : 0;
+  }
+  if (shape === 'I' || shape === 'H') {
+    // For I/H sections: outer perimeter = 4*b + 2*(h - 2*tf) (mm) /1000
+    let h, b, tf;
+    if (isEuro) {
+      h = row[1]; b = row[2];
+      const twIdx = cols.indexOf('tw'); const tfIdx = cols.indexOf('tf');
+      tf = tfIdx >= 0 ? row[tfIdx] : (cols.indexOf('tf') >= 0 ? row[cols.indexOf('tf')] : row[4]);
+      // For euro: cols are Section, h, b, tw, tf[, r, ...] for IPE/HEA/HEB
+      // IPN has cols: Section, h, b, tw, tf, A, G, ...
+      tf = row[4]; // tf is always index 4 for euro I/H
+    } else {
+      // AISC: cols Section, d, bf, tf, tw, ...
+      h = row[1] * 25.4; b = row[2] * 25.4; tf = row[3] * 25.4;
+    }
+    if (!h || !b || !tf) return null;
+    const P = (4 * b + 2 * (h - 2 * tf)); // mm
+    return P / 1000; // m²/m
+  } else if (shape === 'C') {
+    // Channel: perimeter = 2*(2b + h - tw) /1000 approximately
+    let h, b, tw;
+    if (isEuro) {
+      h = row[1]; b = row[2]; tw = row[3];
+    } else {
+      h = row[1] * 25.4; b = row[2] * 25.4; tw = row[4] * 25.4;
+    }
+    if (!h || !b) return null;
+    const P = 2 * (2 * b + h - (tw || 0));
+    return P / 1000;
+  } else if (shape === 'L') {
+    // Equal angle: perimeter = 2*(2*a - t) /1000
+    let a, t;
+    if (isEuro) {
+      const str = String(row[1] || '');
+      const pts = str.split('×').map(parseFloat);
+      a = pts[0] || 0; t = pts[2] || 0;
+    } else {
+      // American L angles may have fractions like '8×8×1' or '4×4×3/8'
+      function parseFrac(s) {
+        const m = s.trim().match(/^(\d+)\/(\d+)$/);
+        if (m) return parseInt(m[1])/parseInt(m[2]);
+        return parseFloat(s) || 0;
+      }
+      const str = String(row[1] || '');
+      const pts = str.split('×').map(s => parseFrac(s) * 25.4);
+      a = pts[0] || 0; t = pts[2] || 0;
+    }
+    if (!a) return null;
+    return 2 * (2 * a - t) / 1000;
+  } else if (shape === 'SHS') {
+    // Square hollow: outer perimeter = 4*a /1000
+    const aVal = isEuro ? row[1] : row[1] * 25.4;
+    return 4 * aVal / 1000;
+  } else if (shape === 'RHS') {
+    // RHS: outer perimeter = 2*(h+b) /1000
+    let h, b;
+    if (isEuro) { h = row[1]; b = row[2]; }
+    else { h = row[1] * 25.4; b = row[2] * 25.4; }
+    return 2 * (h + b) / 1000;
+  } else if (shape === 'CHS') {
+    // CHS: π*D /1000
+    const D = isEuro ? row[1] : row[1] * 25.4;
+    return Math.PI * D / 1000;
+  }
+  return null;
+}
+
+// Build superheader row for a given column list
+function buildSuperHeader(cols, isEuro) {
+  // cols already includes the injected Asurf column at the correct position
+  function getGroup(col, idx) {
+    if (idx === 0) return 'Section';
+    const c = col.replace(/\s*\(.*\)$/, '').trim();
+    if (/^Asurf$/.test(c)) return 'Cross-Section';
+    if (/^(h|b|d|tw|tf|r|t|T|D|a|B|H|OD|bf)\b/.test(c)) return 'Geometry';
+    if (/^(A|G|W|AL|Asurf)\b/.test(c)) return 'Cross-Section';
+    if (isEuro) {
+      // Euro: strong = y-y (Iy, Wely, Wply, iy), weak = z-z (Iz, Welz, Wplz, iz)
+      if (/^(Iy|Wely|Wply|iy|Iy=Iz|iy=iz|Ix=Iy)\b/.test(c)) return 'Strong Axis';
+      if (/^(Iz|Welz|Wplz|iz|Iu|Iv|iu|iv)\b/.test(c)) return 'Weak Axis';
+    } else {
+      // American: strong = x-x (Ix, Sx, Zx, rx), weak = y-y (Iy, Sy, Zy, ry)
+      if (/^(Ix|Sx|Zx|rx)\b/.test(c)) return 'Strong Axis';
+      if (/^(Iy|Sy|Zy|ry)\b/.test(c)) return 'Weak Axis';
+    }
+    if (/^(It|Iw|J|Ct|Cw)\b/.test(c)) return 'Torsional';
+    return 'Other';
+  }
+  const groups = [];
+  cols.forEach((col, idx) => {
+    const g = getGroup(col, idx);
+    if (groups.length === 0 || groups[groups.length-1].label !== g) {
+      groups.push({label: g, span: 1});
+    } else {
+      groups[groups.length-1].span++;
+    }
+  });
+  const GRP_LABELS = {
+    'Section':'', 'Geometry':'Geometry', 'Cross-Section':'Cross-Section',
+    'Strong Axis':'Strong Axis', 'Weak Axis':'Weak Axis',
+    'Torsional':'Torsional', 'Other':'Other'
+  };
+  return '<tr class="superrow">' + groups.map(g =>
+    `<th colspan="${g.span}">${GRP_LABELS[g.label] ?? g.label}</th>`
+  ).join('') + '</tr>';
+}
+
+function renderTable(panel) {
+  const type = panel==='euro' ? curTypeE : curTypeA;
+  const d = DB[type];
+  if (!d) return;
+  const isEuro = d.std === 'euro';
+  const uMode = _detUnit[panel] || (isEuro ? 'mm' : 'in');
+  const descEl = document.getElementById('tbl-desc-'+panel);
+  if (descEl) descEl.textContent = d.desc;
+
+  const q = document.getElementById('search-'+panel).value.toLowerCase();
+  let rows = d.data.filter(r => r[0].toLowerCase().includes(q));
+  // Always sort; col 0 uses DB insertion order (small→large)
+  const dbOrder = new Map(d.data.map((r,i) => [r[0], i]));
+  rows.sort((a,b) => {
+    if (sortCol === 0) return (dbOrder.get(a[0]) - dbOrder.get(b[0])) * sortDir;
+    const va=a[sortCol],vb=b[sortCol];
+    return (typeof va==='number' ? (va-vb) : String(va).localeCompare(String(vb))) * sortDir;
+  });
+
+  // --- Asurf column ---
+  // Don't add if the section type already has a surface area column (AL)
+  const alreadyHasAL = d.cols.some(c => /^AL\b/.test(c.replace(/\s*\(.*\)$/,'')));
+  // Find index of G or W (weight) column — Asurf inserted right after it
+  const gIdx = alreadyHasAL ? -1 : d.cols.findIndex(c => /^(G|W)\s/.test(c));
+  const asurfUnit = uMode==='in' ? 'ft²/ft' : 'm²/m';
+
+  // Build extended virtual cols list for superheader (with Asurf at correct position)
+  const extCols = [...d.cols];
+  if (gIdx >= 0) extCols.splice(gIdx + 1, 0, `Asurf (${asurfUnit})`);
+
+  const th = document.getElementById('th-'+panel);
+  const superRow = buildSuperHeader(extCols, isEuro);
+
+  const asurfTh = `<th data-tip="Exposed surface area per unit length">${'A'}<sub>surf</sub>&thinsp;<span class="th-unit">${asurfUnit}</span></th>`;
+  const normalRow = '<tr>' + d.cols.map((col,i) => {
+    const cls = sortCol===i ? (sortDir===1?'sa':'sd') : '';
+    if (i===0) return `<th class="${cls}" onclick="sortBy(${i},'${panel}')" style="text-align:left">${fmtPropName(col)}</th>`;
+    const colUnit = getColUnit(col, isEuro, uMode);
+    const colBase = col.replace(/\s*\(.*\)$/, '').trim();
+    const hdrHtml = colUnit ? `${fmtPropName(colBase)}&thinsp;<span class="th-unit">${colUnit}</span>` : fmtPropName(col);
+    const tipKey = colBase.replace(/[= ].*/,'').trim();
+    const tip = COL_TIPS[colBase] || COL_TIPS[tipKey] || '';
+    const tipAttr = tip ? ` data-tip="${tip}"` : '';
+    return `<th class="${cls}"${tipAttr} onclick="sortBy(${i},'${panel}')">${hdrHtml}</th>` + (i===gIdx ? asurfTh : '');
+  }).join('') + '</tr>';
+  th.innerHTML = superRow + normalRow;
+
+  const tb = document.getElementById('tb-'+panel);
+  const totalCols = d.cols.length + (gIdx >= 0 ? 1 : 0);
+  tb.innerHTML = rows.length ? rows.map(r => {
+    const al = gIdx >= 0 ? computeSurfaceArea(r, d) : null;
+    const alDisp = al !== null ? (uMode==='in' ? (al*3.281).toFixed(3) : al.toFixed(3)) : '—';
+    const alCell = `<td>${alDisp}</td>`;
+    return `<tr onclick="showDetail('${r[0].replace(/'/g,"\\'")}','${type}','${panel}')">` +
+      r.map((v,i) => {
+        if (i===0) return `<td>${v}</td>`;
+        const {val} = fmtDetVal(v, d.cols[i], isEuro, uMode);
+        return `<td>${val}</td>` + (i===gIdx ? alCell : '');
+      }).join('') + '</tr>';
+  }).join('') : `<tr><td colspan="${totalCols}" class="no-results">No sections found.</td></tr>`;
+}
+
+function sortBy(col, panel) {
+  if (sortCol===col) { sortDir*=-1; }
+  else { sortCol=col; sortDir= col===0 ? 1 : 1; }
+  renderTable(panel);
+}
+
+let _detUnit = {euro:'mm', amer:'in'}; // panel → 'mm' or 'in'
+let _detState = {}; // panel → {name, type}
+
+function setDetUnit(panel, unit) {
+  _detUnit[panel] = unit;
+  document.querySelectorAll('.unit-tgl-'+panel).forEach(b => b.classList.toggle('active', b.dataset.unit===unit));
+  renderTable(panel);
+  const s = _detState[panel];
+  if (s) showDetail(s.name, s.type, panel);
+}
+
+function formatNumber(value) {
+  if (typeof value !== 'number' || !isFinite(value)) return String(value);
+  const abs = Math.abs(value);
+  if (abs >= 1e4) {
+    const exp = Math.floor(Math.log10(abs));
+    const mant = value / Math.pow(10, exp);
+    return mant.toFixed(2) + '×10<sup>' + exp + '</sup>';
+  }
+  if (abs >= 100) return value.toFixed(0);
+  if (abs >= 10)  return value.toFixed(1);
+  return value.toFixed(2);
+}
+
+// Column tooltip descriptions
+const COL_TIPS = {
+  'h':'Total height','b':'Flange width','d':'Depth','tw':'Web thickness','tf':'Flange thickness',
+  'r':'Fillet radius','A':'Cross-sectional area','G':'Weight per unit length',
+  'W':'Weight per unit length','AL':'Surface area per unit length',
+  'Iy':'Second moment of area (strong axis)','Iz':'Second moment of area (weak axis)',
+  'Ix':'Second moment of area (strong axis)','Iy=Iz':'Second moment of area',
+  'Wely':'Elastic section modulus (strong axis)','Welz':'Elastic section modulus (weak axis)',
+  'Wply':'Plastic section modulus (strong axis)','Wplz':'Plastic section modulus (weak axis)',
+  'iy':'Radius of gyration (strong axis)','iz':'Radius of gyration (weak axis)',
+  'iy=iz':'Radius of gyration','It':'Torsional constant','Iw':'Warping constant',
+  'Ct':'Torsional section modulus','Iu':'Principal moment of area (max)',
+  'Iv':'Principal moment of area (min)','iu':'Radius of gyration (max principal)',
+  'iv':'Radius of gyration (min principal)','Sx':'Elastic section modulus (strong axis)',
+  'Sy':'Elastic section modulus (weak axis)','Sx=Sy':'Elastic section modulus',
+  'Zx':'Plastic section modulus (strong axis)','Zy':'Plastic section modulus (weak axis)',
+  'Zx=Zy':'Plastic section modulus','rx':'Radius of gyration (strong axis)',
+  'ry':'Radius of gyration (weak axis)','rx=ry':'Radius of gyration',
+  'J':'Torsional constant','Cw':'Warping constant','bf':'Flange width',
+  'C':'Torsional section modulus','Ix=Iy':'Second moment of area','t':'Wall thickness',
+  'T':'Wall thickness','D':'Outer diameter','a':'Leg length','B':'Width','OD':'Outer diameter',
+  'Surface':'Surface area per unit length (outer perimeter × 1m)',
+  'Asurf':'Surface area per unit length (outer perimeter × 1m)'
+};
+
+function fmtDetVal(v, key, isEuro, unitMode) {
+  if (typeof v !== 'number') return {val: v, unit: ''};
+
+  let converted = v;
+  let unit = '';
+
+  if (isEuro) {
+    // Euro data: geometry in mm (no change), A in cm²→mm², I in cm⁴→mm⁴, W in cm³→mm³, i in cm→mm, G in kg/m, AL in m²/m, Iw in cm⁶ (kept)
+    if (/^(h|b|d|tw|tf|r|t|T|D|a|B|H)\b/.test(key)) {
+      if (unitMode === 'in') { converted = v / 25.4; unit = 'in'; }
+      else { unit = 'mm'; }
+    } else if (/^A /.test(key)) {
+      if (unitMode === 'in') { converted = v / 6.452; unit = 'in²'; }
+      else { converted = v * 100; unit = 'mm²'; }
+    } else if (/^G /.test(key)) {
+      if (unitMode === 'in') { converted = v * 0.6720; unit = 'lb/ft'; }
+      else { unit = 'kg/m'; }
+    } else if (/^AL\b/.test(key)) {
+      if (unitMode === 'in') { converted = v * 3.281; unit = 'ft²/ft'; }
+      else { unit = 'm²/m'; }
+    } else if (/^Iw\b/.test(key)) {
+      if (unitMode === 'in') { converted = v / Math.pow(2.54, 6); unit = 'in⁶'; }
+      else { converted = v * 1e6; unit = 'mm⁶'; }
+    } else if (/^(Iy|Iz|Ix|It|Iu|Iv|J)\b/.test(key)) {
+      if (unitMode === 'in') { converted = v / 41.62; unit = 'in⁴'; }
+      else { converted = v * 10000; unit = 'mm⁴'; }
+    } else if (/^(Wely|Welz|Wply|Wplz|Ct|Cw|Sy|Sz|Sv)\b/.test(key)) {
+      if (unitMode === 'in') { converted = v / 16.387; unit = 'in³'; }
+      else { converted = v * 1000; unit = 'mm³'; }
+    } else if (/^(iy|iz|ix|iu|iv)\b/.test(key)) {
+      if (unitMode === 'in') { converted = v / 2.54; unit = 'in'; }
+      else { converted = v * 10; unit = 'mm'; }
+    }
+  } else {
+    // American data: geometry in inches, A in in², I in in⁴, S/Z in in³, r in in, W in lb/ft, J in in⁴, Cw in in⁶
+    if (/^(d|bf|tf|tw|kdes|T|OD|ID|B|H|h|b|t|r)\b/.test(key) || /\(in\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * 25.4; unit = 'mm'; }
+      else { unit = 'in'; }
+    } else if (/^(A |\bA\b)/.test(key) || /\(in²\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * 6.452; unit = 'cm²'; }
+      else { unit = 'in²'; }
+    } else if (/^W /.test(key) || /lb\/ft/.test(key)) {
+      if (unitMode === 'mm') { converted = v / 0.6720; unit = 'kg/m'; }
+      else { unit = 'lb/ft'; }
+    } else if (/^(Ix|Iy|Iz|It|J)\b/.test(key) || /\(in⁴\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * 41.62; unit = 'cm⁴'; }
+      else { unit = 'in⁴'; }
+    } else if (/^(Sx|Sy|Zx|Zy|Ct|Cw)\b/.test(key) || /\(in³\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * 16.387; unit = 'cm³'; }
+      else { unit = 'in³'; }
+    } else if (/^(rx|ry|rz|r[oxyz])\b/.test(key) || /\(in\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * 2.54; unit = 'cm'; }
+      else { unit = 'in'; }
+    }
+  }
+
+  // Format: formatNumber for both table and detail panel — no toLocaleString commas
+  return {val: formatNumber(converted), unit};
+}
+
+function showDetail(name, type, panel) {
+  const d = DB[type];
+  const row = d.data.find(r => r[0] === name);
+  if (!row) return;
+
+  _detState[panel] = {name, type};
+  if (!_detUnit[panel]) _detUnit[panel] = (DB[type]?.std === 'euro') ? 'mm' : 'in';
+  // Sync dropdown
+  const sel = document.getElementById('sec-select-'+panel);
+  if (sel) sel.value = name;
+  const uMode = _detUnit[panel];
+  const isEuro = d.std === 'euro';
+  const shape = d.shape;
+
+  // Highlight selected row in table
+  document.querySelectorAll('#tb-'+panel+' tr').forEach(tr => {
+    tr.classList.toggle('sel', tr.querySelector('td')?.textContent?.trim()===name);
+  });
+
+  const keys = d.cols;
+
+  // Classify columns into groups
+  const geoKeys = ['h','b','d','tw','tf','r','t','T','D','a','B','H','OD','r1'];
+  const crossKeys = ['A ','G ','AL','W ('];
+  const strongKeys = ['Iy','Wely','Wply','iy','Ix','Sx','Zx','rx'];
+  const weakKeys = ['Iz','Welz','Wplz','iz','Iy ','Sy','Zy','ry'];
+  const torKeys = ['It','Ct','Iw','J ','Cw','J(','C('];
+
+  function matchKey(k, prefixes) {
+    return prefixes.some(p => k.startsWith(p));
+  }
+
+  // Build property rows for a group
+  function buildRows(keyFilter) {
+    return keys.map((k,i) => ({k,i}))
+      .filter(x => x.i > 0 && row[x.i] !== undefined && keyFilter(x.k))
+      .map(x => {
+        const {val, unit} = fmtDetVal(row[x.i], x.k, isEuro, uMode);
+        return `<div class="det-row">
+          <span class="pr-name">${fmtPropName(x.k.replace(/\s*\(.*\)$/,''))}</span>
+          <span><span class="pr-val hl">${val}</span><span class="det-unit">${unit}</span></span>
+        </div>`;
+      }).join('');
+  }
+
+  // Compute AL (surface area m²/m) if not in data
+  function computeAL() {
+    const alIdx = keys.findIndex(k => k.startsWith('AL'));
+    if (alIdx > 0 && row[alIdx]) return null; // already in data, will show via buildRows
+    // Only compute for solid sections (I, H, C shapes)
+    let al = 0;
+    if (shape === 'I' || shape === 'H') {
+      const h=isEuro?row[1]:row[1]*25.4, b=isEuro?row[2]:row[2]*25.4;
+      const tw=isEuro?row[3]:row[4]*25.4;
+      al = (2*b + 2*h - 2*tw) / 1000;
+    } else if (shape === 'C') {
+      const h=isEuro?row[1]:row[1]*25.4, b=isEuro?row[2]:row[2]*25.4;
+      const tw=isEuro?row[3]:row[4]*25.4;
+      al = (2*b + 2*h - tw) / 1000;
+    } else {
+      return null;
+    }
+    const alDisp = uMode==='in' ? (al*3.281).toFixed(2)+' ft²/ft' : al.toFixed(3)+' m²/m';
+    return `<div class="det-row"><span class="pr-name">A<sub>L</sub></span><span><span class="pr-val hl">${alDisp}</span></span></div>`;
+  }
+  const alRow = computeAL();
+
+  // Left column: geometry + cross-section + torsion
+  const geoRows = buildRows(k => matchKey(k, geoKeys));
+  const crossRows = buildRows(k => matchKey(k, crossKeys));
+  const torRows = buildRows(k => matchKey(k, torKeys));
+
+  // Right column: strong axis + weak axis
+  const strongRows = buildRows(k => matchKey(k, strongKeys));
+  const weakRows = buildRows(k => matchKey(k, weakKeys));
+
+  const unitLbl = isEuro
+    ? (uMode==='in' ? 'in / in² / in⁴' : 'mm / cm² / cm⁴')
+    : (uMode==='mm' ? 'mm / cm² / cm⁴' : 'in / in² / in⁴');
+
+  const crossPlusAL = crossRows + (alRow || '');
+  const html = `<div class="det-top">
+    <div class="det-titlebar">
+      <span class="det-secname">${name}</span>
+      <span style="font-size:.7rem;color:rgba(255,255,255,0.38);font-family:'Open Sans',sans-serif;margin-left:4px;">${d.desc.split('.')[0]}</span>
+      <span style="margin-left:auto;font-family:'Open Sans',sans-serif;font-size:.65rem;color:rgba(255,255,255,0.4);padding:2px 8px;background:rgba(255,255,255,0.07);border-radius:3px;">${unitLbl}</span>
+    </div>
+    <div class="det-body">
+      <div class="det-col">
+        ${geoRows?`<div class="det-grp"><div class="pg-lbl">Geometry</div>${geoRows}</div>`:''}
+        ${crossPlusAL?`<div class="det-grp"><div class="pg-lbl">Cross-Section</div>${crossPlusAL}</div>`:''}
+        ${torRows?`<div class="det-grp"><div class="pg-lbl">Torsion</div>${torRows}</div>`:''}
+      </div>
+      <div class="det-diag">${drawSectionSVG(row,type)}</div>
+      <div class="det-col">
+        ${strongRows?`<div class="det-grp"><div class="pg-lbl">Strong axis (y–y)</div>${strongRows}</div>`:''}
+        ${weakRows?`<div class="det-grp"><div class="pg-lbl">Weak axis (z–z)</div>${weakRows}</div>`:''}
+      </div>
+    </div>
+  </div>`;
+
+  const detEl = document.getElementById('det-'+panel);
+  detEl.style.display = '';
+  detEl.innerHTML = html;
+
+  // Scroll to detail panel
+  detEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ══ CUSTOM SECTION ══
+let curShape = 'I';
+let _custUnit = 'mm';
+function setCustUnit(unit, btn) {
+  _custUnit = unit;
+  document.querySelectorAll('#cust-mm,#cust-in').forEach(b => b.classList.toggle('active', b.id === 'cust-'+unit));
+  calcCustom();
+}
+function setShape(shape, btn) {
+  curShape = shape;
+  document.querySelectorAll('.shape-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.custom-inputs').forEach(el => el.classList.remove('show'));
+  document.getElementById('inp-'+shape).classList.add('show');
+  calcCustom();
+}
+
+function g(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+
+function calcCustom() {
+  let A, Iy, Iz, Wely, Welz, Wply, Wplz, iy, iz, It, G_kg;
+  const ρ = 7850; // kg/m³ steel
+
+  switch(curShape) {
+    case 'I': {
+      const h=g('ci_h'), b=g('ci_b'), tf=g('ci_tf'), tw=g('ci_tw');
+      const hw = h - 2*tf;
+      A = 2*b*tf + hw*tw;
+      Iy = (b*h*h*h - (b-tw)*hw*hw*hw)/12;
+      Iz = (2*tf*b*b*b + hw*tw*tw*tw)/12;
+      Wely = Iy/(h/2); Welz = Iz/(b/2);
+      Wply = tw*hw*hw/4 + b*tf*(hw+tf);
+      Wplz = b*b*tf/2 + tw*tw*hw/4;
+      iy = Math.sqrt(Iy/A); iz = Math.sqrt(Iz/A);
+      // Correct thin-walled open section: It = (1/3)*Σ(b_i * t_i³)
+      It = (1/3) * (2*b*tf*tf*tf + hw*tw*tw*tw);
+      G_kg = A*1e-6 * ρ;
+      break;
+    }
+    case 'BOX': {
+      const h=g('cbox_h'), b=g('cbox_b'), t=g('cbox_t');
+      const hi=h-2*t, bi=b-2*t;
+      A = b*h - bi*hi;
+      Iy = (b*h*h*h - bi*hi*hi*hi)/12;
+      Iz = (h*b*b*b - hi*bi*bi*bi)/12;
+      Wely=Iy/(h/2); Welz=Iz/(b/2);
+      Wply=(b*h*h/4)-(bi*hi*hi/4);
+      Wplz=(h*b*b/4)-(hi*bi*bi/4);
+      iy=Math.sqrt(Iy/A); iz=Math.sqrt(Iz/A);
+      // Closed section: It = 4*Am²/(Σs/t), Am = mid-line enclosed area
+      const Am=(h-t)*(b-t);
+      const perimeter_over_t = (2*(h-t) + 2*(b-t)) / t;
+      It = 4*Am*Am / perimeter_over_t;
+      G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'CIRCLE': {
+      const D=g('cch_D'), t=g('cch_t'), Di=D-2*t, r=D/2, ri_=Di/2;
+      A=Math.PI*(r*r-ri_*ri_);
+      Iy=Iz=Math.PI*(D*D*D*D-Di*Di*Di*Di)/64;
+      Wely=Welz=Iy/r;
+      // CHS: It = J = Ix + Iy = 2*Iy
+      It=2*Iy;
+      Wply=Wplz=(D*D*D-Di*Di*Di)/6;
+      iy=iz=Math.sqrt(Iy/A); G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'RECT': {
+      const h=g('cr_h'), b=g('cr_b');
+      const a_=Math.min(b,h), bb_=Math.max(b,h);
+      A=b*h; Iy=b*h*h*h/12; Iz=h*b*b*b/12;
+      Wely=Iy/(h/2); Welz=Iz/(b/2);
+      Wply=b*h*h/4; Wplz=h*b*b/4;
+      iy=Math.sqrt(Iy/A); iz=Math.sqrt(Iz/A);
+      // Timoshenko solid rectangle: It = a³*b*(1/3 - 0.21*(a/b)*(1 - a⁴/(12*b⁴)))
+      It = a_*a_*a_*bb_ * (1/3 - 0.21*(a_/bb_)*(1 - Math.pow(a_,4)/(12*Math.pow(bb_,4))));
+      G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'CIRC_SOLID': {
+      const D=g('ccs_D'), r=D/2;
+      A=Math.PI*r*r; Iy=Iz=Math.PI*r*r*r*r/4;
+      Wely=Welz=Iy/r; Wply=Wplz=4*r*r*r/3;
+      iy=iz=r/2;
+      // Solid circle: It = J = π*D⁴/32
+      It=2*Iy;
+      G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'T': {
+      const h=g('ct_h'), b=g('ct_b'), tf=g('ct_tf'), tw=g('ct_tw');
+      const hw=h-tf;
+      A=b*tf+hw*tw;
+      // centroid from top
+      const yc=(b*tf*(tf/2)+hw*tw*(tf+hw/2))/A;
+      Iy=b*tf*tf*tf/12+b*tf*(yc-tf/2)**2 + tw*hw*hw*hw/12+hw*tw*(yc-tf-hw/2)**2;
+      Iz=(tf*b*b*b+hw*tw*tw*tw)/12;
+      Wely=Iy/Math.max(yc,h-yc); Welz=Iz/(b/2);
+      Wply=0; // simplified
+      Wplz=(b*b*tf/4)+(tw*tw*hw/4);
+      iy=Math.sqrt(Iy/A); iz=Math.sqrt(Iz/A);
+      // Open thin-walled: It = (1/3)*Σ(b_i*t_i³)
+      It=(1/3)*(b*tf*tf*tf+hw*tw*tw*tw);
+      G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'CHANNEL': {
+      const h=g('cc_h'), b=g('cc_b'), tf=g('cc_tf'), tw=g('cc_tw');
+      const hw=h-2*tf;
+      A=2*b*tf+hw*tw;
+      Iy=(tw*h*h*h+(2*b-tw)*hw*hw*hw)/12;
+      // centroid from web back
+      const xc=b*b*tf/A;
+      Iz=2*(tf*b*b*b/12+b*tf*(b/2-xc)**2)+(hw*tw*tw*tw/12+hw*tw*(xc-tw/2)**2);
+      Wely=Iy/(h/2); Welz=Iz/Math.max(xc,b-xc);
+      Wply=(tw*h*h/4)+(2*b*tf*(h/2-tf/2));
+      Wplz=0;
+      iy=Math.sqrt(Iy/A); iz=Math.sqrt(Iz/A);
+      // Open thin-walled: It = (1/3)*Σ(b_i*t_i³)
+      It=(1/3)*(2*b*tf*tf*tf+hw*tw*tw*tw);
+      G_kg=A*1e-6*ρ;
+      break;
+    }
+    case 'L_CUST': {
+      const h=g('cl_h'), b=g('cl_b'), t=g('cl_t');
+      // Vertical leg: width=t, height=h (full), from x=0 to x=t
+      // Horizontal leg: width=b, height=t (bottom), from y=0 to y=t
+      // Combined (no double-counting corner): vertical full + horizontal (b-t) part
+      const hv = h - t; // extra height of vertical leg above horizontal
+      A = h*t + (b-t)*t; // = t*(h+b-t)
+      // centroid from bottom (y=0 at bottom of horizontal leg)
+      // vertical leg: area=h*t, ybar = h/2
+      // horizontal leg (excluding corner): area=(b-t)*t, ybar = t/2
+      const yc = (h*t*(h/2) + (b-t)*t*(t/2)) / A;
+      // centroid from left (x=0 at left of vertical leg)
+      // vertical leg: area=h*t, xbar = t/2
+      // horizontal leg (excluding corner): area=(b-t)*t, xbar = t + (b-t)/2 = (b+t)/2
+      const xc = (h*t*(t/2) + (b-t)*t*((b+t)/2)) / A;
+      // Iy: about own centroid (strong axis, bending about horizontal)
+      Iy = (t*h*h*h/12 + h*t*(yc-h/2)**2) + ((b-t)*t*t*t/12 + (b-t)*t*(yc-t/2)**2);
+      // Iz: about own centroid (weak axis, bending about vertical)
+      Iz = (h*t*t*t/12 + h*t*(xc-t/2)**2) + (t*(b-t)*(b-t)*(b-t)/12 + (b-t)*t*(xc-(b+t)/2)**2);
+      Wely = Iy/Math.max(yc, h-yc);
+      Welz = Iz/Math.max(xc, b-xc);
+      Wply = 0; Wplz = 0; // simplified
+      iy = Math.sqrt(Iy/A); iz = Math.sqrt(Iz/A);
+      // L angle: It = (1/3)*(h+b-t)*t³
+      It = (1/3)*(h+b-t)*t*t*t;
+      G_kg = A*1e-6*ρ;
+      break;
+    }
+    case 'DL_CUST': {
+      // Back-to-back (sırt sırta): vertical legs in center, horizontal flanges pointing outward
+      // Each angle: vertical leg (t wide, h tall) near gap; horizontal leg (b wide, t thick) at bottom going outward
+      const h=g('cdl_h'), b=g('cdl_b'), t=g('cdl_t'), gap=g('cdl_g')||0;
+      const Aone = t*(h+b-t); // area of one angle
+      A = 2*Aone;
+      // Centroid of single angle measured from the INNER FACE of the vertical leg (gap face)
+      // Vertical leg: x centroid = t/2 from inner face
+      // Horizontal leg extension (b-t wide): x centroid = t + (b-t)/2 = (b+t)/2 from inner face
+      const xcOne = (h*t*(t/2) + (b-t)*t*((b+t)/2)) / Aone;
+      // y centroid from bottom
+      const ycOne = (h*t*(h/2) + (b-t)*t*(t/2)) / Aone;
+      // Iy (strong axis, symmetric, same for both angles)
+      const IyOne = t*h*h*h/12 + h*t*(ycOne-h/2)**2
+                  + (b-t)*t*t*t/12 + (b-t)*t*(ycOne-t/2)**2;
+      Iy = 2*IyOne;
+      // Iz (weak axis): each angle's centroid is at (xcOne + gap/2) from composite centre
+      const IzOne = h*t*t*t/12 + h*t*(xcOne-t/2)**2
+                  + t*(b-t)*(b-t)*(b-t)/12 + (b-t)*t*(xcOne-(b+t)/2)**2;
+      const dx = xcOne + gap/2;
+      Iz = 2*(IzOne + Aone*dx*dx);
+      Wely = Iy/Math.max(ycOne, h-ycOne);
+      Welz = Iz/(b + gap/2);     // extreme fibre = flange tip from centre
+      Wply = 0; Wplz = 0;
+      iy = Math.sqrt(Iy/A); iz = Math.sqrt(Iz/A);
+      It = 2*(1/3)*(h+b-t)*t*t*t;
+      G_kg = A*1e-6*ρ;
+      break;
+    }
+    default: return;
+  }
+
+  // Surface area per metre (m²/m)
+  let AL_m2m = null;
+  switch(curShape) {
+    case 'I': { const h=g('ci_h'), b=g('ci_b'), tf=g('ci_tf'); AL_m2m = (4*b + 2*(h - 2*tf))/1000; break; }
+    case 'CHANNEL': { const h=g('cc_h'), b=g('cc_b'), tw=g('cc_tw'); AL_m2m = 2*(2*b + h - tw)/1000; break; }
+    case 'L_CUST': { const h=g('cl_h'), b=g('cl_b'), t=g('cl_t'); AL_m2m = 2*(h + b - t)/1000; break; }
+    case 'DL_CUST': { const h=g('cdl_h'), b=g('cdl_b'), t=g('cdl_t'), gap=g('cdl_g')||0;
+      AL_m2m = (4*(h + b - t) - 2*gap)/1000; break; }
+  }
+
+  const custUnit = _custUnit || 'mm';
+  const isIn = custUnit === 'in';
+  const fn = (v, d=2) => isNaN(v)||!isFinite(v) ? '—' : formatNumber(v);
+
+  let Adisp, Iydisp, Izdisp, Welyd, Welzd, Wplyd, Wplzd, iydisp, izdisp, Itdisp, Gdisp;
+  let uA, uI, uW, ur, uG;
+  let ALdisp, uAL;
+
+  if (isIn) {
+    // mm → in conversions
+    const mm2in=1/25.4, mm2in2=1/645.16, mm4in4=1/416231, mm3in3=1/16387;
+    Adisp=A*mm2in2; uA='in²';
+    Iydisp=Iy*mm4in4; Izdisp=Iz*mm4in4; Itdisp=It*mm4in4; uI='in⁴';
+    Welyd=Wely*mm3in3; Welzd=Welz*mm3in3; Wplyd=Wply*mm3in3; Wplzd=Wplz*mm3in3; uW='in³';
+    iydisp=iy*mm2in; izdisp=iz*mm2in; ur='in';
+    Gdisp=G_kg*0.6720; uG='lb/ft';
+    ALdisp = AL_m2m !== null ? AL_m2m*3.281 : null; uAL='ft²/ft';
+  } else {
+    Adisp=A; uA='mm²';
+    Iydisp=Iy; Izdisp=Iz; Itdisp=It; uI='mm⁴';
+    Welyd=Wely; Welzd=Welz; Wplyd=Wply; Wplzd=Wplz; uW='mm³';
+    iydisp=iy; izdisp=iz; ur='mm';
+    Gdisp=G_kg; uG='kg/m';
+    ALdisp = AL_m2m; uAL='m²/m';
+  }
+
+  document.getElementById('custom_out').innerHTML = `
+    <div class="res-sec">Cross-Section</div>
+    <table class="res-table">
+      <tr><td>Area A</td><td>${fn(Adisp)} ${uA}</td></tr>
+      <tr><td>Weight G</td><td>${fn(Gdisp)} ${uG}</td></tr>
+      ${ALdisp !== null ? `<tr><td>Surface area A<sub>L</sub></td><td>${fn(ALdisp)} ${uAL}</td></tr>` : ''}
+    </table>
+    <div class="res-sec">Bending — Strong Axis (y-y)</div>
+    <table class="res-table">
+      <tr><td>I<sub>y</sub> — 2nd moment</td><td><span class="val-hl">${fn(Iydisp)} ${uI}</span></td></tr>
+      <tr><td>W<sub>el,y</sub> — Elastic modulus</td><td>${fn(Welyd)} ${uW}</td></tr>
+      <tr><td>W<sub>pl,y</sub> — Plastic modulus</td><td>${fn(Wplyd)} ${uW}</td></tr>
+      <tr><td>i<sub>y</sub> — Radius of gyration</td><td>${fn(iydisp)} ${ur}</td></tr>
+    </table>
+    <div class="res-sec">Bending — Weak Axis (z-z)</div>
+    <table class="res-table">
+      <tr><td>I<sub>z</sub> — 2nd moment</td><td><span class="val-hl">${fn(Izdisp)} ${uI}</span></td></tr>
+      <tr><td>W<sub>el,z</sub> — Elastic modulus</td><td>${fn(Welzd)} ${uW}</td></tr>
+      <tr><td>W<sub>pl,z</sub> — Plastic modulus</td><td>${fn(Wplzd)} ${uW}</td></tr>
+      <tr><td>i<sub>z</sub> — Radius of gyration</td><td>${fn(izdisp)} ${ur}</td></tr>
+    </table>
+    <div class="res-sec">Torsion</div>
+    <table class="res-table">
+      <tr><td>I<sub>t</sub> — Torsion constant</td><td>${fn(Itdisp)} ${uI}</td></tr>
+    </table>`;
+  drawCustomSVG(curShape);
+}
+
+// ══ CUSTOM TOOLTIP (replaces native title tooltip) ══
+(function(){
+  const tip = document.getElementById('col-tip');
+  document.addEventListener('mouseover', function(e) {
+    const el = e.target.closest('[data-tip]');
+    if (el) {
+      tip.textContent = el.getAttribute('data-tip');
+      tip.style.display = 'block';
+    }
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (tip.style.display === 'block') {
+      tip.style.left = (e.clientX + 14) + 'px';
+      tip.style.top  = (e.clientY - 28) + 'px';
+    }
+  });
+  document.addEventListener('mouseout', function(e) {
+    const el = e.target.closest('[data-tip]');
+    if (el) tip.style.display = 'none';
+  });
+})();
+
+// INIT
+function populateSel(panel, type) {
+  const sel = document.getElementById('sec-select-'+panel);
+  if (sel && DB[type]) {
+    sel.innerHTML = '<option value="">— select profile —</option>' +
+      DB[type].data.map(r => `<option value="${r[0].replace(/"/g,'&quot;')}">${r[0]}</option>`).join('');
+  }
+}
+// desc is now set by renderTable (supports Iw warning badge)
+populateSel('euro','IPE');
+populateSel('amer','W');
+renderTable('euro');
+renderTable('amer');
+setTimeout(calcCustom, 100);
+</script>
+
+<!-- AdBlock Notice -->
+<div class="adblock-notice" id="adblockNotice">
+  <div class="adblock-notice-content">
+    <span class="adblock-notice-icon">ℹ️</span>
+    <span class="adblock-notice-text">We noticed you're using an ad blocker. This site is free and ad-supported — please consider disabling it to support us.</span>
+  </div>
+  <button class="adblock-notice-close" onclick="dismissAdBlockNotice()">✕ Dismiss</button>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
+  const testAd=document.createElement('div');
+  testAd.className='ad adsbox adsbygoogle';
+  testAd.style.cssText='position:absolute;width:1px;height:1px;top:-9999px;left:-9999px;';
+  document.body.appendChild(testAd);
+  setTimeout(function(){
+    if(testAd.offsetHeight===0||window.getComputedStyle(testAd).display==='none'){
+      const n=document.getElementById('adblockNotice');
+      if(n) n.classList.add('show');
+    }
+    testAd.remove();
+  },200);
+})();
+function dismissAdBlockNotice(){
+  const n=document.getElementById('adblockNotice');
+  if(n) n.classList.remove('show');
+  localStorage.setItem('adblockNoticeDismissed','true');
+}
+</script>
+</body>
+</html>

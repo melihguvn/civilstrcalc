@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concrete Column Design Calculator - PMM Diagram | CivilStrCalc</title>
+<meta name="description" content="Design concrete columns with P-M-M interaction diagrams. ACI 318-25 and Eurocode 2. Biaxial bending analysis tool.">
+<meta name="keywords" content="concrete column, PMM diagram, interaction diagram, biaxial bending, ACI 318, Eurocode 2">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582"
+     crossorigin="anonymous"></script>
+<!-- Font Preload -->
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+@media print{
+  @page{margin:10mm 12mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:8.5pt!important;padding:0!important;}
+  body>div{padding:0!important;}
+  .no-print{display:none!important;}
+  .print-only{display:flex!important;}
+  .bg-section,.sub-tabs,.page-title,.res-empty,
+  [id$="-pmm-outer"],[id$="-empty"]{display:none!important;}
+  /* Show only the active pane's report */
+  .sub-pane:not(.active){display:none!important;}
+  .col-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
+  .report-hdr{border-radius:0!important;}
+  .result-box{background:#f0f5fb!important;}
+  .dcr-banner{border-radius:5px!important;}
+  /* Compact report body */
+  .report-body{padding:8px 14px!important;}
+  .rpt-sec{margin-bottom:7px!important;padding-bottom:7px!important;}
+  .res-tbl td{padding:3px 6px!important;font-size:7.8pt!important;}
+  .ri-value{font-size:.92rem!important;}
+  .ri-label{font-size:.58rem!important;}
+  .result-box{gap:5px!important;padding:8px 10px!important;margin-bottom:8px!important;}
+  .dcr-banner{padding:7px 10px!important;margin-bottom:8px!important;}
+  .dcr-text strong{font-size:.78rem!important;}
+  .report-warn{padding:5px 9px!important;font-size:.7rem!important;margin-bottom:6px!important;}
+  .rpt-sec-title{padding:2px 8px!important;font-size:.58rem!important;margin-bottom:5px!important;}
+  /* PMM print canvas */
+  .print-pmm-wrap{display:block!important;}
+  .print-disclaimer{display:block!important;}
+  .print-footer{display:flex!important;}
+}
+/* Print-only elements (hidden on screen) */
+.print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
+.print-pmm-wrap{display:none;}
+.print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
+.print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
+
+/* UNIT SWITCHER */
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap;}
+.unit-switcher label{font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0;white-space:nowrap;}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap;}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--mono);font-size:.67rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
+
+/* LAYOUT */
+.col-layout{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:stretch;}
+@media(max-width:1050px){.col-layout{grid-template-columns:minmax(300px,1fr) 1fr;align-items:start;}}
+@media(max-width:768px){.col-layout{grid-template-columns:1fr;gap:16px;}}
+.results-col{display:flex;flex-direction:column;gap:14px;}
+
+/* SECTION CANVAS */
+.section-preview{display:flex;justify-content:center;align-items:center;padding:10px;background:var(--white);border:1px solid var(--border);border-radius:6px;margin-top:8px;}
+
+/* REPORT */
+.report-card{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.report-hdr{background:#1a2332;color:white;padding:13px 20px;display:flex;align-items:center;gap:10px;}
+.report-hdr h4{font-family:var(--cond);font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;}
+.rh-code{font-family:var(--mono);font-size:.61rem;background:rgba(255,255,255,.15);border-radius:3px;padding:2px 8px;}
+.print-btn{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;font-family:var(--sans);font-size:.73rem;font-weight:500;padding:5px 11px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.print-btn:hover{background:rgba(255,255,255,.28);}
+.report-body{padding:12px 20px;}
+
+/* RESULT BOX */
+.result-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;padding:11px 14px;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;}
+.result-item{text-align:center;}
+.ri-label{font-size:.68rem;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;font-family:var(--sans);font-weight:500;}
+.ri-value{font-family:var(--mono);font-size:1.05rem;font-weight:600;color:var(--accent);line-height:1.1;}
+.ri-unit{font-size:.7rem;color:var(--text-dim);margin-top:2px;font-family:var(--sans);}
+.result-item.ok   .ri-value{color:var(--green);}
+.result-item.warn .ri-value{color:var(--orange);}
+.result-item.err  .ri-value{color:var(--red);}
+
+/* DCR BANNER */
+.dcr-banner{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:7px;border:1.5px solid;margin-bottom:10px;}
+.dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0;}
+.dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a;}
+.dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8;}
+.dcr-icon{font-size:1.5rem;}
+.dcr-text strong{font-size:.87rem;display:block;margin-bottom:2px;}
+.dcr-text span{font-size:.73rem;color:var(--text-mid);font-family:var(--mono);}
+.dcr-banner.ok .dcr-text strong{color:var(--green);}
+.dcr-banner.warn .dcr-text strong{color:var(--orange);}
+.dcr-banner.err .dcr-text strong{color:var(--red);}
+
+/* PMM */
+.pmm-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.pmm-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 16px;display:flex;align-items:center;gap:8px;}
+.pmm-hdr h4{font-family:var(--cond);font-weight:700;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);}
+.pmm-axis-tabs{display:flex;gap:0;padding:0 14px;border-bottom:1px solid var(--border);background:var(--white);}
+.pmm-tab{background:none;border:none;border-bottom:2px solid transparent;padding:7px 12px;font-family:var(--sans);font-size:.75rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-1px;transition:all .15s;white-space:nowrap;}
+.pmm-tab:hover{color:var(--text);}
+.pmm-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.pmm-canvas-wrap{padding:8px 12px;display:flex;justify-content:center;}
+
+/* RESULT TABLE */
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.rpt-sec-title{font-family:var(--sans);font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 10px;margin-bottom:8px;}
+.res-tbl{width:100%;border-collapse:collapse;}
+.res-tbl tr{border-bottom:1px solid var(--border);}
+.res-tbl tr:last-child{border-bottom:none;}
+.res-tbl td{padding:4px 8px;font-size:.81rem;font-family:var(--sans);}
+.res-tbl td:first-child{color:var(--text-mid);width:60%;}
+.res-tbl td:last-child{font-family:var(--sans);font-weight:500;font-size:.81rem;text-align:right;color:var(--text);}
+.vok{color:var(--green)!important;}.vwarn{color:var(--orange)!important;}.verr{color:var(--red)!important;}.vhl{color:var(--accent)!important;}
+
+/* REBAR */
+.rebar-section{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:13px;}
+.rebar-section h4{font-family:var(--cond);font-weight:700;font-size:.77rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);margin-bottom:10px;}
+.rebar-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:8px;}
+
+/* WARN */
+.report-warn{display:flex;gap:8px;align-items:flex-start;background:#fff8ed;border:1px solid #f4c97a;border-radius:5px;padding:8px 11px;font-size:.76rem;color:#7a5000;margin-bottom:10px;line-height:1.55;}
+.limit-warn{display:none;background:#fff8ed;border:1px solid #f4c97a;border-radius:5px;padding:5px 9px;font-size:.72rem;color:#7a5000;margin-top:3px;line-height:1.5;}
+.limit-warn.show{display:block;}
+
+/* BACKGROUND */
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:24px;overflow:hidden;}
+.bg-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 18px;}
+.bg-hdr h3{font-family:var(--cond);font-weight:700;font-size:.88rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text);}
+.bg-tabs{display:flex;border-bottom:2px solid var(--border);padding:0 18px;background:var(--white);flex-wrap:wrap;}
+.bg-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 13px;font-family:var(--sans);font-size:.77rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.bg-tab:hover{color:var(--text);}.bg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.bg-pane{display:none;padding:20px;}.bg-pane.active{display:block;}
+.tb{max-width:800px;}
+.tb h4{font-family:var(--cond);font-weight:700;font-size:.95rem;color:var(--text);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.tb h4:first-child{margin-top:0;}
+.tb p{font-size:.81rem;color:var(--text-mid);line-height:1.75;margin-bottom:8px;}
+.tb ul{margin:5px 0 9px 17px;font-size:.81rem;color:var(--text-mid);line-height:1.8;}
+.rtag{display:inline-block;font-family:var(--mono);font-size:.62rem;background:var(--accent-lt);color:var(--accent);border:1px solid #b8d0eb;border-radius:3px;padding:1px 6px;margin-right:4px;vertical-align:middle;}
+.fml-blk{background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 15px;margin:8px 0;font-family:var(--mono);font-size:.77rem;color:var(--text-mid);line-height:1.95;}
+.fml-blk .ft{font-size:.61rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;font-family:var(--sans);}
+.fml-blk b{color:var(--accent);}
+.fml-blk .fn{font-size:.7rem;color:var(--text-dim);margin-top:4px;font-family:var(--sans);font-style:italic;}
+.lim-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:8px 0;}
+.lim-tbl th{background:var(--bg2);padding:7px 10px;font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);text-align:left;border-bottom:2px solid var(--border2);}
+.lim-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-mid);font-size:.75rem;}
+.lim-tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--text);}
+.lim-tbl tr:last-child td{border-bottom:none;}
+.ref-list{list-style:none;margin-top:5px;}
+.ref-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;color:var(--text-mid);display:flex;gap:9px;line-height:1.6;}
+.ref-list li:last-child{border-bottom:none;}
+.ref-num{font-family:var(--mono);font-size:.69rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
+</style>
+<!-- Google Funding Choices (Cookie Consent) -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
+<script>(function(){function signalGooglefcPresent(){if(!window.frames['googlefcPresent']){if(document.body){const iframe=document.createElement('iframe');iframe.style='width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;';iframe.style.display='none';iframe.name='googlefcPresent';document.body.appendChild(iframe);}else{setTimeout(signalGooglefcPresent,0);}}}signalGooglefcPresent();})();</script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Column Design</h1>
+  <p>Rectangular RC column — biaxial bending with axial load. Full P-M interaction diagram using strain-compatibility.</p>
+</div>
+
+<div class="sub-tabs no-print">
+  <button class="sub-tab active" onclick="stab(this,'col','aci')">ACI 318-25</button>
+  <button class="sub-tab" onclick="stab(this,'col','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+</div>
+
+<!-- ═══════ ACI 318-25 ═══════ -->
+<div class="sub-pane active" id="col-aci">
+<div class="col-layout">
+
+  <!-- LEFT COLUMN -->
+
+    <!-- INPUT PARAMETERS -->
+    <div class="card no-print">
+      <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="aci-utag">kN-m · m</span></div>
+      <div class="card-body">
+        <div class="unit-switcher">
+          <label>Units:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" onclick="setUnit('knm',this,'aci')">kN-m &amp; m</button>
+            <button class="unit-btn" onclick="setUnit('nmm',this,'aci')">N-mm</button>
+            <button class="unit-btn" onclick="setUnit('us',this,'aci')">US (kip·ft, in)</button>
+          </div>
+        </div>
+
+        <!-- COLUMN SHAPE TOGGLE -->
+        <div class="unit-switcher" style="margin-bottom:12px;">
+          <label>Column:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="aci-shape-rect" onclick="setColShape('rect','aci')">Rectangular</button>
+            <button class="unit-btn" id="aci-shape-circ" onclick="setColShape('circ','aci')">Circular</button>
+          </div>
+        </div>
+
+        <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+        <div id="aci-rect-geom">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-aci-b">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-b" value="0.40" step="0.01" oninput="updatePreview('aci')"><span class="us" id="u-aci-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Depth h <span class="lu" id="lu-aci-h">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-h" value="0.40" step="0.01" oninput="updatePreview('aci')"><span class="us" id="u-aci-h">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="aci-circ-geom" style="display:none;">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Diameter D <span class="lu" id="lu-aci-D">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-D" value="0.50" step="0.01" oninput="updatePreview('aci')"><span class="us" id="u-aci-D">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Clear Cover <span class="lu" id="lu-aci-cv-c">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-cv-c" value="0.050" step="0.001" oninput="updatePreview('aci')"><span class="us" id="u-aci-cv-c">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="aci-rect-cv-wrap" class="form-group">
+          <label>Clear Cover to main bar <span class="lu" id="lu-aci-cv">[m]</span></label>
+          <div class="iw"><input type="number" id="aci-cv" value="0.050" step="0.001"><span class="us" id="u-aci-cv">m</span></div>
+        </div>
+
+        <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>f'c [MPa]</label>
+            <div class="iw"><input type="number" id="aci-fc" value="28" oninput="checkLimACI()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-aci-fc"></div>
+          </div>
+          <div class="form-group">
+            <label>f<sub>y</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="aci-fy" value="420" oninput="checkLimACI()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-aci-fy"></div>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>E<sub>s</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="aci-Es" value="200000"><span class="us">MPa</span></div>
+          </div>
+          <div class="form-group">
+            <label>φ (tied column)</label>
+            <div class="iw"><input type="number" id="aci-phi" value="0.65" step="0.01" min="0.65" max="0.90"><span class="us">—</span></div>
+          </div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:10px;">φ = 0.65 (compression-controlled) to 0.90 (tension-controlled). ACI 318-25 §21.2.2 — diagram applies transition automatically.</div>
+
+        <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+        <div class="form-group">
+          <label>Axial P<sub>u</sub> <span class="lu" id="lu-aci-pu">[kN]</span> <span style="font-size:.65rem;color:var(--text-dim);">(compression +)</span></label>
+          <div class="iw"><input type="number" id="aci-Pu" value="1500"><span class="us" id="u-aci-pu">kN</span></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>M<sub>u,x</sub> <span class="lu" id="lu-aci-mx">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="aci-Mx" value="120"><span class="us" id="u-aci-mx">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about x-axis → NA ∥ b, depth along h</div>
+          </div>
+          <div class="form-group">
+            <label>M<sub>u,y</sub> <span class="lu" id="lu-aci-my">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="aci-My" value="80"><span class="us" id="u-aci-my">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about y-axis → NA ∥ h, depth along b</div>
+          </div>
+        </div>
+
+
+            <!-- REBAR LAYOUT inside input card -->
+            <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
+            <div class="form-group">
+              <label>Bar Dia. [mm]</label>
+              <div class="iw"><input type="number" id="aci-dbar" value="20" oninput="updatePreview('aci')"><span class="us">mm</span></div>
+            </div>
+            <div id="aci-rect-rebar">
+              <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">
+                n<sub>x</sub> = bars along x (top &amp; bottom rows, parallel to b) &nbsp;·&nbsp;
+                n<sub>y</sub> = bars along y (left &amp; right columns, parallel to h, incl. corners)
+              </p>
+              <div class="rebar-row">
+                <div class="form-group">
+                  <label>n<sub>x</sub> (along x)</label>
+                  <div class="iw"><input type="number" id="aci-nb" value="3" min="2" max="12" oninput="updatePreview('aci')"></div>
+                </div>
+                <div class="form-group">
+                  <label>n<sub>y</sub> (along y)</label>
+                  <div class="iw"><input type="number" id="aci-nh" value="3" min="2" max="12" oninput="updatePreview('aci')"></div>
+                </div>
+              </div>
+            </div>
+            <div id="aci-circ-rebar" style="display:none;">
+              <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n = total bars equally spaced around the perimeter</p>
+              <div class="form-group">
+                <label>n (total bars)</label>
+                <div class="iw"><input type="number" id="aci-n" value="8" min="4" max="20" oninput="updatePreview('aci')"></div>
+              </div>
+              <div style="margin-top:8px;">
+                <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:6px;">Transverse reinforcement type (ACI 318-25 §22.4.2)</p>
+                <div style="display:flex;gap:6px;">
+                  <button class="unit-btn active" id="aci-tied-btn" onclick="setCircTie('tied','aci')">Tied &nbsp; φ=0.65 · k=0.80</button>
+                  <button class="unit-btn" id="aci-spiral-btn" onclick="setCircTie('spiral','aci')">Spiral &nbsp; φ=0.75 · k=0.85</button>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:.71rem;color:var(--text-mid);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:6px 10px;margin-bottom:10px;" id="aci-rebar-info">—</div>
+            <div class="section-preview" style="margin-bottom:14px;">
+              <canvas id="aci-sect-canvas" width="230" height="240" role="img" aria-label="ACI column cross-section preview showing bar layout"></canvas>
+            </div>
+        <button class="btn-calc" onclick="calcCol('aci')">▶ Calculate PMM Diagram</button>
+      </div>
+    </div>
+
+  <!-- RIGHT COLUMN: RESULTS -->
+  <div class="results-col">
+    <div class="res-empty" id="aci-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div>
+    <div id="aci-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Calculation Report</h4>
+          <span class="rh-code" id="aci-rh-lbl">ACI 318-25 · kN-m · m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="aci-report-body"></div>
+      </div>
+    </div>
+    <div id="aci-pmm-outer" style="display:none;">
+      <div class="pmm-wrap">
+        <div class="pmm-hdr"><h4>📈 P-M Interaction Diagram</h4></div>
+        <div class="pmm-axis-tabs">
+          <button class="pmm-tab active" onclick="switchPmm('aci','x',this)">P – M<sub>u,x</sub>&nbsp;(NA parallel to b)</button>
+          <button class="pmm-tab" onclick="switchPmm('aci','y',this)">P – M<sub>u,y</sub>&nbsp;(NA parallel to h)</button>
+          <button class="pmm-tab" onclick="switchPmm('aci','bi',this)">Biaxial Check</button>
+        </div>
+        <div class="pmm-canvas-wrap">
+          <canvas id="aci-pmm" width="520" height="400" role="img" aria-label="ACI P-M interaction diagram — column axial load vs. moment capacity"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════ EUROCODE 2 ═══════ -->
+<div class="sub-pane" id="col-ec2">
+<div class="col-layout">
+
+  <!-- INPUTS EC2 -->
+  <div class="card no-print">
+      <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="ec2-utag">kN-m · m</span></div>
+      <div class="card-body">
+        <div class="unit-switcher">
+          <label>Units:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" onclick="setUnit('knm',this,'ec2')">kN-m &amp; m</button>
+            <button class="unit-btn" onclick="setUnit('nmm',this,'ec2')">N-mm</button>
+            <button class="unit-btn" onclick="setUnit('us',this,'ec2')">US (kip·ft, in)</button>
+          </div>
+        </div>
+
+        <!-- COLUMN SHAPE TOGGLE -->
+        <div class="unit-switcher" style="margin-bottom:12px;">
+          <label>Column:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="ec2-shape-rect" onclick="setColShape('rect','ec2')">Rectangular</button>
+            <button class="unit-btn" id="ec2-shape-circ" onclick="setColShape('circ','ec2')">Circular</button>
+          </div>
+        </div>
+
+        <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+        <div id="ec2-rect-geom">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-ec2-b">[m]</span></label>
+              <div class="iw"><input type="number" id="ec2-b" value="0.40" step="0.01" oninput="updatePreview('ec2')"><span class="us" id="u-ec2-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Depth h <span class="lu" id="lu-ec2-h">[m]</span></label>
+              <div class="iw"><input type="number" id="ec2-h" value="0.40" step="0.01" oninput="updatePreview('ec2')"><span class="us" id="u-ec2-h">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="ec2-circ-geom" style="display:none;">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Diameter D <span class="lu" id="lu-ec2-D">[m]</span></label>
+              <div class="iw"><input type="number" id="ec2-D" value="0.50" step="0.01" oninput="updatePreview('ec2')"><span class="us" id="u-ec2-D">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Clear Cover <span class="lu" id="lu-ec2-cv-c">[m]</span></label>
+              <div class="iw"><input type="number" id="ec2-cv-c" value="0.045" step="0.001" oninput="updatePreview('ec2')"><span class="us" id="u-ec2-cv-c">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="ec2-rect-cv-wrap" class="form-group">
+          <label>Clear Cover to main bar <span class="lu" id="lu-ec2-cv">[m]</span></label>
+          <div class="iw"><input type="number" id="ec2-cv" value="0.045" step="0.001"><span class="us" id="u-ec2-cv">m</span></div>
+        </div>
+
+        <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>f<sub>ck</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="ec2-fck" value="25" oninput="checkLimEC2()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-ec2-fck"></div>
+          </div>
+          <div class="form-group">
+            <label>f<sub>yk</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="ec2-fyk" value="500" oninput="checkLimEC2()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-ec2-fyk"></div>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>E<sub>s</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="ec2-Es" value="200000"><span class="us">MPa</span></div>
+          </div>
+          <div></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>γ<sub>c</sub></label>
+            <input type="number" id="ec2-gc" value="1.5" step="0.05">
+            <div style="font-size:.67rem;color:var(--text-dim);margin-top:2px;">Recommended: 1.50</div>
+          </div>
+          <div class="form-group">
+            <label>γ<sub>s</sub></label>
+            <input type="number" id="ec2-gs" value="1.15" step="0.05">
+            <div style="font-size:.67rem;color:var(--text-dim);margin-top:2px;">Recommended: 1.15</div>
+          </div>
+        </div>
+
+        <div class="form-div"><div class="form-div-lbl">Design Loads (ULS)</div></div>
+        <div class="form-group">
+          <label>Axial N<sub>Ed</sub> <span class="lu" id="lu-ec2-ned">[kN]</span> <span style="font-size:.65rem;color:var(--text-dim);">(compression +)</span></label>
+          <div class="iw"><input type="number" id="ec2-NEd" value="1500"><span class="us" id="u-ec2-ned">kN</span></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>M<sub>Ed,x</sub> <span class="lu" id="lu-ec2-mx">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="ec2-Mx" value="120"><span class="us" id="u-ec2-mx">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about x-axis → depth along h</div>
+          </div>
+          <div class="form-group">
+            <label>M<sub>Ed,y</sub> <span class="lu" id="lu-ec2-my">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="ec2-My" value="80"><span class="us" id="u-ec2-my">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about y-axis → depth along b</div>
+          </div>
+        </div>
+
+
+            <!-- REBAR LAYOUT inside input card -->
+            <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
+            <div class="form-group">
+              <label>Bar Dia. [mm]</label>
+              <div class="iw"><input type="number" id="ec2-dbar" value="20" oninput="updatePreview('ec2')"><span class="us">mm</span></div>
+            </div>
+            <div id="ec2-rect-rebar">
+              <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">
+                n<sub>x</sub> = bars along x (top &amp; bottom rows, parallel to b) &nbsp;·&nbsp;
+                n<sub>y</sub> = bars along y (left &amp; right columns, parallel to h, incl. corners)
+              </p>
+              <div class="rebar-row">
+                <div class="form-group">
+                  <label>n<sub>x</sub> (along x)</label>
+                  <div class="iw"><input type="number" id="ec2-nb" value="3" min="2" max="12" oninput="updatePreview('ec2')"></div>
+                </div>
+                <div class="form-group">
+                  <label>n<sub>y</sub> (along y)</label>
+                  <div class="iw"><input type="number" id="ec2-nh" value="3" min="2" max="12" oninput="updatePreview('ec2')"></div>
+                </div>
+              </div>
+            </div>
+            <div id="ec2-circ-rebar" style="display:none;">
+              <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n = total bars equally spaced around the perimeter</p>
+              <div class="form-group">
+                <label>n (total bars)</label>
+                <div class="iw"><input type="number" id="ec2-n" value="8" min="4" max="20" oninput="updatePreview('ec2')"></div>
+              </div>
+            </div>
+            <div style="font-size:.71rem;color:var(--text-mid);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:6px 10px;margin-bottom:10px;" id="ec2-rebar-info">—</div>
+            <div class="section-preview" style="margin-bottom:14px;">
+              <canvas id="ec2-sect-canvas" width="230" height="240" role="img" aria-label="EC2 column cross-section preview showing bar layout"></canvas>
+            </div>
+        <button class="btn-calc" onclick="calcCol('ec2')">▶ Calculate PMM Diagram</button>
+      </div>
+    </div>
+
+  <!-- RIGHT EC2 -->
+  <div class="results-col">
+    <div class="res-empty" id="ec2-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div>
+    <div id="ec2-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Calculation Report</h4>
+          <span class="rh-code" id="ec2-rh-lbl">EN 1992-1-1 · kN-m · m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="ec2-report-body"></div>
+      </div>
+    </div>
+    <div id="ec2-pmm-outer" style="display:none;">
+      <div class="pmm-wrap">
+        <div class="pmm-hdr"><h4>📈 P-M Interaction Diagram</h4></div>
+        <div class="pmm-axis-tabs">
+          <button class="pmm-tab active" onclick="switchPmm('ec2','x',this)">P – M<sub>Ed,x</sub>&nbsp;(NA ∥ b)</button>
+          <button class="pmm-tab" onclick="switchPmm('ec2','y',this)">P – M<sub>Ed,y</sub>&nbsp;(NA ∥ h)</button>
+          <button class="pmm-tab" onclick="switchPmm('ec2','bi',this)">Biaxial Check</button>
+        </div>
+        <div class="pmm-canvas-wrap">
+          <canvas id="ec2-pmm" width="520" height="400" role="img" aria-label="EC2 P-M interaction diagram — column axial load vs. moment capacity"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════ DESIGN BACKGROUND ═══════ -->
+<div class="bg-section">
+  <div class="bg-hdr"><h3>📚 Design Background & Code References</h3></div>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'bg-theory')">Theory</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-aci')">ACI 318-25</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-ec2')">Eurocode 2</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-biax')">Biaxial Bending</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-refs')">References</button>
+  </div>
+  <div class="bg-pane active" id="bg-theory">
+    <div class="tb">
+      <h4>P-M Interaction: Strain Compatibility</h4>
+      <p>The interaction diagram is generated by sweeping the neutral axis depth <i>c</i> from a very large value (near pure compression) down to zero (pure tension), computing the resulting axial force and moment at each step using full strain compatibility.</p>
+      <p>For each neutral axis position, the extreme compression fibre strain is fixed at ε<sub>cu</sub> (0.003 for ACI, 0.0035 for EC2). Each bar's strain is then proportional to its distance from the neutral axis. The bar stress is taken as the lesser of f<sub>y</sub>/f<sub>yd</sub> and E<sub>s</sub>·ε<sub>bar</sub>. The concrete compression resultant is computed using the equivalent rectangular stress block.</p>
+      <ul>
+        <li>300 neutral axis positions ensure smooth, accurate curves</li>
+        <li>Concrete displaced by bars in compression zone is deducted</li>
+        <li>ACI: φ varies continuously with net tensile strain ε<sub>t</sub> (0.65→0.90)</li>
+        <li>EC2: design values fcd, fyd applied directly; no additional φ</li>
+      </ul>
+      <h4>Axis Convention</h4>
+      <p>The section has width <b>b</b> (horizontal) and depth <b>h</b> (vertical). Moments are defined as follows:</p>
+      <ul>
+        <li><b>M<sub>x</sub></b> — bending about the horizontal x-axis: neutral axis is parallel to b, compression/tension varies along h</li>
+        <li><b>M<sub>y</sub></b> — bending about the vertical y-axis: neutral axis is parallel to h, compression/tension varies along b</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-aci">
+    <div class="tb">
+      <h4><span class="rtag">ACI 318-25 §22.4</span> Tied Columns</h4>
+      <p>For compression-controlled sections, ACI 318-25 limits the maximum axial capacity to account for accidental eccentricity:</p>
+      <div class="fml-blk">
+        <div class="ft">Maximum Axial Capacity (Tied)</div>
+        φP<sub>n,max</sub> = φ · 0.80 · [0.85·f'c·(A<sub>g</sub>−A<sub>st</sub>) + f<sub>y</sub>·A<sub>st</sub>]<br>
+        φ = 0.65 (tied) · φ = 0.75 (spiral)
+      </div>
+      <h4><span class="rtag">ACI 318-25 §21.2.2</span> Variable φ</h4>
+      <div class="fml-blk">
+        <div class="ft">Strength Reduction Factor</div>
+        ε<sub>t</sub> ≤ 0.002: &nbsp; φ = 0.65 (compression-controlled)<br>
+        0.002 &lt; ε<sub>t</sub> &lt; 0.005: &nbsp; φ = 0.65 + (ε<sub>t</sub>−0.002)·(0.25/0.003)<br>
+        ε<sub>t</sub> ≥ 0.005: &nbsp; φ = 0.90 (tension-controlled)
+        <div class="fn">ε<sub>t</sub> = net tensile strain in outermost tension steel at ULS. This transition is applied automatically in the interaction diagram.</div>
+      </div>
+      <h4><span class="rtag">ACI 318-25 §10.6</span> Reinforcement Limits</h4>
+      <div class="fml-blk">
+        <div class="ft">Steel Ratio Limits</div>
+        0.01 ≤ ρ<sub>g</sub> = A<sub>st</sub>/A<sub>g</sub> ≤ 0.08
+        <div class="fn">Minimum ensures ductility; maximum prevents congestion. §10.6.1.1</div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-ec2">
+    <div class="tb">
+      <h4><span class="rtag">EN 1992-1-1 §6.1</span> Combined Bending and Axial</h4>
+      <p>EC2 uses design material strengths throughout the interaction diagram. No additional capacity reduction factor (φ) is applied — safety is embedded in the partial factors γ<sub>c</sub> and γ<sub>s</sub>.</p>
+      <div class="fml-blk">
+        <div class="ft">Design Strengths</div>
+        f<sub>cd</sub> = α<sub>cc</sub> · f<sub>ck</sub> / γ<sub>c</sub> &nbsp;&nbsp; [α<sub>cc</sub> = 1.0; γ<sub>c</sub> = 1.5]<br>
+        f<sub>yd</sub> = f<sub>yk</sub> / γ<sub>s</sub> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [γ<sub>s</sub> = 1.15]
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Stress Block Parameters (§3.1.7)</div>
+        λ = 0.8 &nbsp; (f<sub>ck</sub> ≤ 50 MPa) &nbsp;→&nbsp; block depth = λ·x<br>
+        η = 1.0 &nbsp; (f<sub>ck</sub> ≤ 50 MPa) &nbsp;→&nbsp; block stress = η·f<sub>cd</sub><br>
+        For f<sub>ck</sub> > 50 MPa: λ = 0.8−(f<sub>ck</sub>−50)/400 · η = 1−(f<sub>ck</sub>−50)/200
+        <div class="fn">These factors reduce the effective stress block for high-strength concrete, which is why the moment capacity may decrease at higher f<sub>ck</sub> if the reinforcement ratio is fixed.</div>
+      </div>
+      <h4><span class="rtag">EN 1992-1-1 §9.5</span> Reinforcement Limits</h4>
+      <div class="fml-blk">
+        <div class="ft">Steel Ratio Limits</div>
+        A<sub>s,min</sub> = 0.10·N<sub>Ed</sub>/f<sub>yd</sub> ≥ 0.002·A<sub>c</sub><br>
+        A<sub>s,max</sub> = 0.04·A<sub>c</sub> (ρ<sub>g,max</sub> = 4%)
+      </div>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-biax">
+    <div class="tb">
+      <h4>Biaxial Bending Check — Bresler Reciprocal Method</h4>
+      <p>When moments exist about both axes simultaneously, the uniaxial interaction diagrams are insufficient. This calculator uses the <strong>Bresler reciprocal load contour method</strong> to estimate the combined demand-capacity ratio:</p>
+      <div class="fml-blk">
+        <div class="ft">Bresler Biaxial Check</div>
+        (M<sub>x</sub>/M<sub>0x</sub>)<sup>α</sup> + (M<sub>y</sub>/M<sub>0y</sub>)<sup>α</sup> ≤ 1.0<br><br>
+        Where:<br>
+        M<sub>0x</sub> = M<sub>x</sub>-capacity from uniaxial diagram at demand P<br>
+        M<sub>0y</sub> = M<sub>y</sub>-capacity from uniaxial diagram at demand P<br>
+        α = exponent depending on P/P<sub>0</sub> ratio (typically 1.0–2.0)
+        <div class="fn">α = 1.0 + (P/P<sub>0</sub>) for P/P<sub>0</sub> between 0 and 1. This is a conservative approximation; exact biaxial interaction requires a 3D surface computation.</div>
+      </div>
+      <p>The biaxial DCR shown is the left-hand side of the inequality above. Values ≤ 1.0 indicate the section is adequate for combined biaxial loading.</p>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-refs">
+    <div class="tb">
+      <h4>References</h4>
+      <ul class="ref-list">
+        <li><span class="ref-num">[1]</span><div><strong>ACI 318-25</strong> — Building Code Requirements for Structural Concrete. American Concrete Institute, 2025. §10.6 (Columns), §21.2.2 (φ factors), §22.4 (Axial strength).</div></li>
+        <li><span class="ref-num">[2]</span><div><strong>EN 1992-1-1:2004</strong> — Eurocode 2. CEN, Brussels. §6.1 (Bending and axial force), §9.5 (Columns).</div></li>
+        <li><span class="ref-num">[3]</span><div><strong>MacGregor, J.G. & Wight, J.K.</strong> — Reinforced Concrete: Mechanics and Design, 7th Ed. Pearson, 2016. Chapter 11.</div></li>
+        <li><span class="ref-num">[4]</span><div><strong>Bresler, B.</strong> — Design Criteria for Reinforced Columns under Axial Load and Biaxial Bending. ACI Journal, Vol. 57, 1960.</div></li>
+        <li><span class="ref-num">[5]</span><div><strong>Mosley, Bungey & Hulse</strong> — Reinforced Concrete Design to Eurocode 2, 7th Ed. Palgrave Macmillan, 2012. Chapter 9.</div></li>
+      </ul>
+      <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:10px 13px;font-size:.78rem;color:var(--text-mid);margin-top:14px;line-height:1.7;">
+        <strong>Disclaimer:</strong> For educational and preliminary design only. Verify all results with a licensed structural engineer.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="no-print" style="margin-top:36px;padding:16px 0 8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+  <div style="display:flex;gap:10px;align-items:flex-start;background:#fff8ed;border:1px solid #f4c97a;border-radius:6px;padding:11px 14px;font-size:.77rem;color:#6b5000;line-height:1.65;">
+    <span style="flex-shrink:0;margin-top:1px;">⚠️</span>
+    <div>These tools are for <strong>educational and preliminary design purposes only</strong>. All results must be verified by a licensed structural engineer before use in any real project.</div>
+  </div>
+  <div style="font-size:.72rem;color:var(--text-dim);text-align:center;padding-top:4px;">
+    Found an error or have a suggestion? Write to us at <a href="mailto:info@civilstrcalc.com" style="color:var(--accent);text-decoration:none;">info@civilstrcalc.com</a>
+  </div>
+  <div class="footer-legal">
+    © 2026 CivilStrCalc.com &nbsp;·&nbsp;
+    <a href="../privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+    <a href="../terms.html">Terms of Use</a> &nbsp;·&nbsp;
+    <a href="../cookies.html">Cookie Policy</a>
+  </div>
+</footer>
+
+</main><!-- /main-content -->
+<script src="../js/nav.js"></script>
+<script>
+// ══════════════════════════════
+// UNIT SYSTEM
+// ══════════════════════════════
+const UNITS = {
+  knm:{ lenU:'m',  forceU:'kN',  momU:'kN·m',  lenS:1000, forceS:1000,  momS:1e6,   bV:0.400,hV:0.400,cvV:0.050,DV:0.500,PV:1500,MV:120, tag:'kN-m · m' },
+  nmm:{ lenU:'mm', forceU:'N',   momU:'N·mm',  lenS:1,    forceS:1,     momS:1,     bV:400,  hV:400,  cvV:50,  DV:500,  PV:1.5e6,MV:120e6, tag:'N-mm' },
+  us:{  lenU:'in', forceU:'kip', momU:'kip·ft',lenS:25.4, forceS:4448.2,momS:1.356e6,bV:16,  hV:16,   cvV:2,  DV:20,   PV:337,MV:88.5, tag:'US' }
+};
+let curU = {aci:'knm', ec2:'knm'};
+let pmmStore = {aci:null, ec2:null};
+let colShape = {aci:'rect', ec2:'rect'};
+let circTie  = {aci:'tied'}; // 'tied' | 'spiral'
+
+function g(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+
+function setUnit(unit, btn, code){
+  curU[code]=unit;
+  btn.closest('.unit-btns').querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const U=UNITS[unit], p=code+'-';
+  const sv=(id,v)=>{const e=document.getElementById(p+id);if(e)e.value=v;};
+  const sstep=(id,s)=>{const e=document.getElementById(p+id);if(e)e.step=s;};
+  const st=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+  const bFmt = unit==='knm' ? U.bV.toFixed(2) : unit==='nmm' ? String(Math.round(U.bV)) : U.bV.toFixed(2);
+  const cvFmt = unit==='knm' ? U.cvV.toFixed(3) : unit==='nmm' ? String(Math.round(U.cvV)) : U.cvV.toFixed(2);
+  const dFmt = unit==='knm' ? U.DV.toFixed(2) : unit==='nmm' ? String(Math.round(U.DV)) : U.DV.toFixed(2);
+  sv('b',bFmt); sv('h',bFmt); sv('cv',cvFmt); sv('D',dFmt);
+  sstep('b', unit==='nmm'?'1':'0.01');
+  sstep('h', unit==='nmm'?'1':'0.01');
+  sstep('cv', unit==='nmm'?'1':'0.001');
+  sstep('D', unit==='nmm'?'1':'0.01');
+  if(code==='aci'){
+    sv('Pu',U.PV); sv('Mx',U.MV); sv('My',(U.MV*0.67).toFixed(1));
+    sv('cv-c',cvFmt);
+    sstep('cv-c', unit==='nmm'?'1':'0.001');
+    ['b','h','cv','D'].forEach(f=>{st('lu-aci-'+f,'['+U.lenU+']');st('u-aci-'+f,U.lenU);});
+    st('lu-aci-cv-c','['+U.lenU+']'); st('u-aci-cv-c',U.lenU);
+    st('u-aci-pu',U.forceU); st('lu-aci-pu','['+U.forceU+']');
+    st('u-aci-mx',U.momU); st('lu-aci-mx','['+U.momU+']');
+    st('u-aci-my',U.momU); st('lu-aci-my','['+U.momU+']');
+    st('aci-utag',U.tag); st('aci-rh-lbl','ACI 318-25 · '+U.tag);
+  } else {
+    sv('NEd',U.PV); sv('Mx',U.MV); sv('My',(U.MV*0.67).toFixed(1));
+    sv('cv-c',cvFmt);
+    sstep('cv-c', unit==='nmm'?'1':'0.001');
+    ['b','h','cv','D'].forEach(f=>{st('lu-ec2-'+f,'['+U.lenU+']');st('u-ec2-'+f,U.lenU);});
+    st('lu-ec2-cv-c','['+U.lenU+']'); st('u-ec2-cv-c',U.lenU);
+    st('u-ec2-ned',U.forceU); st('lu-ec2-ned','['+U.forceU+']');
+    st('u-ec2-mx',U.momU); st('lu-ec2-mx','['+U.momU+']');
+    st('u-ec2-my',U.momU); st('lu-ec2-my','['+U.momU+']');
+    st('ec2-utag',U.tag); st('ec2-rh-lbl','EN 1992-1-1 · '+U.tag);
+  }
+  document.getElementById(code+'-empty').style.display='';
+  document.getElementById(code+'-report-wrap').style.display='none';
+  document.getElementById(code+'-pmm-outer').style.display='none';
+  updatePreview(code);
+}
+
+function bgTab(btn,id){
+  btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.bg-section').querySelectorAll('.bg-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════
+// LIMIT CHECKS
+// ══════════════════════════════
+function checkLimACI(){
+  const fc=g('aci-fc'),fy=g('aci-fy');
+  const el1=document.getElementById('lw-aci-fc'),el2=document.getElementById('lw-aci-fy');
+  el1.className='limit-warn'+(fc&&(fc<17||fc>70)?' show':'');
+  if(fc&&(fc<17||fc>70)) el1.textContent="⚠ ACI 318-25: f'c recommended 17–70 MPa.";
+  el2.className='limit-warn'+(fy&&(fy<280||fy>550)?' show':'');
+  if(fy&&(fy<280||fy>550)) el2.textContent="⚠ ACI 318-25: fy recommended 280–550 MPa.";
+}
+function checkLimEC2(){
+  const fck=g('ec2-fck'),fyk=g('ec2-fyk');
+  const el1=document.getElementById('lw-ec2-fck'),el2=document.getElementById('lw-ec2-fyk');
+  el1.className='limit-warn'+(fck&&(fck<12||fck>90)?' show':'');
+  if(fck&&(fck<12||fck>90)) el1.textContent="⚠ EC2: fck range 12–90 MPa.";
+  el2.className='limit-warn'+(fyk&&(fyk<400||fyk>600)?' show':'');
+  if(fyk&&(fyk<400||fyk>600)) el2.textContent="⚠ EC2: fyk range 400–600 MPa.";
+}
+
+// ══════════════════════════════
+// BAR POSITIONS
+// Returns array of {d_x (along h), d_y (along b), A}
+// d measured from section centroid (+ve toward compression face)
+// ══════════════════════════════
+function getBars(b,h,cover,dbar,nb,nh){
+  // cover here = clear cover to bar CENTRE
+  const bars=[]; const seen=new Set();
+  const add=(dx,dy)=>{
+    const k=dx.toFixed(2)+','+dy.toFixed(2);
+    if(!seen.has(k)){seen.add(k);bars.push({dx,dy,A:Math.PI*dbar*dbar/4});}
+  };
+  // dx = along h (positive = top face), dy = along b
+  const Rh=h/2-cover, Rb=b/2-cover;
+  // Top and bottom rows (nb bars each, spanning b)
+  for(let i=0;i<nb;i++){
+    const dy = (nb>1) ? -Rb + i*(2*Rb/(nb-1)) : 0;
+    add(+Rh, dy);  // top
+    add(-Rh, dy);  // bottom
+  }
+  // Left and right columns (nh bars each, spanning h), corners shared
+  for(let j=0;j<nh;j++){
+    const dx = (nh>1) ? -Rh + j*(2*Rh/(nh-1)) : 0;
+    add(dx, +Rb);  // right
+    add(dx, -Rb);  // left
+  }
+  return bars;
+}
+
+// ══════════════════════════════
+// SHAPE TOGGLE
+// ══════════════════════════════
+function setColShape(shape, code) {
+  const prev = colShape[code];
+  colShape[code] = shape;
+  const isC = shape==='circ';
+  document.getElementById(code+'-shape-rect').classList.toggle('active',!isC);
+  document.getElementById(code+'-shape-circ').classList.toggle('active', isC);
+  document.getElementById(code+'-rect-geom').style.display    = isC ? 'none' : '';
+  document.getElementById(code+'-circ-geom').style.display    = isC ? '' : 'none';
+  document.getElementById(code+'-rect-rebar').style.display   = isC ? 'none' : '';
+  document.getElementById(code+'-circ-rebar').style.display   = isC ? '' : 'none';
+  document.getElementById(code+'-rect-cv-wrap').style.display = isC ? 'none' : '';
+  // Sync cover value between the two inputs on switch
+  const cvRect = document.getElementById(code+'-cv');
+  const cvCirc = document.getElementById(code+'-cv-c');
+  if(isC && cvRect && cvCirc && prev!=='circ') cvCirc.value = cvRect.value;
+  if(!isC && cvRect && cvCirc && prev==='circ') cvRect.value = cvCirc.value;
+  updatePreview(code);
+}
+
+function setCircTie(type, code) {
+  circTie[code] = type;
+  document.getElementById(code+'-tied-btn').classList.toggle('active',   type==='tied');
+  document.getElementById(code+'-spiral-btn').classList.toggle('active', type==='spiral');
+}
+
+// ══════════════════════════════
+// CIRCULAR BAR POSITIONS
+// dx = vertical from centroid (+ve = top/compression), dy = horizontal
+// ══════════════════════════════
+function getBarsCirc(D, cover, dbar, n) {
+  const Rs = D/2 - cover - dbar/2;
+  const bars = [];
+  for(let i=0; i<n; i++){
+    const a = 2*Math.PI*i/n; // 0 = top
+    bars.push({ dx: Rs*Math.cos(a), dy: Rs*Math.sin(a), A: Math.PI*dbar*dbar/4 });
+  }
+  return bars;
+}
+
+// ══════════════════════════════
+// CIRCULAR PMM CURVE
+// Numerical fiber model for circular cross-section
+// ══════════════════════════════
+function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min, spiral=false) {
+  const ecu = isEC2 ? 0.0035 : 0.003;
+  const fy_use = isEC2 ? fyd : fy;
+  const R = D/2;
+  let lam, fc_eff;
+  if(isEC2){
+    lam = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
+    const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
+    fc_eff = eta*fcd;
+  } else {
+    lam = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
+    fc_eff = 0.85*fc;
+  }
+  const Ag = Math.PI*R*R;
+  const bars = getBarsCirc(D, cover, dbar, n);
+  const Ast = bars.reduce((s,b)=>s+b.A, 0);
+  let P0_cap;
+  if(isEC2){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
+  else {
+    const phi0 = spiral ? 0.75 : phi_min;
+    const kfac = spiral ? 0.85 : 0.80;
+    P0_cap = phi0 * kfac * (0.85*fc*(Ag-Ast) + fy*Ast);
+  }
+  const points = [{P: P0_cap, M: 0}];
+  const NSTRIPS = 80, NSTEPS = 300;
+  const c_start = (D-0.001)/lam, c_end = 0.5;
+  // Outermost tension bar depth from comp face
+  const dt_depth = R - Math.min(...bars.map(b=>b.dx));
+  for(let i=1; i<=NSTEPS; i++){
+    const t = i/NSTEPS;
+    const c = c_start*Math.pow(c_end/c_start, t);
+    const a = lam*c;
+    // Integrate concrete stress block (circular segment: from y=R-a to y=R)
+    const y_bot = R - a;
+    let Cc=0, Mc=0;
+    for(let k=0; k<NSTRIPS; k++){
+      const ya = y_bot + k/NSTRIPS*a;
+      const yb = y_bot + (k+1)/NSTRIPS*a;
+      const ym = (ya+yb)/2;
+      const w  = 2*Math.sqrt(Math.max(0, R*R - ym*ym));
+      const dA = w*(yb-ya);
+      Cc += fc_eff*dA;
+      Mc += fc_eff*dA*ym;
+    }
+    let Fs=0, Ms=0;
+    bars.forEach(bar=>{
+      const d_comp = R - bar.dx;  // depth from comp face
+      const eps = ecu*(c - d_comp)/c;
+      const fs  = Math.max(-fy_use, Math.min(fy_use, eps*Es));
+      const F   = (fs - (d_comp>=0&&d_comp<=a ? fc_eff : 0))*bar.A;
+      Fs += F;  Ms += F*bar.dx;
+    });
+    const P_nom = Cc + Fs;
+    const M_nom = Math.abs(Mc + Ms);
+    let P_des, M_des;
+    if(isEC2){ P_des=P_nom; M_des=M_nom; }
+    else {
+      const phi_c = spiral ? 0.75 : phi_min;  // compression-controlled φ
+      const et = dt_depth>0 ? ecu*(dt_depth/c - 1) : 0.01;
+      let phi;
+      if(et>=0.005) phi=0.90;
+      else if(et<=0.002) phi=phi_c;
+      else phi=phi_c+(et-0.002)*(0.90-phi_c)/0.003;
+      P_des=phi*P_nom; M_des=phi*M_nom;
+    }
+    if(P_des>P0_cap) continue;
+    points.push({P:P_des, M:M_des});
+  }
+  const phi_t = isEC2 ? 1.0 : 0.90;
+  points.push({P:-phi_t*fy_use*Ast, M:0});
+  points.sort((a,b)=>b.P-a.P);
+  return points;
+}
+
+// ══════════════════════════════
+// CIRCULAR SECTION CANVAS
+// ══════════════════════════════
+function drawCircPreview(canvas, D, cover, dbar, n) {
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const R=D/2;
+  const padT=22,padB=18,padL=14,padR=28;
+  const drawW=W-padL-padR, drawH=H-padT-padB;
+  const scl=Math.min(drawW,drawH)/D;
+  const cx=padL+drawW/2, cy=padT+drawH/2;
+  const Rs=R*scl, Rbar=(R-cover-dbar/2)*scl;
+  // Section circle
+  ctx.fillStyle='#e8edf2'; ctx.strokeStyle='#5a6a7a'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,Rs,0,2*Math.PI); ctx.fill(); ctx.stroke();
+  // Centroidal axes
+  ctx.strokeStyle='rgba(154,171,187,0.45)'; ctx.lineWidth=0.8; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(cx-Rs,cy); ctx.lineTo(cx+Rs,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-Rs); ctx.lineTo(cx,cy+Rs); ctx.stroke();
+  ctx.setLineDash([]);
+  // Axis arrows
+  function arrow(x1,y1,x2,y2,col){
+    const ang=Math.atan2(y2-y1,x2-x1),len=6;
+    ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.2;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(ang-0.4),y2-len*Math.sin(ang-0.4));
+    ctx.lineTo(x2-len*Math.cos(ang+0.4),y2-len*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fill();
+  }
+  const axCol='#9aabbb';
+  arrow(cx-Rs-2,cy,cx+Rs+14,cy,axCol);
+  arrow(cx,cy+Rs+2,cx,cy-Rs-14,axCol);
+  ctx.fillStyle=axCol; ctx.font='bold 11px Arial';
+  ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText('x',cx+Rs+18,cy);
+  ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('y',cx,cy-Rs-16);
+  // Diameter label
+  ctx.fillStyle='#8898aa'; ctx.font='8px Arial';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('D='+D+' mm',cx,cy+Rs+5);
+  // Bars (angle 0 = top, clockwise)
+  const barR=Math.max(2.5,dbar*scl/2);
+  for(let i=0;i<n;i++){
+    const a=2*Math.PI*i/n; // 0=top
+    const bx=cx+Rbar*Math.sin(a);
+    const by=cy-Rbar*Math.cos(a);
+    ctx.fillStyle='#1a6db5'; ctx.strokeStyle='#0f3d6e'; ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.arc(bx,by,barR,0,2*Math.PI); ctx.fill(); ctx.stroke();
+  }
+}
+
+// ══════════════════════════════
+// SECTION PREVIEW
+// ══════════════════════════════
+const _prevTimer={};
+function updatePreview(code){
+  clearTimeout(_prevTimer[code]);
+  _prevTimer[code]=setTimeout(()=>_doUpdatePreview(code),80);
+}
+function _doUpdatePreview(code){
+  const p=code+'-';
+  const U=UNITS[curU[code]];
+  const cv=g(p+'cv')*U.lenS, db=g(p+'dbar');
+
+  if(colShape[code]==='circ'){
+    const D=g(p+'D')*U.lenS;
+    const cv=g(p+'cv-c')*U.lenS;
+    if(!D) return;
+    const n=Math.max(4,Math.round(g(p+'n')));
+    const bars=getBarsCirc(D,cv,db,n);
+    const As=bars.reduce((s,b)=>s+b.A,0), Ag=Math.PI*(D/2)**2, rho=As/Ag;
+    const el=document.getElementById(p+'rebar-info');
+    if(el) el.textContent=`${bars.length} bars Ø${db} mm  ·  Ast = ${As.toFixed(0)} mm²  ·  ρg = ${(rho*100).toFixed(2)}%${rho<0.01||rho>0.08?' ⚠ outside limits':''}`;
+    const canvas=document.getElementById(p+'sect-canvas');
+    if(canvas) drawCircPreview(canvas,D,cv,db,n);
+    return;
+  }
+
+  const b=g(p+'b')*U.lenS, h=g(p+'h')*U.lenS;
+  const nb=Math.max(2,Math.round(g(p+'nb'))), nh=Math.max(2,Math.round(g(p+'nh')));
+  if(!b||!h) return;
+  const bars=getBars(b,h,cv,db,nb,nh);
+  const As=bars.reduce((s,b)=>s+b.A,0), Ag=b*h, rho=As/Ag;
+  const el=document.getElementById(p+'rebar-info');
+  if(el) el.textContent=`${bars.length} bars Ø${db} mm  ·  Ast = ${As.toFixed(0)} mm²  ·  ρg = ${(rho*100).toFixed(2)}%${rho<0.01||rho>0.08?' ⚠ outside limits':''}`;
+
+  const canvas=document.getElementById(p+'sect-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Layout: leave room for axis labels
+  // top=22 (y-label above), bottom=18, left=14, right=28 (x-label right)
+  const padT=22,padB=18,padL=14,padR=28;
+  const drawW=W-padL-padR, drawH=H-padT-padB;
+  const scl=Math.min(drawW/b, drawH/h);
+  const cx=padL+drawW/2, cy=padT+drawH/2;
+  const bw=b*scl, hh=h*scl;
+
+  // Section fill + border
+  ctx.fillStyle='#e8edf2';ctx.strokeStyle='#5a6a7a';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.rect(cx-bw/2,cy-hh/2,bw,hh);ctx.fill();ctx.stroke();
+
+  // Dashed centroidal axes (inside section only)
+  ctx.strokeStyle='rgba(154,171,187,0.45)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(cx-bw/2,cy);ctx.lineTo(cx+bw/2,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-hh/2);ctx.lineTo(cx,cy+hh/2);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrow helper
+  function arrow(x1,y1,x2,y2,col){
+    const angle=Math.atan2(y2-y1,x2-x1),len=6;
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=1.2;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(angle-0.4),y2-len*Math.sin(angle-0.4));
+    ctx.lineTo(x2-len*Math.cos(angle+0.4),y2-len*Math.sin(angle+0.4));
+    ctx.closePath();ctx.fill();
+  }
+
+  const axCol='#9aabbb';
+  // x-axis: horizontal, pointing right, extends past section
+  arrow(cx-bw/2-2, cy, cx+bw/2+14, cy, axCol);
+  // y-axis: vertical, pointing UP, extends past section top
+  arrow(cx, cy+hh/2+2, cx, cy-hh/2-14, axCol);
+
+  // Axis labels
+  ctx.fillStyle=axCol;ctx.font='bold 11px Arial';
+  // x label — right of arrow tip
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText('x', cx+bw/2+18, cy);
+  // y label — above arrow tip
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('y', cx, cy-hh/2-16);
+
+  // Dimension labels (b and h)
+  ctx.fillStyle='#8898aa';ctx.font='8px Arial';
+  // b= below section
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('b='+b+' mm', cx, cy+hh/2+5);
+  // h= rotated on left side
+  ctx.save();ctx.translate(cx-bw/2-6,cy);ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('h='+h+' mm',0,0);ctx.restore();
+
+  // Bars
+  const barR=Math.max(2.5,db*scl/2);
+  bars.forEach(bar=>{
+    const bx=cx+bar.dy*scl;
+    const by=cy-bar.dx*scl;
+    ctx.fillStyle='#1a6db5';ctx.strokeStyle='#0f3d6e';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.arc(bx,by,barR,0,2*Math.PI);ctx.fill();ctx.stroke();
+  });
+}
+
+// ══════════════════════════════
+// PMM ENGINE — v4 (correct)
+// ══════════════════════════════
+function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, isEC2,fcd,fyd, phi_min, axis){
+  const ecu    = isEC2 ? 0.0035 : 0.003;
+  const fy_use = isEC2 ? fyd : fy;
+
+  // Stress block
+  let lam, fc_eff;
+  if(isEC2){
+    lam    = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
+    const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
+    fc_eff = eta * fcd;
+  } else {
+    lam    = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
+    fc_eff = 0.85 * fc;
+  }
+
+  const D  = axis==='x' ? h : b;
+  const Bw = axis==='x' ? b : h;
+
+  const allBars = getBars(b,h,cover,dbar,nb,nh);
+  const barD = allBars.map(bar=>({
+    d: axis==='x' ? bar.dx : bar.dy,
+    A: bar.A
+  }));
+
+  const Ast   = barD.reduce((s,b)=>s+b.A, 0);
+  const Ag    = b*h;
+  const d_min = Math.min(...barD.map(b=>b.d));  // outermost tension bar (most negative d)
+  const dt    = D/2 - d_min;                     // dist from comp face to outermost tension bar
+
+  // ACI cap: phi * 0.80 * Pn0  (M=0 tip of diagram)
+  // EC2 cap: Pn0  (uniform compression)
+  let P0_cap;
+  if(isEC2){
+    P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast;
+  } else {
+    P0_cap = phi_min * 0.80 * (0.85*fc*(Ag-Ast) + fy*Ast);
+  }
+  const points = [{P: P0_cap, M: 0}];
+
+  // Sweep: c from just-below D/lam down to ~0.5mm
+  // Only include points where computed P <= P0_cap (avoids backwards hook)
+  const c_start = (D - 0.001) / lam;
+  const c_end   = 0.5;
+  const NSTEPS  = 300;
+
+  for(let i=1; i<=NSTEPS; i++){
+    const t = i / NSTEPS;
+    const c = c_start * Math.pow(c_end/c_start, t);  // log spacing
+    const a = lam * c;   // always < D by construction
+
+    const Cc = fc_eff * Bw * a;
+    const yC = D/2 - a/2;   // from centroid, positive = compression side
+
+    let Fs_sum=0, Ms_sum=0;
+    barD.forEach(bar=>{
+      const dist_from_comp = D/2 - bar.d;       // +ve = toward compression face
+      const eps_bar = ecu * (1 - dist_from_comp/c);  // +ve = compression
+      const fs  = Math.max(-fy_use, Math.min(fy_use, eps_bar*Es));
+      // Subtract concrete where bar is inside stress block
+      const fc_sub = (dist_from_comp >= 0 && dist_from_comp <= a) ? fc_eff : 0;
+      const Fbar = (fs - fc_sub) * bar.A;
+      Fs_sum += Fbar;
+      Ms_sum += Fbar * bar.d;
+    });
+
+    const P_nom = Cc + Fs_sum;
+    const M_nom = Cc*yC + Ms_sum;
+
+    let P_des, M_des;
+    if(isEC2){
+      P_des = P_nom;
+      M_des = M_nom;
+    } else {
+      const et  = dt > 0 ? ecu*(dt/c - 1) : 0.01;
+      let phi;
+      if(et >= 0.005)      phi = 0.90;
+      else if(et <= 0.002) phi = phi_min;
+      else                 phi = phi_min + (et-0.002)*(0.90-phi_min)/0.003;
+      P_des = phi * P_nom;
+      M_des = phi * M_nom;
+    }
+
+    // Skip points above the axial cap (avoids backwards hook at top)
+    if(P_des > P0_cap) continue;
+    points.push({P: P_des, M: M_des});
+  }
+
+  // Pure tension
+  const phi_t = isEC2 ? 1.0 : 0.90;
+  points.push({P: -phi_t * fy_use * Ast, M: 0});
+
+  points.sort((a,b) => b.P - a.P);
+  return points;
+}
+
+// ══════════════════════════════
+// INTERPOLATE M capacity at given P
+// ══════════════════════════════
+function getM0(P, curve){
+  for(let i=0;i<curve.length-1;i++){
+    if(curve[i].P>=P && curve[i+1].P<=P){
+      const t=(P-curve[i].P)/(curve[i+1].P-curve[i].P);
+      return curve[i].M+t*(curve[i+1].M-curve[i].M);
+    }
+  }
+  // P outside curve range
+  if(P>curve[0].P) return 0;
+  return 0;
+}
+
+// ══════════════════════════════
+// MAIN CALC
+// ══════════════════════════════
+function calcCol(code){
+  if(typeof validateCol==='function'&&!validateCol(code))return;
+  const p=code+'-', isEC2=code==='ec2';
+  const U=UNITS[curU[code]];
+  const isCirc=colShape[code]==='circ';
+
+  // shared material params
+  let fc,fy,fcd,fyd,phi_min,gc=1.5,gs=1.15;
+  if(isEC2){
+    fc=g('ec2-fck'); fy=g('ec2-fyk');
+    gc=g('ec2-gc'); gs=g('ec2-gs');
+    fcd=fc/gc; fyd=fy/gs; phi_min=1;
+  } else {
+    fc=g('aci-fc'); fy=g('aci-fy');
+    phi_min=g('aci-phi'); fcd=fc; fyd=fy;
+  }
+  const Es=g(p+'Es');
+  const Pu=g(p+(isEC2?'NEd':'Pu'))*U.forceS;
+  const Mx=g(p+'Mx')*U.momS;
+  const My=g(p+'My')*U.momS;
+
+  // ── CIRCULAR ────────────────────────────────────
+  if(isCirc){
+    const D=g(p+'D')*U.lenS, cv=g(p+'cv-c')*U.lenS;
+    const dbar=g(p+'dbar'), n_c=Math.max(4,Math.round(g(p+'n')));
+    const spiral = !isEC2 && circTie[code]==='spiral';
+    if(!D){ alert('Enter diameter.'); return; }
+    updatePreview(code);
+    const bars=getBarsCirc(D,cv,dbar,n_c);
+    const Ast=bars.reduce((s,b)=>s+b.A,0), Ag=Math.PI*(D/2)**2, rho=Ast/Ag;
+    const curve=buildCurveCirc(D,cv,dbar,n_c,fc,fy,Es,isEC2,fcd,fyd,phi_min,spiral);
+    const P0=curve[0].P, M0=getM0(Pu,curve);
+    const Mu=Math.sqrt(Mx*Mx+My*My);
+    const dcr=M0>0?Mu/M0:(Mu>0?999:0);
+    const st=dcr<=1?'ok':dcr<=1.05?'warn':'err';
+    pmmStore[code]={cx:curve,cy:curve,Pu,Mx,My,dcr_x:dcr,dcr_y:dcr,dcr_bi:dcr,P0,M0x:M0,M0y:M0,isEC2,code};
+    const warns=[];
+    if(rho<0.01||rho>0.08) warns.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is outside typical range (1–8%).`);
+    if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub>.`);
+    if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
+    if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
+    if(isEC2&&fc&&(fc<12||fc>90)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
+    if(isEC2&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+    const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
+    const isNmm=curU[code]==='nmm';
+    const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
+    const fmtM=v=>(v/U.momS).toFixed(isNmm?0:1)+' '+U.momU;
+    const fmtL=v=>(v/U.lenS).toFixed(isNmm?0:2)+' '+U.lenU;
+    document.getElementById(p+'report-body').innerHTML=`
+    <div class="print-only">
+      <div>
+        <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Design Report</div>
+        <div style="font-size:.68rem;color:#666;margin-top:1px;">${isEC2?'EN 1992-1-1 (Eurocode 2)':'ACI 318-25'} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Circular Section${!isEC2?(spiral?' — Spiral':' — Tied'):''}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right;">
+        <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        <div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div>
+      </div>
+    </div>
+    ${warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Section Properties</div>
+      <table class="res-tbl">
+        <tr><td>Diameter D</td><td>${fmtL(D)}</td></tr>
+        <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
+        <tr><td>Bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
+        <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.08?'vok':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
+        ${!isEC2?`<tr><td>Confinement type</td><td>${spiral?'Spiral (φ=0.75, k=0.85)':'Tied (φ=0.65, k=0.80)'}</td></tr>`:''}
+        ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
+      </table>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Design Results</div>
+      <div class="result-box">
+        <div class="result-item"><div class="ri-label">Max P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
+        <div class="result-item"><div class="ri-label">M Capacity</div><div class="ri-value">${(M0/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item"><div class="ri-label">M Resultant</div><div class="ri-value">${(Mu/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+      </div>
+      <div class="dcr-banner ${st}">
+        <div class="dcr-icon">${icons[st]}</div>
+        <div class="dcr-text">
+          <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+          <span>M<sub>u</sub> = ${fmtM(Mu)}  ·  M<sub>0</sub> at P = ${fmtM(M0)}</span>
+        </div>
+      </div>
+      <table class="res-tbl">
+        <tr><td>Applied axial P</td><td>${fmtF(Pu)}</td></tr>
+        <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
+        <tr><td>Applied M<sub>x</sub></td><td>${fmtM(Mx)}</td></tr>
+        <tr><td>Applied M<sub>y</sub></td><td>${fmtM(My)}</td></tr>
+        <tr><td>Resultant M<sub>u</sub> = √(M<sub>x</sub>²+M<sub>y</sub>²)</td><td>${fmtM(Mu)}</td></tr>
+        <tr><td>Moment capacity M<sub>0</sub> at applied P</td><td class="vok">${fmtM(M0)}</td></tr>
+        <tr><td>D/C</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
+      </table>
+    </div>
+    <div class="print-pmm-wrap">
+      <div style="font-family:var(--sans);font-size:6.8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:2px 8px;margin-bottom:5px;">P-M Interaction Diagram</div>
+      <canvas id="${p}print-pmm" width="510" height="280" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>
+    </div>
+    <div class="print-disclaimer">
+      ⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.
+    </div>
+    <div class="print-footer">
+      <span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span>
+      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ACI 318-25 / EN 1992-1-1</span>
+    </div>`;
+    document.getElementById(p+'empty').style.display='none';
+    document.getElementById(p+'report-wrap').style.display='';
+    document.getElementById(p+'pmm-outer').style.display='';
+    drawPMM(code,'x');
+    // Draw P-M curve onto print canvas (for circular: x-axis curve)
+    setTimeout(()=>{
+      const pc=document.getElementById(p+'print-pmm');
+      if(pc&&pmmStore[code]) drawPMM_onCanvas(pc,pmmStore[code],UNITS[curU[code]],'x');
+    },50);
+    return;
+  }
+  // ── RECTANGULAR ─────────────────────────────────
+
+  const b=g(p+'b')*U.lenS, h=g(p+'h')*U.lenS, cv=g(p+'cv')*U.lenS;
+  const dbar=g(p+'dbar');
+  const nb=Math.max(2,Math.round(g(p+'nb'))), nh=Math.max(2,Math.round(g(p+'nh')));
+
+  if(!b||!h){ alert('Enter section dimensions.'); return; }
+  updatePreview(code);
+
+  const bars=getBars(b,h,cv,dbar,nb,nh);
+  const Ast=bars.reduce((s,b)=>s+b.A,0), Ag=b*h, rho=Ast/Ag;
+
+  // Build both curves
+  const cx=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,'x');
+  const cy_curve=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,'y');
+
+  const P0=cx[0].P;
+  const M0x=getM0(Pu,cx);
+  const M0y=getM0(Pu,cy_curve);
+
+  const dcr_x = M0x>0 ? Math.abs(Mx)/M0x : (Math.abs(Mx)>0?999:0);
+  const dcr_y = M0y>0 ? Math.abs(My)/M0y : (Math.abs(My)>0?999:0);
+
+  // Biaxial: Bresler
+  let dcr_bi=0;
+  if(M0x>0&&M0y>0){
+    const pRatio=Math.max(0,Math.min(1,Pu/P0));
+    const alpha=1+pRatio;
+    dcr_bi=Math.pow(Math.abs(Mx/M0x),alpha)+Math.pow(Math.abs(My/M0y),alpha);
+  } else if(M0x>0){ dcr_bi=Math.abs(Mx/M0x); }
+  else if(M0y>0){ dcr_bi=Math.abs(My/M0y); }
+
+  const dcr_gov=Math.max(dcr_x,dcr_y,dcr_bi);
+  const st=dcr_gov<=1?'ok':dcr_gov<=1.05?'warn':'err';
+
+  pmmStore[code]={cx,cy:cy_curve,Pu,Mx,My,dcr_x,dcr_y,dcr_bi,P0,M0x,M0y,isEC2,code};
+
+  // Warnings
+  const warns=[];
+  if(rho<0.01||rho>0.08) warns.push(`<b>Reinforcement ratio:</b> ρg = ${(rho*100).toFixed(2)}% is outside typical range (${isEC2?'0.2–4%':'1–8%'}).`);
+  if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
+  if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
+  if(isEC2&&fc&&(fc<12||fc>90)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
+  if(isEC2&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+  if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub> = ${(P0/U.forceS).toFixed(0)} ${U.forceU}.`);
+
+  const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
+  const isNmm = curU[code]==='nmm';
+  const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
+  const fmtM=v=>(v/U.momS).toFixed(isNmm?0:1)+' '+U.momU;
+  const fmtL=v=>(v/U.lenS).toFixed(isNmm?0:2)+' '+U.lenU;
+
+  document.getElementById(p+'report-body').innerHTML=`
+    <div class="print-only">
+      <div>
+        <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Design Report</div>
+        <div style="font-size:.68rem;color:#666;margin-top:1px;">${isEC2?'EN 1992-1-1 (Eurocode 2)':'ACI 318-25'} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Rectangular Section</div>
+      </div>
+      <div style="margin-left:auto;text-align:right;">
+        <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        <div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div>
+      </div>
+    </div>
+    ${warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Section Properties</div>
+      <table class="res-tbl">
+        <tr><td>Section b × h</td><td>${fmtL(b)} × ${fmtL(h)}</td></tr>
+        <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
+        <tr><td>Total bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
+        <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.08?'vok':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
+        ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
+      </table>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Design Results</div>
+      <div class="result-box">
+        <div class="result-item"><div class="ri-label">Max Axial P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
+        <div class="result-item"><div class="ri-label">M<sub>x</sub> Capacity</div><div class="ri-value">${(M0x/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item"><div class="ri-label">M<sub>y</sub> Capacity</div><div class="ri-value">${(M0y/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr_gov.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+      </div>
+      <div class="dcr-banner ${st}">
+        <div class="dcr-icon">${icons[st]}</div>
+        <div class="dcr-text">
+          <strong>${labels[st]} — D/C = ${dcr_gov.toFixed(3)}</strong>
+          <span>D/C-Mx = ${dcr_x.toFixed(3)}  ·  D/C-My = ${dcr_y.toFixed(3)}  ·  Biaxial = ${dcr_bi.toFixed(3)}</span>
+        </div>
+      </div>
+      <table class="res-tbl">
+        <tr><td>Applied axial P</td><td>${fmtF(Pu)}</td></tr>
+        <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
+        <tr><td>Applied M<sub>x</sub> (about x-axis, depth along h)</td><td>${fmtM(Mx)}</td></tr>
+        <tr><td>M<sub>x</sub> capacity at applied P</td><td class="vok">${fmtM(M0x)}</td></tr>
+        <tr><td>D/C — M<sub>x</sub></td><td class="${dcr_x<=1?'vok':'verr'}">${dcr_x.toFixed(3)}</td></tr>
+        <tr><td>Applied M<sub>y</sub> (about y-axis, depth along b)</td><td>${fmtM(My)}</td></tr>
+        <tr><td>M<sub>y</sub> capacity at applied P</td><td class="vok">${fmtM(M0y)}</td></tr>
+        <tr><td>D/C — M<sub>y</sub></td><td class="${dcr_y<=1?'vok':'verr'}">${dcr_y.toFixed(3)}</td></tr>
+        <tr><td>Biaxial D/C (Bresler)</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr_bi.toFixed(3)}</td></tr>
+      </table>
+    </div>
+    <div class="print-pmm-wrap">
+      <div style="font-family:var(--sans);font-size:6.8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:2px 8px;margin-bottom:5px;">P-M Interaction Diagrams</div>
+      <div style="display:flex;gap:6px;">
+        <canvas id="${p}print-pmm-x" width="250" height="220" style="display:block;flex:1;"></canvas>
+        <canvas id="${p}print-pmm-y" width="250" height="220" style="display:block;flex:1;"></canvas>
+      </div>
+    </div>
+    <div class="print-disclaimer">
+      ⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.
+    </div>
+    <div class="print-footer">
+      <span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span>
+      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ACI 318-25 / EN 1992-1-1</span>
+    </div>`;
+
+  document.getElementById(p+'empty').style.display='none';
+  document.getElementById(p+'report-wrap').style.display='';
+  document.getElementById(p+'pmm-outer').style.display='';
+  // Defer canvas drawing to next animation frame — keeps UI responsive
+  requestAnimationFrame(()=>{
+    drawPMM(code,'x');
+    // Print canvases in following frame (they're off-screen)
+    requestAnimationFrame(()=>{
+      const pcx=document.getElementById(p+'print-pmm-x');
+      const pcy=document.getElementById(p+'print-pmm-y');
+      if(pcx&&pcy&&pmmStore[code]) drawPMMdual(pcx,pcy,pmmStore[code],UNITS[curU[code]]);
+    });
+  });
+}
+
+// ══════════════════════════════
+// DRAW TWO P-M PANELS (SAME SCALE) FOR PRINT
+// ══════════════════════════════
+function drawPMMdual(canvasX, canvasY, d, U) {
+  // Shared P scale from both curves
+  const allP = [...d.cx.map(p=>p.P), ...d.cy.map(p=>p.P)];
+  const maxP = Math.max(0, ...allP) * 1.08;
+  const minP = Math.min(0, ...allP) * 1.12;
+  // Shared M scale: largest of both axes + demand
+  const maxM = Math.max(
+    ...d.cx.map(p=>p.M), Math.abs(d.Mx||0)*1.2,
+    ...d.cy.map(p=>p.M), Math.abs(d.My||0)*1.2
+  ) * 1.1;
+  _drawPMMpanel(canvasX, d.cx, d.Pu, d.Mx, d.dcr_x, 'x', maxP, minP, maxM, U);
+  _drawPMMpanel(canvasY, d.cy, d.Pu, d.My, d.dcr_y, 'y', maxP, minP, maxM, U);
+}
+
+function _drawPMMpanel(canvas, curve, Pu, Mu, dcr_pt, axis, maxP, minP, maxM, U) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pad = {top:26, right:14, bottom:38, left:54};
+  const cw = W-pad.left-pad.right, ch = H-pad.top-pad.bottom;
+  const toX = m => pad.left + Math.max(0,m)/maxM * cw;
+  const toY = p => pad.top + (1-(p-minP)/(maxP-minP)) * ch;
+  // Grid
+  const nGx=4, nGy=5;
+  ctx.strokeStyle='#dde2e8'; ctx.lineWidth=0.7;
+  for(let i=0;i<=nGx;i++){
+    const x=pad.left+i/nGx*cw;
+    ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='7.5px Arial';ctx.textAlign='center';
+    ctx.fillText((i/nGx*maxM/U.momS).toFixed(0),x,pad.top+ch+11);
+  }
+  for(let i=0;i<=nGy;i++){
+    const Pv=minP+(maxP-minP)*i/nGy, y=toY(Pv);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='7.5px Arial';ctx.textAlign='right';
+    ctx.fillText((Pv/U.forceS).toFixed(0),pad.left-3,y+2.5);
+  }
+  // Axes
+  ctx.strokeStyle='#5a6a7a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.left,pad.top);ctx.lineTo(pad.left,pad.top+ch);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.left,toY(0));ctx.lineTo(pad.left+cw,toY(0));ctx.stroke();
+  // Axis labels
+  ctx.fillStyle='#2c3a4a';ctx.font='8.5px Arial';ctx.textAlign='center';
+  const mLbl=axis==='x'?`M\u2093 (${U.momU})`:`M\u1D67 (${U.momU})`;
+  ctx.fillText(mLbl,pad.left+cw/2,H-2);
+  ctx.save();ctx.translate(9,pad.top+ch/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(`P (${U.forceU})`,0,0);ctx.restore();
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(toX(0),toY(curve[0].P));
+  curve.forEach(pt=>ctx.lineTo(toX(pt.M),toY(pt.P)));
+  ctx.lineTo(toX(0),toY(curve[curve.length-1].P));
+  ctx.closePath();ctx.fillStyle='rgba(26,109,181,0.07)';ctx.fill();
+  // Curve
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=1.8;
+  let first=true;
+  curve.forEach(pt=>{
+    const x=toX(pt.M),y=toY(pt.P);
+    if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // Demand
+  const dpx=toX(Math.abs(Mu||0)), dpy=toY(Pu);
+  const inBounds=dpx>=pad.left&&dpx<=pad.left+cw&&dpy>=pad.top&&dpy<=pad.top+ch;
+  const ptColor=(dcr_pt||0)<=1?'#1a8a5a':'#c0392b';
+  if(inBounds){
+    ctx.strokeStyle=ptColor;ctx.lineWidth=0.8;ctx.setLineDash([3,2]);
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(pad.left,dpy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(dpx,toY(0));ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(dpx,dpy,4,0,2*Math.PI);
+    ctx.fillStyle=ptColor;ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1;ctx.stroke();
+    const lx=Math.min(dpx+6,pad.left+cw-60), ly=Math.max(dpy-7,pad.top+10);
+    ctx.fillStyle=ptColor;ctx.font='bold 7.5px Arial';ctx.textAlign='left';
+    ctx.fillText(`D/C=${(dcr_pt||0).toFixed(2)}`,lx,ly);
+  }
+  // Title
+  ctx.fillStyle='#2c3a4a';ctx.font='bold 8.5px Arial';ctx.textAlign='center';
+  const titles={x:'P – Mx  (NA ∥ b)',y:'P – My  (NA ∥ h)'};
+  ctx.fillText(titles[axis]||'',pad.left+cw/2,14);
+  // Legend (top-right)
+  const lx0=pad.left+cw-86;
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=1.8;
+  ctx.moveTo(lx0,pad.top+6);ctx.lineTo(lx0+18,pad.top+6);ctx.stroke();
+  ctx.fillStyle='#5a6a7a';ctx.font='7px Arial';ctx.textAlign='left';
+  ctx.fillText('Capacity',lx0+21,pad.top+9);
+  ctx.beginPath();ctx.arc(lx0-4,pad.top+18,3,0,2*Math.PI);
+  ctx.fillStyle=ptColor;ctx.fill();
+  ctx.fillStyle='#5a6a7a';ctx.fillText('Demand',lx0+0,pad.top+21);
+}
+
+// ══════════════════════════════
+// DRAW PMM ON ANY CANVAS
+// ══════════════════════════════
+function drawPMM_onCanvas(canvas, d, U, axis) {
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  if(axis==='bi') { drawBiaxialContour(ctx,d,U,W,H); return; }
+  const curve = axis==='y' ? d.cy : d.cx;
+  const Pu=d.Pu, Mu=axis==='y'?d.My:d.Mx;
+  const pad={top:28,right:20,bottom:44,left:60};
+  const cw=W-pad.left-pad.right, ch=H-pad.top-pad.bottom;
+  const maxP=Math.max(0,...curve.map(p=>p.P))*1.08;
+  const minP=Math.min(0,...curve.map(p=>p.P))*1.12;
+  const maxM=Math.max(...curve.map(p=>p.M),Math.abs(Mu)*1.2)*1.1;
+  const px=m=>pad.left+Math.max(0,m)/maxM*cw;
+  const py=p=>pad.top+(1-(p-minP)/(maxP-minP))*ch;
+  ctx.strokeStyle='#dde2e8';ctx.lineWidth=0.7;
+  for(let i=0;i<=5;i++){
+    const x=pad.left+i/5*cw;
+    ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='8px sans-serif';ctx.textAlign='center';
+    ctx.fillText((i/5*maxM/U.momS).toFixed(0),x,pad.top+ch+12);
+    const Pv=minP+(maxP-minP)*i/5, y=py(Pv);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.textAlign='right';
+    ctx.fillText((Pv/U.forceS).toFixed(0),pad.left-4,y+3);
+  }
+  ctx.strokeStyle='#5a6a7a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.left,pad.top);ctx.lineTo(pad.left,pad.top+ch);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.left,py(0));ctx.lineTo(pad.left+cw,py(0));ctx.stroke();
+  ctx.fillStyle='#2c3a4a';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText(`M (${U.momU})`,pad.left+cw/2,H-3);
+  ctx.save();ctx.translate(11,pad.top+ch/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(`P (${U.forceU})`,0,0);ctx.restore();
+  ctx.beginPath();ctx.moveTo(px(0),py(curve[0].P));
+  curve.forEach(pt=>ctx.lineTo(px(pt.M),py(pt.P)));
+  ctx.lineTo(px(0),py(curve[curve.length-1].P));
+  ctx.closePath();ctx.fillStyle='rgba(26,109,181,0.07)';ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=2;
+  let first=true;
+  curve.forEach(pt=>{first?ctx.moveTo(px(pt.M),py(pt.P)):ctx.lineTo(px(pt.M),py(pt.P));first=false;});
+  ctx.stroke();
+  const dpx=px(Math.abs(Mu)),dpy=py(Pu);
+  const ptColor=Math.abs(Mu)/maxM<=1&&Pu>=minP&&Pu<=maxP?'#c0392b':'#c0392b';
+  ctx.beginPath();ctx.arc(dpx,dpy,5,0,2*Math.PI);ctx.fillStyle=ptColor;ctx.fill();
+  ctx.strokeStyle='white';ctx.lineWidth=1.2;ctx.stroke();
+}
+
+// ══════════════════════════════
+// PMM DIAGRAM DRAWING
+// ══════════════════════════════
+function switchPmm(code,axis,btn){
+  btn.closest('.pmm-axis-tabs').querySelectorAll('.pmm-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawPMM(code,axis);
+}
+
+function drawPMM(code,axis){
+  const d=pmmStore[code]; if(!d) return;
+  const U=UNITS[curU[code]];
+  const canvas=document.getElementById(code+'-pmm'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  if(axis==='bi'){
+    drawBiaxialContour(ctx,d,U,W,H);
+    return;
+  }
+
+  const curve = axis==='y' ? d.cy : d.cx;
+  const Pu=d.Pu;
+  const Mu = axis==='y' ? d.My : d.Mx;
+  const dcr_pt = axis==='y' ? d.dcr_y : d.dcr_x;
+
+  const pad={top:32,right:24,bottom:52,left:72};
+  const cw=W-pad.left-pad.right, ch=H-pad.top-pad.bottom;
+
+  // Scale
+  const maxP=Math.max(0,...curve.map(p=>p.P))*1.08;
+  const minP=Math.min(0,...curve.map(p=>p.P))*1.12;
+  const maxM=Math.max(...curve.map(p=>p.M),Math.abs(Mu)*1.2)*1.1;
+
+  const px=m=>pad.left+Math.max(0,m)/maxM*cw;
+  const py=p=>pad.top+(1-(p-minP)/(maxP-minP))*ch;
+
+  // Grid lines
+  const nGx=5,nGy=6;
+  ctx.strokeStyle='#dde2e8';ctx.lineWidth=0.7;
+  for(let i=0;i<=nGx;i++){
+    const x=pad.left+i/nGx*cw;
+    ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='9.5px Arial';ctx.textAlign='center';
+    ctx.fillText((i/nGx*maxM/U.momS).toFixed(0),x,pad.top+ch+14);
+  }
+  for(let i=0;i<=nGy;i++){
+    const Pv=minP+(maxP-minP)*i/nGy;
+    const y=py(Pv);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='9.5px Arial';ctx.textAlign='right';
+    ctx.fillText((Pv/U.forceS).toFixed(0),pad.left-5,y+3.5);
+  }
+
+  // Axes
+  ctx.strokeStyle='#5a6a7a';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(pad.left,pad.top);ctx.lineTo(pad.left,pad.top+ch);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.left,py(0));ctx.lineTo(pad.left+cw,py(0));ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle='#2c3a4a';ctx.font='10.5px Arial';ctx.textAlign='center';
+  const mLbl=axis==='x'?`M\u2093 (${U.momU})`:`M\u1D67 (${U.momU})`;
+  ctx.fillText(mLbl,pad.left+cw/2,H-5);
+  ctx.save();ctx.translate(13,pad.top+ch/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(`P (${U.forceU})`,0,0);ctx.restore();
+
+  // Interaction curve FILL
+  ctx.beginPath();
+  ctx.moveTo(px(0),py(curve[0].P));
+  curve.forEach(pt=>ctx.lineTo(px(pt.M),py(pt.P)));
+  ctx.lineTo(px(0),py(curve[curve.length-1].P));
+  ctx.closePath();
+  ctx.fillStyle='rgba(26,109,181,0.07)';ctx.fill();
+
+  // Interaction CURVE
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=2.5;
+  let first=true;
+  curve.forEach(pt=>{
+    const x=px(pt.M),y=py(pt.P);
+    if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Demand point
+  const dpx=px(Math.abs(Mu)), dpy=py(Pu);
+  const inBounds=dpx>=pad.left&&dpx<=pad.left+cw&&dpy>=pad.top&&dpy<=pad.top+ch;
+  const ptColor=dcr_pt<=1?'#1a8a5a':'#c0392b';
+
+  if(inBounds){
+    ctx.strokeStyle=ptColor;ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(pad.left,dpy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(dpx,py(0));ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(dpx,dpy,6,0,2*Math.PI);
+    ctx.fillStyle=ptColor;ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    const lx=Math.min(dpx+9,pad.left+cw-80), ly=Math.max(dpy-9,pad.top+12);
+    ctx.fillStyle=ptColor;ctx.font='bold 9.5px Arial';ctx.textAlign='left';
+    ctx.fillText(`D/C = ${dcr_pt.toFixed(2)}`,lx,ly);
+  }
+
+  // Title
+  ctx.fillStyle='#2c3a4a';ctx.font='bold 10.5px Arial';ctx.textAlign='center';
+  const titles={x:'P – Mx  (Neutral Axis parallel to b)',y:'P – My  (Neutral Axis parallel to h)'};
+  ctx.fillText(titles[axis]||'',pad.left+cw/2,18);
+
+  // Legend
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=2.5;
+  ctx.moveTo(pad.left+cw-120,pad.top+8);ctx.lineTo(pad.left+cw-94,pad.top+8);ctx.stroke();
+  ctx.fillStyle='#5a6a7a';ctx.font='8.5px Arial';ctx.textAlign='left';
+  ctx.fillText('Capacity envelope',pad.left+cw-90,pad.top+12);
+  ctx.beginPath();ctx.arc(pad.left+cw-126,pad.top+26,4,0,2*Math.PI);
+  ctx.fillStyle=ptColor;ctx.fill();
+  ctx.fillStyle='#5a6a7a';ctx.fillText('Demand',pad.left+cw-118,pad.top+30);
+}
+
+function drawBiaxialContour(ctx,d,U,W,H){
+  const {Pu,Mx,My,M0x,M0y,P0,dcr_bi} = d;
+  if(!M0x||!M0y){ ctx.fillStyle='#8898aa';ctx.font='13px Arial';ctx.textAlign='center';ctx.fillText('Run calculation first',W/2,H/2); return; }
+
+  // α from Bresler (same as calcCol)
+  const pRatio=Math.max(0,Math.min(1,Pu/P0));
+  const alpha=1+pRatio;
+
+  const pad={top:40,right:30,bottom:58,left:72};
+  const cw=W-pad.left-pad.right, ch=H-pad.top-pad.bottom;
+
+  // Scale: x=Mx, y=My
+  const axMax=Math.max(M0x,Math.abs(Mx)*1.3)*1.15/U.momS;
+  const ayMax=Math.max(M0y,Math.abs(My)*1.3)*1.15/U.momS;
+  const px=mx=>pad.left+mx/axMax*cw;
+  const py=my=>pad.top+ch - my/ayMax*ch;
+
+  // Grid
+  const nG=5;
+  ctx.strokeStyle='#dde2e8';ctx.lineWidth=0.7;
+  for(let i=0;i<=nG;i++){
+    const x=pad.left+i/nG*cw;
+    ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.font='9.5px Arial';ctx.textAlign='center';
+    ctx.fillText((i/nG*axMax).toFixed(0),x,pad.top+ch+14);
+    const y=pad.top+ch-i/nG*ch;
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle='#8898aa';ctx.textAlign='right';
+    ctx.fillText((i/nG*ayMax).toFixed(0),pad.left-5,y+3.5);
+  }
+
+  // Axes
+  ctx.strokeStyle='#5a6a7a';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(pad.left,pad.top);ctx.lineTo(pad.left,pad.top+ch);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.left,pad.top+ch);ctx.lineTo(pad.left+cw,pad.top+ch);ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle='#2c3a4a';ctx.font='10.5px Arial';ctx.textAlign='center';
+  ctx.fillText(`M\u2093 (${U.momU})`,pad.left+cw/2,H-5);
+  ctx.save();ctx.translate(13,pad.top+ch/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(`M\u1D67 (${U.momU})`,0,0);ctx.restore();
+
+  // Capacity contour: (Mx/M0x)^α + (My/M0y)^α = 1
+  // Parametric: Mx sweeps 0→M0x, My = M0y*(1-(Mx/M0x)^α)^(1/α)
+  const N=200;
+  ctx.beginPath();
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const mxN=t;  // normalised Mx/M0x
+    const myN=Math.pow(Math.max(0,1-Math.pow(mxN,alpha)),1/alpha);
+    const mxV=mxN*M0x/U.momS, myV=myN*M0y/U.momS;
+    if(i===0) ctx.moveTo(px(mxV),py(myV));
+    else ctx.lineTo(px(mxV),py(myV));
+  }
+  ctx.lineTo(px(0),py(0));
+  ctx.closePath();
+  ctx.fillStyle='rgba(26,109,181,0.07)';ctx.fill();
+  ctx.strokeStyle='#1a6db5';ctx.lineWidth=2.5;ctx.stroke();
+
+  // Demand point
+  const absMx=Math.abs(Mx)/U.momS, absMy=Math.abs(My)/U.momS;
+  const dpx=px(absMx), dpy=py(absMy);
+  const ptColor=dcr_bi<=1?'#1a8a5a':'#c0392b';
+  const inBounds=dpx>=pad.left&&dpx<=pad.left+cw&&dpy>=pad.top&&dpy<=pad.top+ch;
+
+  if(inBounds){
+    // Guide lines to axes
+    ctx.strokeStyle=ptColor;ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(pad.left,dpy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dpx,dpy);ctx.lineTo(dpx,pad.top+ch);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(dpx,dpy,6,0,2*Math.PI);
+    ctx.fillStyle=ptColor;ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    // Label
+    const lx=Math.min(dpx+9,pad.left+cw-90), ly=Math.max(dpy-9,pad.top+12);
+    ctx.fillStyle=ptColor;ctx.font='bold 9.5px Arial';ctx.textAlign='left';
+    ctx.fillText(`D/C = ${dcr_bi.toFixed(2)}`,lx,ly);
+  }
+
+  // Capacity points on axes (M0x, 0) and (0, M0y)
+  ctx.fillStyle='#1a6db5';
+  [[M0x/U.momS,0],[0,M0y/U.momS]].forEach(([mx,my])=>{
+    ctx.beginPath();ctx.arc(px(mx),py(my),4,0,2*Math.PI);ctx.fill();
+  });
+
+  // Title
+  ctx.fillStyle='#2c3a4a';ctx.font='bold 10.5px Arial';ctx.textAlign='center';
+  ctx.fillText(`Biaxial Moment Contour at P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU}  (α = ${alpha.toFixed(2)})`,pad.left+cw/2,18);
+
+  // Legend
+  ctx.beginPath();ctx.strokeStyle='#1a6db5';ctx.lineWidth=2.5;
+  ctx.moveTo(pad.left+cw-160,pad.top+8);ctx.lineTo(pad.left+cw-134,pad.top+8);ctx.stroke();
+  ctx.fillStyle='#5a6a7a';ctx.font='8.5px Arial';ctx.textAlign='left';
+  ctx.fillText('(Mx/M\u2080x)\u1D45+(My/M\u2080y)\u1D45=1',pad.left+cw-130,pad.top+12);
+  ctx.beginPath();ctx.arc(pad.left+cw-166,pad.top+26,4,0,2*Math.PI);
+  ctx.fillStyle=ptColor;ctx.fill();
+  ctx.fillStyle='#5a6a7a';ctx.fillText('Demand (Mux, Muy)',pad.left+cw-158,pad.top+30);
+}
+
+// INIT
+window.addEventListener('load',()=>{
+  ['aci','ec2'].forEach(code=>{
+    const p=code+'-';
+    const fmt=(id,dec)=>{const e=document.getElementById(p+id);if(e&&e.value)e.value=parseFloat(e.value).toFixed(dec);};
+    fmt('b',2); fmt('h',2); fmt('cv',3); fmt('cv-c',3); fmt('D',2);
+  });
+  updatePreview('aci'); updatePreview('ec2');
+});
+
+// ══ PRINT: redraw canvases before print dialog ══
+window.addEventListener('beforeprint', () => {
+  ['aci','ec2'].forEach(code => {
+    if(!pmmStore[code]) return;
+    const U = UNITS[curU[code]];
+    if(colShape[code]==='circ') {
+      const pc = document.getElementById(code+'-print-pmm');
+      if(pc) drawPMM_onCanvas(pc, pmmStore[code], U, 'x');
+    } else {
+      const pcx = document.getElementById(code+'-print-pmm-x');
+      const pcy = document.getElementById(code+'-print-pmm-y');
+      if(pcx && pcy) drawPMMdual(pcx, pcy, pmmStore[code], U);
+    }
+  });
+});
+
+// ══ AUTO-CALCULATE ON INPUT ══
+let autoCalcTimer;
+function debounceCalc(fn) {
+  clearTimeout(autoCalcTimer);
+  autoCalcTimer = setTimeout(fn, 600);
+}
+document.querySelectorAll('#col-aci input[type="number"], #col-aci select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(() => calcCol('aci')));
+});
+document.querySelectorAll('#col-ec2 input[type="number"], #col-ec2 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(() => calcCol('ec2')));
+});
+</script>
+
+<!-- Validation helpers -->
+<script>
+function _valClear(ids){
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('val-err');});
+  document.querySelectorAll('.val-banner').forEach(el=>el.remove());
+}
+function _valShow(containerId,errors){
+  const wrap=document.getElementById(containerId);
+  if(!wrap)return;
+  const box=document.createElement('div');
+  box.className='val-banner';
+  box.setAttribute('role','alert');
+  box.setAttribute('aria-live','assertive');
+  box.innerHTML='<span>⚠️</span><div><strong>Please check the following:</strong><ul>'+
+    errors.map(e=>'<li>'+e+'</li>').join('')+'</ul></div>';
+  wrap.insertBefore(box,wrap.firstChild);
+}
+function _valMark(id){const el=document.getElementById(id);if(el)el.classList.add('val-err');}
+
+function validateCol(code){
+  const isEC2=code==='ec2';
+  const U=UNITS[curU[code]];
+  const isCirc=colShape[code]==='circ';
+  const p=code+'-';
+  const e=[];
+
+  const fcId=isEC2?p+'fck':p+'fc';
+  const fyId=isEC2?p+'fyk':p+'fy';
+  const PuId=isEC2?p+'NEd':p+'Pu';
+  const ids=isCirc?[p+'D',fcId,fyId,PuId]:[p+'b',p+'h',fcId,fyId,PuId];
+
+  _valClear(ids);
+
+  if(isCirc){
+    const D=g(p+'D')*U.lenS;
+    if(!D||D<150||D>3000){e.push("Diameter D: 150–3000 mm");_valMark(p+'D');}
+  } else {
+    const b=g(p+'b')*U.lenS, h=g(p+'h')*U.lenS;
+    if(!b||b<150||b>3000){e.push("Width b: 150–3000 mm");_valMark(p+'b');}
+    if(!h||h<150||h>3000){e.push("Height h: 150–3000 mm");_valMark(p+'h');}
+  }
+
+  const fc=isEC2?g(p+'fck'):g(p+'fc');
+  const fy=isEC2?g(p+'fyk'):g(p+'fy');
+  if(isEC2){
+    if(!fc||fc<12||fc>90){e.push("fck: 12–90 MPa (EC2)");_valMark(fcId);}
+    if(!fy||fy<240||fy>600){e.push("fyk: 240–600 MPa");_valMark(fyId);}
+  } else {
+    if(!fc||fc<17||fc>100){e.push("f'c: 17–100 MPa (ACI)");_valMark(fcId);}
+    if(!fy||fy<240||fy>600){e.push("fy: 240–600 MPa");_valMark(fyId);}
+  }
+
+  const Pu=g(PuId)*U.forceS;
+  if(!Pu||Pu<=0){e.push("Axial load must be > 0");_valMark(PuId);}
+
+  if(e.length){_valShow('col-'+code,e);return false;}
+  return true;
+}
+</script>
+
+<!-- AdBlock Notice -->
+<div class="adblock-notice" id="adblockNotice">
+  <div class="adblock-notice-content">
+    <span class="adblock-notice-icon">ℹ️</span>
+    <span class="adblock-notice-text">We noticed you're using an ad blocker. This site is free and ad-supported — please consider disabling it to support us.</span>
+  </div>
+  <button class="adblock-notice-close" onclick="dismissAdBlockNotice()">✕ Dismiss</button>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
+  const testAd=document.createElement('div');
+  testAd.className='ad adsbox adsbygoogle';
+  testAd.style.cssText='position:absolute;width:1px;height:1px;top:-9999px;left:-9999px;';
+  document.body.appendChild(testAd);
+  setTimeout(function(){
+    if(testAd.offsetHeight===0||window.getComputedStyle(testAd).display==='none'){
+      const n=document.getElementById('adblockNotice');
+      if(n) n.classList.add('show');
+    }
+    testAd.remove();
+  },200);
+})();
+function dismissAdBlockNotice(){
+  const n=document.getElementById('adblockNotice');
+  if(n) n.classList.remove('show');
+  localStorage.setItem('adblockNoticeDismissed','true');
+}
+</script>
+</body>
+</html>
