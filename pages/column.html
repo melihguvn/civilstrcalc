@@ -1213,7 +1213,7 @@ function calcCol(code){
     const st=dcr<=1?'ok':dcr<=1.05?'warn':'err';
     pmmStore[code]={cx:curve,cy:curve,Pu,Mx,My,dcr_x:dcr,dcr_y:dcr,dcr_bi:dcr,P0,M0x:M0,M0y:M0,isEC2,code};
     const warns=[];
-    if(rho<0.01||rho>0.08) warns.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is outside typical range (1–8%).`);
+    warns.push(..._rhoWarns(rho,isEC2));
     if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub>.`);
     if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
     if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
@@ -1243,7 +1243,7 @@ function calcCol(code){
         <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
         <tr><td>Bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
         <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
-        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.08?'vok':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
         ${!isEC2?`<tr><td>Confinement type</td><td>${spiral?'Spiral (φ=0.75, k=0.85)':'Tied (φ=0.65, k=0.80)'}</td></tr>`:''}
         ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
       </table>
@@ -1334,7 +1334,7 @@ function calcCol(code){
 
   // Warnings
   const warns=[];
-  if(rho<0.01||rho>0.08) warns.push(`<b>Reinforcement ratio:</b> ρg = ${(rho*100).toFixed(2)}% is outside typical range (${isEC2?'0.2–4%':'1–8%'}).`);
+  warns.push(..._rhoWarns(rho,isEC2));
   if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
   if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
   if(isEC2&&fc&&(fc<12||fc>90)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
@@ -1366,7 +1366,7 @@ function calcCol(code){
         <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
         <tr><td>Total bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
         <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
-        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.08?'vok':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
         ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
       </table>
     </div>
@@ -1846,6 +1846,23 @@ function _valShow(containerId,errors){
   wrap.insertBefore(box,wrap.firstChild);
 }
 function _valMark(id){const el=document.getElementById(id);if(el)el.classList.add('val-err');}
+
+function _rhoWarns(rho,isEC2){
+  const w=[];
+  if(isEC2){
+    if(rho<0.01){
+      w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below Eurocode 2 minimum for seismic design (ρ<sub>min</sub> = 1.0%, EC2 5.4.3.2.2, DCM/DCH). Increase reinforcement or verify ductility class requirement.`);
+      if(rho>=0.002) w.push(`<b>Note:</b> ρ<sub>min</sub> = 0.2% applies only to non-seismic design (DCL). For seismic regions (DCM/DCH), ρ<sub>min</sub> = 1.0% is required.`);
+    }
+    if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds Eurocode 2 maximum (ρ<sub>max</sub> = 4.0%, EC2 9.5.2(3)). Consider increasing column size or reducing reinforcement.`);
+  } else {
+    if(rho<0.01) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below ACI 318 minimum (ρ<sub>min</sub> = 1.0%, ACI 10.6.1.1). Increase reinforcement to meet code requirements.`);
+    if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds ACI 318 practical maximum (ρ<sub>max</sub> = 4.0%, ACI 18.7.5.1). This limit accounts for lap splice congestion in connection regions. Consider increasing column size.`);
+    if(rho>0.06&&rho<=0.08) w.push(`<b>Note:</b> While ACI allows up to 8% in specific conditions, practical constructability limits reinforcement to ~4% due to lap splice requirements in connection zones.`);
+    if(rho>0.08) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds ACI 318 absolute maximum (8.0%, ACI 10.6.1.1). This is not permitted under any condition.`);
+  }
+  return w;
+}
 
 function validateCol(code){
   const isEC2=code==='ec2';
