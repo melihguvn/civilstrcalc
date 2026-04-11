@@ -162,6 +162,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <div class="sub-tabs no-print">
   <button class="sub-tab active" onclick="stab(this,'shear','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'shear','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+  <button class="sub-tab" onclick="stab(this,'shear','is456')">IS 456:2000</button>
 </div>
 
 <!-- ═══════ ACI 318-25 ═══════ -->
@@ -379,12 +380,121 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
+<!-- ═══════ IS 456:2000 ═══════ -->
+<div class="sub-pane" id="shear-is456">
+<div class="shear-layout">
+
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">IS 456:2000</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="is456-shear-mmkn" onclick="setIS456ShearUnit('mm-kN',this)">mm – kN</button>
+          <button class="unit-btn" id="is456-shear-cmtf" onclick="setIS456ShearUnit('cm-tonf',this)">cm – tonf</button>
+        </div>
+      </div>
+
+      <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b<sub>w</sub> <span class="lu" id="lu-is456s-bw">[mm]</span></label>
+          <div class="iw"><input type="number" id="is456s-bw" value="300"><span class="us" id="u-is456s-bw">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total depth D <span class="lu" id="lu-is456s-h">[mm]</span></label>
+          <div class="iw"><input type="number" id="is456s-h" value="600"><span class="us" id="u-is456s-h">mm</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cover to stirrup <span class="lu" id="lu-is456s-cv">[mm]</span></label>
+        <div class="iw"><input type="number" id="is456s-cv" value="25"><span class="us" id="u-is456s-cv">mm</span></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> (MPa)</label>
+          <select id="is456s-fck">
+            <option value="15">M15 — 15 MPa</option>
+            <option value="20">M20 — 20 MPa</option>
+            <option value="25" selected>M25 — 25 MPa</option>
+            <option value="30">M30 — 30 MPa</option>
+            <option value="35">M35 — 35 MPa</option>
+            <option value="40">M40 — 40 MPa</option>
+            <option value="45">M45 — 45 MPa</option>
+            <option value="50">M50 — 50 MPa</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>f<sub>y</sub> Stirrup (MPa)</label>
+          <select id="is456s-fyv">
+            <option value="250">Fe 250</option>
+            <option value="415" selected>Fe 415</option>
+            <option value="500">Fe 500</option>
+            <option value="550">Fe 550</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Longitudinal Steel</div></div>
+      <div class="form-group">
+        <label>A<sub>st</sub> (tension steel) <span class="lu" id="lu-is456s-ast">[mm²]</span></label>
+        <div class="iw"><input type="number" id="is456s-ast" value="1500"><span class="us" id="u-is456s-ast">mm²</span></div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-top:2px;">Used to compute p<sub>t</sub> = 100·A<sub>st</sub>/(b·d) for τ<sub>c</sub> (Table 19)</div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Stirrup Layout</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Stirrup Dia. (mm)</label>
+          <div class="iw"><input type="number" id="is456s-db" value="8"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Legs n</label>
+          <div class="iw"><input type="number" id="is456s-legs" value="2" min="1" max="6"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Provided spacing s<sub>v</sub> <span class="lu" id="lu-is456s-sv">[mm]</span></label>
+        <div class="iw"><input type="number" id="is456s-sv" value="150"><span class="us" id="u-is456s-sv">mm</span></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Applied Load</div></div>
+      <div class="form-group">
+        <label>Factored Shear V<sub>u</sub> <span class="lu" id="lu-is456s-vu">[kN]</span></label>
+        <div class="iw"><input type="number" id="is456s-vu" value="150"><span class="us" id="u-is456s-vu">kN</span></div>
+      </div>
+
+      <button class="btn-calc" onclick="calcShearIS456()">▶ Calculate</button>
+    </div>
+  </div>
+
+  <div class="results-col">
+    <div class="res-empty" id="is456s-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div>
+    <div id="is456s-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Calculation Report</h4>
+          <span class="rh-code">IS 456:2000 · Cl. 40</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="is456s-report-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
 <!-- ═══════ DESIGN BACKGROUND ═══════ -->
 <div class="bg-section">
   <div class="bg-hdr"><h3>📚 Design Background &amp; Code References</h3></div>
   <div class="bg-tabs">
     <button class="bg-tab active" onclick="bgTab(this,'bg-aci')">ACI 318-25</button>
     <button class="bg-tab" onclick="bgTab(this,'bg-ec2')">Eurocode 2</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-is456')">IS 456:2000</button>
   </div>
   <div class="bg-pane active" id="bg-aci">
     <div class="tb">
@@ -430,6 +540,31 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="ft">Maximum Spacing — §9.2.2</div>
         s<sub>l,max</sub> = 0.75 · d &nbsp; (vertical stirrups, θ = 45°)<br>
         ρ<sub>w,min</sub> = 0.08 √f<sub>ck</sub> / f<sub>ywk</sub>
+      </div>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-is456">
+    <div class="tb">
+      <h4><span class="rtag">IS 456:2000 Cl. 40</span> Shear Design</h4>
+      <p>The nominal shear stress τ<sub>v</sub> is checked against the design shear strength τ<sub>c</sub> (Table 19) and maximum shear stress τ<sub>c,max</sub> (Table 20). Stirrups carry the shear in excess of τ<sub>c</sub>.</p>
+      <div class="fml-blk">
+        <div class="ft">Nominal Shear Stress — Cl. 40.1</div>
+        τ<sub>v</sub> = V<sub>u</sub> / (b · d) &nbsp; [N/mm²]
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Design Shear Strength — Table 19</div>
+        τ<sub>c</sub> depends on p<sub>t</sub> = 100·A<sub>st</sub>/(b·d) and f<sub>ck</sub><br>
+        τ<sub>c,max</sub> from Table 20: M20 → 2.8, M25 → 3.1, M30 → 3.5, M35 → 3.7, M40+ → 4.0 N/mm²
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Stirrup Contribution — Cl. 40.4</div>
+        V<sub>us</sub> = 0.87·f<sub>y</sub>·A<sub>sv</sub>·d / s<sub>v</sub><br>
+        Required A<sub>sv</sub>/s<sub>v</sub> = (V<sub>u</sub> − τ<sub>c</sub>·b·d) / (0.87·f<sub>y</sub>·d)
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Minimum Shear Reinforcement — Cl. 26.5.1.6</div>
+        A<sub>sv</sub> / (b·s<sub>v</sub>) ≥ 0.4 / (0.87·f<sub>y</sub>)<br>
+        Max spacing: s<sub>v,max</sub> = min(0.75d, 300 mm) — Cl. 26.5.1.5
       </div>
     </div>
   </div>
@@ -813,6 +948,191 @@ function beamNav(tabId) {
   window.location.href = 'beam.html#' + tabId;
 }
 
+// ══════════════════════════════
+// IS 456:2000 UNIT SWITCHER
+// ══════════════════════════════
+let curIS456ShearUnit = 'mm-kN';
+
+function setIS456ShearUnit(unit, btn) {
+  curIS456ShearUnit = unit;
+  btn.closest('.unit-btns').querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const isCM = unit === 'cm-tonf';
+  const lenU = isCM ? 'cm' : 'mm';
+  const forceU = isCM ? 'tonf' : 'kN';
+
+  const setLU = (sfx, u) => {
+    const lu = document.getElementById('lu-is456s-' + sfx);
+    const uu = document.getElementById('u-is456s-' + sfx);
+    if (lu) lu.textContent = '[' + u + ']';
+    if (uu) uu.textContent = u;
+  };
+  setLU('bw', lenU); setLU('h', lenU); setLU('cv', lenU); setLU('sv', lenU);
+  setLU('vu', forceU); setLU('ast', 'mm²');
+
+  // Update default values
+  const sv = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+  if (isCM) {
+    sv('is456s-bw', '30'); sv('is456s-h', '60'); sv('is456s-cv', '2.5');
+    sv('is456s-sv', '15'); sv('is456s-vu', '15.3');
+  } else {
+    sv('is456s-bw', '300'); sv('is456s-h', '600'); sv('is456s-cv', '25');
+    sv('is456s-sv', '150'); sv('is456s-vu', '150');
+  }
+
+  // Hide results on unit change
+  const em = document.getElementById('is456s-empty'), wr = document.getElementById('is456s-report-wrap');
+  if (em) em.style.display = ''; if (wr) wr.style.display = 'none';
+}
+
+// ══════════════════════════════
+// IS 456:2000 — τc TABLE 19
+// ══════════════════════════════
+function _getTauCShear(fck, pt) {
+  // IS 456 Table 19 base values (M25)
+  const tbl = [
+    [0.15, 0.29], [0.25, 0.36], [0.50, 0.49], [0.75, 0.57],
+    [1.00, 0.64], [1.25, 0.70], [1.50, 0.74], [1.75, 0.78],
+    [2.00, 0.82], [2.25, 0.85], [2.50, 0.88], [3.00, 0.92]
+  ];
+  // fck scaling factor (approximate)
+  const sc = fck <= 15 ? 0.85 : fck <= 20 ? 0.92 : fck <= 25 ? 1.00 : fck <= 30 ? 1.05 : fck <= 35 ? 1.10 : fck <= 40 ? 1.14 : 1.17;
+  const ptC = Math.min(Math.max(pt, 0.15), 3.0);
+  if (ptC <= tbl[0][0]) return tbl[0][1] * sc;
+  if (ptC >= tbl[tbl.length - 1][0]) return tbl[tbl.length - 1][1] * sc;
+  for (let i = 0; i < tbl.length - 1; i++) {
+    if (ptC >= tbl[i][0] && ptC <= tbl[i + 1][0]) {
+      const frac = (ptC - tbl[i][0]) / (tbl[i + 1][0] - tbl[i][0]);
+      return (tbl[i][1] + frac * (tbl[i + 1][1] - tbl[i][1])) * sc;
+    }
+  }
+  return 0.29 * sc;
+}
+
+// ══════════════════════════════
+// IS 456:2000 SHEAR CALCULATION
+// ══════════════════════════════
+function calcShearIS456() {
+  if (typeof validateShearIS456 === 'function' && !validateShearIS456()) return;
+
+  const isCM = curIS456ShearUnit === 'cm-tonf';
+  const lenS = isCM ? 10 : 1;      // cm→mm or mm→mm
+  const forceS = isCM ? 9806.65 : 1000; // tonf→N or kN→N
+
+  const bw  = parseFloat(document.getElementById('is456s-bw').value || 0) * lenS;
+  const h   = parseFloat(document.getElementById('is456s-h').value  || 0) * lenS;
+  const cv  = parseFloat(document.getElementById('is456s-cv').value || 0) * lenS;
+  const sv  = parseFloat(document.getElementById('is456s-sv').value || 0) * lenS;
+  const db  = parseFloat(document.getElementById('is456s-db').value || 8);
+  const legs= Math.max(1, Math.round(parseFloat(document.getElementById('is456s-legs').value || 2)));
+  const fck = parseFloat(document.getElementById('is456s-fck').value || 25);
+  const fyv = parseFloat(document.getElementById('is456s-fyv').value || 415);
+  const Ast = parseFloat(document.getElementById('is456s-ast').value || 0);
+  const Vu  = parseFloat(document.getElementById('is456s-vu').value  || 0) * forceS; // N
+
+  if (!bw || !h || !Vu) { alert('Enter all section and load values.'); return; }
+
+  const d   = h - cv - db / 2;
+  const Av  = legs * Math.PI * db * db / 4;  // mm²
+  const pt  = Math.min((100 * Ast) / (bw * d), 3.0);
+
+  // Nominal shear stress (Cl. 40.1)
+  const tau_v = Vu / (bw * d);  // N/mm²
+
+  // Design shear strength (Table 19)
+  const tau_c = _getTauCShear(fck, pt);
+
+  // Maximum shear stress (Table 20)
+  const tau_cmax = fck <= 20 ? 2.8 : fck <= 25 ? 3.1 : fck <= 30 ? 3.5 : fck <= 35 ? 3.7 : 4.0;
+
+  // Check section adequacy
+  const secFail = tau_v > tau_cmax;
+  const needStirrups = tau_v > tau_c;
+
+  // Stirrup capacity at provided spacing (Cl. 40.4)
+  const Vus_prov = sv > 0 ? (0.87 * fyv * Av * d) / sv : 0;  // N
+  const Vus_prov_N = Vus_prov;
+  const Vc = tau_c * bw * d;  // N
+  const Vn = Vc + Vus_prov_N;
+  const dc  = Vn > 0 ? Vu / Vn : 999;
+  const st  = dc <= 1 ? 'ok' : dc <= 1.05 ? 'warn' : 'err';
+
+  // Required stirrup spacing
+  const Vus_req = Vu - Vc;
+  const sv_req  = Vus_req > 0 ? (0.87 * fyv * Av * d) / Vus_req : Infinity;
+
+  // Minimum shear reinforcement (Cl. 26.5.1.6)
+  const Asvs_min = 0.4 * bw / (0.87 * fyv);  // mm²/mm
+  const sv_min_reinf = Av / Asvs_min;
+
+  // Maximum spacing (Cl. 26.5.1.5)
+  const sv_max = Math.min(0.75 * d, 300);
+  const sv_max_eff = Math.min(sv_max, sv_min_reinf);
+
+  const warns = [];
+  if (secFail) warns.push(`<b>Section too small:</b> τ<sub>v</sub> = ${tau_v.toFixed(2)} N/mm² exceeds τ<sub>c,max</sub> = ${tau_cmax} N/mm² (IS 456 Table 20). Increase section size.`);
+  if (sv > sv_max_eff) warns.push(`<b>Spacing too large:</b> Provided s<sub>v</sub> = ${sv.toFixed(0)} mm exceeds s<sub>v,max</sub> = ${sv_max_eff.toFixed(0)} mm.`);
+  if (needStirrups && sv_req < 50) warns.push(`<b>Spacing too small:</b> Required s<sub>v</sub> = ${sv_req.toFixed(0)} mm < 50 mm. Increase stirrup size, legs, or section width.`);
+  if (pt < 0.15) warns.push(`<b>Low reinforcement ratio:</b> p<sub>t</sub> = ${pt.toFixed(3)}% is below minimum tabulated value (0.15%). τ<sub>c</sub> is taken conservatively at lowest table value.`);
+
+  const icons  = { ok: '✅', warn: '⚠️', err: '❌' };
+  const labels = { ok: 'ADEQUATE', warn: 'MARGINAL — CHECK CAREFULLY', err: 'INADEQUATE' };
+
+  const lenU   = isCM ? 'cm' : 'mm';
+  const forceU = isCM ? 'tonf' : 'kN';
+  const fmtLen = v => isCM ? (v / 10).toFixed(1) + ' cm' : v.toFixed(0) + ' mm';
+  const fmtFrc = v => isCM ? (v / 9806.65).toFixed(2) + ' tonf' : (v / 1000).toFixed(1) + ' kN';
+
+  const _date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  document.getElementById('is456s-report-body').innerHTML = `
+    <div class="print-only"><div><div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Beam Shear Design Report</div><div style="font-size:.75rem;color:#666">civilstrcalc.com · IS 456:2000 · ${isCM ? 'cm-tonf' : 'mm-kN'}</div></div><div style="margin-left:auto;font-size:.72rem;color:#888;font-family:var(--mono)">${_date}</div></div>
+    ${warns.map(w => `<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Section Properties</div>
+      <table class="res-tbl">
+        <tr><td>b<sub>w</sub> × D</td><td>${fmtLen(bw)} × ${fmtLen(h)}</td></tr>
+        <tr><td>Cover to stirrup</td><td>${fmtLen(cv)}</td></tr>
+        <tr><td>Effective depth d = D − cv − d<sub>b</sub>/2</td><td>${fmtLen(d)}</td></tr>
+        <tr><td>A<sub>sv</sub> (${legs}×Ø${db} mm)</td><td>${Av.toFixed(0)} mm²</td></tr>
+        <tr><td>p<sub>t</sub> = 100·A<sub>st</sub>/(b·d)</td><td>${pt.toFixed(3)}%</td></tr>
+      </table>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">Design Results</div>
+      <div class="result-box">
+        <div class="result-item"><div class="ri-label">τ<sub>v</sub></div><div class="ri-value">${tau_v.toFixed(2)}</div><div class="ri-unit">N/mm²</div></div>
+        <div class="result-item"><div class="ri-label">τ<sub>c</sub></div><div class="ri-value">${tau_c.toFixed(2)}</div><div class="ri-unit">N/mm²</div></div>
+        <div class="result-item"><div class="ri-label">τ<sub>c,max</sub></div><div class="ri-value ${secFail ? 'verr' : ''}">${tau_cmax}</div><div class="ri-unit">N/mm²</div></div>
+        <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dc.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+      </div>
+      <div class="dcr-banner ${st}">
+        <div class="dcr-icon">${icons[st]}</div>
+        <div class="dcr-text">
+          <strong>${labels[st]} — D/C = ${dc.toFixed(3)}</strong>
+          <span>V<sub>u</sub> = ${fmtFrc(Vu)} · V<sub>c</sub> = ${fmtFrc(Vc)} · V<sub>us</sub> = ${fmtFrc(Vus_prov_N)}</span>
+        </div>
+      </div>
+      <table class="res-tbl">
+        <tr><td>Applied V<sub>u</sub></td><td>${fmtFrc(Vu)}</td></tr>
+        <tr><td>τ<sub>v</sub> = V<sub>u</sub>/(b·d)</td><td>${tau_v.toFixed(3)} N/mm²</td></tr>
+        <tr><td>τ<sub>c</sub> (Table 19, p<sub>t</sub> = ${pt.toFixed(3)}%)</td><td class="vok">${tau_c.toFixed(3)} N/mm²</td></tr>
+        <tr><td>τ<sub>c,max</sub> (Table 20, ${fck <= 20 ? 'M20' : fck <= 25 ? 'M25' : fck <= 30 ? 'M30' : fck <= 35 ? 'M35' : 'M40+'})</td><td class="${secFail ? 'verr' : 'vok'}">${tau_cmax} N/mm²</td></tr>
+        <tr><td>Stirrups needed?</td><td class="${needStirrups ? 'vwarn' : 'vok'}">${needStirrups ? 'Yes — τ<sub>v</sub> > τ<sub>c</sub>' : 'Minimum only — τ<sub>v</sub> ≤ τ<sub>c</sub>'}</td></tr>
+        <tr><td>V<sub>c</sub> = τ<sub>c</sub>·b·d</td><td>${fmtFrc(Vc)}</td></tr>
+        <tr><td>V<sub>us</sub> at s<sub>v</sub> = ${sv.toFixed(0)} mm</td><td>${fmtFrc(Vus_prov_N)}</td></tr>
+        <tr><td>V<sub>n</sub> = V<sub>c</sub> + V<sub>us</sub></td><td class="vok">${fmtFrc(Vn)}</td></tr>
+        <tr><td>Required s<sub>v,req</sub></td><td class="${needStirrups ? 'vhl' : ''}">${isFinite(sv_req) ? sv_req.toFixed(0) + ' mm' : 'Min only'}</td></tr>
+        <tr><td>Max spacing s<sub>v,max</sub> (Cl. 26.5.1.5)</td><td>${sv_max_eff.toFixed(0)} mm</td></tr>
+        <tr><td>D/C = V<sub>u</sub> / V<sub>n</sub></td><td class="${st === 'ok' ? 'vok' : st === 'warn' ? 'vwarn' : 'verr'} vhl">${dc.toFixed(3)}</td></tr>
+      </table>
+    </div>
+    <div class="print-disclaimer">⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.</div>
+    <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; IS 456:2000</span></div>`;
+
+  document.getElementById('is456s-empty').style.display = 'none';
+  document.getElementById('is456s-report-wrap').style.display = '';
+}
+
 // ══ AUTO-CALCULATE ON INPUT ══
 let autoCalcTimer;
 function debounceCalc(fn) {
@@ -824,6 +1144,9 @@ document.querySelectorAll('#shear-aci input[type="number"], #shear-aci select').
 });
 document.querySelectorAll('#shear-ec2 input[type="number"], #shear-ec2 select').forEach(el => {
   el.addEventListener('input', () => debounceCalc(calcEC2));
+});
+document.querySelectorAll('#shear-is456 input[type="number"], #shear-is456 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcShearIS456));
 });
 </script>
 
@@ -875,6 +1198,25 @@ function validateShearEC2(){
   if(!fywk||fywk<240||fywk>600){e.push("fywk: 240–600 MPa");_valMark('ec2-fywk');}
   if(!VEd||VEd<=0){e.push("Shear force VEd must be > 0");_valMark('ec2-ved');}
   if(e.length){_valShow('shear-ec2',e);return false;}
+  return true;
+}
+
+function validateShearIS456(){
+  const isCM = curIS456ShearUnit === 'cm-tonf';
+  const lenS = isCM ? 10 : 1;
+  const forceS = isCM ? 9806.65 : 1000;
+  const bw = parseFloat(document.getElementById('is456s-bw')?.value || 0) * lenS;
+  const h  = parseFloat(document.getElementById('is456s-h')?.value  || 0) * lenS;
+  const cv = parseFloat(document.getElementById('is456s-cv')?.value || 0) * lenS;
+  const Vu = parseFloat(document.getElementById('is456s-vu')?.value || 0) * forceS;
+  const ids = ['is456s-bw','is456s-h','is456s-cv','is456s-vu'];
+  _valClear(ids);
+  const e = [];
+  if(!bw||bw<150||bw>1500){e.push("Beam width bw: 150–1500 mm");_valMark('is456s-bw');}
+  if(!h||h<200||h>2000){e.push("Total depth D: 200–2000 mm");_valMark('is456s-h');}
+  if(!cv||cv<15||cv>100){e.push("Cover: 15–100 mm");_valMark('is456s-cv');}
+  if(!Vu||Vu<=0){e.push("Shear force Vu must be > 0");_valMark('is456s-vu');}
+  if(e.length){_valShow('shear-is456',e);return false;}
   return true;
 }
 </script>

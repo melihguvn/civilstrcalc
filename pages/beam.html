@@ -203,6 +203,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   <div class="sub-tabs no-print">
     <button class="sub-tab active" onclick="stab(this,'beam','aci')">ACI 318-25</button>
     <button class="sub-tab" onclick="stab(this,'beam','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+    <button class="sub-tab" onclick="stab(this,'beam','is456')">IS 456:2000</button>
   </div>
 
   <!-- ═══════════════ ACI 318-25 ═══════════════ -->
@@ -414,6 +415,95 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
     </div>
   </div>
 
+  <!-- ═══════════════ IS 456:2000 — FLEXURAL DESIGN ═══════════════ -->
+  <div class="sub-pane" id="beam-is456">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456flex-utag">IS 456:2000 · mm · kN·m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher" style="margin-bottom:14px;">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setIS456BeamUnit('mm-kN','flex',this)">mm – kN</button>
+              <button class="unit-btn" onclick="setIS456BeamUnit('cm-tonf','flex',this)">cm – tonf</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-flex-b">[mm]</span></label>
+              <div class="iw"><input type="number" id="b_is456" value="300" step="10"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth D [mm]</label>
+              <div class="iw"><input type="number" id="h_is456" value="600" step="10"><span class="us">mm</span></div>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Clear Cover [mm]</label>
+              <div class="iw"><input type="number" id="cv_is456" value="25" step="5"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Stirrup Dia. [mm]</label>
+              <div class="iw"><input type="number" id="dst_is456" value="8" step="2" min="6" max="16"><span class="us">mm</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Main Bar Dia. [mm]</label>
+            <div class="iw"><input type="number" id="dbar_is456" value="20" step="2" min="8" max="40"><span class="us">mm</span></div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade (f<sub>ck</sub>)</label>
+              <select id="fck_is456">
+                <option value="15">M15 — 15 MPa</option>
+                <option value="20">M20 — 20 MPa</option>
+                <option value="25" selected>M25 — 25 MPa</option>
+                <option value="30">M30 — 30 MPa</option>
+                <option value="35">M35 — 35 MPa</option>
+                <option value="40">M40 — 40 MPa</option>
+                <option value="45">M45 — 45 MPa</option>
+                <option value="50">M50 — 50 MPa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade (f<sub>y</sub>)</label>
+              <select id="fy_is456">
+                <option value="250">Fe 250 — 250 MPa</option>
+                <option value="415" selected>Fe 415 — 415 MPa</option>
+                <option value="500">Fe 500 — 500 MPa</option>
+                <option value="550">Fe 550 — 550 MPa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+          <div class="form-group">
+            <label>Factored Moment M<sub>u</sub> [kN·m]</label>
+            <div class="iw"><input type="number" id="mu_is456" value="150" step="1" min="0.01"><span class="us">kN·m</span></div>
+          </div>
+
+          <button class="btn-calc" onclick="calcFlexIS456()">▶ Calculate</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="res-empty" id="is456_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="is456_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code">IS 456:2000 · mm · kN·m</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="is456_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /mod-flexdesign -->
 
   <!-- ═══════════════ MODULE: FLEXURAL CAPACITY ═══════════════ -->
@@ -422,6 +512,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   <div class="sub-tabs no-print">
     <button class="sub-tab active" onclick="stab(this,'cap','aci')">ACI 318-25</button>
     <button class="sub-tab" onclick="stab(this,'cap','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+    <button class="sub-tab" onclick="stab(this,'cap','is456')">IS 456:2000</button>
   </div>
 
   <!-- CAP ACI -->
@@ -652,6 +743,103 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
     </div>
   </div>
 
+  <!-- ═══════════════ IS 456:2000 — FLEXURAL CAPACITY ═══════════════ -->
+  <div class="sub-pane" id="cap-is456">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456cap-utag">IS 456:2000 · mm · kN·m</span></div>
+        <div class="card-body">
+          <div class="unit-switcher" style="margin-bottom:14px;">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setIS456BeamUnit('mm-kN','cap',this)">mm – kN</button>
+              <button class="unit-btn" onclick="setIS456BeamUnit('cm-tonf','cap',this)">cm – tonf</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-cap-b">[mm]</span></label>
+              <div class="iw"><input type="number" id="cap_b_is456" value="300" step="10"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth D [mm]</label>
+              <div class="iw"><input type="number" id="cap_h_is456" value="600" step="10"><span class="us">mm</span></div>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Clear Cover [mm]</label>
+              <div class="iw"><input type="number" id="cap_cv_is456" value="25" step="5"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Stirrup Dia. [mm]</label>
+              <div class="iw"><input type="number" id="cap_dst_is456" value="8" step="2" min="6" max="16"><span class="us">mm</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade (f<sub>ck</sub>)</label>
+              <select id="cap_fck_is456">
+                <option value="15">M15 — 15 MPa</option>
+                <option value="20">M20 — 20 MPa</option>
+                <option value="25" selected>M25 — 25 MPa</option>
+                <option value="30">M30 — 30 MPa</option>
+                <option value="35">M35 — 35 MPa</option>
+                <option value="40">M40 — 40 MPa</option>
+                <option value="45">M45 — 45 MPa</option>
+                <option value="50">M50 — 50 MPa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade (f<sub>y</sub>)</label>
+              <select id="cap_fy_is456">
+                <option value="250">Fe 250 — 250 MPa</option>
+                <option value="415" selected>Fe 415 — 415 MPa</option>
+                <option value="500">Fe 500 — 500 MPa</option>
+                <option value="550">Fe 550 — 550 MPa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Tension Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter [mm]</label>
+              <div class="iw"><input type="number" id="cap_dbt_is456" value="20" step="2" min="8" max="40"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="cap_nbt_is456" value="4" step="1" min="1"><span class="us">bars</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Loading (optional — for D/C)</div></div>
+          <div class="form-group">
+            <label>Applied M<sub>u</sub> [kN·m]</label>
+            <div class="iw"><input type="number" id="cap_mu_is456" value="0" placeholder="0 = skip D/C"><span class="us">kN·m</span></div>
+          </div>
+
+          <button class="btn-calc" onclick="calcCapIS456()">▶ Calculate</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="res-empty" id="cap_is456_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="cap_is456_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code">IS 456:2000 · mm · kN·m</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="cap_is456_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /mod-flexcap -->
 
   <!-- ═══════════════ MODULE: TORSION DESIGN ═══════════════ -->
@@ -660,6 +848,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   <div class="sub-tabs no-print">
     <button class="sub-tab active" onclick="stab(this,'tor','aci')">ACI 318-25</button>
     <button class="sub-tab" onclick="stab(this,'tor','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+    <button class="sub-tab" onclick="stab(this,'tor','is456')">IS 456:2000</button>
   </div>
 
   <!-- TOR ACI -->
@@ -866,6 +1055,128 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
             <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
           </div>
           <div class="report-body" id="tor_ec2_body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ IS 456:2000 — TORSION DESIGN ═══════════════ -->
+  <div class="sub-pane" id="tor-is456">
+    <div class="calc-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456tor-utag">IS 456:2000 · mm · kN</span></div>
+        <div class="card-body">
+          <div class="unit-switcher" style="margin-bottom:14px;">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" onclick="setIS456BeamUnit('mm-kN','tor',this)">mm – kN</button>
+              <button class="unit-btn" onclick="setIS456BeamUnit('cm-tonf','tor',this)">cm – tonf</button>
+            </div>
+          </div>
+          <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b<sub>w</sub> <span class="lu" id="lu-tor-b">[mm]</span></label>
+              <div class="iw"><input type="number" id="tor_b_is456" value="300" step="10"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Total Depth D [mm]</label>
+              <div class="iw"><input type="number" id="tor_h_is456" value="600" step="10"><span class="us">mm</span></div>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Clear Cover [mm]</label>
+              <div class="iw"><input type="number" id="tor_cv_is456" value="25" step="5"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Main Bar Dia. [mm]</label>
+              <div class="iw"><input type="number" id="tor_dbar_is456" value="20" step="2" min="8" max="40"><span class="us">mm</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade (f<sub>ck</sub>)</label>
+              <select id="tor_fck_is456">
+                <option value="15">M15 — 15 MPa</option>
+                <option value="20">M20 — 20 MPa</option>
+                <option value="25" selected>M25 — 25 MPa</option>
+                <option value="30">M30 — 30 MPa</option>
+                <option value="35">M35 — 35 MPa</option>
+                <option value="40">M40 — 40 MPa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade (f<sub>y</sub>)</label>
+              <select id="tor_fy_is456">
+                <option value="250">Fe 250 — 250 MPa</option>
+                <option value="415" selected>Fe 415 — 415 MPa</option>
+                <option value="500">Fe 500 — 500 MPa</option>
+                <option value="550">Fe 550 — 550 MPa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Design Actions</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Shear V<sub>u</sub> [kN]</label>
+              <div class="iw"><input type="number" id="tor_vu_is456" value="150" step="1"><span class="us">kN</span></div>
+            </div>
+            <div class="form-group">
+              <label>Torsion T<sub>u</sub> [kN·m]</label>
+              <div class="iw"><input type="number" id="tor_tu_is456" value="30" step="1"><span class="us">kN·m</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bending Moment M<sub>u</sub> [kN·m]</label>
+            <div class="iw"><input type="number" id="tor_mu_is456" value="100" step="1"><span class="us">kN·m</span></div>
+            <div style="font-size:.69rem;color:var(--text-dim);margin-top:3px;">Required for equivalent moment M<sub>e</sub> per IS 456 Cl 41.3</div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Closed Stirrups)</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Stirrup Dia. [mm]</label>
+              <div class="iw"><input type="number" id="tor_dst_is456" value="10" step="2" min="6" max="20"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Stirrup Spacing [mm]</label>
+              <div class="iw"><input type="number" id="tor_s_is456" value="150" step="10" min="50"><span class="us">mm</span></div>
+            </div>
+          </div>
+
+          <div class="form-div"><div class="form-div-lbl">Longitudinal Torsion Bars</div></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Bar Diameter [mm]</label>
+              <div class="iw"><input type="number" id="tor_dl_is456" value="16" step="2" min="8" max="40"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Number of Bars</label>
+              <div class="iw"><input type="number" id="tor_nl_is456" value="6" step="1" min="0"><span class="us">bars</span></div>
+            </div>
+          </div>
+
+          <button class="btn-calc" onclick="calcTorIS456()">▶ Calculate</button>
+          <div style="margin-top:12px;display:flex;gap:9px;align-items:flex-start;background:#eef4fb;border:1px solid #b8d0eb;border-radius:6px;padding:10px 13px;font-size:.76rem;color:#1a4270;line-height:1.65;">
+            <span style="flex-shrink:0;font-size:1rem;margin-top:1px;">ℹ️</span>
+            <div><strong>IS 456:2000 Cl 41 — Equivalent Shear/Moment Method:</strong> Combined torsion, bending, and shear are handled by designing for equivalent shear V<sub>e</sub> = V<sub>u</sub> + 1.6T<sub>u</sub>/b and equivalent moments M<sub>e1</sub> (bottom), M<sub>e2</sub> (top). Stirrups are designed for the equivalent nominal shear stress τ<sub>ve</sub>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="res-empty" id="tor_is456_empty"><div class="ri">📋</div>Enter values and click Calculate.</div>
+        <div class="report-card" id="tor_is456_card" style="display:none">
+          <div class="report-hdr">
+            <h4>Calculation Report</h4>
+            <span class="rh-code">IS 456:2000 · mm · kN</span>
+            <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+          </div>
+          <div class="report-body" id="tor_is456_body"></div>
         </div>
       </div>
     </div>
@@ -1173,7 +1484,7 @@ function setUnit(unit, btn) {
 }
 
 function clearResults() {
-  ['aci','ec2','cap_aci','cap_ec2','tor_aci','tor_ec2'].forEach(id => {
+  ['aci','ec2','is456','cap_aci','cap_ec2','cap_is456','tor_aci','tor_ec2','tor_is456'].forEach(id => {
     const e=document.getElementById(id+'_empty'); if(e) e.style.display='';
     const c=document.getElementById(id+'_card');  if(c) c.style.display='none';
   });
@@ -1656,6 +1967,277 @@ function calcEC2(){
       ec2_customRes
     );
   }
+}
+
+// ══ IS 456:2000 — HELPER ══
+function _is456XuMaxRatio(fy){ return fy<=250?0.53:fy<=415?0.48:fy<=500?0.46:0.44; }
+
+function _getTauC(fck, pt_pct){
+  // IS 456:2000 Table 19 — τc (N/mm²) for M25; scale slightly for other grades
+  const tbl=[[0.15,0.29],[0.25,0.36],[0.50,0.49],[0.75,0.57],[1.00,0.64],[1.25,0.70],[1.50,0.74],[1.75,0.78],[2.00,0.82],[2.25,0.85],[2.50,0.88],[3.00,0.92]];
+  const sc=fck<=20?0.90:fck<=25?1.00:fck<=30?1.05:fck<=35?1.10:1.15;
+  const pt=Math.max(0.15,Math.min(3.0,pt_pct));
+  if(pt<=tbl[0][0]) return tbl[0][1]*sc;
+  for(let i=1;i<tbl.length;i++){
+    if(pt<=tbl[i][0]){
+      const t=(pt-tbl[i-1][0])/(tbl[i][0]-tbl[i-1][0]);
+      return (tbl[i-1][1]+t*(tbl[i][1]-tbl[i-1][1]))*sc;
+    }
+  }
+  return tbl[tbl.length-1][1]*sc;
+}
+
+// ══ IS 456:2000 — UNIT SWITCHER ══
+const _IS456BeamUnits = {
+  'mm-kN':   { lenU:'mm', forceU:'kN',   lenS:1,   forceS:1,    momU:'kN·m',  momS:1     },
+  'cm-tonf': { lenU:'cm', forceU:'tonf', lenS:10,  forceS:9.807, momU:'tf·m', momS:9.807 }
+};
+let curIS456BeamUnit = { flex:'mm-kN', cap:'mm-kN', tor:'mm-kN' };
+
+function setIS456BeamUnit(unit, mod, btn) {
+  curIS456BeamUnit[mod] = unit;
+  btn.closest('.unit-btns').querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const U = _IS456BeamUnits[unit];
+  const tag = document.getElementById('is456'+mod+'-utag');
+  if (tag) tag.textContent = 'IS 456:2000 · ' + U.lenU + ' · ' + U.momU;
+  // Update width/depth/cover label hint (only b label has a lu span per mod)
+  const luB = document.getElementById('lu-'+mod+'-b');
+  if (luB) luB.textContent = '[' + U.lenU + ']';
+}
+
+// ══ IS 456:2000 — FLEXURAL DESIGN ══
+function calcFlexIS456(){
+  if(!validateFlexIS456()) return;
+  const b=ri('b_is456'), h=ri('h_is456'), cv=ri('cv_is456');
+  const dst=ri('dst_is456'), dbar=ri('dbar_is456');
+  const fck=parseFloat(document.getElementById('fck_is456').value);
+  const fy=parseFloat(document.getElementById('fy_is456').value);
+  const Mu_kNm=ri('mu_is456'), Mu=Mu_kNm*1e6; // N·mm
+
+  const d=h-cv-dst-dbar/2;
+  const xuMaxR=_is456XuMaxRatio(fy), xuMax=xuMaxR*d;
+  const fst=0.87*fy; // design steel stress IS 456
+  const MuLim=0.36*fck*b*xuMax*(d-0.42*xuMax);
+  const MuLim_kNm=MuLim/1e6;
+  const AstMin=0.85*b*d/fy;   // IS 456 Cl 26.5.1.1(a)
+  const AstMax=0.04*b*h;      // IS 456 Cl 26.5.1.1(b)
+
+  const warns=[], steps=[];
+  let Ast, xu, over=false;
+
+  if(Mu<=MuLim){
+    // Singly reinforced — solve quadratic 0.36fck·b·xu·(d-0.42xu)=Mu
+    const A=0.36*0.42*fck*b, B=-0.36*fck*b*d, C=Mu;
+    const disc=B*B-4*A*C;
+    if(disc<0){showErr('is456','Section too small — concrete over-stressed. Increase b or D.'); return;}
+    xu=(-B-Math.sqrt(disc))/(2*A);
+    Ast=0.36*fck*b*xu/fst; // equilibrium: 0.36fck·b·xu = 0.87fy·Ast
+    steps.push(
+      {desc:'(x<sub>u</sub>/d)<sub>max</sub> — IS 456 Annex G',formula:'Fe415: 0.48 · Fe500: 0.46 · Fe250: 0.53',val:xuMaxR.toFixed(2)},
+      {desc:'Limiting moment M<sub>u,lim</sub>',formula:'0.36·f<sub>ck</sub>·b·x<sub>u,max</sub>·(d−0.42x<sub>u,max</sub>)',val:MuLim_kNm.toFixed(2)+' kN·m',cls:'ok',check:{type:'ok',label:'Singly reinforced ✓'}},
+      {desc:'Neutral axis x<sub>u</sub> (quadratic)',formula:'0.36·f<sub>ck</sub>·b·x<sub>u</sub>·(d−0.42x<sub>u</sub>) = M<sub>u</sub>',val:xu.toFixed(1)+' mm'},
+      {desc:'x<sub>u</sub> / d',formula:'',val:(xu/d).toFixed(3),cls:xu<=xuMax?'ok':'err',check:xu<=xuMax?{type:'ok',label:'≤ limit ✓'}:{type:'err',label:'> limit ✗'}},
+      {desc:'Required A<sub>st</sub>',formula:'0.36·f<sub>ck</sub>·b·x<sub>u</sub> / (0.87·f<sub>y</sub>)',val:Ast.toFixed(0)+' mm²',cls:'hl'}
+    );
+  } else {
+    over=true;
+    xu=xuMax;
+    Ast=MuLim/(fst*(d-0.42*xuMax));
+    warns.push(`<b>M<sub>u</sub> > M<sub>u,lim</sub>:</b> M<sub>u</sub> = ${Mu_kNm.toFixed(2)} kN·m > M<sub>u,lim</sub> = ${MuLim_kNm.toFixed(2)} kN·m. Doubly reinforced design required. Tension steel shown is for M<sub>u,lim</sub> only — additional compression steel must be designed for excess moment ΔM<sub>u</sub> = ${(Mu_kNm-MuLim_kNm).toFixed(2)} kN·m.`);
+    steps.push(
+      {desc:'Limiting moment M<sub>u,lim</sub>',formula:'0.36·f<sub>ck</sub>·b·x<sub>u,max</sub>·(d−0.42x<sub>u,max</sub>)',val:MuLim_kNm.toFixed(2)+' kN·m',cls:'err',check:{type:'err',label:'Mu > Mu,lim — doubly reinforced'}},
+      {desc:'Excess moment ΔM<sub>u</sub>',formula:'M<sub>u</sub> − M<sub>u,lim</sub>',val:(Mu_kNm-MuLim_kNm).toFixed(2)+' kN·m',cls:'warn'},
+      {desc:'Tension A<sub>st1</sub> for M<sub>u,lim</sub>',formula:'M<sub>u,lim</sub> / (0.87·f<sub>y</sub>·(d−0.42·x<sub>u,max</sub>))',val:Ast.toFixed(0)+' mm²'}
+    );
+  }
+
+  const AstDesign=Math.max(Ast,AstMin);
+  const minGov=Ast<AstMin, maxExc=AstDesign>AstMax;
+  if(minGov) warns.push(`<b>Minimum reinforcement governs:</b> A<sub>st,req</sub> = ${Ast.toFixed(0)} mm² < A<sub>st,min</sub> = ${AstMin.toFixed(0)} mm² (IS 456 Cl 26.5.1.1a: 0.85·b·d/f<sub>y</sub>).`);
+  if(maxExc)  warns.push(`<b>Reinforcement exceeds maximum:</b> A<sub>st,design</sub> = ${AstDesign.toFixed(0)} mm² > A<sub>st,max</sub> = ${AstMax.toFixed(0)} mm² (IS 456 Cl 26.5.1.1b: 0.04·b·D). Increase section.`);
+
+  const barArea=Math.PI/4*dbar*dbar;
+  const nBars=Math.ceil(AstDesign/barArea);
+  const AstProv=nBars*barArea;
+  const rho=AstProv/(b*d)*100;
+
+  const is456ResHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="fl-rb">
+      <div class="fl-col"><div class="fl-lbl">Required A<sub>st</sub></div>
+        <div class="fl-val${over?' err':''}">${AstDesign.toFixed(0)}</div><div class="fl-unit">mm²</div></div>
+      <div class="fl-col"><div class="fl-lbl">A<sub>st,min</sub></div>
+        <div class="fl-val mid">${AstMin.toFixed(0)}</div><div class="fl-unit">mm²</div>
+        <div style="font-size:.65rem;margin-top:4px;">${minGov?'<span style="color:var(--orange)">governs</span>':'<span style="color:var(--green)">satisfied</span>'}</div></div>
+      <div class="fl-col"><div class="fl-lbl">M<sub>u</sub> / M<sub>u,lim</sub></div>
+        <div class="fl-val ${over?'err':(Mu/MuLim)>0.9?'warn':'ok'}">${(Mu/MuLim).toFixed(3)}</div><div class="fl-unit">≤ 1.0</div></div>
+    </div>
+    <div class="fl-sub"><b>Provide: ${nBars}–Ø${dbar} mm bars</b> &nbsp;·&nbsp; A<sub>st,prov</sub> = ${AstProv.toFixed(0)} mm² &nbsp;·&nbsp; ρ = ${rho.toFixed(2)}%</div>
+  </div>`;
+
+  const allSteps=[
+    {desc:'Effective depth d',formula:'D − c<sub>clear</sub> − d<sub>stirrup</sub> − d<sub>bar</sub>/2',val:d.toFixed(1)+' mm'},
+    ...steps,
+    {desc:'A<sub>st,min</sub> (IS 456 Cl 26.5.1.1a)',formula:'0.85·b·d / f<sub>y</sub>',val:AstMin.toFixed(0)+' mm²',check:minGov?{type:'warn',label:'governs'}:null},
+    {desc:'A<sub>st,max</sub> (IS 456 Cl 26.5.1.1b)',formula:'0.04·b·D',val:AstMax.toFixed(0)+' mm²',check:maxExc?{type:'err',label:'exceeded'}:{type:'ok',label:'OK'}},
+    {desc:'Design A<sub>st</sub>',formula:'max(A<sub>st,req</sub>, A<sub>st,min</sub>)',val:AstDesign.toFixed(0)+' mm²',cls:'hl'},
+    {desc:'Bar provision',formula:`⌈A<sub>st,design</sub> / (π/4·Ø${dbar}²)⌉`,val:`${nBars}–Ø${dbar} = ${AstProv.toFixed(0)} mm²`}
+  ];
+
+  document.getElementById('is456_empty').style.display='none';
+  document.getElementById('is456_card').style.display='';
+  document.getElementById('is456_body').innerHTML=buildReport(
+    [['Section b × D',`${b} × ${h} mm`],['Clear cover',`${cv} mm`],
+     ['Stirrup / main bar dia.',`Ø${dst} / Ø${dbar} mm`],
+     ['Concrete grade',`M${fck} (f<sub>ck</sub> = ${fck} MPa)`],
+     ['Steel grade',`Fe${fy} (f<sub>y</sub> = ${fy} MPa)`],
+     ['Factored moment M<sub>u</sub>',`${Mu_kNm} kN·m`]],
+    null, allSteps, warns, is456ResHTML);
+}
+
+// ══ IS 456:2000 — FLEXURAL CAPACITY ══
+function calcCapIS456(){
+  if(!validateCapIS456()) return;
+  const b=ri('cap_b_is456'), h=ri('cap_h_is456'), cv=ri('cap_cv_is456');
+  const dst=ri('cap_dst_is456'), dbt=ri('cap_dbt_is456'), nbt=ri('cap_nbt_is456');
+  const fck=parseFloat(document.getElementById('cap_fck_is456').value);
+  const fy=parseFloat(document.getElementById('cap_fy_is456').value);
+  const Mu_kNm=ri('cap_mu_is456'), Mu=Mu_kNm>0?Mu_kNm*1e6:0;
+
+  const d=h-cv-dst-dbt/2;
+  const xuMaxR=_is456XuMaxRatio(fy), xuMax=xuMaxR*d;
+  const fst=0.87*fy;
+  const Ast=nbt*Math.PI/4*dbt*dbt;
+  const xu=fst*Ast/(0.36*fck*b);
+  const over=xu>xuMax;
+
+  const Mn_kNm=over
+    ? 0.36*fck*b*xuMax*(d-0.42*xuMax)/1e6
+    : fst*Ast*(d-0.42*xu)/1e6;
+  const dc=Mu>0?(Mu/1e6)/Mn_kNm:null;
+
+  const AstMin=0.85*b*d/fy, AstMax=0.04*b*h, rho=Ast/(b*d)*100;
+  const capWarns=[];
+  if(over)        capWarns.push(`<b>Over-reinforced section:</b> x<sub>u</sub>/d = ${(xu/d).toFixed(3)} > (x<sub>u</sub>/d)<sub>max</sub> = ${xuMaxR.toFixed(2)} (IS 456 Annex G). Capacity is limited to M<sub>u,lim</sub>. Reduce tension steel or increase section.`);
+  if(Ast<AstMin)  capWarns.push(`<b>Below minimum reinforcement:</b> A<sub>st</sub> = ${Ast.toFixed(0)} mm² < A<sub>st,min</sub> = ${AstMin.toFixed(0)} mm² (IS 456 Cl 26.5.1.1a).`);
+  if(Ast>AstMax)  capWarns.push(`<b>Exceeds maximum reinforcement:</b> A<sub>st</sub> = ${Ast.toFixed(0)} mm² > A<sub>st,max</sub> = ${AstMax.toFixed(0)} mm² (IS 456 Cl 26.5.1.1b).`);
+  if(dc!==null&&dc>1.0) capWarns.push(`<b>Capacity exceeded:</b> M<sub>u</sub> = ${Mu_kNm} kN·m > M<sub>u,cap</sub> = ${Mn_kNm.toFixed(2)} kN·m.`);
+  const capWarnHTML=capWarns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('');
+
+  const capResHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="result-box">
+      <div class="result-item${dc!==null&&dc>1?' err':''}"><div class="ri-label">M<sub>u,cap</sub></div><div class="ri-value">${Mn_kNm.toFixed(2)}</div><div class="ri-unit">kN·m</div></div>
+      <div class="result-item"><div class="ri-label">Tension A<sub>st</sub></div><div class="ri-value">${Ast.toFixed(0)}</div><div class="ri-unit">mm²</div></div>
+      <div class="result-item"><div class="ri-label">x<sub>u</sub>/d</div><div class="ri-value${over?' err':''}">${(xu/d).toFixed(3)}</div><div class="ri-unit">≤ ${xuMaxR.toFixed(2)}</div></div>
+      ${dc!==null?`<div class="result-item${dc>1?' err':dc>0.85?' warn':''}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dc.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>`:''}
+    </div>
+    ${capWarnHTML}
+  </div>`;
+
+  document.getElementById('cap_is456_empty').style.display='none';
+  document.getElementById('cap_is456_card').style.display='';
+  document.getElementById('cap_is456_body').innerHTML=buildReport(
+    [['Section b × D',`${b} × ${h} mm`],['Clear cover / Stirrup dia.',`${cv} mm / Ø${dst} mm`],
+     ['Concrete / Steel grade',`M${fck} / Fe${fy}`],
+     ['Tension steel',`${nbt}×Ø${dbt} = ${Ast.toFixed(0)} mm² (ρ = ${rho.toFixed(2)}%)`],
+     ...(Mu>0?[['Applied M<sub>u</sub>',`${Mu_kNm} kN·m`]]:[])],
+    [],
+    [{desc:'Effective depth d',formula:'D − c<sub>clear</sub> − d<sub>stirrup</sub> − d<sub>bar</sub>/2',val:d.toFixed(1)+' mm'},
+     {desc:'Tension steel area A<sub>st</sub>',formula:'n·π/4·Ø²',val:Ast.toFixed(0)+' mm²'},
+     {desc:'(x<sub>u</sub>/d)<sub>max</sub> — IS 456 Annex G',formula:'Fe415: 0.48 · Fe500: 0.46 · Fe250: 0.53',val:xuMaxR.toFixed(2)},
+     {desc:'Neutral axis x<sub>u</sub>',formula:'0.87·f<sub>y</sub>·A<sub>st</sub> / (0.36·f<sub>ck</sub>·b)',val:xu.toFixed(1)+' mm'},
+     {desc:'x<sub>u</sub>/d',formula:'',val:(xu/d).toFixed(3),cls:over?'err':'ok',check:over?{type:'err',label:'over-reinforced'}:{type:'ok',label:'under-reinforced ✓'}},
+     {desc:'Moment capacity M<sub>u,cap</sub>',formula:over?'0.36·f<sub>ck</sub>·b·x<sub>u,max</sub>·(d−0.42x<sub>u,max</sub>) [limited]':'0.87·f<sub>y</sub>·A<sub>st</sub>·(d−0.42·x<sub>u</sub>)',val:Mn_kNm.toFixed(2)+' kN·m',cls:'hl'},
+     ...(dc!==null?[{desc:'Demand/Capacity ratio',formula:'M<sub>u</sub> / M<sub>u,cap</sub>',val:dc.toFixed(3),cls:dc>1?'err':dc>0.85?'warn':'ok',check:dc<=1?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}}]:[])],
+    [],
+    capResHTML);
+}
+
+// ══ IS 456:2000 — TORSION DESIGN ══
+function calcTorIS456(){
+  if(!validateTorIS456()) return;
+  const b=ri('tor_b_is456'), h=ri('tor_h_is456'), cv=ri('tor_cv_is456');
+  const dbar=ri('tor_dbar_is456'), dst=ri('tor_dst_is456'), sv=ri('tor_s_is456');
+  const dl=ri('tor_dl_is456'), nl=ri('tor_nl_is456');
+  const fck=parseFloat(document.getElementById('tor_fck_is456').value);
+  const fy=parseFloat(document.getElementById('tor_fy_is456').value);
+  const Vu=ri('tor_vu_is456'), Tu=ri('tor_tu_is456'), Mu_in=ri('tor_mu_is456');
+
+  const d=h-cv-dst-dbar/2;
+  // Equivalent shear (IS 456 Cl 41.2) — Vu kN, Tu kN·m, b mm → Ve kN
+  const Ve=Vu+1.6*Tu*1000/b;
+  const Ve_N=Ve*1000;
+  // Equivalent moments (IS 456 Cl 41.3)
+  const Mt=Tu*(1+h/b)/1.7;
+  const Me1=Mu_in+Mt;
+  const Me2=Mt-Mu_in;
+  // Shear stresses
+  const tau_ve=Ve_N/(b*d);
+  const tau_cmax=fck<=20?2.8:fck<=25?3.1:fck<=30?3.5:fck<=35?3.7:4.0;
+  // τc based on provided longitudinal steel
+  const Al_prov=nl*Math.PI/4*dl*dl;
+  const pt_prov=Al_prov/(b*d)*100;
+  const tau_c=_getTauC(fck,pt_prov||1.0);
+  // Stirrup design
+  const Asv_prov=2*Math.PI/4*dst*dst; // 2-legged closed stirrups
+  const Asv_req_sv=tau_ve>tau_c?(tau_ve-tau_c)*b/(0.87*fy):0.4*b/(0.87*fy);
+  const Asv_min_sv=0.4*b/(0.87*fy); // IS 456 Cl 26.5.1.6 min
+  const Asv_req_sv_use=Math.max(Asv_req_sv,Asv_min_sv);
+  const Asv_prov_sv=Asv_prov/sv;
+  const stirrupOK=Asv_prov_sv>=Asv_req_sv_use;
+  const sectionOK=tau_ve<=tau_cmax;
+  // Max stirrup spacing check: IS 456 Cl 41.4.4: sv ≤ min(x1, y1/4, 300) where x1,y1=shorter,longer dimension
+  const sv_max=Math.min(b-2*cv, 300);
+  const spacingOK=sv<=sv_max;
+  const dc=Math.max(tau_ve/tau_cmax, Asv_req_sv_use/(Asv_prov_sv||0.001));
+  const st=dc<=1?'ok':dc<=1.05?'warn':'err';
+  const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
+  const warns=[];
+  if(!sectionOK) warns.push(`<b>Section inadequate:</b> τ<sub>ve</sub> = ${tau_ve.toFixed(2)} N/mm² > τ<sub>c,max</sub> = ${tau_cmax.toFixed(1)} N/mm² (IS 456 Table 20). Increase section dimensions.`);
+  if(!stirrupOK) warns.push(`<b>Stirrups inadequate:</b> A<sub>sv</sub>/s<sub>v</sub> provided = ${Asv_prov_sv.toFixed(4)} mm²/mm < required ${Asv_req_sv_use.toFixed(4)} mm²/mm.`);
+  if(!spacingOK) warns.push(`<b>Stirrup spacing:</b> s<sub>v</sub> = ${sv} mm > maximum allowed ${sv_max} mm (IS 456 Cl 41.4.4). Reduce spacing.`);
+
+  const is456TorResHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Calculation Result</div>
+    <div class="result-box">
+      <div class="result-item"><div class="ri-label">V<sub>e</sub> (equiv.)</div><div class="ri-value">${Ve.toFixed(1)}</div><div class="ri-unit">kN</div></div>
+      <div class="result-item${!sectionOK?' err':''}"><div class="ri-label">τ<sub>ve</sub></div><div class="ri-value">${tau_ve.toFixed(2)}</div><div class="ri-unit">N/mm²</div></div>
+      <div class="result-item"><div class="ri-label">M<sub>e1</sub> (design)</div><div class="ri-value">${Me1.toFixed(2)}</div><div class="ri-unit">kN·m</div></div>
+      <div class="result-item ${st}"><div class="ri-label">Overall D/C</div><div class="ri-value">${Math.min(dc,9.999).toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+    </div>
+    <div class="dcr-banner ${st}">
+      <div class="dcr-icon">${icons[st]}</div>
+      <div class="dcr-text">
+        <strong>${labels[st]}</strong>
+        <span>τ<sub>ve</sub> = ${tau_ve.toFixed(2)} N/mm² · τ<sub>c,max</sub> = ${tau_cmax.toFixed(1)} N/mm²</span>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('tor_is456_empty').style.display='none';
+  document.getElementById('tor_is456_card').style.display='';
+  document.getElementById('tor_is456_body').innerHTML=buildReport(
+    [['Section b × D',`${b} × ${h} mm`],['Clear cover',`${cv} mm`],
+     ['Concrete / Steel grade',`M${fck} / Fe${fy}`],
+     ['Shear V<sub>u</sub>',`${Vu} kN`],['Torsion T<sub>u</sub>',`${Tu} kN·m`],
+     ['Bending M<sub>u</sub>',`${Mu_in} kN·m`],
+     ['Stirrups',`2-Ø${dst} @ ${sv} mm`],['Long. bars',`${nl}×Ø${dl} mm`]],
+    [{label:'V<sub>e</sub>',value:Ve.toFixed(1),unit:'kN'},
+     {label:'τ<sub>ve</sub>',value:tau_ve.toFixed(2),unit:'N/mm²',cls:!sectionOK?'err':''},
+     {label:'M<sub>e1</sub>',value:Me1.toFixed(2),unit:'kN·m'},
+     {label:'D/C',value:Math.min(dc,9.999).toFixed(3),unit:'≤ 1.0',cls:st}],
+    [{desc:'Effective depth d',formula:'D − c<sub>clear</sub> − d<sub>stirrup</sub> − d<sub>bar</sub>/2',val:d.toFixed(0)+' mm'},
+     {desc:'Equivalent shear V<sub>e</sub> (IS 456 Cl 41.2)',formula:'V<sub>u</sub> + 1.6·T<sub>u</sub>/b',val:Ve.toFixed(2)+' kN'},
+     {desc:'Equivalent shear stress τ<sub>ve</sub>',formula:'V<sub>e</sub>×1000 / (b·d)',val:tau_ve.toFixed(3)+' N/mm²'},
+     {desc:'Max. permissible τ<sub>c,max</sub> (IS 456 Table 20)',formula:'f(f<sub>ck</sub>)',val:tau_cmax.toFixed(1)+' N/mm²',cls:sectionOK?'ok':'err',check:sectionOK?{type:'ok',label:'OK ✓'}:{type:'err',label:'Inadequate ✗'}},
+     {desc:'Equivalent torsional moment M<sub>t</sub> (IS 456 Cl 41.3)',formula:'T<sub>u</sub>·(1 + D/b) / 1.7',val:Mt.toFixed(2)+' kN·m'},
+     {desc:'Equivalent design moment M<sub>e1</sub> (bottom)',formula:'M<sub>u</sub> + M<sub>t</sub>',val:Me1.toFixed(2)+' kN·m',cls:'hl'},
+     {desc:'Equivalent design moment M<sub>e2</sub> (top)',formula:'M<sub>t</sub> − M<sub>u</sub>',val:Me2.toFixed(2)+' kN·m '+(Me2>0?'<span class="step-check chk-warn">top steel required</span>':'<span class="step-check chk-ok">no top steel needed</span>')},
+     {desc:'Nominal shear τ<sub>c</sub> (IS 456 Table 19)',formula:`For ρ = ${pt_prov.toFixed(2)}%, M${fck}`,val:tau_c.toFixed(3)+' N/mm²'},
+     {desc:'Required A<sub>sv</sub>/s<sub>v</sub>',formula:'max[(τ<sub>ve</sub>−τ<sub>c</sub>)·b/(0.87·f<sub>y</sub>), 0.4b/(0.87f<sub>y</sub>)]',val:Asv_req_sv_use.toFixed(4)+' mm²/mm'},
+     {desc:'Provided A<sub>sv</sub>/s<sub>v</sub> (2 legs)',formula:`2·π/4·Ø${dst}² / ${sv}`,val:Asv_prov_sv.toFixed(4)+' mm²/mm',cls:stirrupOK?'ok':'err',check:stirrupOK?{type:'ok',label:'OK ✓'}:{type:'err',label:'FAIL ✗'}},
+     {desc:'Max. stirrup spacing (IS 456 Cl 41.4.4)',formula:'min(b−2c, 300 mm)',val:sv_max.toFixed(0)+' mm',check:spacingOK?{type:'ok',label:'OK ✓'}:{type:'warn',label:'exceeded ⚠'}},
+     {desc:'Longitudinal steel provided',formula:`${nl}×Ø${dl}`,val:Al_prov.toFixed(0)+' mm²'}],
+    warns, is456TorResHTML);
 }
 
 function showErr(id,msg){
@@ -2165,6 +2747,15 @@ document.querySelectorAll('#tor-aci input[type="number"], #tor-aci select').forE
 document.querySelectorAll('#tor-ec2 input[type="number"], #tor-ec2 select').forEach(el => {
   el.addEventListener('input', () => debounceCalc(calcTorEC2));
 });
+document.querySelectorAll('#beam-is456 input[type="number"], #beam-is456 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcFlexIS456));
+});
+document.querySelectorAll('#cap-is456 input[type="number"], #cap-is456 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcCapIS456));
+});
+document.querySelectorAll('#tor-is456 input[type="number"], #tor-is456 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(calcTorIS456));
+});
 </script>
 
 <!-- Validation helpers -->
@@ -2282,6 +2873,54 @@ function validateTorEC2(){
   if(!fck||fck<12||fck>90){e.push("fck: 12–90 MPa");_valMark('tor_fck_ec2');}
   if(!fyk||fyk<240||fyk>600){e.push("fyk: 240–600 MPa");_valMark('tor_fyk_ec2');}
   if(e.length){_valShow('tor-ec2',e);return false;}
+  return true;
+}
+
+// ── BEAM IS 456 ──
+function validateFlexIS456(){
+  const b=ri('b_is456'), h=ri('h_is456'), cv=ri('cv_is456');
+  const dst=ri('dst_is456'), dbar=ri('dbar_is456'), Mu=ri('mu_is456');
+  const ids=['b_is456','h_is456','cv_is456','dst_is456','dbar_is456','mu_is456'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('b_is456');}
+  if(!h||h<200||h>2000){e.push("Total depth D: 200–2000 mm");_valMark('h_is456');}
+  if(!cv||cv<15||cv>100){e.push("Clear cover: 15–100 mm");_valMark('cv_is456');}
+  if(!dst||dst<6||dst>20){e.push("Stirrup dia: 6–20 mm");_valMark('dst_is456');}
+  if(!dbar||dbar<8||dbar>50){e.push("Main bar dia: 8–50 mm");_valMark('dbar_is456');}
+  if(!Mu||Mu<=0){e.push("Factored moment Mu must be > 0");_valMark('mu_is456');}
+  if(e.length){_valShow('beam-is456',e);return false;}
+  return true;
+}
+
+function validateCapIS456(){
+  const b=ri('cap_b_is456'), h=ri('cap_h_is456'), cv=ri('cap_cv_is456');
+  const dst=ri('cap_dst_is456'), nbar=ri('cap_nbar_is456'), dbar=ri('cap_dbar_is456');
+  const ids=['cap_b_is456','cap_h_is456','cap_cv_is456','cap_dst_is456','cap_nbar_is456','cap_dbar_is456'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('cap_b_is456');}
+  if(!h||h<200||h>2000){e.push("Total depth D: 200–2000 mm");_valMark('cap_h_is456');}
+  if(!cv||cv<15||cv>100){e.push("Clear cover: 15–100 mm");_valMark('cap_cv_is456');}
+  if(!dst||dst<6||dst>20){e.push("Stirrup dia: 6–20 mm");_valMark('cap_dst_is456');}
+  if(!nbar||nbar<1||nbar>20){e.push("Bar count: 1–20");_valMark('cap_nbar_is456');}
+  if(!dbar||dbar<8||dbar>50){e.push("Bar dia: 8–50 mm");_valMark('cap_dbar_is456');}
+  if(e.length){_valShow('cap-is456',e);return false;}
+  return true;
+}
+
+function validateTorIS456(){
+  const b=ri('tor_b_is456'), h=ri('tor_h_is456'), cv=ri('tor_cv_is456');
+  const Vu=ri('tor_vu_is456'), Tu=ri('tor_tu_is456');
+  const ids=['tor_b_is456','tor_h_is456','tor_cv_is456','tor_vu_is456','tor_tu_is456'];
+  _valClear(ids);
+  const e=[];
+  if(!b||b<150||b>1500){e.push("Width b: 150–1500 mm");_valMark('tor_b_is456');}
+  if(!h||h<200||h>2000){e.push("Total depth D: 200–2000 mm");_valMark('tor_h_is456');}
+  if(!cv||cv<15||cv>100){e.push("Clear cover: 15–100 mm");_valMark('tor_cv_is456');}
+  if(Vu===null||Vu<0){e.push("Shear force Vu must be ≥ 0");_valMark('tor_vu_is456');}
+  if(!Tu||Tu<=0){e.push("Torsional moment Tu must be > 0");_valMark('tor_tu_is456');}
+  if(e.length){_valShow('tor-is456',e);return false;}
   return true;
 }
 </script>
