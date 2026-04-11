@@ -563,20 +563,42 @@ buildPanel('astm');
 <script>
 (function(){
   if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
-  const testAd=document.createElement('div');
-  testAd.className='ad adsbox adsbygoogle';
-  testAd.style.cssText='position:absolute;width:1px;height:1px;top:-9999px;left:-9999px;';
+
+  let adsBlocked = false;
+
+  // Method 1: Check if AdSense loaded
+  if (typeof window.adsbygoogle === 'undefined') {
+    adsBlocked = true;
+  }
+
+  // Method 2: Test element with multiple checks
+  const testAd = document.createElement('div');
+  testAd.className = 'ad adsbox adsbygoogle';
+  testAd.style.cssText = 'position:absolute!important;width:1px!important;height:1px!important;top:-9999px!important;left:-9999px!important;';
+  testAd.innerHTML = '&nbsp;';
   document.body.appendChild(testAd);
+
   setTimeout(function(){
-    if(testAd.offsetHeight===0||window.getComputedStyle(testAd).display==='none'){
-      const n=document.getElementById('adblockNotice');
-      if(n) n.classList.add('show');
+    const rect = testAd.getBoundingClientRect();
+    if (testAd.offsetHeight === 0 ||
+        testAd.offsetWidth === 0 ||
+        rect.height === 0 ||
+        rect.width === 0 ||
+        window.getComputedStyle(testAd).display === 'none' ||
+        window.getComputedStyle(testAd).visibility === 'hidden') {
+      adsBlocked = true;
     }
     testAd.remove();
-  },200);
+
+    if (adsBlocked) {
+      const n = document.getElementById('adblockNotice');
+      if(n) n.classList.add('show');
+    }
+  }, 500);
 })();
+
 function dismissAdBlockNotice(){
-  const n=document.getElementById('adblockNotice');
+  const n = document.getElementById('adblockNotice');
   if(n) n.classList.remove('show');
   localStorage.setItem('adblockNoticeDismissed','true');
 }
