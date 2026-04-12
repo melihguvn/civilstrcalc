@@ -112,37 +112,60 @@
 (function(){
   if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
 
-  let adsBlocked = false;
+  // Wait for page to fully load
+  window.addEventListener('load', function() {
+    // Additional delay for AdSense initialization
+    setTimeout(function() {
+      let adsBlocked = false;
 
-  // Method 1: Check if AdSense loaded
-  if (typeof window.adsbygoogle === 'undefined') {
-    adsBlocked = true;
-  }
+      // Method 1: Check if adsbygoogle is defined and loaded
+      if (typeof window.adsbygoogle === 'undefined') {
+        adsBlocked = true;
+      } else {
+        // Method 2: Check if adsbygoogle array exists and has content
+        try {
+          if (!window.adsbygoogle || window.adsbygoogle.length === 0) {
+            // AdSense loaded but no ads pushed yet - this is OK, not blocked
+            // Run test element check instead
+          }
+        } catch(e) {
+          adsBlocked = true;
+        }
+      }
 
-  // Method 2: Test element with multiple checks
-  const testAd = document.createElement('div');
-  testAd.className = 'ad adsbox adsbygoogle';
-  testAd.style.cssText = 'position:absolute!important;width:1px!important;height:1px!important;top:-9999px!important;left:-9999px!important;';
-  testAd.innerHTML = '&nbsp;';
-  document.body.appendChild(testAd);
+      // Method 3: Test element (only if not already detected)
+      if (!adsBlocked) {
+        const testAd = document.createElement('div');
+        testAd.className = 'adsbygoogle';
+        testAd.style.cssText = 'width:1px;height:1px;position:absolute;top:-9999px;left:-9999px;';
+        testAd.setAttribute('data-ad-client', 'ca-pub-0000000000000000');
+        document.body.appendChild(testAd);
 
-  setTimeout(function(){
-    const rect = testAd.getBoundingClientRect();
-    if (testAd.offsetHeight === 0 ||
-        testAd.offsetWidth === 0 ||
-        rect.height === 0 ||
-        rect.width === 0 ||
-        window.getComputedStyle(testAd).display === 'none' ||
-        window.getComputedStyle(testAd).visibility === 'hidden') {
-      adsBlocked = true;
-    }
-    testAd.remove();
+        setTimeout(function() {
+          const rect = testAd.getBoundingClientRect();
+          if (testAd.offsetHeight === 0 ||
+              testAd.offsetWidth === 0 ||
+              rect.height === 0 ||
+              rect.width === 0 ||
+              window.getComputedStyle(testAd).display === 'none' ||
+              window.getComputedStyle(testAd).visibility === 'hidden') {
+            adsBlocked = true;
+          }
+          testAd.remove();
 
-    if (adsBlocked) {
-      const n = document.getElementById('adblockNotice');
-      if(n) n.classList.add('show');
-    }
-  }, 500);
+          // Show notice ONLY if actually blocked
+          if (adsBlocked) {
+            const n = document.getElementById('adblockNotice');
+            if(n) n.classList.add('show');
+          }
+        }, 200);
+      } else {
+        // Already detected as blocked
+        const n = document.getElementById('adblockNotice');
+        if(n) n.classList.add('show');
+      }
+    }, 1500); // Wait 1.5 seconds for AdSense to fully initialize
+  });
 })();
 
 function dismissAdBlockNotice(){
