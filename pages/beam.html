@@ -2424,18 +2424,32 @@ function calcEC2(){
 function _is456XuMaxRatio(fy){ return fy<=250?0.53:fy<=415?0.48:fy<=500?0.46:0.44; }
 
 function _getTauC(fck, pt_pct){
-  // IS 456:2000 Table 19 — τc (N/mm²) for M25; scale slightly for other grades
-  const tbl=[[0.15,0.29],[0.25,0.36],[0.50,0.49],[0.75,0.57],[1.00,0.64],[1.25,0.70],[1.50,0.74],[1.75,0.78],[2.00,0.82],[2.25,0.85],[2.50,0.88],[3.00,0.92]];
-  const sc=fck<=20?0.90:fck<=25?1.00:fck<=30?1.05:fck<=35?1.10:1.15;
+  // IS 456:2000 Table 19 — τc (N/mm²) direct 2D lookup, no scaling approximation
+  // Columns: [pt%, M15, M20, M25, M30, M35, M40+]
+  const tbl=[
+    [0.15, 0.28, 0.28, 0.29, 0.29, 0.29, 0.30],
+    [0.25, 0.35, 0.36, 0.36, 0.37, 0.37, 0.38],
+    [0.50, 0.46, 0.48, 0.49, 0.50, 0.50, 0.51],
+    [0.75, 0.54, 0.56, 0.57, 0.59, 0.59, 0.60],
+    [1.00, 0.60, 0.62, 0.64, 0.66, 0.67, 0.68],
+    [1.25, 0.64, 0.67, 0.70, 0.71, 0.73, 0.74],
+    [1.50, 0.68, 0.72, 0.74, 0.76, 0.78, 0.79],
+    [1.75, 0.71, 0.75, 0.78, 0.80, 0.82, 0.84],
+    [2.00, 0.71, 0.79, 0.82, 0.84, 0.86, 0.88],
+    [2.25, 0.71, 0.81, 0.85, 0.88, 0.90, 0.92],
+    [2.50, 0.71, 0.82, 0.88, 0.91, 0.93, 0.95],
+    [3.00, 0.71, 0.82, 0.92, 0.97, 1.01, 1.05]
+  ];
+  const gi=fck<=15?1:fck<=20?2:fck<=25?3:fck<=30?4:fck<=35?5:6; // grade column index
   const pt=Math.max(0.15,Math.min(3.0,pt_pct));
-  if(pt<=tbl[0][0]) return tbl[0][1]*sc;
-  for(let i=1;i<tbl.length;i++){
-    if(pt<=tbl[i][0]){
-      const t=(pt-tbl[i-1][0])/(tbl[i][0]-tbl[i-1][0]);
-      return (tbl[i-1][1]+t*(tbl[i][1]-tbl[i-1][1]))*sc;
+  if(pt<=tbl[0][0]) return tbl[0][gi];
+  for(let i=0;i<tbl.length-1;i++){
+    if(pt>=tbl[i][0]&&pt<=tbl[i+1][0]){
+      const f=(pt-tbl[i][0])/(tbl[i+1][0]-tbl[i][0]);
+      return tbl[i][gi]+f*(tbl[i+1][gi]-tbl[i][gi]);
     }
   }
-  return tbl[tbl.length-1][1]*sc;
+  return tbl[tbl.length-1][gi];
 }
 
 // ══ IS 456:2000 — UNIT SWITCHER ══
@@ -3450,19 +3464,7 @@ function calcShearEC2(){
 }
 
 // ── IS 456:2000 Shear ──
-function _getTauCShear(fck, pt){
-  const tbl=[[0.15,0.29],[0.25,0.36],[0.50,0.49],[0.75,0.57],[1.00,0.64],[1.25,0.70],[1.50,0.74],[1.75,0.78],[2.00,0.82],[2.25,0.85],[2.50,0.88],[3.00,0.92]];
-  const sc=fck<=15?0.85:fck<=20?0.92:fck<=25?1.00:fck<=30?1.05:fck<=35?1.10:fck<=40?1.14:1.17;
-  const ptC=Math.min(Math.max(pt,0.15),3.0);
-  if(ptC<=tbl[0][0]) return tbl[0][1]*sc;
-  if(ptC>=tbl[tbl.length-1][0]) return tbl[tbl.length-1][1]*sc;
-  for(let i=0;i<tbl.length-1;i++){
-    if(ptC>=tbl[i][0]&&ptC<=tbl[i+1][0]){
-      return(tbl[i][1]+(ptC-tbl[i][0])/(tbl[i+1][0]-tbl[i][0])*(tbl[i+1][1]-tbl[i][1]))*sc;
-    }
-  }
-  return 0.29*sc;
-}
+function _getTauCShear(fck, pt){ return _getTauC(fck, pt); }
 
 function calcShearIS456(){
   if(!validateShearIS456()) return;
