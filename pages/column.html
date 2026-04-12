@@ -26,9 +26,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 @media print{
-  @page{margin:10mm 12mm;size:A4;}
+  @page{margin:8mm 10mm;size:A4;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  body{background:white!important;font-size:8.5pt!important;padding:0!important;}
+  body{background:white!important;font-size:7pt!important;padding:0!important;line-height:1.35!important;}
   body>div{padding:0!important;}
   .no-print{display:none!important;}
   .print-only{display:flex!important;}
@@ -37,25 +37,45 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   /* Show only the active pane's report */
   .sub-pane:not(.active){display:none!important;}
   .col-layout{display:block!important;}
-  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
-  .report-hdr{border-radius:0!important;}
-  .result-box{background:#f0f5fb!important;}
-  .dcr-banner{border-radius:5px!important;}
+  .results-col{gap:6px!important;}
+  .report-card{box-shadow:none!important;border:1px solid #ccc!important;border-radius:4px!important;page-break-inside:avoid;}
+  .report-hdr{border-radius:0!important;padding:7px 14px!important;}
+  .report-hdr h4{font-size:.72rem!important;}
+  .rh-code{font-size:.56rem!important;}
+  .print-btn{display:none!important;}
+  .result-box{background:#f0f5fb!important;gap:4px!important;padding:6px 8px!important;margin-bottom:6px!important;grid-template-columns:repeat(4,1fr)!important;}
+  .ri-value{font-size:.82rem!important;}
+  .ri-label{font-size:.52rem!important;}
+  .ri-unit{font-size:.52rem!important;margin-top:1px!important;}
+  .dcr-banner{border-radius:4px!important;padding:5px 9px!important;margin-bottom:6px!important;}
+  .dcr-text strong{font-size:.7rem!important;}
+  .dcr-text span{font-size:.6rem!important;}
+  .dcr-icon{font-size:.9rem!important;}
   /* Compact report body */
-  .report-body{padding:8px 14px!important;}
-  .rpt-sec{margin-bottom:7px!important;padding-bottom:7px!important;}
-  .res-tbl td{padding:3px 6px!important;font-size:7.8pt!important;}
-  .ri-value{font-size:.92rem!important;}
-  .ri-label{font-size:.58rem!important;}
-  .result-box{gap:5px!important;padding:8px 10px!important;margin-bottom:8px!important;}
-  .dcr-banner{padding:7px 10px!important;margin-bottom:8px!important;}
-  .dcr-text strong{font-size:.78rem!important;}
-  .report-warn{padding:5px 9px!important;font-size:.7rem!important;margin-bottom:6px!important;}
-  .rpt-sec-title{padding:2px 8px!important;font-size:.58rem!important;margin-bottom:5px!important;}
-  /* PMM print canvas */
-  .print-pmm-wrap{display:block!important;}
-  .print-disclaimer{display:block!important;}
-  .print-footer{display:flex!important;}
+  .report-body{padding:6px 12px!important;}
+  /* Side-by-side sections layout */
+  .rpt-sec-left,.rpt-sec-right{
+    display:inline-block!important;vertical-align:top!important;width:48%!important;
+  }
+  .rpt-sec-left{margin-right:3%!important;}
+  .rpt-sec{margin-bottom:5px!important;padding-bottom:5px!important;}
+  .rpt-sec-title{padding:1px 6px!important;font-size:.52rem!important;margin-bottom:4px!important;}
+  .res-tbl{width:100%!important;}
+  .res-tbl td{padding:2px 5px!important;font-size:6.5pt!important;}
+  .report-warn{padding:3px 7px!important;font-size:.62rem!important;margin-bottom:4px!important;}
+  /* Print-only header */
+  .print-only{padding-bottom:7px!important;margin-bottom:7px!important;}
+  /* PMM print canvas — constrain display size (HTML attrs set resolution, CSS sets display) */
+  .print-pmm-wrap{display:block!important;margin-top:4px!important;}
+  .print-pmm-wrap canvas{display:block!important;}
+  /* Circular: single canvas full width, fixed height */
+  .print-pmm-wrap>canvas{width:100%!important;height:130px!important;}
+  /* Rectangular: two side-by-side canvases */
+  .print-pmm-wrap>div{display:flex!important;gap:4px!important;}
+  .print-pmm-wrap>div canvas{width:calc(50% - 2px)!important;height:120px!important;flex:none!important;}
+  .print-pmm-wrap .pmm-lbl{margin-bottom:3px!important;}
+  .print-disclaimer{display:block!important;margin-top:5px!important;padding:4px 8px!important;font-size:6pt!important;}
+  .print-footer{display:flex!important;margin-top:5px!important;padding-top:4px!important;font-size:6pt!important;}
 }
 /* Print-only elements (hidden on screen) */
 .print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
@@ -196,6 +216,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <div class="sub-tabs no-print">
   <button class="sub-tab active" onclick="stab(this,'col','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'col','ec2')">Eurocode 2 (EN 1992-1-1)</button>
+  <button class="sub-tab" onclick="stab(this,'col','is456')">IS 456:2000</button>
 </div>
 
 <!-- ═══════ ACI 318-25 ═══════ -->
@@ -549,6 +570,169 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
+<!-- ═══════ IS 456:2000 ═══════ -->
+<div class="sub-pane" id="col-is456">
+<div class="col-layout">
+
+  <!-- INPUTS IS 456 -->
+  <div class="card no-print">
+      <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456-utag">kN-m · m</span></div>
+      <div class="card-body">
+        <div class="unit-switcher">
+          <label>Units:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" onclick="setUnit('knm',this,'is456')">kN-m &amp; m</button>
+            <button class="unit-btn" onclick="setUnit('nmm',this,'is456')">N-mm</button>
+          </div>
+        </div>
+
+        <!-- COLUMN SHAPE TOGGLE -->
+        <div class="unit-switcher" style="margin-bottom:12px;">
+          <label>Column:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="is456-shape-rect" onclick="setColShape('rect','is456')">Rectangular</button>
+            <button class="unit-btn" id="is456-shape-circ" onclick="setColShape('circ','is456')">Circular</button>
+          </div>
+        </div>
+
+        <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+        <div id="is456-rect-geom">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width b <span class="lu" id="lu-is456-b">[m]</span></label>
+              <div class="iw"><input type="number" id="is456-b" value="0.40" step="0.01" oninput="updatePreview('is456')"><span class="us" id="u-is456-b">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Depth h <span class="lu" id="lu-is456-h">[m]</span></label>
+              <div class="iw"><input type="number" id="is456-h" value="0.40" step="0.01" oninput="updatePreview('is456')"><span class="us" id="u-is456-h">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="is456-circ-geom" style="display:none;">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Diameter D <span class="lu" id="lu-is456-D">[m]</span></label>
+              <div class="iw"><input type="number" id="is456-D" value="0.50" step="0.01" oninput="updatePreview('is456')"><span class="us" id="u-is456-D">m</span></div>
+            </div>
+            <div class="form-group">
+              <label>Clear Cover <span class="lu" id="lu-is456-cv-c">[m]</span></label>
+              <div class="iw"><input type="number" id="is456-cv-c" value="0.040" step="0.001" oninput="updatePreview('is456')"><span class="us" id="u-is456-cv-c">m</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="is456-rect-cv-wrap" class="form-group">
+          <label>Clear Cover to main bar <span class="lu" id="lu-is456-cv">[m]</span></label>
+          <div class="iw"><input type="number" id="is456-cv" value="0.040" step="0.001"><span class="us" id="u-is456-cv">m</span></div>
+        </div>
+
+        <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>f<sub>ck</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="is456-fck" value="25" oninput="checkLimIS456()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-is456-fck"></div>
+          </div>
+          <div class="form-group">
+            <label>f<sub>y</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="is456-fy" value="415" oninput="checkLimIS456()"><span class="us">MPa</span></div>
+            <div class="limit-warn" id="lw-is456-fy"></div>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>E<sub>s</sub> [MPa]</label>
+            <div class="iw"><input type="number" id="is456-Es" value="200000"><span class="us">MPa</span></div>
+          </div>
+          <div></div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:10px;">γ<sub>c</sub> = 1.5 · γ<sub>s</sub> = 1.15 &nbsp;(IS 456 Table 1) &nbsp;·&nbsp; f<sub>cd</sub> = 0.447 f<sub>ck</sub> · f<sub>yd</sub> = 0.87 f<sub>y</sub></div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:10px;">Typical grades: M15/M20/M25/M30 · Fe250 / Fe415 / Fe500</div>
+
+        <div class="form-div"><div class="form-div-lbl">Factored Loads (Limit State)</div></div>
+        <div class="form-group">
+          <label>Axial P<sub>u</sub> <span class="lu" id="lu-is456-pu">[kN]</span> <span style="font-size:.65rem;color:var(--text-dim);">(compression +)</span></label>
+          <div class="iw"><input type="number" id="is456-Pu" value="1500"><span class="us" id="u-is456-pu">kN</span></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>M<sub>ux</sub> <span class="lu" id="lu-is456-mx">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="is456-Mx" value="120"><span class="us" id="u-is456-mx">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about x-axis → depth along h</div>
+          </div>
+          <div class="form-group">
+            <label>M<sub>uy</sub> <span class="lu" id="lu-is456-my">[kN·m]</span></label>
+            <div class="iw"><input type="number" id="is456-My" value="80"><span class="us" id="u-is456-my">kN·m</span></div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Bending about y-axis → depth along b</div>
+          </div>
+        </div>
+
+        <!-- REBAR LAYOUT -->
+        <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
+        <div class="form-group">
+          <label>Bar Dia. [mm]</label>
+          <div class="iw"><input type="number" id="is456-dbar" value="20" oninput="updatePreview('is456')"><span class="us">mm</span></div>
+        </div>
+        <div id="is456-rect-rebar">
+          <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">
+            n<sub>x</sub> = bars along x (top &amp; bottom rows, parallel to b) &nbsp;·&nbsp;
+            n<sub>y</sub> = bars along y (left &amp; right, parallel to h, incl. corners)
+          </p>
+          <div class="rebar-row">
+            <div class="form-group">
+              <label>n<sub>x</sub> (along x)</label>
+              <div class="iw"><input type="number" id="is456-nb" value="3" min="2" max="12" oninput="updatePreview('is456')"></div>
+            </div>
+            <div class="form-group">
+              <label>n<sub>y</sub> (along y)</label>
+              <div class="iw"><input type="number" id="is456-nh" value="3" min="2" max="12" oninput="updatePreview('is456')"></div>
+            </div>
+          </div>
+        </div>
+        <div id="is456-circ-rebar" style="display:none;">
+          <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n = total bars equally spaced around the perimeter</p>
+          <div class="form-group">
+            <label>n (total bars)</label>
+            <div class="iw"><input type="number" id="is456-n" value="8" min="4" max="20" oninput="updatePreview('is456')"></div>
+          </div>
+        </div>
+        <div style="font-size:.71rem;color:var(--text-mid);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:6px 10px;margin-bottom:10px;" id="is456-rebar-info">—</div>
+        <div class="section-preview" style="margin-bottom:14px;">
+          <canvas id="is456-sect-canvas" width="230" height="240" role="img" aria-label="IS 456 column cross-section preview showing bar layout"></canvas>
+        </div>
+        <button class="btn-calc" onclick="calcCol('is456')">▶ Calculate PMM Diagram</button>
+      </div>
+    </div>
+
+  <!-- RIGHT IS 456 -->
+  <div class="results-col">
+    <div class="res-empty" id="is456-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div>
+    <div id="is456-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Calculation Report</h4>
+          <span class="rh-code" id="is456-rh-lbl">IS 456:2000 · kN-m · m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="is456-report-body"></div>
+      </div>
+    </div>
+    <div id="is456-pmm-outer" style="display:none;">
+      <div class="pmm-wrap">
+        <div class="pmm-hdr"><h4>📈 P-M Interaction Diagram</h4></div>
+        <div class="pmm-axis-tabs">
+          <button class="pmm-tab active" onclick="switchPmm('is456','x',this)">P – M<sub>ux</sub>&nbsp;(NA ∥ b)</button>
+          <button class="pmm-tab" onclick="switchPmm('is456','y',this)">P – M<sub>uy</sub>&nbsp;(NA ∥ h)</button>
+          <button class="pmm-tab" onclick="switchPmm('is456','bi',this)">Biaxial Check</button>
+        </div>
+        <div class="pmm-canvas-wrap">
+          <canvas id="is456-pmm" width="520" height="400" role="img" aria-label="IS 456 P-M interaction diagram — column axial load vs. moment capacity"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- ═══════ DESIGN BACKGROUND ═══════ -->
 <div class="bg-section">
   <div class="bg-hdr"><h3>📚 Design Background & Code References</h3></div>
@@ -556,6 +740,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <button class="bg-tab active" onclick="bgTab(this,'bg-theory')">Theory</button>
     <button class="bg-tab" onclick="bgTab(this,'bg-aci')">ACI 318-25</button>
     <button class="bg-tab" onclick="bgTab(this,'bg-ec2')">Eurocode 2</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-is456')">IS 456:2000</button>
     <button class="bg-tab" onclick="bgTab(this,'bg-biax')">Biaxial Bending</button>
     <button class="bg-tab" onclick="bgTab(this,'bg-refs')">References</button>
   </div>
@@ -563,12 +748,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="tb">
       <h4>P-M Interaction: Strain Compatibility</h4>
       <p>The interaction diagram is generated by sweeping the neutral axis depth <i>c</i> from a very large value (near pure compression) down to zero (pure tension), computing the resulting axial force and moment at each step using full strain compatibility.</p>
-      <p>For each neutral axis position, the extreme compression fibre strain is fixed at ε<sub>cu</sub> (0.003 for ACI, 0.0035 for EC2). Each bar's strain is then proportional to its distance from the neutral axis. The bar stress is taken as the lesser of f<sub>y</sub>/f<sub>yd</sub> and E<sub>s</sub>·ε<sub>bar</sub>. The concrete compression resultant is computed using the equivalent rectangular stress block.</p>
+      <p>For each neutral axis position, the extreme compression fibre strain is fixed at ε<sub>cu</sub> (0.003 for ACI, 0.0035 for EC2/IS 456). Each bar's strain is then proportional to its distance from the neutral axis. The bar stress is taken as the lesser of f<sub>y</sub>/f<sub>yd</sub> and E<sub>s</sub>·ε<sub>bar</sub>. The concrete compression resultant is computed using the equivalent rectangular stress block.</p>
       <ul>
         <li>300 neutral axis positions ensure smooth, accurate curves</li>
         <li>Concrete displaced by bars in compression zone is deducted</li>
         <li>ACI: φ varies continuously with net tensile strain ε<sub>t</sub> (0.65→0.90)</li>
-        <li>EC2: design values fcd, fyd applied directly; no additional φ</li>
+        <li>EC2 / IS 456: design values f<sub>cd</sub>, f<sub>yd</sub> applied directly; no additional φ</li>
       </ul>
       <h4>Axis Convention</h4>
       <p>The section has width <b>b</b> (horizontal) and depth <b>h</b> (vertical). Moments are defined as follows:</p>
@@ -627,6 +812,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
   </div>
+  <div class="bg-pane" id="bg-is456">
+    <div class="tb">
+      <h4><span class="rtag">IS 456:2000 Cl 39.3</span> Axial Load and Biaxial Bending</h4>
+      <p>IS 456:2000 uses design material strengths with partial safety factors embedded in material values. No separate capacity reduction factor (φ) is applied — the safety margins are captured through γ<sub>c</sub> = 1.5 and γ<sub>s</sub> = 1.15.</p>
+      <div class="fml-blk">
+        <div class="ft">Design Strengths (IS 456 Table 1)</div>
+        f<sub>cd</sub> = 0.67·f<sub>ck</sub> / γ<sub>c</sub> = 0.67·f<sub>ck</sub> / 1.5 = 0.447·f<sub>ck</sub><br>
+        f<sub>yd</sub> = f<sub>y</sub> / γ<sub>s</sub> = f<sub>y</sub> / 1.15 = 0.87·f<sub>y</sub>
+      </div>
+      <h4><span class="rtag">IS 456:2000</span> Equivalent Rectangular Stress Block</h4>
+      <p>IS 456 specifies a parabolic-rectangular stress distribution for concrete in compression. For computation, this is converted to an equivalent rectangular block with the same resultant force and centroid:</p>
+      <div class="fml-blk">
+        <div class="ft">IS 456 Stress Block Parameters</div>
+        C<sub>c</sub> = 0.36·f<sub>ck</sub>·b·x<sub>u</sub> &nbsp;(resultant force)<br>
+        Centroid at 0.416·x<sub>u</sub> from compression face<br><br>
+        Equivalent rectangular block depth: &nbsp; a = λ·x<sub>u</sub> &nbsp; where λ = 0.832<br>
+        Equivalent block stress: &nbsp; f<sub>c,eff</sub> = 0.4327·f<sub>ck</sub><br>
+        <div class="fn">Derived so that: f<sub>c,eff</sub>·λ·x<sub>u</sub>·b = 0.36·f<sub>ck</sub>·b·x<sub>u</sub> (same Cc) and centroid at a/2 = 0.416·x<sub>u</sub> (same lever arm). Maximum compressive strain ε<sub>cu</sub> = 0.0035.</div>
+      </div>
+      <h4><span class="rtag">IS 456:2000 Cl 39.3</span> Maximum Axial Capacity</h4>
+      <div class="fml-blk">
+        <div class="ft">P<sub>0,max</sub> (IS 456 Cl 39.3)</div>
+        P<sub>0</sub> = 0.4·f<sub>ck</sub>·A<sub>c</sub> + 0.67·f<sub>y</sub>·A<sub>sc</sub><br>
+        Where A<sub>c</sub> = A<sub>g</sub> − A<sub>sc</sub> (net concrete area)
+        <div class="fn">The 0.4·fck factor (rather than 0.447·fck) accounts for the IS 456 long-term loading allowance and implicit minimum eccentricity of 0.05·h per Cl 39.2. This is IS 456's approach to accidental eccentricity, equivalent to the ACI k-factor.</div>
+      </div>
+      <h4><span class="rtag">IS 456:2000 Cl 26.5.3.1</span> Reinforcement Limits</h4>
+      <div class="fml-blk">
+        <div class="ft">Steel Ratio Limits</div>
+        ρ<sub>min</sub> = 0.8% &nbsp; (A<sub>sc,min</sub> = 0.008·A<sub>g</sub>)<br>
+        ρ<sub>max</sub> = 6.0% &nbsp; (A<sub>sc,max</sub> = 0.06·A<sub>g</sub>)<br>
+        <div class="fn">Minimum steel controls long-term creep and shrinkage effects; maximum prevents concrete placement difficulty. For lapped splices at the same location, the local maximum reduces to 4%.</div>
+      </div>
+      <h4><span class="rtag">IS 456:2000 Cl 39.6</span> Biaxial Bending</h4>
+      <p>IS 456 Cl 39.6 provides the Bresler-type interaction formula for combined biaxial bending:</p>
+      <div class="fml-blk">
+        <div class="ft">IS 456 Biaxial Check (Cl 39.6)</div>
+        (M<sub>ux</sub>/M<sub>ux1</sub>)<sup>α<sub>n</sub></sup> + (M<sub>uy</sub>/M<sub>muy1</sub>)<sup>α<sub>n</sub></sup> ≤ 1.0<br><br>
+        α<sub>n</sub> = 1.0 when P<sub>u</sub>/P<sub>uz</sub> = 0.2<br>
+        α<sub>n</sub> = 2.0 when P<sub>u</sub>/P<sub>uz</sub> = 0.8<br>
+        Linear interpolation between 0.2 and 0.8
+        <div class="fn">This calculator uses α = 1 + P/P<sub>0</sub>, a conservative approximation consistent with the IS 456 spirit. For precise α<sub>n</sub> per Cl 39.6, the P<sub>uz</sub> reference value should be checked explicitly.</div>
+      </div>
+    </div>
+  </div>
   <div class="bg-pane" id="bg-biax">
     <div class="tb">
       <h4>Biaxial Bending Check — Bresler Reciprocal Method</h4>
@@ -652,6 +882,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <li><span class="ref-num">[3]</span><div><strong>MacGregor, J.G. & Wight, J.K.</strong> — Reinforced Concrete: Mechanics and Design, 7th Ed. Pearson, 2016. Chapter 11.</div></li>
         <li><span class="ref-num">[4]</span><div><strong>Bresler, B.</strong> — Design Criteria for Reinforced Columns under Axial Load and Biaxial Bending. ACI Journal, Vol. 57, 1960.</div></li>
         <li><span class="ref-num">[5]</span><div><strong>Mosley, Bungey & Hulse</strong> — Reinforced Concrete Design to Eurocode 2, 7th Ed. Palgrave Macmillan, 2012. Chapter 9.</div></li>
+        <li><span class="ref-num">[6]</span><div><strong>IS 456:2000</strong> — Plain and Reinforced Concrete — Code of Practice (4th Revision). Bureau of Indian Standards, New Delhi. Cl 26.5.3.1 (Steel limits), Cl 39.3 (Axial capacity), Cl 39.6 (Biaxial bending).</div></li>
+        <li><span class="ref-num">[7]</span><div><strong>Pillai, S.U. & Menon, D.</strong> — Reinforced Concrete Design, 3rd Ed. Tata McGraw-Hill, 2009. Chapter 13 (Columns under combined loading).</div></li>
+        <li><span class="ref-num">[8]</span><div><strong>SP:16(S&T)-1980</strong> — Design Aids for Reinforced Concrete to IS 456:1978. Bureau of Indian Standards, New Delhi. (Interaction diagrams and design charts).</div></li>
       </ul>
       <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:10px 13px;font-size:.78rem;color:var(--text-mid);margin-top:14px;line-height:1.7;">
         <strong>Disclaimer:</strong> For educational and preliminary design only. Verify all results with a licensed structural engineer.
@@ -688,10 +921,10 @@ const UNITS = {
   nmm:{ lenU:'mm', forceU:'N',   momU:'N·mm',  lenS:1,    forceS:1,     momS:1,     bV:400,  hV:400,  cvV:50,  DV:500,  PV:1.5e6,MV:120e6, tag:'N-mm' },
   us:{  lenU:'in', forceU:'kip', momU:'kip·ft',lenS:25.4, forceS:4448.2,momS:1.356e6,bV:16,  hV:16,   cvV:2,  DV:20,   PV:337,MV:88.5, tag:'US' }
 };
-let curU = {aci:'knm', ec2:'knm'};
-let pmmStore = {aci:null, ec2:null};
-let colShape = {aci:'rect', ec2:'rect'};
-let circTie  = {aci:'tied'}; // 'tied' | 'spiral'
+let curU = {aci:'knm', ec2:'knm', is456:'knm'};
+let pmmStore = {aci:null, ec2:null, is456:null};
+let colShape = {aci:'rect', ec2:'rect', is456:'rect'};
+let circTie  = {aci:'tied'}; // 'tied' | 'spiral' (ACI only)
 
 function g(id){ return parseFloat(document.getElementById(id)?.value)||0; }
 
@@ -721,7 +954,7 @@ function setUnit(unit, btn, code){
     st('u-aci-mx',U.momU); st('lu-aci-mx','['+U.momU+']');
     st('u-aci-my',U.momU); st('lu-aci-my','['+U.momU+']');
     st('aci-utag',U.tag); st('aci-rh-lbl','ACI 318-25 · '+U.tag);
-  } else {
+  } else if(code==='ec2'){
     sv('NEd',U.PV); sv('Mx',U.MV); sv('My',(U.MV*0.67).toFixed(1));
     sv('cv-c',cvFmt);
     sstep('cv-c', unit==='nmm'?'1':'0.001');
@@ -731,6 +964,16 @@ function setUnit(unit, btn, code){
     st('u-ec2-mx',U.momU); st('lu-ec2-mx','['+U.momU+']');
     st('u-ec2-my',U.momU); st('lu-ec2-my','['+U.momU+']');
     st('ec2-utag',U.tag); st('ec2-rh-lbl','EN 1992-1-1 · '+U.tag);
+  } else { // is456
+    sv('Pu',U.PV); sv('Mx',U.MV); sv('My',(U.MV*0.67).toFixed(1));
+    sv('cv-c',cvFmt);
+    sstep('cv-c', unit==='nmm'?'1':'0.001');
+    ['b','h','cv','D'].forEach(f=>{st('lu-is456-'+f,'['+U.lenU+']');st('u-is456-'+f,U.lenU);});
+    st('lu-is456-cv-c','['+U.lenU+']'); st('u-is456-cv-c',U.lenU);
+    st('u-is456-pu',U.forceU); st('lu-is456-pu','['+U.forceU+']');
+    st('u-is456-mx',U.momU); st('lu-is456-mx','['+U.momU+']');
+    st('u-is456-my',U.momU); st('lu-is456-my','['+U.momU+']');
+    st('is456-utag',U.tag); st('is456-rh-lbl','IS 456:2000 · '+U.tag);
   }
   document.getElementById(code+'-empty').style.display='';
   document.getElementById(code+'-report-wrap').style.display='none';
@@ -763,6 +1006,14 @@ function checkLimEC2(){
   if(fck&&(fck<12||fck>90)) el1.textContent="⚠ EC2: fck range 12–90 MPa.";
   el2.className='limit-warn'+(fyk&&(fyk<400||fyk>600)?' show':'');
   if(fyk&&(fyk<400||fyk>600)) el2.textContent="⚠ EC2: fyk range 400–600 MPa.";
+}
+function checkLimIS456(){
+  const fck=g('is456-fck'),fy=g('is456-fy');
+  const el1=document.getElementById('lw-is456-fck'),el2=document.getElementById('lw-is456-fy');
+  el1.className='limit-warn'+(fck&&(fck<15||fck>55)?' show':'');
+  if(fck&&(fck<15||fck>55)) el1.textContent="⚠ IS 456: fck range 15–55 MPa (M15–M55).";
+  el2.className='limit-warn'+(fy&&(fy<250||fy>550)?' show':'');
+  if(fy&&(fy<250||fy>550)) el2.textContent="⚠ IS 456: fy typical range 250–500 MPa.";
 }
 
 // ══════════════════════════════
@@ -840,12 +1091,19 @@ function getBarsCirc(D, cover, dbar, n) {
 // CIRCULAR PMM CURVE
 // Numerical fiber model for circular cross-section
 // ══════════════════════════════
-function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min, spiral=false) {
-  const ecu = isEC2 ? 0.0035 : 0.003;
-  const fy_use = isEC2 ? fyd : fy;
+function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, spiral=false) {
+  const isEC2   = code === 'ec2';
+  const isIS456 = code === 'is456';
+  const ecu = (isEC2 || isIS456) ? 0.0035 : 0.003;
+  const fy_use = (isEC2 || isIS456) ? fyd : fy;
   const R = D/2;
   let lam, fc_eff;
-  if(isEC2){
+  if(isIS456){
+    // IS 456 parabolic-rectangular → equivalent rectangular: lam=0.832, fc_eff=0.4327*fck
+    // → Cc=0.36*fck*b*xu, centroid at 0.416*xu (via lam/2=0.416) ✓
+    lam = 0.832;
+    fc_eff = 0.4327 * fc;
+  } else if(isEC2){
     lam = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
     const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
     fc_eff = eta*fcd;
@@ -857,7 +1115,10 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min,
   const bars = getBarsCirc(D, cover, dbar, n);
   const Ast = bars.reduce((s,b)=>s+b.A, 0);
   let P0_cap;
-  if(isEC2){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
+  if(isIS456){
+    // IS 456 Cl 39.3: Pu,max = 0.4*fck*Ac + 0.67*fy*Asc
+    P0_cap = 0.4*fc*(Ag-Ast) + 0.67*fy*Ast;
+  } else if(isEC2){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
   else {
     const phi0 = spiral ? 0.75 : phi_min;
     const kfac = spiral ? 0.85 : 0.80;
@@ -895,7 +1156,7 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min,
     const P_nom = Cc + Fs;
     const M_nom = Math.abs(Mc + Ms);
     let P_des, M_des;
-    if(isEC2){ P_des=P_nom; M_des=M_nom; }
+    if(isEC2 || isIS456){ P_des=P_nom; M_des=M_nom; }
     else {
       const phi_c = spiral ? 0.75 : phi_min;  // compression-controlled φ
       const et = dt_depth>0 ? ecu*(dt_depth/c - 1) : 0.01;
@@ -908,7 +1169,7 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, isEC2, fcd, fyd, phi_min,
     if(P_des>P0_cap) continue;
     points.push({P:P_des, M:M_des});
   }
-  const phi_t = isEC2 ? 1.0 : 0.90;
+  const phi_t = (isEC2 || isIS456) ? 1.0 : 0.90;
   points.push({P:-phi_t*fy_use*Ast, M:0});
   points.sort((a,b)=>b.P-a.P);
   return points;
@@ -1080,13 +1341,20 @@ function _doUpdatePreview(code){
 // ══════════════════════════════
 // PMM ENGINE — v4 (correct)
 // ══════════════════════════════
-function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, isEC2,fcd,fyd, phi_min, axis){
-  const ecu    = isEC2 ? 0.0035 : 0.003;
-  const fy_use = isEC2 ? fyd : fy;
+function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis){
+  const isEC2   = code === 'ec2';
+  const isIS456 = code === 'is456';
+  const ecu    = (isEC2 || isIS456) ? 0.0035 : 0.003;
+  const fy_use = (isEC2 || isIS456) ? fyd : fy;
 
   // Stress block
   let lam, fc_eff;
-  if(isEC2){
+  if(isIS456){
+    // IS 456 parabolic-rectangular block → equivalent rectangular:
+    // Cc = 0.36*fck*b*xu, centroid at 0.416*xu ↔ lam=0.832, fc_eff=0.4327*fck
+    lam    = 0.832;
+    fc_eff = 0.4327 * fc;
+  } else if(isEC2){
     lam    = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
     const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
     fc_eff = eta * fcd;
@@ -1109,10 +1377,12 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, isEC2,fcd,fyd, phi_min, axis
   const d_min = Math.min(...barD.map(b=>b.d));  // outermost tension bar (most negative d)
   const dt    = D/2 - d_min;                     // dist from comp face to outermost tension bar
 
-  // ACI cap: phi * 0.80 * Pn0  (M=0 tip of diagram)
-  // EC2 cap: Pn0  (uniform compression)
+  // P0 cap: max axial capacity (M=0 tip of diagram)
   let P0_cap;
-  if(isEC2){
+  if(isIS456){
+    // IS 456 Cl 39.3: Pu,max = 0.4*fck*(Ag-Ast) + 0.67*fy*Ast
+    P0_cap = 0.4*fc*(Ag-Ast) + 0.67*fy*Ast;
+  } else if(isEC2){
     P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast;
   } else {
     P0_cap = phi_min * 0.80 * (0.85*fc*(Ag-Ast) + fy*Ast);
@@ -1149,7 +1419,7 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, isEC2,fcd,fyd, phi_min, axis
     const M_nom = Cc*yC + Ms_sum;
 
     let P_des, M_des;
-    if(isEC2){
+    if(isEC2 || isIS456){
       P_des = P_nom;
       M_des = M_nom;
     } else {
@@ -1168,7 +1438,7 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, isEC2,fcd,fyd, phi_min, axis
   }
 
   // Pure tension
-  const phi_t = isEC2 ? 1.0 : 0.90;
+  const phi_t = (isEC2 || isIS456) ? 1.0 : 0.90;
   points.push({P: -phi_t * fy_use * Ast, M: 0});
 
   points.sort((a,b) => b.P - a.P);
@@ -1195,7 +1465,9 @@ function getM0(P, curve){
 // ══════════════════════════════
 function calcCol(code){
   if(typeof validateCol==='function'&&!validateCol(code))return;
-  const p=code+'-', isEC2=code==='ec2';
+  const p=code+'-';
+  const isEC2   = code==='ec2';
+  const isIS456 = code==='is456';
   const U=UNITS[curU[code]];
   const isCirc=colShape[code]==='circ';
 
@@ -1205,6 +1477,9 @@ function calcCol(code){
     fc=g('ec2-fck'); fy=g('ec2-fyk');
     gc=g('ec2-gc'); gs=g('ec2-gs');
     fcd=fc/gc; fyd=fy/gs; phi_min=1;
+  } else if(isIS456){
+    fc=g('is456-fck'); fy=g('is456-fy');
+    fcd=0.447*fc; fyd=fy/1.15; phi_min=1;
   } else {
     fc=g('aci-fc'); fy=g('aci-fy');
     phi_min=g('aci-phi'); fcd=fc; fyd=fy;
@@ -1218,25 +1493,28 @@ function calcCol(code){
   if(isCirc){
     const D=g(p+'D')*U.lenS, cv=g(p+'cv-c')*U.lenS;
     const dbar=g(p+'dbar'), n_c=Math.max(4,Math.round(g(p+'n')));
-    const spiral = !isEC2 && circTie[code]==='spiral';
+    const spiral = !isEC2 && !isIS456 && circTie[code]==='spiral';
     if(!D){ alert('Enter diameter.'); return; }
     updatePreview(code);
     const bars=getBarsCirc(D,cv,dbar,n_c);
     const Ast=bars.reduce((s,b)=>s+b.A,0), Ag=Math.PI*(D/2)**2, rho=Ast/Ag;
-    const curve=buildCurveCirc(D,cv,dbar,n_c,fc,fy,Es,isEC2,fcd,fyd,phi_min,spiral);
+    const curve=buildCurveCirc(D,cv,dbar,n_c,fc,fy,Es,code,fcd,fyd,phi_min,spiral);
     const P0=curve[0].P, M0=getM0(Pu,curve);
     const Mu=Math.sqrt(Mx*Mx+My*My);
     const dcr=M0>0?Mu/M0:(Mu>0?999:0);
     const st=dcr<=1?'ok':dcr<=1.05?'warn':'err';
     pmmStore[code]={cx:curve,cy:curve,Pu,Mx,My,dcr_x:dcr,dcr_y:dcr,dcr_bi:dcr,P0,M0x:M0,M0y:M0,isEC2,code};
     const warns=[];
-    warns.push(..._rhoWarns(rho,isEC2));
+    warns.push(..._rhoWarns(rho,code));
     if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub>.`);
-    if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
-    if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
-    if(isEC2&&fc&&(fc<12||fc>90)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
-    if(isEC2&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+    if(code==='aci'&&fc&&(fc<17||fc>70))   warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
+    if(code==='aci'&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
+    if(code==='ec2'&&fc&&(fc<12||fc>90))   warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
+    if(code==='ec2'&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+    if(code==='is456'&&fc&&(fc<15||fc>55)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside IS 456 range (M15–M55).`);
+    if(code==='is456'&&fy&&(fy<250||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside IS 456 range.`);
     const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
+    const codeLbl = isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
     const isNmm=curU[code]==='nmm';
     const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
     const fmtM=v=>(v/U.momS).toFixed(isNmm?0:1)+' '+U.momU;
@@ -1245,7 +1523,7 @@ function calcCol(code){
     <div class="print-only">
       <div>
         <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Design Report</div>
-        <div style="font-size:.68rem;color:#666;margin-top:1px;">${isEC2?'EN 1992-1-1 (Eurocode 2)':'ACI 318-25'} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Circular Section${!isEC2?(spiral?' — Spiral':' — Tied'):''}</div>
+        <div style="font-size:.68rem;color:#666;margin-top:1px;">${codeLbl} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Circular Section${code==='aci'?(spiral?' — Spiral':' — Tied'):''}</div>
       </div>
       <div style="margin-left:auto;text-align:right;">
         <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
@@ -1253,19 +1531,20 @@ function calcCol(code){
       </div>
     </div>
     ${warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
-    <div class="rpt-sec">
+    <div class="rpt-sec rpt-sec-left">
       <div class="rpt-sec-title">Section Properties</div>
       <table class="res-tbl">
         <tr><td>Diameter D</td><td>${fmtL(D)}</td></tr>
         <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
         <tr><td>Bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
-        <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
-        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
-        ${!isEC2?`<tr><td>Confinement type</td><td>${spiral?'Spiral (φ=0.75, k=0.85)':'Tied (φ=0.65, k=0.80)'}</td></tr>`:''}
-        ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
+        <tr><td>Steel area A<sub>sc</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${isIS456?(rho>=0.008&&rho<=0.06?'vok':rho>0.06?'verr':'vwarn'):(rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn')}">${(rho*100).toFixed(3)}%</td></tr>
+        ${code==='aci'?`<tr><td>Confinement type</td><td>${spiral?'Spiral (φ=0.75, k=0.85)':'Tied (φ=0.65, k=0.80)'}</td></tr>`:''}
+        ${(isEC2||isIS456)?`<tr><td>f<sub>cd</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
+        ${isIS456?`<tr><td>P<sub>0,max</sub> (IS 456 Cl 39.3)</td><td class="vhl">0.4·f<sub>ck</sub>·A<sub>c</sub> + 0.67·f<sub>y</sub>·A<sub>sc</sub></td></tr>`:''}
       </table>
     </div>
-    <div class="rpt-sec">
+    <div class="rpt-sec rpt-sec-right">
       <div class="rpt-sec-title">Design Results</div>
       <div class="result-box">
         <div class="result-item"><div class="ri-label">Max P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
@@ -1281,11 +1560,11 @@ function calcCol(code){
         </div>
       </div>
       <table class="res-tbl">
-        <tr><td>Applied axial P</td><td>${fmtF(Pu)}</td></tr>
+        <tr><td>Applied axial P<sub>u</sub></td><td>${fmtF(Pu)}</td></tr>
         <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
-        <tr><td>Applied M<sub>x</sub></td><td>${fmtM(Mx)}</td></tr>
-        <tr><td>Applied M<sub>y</sub></td><td>${fmtM(My)}</td></tr>
-        <tr><td>Resultant M<sub>u</sub> = √(M<sub>x</sub>²+M<sub>y</sub>²)</td><td>${fmtM(Mu)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'ux':'x'}</sub></td><td>${fmtM(Mx)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'uy':'y'}</sub></td><td>${fmtM(My)}</td></tr>
+        <tr><td>Resultant M<sub>u</sub> = √(M<sub>ux</sub>²+M<sub>uy</sub>²)</td><td>${fmtM(Mu)}</td></tr>
         <tr><td>Moment capacity M<sub>0</sub> at applied P</td><td class="vok">${fmtM(M0)}</td></tr>
         <tr><td>D/C</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
       </table>
@@ -1299,7 +1578,7 @@ function calcCol(code){
     </div>
     <div class="print-footer">
       <span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span>
-      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ACI 318-25 / EN 1992-1-1</span>
+      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ${codeLbl}</span>
     </div>`;
     document.getElementById(p+'empty').style.display='none';
     document.getElementById(p+'report-wrap').style.display='';
@@ -1325,8 +1604,8 @@ function calcCol(code){
   const Ast=bars.reduce((s,b)=>s+b.A,0), Ag=b*h, rho=Ast/Ag;
 
   // Build both curves
-  const cx=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,'x');
-  const cy_curve=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,isEC2,fcd,fyd,phi_min,'y');
+  const cx=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,code,fcd,fyd,phi_min,'x');
+  const cy_curve=buildCurve(b,h,cv,dbar,nb,nh,fc,fy,Es,code,fcd,fyd,phi_min,'y');
 
   const P0=cx[0].P;
   const M0x=getM0(Pu,cx);
@@ -1351,14 +1630,17 @@ function calcCol(code){
 
   // Warnings
   const warns=[];
-  warns.push(..._rhoWarns(rho,isEC2));
-  if(!isEC2&&fc&&(fc<17||fc>70)) warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
-  if(!isEC2&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
-  if(isEC2&&fc&&(fc<12||fc>90)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
-  if(isEC2&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+  warns.push(..._rhoWarns(rho,code));
+  if(code==='aci'&&fc&&(fc<17||fc>70))   warns.push(`<b>Material limit:</b> f'c = ${fc} MPa outside ACI 318-25 range.`);
+  if(code==='aci'&&fy&&(fy<280||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside ACI 318-25 range.`);
+  if(code==='ec2'&&fc&&(fc<12||fc>90))   warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside EC2 range.`);
+  if(code==='ec2'&&fy&&(fy<400||fy>600)) warns.push(`<b>Material limit:</b> fyk = ${fy} MPa outside EC2 range.`);
+  if(code==='is456'&&fc&&(fc<15||fc>55)) warns.push(`<b>Material limit:</b> fck = ${fc} MPa outside IS 456 range (M15–M55).`);
+  if(code==='is456'&&fy&&(fy<250||fy>550)) warns.push(`<b>Material limit:</b> fy = ${fy} MPa outside IS 456 range.`);
   if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub> = ${(P0/U.forceS).toFixed(0)} ${U.forceU}.`);
 
   const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
+  const codeLbl = isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
   const isNmm = curU[code]==='nmm';
   const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
   const fmtM=v=>(v/U.momS).toFixed(isNmm?0:1)+' '+U.momU;
@@ -1368,7 +1650,7 @@ function calcCol(code){
     <div class="print-only">
       <div>
         <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Design Report</div>
-        <div style="font-size:.68rem;color:#666;margin-top:1px;">${isEC2?'EN 1992-1-1 (Eurocode 2)':'ACI 318-25'} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Rectangular Section</div>
+        <div style="font-size:.68rem;color:#666;margin-top:1px;">${codeLbl} &nbsp;·&nbsp; ${U.tag} &nbsp;·&nbsp; Rectangular Section</div>
       </div>
       <div style="margin-left:auto;text-align:right;">
         <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
@@ -1376,18 +1658,19 @@ function calcCol(code){
       </div>
     </div>
     ${warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
-    <div class="rpt-sec">
+    <div class="rpt-sec rpt-sec-left">
       <div class="rpt-sec-title">Section Properties</div>
       <table class="res-tbl">
         <tr><td>Section b × h</td><td>${fmtL(b)} × ${fmtL(h)}</td></tr>
         <tr><td>Gross area A<sub>g</sub></td><td>${(Ag/100).toFixed(0)} cm²</td></tr>
         <tr><td>Total bars</td><td>${bars.length} × Ø${dbar} mm</td></tr>
         <tr><td>Steel area A<sub>st</sub></td><td>${Ast.toFixed(0)} mm²</td></tr>
-        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn'}">${(rho*100).toFixed(3)}%</td></tr>
+        <tr><td>Reinforcement ratio ρ<sub>g</sub></td><td class="${isIS456?(rho>=0.008&&rho<=0.06?'vok':rho>0.06?'verr':'vwarn'):(rho>=0.01&&rho<=0.04?'vok':rho>0.08?'verr':'vwarn')}">${(rho*100).toFixed(3)}%</td></tr>
         ${isEC2?`<tr><td>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub></td><td>${fyd.toFixed(2)} MPa</td></tr>`:''}
+        ${isIS456?`<tr><td>f<sub>cd</sub> = 0.447·f<sub>ck</sub></td><td>${fcd.toFixed(2)} MPa</td></tr><tr><td>f<sub>yd</sub> = f<sub>y</sub>/1.15</td><td>${fyd.toFixed(2)} MPa</td></tr><tr><td>P<sub>0,max</sub> (IS 456 Cl 39.3)</td><td class="vhl">0.4·f<sub>ck</sub>·A<sub>c</sub> + 0.67·f<sub>y</sub>·A<sub>st</sub></td></tr>`:''}
       </table>
     </div>
-    <div class="rpt-sec">
+    <div class="rpt-sec rpt-sec-right">
       <div class="rpt-sec-title">Design Results</div>
       <div class="result-box">
         <div class="result-item"><div class="ri-label">Max Axial P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
@@ -1403,14 +1686,14 @@ function calcCol(code){
         </div>
       </div>
       <table class="res-tbl">
-        <tr><td>Applied axial P</td><td>${fmtF(Pu)}</td></tr>
+        <tr><td>Applied axial ${isEC2?'N<sub>Ed</sub>':'P<sub>u</sub>'}</td><td>${fmtF(Pu)}</td></tr>
         <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
-        <tr><td>Applied M<sub>x</sub> (about x-axis, depth along h)</td><td>${fmtM(Mx)}</td></tr>
-        <tr><td>M<sub>x</sub> capacity at applied P</td><td class="vok">${fmtM(M0x)}</td></tr>
-        <tr><td>D/C — M<sub>x</sub></td><td class="${dcr_x<=1?'vok':'verr'}">${dcr_x.toFixed(3)}</td></tr>
-        <tr><td>Applied M<sub>y</sub> (about y-axis, depth along b)</td><td>${fmtM(My)}</td></tr>
-        <tr><td>M<sub>y</sub> capacity at applied P</td><td class="vok">${fmtM(M0y)}</td></tr>
-        <tr><td>D/C — M<sub>y</sub></td><td class="${dcr_y<=1?'vok':'verr'}">${dcr_y.toFixed(3)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'ux':'x'}</sub> (about x-axis, depth along h)</td><td>${fmtM(Mx)}</td></tr>
+        <tr><td>M<sub>${isIS456?'ux':'x'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0x)}</td></tr>
+        <tr><td>D/C — M<sub>${isIS456?'ux':'x'}</sub></td><td class="${dcr_x<=1?'vok':'verr'}">${dcr_x.toFixed(3)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'uy':'y'}</sub> (about y-axis, depth along b)</td><td>${fmtM(My)}</td></tr>
+        <tr><td>M<sub>${isIS456?'uy':'y'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0y)}</td></tr>
+        <tr><td>D/C — M<sub>${isIS456?'uy':'y'}</sub></td><td class="${dcr_y<=1?'vok':'verr'}">${dcr_y.toFixed(3)}</td></tr>
         <tr><td>Biaxial D/C (Bresler)</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr_bi.toFixed(3)}</td></tr>
       </table>
     </div>
@@ -1426,7 +1709,7 @@ function calcCol(code){
     </div>
     <div class="print-footer">
       <span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span>
-      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ACI 318-25 / EN 1992-1-1</span>
+      <span>© ${new Date().getFullYear()} CivilStrCalc.com &nbsp;·&nbsp; ${codeLbl}</span>
     </div>`;
 
   document.getElementById(p+'empty').style.display='none';
@@ -1807,17 +2090,17 @@ function drawBiaxialContour(ctx,d,U,W,H){
 
 // INIT
 window.addEventListener('load',()=>{
-  ['aci','ec2'].forEach(code=>{
+  ['aci','ec2','is456'].forEach(code=>{
     const p=code+'-';
     const fmt=(id,dec)=>{const e=document.getElementById(p+id);if(e&&e.value)e.value=parseFloat(e.value).toFixed(dec);};
     fmt('b',2); fmt('h',2); fmt('cv',3); fmt('cv-c',3); fmt('D',2);
   });
-  updatePreview('aci'); updatePreview('ec2');
+  updatePreview('aci'); updatePreview('ec2'); updatePreview('is456');
 });
 
 // ══ PRINT: redraw canvases before print dialog ══
 window.addEventListener('beforeprint', () => {
-  ['aci','ec2'].forEach(code => {
+  ['aci','ec2','is456'].forEach(code => {
     if(!pmmStore[code]) return;
     const U = UNITS[curU[code]];
     if(colShape[code]==='circ') {
@@ -1843,6 +2126,9 @@ document.querySelectorAll('#col-aci input[type="number"], #col-aci select').forE
 document.querySelectorAll('#col-ec2 input[type="number"], #col-ec2 select').forEach(el => {
   el.addEventListener('input', () => debounceCalc(() => calcCol('ec2')));
 });
+document.querySelectorAll('#col-is456 input[type="number"], #col-is456 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(() => calcCol('is456')));
+});
 </script>
 
 <!-- Validation helpers -->
@@ -1864,7 +2150,9 @@ function _valShow(containerId,errors){
 }
 function _valMark(id){const el=document.getElementById(id);if(el)el.classList.add('val-err');}
 
-function _rhoWarns(rho,isEC2){
+function _rhoWarns(rho,code){
+  const isEC2   = code==='ec2';
+  const isIS456 = code==='is456';
   const w=[];
   if(isEC2){
     if(rho<0.01){
@@ -1872,6 +2160,9 @@ function _rhoWarns(rho,isEC2){
       if(rho>=0.002) w.push(`<b>Note:</b> ρ<sub>min</sub> = 0.2% applies only to non-seismic design (DCL). For seismic regions (DCM/DCH), ρ<sub>min</sub> = 1.0% is required.`);
     }
     if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds Eurocode 2 maximum (ρ<sub>max</sub> = 4.0%, EC2 9.5.2(3)). Consider increasing column size or reducing reinforcement.`);
+  } else if(isIS456){
+    if(rho<0.008) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below IS 456:2000 minimum (ρ<sub>min</sub> = 0.8%, IS 456 Cl 26.5.3.1). Increase reinforcement to meet code requirements.`);
+    if(rho>0.06) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds IS 456:2000 maximum (ρ<sub>max</sub> = 6.0%, IS 456 Cl 26.5.3.1). Consider increasing column size or reducing reinforcement.`);
   } else {
     if(rho<0.01) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below ACI 318 minimum (ρ<sub>min</sub> = 1.0%, ACI 10.6.1.1). Increase reinforcement to meet code requirements.`);
     if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds ACI 318 practical maximum (ρ<sub>max</sub> = 4.0%, ACI 18.7.5.1). This limit accounts for lap splice congestion in connection regions. Consider increasing column size.`);
@@ -1882,14 +2173,15 @@ function _rhoWarns(rho,isEC2){
 }
 
 function validateCol(code){
-  const isEC2=code==='ec2';
+  const isEC2  =code==='ec2';
+  const isIS456=code==='is456';
   const U=UNITS[curU[code]];
   const isCirc=colShape[code]==='circ';
   const p=code+'-';
   const e=[];
 
-  const fcId=isEC2?p+'fck':p+'fc';
-  const fyId=isEC2?p+'fyk':p+'fy';
+  const fcId=isEC2?p+'fck':isIS456?p+'fck':p+'fc';
+  const fyId=isEC2?p+'fyk':isIS456?p+'fy':p+'fy';
   const PuId=isEC2?p+'NEd':p+'Pu';
   const ids=isCirc?[p+'D',fcId,fyId,PuId]:[p+'b',p+'h',fcId,fyId,PuId];
 
@@ -1904,11 +2196,14 @@ function validateCol(code){
     if(!h||h<150||h>3000){e.push("Height h: 150–3000 mm");_valMark(p+'h');}
   }
 
-  const fc=isEC2?g(p+'fck'):g(p+'fc');
+  const fc=isEC2?g(p+'fck'):isIS456?g(p+'fck'):g(p+'fc');
   const fy=isEC2?g(p+'fyk'):g(p+'fy');
   if(isEC2){
     if(!fc||fc<12||fc>90){e.push("fck: 12–90 MPa (EC2)");_valMark(fcId);}
     if(!fy||fy<240||fy>600){e.push("fyk: 240–600 MPa");_valMark(fyId);}
+  } else if(isIS456){
+    if(!fc||fc<15||fc>55){e.push("fck: 15–55 MPa (IS 456 M15–M55)");_valMark(fcId);}
+    if(!fy||fy<250||fy>600){e.push("fy: 250–600 MPa (IS 456)");_valMark(fyId);}
   } else {
     if(!fc||fc<17||fc>100){e.push("f'c: 17–100 MPa (ACI)");_valMark(fcId);}
     if(!fy||fy<240||fy>600){e.push("fy: 240–600 MPa");_valMark(fyId);}
