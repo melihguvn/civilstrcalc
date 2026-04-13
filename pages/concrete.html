@@ -10,9 +10,9 @@
   gtag('js', new Date());
   gtag('config', 'G-VPM6LCCWLN');
 </script>
-<title>Concrete Class Reference - ACI & Eurocode | CivilStrCalc</title>
-<meta name="description" content="Concrete strength class conversion tables. ACI 318 and Eurocode 2 standards with fc', fck, and fck,cube values.">
-<meta name="keywords" content="concrete strength, concrete class, fc prime, fck, ACI 318, Eurocode 2">
+<title>Concrete Class Reference - ACI, Eurocode 2 & IS 456 | CivilStrCalc</title>
+<meta name="description" content="Concrete strength class tables. ACI 318-25, Eurocode 2 EN 1992-1-1, and IS 456:2000 (India) standards with fc', fck, fcd, Ec values.">
+<meta name="keywords" content="concrete strength, concrete class, fc prime, fck, fcd, ACI 318, Eurocode 2, IS 456, Indian concrete">
 <!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582"
      crossorigin="anonymous"></script>
@@ -27,14 +27,14 @@
   text-align:center;border-bottom:2px solid #c8d0da;white-space:nowrap;
   letter-spacing:.01em;cursor:default;
 }
-.con-tbl thead th:first-child{text-align:left;padding-left:14px;}
+.con-tbl thead th:first-child{text-align:center;padding-left:10px;}
 .con-tbl .superrow th{
   font-size:.62rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   background:#f4f6f9;color:#8898aa;padding:3px 8px !important;
   border-bottom:1px solid #dde3ea !important;text-align:center;
   border-right:1px solid #dde3ea;
 }
-.con-tbl .superrow th:first-child{text-align:left;padding-left:14px !important;}
+.con-tbl .superrow th:first-child{text-align:center;padding-left:10px !important;}
 .con-tbl tbody tr{border-bottom:1px solid #dde2e8;transition:background .12s;}
 .con-tbl tbody tr:last-child{border-bottom:none;}
 .con-tbl tbody tr:hover{background:#e8f2fc;}
@@ -89,21 +89,21 @@
 
 <div class="page-title">
   <h1>Concrete Strength Classes</h1>
-  <p>Design properties per EN 1992-1-1 Table 3.1 and ACI 318-25.</p>
+  <p>Design properties per EN 1992-1-1 Table 3.1, ACI 318-25, and IS 456:2000.</p>
 </div>
 
 <div class="sub-tabs">
   <button class="sub-tab active" onclick="switchTab('ec2',this)">Eurocode 2 — EN 1992-1-1</button>
   <button class="sub-tab" onclick="switchTab('aci',this)">ACI 318-25 (US)</button>
+  <button class="sub-tab" onclick="switchTab('is456',this)">IS 456:2000 (India)</button>
 </div>
 
 <!-- EC2 -->
 <div class="sub-pane active" id="tab-ec2">
   <div class="card" style="margin-bottom:20px;overflow:hidden;">
     <div class="card-hdr">
-      <h3 style="margin:0;">Eurocode 2 — Concrete Classes</h3>
+      <h3 style="margin:0;">Eurocode 2 Concrete Classes — EN 1992-1-1 Table 3.1</h3>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-        <span class="ctag">EN 1992-1-1 Table 3.1</span>
         <div class="unit-toggle">
           <button class="unit-btn active" data-tbl="ec2" data-unit="mpa" onclick="setUnit('ec2','mpa',this)">MPa</button>
           <button class="unit-btn"        data-tbl="ec2" data-unit="psi" onclick="setUnit('ec2','psi',this)">psi</button>
@@ -112,7 +112,6 @@
     </div>
     <div class="tbl-wrap">
       <table class="con-tbl">
-        <caption>Eurocode 2 EN 1992-1-1 Table 3.1 — Concrete strength class properties</caption>
         <thead id="ec2-thead"></thead>
         <tbody id="ec2-tbody"></tbody>
       </table>
@@ -126,7 +125,6 @@
     <div class="card-hdr">
       <h3 style="margin:0;">ACI 318-25 — Normal Weight Concrete</h3>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-        <span class="ctag">ACI 318-25</span>
         <div class="unit-toggle">
           <button class="unit-btn active" data-tbl="aci" data-unit="psi" onclick="setUnit('aci','psi',this)">psi</button>
           <button class="unit-btn"        data-tbl="aci" data-unit="mpa" onclick="setUnit('aci','mpa',this)">MPa</button>
@@ -135,9 +133,29 @@
     </div>
     <div class="tbl-wrap">
       <table class="con-tbl" id="aci-tbl">
-        <caption>ACI 318-25 — Normal weight concrete design properties</caption>
         <thead id="aci-thead"></thead>
         <tbody id="aci-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- IS 456 -->
+<div class="sub-pane" id="tab-is456">
+  <div class="card" style="margin-bottom:20px;overflow:hidden;">
+    <div class="card-hdr">
+      <h3 style="margin:0;">IS 456:2000 — Indian Concrete Grades</h3>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div class="unit-toggle">
+          <button class="unit-btn active" data-tbl="is456" data-unit="mpa" onclick="setUnit('is456','mpa',this)">MPa</button>
+          <button class="unit-btn"        data-tbl="is456" data-unit="psi" onclick="setUnit('is456','psi',this)">psi</button>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="con-tbl">
+        <thead id="is456-thead"></thead>
+        <tbody id="is456-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -197,8 +215,64 @@ const ACI = ACI_KSI.map((fc, i) => ({
   app:    ACI_APP[i],
 }));
 
+// ── IS 456:2000 data ──
+// fck (MPa), fcd=0.447×fck (Cl 38.1), fctm≈0.7√fck (Cl 6.2.1),
+// Ec=5000√fck MPa (Cl 6.2.3.1), εcu=0.0035 (Fig 21)
+const IS456 = [
+  {grade:'M15', fck:15, fcd:6.71,  fctm:2.71, Ec:19365, ecu:0.0035},
+  {grade:'M20', fck:20, fcd:8.94,  fctm:3.13, Ec:22361, ecu:0.0035},
+  {grade:'M25', fck:25, fcd:11.18, fctm:3.50, Ec:25000, ecu:0.0035},
+  {grade:'M30', fck:30, fcd:13.41, fctm:3.83, Ec:27386, ecu:0.0035},
+  {grade:'M35', fck:35, fcd:15.65, fctm:4.14, Ec:29580, ecu:0.0035},
+  {grade:'M40', fck:40, fcd:17.88, fctm:4.43, Ec:31623, ecu:0.0035},
+  {grade:'M45', fck:45, fcd:20.12, fctm:4.70, Ec:33541, ecu:0.0035},
+  {grade:'M50', fck:50, fcd:22.35, fctm:4.95, Ec:35355, ecu:0.0035},
+  {grade:'M55', fck:55, fcd:24.59, fctm:5.19, Ec:37081, ecu:0.0035},
+];
+const IS456_HDRS = [
+  {lbl:'Grade',                                      tip:'Concrete mix designation (IS 456:2000 Table 2)',                                           unit:null},
+  {lbl:'f<sub>ck</sub>',                             tip:'Characteristic compressive strength of 150 mm cube at 28 days',                           unit:'MPa'},
+  {lbl:'f<sub>cd</sub>',                             tip:'Design compressive strength = 0.447 f\u2099\u2096 (IS 456 Cl 38.1, \u03b3m = 1.5)',        unit:'MPa'},
+  {lbl:'f<sub>ctm</sub>',                            tip:'Flexural tensile strength \u2248 0.7\u221af\u2099\u2096 (IS 456 Cl 6.2.1)',                unit:'MPa'},
+  {lbl:'E<sub>c</sub>',                              tip:'Short-term static modulus of elasticity = 5000\u221af\u2099\u2096 MPa (IS 456 Cl 6.2.3.1)', unit:'GPa'},
+  {lbl:'&epsilon;<sub>cu</sub>',                     tip:'Ultimate strain in compression = 0.0035 (IS 456 Fig 21)',                                  unit:'—'},
+];
+const IS456_GROUPS = [
+  {label:'',           span:1},
+  {label:'Strength',   span:3},
+  {label:'Elasticity', span:1},
+  {label:'Ductility',  span:1},
+];
+
+function renderIS456() {
+  const u = unitState.is456;
+  const MPa2psi = 145.038;
+  const stressLbl = u === 'psi' ? 'psi' : 'MPa';
+  const hdrCells = IS456_HDRS.map(h => {
+    let lbl = h.lbl;
+    if (h.unit === 'MPa') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${stressLbl}</span>`;
+    else if (h.unit === 'GPa') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${u === 'psi' ? 'ksi' : 'GPa'}</span>`;
+    else if (h.unit === '—') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">—</span>`;
+    return `<th scope="col" data-tip="${h.tip}">${lbl}</th>`;
+  }).join('');
+  document.getElementById('is456-thead').innerHTML =
+    '<tr class="superrow">' + IS456_GROUPS.map(g => `<th colspan="${g.span}">${g.label}</th>`).join('') + '</tr>' +
+    `<tr>${hdrCells}</tr>`;
+  document.getElementById('is456-tbody').innerHTML = IS456.map(r => {
+    function cv(mpa, dec) { return u === 'psi' ? (mpa * MPa2psi).toFixed(0) : mpa.toFixed(dec); }
+    function cvE(mpa) { // Ec: show GPa in MPa mode, ksi in psi mode
+      return u === 'psi' ? (mpa * MPa2psi / 1000).toFixed(1) : (mpa / 1000).toFixed(2);
+    }
+    const cells = [r.grade, cv(r.fck,0), cv(r.fcd,2), cv(r.fctm,2), cvE(r.Ec), r.ecu.toFixed(4)];
+    return '<tr>' + cells.map((v, i) => {
+      const hl = (i >= 1 && i <= 4) ? ' class="hl"' : '';
+      return `<td${hl}>${v}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+}
+
 // ── State ──
-const unitState = { ec2: 'mpa', aci: 'psi' };
+const unitState = { ec2: 'mpa', aci: 'psi', is456: 'mpa' };
 const MPa2ksi = 0.14504;
 
 // ── EC2 render ──
@@ -241,8 +315,7 @@ function renderEC2() {
     } else if (h.unit === '‰' || h.unit === '—') {
       uSpan = `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${h.unit}</span>`;
     }
-    const ta = i === 0 ? ' style="text-align:left"' : '';
-    return `<th${ta} scope="col" data-tip="${h.tip}">${h.lbl}${uSpan}</th>`;
+    return `<th scope="col" data-tip="${h.tip}">${h.lbl}${uSpan}</th>`;
   }).join('');
   document.getElementById('ec2-thead').innerHTML =
     '<tr class="superrow">' + EC2_GROUPS.map(g=>`<th colspan="${g.span}">${g.label}</th>`).join('') + '</tr>' +
@@ -270,7 +343,7 @@ function renderEC2() {
     ];
     return '<tr>' + cells.map((v, i) => {
       const hl = (i >= 1 && i <= 7) ? ' class="hl"' : '';
-      const leftCls = i === 0 ? ' class="left"' : hl;
+      const leftCls = hl;
       return `<td${leftCls}>${v}</td>`;
     }).join('') + '</tr>';
   }).join('');
@@ -359,7 +432,9 @@ function setUnit(tbl, unit, btn) {
   document.querySelectorAll(`.unit-btn[data-tbl="${tbl}"]`).forEach(b =>
     b.classList.toggle('active', b.dataset.unit === unit)
   );
-  if (tbl === 'ec2') renderEC2(); else renderACI();
+  if (tbl === 'ec2') renderEC2();
+  else if (tbl === 'aci') renderACI();
+  else renderIS456();
 }
 
 // ── Tooltip ──
@@ -382,6 +457,7 @@ function setUnit(tbl, unit, btn) {
 
 renderEC2();
 renderACI();
+renderIS456();
 </script>
 
 <!-- AdBlock Notice -->
