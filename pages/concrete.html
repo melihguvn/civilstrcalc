@@ -251,7 +251,7 @@ function renderIS456() {
   const hdrCells = IS456_HDRS.map(h => {
     let lbl = h.lbl;
     if (h.unit === 'MPa') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${stressLbl}</span>`;
-    else if (h.unit === 'GPa') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${u === 'psi' ? 'ksi' : 'GPa'}</span>`;
+    else if (h.unit === 'GPa') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">${u === 'psi' ? 'psi' : 'GPa'}</span>`;
     else if (h.unit === '—') lbl += `&thinsp;<span style="font-weight:400;opacity:.5;font-size:.82em">—</span>`;
     return `<th scope="col" data-tip="${h.tip}">${lbl}</th>`;
   }).join('');
@@ -260,8 +260,8 @@ function renderIS456() {
     `<tr>${hdrCells}</tr>`;
   document.getElementById('is456-tbody').innerHTML = IS456.map(r => {
     function cv(mpa, dec) { return u === 'psi' ? (mpa * MPa2psi).toFixed(0) : mpa.toFixed(dec); }
-    function cvE(mpa) { // Ec: show GPa in MPa mode, ksi in psi mode
-      return u === 'psi' ? (mpa * MPa2psi / 1000).toFixed(1) : (mpa / 1000).toFixed(2);
+    function cvE(mpa) { // Ec: show GPa in MPa mode, psi in psi mode
+      return u === 'psi' ? Math.round(mpa * MPa2psi).toLocaleString() : (mpa / 1000).toFixed(2);
     }
     const cells = [r.grade, cv(r.fck,0), cv(r.fcd,2), cv(r.fctm,2), cvE(r.Ec), r.ecu.toFixed(4)];
     return '<tr>' + cells.map((v, i) => {
