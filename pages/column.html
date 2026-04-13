@@ -43,43 +43,58 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .report-hdr h4{font-size:.72rem!important;}
   .rh-code{font-size:.56rem!important;}
   .print-btn{display:none!important;}
-  .result-box{background:#f0f5fb!important;gap:4px!important;padding:6px 8px!important;margin-bottom:6px!important;grid-template-columns:repeat(4,1fr)!important;}
-  .ri-value{font-size:.82rem!important;}
-  .ri-label{font-size:.52rem!important;}
-  .ri-unit{font-size:.52rem!important;margin-top:1px!important;}
-  .dcr-banner{border-radius:4px!important;padding:5px 9px!important;margin-bottom:6px!important;}
-  .dcr-text strong{font-size:.7rem!important;}
-  .dcr-text span{font-size:.6rem!important;}
-  .dcr-icon{font-size:.9rem!important;}
+  .ri-value{font-size:1.1rem!important;}
+  .ri-label{font-size:.65rem!important;}
+  .ri-unit{font-size:.62rem!important;margin-top:1px!important;}
+  .dcr-text strong{font-size:.78rem!important;}
+  .dcr-text span{font-size:.67rem!important;}
+  .dcr-icon{font-size:1.1rem!important;}
   /* Compact report body */
-  .report-body{padding:6px 12px!important;}
-  /* Side-by-side sections layout */
+  .report-body{padding:5px 10px!important;}
+  /* Stacked sections layout */
   .rpt-sec-left,.rpt-sec-right{
-    display:inline-block!important;vertical-align:top!important;width:48%!important;
+    display:block!important;width:100%!important;
   }
-  .rpt-sec-left{margin-right:3%!important;}
+  .rpt-sec-left{margin-right:0!important;}
   .rpt-sec{margin-bottom:5px!important;padding-bottom:5px!important;}
-  .rpt-sec-title{padding:1px 6px!important;font-size:.52rem!important;margin-bottom:4px!important;}
+  .rpt-sec-title{padding:2px 6px!important;font-size:.57rem!important;margin-bottom:4px!important;}
   .res-tbl{width:100%!important;}
-  .res-tbl td{padding:2px 5px!important;font-size:6.5pt!important;}
+  .res-tbl td{padding:3px 5px!important;font-size:7.5pt!important;}
   .report-warn{padding:3px 7px!important;font-size:.62rem!important;margin-bottom:4px!important;}
   /* Print-only header */
-  .print-only{padding-bottom:7px!important;margin-bottom:7px!important;}
-  /* PMM print canvas — constrain display size (HTML attrs set resolution, CSS sets display) */
-  .print-pmm-wrap{display:block!important;margin-top:4px!important;}
+  .print-only{padding-bottom:6px!important;margin-bottom:6px!important;}
+  /* Result summary sizing */
+  .result-box{background:#f0f5fb!important;gap:8px!important;padding:8px 12px!important;margin-bottom:5px!important;grid-template-columns:repeat(4,1fr)!important;}
+  .dcr-banner{border-radius:4px!important;padding:6px 10px!important;margin-bottom:5px!important;}
+  /* PMM print canvas */
+  .print-pmm-wrap{display:block!important;margin-top:5px!important;}
   .print-pmm-wrap canvas{display:block!important;}
-  /* Circular: single canvas full width, fixed height */
-  .print-pmm-wrap>canvas{width:100%!important;height:130px!important;}
-  /* Rectangular: two side-by-side canvases */
-  .print-pmm-wrap>div{display:flex!important;gap:4px!important;}
-  .print-pmm-wrap>div canvas{width:calc(50% - 2px)!important;height:120px!important;flex:none!important;}
+  /* Circular: single canvas centred, maintain 540:280 aspect ratio */
+  .print-pmm-wrap>canvas{
+    width:86%!important;height:auto!important;
+    aspect-ratio:540/380!important;
+    margin:0 auto!important;
+    display:block!important;
+  }
+  /* Rectangular: two side-by-side, maintain 380:280 aspect ratio */
+  .print-pmm-wrap>div{display:flex!important;gap:6px!important;justify-content:center!important;}
+  .print-pmm-wrap>div canvas{
+    flex:none!important;width:48%!important;min-width:0!important;
+    height:auto!important;
+    aspect-ratio:380/350!important;
+  }
   .print-pmm-wrap .pmm-lbl{margin-bottom:3px!important;}
-  .print-disclaimer{display:block!important;margin-top:5px!important;padding:4px 8px!important;font-size:6pt!important;}
-  .print-footer{display:flex!important;margin-top:5px!important;padding-top:4px!important;font-size:6pt!important;}
+  /* Summary bar (result-box + dcr-banner above diagrams) */
+  .rpt-sec-summary{display:block!important;margin:4px 0!important;}
+  .rpt-sec-screen-only{display:none!important;}
+  .print-disclaimer{display:block!important;margin-top:4px!important;padding:3px 8px!important;font-size:6pt!important;}
+  .print-footer{display:flex!important;margin-top:4px!important;padding-top:3px!important;font-size:6pt!important;}
 }
 /* Print-only elements (hidden on screen) */
 .print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
 .print-pmm-wrap{display:none;}
+.rpt-sec-summary{display:none;}
+.rpt-sec-screen-only{display:block;}
 .print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
 .print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
 
@@ -1546,17 +1561,19 @@ function calcCol(code){
     </div>
     <div class="rpt-sec rpt-sec-right">
       <div class="rpt-sec-title">Design Results</div>
-      <div class="result-box">
-        <div class="result-item"><div class="ri-label">Max P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
-        <div class="result-item"><div class="ri-label">M Capacity</div><div class="ri-value">${(M0/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
-        <div class="result-item"><div class="ri-label">M Resultant</div><div class="ri-value">${(Mu/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
-        <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
-      </div>
-      <div class="dcr-banner ${st}">
-        <div class="dcr-icon">${icons[st]}</div>
-        <div class="dcr-text">
-          <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
-          <span>M<sub>u</sub> = ${fmtM(Mu)}  ·  M<sub>0</sub> at P = ${fmtM(M0)}</span>
+      <div class="rpt-sec-screen-only">
+        <div class="result-box" style="margin-bottom:8px;">
+          <div class="result-item"><div class="ri-label">Max P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
+          <div class="result-item"><div class="ri-label">M Capacity</div><div class="ri-value">${(M0/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+          <div class="result-item"><div class="ri-label">M Resultant</div><div class="ri-value">${(Mu/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+          <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+        </div>
+        <div class="dcr-banner ${st}" style="margin-bottom:8px;">
+          <div class="dcr-icon">${icons[st]}</div>
+          <div class="dcr-text">
+            <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+            <span>M<sub>u</sub> = ${fmtM(Mu)}  ·  M<sub>0</sub> at P = ${fmtM(M0)}</span>
+          </div>
         </div>
       </div>
       <table class="res-tbl">
@@ -1569,9 +1586,24 @@ function calcCol(code){
         <tr><td>D/C</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
       </table>
     </div>
+    <div class="rpt-sec-summary">
+      <div class="result-box">
+        <div class="result-item"><div class="ri-label">Max P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
+        <div class="result-item"><div class="ri-label">M Capacity</div><div class="ri-value">${(M0/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item"><div class="ri-label">M Resultant</div><div class="ri-value">${(Mu/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+        <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+      </div>
+      <div class="dcr-banner ${st}" style="margin-bottom:4px;">
+        <div class="dcr-icon">${icons[st]}</div>
+        <div class="dcr-text">
+          <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+          <span>M<sub>u</sub> = ${fmtM(Mu)}  ·  M<sub>0</sub> at P = ${fmtM(M0)}</span>
+        </div>
+      </div>
+    </div>
     <div class="print-pmm-wrap">
-      <div style="font-family:var(--sans);font-size:6.8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:2px 8px;margin-bottom:5px;">P-M Interaction Diagram</div>
-      <canvas id="${p}print-pmm" width="510" height="280" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>
+      <div style="font-family:var(--sans);font-size:8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin-bottom:5px;">P-M Interaction Diagram</div>
+      <canvas id="${p}print-pmm" width="540" height="380" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>
     </div>
     <div class="print-disclaimer">
       ⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.
@@ -1672,36 +1704,53 @@ function calcCol(code){
     </div>
     <div class="rpt-sec rpt-sec-right">
       <div class="rpt-sec-title">Design Results</div>
+      <div class="rpt-sec-screen-only">
+        <div class="result-box" style="margin-bottom:8px;">
+          <div class="result-item"><div class="ri-label">Max Axial P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
+          <div class="result-item"><div class="ri-label">M<sub>x</sub> Capacity</div><div class="ri-value">${(M0x/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+          <div class="result-item"><div class="ri-label">M<sub>y</sub> Capacity</div><div class="ri-value">${(M0y/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
+          <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr_gov.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+        </div>
+        <div class="dcr-banner ${st}" style="margin-bottom:8px;">
+          <div class="dcr-icon">${icons[st]}</div>
+          <div class="dcr-text">
+            <strong>${labels[st]} — D/C = ${dcr_gov.toFixed(3)}</strong>
+            <span>D/C-Mx = ${dcr_x.toFixed(3)}  ·  D/C-My = ${dcr_y.toFixed(3)}  ·  Biaxial = ${dcr_bi.toFixed(3)}</span>
+          </div>
+        </div>
+      </div>
+      <table class="res-tbl">
+        <tr><td>Applied axial ${isEC2?'N<sub>Ed</sub>':'P<sub>u</sub>'}</td><td>${fmtF(Pu)}</td></tr>
+        <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'ux':'x'}</sub> (about x-axis)</td><td>${fmtM(Mx)}</td></tr>
+        <tr><td>M<sub>${isIS456?'ux':'x'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0x)}</td></tr>
+        <tr><td>D/C — M<sub>${isIS456?'ux':'x'}</sub></td><td class="${dcr_x<=1?'vok':'verr'}">${dcr_x.toFixed(3)}</td></tr>
+        <tr><td>Applied M<sub>${isIS456?'uy':'y'}</sub> (about y-axis)</td><td>${fmtM(My)}</td></tr>
+        <tr><td>M<sub>${isIS456?'uy':'y'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0y)}</td></tr>
+        <tr><td>D/C — M<sub>${isIS456?'uy':'y'}</sub></td><td class="${dcr_y<=1?'vok':'verr'}">${dcr_y.toFixed(3)}</td></tr>
+        <tr><td>Biaxial D/C (Bresler)</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr_bi.toFixed(3)}</td></tr>
+      </table>
+    </div>
+    <div class="rpt-sec-summary">
       <div class="result-box">
         <div class="result-item"><div class="ri-label">Max Axial P<sub>0</sub></div><div class="ri-value">${(P0/U.forceS).toFixed(0)}</div><div class="ri-unit">${U.forceU}</div></div>
         <div class="result-item"><div class="ri-label">M<sub>x</sub> Capacity</div><div class="ri-value">${(M0x/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
         <div class="result-item"><div class="ri-label">M<sub>y</sub> Capacity</div><div class="ri-value">${(M0y/U.momS).toFixed(isNmm?0:1)}</div><div class="ri-unit">${U.momU}</div></div>
         <div class="result-item ${st}"><div class="ri-label">D/C Ratio</div><div class="ri-value">${dcr_gov.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
       </div>
-      <div class="dcr-banner ${st}">
+      <div class="dcr-banner ${st}" style="margin-bottom:4px;">
         <div class="dcr-icon">${icons[st]}</div>
         <div class="dcr-text">
           <strong>${labels[st]} — D/C = ${dcr_gov.toFixed(3)}</strong>
           <span>D/C-Mx = ${dcr_x.toFixed(3)}  ·  D/C-My = ${dcr_y.toFixed(3)}  ·  Biaxial = ${dcr_bi.toFixed(3)}</span>
         </div>
       </div>
-      <table class="res-tbl">
-        <tr><td>Applied axial ${isEC2?'N<sub>Ed</sub>':'P<sub>u</sub>'}</td><td>${fmtF(Pu)}</td></tr>
-        <tr><td>Max axial capacity P<sub>0</sub></td><td class="vok">${fmtF(P0)}</td></tr>
-        <tr><td>Applied M<sub>${isIS456?'ux':'x'}</sub> (about x-axis, depth along h)</td><td>${fmtM(Mx)}</td></tr>
-        <tr><td>M<sub>${isIS456?'ux':'x'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0x)}</td></tr>
-        <tr><td>D/C — M<sub>${isIS456?'ux':'x'}</sub></td><td class="${dcr_x<=1?'vok':'verr'}">${dcr_x.toFixed(3)}</td></tr>
-        <tr><td>Applied M<sub>${isIS456?'uy':'y'}</sub> (about y-axis, depth along b)</td><td>${fmtM(My)}</td></tr>
-        <tr><td>M<sub>${isIS456?'uy':'y'}</sub> capacity at applied P</td><td class="vok">${fmtM(M0y)}</td></tr>
-        <tr><td>D/C — M<sub>${isIS456?'uy':'y'}</sub></td><td class="${dcr_y<=1?'vok':'verr'}">${dcr_y.toFixed(3)}</td></tr>
-        <tr><td>Biaxial D/C (Bresler)</td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr_bi.toFixed(3)}</td></tr>
-      </table>
     </div>
     <div class="print-pmm-wrap">
-      <div style="font-family:var(--sans);font-size:6.8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:2px 8px;margin-bottom:5px;">P-M Interaction Diagrams</div>
+      <div style="font-family:var(--sans);font-size:8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin-bottom:5px;">P-M Interaction Diagrams</div>
       <div style="display:flex;gap:6px;">
-        <canvas id="${p}print-pmm-x" width="250" height="220" style="display:block;flex:1;"></canvas>
-        <canvas id="${p}print-pmm-y" width="250" height="220" style="display:block;flex:1;"></canvas>
+        <canvas id="${p}print-pmm-x" width="380" height="350" style="display:block;flex:1;"></canvas>
+        <canvas id="${p}print-pmm-y" width="380" height="350" style="display:block;flex:1;"></canvas>
       </div>
     </div>
     <div class="print-disclaimer">
@@ -1748,7 +1797,7 @@ function _drawPMMpanel(canvas, curve, Pu, Mu, dcr_pt, axis, maxP, minP, maxM, U)
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
-  const pad = {top:26, right:14, bottom:38, left:54};
+  const pad = {top:36, right:18, bottom:44, left:44};
   const cw = W-pad.left-pad.right, ch = H-pad.top-pad.bottom;
   const toX = m => pad.left + Math.max(0,m)/maxM * cw;
   const toY = p => pad.top + (1-(p-minP)/(maxP-minP)) * ch;
@@ -1775,7 +1824,7 @@ function _drawPMMpanel(canvas, curve, Pu, Mu, dcr_pt, axis, maxP, minP, maxM, U)
   ctx.fillStyle='#2c3a4a';ctx.font='8.5px Arial';ctx.textAlign='center';
   const mLbl=axis==='x'?`M\u2093 (${U.momU})`:`M\u1D67 (${U.momU})`;
   ctx.fillText(mLbl,pad.left+cw/2,H-2);
-  ctx.save();ctx.translate(9,pad.top+ch/2);ctx.rotate(-Math.PI/2);
+  ctx.save();ctx.translate(11,pad.top+ch/2);ctx.rotate(-Math.PI/2);
   ctx.fillText(`P (${U.forceU})`,0,0);ctx.restore();
   // Fill
   ctx.beginPath();
@@ -1832,7 +1881,7 @@ function drawPMM_onCanvas(canvas, d, U, axis) {
   if(axis==='bi') { drawBiaxialContour(ctx,d,U,W,H); return; }
   const curve = axis==='y' ? d.cy : d.cx;
   const Pu=d.Pu, Mu=axis==='y'?d.My:d.Mx;
-  const pad={top:28,right:20,bottom:44,left:60};
+  const pad={top:28,right:20,bottom:44,left:46};
   const cw=W-pad.left-pad.right, ch=H-pad.top-pad.bottom;
   const maxP=Math.max(0,...curve.map(p=>p.P))*1.08;
   const minP=Math.min(0,...curve.map(p=>p.P))*1.12;
