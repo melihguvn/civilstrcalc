@@ -5,7 +5,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
 <title>RC Slab Flexural Design Calculator - ACI 318, Eurocode 2 & IS 456:2000 | CivilStrCalc</title>
-<meta name="description" content="One-way RC slab flexural design and capacity check per ACI 318-25, Eurocode 2 (EN 1992-1-1) and IS 456:2000. Unit strip (1 m) approach. Free online structural calculator.">
+<meta name="description" content="RC slab flexural design and capacity check per ACI 318-25, Eurocode 2 (EN 1992-1-1) and IS 456:2000. SI and US unit systems. Free online structural calculator.">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
@@ -74,7 +74,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .spc-tbl td:first-child{text-align:left;font-family:var(--sans);font-weight:600;color:var(--text);}
 .spc-tbl tr:last-child td{border-bottom:none;}
 .spc-tbl tr.spc-ok td{background:#f5fdf8;}.spc-tbl tr.spc-warn td{background:#fffbf0;}.spc-tbl tr.spc-na td{opacity:.45;}
-.strip-info{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px 12px;font-size:.77rem;color:var(--text-mid);margin-bottom:14px;}
+.strip-info{display:none;}
+/* UNIT SWITCHER */
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap;}
+.unit-switcher label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0;white-space:nowrap;}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap;}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--mono);font-size:.68rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
 .strip-info svg{flex-shrink:0;}
 .notation-preview{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--accent);background:var(--accent-lt);border:1px solid #b8d0eb;border-radius:5px;padding:5px 12px;text-align:center;margin-top:6px;letter-spacing:.03em;}
 .bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden;}
@@ -105,7 +112,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   body{background:white!important;font-size:8.5pt!important;}
   .no-print{display:none!important;}
   .print-only{display:flex!important;}
-  .bg-section,.sub-tabs,.mod-tabs,.page-title{display:none!important;}
+  .bg-section,.sub-tabs,.mod-tabs,.page-title,.unit-switcher{display:none!important;}
   .sub-pane:not(.active){display:none!important;}
   .mod-pane:not(.active){display:none!important;}
   .calc-layout{display:block!important;}
@@ -132,7 +139,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>Slab Design</h1>
-  <p>One-way RC slab flexural design and capacity check — unit strip (b = 1 m). ACI 318-25, Eurocode 2, IS 456:2000.</p>
+  <p>RC slab flexural design and capacity check. ACI 318-25, Eurocode 2, IS 456:2000.</p>
 </div>
 
 <!-- MODULE TABS -->
@@ -157,47 +164,39 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">ACI 318-25</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m) — results are per meter width
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth h [mm]</label>
-          <div class="iw"><input type="number" id="des_h_aci" value="200" step="5"><span class="us">mm</span></div>
+          <label>Total Depth h <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_h_aci" value="200" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Clear Cover [mm]</label>
-          <div class="iw"><input type="number" id="des_cv_aci" value="20" step="5"><span class="us">mm</span></div>
+          <label>Clear Cover <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_cv_aci" value="20" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Assumed Bar Diameter d<sub>b</sub> [mm]</label>
-        <select id="des_db_aci" class="form-select">
-          <option value="9.525">#3 (9.5 mm)</option>
-          <option value="12.70" selected>#4 (12.7 mm)</option>
-          <option value="15.88">#5 (15.9 mm)</option>
-          <option value="19.05">#6 (19.1 mm)</option>
-          <option value="22.23">#7 (22.2 mm)</option>
-          <option value="25.40">#8 (25.4 mm)</option>
-        </select>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f'c [MPa]</label>
-          <div class="iw"><input type="number" id="des_fc_aci" value="28"><span class="us">MPa</span></div>
+          <label>f'c <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fc_aci" value="28"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>y</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="des_fy_aci" value="420"><span class="us">MPa</span></div>
+          <label>f<sub>y</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fy_aci" value="420"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
       <div class="form-group">
-        <label>Factored Moment M<sub>u</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="des_mu_aci" value="25"><span class="us">kN·m/m</span></div>
+        <label>Factored Moment M<sub>u</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="des_mu_aci" value="25"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <div class="form-group">
         <label>φ — Flexure</label>
@@ -227,43 +226,33 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">EN 1992-1-1</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m) — results are per meter width
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth h [mm]</label>
-          <div class="iw"><input type="number" id="des_h_ec2" value="200" step="5"><span class="us">mm</span></div>
+          <label>Total Depth h <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_h_ec2" value="200" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Nominal Cover c<sub>nom</sub> [mm]</label>
-          <div class="iw"><input type="number" id="des_cv_ec2" value="25" step="5"><span class="us">mm</span></div>
+          <label>Nominal Cover c<sub>nom</sub> <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_cv_ec2" value="25" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Assumed Bar Diameter d<sub>b</sub> [mm]</label>
-        <select id="des_db_ec2" class="form-select">
-          <option value="6">Ø6</option>
-          <option value="8">Ø8</option>
-          <option value="10">Ø10</option>
-          <option value="12" selected>Ø12</option>
-          <option value="14">Ø14</option>
-          <option value="16">Ø16</option>
-          <option value="20">Ø20</option>
-          <option value="25">Ø25</option>
-        </select>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f<sub>ck</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="des_fck_ec2" value="25"><span class="us">MPa</span></div>
+          <label>f<sub>ck</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fck_ec2" value="25"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>yk</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="des_fyk_ec2" value="500"><span class="us">MPa</span></div>
+          <label>f<sub>yk</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fyk_ec2" value="500"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Partial Safety Factors</div></div>
@@ -279,8 +268,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
       <div class="form-group">
-        <label>Design Moment M<sub>Ed</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="des_mu_ec2" value="25"><span class="us">kN·m/m</span></div>
+        <label>Design Moment M<sub>Ed</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="des_mu_ec2" value="25"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <button class="btn-calc" onclick="calcDesEC2()">▶ Calculate</button>
     </div>
@@ -305,48 +294,39 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">IS 456:2000</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m) — results are per meter width
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <p style="font-size:.73rem;color:var(--text-dim);margin-bottom:11px">Section Geometry</p>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth D [mm]</label>
-          <div class="iw"><input type="number" id="des_h_is456" value="150" step="5"><span class="us">mm</span></div>
+          <label>Total Depth D <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_h_is456" value="150" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Clear Cover [mm]</label>
-          <div class="iw"><input type="number" id="des_cv_is456" value="20" step="5"><span class="us">mm</span></div>
+          <label>Clear Cover <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="des_cv_is456" value="20" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Assumed Bar Diameter [mm]</label>
-        <select id="des_db_is456" class="form-select">
-          <option value="6">T6 (6 mm)</option>
-          <option value="8">T8 (8 mm)</option>
-          <option value="10">T10 (10 mm)</option>
-          <option value="12" selected>T12 (12 mm)</option>
-          <option value="16">T16 (16 mm)</option>
-          <option value="20">T20 (20 mm)</option>
-          <option value="25">T25 (25 mm)</option>
-        </select>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f<sub>ck</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="des_fck_is456" value="20"><span class="us">MPa</span></div>
+          <label>f<sub>ck</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fck_is456" value="20"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>y</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="des_fy_is456" value="415"><span class="us">MPa</span></div>
+          <label>f<sub>y</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="des_fy_is456" value="415"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
       <div class="form-group">
-        <label>Factored Moment M<sub>u</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="des_mu_is456" value="15"><span class="us">kN·m/m</span></div>
+        <label>Factored Moment M<sub>u</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="des_mu_is456" value="15"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <button class="btn-calc" onclick="calcDesIS456()">▶ Calculate</button>
     </div>
@@ -382,29 +362,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">ACI 318-25</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m)
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth h [mm]</label>
-          <div class="iw"><input type="number" id="cap_h_aci" value="200" step="5"><span class="us">mm</span></div>
+          <label>Total Depth h <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_h_aci" value="200" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Clear Cover [mm]</label>
-          <div class="iw"><input type="number" id="cap_cv_aci" value="20" step="5"><span class="us">mm</span></div>
+          <label>Clear Cover <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_cv_aci" value="20" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f'c [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fc_aci" value="28"><span class="us">MPa</span></div>
+          <label>f'c <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fc_aci" value="28"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>y</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fy_aci" value="420"><span class="us">MPa</span></div>
+          <label>f<sub>y</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fy_aci" value="420"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Reinforcement (ACI Notation: #Bar@spacing)</div></div>
@@ -421,15 +404,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </select>
         </div>
         <div class="form-group">
-          <label>Spacing s [mm]</label>
-          <div class="iw"><input type="number" id="cap_s_aci" value="200" step="5" oninput="updNotation('aci')"><span class="us">mm</span></div>
+          <label>Spacing s <span data-lu="s">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_s_aci" value="200" step="5" oninput="updNotation('aci')"><span class="us" data-su="s">mm</span></div>
         </div>
       </div>
       <div class="notation-preview" id="cap_notation_aci">#4@200</div>
       <div class="form-div"><div class="form-div-lbl">Demand (for D/C ratio)</div></div>
       <div class="form-group">
-        <label>Applied Moment M<sub>u</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="cap_mu_aci" value="25"><span class="us">kN·m/m</span></div>
+        <label>Applied Moment M<sub>u</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="cap_mu_aci" value="25"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <button class="btn-calc" onclick="calcCapACI()">▶ Calculate</button>
     </div>
@@ -454,29 +437,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">EN 1992-1-1</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m)
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth h [mm]</label>
-          <div class="iw"><input type="number" id="cap_h_ec2" value="200" step="5"><span class="us">mm</span></div>
+          <label>Total Depth h <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_h_ec2" value="200" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Nominal Cover c<sub>nom</sub> [mm]</label>
-          <div class="iw"><input type="number" id="cap_cv_ec2" value="25" step="5"><span class="us">mm</span></div>
+          <label>Nominal Cover c<sub>nom</sub> <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_cv_ec2" value="25" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f<sub>ck</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fck_ec2" value="25"><span class="us">MPa</span></div>
+          <label>f<sub>ck</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fck_ec2" value="25"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>yk</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fyk_ec2" value="500"><span class="us">MPa</span></div>
+          <label>f<sub>yk</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fyk_ec2" value="500"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-row-2">
@@ -505,15 +491,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </select>
         </div>
         <div class="form-group">
-          <label>Spacing s [mm]</label>
-          <div class="iw"><input type="number" id="cap_s_ec2" value="150" step="5" oninput="updNotation('ec2')"><span class="us">mm</span></div>
+          <label>Spacing s <span data-lu="s">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_s_ec2" value="150" step="5" oninput="updNotation('ec2')"><span class="us" data-su="s">mm</span></div>
         </div>
       </div>
       <div class="notation-preview" id="cap_notation_ec2">Ø12/150</div>
       <div class="form-div"><div class="form-div-lbl">Demand (for D/C ratio)</div></div>
       <div class="form-group">
-        <label>Design Moment M<sub>Ed</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="cap_mu_ec2" value="25"><span class="us">kN·m/m</span></div>
+        <label>Design Moment M<sub>Ed</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="cap_mu_ec2" value="25"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <button class="btn-calc" onclick="calcCapEC2()">▶ Calculate</button>
     </div>
@@ -538,29 +524,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">IS 456:2000</span></div>
     <div class="card-body">
-      <div class="strip-info">
-        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/></svg>
-        Unit strip: <strong>b = 1000 mm</strong> (1 m)
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn slab-unit-btn active" data-unit="si" onclick="setSlabUnit('si',this)">SI (mm · kN)</button>
+          <button class="unit-btn slab-unit-btn" data-unit="us" onclick="setSlabUnit('us',this)">US (in · kip)</button>
+        </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Total Depth D [mm]</label>
-          <div class="iw"><input type="number" id="cap_h_is456" value="150" step="5"><span class="us">mm</span></div>
+          <label>Total Depth D <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_h_is456" value="150" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Clear Cover [mm]</label>
-          <div class="iw"><input type="number" id="cap_cv_is456" value="20" step="5"><span class="us">mm</span></div>
+          <label>Clear Cover <span data-lu="h">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_cv_is456" value="20" step="5"><span class="us" data-su="h">mm</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f<sub>ck</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fck_is456" value="20"><span class="us">MPa</span></div>
+          <label>f<sub>ck</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fck_is456" value="20"><span class="us" data-su="fc">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>y</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="cap_fy_is456" value="415"><span class="us">MPa</span></div>
+          <label>f<sub>y</sub> <span data-lu="fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="cap_fy_is456" value="415"><span class="us" data-su="fc">MPa</span></div>
         </div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Reinforcement (IS Notation: Tdb@spacing c/c)</div></div>
@@ -578,15 +567,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </select>
         </div>
         <div class="form-group">
-          <label>Spacing s [mm]</label>
-          <div class="iw"><input type="number" id="cap_s_is456" value="150" step="5" oninput="updNotation('is456')"><span class="us">mm</span></div>
+          <label>Spacing s <span data-lu="s">[mm]</span></label>
+          <div class="iw"><input type="number" id="cap_s_is456" value="150" step="5" oninput="updNotation('is456')"><span class="us" data-su="s">mm</span></div>
         </div>
       </div>
       <div class="notation-preview" id="cap_notation_is456">T12@150 c/c</div>
       <div class="form-div"><div class="form-div-lbl">Demand (for D/C ratio)</div></div>
       <div class="form-group">
-        <label>Factored Moment M<sub>u</sub> [kN·m/m]</label>
-        <div class="iw"><input type="number" id="cap_mu_is456" value="15"><span class="us">kN·m/m</span></div>
+        <label>Factored Moment M<sub>u</sub> <span data-lu="mu">[kN·m/m]</span></label>
+        <div class="iw"><input type="number" id="cap_mu_is456" value="15"><span class="us" data-su="mu">kN·m/m</span></div>
       </div>
       <button class="btn-calc" onclick="calcCapIS456()">▶ Calculate</button>
     </div>
@@ -693,6 +682,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 function ri(id){ return parseFloat(document.getElementById(id).value)||0; }
 function riv(id){ return document.getElementById(id).value; }
 function su(id,txt){ const e=document.getElementById(id); if(e) e.textContent=txt; }
+function sv(id,val){ const e=document.getElementById(id); if(e) e.value=val; }
 function showErr(id,msg){
   const emp=document.getElementById(id+'_empty');
   const crd=document.getElementById(id+'_card');
@@ -700,6 +690,71 @@ function showErr(id,msg){
   emp.style.display='';
   crd.style.display='none';
 }
+
+// ── Unit System ──
+let slabCurUnit = 'si';
+const SLAB_UNITS = {
+  si: { hU:'mm', fcU:'MPa', muU:'kN·m/m', sU:'mm',
+        hScale:1, fcScale:1, muScale:1e6,
+        // default values
+        hDes:200, cvDes:20, hDes_is:150, cvDes_is:20,
+        muDes:25, muDes_is:15,
+        hCap:200, cvCap:20, hCap_is:150, cvCap_is:20,
+        sCap:200, sCap_is:150, muCap:25, muCap_is:15,
+        fcAci:28, fyAci:420, fckEc2:25, fykEc2:500, fckIs:20, fyIs:415 },
+  us: { hU:'in', fcU:'psi', muU:'kip·ft/ft', sU:'in',
+        hScale:25.4, fcScale:0.006895, muScale:4448220,
+        hDes:8, cvDes:0.75, hDes_is:6, cvDes_is:0.75,
+        muDes:5.6, muDes_is:3.4,
+        hCap:8, cvCap:0.75, hCap_is:6, cvCap_is:0.75,
+        sCap:8, sCap_is:6, muCap:5.6, muCap_is:3.4,
+        fcAci:4000, fyAci:60000, fckEc2:3625, fykEc2:72520, fckIs:2900, fyIs:60175 }
+};
+
+function setSlabUnit(unit, btn) {
+  slabCurUnit = unit;
+  const U = SLAB_UNITS[unit];
+  document.querySelectorAll('.slab-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === unit));
+  // Update unit label spans in all panels
+  document.querySelectorAll('[data-su="h"]').forEach(el => el.textContent = U.hU);
+  document.querySelectorAll('[data-su="fc"]').forEach(el => el.textContent = U.fcU);
+  document.querySelectorAll('[data-su="mu"]').forEach(el => el.textContent = U.muU);
+  document.querySelectorAll('[data-su="s"]').forEach(el => el.textContent = U.sU);
+  document.querySelectorAll('[data-lu="h"]').forEach(el => el.textContent = '['+U.hU+']');
+  document.querySelectorAll('[data-lu="fc"]').forEach(el => el.textContent = '['+U.fcU+']');
+  document.querySelectorAll('[data-lu="mu"]').forEach(el => el.textContent = '['+U.muU+']');
+  document.querySelectorAll('[data-lu="s"]').forEach(el => el.textContent = '['+U.sU+']');
+  // Geometry defaults
+  sv('des_h_aci', U.hDes);    sv('des_cv_aci', U.cvDes);
+  sv('des_h_ec2', U.hDes);    sv('des_cv_ec2', U.cvDes);
+  sv('des_h_is456', U.hDes_is); sv('des_cv_is456', U.cvDes_is);
+  sv('cap_h_aci', U.hCap);    sv('cap_cv_aci', U.cvCap);
+  sv('cap_h_ec2', U.hCap);    sv('cap_cv_ec2', U.cvCap);
+  sv('cap_h_is456', U.hCap_is); sv('cap_cv_is456', U.cvCap_is);
+  // Moment defaults
+  sv('des_mu_aci', U.muDes);  sv('des_mu_ec2', U.muDes);  sv('des_mu_is456', U.muDes_is);
+  sv('cap_mu_aci', U.muCap);  sv('cap_mu_ec2', U.muCap);  sv('cap_mu_is456', U.muCap_is);
+  // Spacing defaults
+  sv('cap_s_aci', U.sCap);    sv('cap_s_ec2', U.sCap);    sv('cap_s_is456', U.sCap_is);
+  // Strength defaults
+  sv('des_fc_aci', U.fcAci);  sv('cap_fc_aci', U.fcAci);
+  sv('des_fy_aci', U.fyAci);  sv('cap_fy_aci', U.fyAci);
+  sv('des_fck_ec2', U.fckEc2); sv('cap_fck_ec2', U.fckEc2);
+  sv('des_fyk_ec2', U.fykEc2); sv('cap_fyk_ec2', U.fykEc2);
+  sv('des_fck_is456', U.fckIs); sv('cap_fck_is456', U.fckIs);
+  sv('des_fy_is456', U.fyIs);   sv('cap_fy_is456', U.fyIs);
+  // Refresh notation previews
+  updNotation('aci'); updNotation('ec2'); updNotation('is456');
+}
+
+// Unit conversion helpers (input → internal mm / MPa / N·mm)
+function _h(v)  { return v * SLAB_UNITS[slabCurUnit].hScale; }
+function _fc(v) { return v * SLAB_UNITS[slabCurUnit].fcScale; }
+function _mu(v) { return v * SLAB_UNITS[slabCurUnit].muScale; }  // → N·mm for 1000mm strip
+function _muKn(v) { return _mu(v) / 1e6; }  // → kN·m/m equivalent (for display)
+function _uH()  { return SLAB_UNITS[slabCurUnit].hU; }
+function _uFc() { return SLAB_UNITS[slabCurUnit].fcU; }
+function _uMu() { return SLAB_UNITS[slabCurUnit].muU; }
 
 // ── Tab switching ──
 function modTab(btn, id){
@@ -731,14 +786,15 @@ function updNotation(std){
   const bar=document.getElementById('cap_bar_'+std);
   const s=document.getElementById('cap_s_'+std).value;
   const db=parseFloat(bar.value);
+  const sU=SLAB_UNITS[slabCurUnit].sU;
   let txt='';
   if(std==='aci'){
     const n=BAR_LABELS[bar.value]||('#'+db);
-    txt=n+'@'+s;
+    txt=n+'@'+s+(sU==='in'?'"':'');
   } else if(std==='ec2'){
-    txt='Ø'+db+'/'+s;
+    txt='Ø'+db+'/'+s+(sU==='in'?'"':'');
   } else {
-    txt='T'+db+'@'+s+' c/c';
+    txt='T'+db+'@'+s+(sU==='in'?'"':' c/c');
   }
   document.getElementById('cap_notation_'+std).textContent=txt;
 }
@@ -813,14 +869,14 @@ function dcrHTML(dcr, Mu_disp, Mn_disp){
 // FLEXURAL DESIGN — ACI 318-25
 // ═══════════════════════════════════════════════
 function calcDesACI(){
-  const h=ri('des_h_aci'), cv=ri('des_cv_aci'), db=ri('des_db_aci');
-  const fc=ri('des_fc_aci'), fy=ri('des_fy_aci');
-  const Mu_knm=ri('des_mu_aci'), phi=ri('des_phi_aci')||0.90;
-  if(!h||!cv||!fc||!fy||!Mu_knm){showErr('des_aci','Please fill in all input fields.');return;}
+  const h=_h(ri('des_h_aci')), cv=_h(ri('des_cv_aci'));
+  const fc=_fc(ri('des_fc_aci')), fy=_fc(ri('des_fy_aci'));
+  const Mu=_mu(ri('des_mu_aci')), phi=ri('des_phi_aci')||0.90;
+  const db=12.7; // #4 — used only for effective depth estimate
+  if(!h||!cv||!fc||!fy||!Mu){showErr('des_aci','Please fill in all input fields.');return;}
   const b=1000; // mm
   const d=h-cv-db/2;
-  if(d<=0){showErr('des_aci','Effective depth d ≤ 0. Check cover and bar diameter vs total depth.');return;}
-  const Mu=Mu_knm*1e6; // N·mm/m
+  if(d<=0){showErr('des_aci','Effective depth d ≤ 0. Check cover vs total depth.');return;}
   const b1=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);
   const Rn=Mu/(phi*b*d*d);
   const disc=1-2*Rn/(0.85*fc);
@@ -861,10 +917,10 @@ function calcDesACI(){
     </div></div>`;
   const spcHTML=spacingTable(ACI_BARS, As_req, s_max,'ACI 318-25 §7.7.2.3');
   const html=buildReport('Slab Flexural Design','ACI 318-25',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth h',`${h} mm`],['Clear cover',`${cv} mm`],
-     ['Assumed bar diameter',`d<sub>b</sub> = ${db} mm`],['Effective depth d',`${d.toFixed(1)} mm`],
-     ["Concrete f'c",`${fc} MPa`],['Rebar f<sub>y</sub>',`${fy} MPa`],['φ (flexure)',phi.toFixed(2)],
-     ['Factored moment M<sub>u</sub>',`${Mu_knm} kN·m/m`]],
+    [['Total depth h',`${ri('des_h_aci')} ${_uH()}`],['Clear cover',`${ri('des_cv_aci')} ${_uH()}`],
+     ['Effective depth d (d<sub>b</sub>=12.7 mm)',`${d.toFixed(1)} mm`],
+     ["Concrete f'c",`${fc.toFixed(1)} MPa`],['Rebar f<sub>y</sub>',`${fy.toFixed(1)} MPa`],['φ (flexure)',phi.toFixed(2)],
+     ['Factored moment M<sub>u</sub>',`${ri('des_mu_aci')} ${_uMu()}`]],
     resHTML+spcHTML, steps, warns);
   showReport('des_aci', html);
 }
@@ -873,15 +929,15 @@ function calcDesACI(){
 // FLEXURAL DESIGN — EUROCODE 2
 // ═══════════════════════════════════════════════
 function calcDesEC2(){
-  const h=ri('des_h_ec2'), cv=ri('des_cv_ec2'), db=ri('des_db_ec2');
-  const fck=ri('des_fck_ec2'), fyk=ri('des_fyk_ec2');
+  const h=_h(ri('des_h_ec2')), cv=_h(ri('des_cv_ec2'));
+  const fck=_fc(ri('des_fck_ec2')), fyk=_fc(ri('des_fyk_ec2'));
   const gc=ri('des_gc_ec2')||1.5, gs=ri('des_gs_ec2')||1.15;
-  const Mu_knm=ri('des_mu_ec2');
-  if(!h||!cv||!fck||!fyk||!Mu_knm){showErr('des_ec2','Please fill in all input fields.');return;}
+  const Mu=_mu(ri('des_mu_ec2'));
+  const db=12; // Ø12 — used only for effective depth estimate
+  if(!h||!cv||!fck||!fyk||!Mu){showErr('des_ec2','Please fill in all input fields.');return;}
   const b=1000;
   const d=h-cv-db/2;
-  if(d<=0){showErr('des_ec2','Effective depth d ≤ 0. Check cover and bar diameter vs total depth.');return;}
-  const Mu=Mu_knm*1e6;
+  if(d<=0){showErr('des_ec2','Effective depth d ≤ 0. Check cover vs total depth.');return;}
   const fcd=fck/gc, fyd=fyk/gs;
   const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+fck/10+8);
   const K=Mu/(b*d*d*fcd);
@@ -924,10 +980,10 @@ function calcDesEC2(){
     </div></div>`;
   const spcHTML=spacingTable(EC2_BARS, As_des, s_max,'EC2 §9.3.1.1');
   const html=buildReport('Slab Flexural Design','EN 1992-1-1',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth h',`${h} mm`],['Nominal cover c<sub>nom</sub>',`${cv} mm`],
-     ['Assumed bar diameter',`d<sub>b</sub> = ${db} mm`],['Effective depth d',`${d.toFixed(1)} mm`],
-     ['Concrete f<sub>ck</sub>',`${fck} MPa`],['Rebar f<sub>yk</sub>',`${fyk} MPa`],
-     ['γ<sub>c</sub> / γ<sub>s</sub>',`${gc} / ${gs}`],['Design moment M<sub>Ed</sub>',`${Mu_knm} kN·m/m`]],
+    [['Total depth h',`${ri('des_h_ec2')} ${_uH()}`],['Nominal cover c<sub>nom</sub>',`${ri('des_cv_ec2')} ${_uH()}`],
+     ['Effective depth d (d<sub>b</sub>=12 mm)',`${d.toFixed(1)} mm`],
+     ['Concrete f<sub>ck</sub>',`${fck.toFixed(1)} MPa`],['Rebar f<sub>yk</sub>',`${fyk.toFixed(1)} MPa`],
+     ['γ<sub>c</sub> / γ<sub>s</sub>',`${gc} / ${gs}`],['Design moment M<sub>Ed</sub>',`${ri('des_mu_ec2')} ${_uMu()}`]],
     resHTML+spcHTML, steps, warns);
   showReport('des_ec2', html);
 }
@@ -936,14 +992,14 @@ function calcDesEC2(){
 // FLEXURAL DESIGN — IS 456:2000
 // ═══════════════════════════════════════════════
 function calcDesIS456(){
-  const h=ri('des_h_is456'), cv=ri('des_cv_is456'), db=ri('des_db_is456');
-  const fck=ri('des_fck_is456'), fy=ri('des_fy_is456');
-  const Mu_knm=ri('des_mu_is456');
-  if(!h||!cv||!fck||!fy||!Mu_knm){showErr('des_is456','Please fill in all input fields.');return;}
+  const h=_h(ri('des_h_is456')), cv=_h(ri('des_cv_is456'));
+  const fck=_fc(ri('des_fck_is456')), fy=_fc(ri('des_fy_is456'));
+  const Mu=_mu(ri('des_mu_is456'));
+  const db=12; // T12 — used only for effective depth estimate
+  if(!h||!cv||!fck||!fy||!Mu){showErr('des_is456','Please fill in all input fields.');return;}
   const b=1000;
   const d=h-cv-db/2;
-  if(d<=0){showErr('des_is456','Effective depth d ≤ 0. Check cover and bar diameter vs total depth.');return;}
-  const Mu=Mu_knm*1e6;
+  if(d<=0){showErr('des_is456','Effective depth d ≤ 0. Check cover vs total depth.');return;}
   const xuMaxR=fy<=250?0.53:fy<=415?0.48:fy<=500?0.46:0.44;
   const xuMax=xuMaxR*d;
   const fst=0.87*fy;
@@ -983,10 +1039,10 @@ function calcDesIS456(){
     </div></div>`;
   const spcHTML=spacingTable(IS_BARS, As_des, s_max,'IS 456:2000 Cl 26.3.3');
   const html=buildReport('Slab Flexural Design','IS 456:2000',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth D',`${h} mm`],['Clear cover',`${cv} mm`],
-     ['Assumed bar diameter',`d<sub>b</sub> = ${db} mm`],['Effective depth d',`${d.toFixed(1)} mm`],
-     ['Concrete f<sub>ck</sub>',`${fck} MPa`],['Rebar f<sub>y</sub>',`${fy} MPa`],
-     ['Factored moment M<sub>u</sub>',`${Mu_knm} kN·m/m`]],
+    [['Total depth D',`${ri('des_h_is456')} ${_uH()}`],['Clear cover',`${ri('des_cv_is456')} ${_uH()}`],
+     ['Effective depth d (d<sub>b</sub>=12 mm)',`${d.toFixed(1)} mm`],
+     ['Concrete f<sub>ck</sub>',`${fck.toFixed(1)} MPa`],['Rebar f<sub>y</sub>',`${fy.toFixed(1)} MPa`],
+     ['Factored moment M<sub>u</sub>',`${ri('des_mu_is456')} ${_uMu()}`]],
     resHTML+spcHTML, steps, warns);
   showReport('des_is456', html);
 }
@@ -995,10 +1051,11 @@ function calcDesIS456(){
 // FLEXURAL CAPACITY — ACI 318-25
 // ═══════════════════════════════════════════════
 function calcCapACI(){
-  const h=ri('cap_h_aci'), cv=ri('cap_cv_aci');
-  const fc=ri('cap_fc_aci'), fy=ri('cap_fy_aci');
-  const db=ri('cap_bar_aci'), s=ri('cap_s_aci');
-  const Mu_knm=ri('cap_mu_aci');
+  const h=_h(ri('cap_h_aci')), cv=_h(ri('cap_cv_aci'));
+  const fc=_fc(ri('cap_fc_aci')), fy=_fc(ri('cap_fy_aci'));
+  const db=ri('cap_bar_aci');
+  const s=_h(ri('cap_s_aci')); // spacing in mm
+  const Mu=_mu(ri('cap_mu_aci'));
   if(!h||!cv||!fc||!fy||!db||!s){showErr('cap_aci','Please fill in all input fields.');return;}
   if(s<=0){showErr('cap_aci','Spacing must be greater than 0.');return;}
   const b=1000;
@@ -1013,8 +1070,8 @@ function calcCapACI(){
   const phi=et>=0.005?0.90:et>=0.004?0.65+(et-0.004)/0.001*0.25:0.65;
   const phiMn_Nmm=phi*As_prov*fy*(d-a/2);
   const phiMn=phiMn_Nmm/1e6; // kN·m/m
-  const Mu=Mu_knm;
-  const dcr=Mu/phiMn;
+  const Mu_knm=Mu/1e6; // kN·m/m (for display)
+  const dcr=Mu_knm/phiMn;
   const rho_min=Math.max(0.0018*420/fy,0.0014);
   const As_min=rho_min*b*h;
   const s_max=Math.min(3*h,450);
@@ -1037,19 +1094,18 @@ function calcCapACI(){
     {desc:'Max bar spacing check',formula:'min(3h, 450 mm)',val:`s=${s} mm vs s<sub>max</sub>=${s_max.toFixed(0)} mm`,
       check:s<=s_max?{t:'ok',l:'OK ✓'}:{t:'warn',l:'exceeded'}}
   ];
-  const dclsCap=dcr<=0.75?'ok':dcr<=1.0?'warn':'err';
   const resHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Capacity Result</div>
-    ${dcrHTML(dcr,`${Mu.toFixed(2)} kN·m/m`,`${phiMn.toFixed(2)} kN·m/m`)}
+    ${dcrHTML(Mu_knm/phiMn,`${Mu_knm.toFixed(2)} kN·m/m`,`${phiMn.toFixed(2)} kN·m/m`)}
     <div class="fl-rb">
       <div class="fl-col"><div class="fl-lbl">φM<sub>n</sub></div><div class="fl-val">${phiMn.toFixed(2)}</div><div class="fl-unit">kN·m/m</div></div>
       <div class="fl-col"><div class="fl-lbl">A<sub>s,prov</sub></div><div class="fl-val mid">${As_prov.toFixed(0)}</div><div class="fl-unit">mm²/m</div></div>
       <div class="fl-col"><div class="fl-lbl">φ</div><div class="fl-val mid">${phi.toFixed(3)}</div><div class="fl-unit">—</div></div>
     </div></div>`;
   const html=buildReport('Slab Flexural Capacity','ACI 318-25',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth h',`${h} mm`],['Clear cover',`${cv} mm`],
-     ["Concrete f'c",`${fc} MPa`],['Rebar f<sub>y</sub>',`${fy} MPa`],
-     ['Reinforcement (notation)',notation],['Bar / spacing',`${barLabel} @ ${s} mm`],
-     ['Applied moment M<sub>u</sub>',`${Mu_knm} kN·m/m`]],
+    [['Total depth h',`${ri('cap_h_aci')} ${_uH()}`],['Clear cover',`${ri('cap_cv_aci')} ${_uH()}`],
+     ["Concrete f'c",`${fc.toFixed(1)} MPa`],['Rebar f<sub>y</sub>',`${fy.toFixed(1)} MPa`],
+     ['Reinforcement',notation],['Bar / spacing',`${barLabel} @ ${ri('cap_s_aci')} ${SLAB_UNITS[slabCurUnit].sU}`],
+     ['Applied moment M<sub>u</sub>',`${ri('cap_mu_aci')} ${_uMu()}`]],
     resHTML, steps, warns);
   showReport('cap_aci', html);
 }
@@ -1058,11 +1114,12 @@ function calcCapACI(){
 // FLEXURAL CAPACITY — EUROCODE 2
 // ═══════════════════════════════════════════════
 function calcCapEC2(){
-  const h=ri('cap_h_ec2'), cv=ri('cap_cv_ec2');
-  const fck=ri('cap_fck_ec2'), fyk=ri('cap_fyk_ec2');
+  const h=_h(ri('cap_h_ec2')), cv=_h(ri('cap_cv_ec2'));
+  const fck=_fc(ri('cap_fck_ec2')), fyk=_fc(ri('cap_fyk_ec2'));
   const gc=ri('cap_gc_ec2')||1.5, gs=ri('cap_gs_ec2')||1.15;
-  const db=ri('cap_bar_ec2'), s=ri('cap_s_ec2');
-  const Mu_knm=ri('cap_mu_ec2');
+  const db=ri('cap_bar_ec2');
+  const s=_h(ri('cap_s_ec2'));
+  const Mu=_mu(ri('cap_mu_ec2'));
   if(!h||!cv||!fck||!fyk||!db||!s){showErr('cap_ec2','Please fill in all input fields.');return;}
   if(s<=0){showErr('cap_ec2','Spacing must be greater than 0.');return;}
   const b=1000;
@@ -1077,8 +1134,8 @@ function calcCapEC2(){
   const z=Math.min(d-0.4*xu,0.95*d);
   const MRd_Nmm=As_prov*fyd*z;
   const MRd=MRd_Nmm/1e6;
-  const Mu=Mu_knm;
-  const dcr=Mu/MRd;
+  const Mu_knm=Mu/1e6; // kN·m/m for display
+  const dcr=Mu_knm/MRd;
   const rho_min=Math.max(0.26*fctm/fyk,0.0013);
   const As_min=rho_min*b*d;
   const s_max=Math.min(3*h,400);
@@ -1102,18 +1159,18 @@ function calcCapEC2(){
       check:s<=s_max?{t:'ok',l:'OK ✓'}:{t:'warn',l:'exceeded'}}
   ];
   const resHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Capacity Result</div>
-    ${dcrHTML(dcr,`${Mu.toFixed(2)} kN·m/m`,`${MRd.toFixed(2)} kN·m/m`)}
+    ${dcrHTML(dcr,`${Mu_knm.toFixed(2)} kN·m/m`,`${MRd.toFixed(2)} kN·m/m`)}
     <div class="fl-rb">
       <div class="fl-col"><div class="fl-lbl">M<sub>Rd</sub></div><div class="fl-val">${MRd.toFixed(2)}</div><div class="fl-unit">kN·m/m</div></div>
       <div class="fl-col"><div class="fl-lbl">A<sub>s,prov</sub></div><div class="fl-val mid">${As_prov.toFixed(0)}</div><div class="fl-unit">mm²/m</div></div>
       <div class="fl-col"><div class="fl-lbl">x<sub>u</sub>/d</div><div class="fl-val mid ${xuRatio>0.45?'err':'ok'}">${xuRatio.toFixed(3)}</div><div class="fl-unit">≤ 0.45</div></div>
     </div></div>`;
   const html=buildReport('Slab Flexural Capacity','EN 1992-1-1',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth h',`${h} mm`],['Nominal cover c<sub>nom</sub>',`${cv} mm`],
-     ['Concrete f<sub>ck</sub>',`${fck} MPa`],['Rebar f<sub>yk</sub>',`${fyk} MPa`],
+    [['Total depth h',`${ri('cap_h_ec2')} ${_uH()}`],['Nominal cover c<sub>nom</sub>',`${ri('cap_cv_ec2')} ${_uH()}`],
+     ['Concrete f<sub>ck</sub>',`${fck.toFixed(1)} MPa`],['Rebar f<sub>yk</sub>',`${fyk.toFixed(1)} MPa`],
      ['γ<sub>c</sub> / γ<sub>s</sub>',`${gc} / ${gs}`],
-     ['Reinforcement (notation)',notation],['Bar / spacing',`Ø${db} @ ${s} mm`],
-     ['Design moment M<sub>Ed</sub>',`${Mu_knm} kN·m/m`]],
+     ['Reinforcement',notation],['Bar / spacing',`Ø${db} @ ${ri('cap_s_ec2')} ${SLAB_UNITS[slabCurUnit].sU}`],
+     ['Design moment M<sub>Ed</sub>',`${ri('cap_mu_ec2')} ${_uMu()}`]],
     resHTML, steps, warns);
   showReport('cap_ec2', html);
 }
@@ -1122,10 +1179,11 @@ function calcCapEC2(){
 // FLEXURAL CAPACITY — IS 456:2000
 // ═══════════════════════════════════════════════
 function calcCapIS456(){
-  const h=ri('cap_h_is456'), cv=ri('cap_cv_is456');
-  const fck=ri('cap_fck_is456'), fy=ri('cap_fy_is456');
-  const db=ri('cap_bar_is456'), s=ri('cap_s_is456');
-  const Mu_knm=ri('cap_mu_is456');
+  const h=_h(ri('cap_h_is456')), cv=_h(ri('cap_cv_is456'));
+  const fck=_fc(ri('cap_fck_is456')), fy=_fc(ri('cap_fy_is456'));
+  const db=ri('cap_bar_is456');
+  const s=_h(ri('cap_s_is456'));
+  const Mu=_mu(ri('cap_mu_is456'));
   if(!h||!cv||!fck||!fy||!db||!s){showErr('cap_is456','Please fill in all input fields.');return;}
   if(s<=0){showErr('cap_is456','Spacing must be greater than 0.');return;}
   const b=1000;
@@ -1141,8 +1199,8 @@ function calcCapIS456(){
   const xu_use=Math.min(xu,xuMax);
   const Mn_Nmm=fst*As_prov*(d-0.42*xu_use);
   const Mn=Mn_Nmm/1e6;
-  const Mu=Mu_knm;
-  const dcr=Mu/Mn;
+  const Mu_knm=Mu/1e6; // kN·m/m for display
+  const dcr=Mu_knm/Mn;
   const As_min=(fy>=415?0.0012:0.0015)*b*h;
   const s_max=Math.min(3*d,300);
   const notation=document.getElementById('cap_notation_is456').textContent;
@@ -1162,17 +1220,17 @@ function calcCapIS456(){
       check:s<=s_max?{t:'ok',l:'OK ✓'}:{t:'warn',l:'exceeded'}}
   ];
   const resHTML=`<div class="rpt-sec"><div class="rpt-sec-title">Capacity Result</div>
-    ${dcrHTML(dcr,`${Mu.toFixed(2)} kN·m/m`,`${Mn.toFixed(2)} kN·m/m`)}
+    ${dcrHTML(dcr,`${Mu_knm.toFixed(2)} kN·m/m`,`${Mn.toFixed(2)} kN·m/m`)}
     <div class="fl-rb">
       <div class="fl-col"><div class="fl-lbl">M<sub>n</sub></div><div class="fl-val">${Mn.toFixed(2)}</div><div class="fl-unit">kN·m/m</div></div>
       <div class="fl-col"><div class="fl-lbl">A<sub>st,prov</sub></div><div class="fl-val mid">${As_prov.toFixed(0)}</div><div class="fl-unit">mm²/m</div></div>
       <div class="fl-col"><div class="fl-lbl">x<sub>u</sub>/d</div><div class="fl-val mid ${xuOk?'ok':'err'}">${(xu/d).toFixed(3)}</div><div class="fl-unit">≤ ${xuMaxR}</div></div>
     </div></div>`;
   const html=buildReport('Slab Flexural Capacity','IS 456:2000',
-    [['Section','b = 1000 mm (unit strip)'],['Total depth D',`${h} mm`],['Clear cover',`${cv} mm`],
-     ['Concrete f<sub>ck</sub>',`${fck} MPa`],['Rebar f<sub>y</sub>',`${fy} MPa`],
-     ['Reinforcement (notation)',notation],['Bar / spacing',`T${db} @ ${s} mm c/c`],
-     ['Factored moment M<sub>u</sub>',`${Mu_knm} kN·m/m`]],
+    [['Total depth D',`${ri('cap_h_is456')} ${_uH()}`],['Clear cover',`${ri('cap_cv_is456')} ${_uH()}`],
+     ['Concrete f<sub>ck</sub>',`${fck.toFixed(1)} MPa`],['Rebar f<sub>y</sub>',`${fy.toFixed(1)} MPa`],
+     ['Reinforcement',notation],['Bar / spacing',`T${db} @ ${ri('cap_s_is456')} ${SLAB_UNITS[slabCurUnit].sU} c/c`],
+     ['Factored moment M<sub>u</sub>',`${ri('cap_mu_is456')} ${_uMu()}`]],
     resHTML, steps, warns);
   showReport('cap_is456', html);
 }

@@ -145,6 +145,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   font-size:.82rem;color:#1a6db5;font-weight:500;
   text-align:center;letter-spacing:.02em;min-height:28px;
 }
+
+/* COLUMN HEADER TOOLTIP */
+.col-tip{position:fixed;z-index:9999;background:#1a2332;color:#fff;font-size:.72rem;padding:5px 10px;border-radius:5px;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3);display:none;}
 </style>
 <!-- Google Funding Choices (Cookie Consent) -->
 <script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
@@ -161,6 +164,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <meta name="theme-color" content="#1e3a5f">
 </head>
 <body style="display:block;background:#f4f6f8;">
+<div id="col-tip" class="col-tip"></div>
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
 
@@ -759,12 +763,12 @@ function renderISOmech() {
       <th colspan="1"></th>
     </tr>
     <tr>
-      <th>Grade</th>
-      <th>f<sub>yk</sub> (${su})</th>
-      <th>f<sub>uk</sub> (${su})</th>
-      <th>f<sub>t</sub>/f<sub>y</sub></th>
-      <th>ε<sub>uk</sub> (%)</th>
-      <th>Class</th>
+      <th data-tip="Steel designation">Grade</th>
+      <th data-tip="Characteristic yield strength">f<sub>yk</sub> (${su})</th>
+      <th data-tip="Characteristic tensile strength">f<sub>uk</sub> (${su})</th>
+      <th data-tip="Tensile-to-yield strength ratio (k)">f<sub>t</sub>/f<sub>y</sub></th>
+      <th data-tip="Characteristic strain at maximum force">ε<sub>uk</sub> (%)</th>
+      <th data-tip="Ductility class (EN 1992-1-1 Annex C)">Class</th>
     </tr>`;
   document.getElementById('iso-mech-tbody').innerHTML = ISO_MECH.map(r =>
     `<tr>
@@ -789,12 +793,12 @@ function renderASTMmech() {
       <th colspan="1"></th>
     </tr>
     <tr>
-      <th>Grade</th>
-      <th>Standard</th>
-      <th>f<sub>y</sub> (${su})</th>
-      <th>f<sub>u</sub> (${su})</th>
-      <th>Elong. (%)</th>
-      <th>Notes</th>
+      <th data-tip="ASTM grade designation">Grade</th>
+      <th data-tip="ASTM standard (A615 = deformed/plain carbon-steel; A706 = low-alloy)">Standard</th>
+      <th data-tip="Minimum yield strength">f<sub>y</sub> (${su})</th>
+      <th data-tip="Minimum tensile strength">f<sub>u</sub> (${su})</th>
+      <th data-tip="Minimum elongation at fracture in 200 mm gauge length">Elong. (%)</th>
+      <th data-tip="Additional requirements">Notes</th>
     </tr>`;
   let prevStd = '';
   document.getElementById('astm-mech-tbody').innerHTML = ASTM_MECH.map(r => {
@@ -822,11 +826,11 @@ function renderIndiaMech() {
       <th colspan="1"></th>
     </tr>
     <tr>
-      <th>Grade</th>
-      <th>f<sub>y</sub> (${su})</th>
-      <th>f<sub>u</sub> (${su})</th>
-      <th>Elong. (%)</th>
-      <th>Notes</th>
+      <th data-tip="IS 1786:2008 grade designation">Grade</th>
+      <th data-tip="Minimum yield/proof strength">f<sub>y</sub> (${su})</th>
+      <th data-tip="Minimum tensile strength">f<sub>u</sub> (${su})</th>
+      <th data-tip="Minimum elongation at fracture">Elong. (%)</th>
+      <th data-tip="Additional requirements">Notes</th>
     </tr>`;
   document.getElementById('india-mech-tbody').innerHTML = IS1786_MECH.map(r =>
     `<tr>
@@ -838,6 +842,25 @@ function renderIndiaMech() {
     </tr>`
   ).join('');
 }
+
+// ── COLUMN HEADER TOOLTIPS ──
+(function(){
+  const tip = document.getElementById('col-tip');
+  document.addEventListener('mouseover', e => {
+    const th = e.target.closest('th[data-tip]');
+    if (!th) return;
+    tip.textContent = th.dataset.tip;
+    tip.style.display = 'block';
+  });
+  document.addEventListener('mousemove', e => {
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top  = (e.clientY - 28) + 'px';
+  });
+  document.addEventListener('mouseout', e => {
+    if (!e.target.closest('th[data-tip]')) return;
+    tip.style.display = 'none';
+  });
+})();
 
 // ── INIT ──
 renderTable('iso');
