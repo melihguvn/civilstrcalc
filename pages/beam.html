@@ -204,6 +204,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
 .ref-list li{padding:9px 0;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text-mid);display:flex;gap:10px;line-height:1.6;}
 .ref-list li:last-child{border-bottom:none;}
 .ref-num{font-family:var(--mono);font-size:.7rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
+.bar-no-sel{font-size:.8rem;padding:5px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surface,var(--white));color:var(--text);width:100%;cursor:pointer;}
 </style>
 <!-- Google Funding Choices (Cookie Consent) -->
 <script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
@@ -1971,6 +1972,7 @@ function setUnit(unit, btn) {
   });
   clearResults();
   clearWarnings();
+  _swapAciBarUI(unit==='us');
 }
 
 function clearResults() {
@@ -2254,7 +2256,7 @@ function calcACI(){
      ["Concrete strength f'c", `${ri('fc_aci')} ${U.fcU}`],
      ["Rebar yield strength fy", `${ri('fy_aci')} ${U.fyU}`],
      ["Strength reduction factor φ", phi.toFixed(2)],
-     ...(hasDbl&&Asp>0?[["Compression steel A's", `${nbc}×Ø${ri('dbc_aci')} ${U.dbU}, d'=${ri('dprime_aci')} ${U.bU}`]]:[]),
+     ...(hasDbl&&Asp>0?[["Compression steel A's", `${nbc}×${fmtBar(dbc_mm,curUnit==='us')}, d'=${ri('dprime_aci')} ${U.bU}`]]:[]),
      ["Factored moment Mu", `${ri('mu_aci')} ${U.muU}`]],
     null,
     allSteps,
@@ -2861,8 +2863,8 @@ function calcCapACI(){
      ['Clear cover',`${ri('cap_cv_aci')} ${U.cvU}`],
      ["f'c",`${ri('cap_fc_aci')} ${U.fcU}`],
      ['f<sub>y</sub>',`${ri('cap_fy_aci')} ${U.fyU}`],
-     ['Tension steel',`${nbt}×Ø${ri('cap_dbt_aci')} ${U.dbU}${hasRow2?' + '+nb2+'×Ø'+ri('cap_db2_aci')+' '+U.dbU+' (row 2)':''}`],
-     ...(hasComp?[['Compression steel',`${nbc}×Ø${ri('cap_dbc_aci')} ${U.dbU}`]]:[]),
+     ['Tension steel',`${nbt}×${fmtBar(dbt,curUnit==='us')}${hasRow2?' + '+nb2+'×'+fmtBar(db2,curUnit==='us')+' (row 2)':''}`],
+     ...(hasComp?[['Compression steel',`${nbc}×${fmtBar(dbc,curUnit==='us')}`]]:[]),
      ...(Mu>0?[['Applied M<sub>u</sub>',`${ri('cap_mu_aci')} ${U.muU}`]]:[]),
      ['φ',phi.toFixed(2)]],
     [],
@@ -3086,8 +3088,8 @@ function calcTorACI(){
      ['φ / λ',`${phi} / ${lam}`],
      ['V<sub>u</sub>',`${ri('tor_vu_aci')} ${U.vuU}`],
      ['T<sub>u</sub>',`${ri('tor_tu_aci')} ${U.tuU}`],
-     ['Stirrups',`Ø${ri('tor_dst_aci')} ${U.dbU} @ ${ri('tor_s_aci')} ${U.bU}`],
-     ['Long. bars',`${nl}×Ø${ri('tor_dl_aci')} ${U.dbU}`]],
+     ['Stirrups',`${fmtBar(dst,curUnit==='us')} @ ${ri('tor_s_aci')} ${U.bU}`],
+     ['Long. bars',`${nl}×${fmtBar(dl,curUnit==='us')}`]],
     [{label:'T<sub>u</sub>',value:torV,unit:torUn,cls:neglect?'ok':''},
      {label:'φT<sub>th</sub>',value:tthV,unit:tthUn,cls:neglect?'ok':'warn'},
      {label:'φV<sub>c</sub>',value:vcV,unit:vcUn},
@@ -3297,6 +3299,14 @@ function setShearUnit(unit, btn, code){
   if(rhl) rhl.textContent=(code==='aci'?'ACI 318-25':'EN 1992-1-1')+' · '+U.tag;
   const empty=document.getElementById(p+'empty'), wrap=document.getElementById(p+'report-wrap');
   if(empty) empty.style.display=''; if(wrap) wrap.style.display='none';
+  if(code==='aci'){
+    const isUS=unit==='us';
+    const shInp=document.getElementById('aci-db'), shSel=document.getElementById('aci-db_bn');
+    if(shInp&&shSel){
+      if(isUS){shSel.value=String(shInp.value);shInp.style.display='none';shSel.style.display='';}
+      else{shInp.style.display='';shSel.style.display='none';}
+    }
+  }
 }
 
 function setShearIS456Unit(unit, btn){
@@ -3386,7 +3396,7 @@ function calcShearACI(){
       <tr><td>b × h</td><td>${fmtShL(bw,U)} × ${fmtShL(h,U)}</td></tr>
       <tr><td>Cover to stirrup</td><td>${isNmm?fmtShMM(cv):fmtShL(cv,U)}</td></tr>
       <tr><td>Effective depth d = h − cv − d<sub>b</sub>/2</td><td>${isNmm?fmtShMM(d):fmtShL(d,U)}</td></tr>
-      <tr><td>A<sub>v</sub> (${legs}×Ø${db} mm)</td><td>${Av.toFixed(0)} mm²</td></tr>
+      <tr><td>A<sub>v</sub> (${legs}×${fmtBar(db,curShearU.aci==='us')})</td><td>${Av.toFixed(0)} mm²</td></tr>
       <tr><td>ρ<sub>w</sub> = A<sub>sl</sub>/(b·d)</td><td>${(rho_w*100).toFixed(3)}%</td></tr>
     </table></div>
     <div class="rpt-sec"><div class="rpt-sec-title">Design Results</div>
@@ -3843,6 +3853,44 @@ function validateShearIS456(){
   if(!Vu||Vu<=0){e.push("Shear force Vu must be > 0");_valMark('is456s-vu');}
   if(e.length){_valShow('shear-is456',e);return false;}
   return true;
+}
+
+// ── ACI Bar Number Input System ───────────────────────────────────────────────
+const _ACI_BAR_IN=[{n:3,v:.375},{n:4,v:.500},{n:5,v:.625},{n:6,v:.750},{n:7,v:.875},{n:8,v:1.000},{n:9,v:1.128},{n:10,v:1.270},{n:11,v:1.410}];
+const _ACI_BAR_MM=_ACI_BAR_IN.map(b=>({n:b.n,v:+(b.v*25.4).toFixed(3)}));
+// Format mm diameter for display: '#6' in US mode, 'Ø19 mm' in SI
+function fmtBar(d_mm,isUS){
+  if(isUS){const b=_ACI_BAR_MM.find(x=>Math.abs(x.v-d_mm)<0.15);return b?'#'+b.n:(d_mm/25.4).toFixed(3)+'"';}
+  return 'Ø'+d_mm.toFixed(0)+' mm';
+}
+(function _initAciBarInputs(){
+  function _buildSel(inp,bars,defN,hasNone){
+    const sel=document.createElement('select');
+    sel.id=inp.id+'_bn'; sel.className='bar-no-sel'; sel.style.display='none';
+    if(hasNone) sel.innerHTML='<option value="0">None</option>';
+    sel.innerHTML+=bars.map(b=>`<option value="${b.v}"${b.n===defN?' selected':''}>#${b.n}</option>`).join('');
+    sel.addEventListener('change',()=>{inp.value=sel.value;});
+    inp.parentNode.insertBefore(sel,inp.nextSibling);
+  }
+  // inch-based inputs (calc functions multiply by 25.4)
+  [{id:'dbc_aci',def:5},{id:'cap_dbt_aci',def:6},{id:'cap_dbc_aci',def:6,none:true},
+   {id:'cap_db2_aci',def:6},{id:'tor_dst_aci',def:3},{id:'tor_dl_aci',def:5}
+  ].forEach(({id,def,none})=>{const inp=document.getElementById(id);if(inp)_buildSel(inp,_ACI_BAR_IN,def,!!none);});
+  // mm-based input (shear module always uses mm directly)
+  const shInp=document.getElementById('aci-db');
+  if(shInp) _buildSel(shInp,_ACI_BAR_MM,4,false);
+})();
+function _swapAciBarUI(isUS){
+  ['dbc_aci','cap_dbt_aci','cap_dbc_aci','cap_db2_aci','tor_dst_aci','tor_dl_aci','aci-db'].forEach(id=>{
+    const inp=document.getElementById(id),sel=document.getElementById(id+'_bn');
+    if(!inp||!sel) return;
+    if(isUS){sel.value=String(inp.value);inp.style.display='none';sel.style.display='';}
+    else{inp.style.display='';sel.style.display='none';}
+  });
+  const luIds=['lu-aci-dbc','lu-cap-aci-dbt','lu-cap-aci-dbc','lu-cap-aci-db2','lu-tor-aci-dst','lu-tor-aci-dl'];
+  const uIds =['u-aci-dbc', 'u-cap-aci-dbt','u-cap-aci-dbc','u-cap-aci-db2','u-tor-aci-dst','u-tor-aci-dl'];
+  luIds.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=isUS?'[bar #]':'[mm]';});
+  uIds.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=isUS?'':'mm';});
 }
 </script>
 
