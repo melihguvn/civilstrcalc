@@ -32,9 +32,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   body>div{padding:0!important;}
   .no-print{display:none!important;}
   .print-only{display:flex!important;}
-  .bg-section,.sub-tabs,.sh-tabs,.page-title,.res-empty,
+  .bg-section,.sub-tabs,.sh-tabs,.mod-tabs,.page-title,.res-empty,
   [id$="-pmm-outer"],[id$="-empty"]{display:none!important;}
   .sh-pane:not(.active){display:none!important;}
+  .mod-pane:not(.active){display:none!important;}
   /* Show only the active pane's report */
   .sub-pane:not(.active){display:none!important;}
   .col-layout{display:block!important;}
@@ -213,6 +214,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .sh-tab:hover{border-color:var(--accent);color:var(--accent);}
 .sh-tab.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
 .sh-pane{display:none;}.sh-pane.active{display:block;}
+/* MODULE TABS */
+.mod-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--white);padding:0 28px;flex-wrap:wrap;margin:16px -28px 14px;}
+.mod-tab{background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-family:var(--sans);font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.mod-tab:hover{color:var(--text);}
+.mod-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.mod-pane{display:none;}.mod-pane.active{display:block;}
 </style>
 <!-- Google Funding Choices (Cookie Consent) -->
 <script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
@@ -237,11 +244,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <p>Rectangular RC column — biaxial bending with axial load. Full P-M interaction diagram using strain-compatibility.</p>
 </div>
 
+<div class="mod-tabs no-print">
+  <button class="mod-tab active" id="mtab-pmm" onclick="modTab(this,'mod-pmm')">PMM Design</button>
+  <button class="mod-tab" id="mtab-colshear" onclick="modTab(this,'mod-colshear')">Shear Design</button>
+</div>
+
+<!-- ═══════ PMM DESIGN MODULE ═══════ -->
+<div class="mod-pane active" id="mod-pmm">
 <div class="sub-tabs no-print">
   <button class="sub-tab active" onclick="stab(this,'col','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'col','ec2')">Eurocode 2 (EN 1992-1-1)</button>
   <button class="sub-tab" onclick="stab(this,'col','is456')">IS 456:2000</button>
-  <button class="sub-tab" onclick="stab(this,'col','shear')">Shear Design</button>
 </div>
 
 <!-- ═══════ ACI 318-25 ═══════ -->
@@ -758,8 +771,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
-<!-- ═══════ SHEAR DESIGN ═══════ -->
-<div class="sub-pane" id="col-shear">
+</div><!-- /mod-pmm -->
+
+<!-- ═══════ SHEAR DESIGN MODULE ═══════ -->
+<div class="mod-pane" id="mod-colshear">
 <div class="sh-tabs no-print">
   <button class="sh-tab active" onclick="shTab(this,'sh-aci')">ACI 318-25</button>
   <button class="sh-tab" onclick="shTab(this,'sh-ec2')">Eurocode 2</button>
@@ -792,9 +807,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
       <div class="form-group">
-        <label>Effective depth d <span class="lu" id="lu-shc-aci-d">[m]</span></label>
-        <div class="iw"><input type="number" id="shc-aci-d" value="0.34" step="0.01"><span class="us" id="u-shc-aci-d">m</span></div>
-        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ h − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+        <label>Clear cover c<sub>v</sub> <span class="lu" id="lu-shc-aci-cv">[mm]</span></label>
+        <div class="iw"><input type="number" id="shc-aci-cv" value="30" step="1" min="10"><span class="us" id="u-shc-aci-cv">mm</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d = h − c<sub>v</sub> − d<sub>t</sub> − d<sub>bl</sub>/2 (computed internally)</div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
@@ -894,9 +909,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
       <div class="form-group">
-        <label>Effective depth d <span class="lu" id="lu-shc-ec2-d">[m]</span></label>
-        <div class="iw"><input type="number" id="shc-ec2-d" value="0.34" step="0.01"><span class="us" id="u-shc-ec2-d">m</span></div>
-        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ h − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+        <label>Clear cover c<sub>v</sub> <span class="lu" id="lu-shc-ec2-cv">[mm]</span></label>
+        <div class="iw"><input type="number" id="shc-ec2-cv" value="30" step="1" min="10"><span class="us" id="u-shc-ec2-cv">mm</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d = h − c<sub>v</sub> − d<sub>t</sub> − d<sub>bl</sub>/2 (computed internally)</div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
@@ -995,9 +1010,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
       <div class="form-group">
-        <label>Effective depth d <span class="lu" id="lu-shc-is456-d">[m]</span></label>
-        <div class="iw"><input type="number" id="shc-is456-d" value="0.34" step="0.01"><span class="us" id="u-shc-is456-d">m</span></div>
-        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ D − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+        <label>Clear cover c<sub>v</sub> [mm]</label>
+        <div class="iw"><input type="number" id="shc-is456-cv" value="30" step="1" min="10"><span class="us">mm</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d = D − c<sub>v</sub> − d<sub>t</sub> − d<sub>bl</sub>/2 (computed internally)</div>
       </div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
@@ -1066,7 +1081,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
-</div><!-- /col-shear -->
+</div><!-- /mod-colshear -->
 
 <!-- ═══════ DESIGN BACKGROUND ═══════ -->
 <div class="bg-section">
@@ -2628,6 +2643,13 @@ function validateCol(code){
 // SHEAR DESIGN MODULE
 // ══════════════════════════════
 
+function modTab(btn, id) {
+  document.querySelectorAll('.mod-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mod-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
 function shTab(btn, id) {
   btn.closest('.sh-tabs').parentElement.querySelectorAll('.sh-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -2648,16 +2670,16 @@ function setShColUnit(unit, btn, code) {
   const lenDecimals = unit==='knm' ? 2 : unit==='nmm' ? 0 : 2;
   const bwV  = unit==='knm'?0.40 : unit==='nmm'?400  : 16;
   const hV   = unit==='knm'?0.40 : unit==='nmm'?400  : 16;
-  const dV   = unit==='knm'?0.34 : unit==='nmm'?340  : 13.5;
+  const cvV  = unit==='us' ? 1.5 : 30;
   const sV   = unit==='knm'?200  : unit==='nmm'?200  : 8;
   const VuV  = unit==='knm'?200  : unit==='nmm'?200000 : 45;
   const NuV  = unit==='knm'?1500 : unit==='nmm'?1500000 : 337;
   sv(p+'bw', unit==='nmm'?bwV:bwV.toFixed(lenDecimals));
   sv(p+'h',  unit==='nmm'?hV :hV.toFixed(lenDecimals));
-  sv(p+'d',  unit==='nmm'?dV :dV.toFixed(lenDecimals));
+  sv(p+'cv', cvV);
   st('lu-'+p+'bw','['+U.lenU+']'); st('u-'+p+'bw',U.lenU);
   st('lu-'+p+'h', '['+U.lenU+']'); st('u-'+p+'h', U.lenU);
-  st('lu-'+p+'d', '['+U.lenU+']'); st('u-'+p+'d', U.lenU);
+  st('lu-'+p+'cv','['+U.dbU+']'); st('u-'+p+'cv',U.dbU);
   if (code!=='is456') {
     st('shc-'+code+'-utag', U.tag);
     st('shc-'+code+'-rh-lbl', (code==='aci'?'ACI 318-25':'EN 1992-1-1')+' · '+U.tag);
@@ -2694,7 +2716,6 @@ function setShColUnit(unit, btn, code) {
     sv(p+'pu', unit==='nmm'?1500000:1500);
     st('lu-shc-is456-bw','['+U.lenU+']'); st('u-shc-is456-bw',U.lenU);
     st('lu-shc-is456-h', '['+U.lenU+']'); st('u-shc-is456-h', U.lenU);
-    st('lu-shc-is456-d', '['+U.lenU+']'); st('u-shc-is456-d', U.lenU);
     st('lu-shc-is456-sv','['+U.lenU+']'); st('u-shc-is456-sv',U.lenU);
     sv(p+'sv', sV);
     st('shc-is456-utag', U.tag);
@@ -2764,7 +2785,7 @@ function calcShCol_aci() {
 
   const bw  = g('shc-aci-bw')  * LS;
   const h   = g('shc-aci-h')   * LS;
-  const d   = g('shc-aci-d')   * LS;
+  const cv  = g('shc-aci-cv')  * dbS;
   const fc  = g('shc-aci-fc')  * fcS;
   const fyt = g('shc-aci-fyt') * fcS;
   const lam = g('shc-aci-lam') || 1.0;
@@ -2775,16 +2796,19 @@ function calcShCol_aci() {
   const dbl = g('shc-aci-dbl') * dbS;
   const s   = g('shc-aci-s')   * LS;
   const nl  = Math.max(2, Math.round(g('shc-aci-nl')));
+  const d   = Math.max(h - cv - dt - dbl / 2, 50); // effective depth (mm)
 
-  if (!bw||!h||!d||!fc||!fyt||!Vu) { alert('Please fill all required inputs.'); return; }
+  if (!bw||!h||!fc||!fyt||!Vu) { alert('Please fill all required inputs.'); return; }
 
   const Ag  = bw * h;
   const Ab  = Math.PI * dt * dt / 4;
   const Av  = nl * Ab;   // mm² per spacing s
 
-  // ACI 318-25 Table 22.5.5.1-a (SI): Vc = [0.66λ(ρw)^(1/3)(f'c)^(1/3) + Nu/(6Ag)]×bw×d
-  const Vc_detail = (0.66*lam*Math.pow(rho_l,1/3)*Math.pow(fc,1/3) + Math.max(Nu,0)/(6*Ag)) * bw * d;
-  // Simplified (lower bound): Vc = 0.17λ√f'c × bw × d (no axial benefit)
+  // ACI 318-25 §22.5.5.1: size-effect factor λs
+  const lam_s = Math.min(Math.sqrt(2 / (1 + 0.004 * d)), 1.0);
+  // ACI 318-25 Table 22.5.5.1-a (SI): Vc = [0.66λλs(ρw)^(1/3)(f'c)^(1/3) + Nu/(6Ag)]×bw×d
+  const Vc_detail = (0.66*lam*lam_s*Math.pow(rho_l,1/3)*Math.pow(fc,1/3) + Math.max(Nu,0)/(6*Ag)) * bw * d;
+  // Simplified (lower bound): Vc = 0.17λ√f'c × bw × d (ACI 318-25 Table 22.5.5.1-b)
   const Vc_simp   = 0.17 * lam * Math.sqrt(fc) * bw * d;
   const Vc = Math.max(Vc_detail, Vc_simp);
   const phi = 0.75;
@@ -2847,11 +2871,13 @@ function calcShCol_aci() {
     <table class="res-tbl">
       <tr><td>Width b<sub>w</sub></td><td>${fmtL(bw)}</td></tr>
       <tr><td>Total depth h</td><td>${fmtL(h)}</td></tr>
-      <tr><td>Effective depth d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
+      <tr><td>Effective depth d = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td class="vhl">${fmtL(d)}</td></tr>
       <tr><td>Gross area A<sub>g</sub></td><td>${fmtA(Ag)}</td></tr>
       <tr><td>f'c</td><td>${fmtS(fc)}</td></tr>
       <tr><td>f<sub>yt</sub></td><td>${fmtS(fyt)}</td></tr>
       <tr><td>λ</td><td>${lam.toFixed(2)}</td></tr>
+      <tr><td>λ<sub>s</sub> (size effect, §22.5.5.1)</td><td>${lam_s.toFixed(3)}</td></tr>
       <tr><td>ρ<sub>l</sub></td><td>${(rho_l*100).toFixed(2)}%</td></tr>
     </table>
   </div>
@@ -2866,7 +2892,7 @@ function calcShCol_aci() {
   <div class="rpt-sec">
     <div class="rpt-sec-title">Shear Strength — ACI 318-25 §22.5</div>
     <table class="res-tbl">
-      <tr><td>V<sub>c</sub> (detailed, Table 22.5.5.1-a)</td><td>${fmtV(Vc_detail)}</td></tr>
+      <tr><td>V<sub>c</sub> (detailed, 0.66λλ<sub>s</sub>ρ<sup>⅓</sup>f'c<sup>⅓</sup>+N<sub>u</sub>/6A<sub>g</sub>)·b·d</td><td>${fmtV(Vc_detail)}</td></tr>
       <tr><td>V<sub>c</sub> (simplified, 0.17λ√f'c·b·d)</td><td>${fmtV(Vc_simp)}</td></tr>
       <tr><td>V<sub>c</sub> used</td><td class="vhl">${fmtV(Vc)}</td></tr>
       <tr><td>φV<sub>c</sub> (φ=0.75)</td><td>${fmtV(phiVc)}</td></tr>
@@ -2921,7 +2947,7 @@ function calcShCol_ec2() {
 
   const bw  = g('shc-ec2-bw')  * LS;
   const h   = g('shc-ec2-h')   * LS;
-  const d   = g('shc-ec2-d')   * LS;
+  const cv  = g('shc-ec2-cv')  * dbS;
   const fck = g('shc-ec2-fck') * fcS;
   const fyk = g('shc-ec2-fyk') * fcS;
   const rho_l = Math.min(Math.max(g('shc-ec2-rho')/100, 0.0001), 0.02);
@@ -2932,8 +2958,9 @@ function calcShCol_ec2() {
   const dbl = g('shc-ec2-dbl') * dbS;
   const s   = g('shc-ec2-s')   * LS;
   const nl  = Math.max(2, Math.round(g('shc-ec2-nl')));
+  const d   = Math.max(h - cv - dt - dbl / 2, 50); // effective depth (mm)
 
-  if (!bw||!h||!d||!fck||!fyk||!VEd) { alert('Please fill all required inputs.'); return; }
+  if (!bw||!h||!fck||!fyk||!VEd) { alert('Please fill all required inputs.'); return; }
 
   const Ac   = bw * h;
   const fcd  = fck / 1.5;
@@ -3002,7 +3029,8 @@ function calcShCol_ec2() {
     <table class="res-tbl">
       <tr><td>b<sub>w</sub></td><td>${fmtL(bw)}</td></tr>
       <tr><td>h</td><td>${fmtL(h)}</td></tr>
-      <tr><td>d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
+      <tr><td>d = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td class="vhl">${fmtL(d)}</td></tr>
       <tr><td>f<sub>ck</sub></td><td>${fmtS(fck)}</td></tr>
       <tr><td>f<sub>cd</sub> = f<sub>ck</sub>/1.5</td><td>${fmtS(fcd)}</td></tr>
       <tr><td>f<sub>yk</sub></td><td>${fmtS(fyk)}</td></tr>
@@ -3077,18 +3105,19 @@ function calcShCol_is456() {
 
   const bw  = g('shc-is456-bw')  * LS;
   const h   = g('shc-is456-h')   * LS;
-  const d   = g('shc-is456-d')   * LS;
-  const fck = g('shc-is456-fck');   // always MPa
-  const fy  = g('shc-is456-fy');    // always MPa
+  const cv  = g('shc-is456-cv');     // always mm
+  const fck = g('shc-is456-fck');    // always MPa
+  const fy  = g('shc-is456-fy');     // always MPa
   const pt  = Math.min(Math.max(g('shc-is456-rho'),0.15),3.0);
   const Vu  = g('shc-is456-vu')  * FS;
   const Pu  = g('shc-is456-pu')  * FS;
-  const dt  = g('shc-is456-dt');    // always mm
-  const dbl = g('shc-is456-dbl');   // always mm
+  const dt  = g('shc-is456-dt');     // always mm
+  const dbl = g('shc-is456-dbl');    // always mm
   const sv  = g('shc-is456-sv')  * LS;
   const nl  = Math.max(2, Math.round(g('shc-is456-nl')));
+  const d   = Math.max(h - cv - dt - dbl / 2, 50); // effective depth (mm)
 
-  if (!bw||!h||!d||!fck||!fy||!Vu) { alert('Please fill all required inputs.'); return; }
+  if (!bw||!h||!fck||!fy||!Vu) { alert('Please fill all required inputs.'); return; }
 
   const Ag   = bw * h;
   const Ab   = Math.PI * dt * dt / 4;
@@ -3151,7 +3180,8 @@ function calcShCol_is456() {
     <table class="res-tbl">
       <tr><td>Width b</td><td>${fmtL(bw)}</td></tr>
       <tr><td>Total depth D</td><td>${fmtL(h)}</td></tr>
-      <tr><td>Effective depth d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>Clear cover c<sub>v</sub></td><td>${cv.toFixed(0)} mm</td></tr>
+      <tr><td>d = D−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td class="vhl">${fmtL(d)}</td></tr>
       <tr><td>f<sub>ck</sub></td><td>${fck.toFixed(0)} MPa</td></tr>
       <tr><td>f<sub>y</sub></td><td>${fy.toFixed(0)} MPa</td></tr>
       <tr><td>ρ<sub>l</sub> = 100·A<sub>st</sub>/(b·d)</td><td>${pt.toFixed(2)}%</td></tr>
@@ -3258,6 +3288,16 @@ function _swapShColBarUI(isUS){
     if(u)  u.textContent=isUS?'':'mm';
   });
 }
+
+// Hash-based module navigation (for sidebar deep-links)
+(function(){
+  const hash = location.hash.replace('#','');
+  if (hash === 'colshear') {
+    modTab(document.getElementById('mtab-colshear'), 'mod-colshear');
+  } else {
+    modTab(document.getElementById('mtab-pmm'), 'mod-pmm');
+  }
+})();
 </script>
 
 <!-- AdBlock Notice -->
