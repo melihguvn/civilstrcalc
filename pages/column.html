@@ -32,8 +32,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   body>div{padding:0!important;}
   .no-print{display:none!important;}
   .print-only{display:flex!important;}
-  .bg-section,.sub-tabs,.page-title,.res-empty,
+  .bg-section,.sub-tabs,.sh-tabs,.page-title,.res-empty,
   [id$="-pmm-outer"],[id$="-empty"]{display:none!important;}
+  .sh-pane:not(.active){display:none!important;}
   /* Show only the active pane's report */
   .sub-pane:not(.active){display:none!important;}
   .col-layout{display:block!important;}
@@ -206,6 +207,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .ref-list li:last-child{border-bottom:none;}
 .ref-num{font-family:var(--mono);font-size:.69rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
 .bar-no-sel{font-size:.8rem;padding:5px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surface,var(--white));color:var(--text);width:100%;cursor:pointer;}
+/* SHEAR MODULE INNER TABS */
+.sh-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.sh-tab{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--mono);font-size:.67rem;padding:4px 12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.sh-tab:hover{border-color:var(--accent);color:var(--accent);}
+.sh-tab.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
+.sh-pane{display:none;}.sh-pane.active{display:block;}
 </style>
 <!-- Google Funding Choices (Cookie Consent) -->
 <script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
@@ -234,6 +241,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <button class="sub-tab active" onclick="stab(this,'col','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'col','ec2')">Eurocode 2 (EN 1992-1-1)</button>
   <button class="sub-tab" onclick="stab(this,'col','is456')">IS 456:2000</button>
+  <button class="sub-tab" onclick="stab(this,'col','shear')">Shear Design</button>
 </div>
 
 <!-- ═══════ ACI 318-25 ═══════ -->
@@ -750,6 +758,316 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
+<!-- ═══════ SHEAR DESIGN ═══════ -->
+<div class="sub-pane" id="col-shear">
+<div class="sh-tabs no-print">
+  <button class="sh-tab active" onclick="shTab(this,'sh-aci')">ACI 318-25</button>
+  <button class="sh-tab" onclick="shTab(this,'sh-ec2')">Eurocode 2</button>
+  <button class="sh-tab" onclick="shTab(this,'sh-is456')">IS 456:2000</button>
+</div>
+
+<!-- ── ACI 318-25 Shear ── -->
+<div class="sh-pane active" id="sh-aci">
+<div class="col-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="shc-aci-utag">kN-m · m</span></div>
+    <div class="card-body">
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" onclick="setShColUnit('knm',this,'aci')">kN-m &amp; m</button>
+          <button class="unit-btn" onclick="setShColUnit('nmm',this,'aci')">N-mm</button>
+          <button class="unit-btn" onclick="setShColUnit('us',this,'aci')">US (kip, in)</button>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b<sub>w</sub> <span class="lu" id="lu-shc-aci-bw">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-bw" value="0.40" step="0.01"><span class="us" id="u-shc-aci-bw">m</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total depth h <span class="lu" id="lu-shc-aci-h">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-h" value="0.40" step="0.01"><span class="us" id="u-shc-aci-h">m</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Effective depth d <span class="lu" id="lu-shc-aci-d">[m]</span></label>
+        <div class="iw"><input type="number" id="shc-aci-d" value="0.34" step="0.01"><span class="us" id="u-shc-aci-d">m</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ h − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f'c <span class="lu" id="lu-shc-aci-fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-fc" value="28"><span class="us" id="u-shc-aci-fc">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>yt</sub> ties <span class="lu" id="lu-shc-aci-fyt">[MPa]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-fyt" value="420"><span class="us" id="u-shc-aci-fyt">MPa</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>λ <span style="font-size:.63rem;color:var(--text-dim);">(1.0=NW concrete)</span></label>
+          <div class="iw"><input type="number" id="shc-aci-lam" value="1.0" step="0.05" min="0.75" max="1.0"><span class="us">—</span></div>
+        </div>
+        <div class="form-group">
+          <label>ρ<sub>l</sub> longit. <span class="lu">[%]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-rho" value="1.5" step="0.1" min="0.1"><span class="us">%</span></div>
+        </div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>V<sub>u</sub> <span class="lu" id="lu-shc-aci-vu">[kN]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-vu" value="200"><span class="us" id="u-shc-aci-vu">kN</span></div>
+        </div>
+        <div class="form-group">
+          <label>N<sub>u</sub> <span class="lu" id="lu-shc-aci-nu">[kN]</span> <span style="font-size:.62rem;color:var(--text-dim);">comp+</span></label>
+          <div class="iw"><input type="number" id="shc-aci-nu" value="1500"><span class="us" id="u-shc-aci-nu">kN</span></div>
+        </div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Ties)</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Tie dia. d<sub>t</sub> <span class="lu" id="lu-shc-aci-dt">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-dt" value="10" step="1" min="6"><span class="us" id="u-shc-aci-dt">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Legs n</label>
+          <div class="iw"><input type="number" id="shc-aci-nl" value="2" min="2" max="8"><span class="us">—</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Spacing s <span class="lu" id="lu-shc-aci-s">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-s" value="200" step="5" min="25"><span class="us" id="u-shc-aci-s">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Main bar d<sub>bl</sub> <span class="lu" id="lu-shc-aci-dbl">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-aci-dbl" value="20" step="1" min="10"><span class="us" id="u-shc-aci-dbl">mm</span></div>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcShCol_aci()">▶ Calculate Shear Design</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="shc-aci-empty"><div class="ri">🔩</div>Configure inputs and click Calculate.</div>
+    <div id="shc-aci-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Shear Design Report</h4>
+          <span class="rh-code" id="shc-aci-rh-lbl">ACI 318-25 · kN-m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="shc-aci-report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── EC2 Shear ── -->
+<div class="sh-pane" id="sh-ec2">
+<div class="col-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="shc-ec2-utag">kN-m · m</span></div>
+    <div class="card-body">
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" onclick="setShColUnit('knm',this,'ec2')">kN-m &amp; m</button>
+          <button class="unit-btn" onclick="setShColUnit('nmm',this,'ec2')">N-mm</button>
+          <button class="unit-btn" onclick="setShColUnit('us',this,'ec2')">US (kip, in)</button>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b<sub>w</sub> <span class="lu" id="lu-shc-ec2-bw">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-bw" value="0.40" step="0.01"><span class="us" id="u-shc-ec2-bw">m</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total depth h <span class="lu" id="lu-shc-ec2-h">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-h" value="0.40" step="0.01"><span class="us" id="u-shc-ec2-h">m</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Effective depth d <span class="lu" id="lu-shc-ec2-d">[m]</span></label>
+        <div class="iw"><input type="number" id="shc-ec2-d" value="0.34" step="0.01"><span class="us" id="u-shc-ec2-d">m</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ h − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> <span class="lu" id="lu-shc-ec2-fck">[MPa]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-fck" value="25"><span class="us" id="u-shc-ec2-fck">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>yk</sub> ties <span class="lu" id="lu-shc-ec2-fyk">[MPa]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-fyk" value="500"><span class="us" id="u-shc-ec2-fyk">MPa</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>ρ<sub>l</sub> longit. <span class="lu">[%]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-rho" value="1.5" step="0.1" min="0.1"><span class="us">%</span></div>
+        </div>
+        <div class="form-group">
+          <label>cot θ <span style="font-size:.63rem;color:var(--text-dim);">(1.0–2.5)</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-cot" value="2.5" step="0.1" min="1.0" max="2.5"><span class="us">—</span></div>
+        </div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>V<sub>Ed</sub> <span class="lu" id="lu-shc-ec2-ved">[kN]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-ved" value="200"><span class="us" id="u-shc-ec2-ved">kN</span></div>
+        </div>
+        <div class="form-group">
+          <label>N<sub>Ed</sub> <span class="lu" id="lu-shc-ec2-ned">[kN]</span> <span style="font-size:.62rem;color:var(--text-dim);">comp+</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-ned" value="1500"><span class="us" id="u-shc-ec2-ned">kN</span></div>
+        </div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Links)</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Link dia. d<sub>t</sub> <span class="lu" id="lu-shc-ec2-dt">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-dt" value="8" step="1" min="6"><span class="us" id="u-shc-ec2-dt">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Legs n</label>
+          <div class="iw"><input type="number" id="shc-ec2-nl" value="2" min="2" max="8"><span class="us">—</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Spacing s <span class="lu" id="lu-shc-ec2-s">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-s" value="200" step="5" min="25"><span class="us" id="u-shc-ec2-s">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Main bar d<sub>bl</sub> <span class="lu" id="lu-shc-ec2-dbl">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-ec2-dbl" value="20" step="1" min="10"><span class="us" id="u-shc-ec2-dbl">mm</span></div>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcShCol_ec2()">▶ Calculate Shear Design</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="shc-ec2-empty"><div class="ri">🔩</div>Configure inputs and click Calculate.</div>
+    <div id="shc-ec2-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Shear Design Report</h4>
+          <span class="rh-code" id="shc-ec2-rh-lbl">EN 1992-1-1 · kN-m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="shc-ec2-report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── IS 456:2000 Shear ── -->
+<div class="sh-pane" id="sh-is456">
+<div class="col-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="shc-is456-utag">kN-m · m</span></div>
+    <div class="card-body">
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" onclick="setShColUnit('knm',this,'is456')">kN-m &amp; m</button>
+          <button class="unit-btn" onclick="setShColUnit('nmm',this,'is456')">N-mm</button>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b <span class="lu" id="lu-shc-is456-bw">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-is456-bw" value="0.40" step="0.01"><span class="us" id="u-shc-is456-bw">m</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total depth D <span class="lu" id="lu-shc-is456-h">[m]</span></label>
+          <div class="iw"><input type="number" id="shc-is456-h" value="0.40" step="0.01"><span class="us" id="u-shc-is456-h">m</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Effective depth d <span class="lu" id="lu-shc-is456-d">[m]</span></label>
+        <div class="iw"><input type="number" id="shc-is456-d" value="0.34" step="0.01"><span class="us" id="u-shc-is456-d">m</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">d ≈ D − cover − d<sub>t</sub> − d<sub>bl</sub>/2</div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="shc-is456-fck" value="25"><span class="us">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>y</sub> ties [MPa]</label>
+          <div class="iw"><input type="number" id="shc-is456-fy" value="415"><span class="us">MPa</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ρ<sub>l</sub> = 100·A<sub>st</sub>/(b·d) [%]</label>
+        <div class="iw"><input type="number" id="shc-is456-rho" value="1.5" step="0.1" min="0.15" max="3.0"><span class="us">%</span></div>
+        <div style="font-size:.65rem;color:var(--text-dim);margin-top:2px;">Used for τ<sub>c</sub> lookup from IS 456 Table 19. Range 0.15–3.0%.</div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>V<sub>u</sub> <span class="lu" id="lu-shc-is456-vu">[kN]</span></label>
+          <div class="iw"><input type="number" id="shc-is456-vu" value="200"><span class="us" id="u-shc-is456-vu">kN</span></div>
+        </div>
+        <div class="form-group">
+          <label>P<sub>u</sub> <span class="lu" id="lu-shc-is456-pu">[kN]</span> <span style="font-size:.62rem;color:var(--text-dim);">comp+</span></label>
+          <div class="iw"><input type="number" id="shc-is456-pu" value="1500"><span class="us" id="u-shc-is456-pu">kN</span></div>
+        </div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Transverse Reinforcement (Ties)</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Tie dia. d<sub>t</sub> [mm]</label>
+          <div class="iw"><input type="number" id="shc-is456-dt" value="8" step="1" min="6"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Legs n</label>
+          <div class="iw"><input type="number" id="shc-is456-nl" value="2" min="2" max="8"><span class="us">—</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Spacing s<sub>v</sub> <span class="lu" id="lu-shc-is456-sv">[mm]</span></label>
+          <div class="iw"><input type="number" id="shc-is456-sv" value="200" step="5" min="25"><span class="us" id="u-shc-is456-sv">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Main bar d<sub>bl</sub> [mm]</label>
+          <div class="iw"><input type="number" id="shc-is456-dbl" value="20" step="1" min="6"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcShCol_is456()">▶ Calculate Shear Design</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="shc-is456-empty"><div class="ri">🔩</div>Configure inputs and click Calculate.</div>
+    <div id="shc-is456-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr">
+          <h4>Shear Design Report</h4>
+          <span class="rh-code" id="shc-is456-rh-lbl">IS 456:2000 · kN-m</span>
+          <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+        <div class="report-body" id="shc-is456-report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /col-shear -->
+
 <!-- ═══════ DESIGN BACKGROUND ═══════ -->
 <div class="bg-section">
   <div class="bg-hdr"><h3>📚 Design Background & Code References</h3></div>
@@ -938,7 +1256,7 @@ const UNITS = {
   nmm:{ lenU:'mm', forceU:'N',   momU:'N·mm',  stressU:'MPa', lenS:1,    forceS:1,     momS:1,      fcScale:1,       dbScale:1,   dbU:'mm', bV:400,  hV:400,  cvV:50,  DV:500,  PV:1.5e6, MV:120e6,  tag:'N-mm' },
   us:{  lenU:'in', forceU:'kip', momU:'kip·ft',stressU:'psi', lenS:25.4, forceS:4448.2,momS:1.356e6,fcScale:0.006895,dbScale:25.4,dbU:'in', bV:16,   hV:16,   cvV:2,   DV:20,   PV:337,   MV:88.5,   tag:'US' }
 };
-let curU = {aci:'knm', ec2:'knm', is456:'knm'};
+let curU = {aci:'knm', ec2:'knm', is456:'knm', sh_aci:'knm', sh_ec2:'knm', sh_is456:'knm'};
 let pmmStore = {aci:null, ec2:null, is456:null};
 let colShape = {aci:'rect', ec2:'rect', is456:'rect'};
 let circTie  = {aci:'tied'}; // 'tied' | 'spiral' (ACI only)
@@ -2306,6 +2624,586 @@ function validateCol(code){
   return true;
 }
 
+// ══════════════════════════════
+// SHEAR DESIGN MODULE
+// ══════════════════════════════
+
+function shTab(btn, id) {
+  btn.closest('.sh-tabs').parentElement.querySelectorAll('.sh-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.sh-tabs').parentElement.querySelectorAll('.sh-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Unit switching for shear module ──────────────────────────────────────────
+function setShColUnit(unit, btn, code) {
+  curU['sh_'+code] = unit;
+  btn.closest('.unit-btns').querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const U = UNITS[unit];
+  const isUS = unit === 'us';
+  const p = 'shc-' + code + '-';
+  const st = (id,t) => { const e=document.getElementById(id); if(e) e.textContent=t; };
+  const sv = (id,v) => { const e=document.getElementById(id); if(e) e.value=v; };
+  const lenDecimals = unit==='knm' ? 2 : unit==='nmm' ? 0 : 2;
+  const bwV  = unit==='knm'?0.40 : unit==='nmm'?400  : 16;
+  const hV   = unit==='knm'?0.40 : unit==='nmm'?400  : 16;
+  const dV   = unit==='knm'?0.34 : unit==='nmm'?340  : 13.5;
+  const sV   = unit==='knm'?200  : unit==='nmm'?200  : 8;
+  const VuV  = unit==='knm'?200  : unit==='nmm'?200000 : 45;
+  const NuV  = unit==='knm'?1500 : unit==='nmm'?1500000 : 337;
+  sv(p+'bw', unit==='nmm'?bwV:bwV.toFixed(lenDecimals));
+  sv(p+'h',  unit==='nmm'?hV :hV.toFixed(lenDecimals));
+  sv(p+'d',  unit==='nmm'?dV :dV.toFixed(lenDecimals));
+  st('lu-'+p+'bw','['+U.lenU+']'); st('u-'+p+'bw',U.lenU);
+  st('lu-'+p+'h', '['+U.lenU+']'); st('u-'+p+'h', U.lenU);
+  st('lu-'+p+'d', '['+U.lenU+']'); st('u-'+p+'d', U.lenU);
+  if (code!=='is456') {
+    st('shc-'+code+'-utag', U.tag);
+    st('shc-'+code+'-rh-lbl', (code==='aci'?'ACI 318-25':'EN 1992-1-1')+' · '+U.tag);
+  }
+  // force/stress labels
+  if (code==='aci') {
+    st('lu-shc-aci-fc','['+U.stressU+']'); st('u-shc-aci-fc',U.stressU);
+    st('lu-shc-aci-fyt','['+U.stressU+']'); st('u-shc-aci-fyt',U.stressU);
+    st('lu-shc-aci-vu','['+U.forceU+']'); st('u-shc-aci-vu',U.forceU);
+    st('lu-shc-aci-nu','['+U.forceU+']'); st('u-shc-aci-nu',U.forceU);
+    sv(p+'vu', VuV); sv(p+'nu', NuV);
+    if(isUS){ sv(p+'fc',4000); sv(p+'fyt',60000); sv(p+'dt',0.375); sv(p+'dbl',0.750); sv(p+'s',sV); }
+    else    { sv(p+'fc',28);   sv(p+'fyt',420);   sv(p+'dt',10);    sv(p+'dbl',20);    sv(p+'s',sV); }
+    st('lu-shc-aci-dt','['+U.dbU+']'); st('u-shc-aci-dt',U.dbU);
+    st('lu-shc-aci-dbl','['+U.dbU+']'); st('u-shc-aci-dbl',U.dbU);
+    st('lu-shc-aci-s','['+U.lenU+']'); st('u-shc-aci-s',U.lenU);
+    _swapShColBarUI(isUS);
+  } else if (code==='ec2') {
+    st('lu-shc-ec2-fck','['+U.stressU+']'); st('u-shc-ec2-fck',U.stressU);
+    st('lu-shc-ec2-fyk','['+U.stressU+']'); st('u-shc-ec2-fyk',U.stressU);
+    st('lu-shc-ec2-ved','['+U.forceU+']'); st('u-shc-ec2-ved',U.forceU);
+    st('lu-shc-ec2-ned','['+U.forceU+']'); st('u-shc-ec2-ned',U.forceU);
+    sv(p+'ved', VuV); sv(p+'ned', NuV);
+    if(isUS){ sv(p+'fck',4000); sv(p+'fyk',72500); sv(p+'dt',0.375); sv(p+'dbl',0.750); sv(p+'s',sV); }
+    else    { sv(p+'fck',25);   sv(p+'fyk',500);   sv(p+'dt',8);     sv(p+'dbl',20);    sv(p+'s',sV); }
+    st('lu-shc-ec2-dt','['+U.dbU+']'); st('u-shc-ec2-dt',U.dbU);
+    st('lu-shc-ec2-dbl','['+U.dbU+']'); st('u-shc-ec2-dbl',U.dbU);
+    st('lu-shc-ec2-s','['+U.lenU+']'); st('u-shc-ec2-s',U.lenU);
+  } else { // is456
+    const fU = unit==='nmm'?'N':'kN';
+    st('lu-shc-is456-vu','['+fU+']'); st('u-shc-is456-vu',fU);
+    st('lu-shc-is456-pu','['+fU+']'); st('u-shc-is456-pu',fU);
+    sv(p+'vu', unit==='nmm'?200000:200);
+    sv(p+'pu', unit==='nmm'?1500000:1500);
+    st('lu-shc-is456-bw','['+U.lenU+']'); st('u-shc-is456-bw',U.lenU);
+    st('lu-shc-is456-h', '['+U.lenU+']'); st('u-shc-is456-h', U.lenU);
+    st('lu-shc-is456-d', '['+U.lenU+']'); st('u-shc-is456-d', U.lenU);
+    st('lu-shc-is456-sv','['+U.lenU+']'); st('u-shc-is456-sv',U.lenU);
+    sv(p+'sv', sV);
+    st('shc-is456-utag', U.tag);
+    st('shc-is456-rh-lbl','IS 456:2000 · '+U.tag);
+  }
+  // clear results
+  const emp = document.getElementById('shc-'+code+'-empty');
+  const wrap = document.getElementById('shc-'+code+'-report-wrap');
+  if(emp) emp.style.display='';
+  if(wrap) wrap.style.display='none';
+}
+
+// ── IS 456 Table 19: τc (N/mm²) ──────────────────────────────────────────────
+const _IS456_TC = {
+  pt:  [0.15,0.25,0.50,0.75,1.00,1.25,1.50,1.75,2.00,2.25,2.50,2.75,3.00],
+  fck: [15,20,25,30,35,40],
+  tc: [
+    [0.28,0.28,0.29,0.29,0.29,0.30],
+    [0.35,0.36,0.36,0.37,0.37,0.38],
+    [0.46,0.48,0.49,0.50,0.50,0.51],
+    [0.54,0.56,0.57,0.59,0.59,0.60],
+    [0.60,0.62,0.64,0.66,0.67,0.68],
+    [0.64,0.67,0.70,0.71,0.73,0.74],
+    [0.68,0.72,0.74,0.76,0.78,0.79],
+    [0.71,0.75,0.78,0.80,0.82,0.84],
+    [0.71,0.79,0.82,0.84,0.86,0.88],
+    [0.71,0.81,0.85,0.88,0.90,0.92],
+    [0.71,0.82,0.88,0.91,0.93,0.95],
+    [0.71,0.82,0.90,0.94,0.96,0.98],
+    [0.71,0.82,0.92,0.96,0.99,1.01]
+  ]
+};
+const _IS456_TCMAX = [{fck:15,v:2.5},{fck:20,v:2.8},{fck:25,v:3.1},{fck:30,v:3.5},{fck:35,v:3.7},{fck:40,v:4.0}];
+
+function _getTc456(pt_pct, fck_mpa) {
+  const pts=_IS456_TC.pt, fks=_IS456_TC.fck, tc=_IS456_TC.tc;
+  const pt=Math.max(pts[0],Math.min(pt_pct,pts[pts.length-1]));
+  const fck=Math.max(fks[0],Math.min(fck_mpa,fks[fks.length-1]));
+  let i1=pts.length-2,i2=pts.length-1;
+  for(let i=0;i<pts.length-1;i++){ if(pt>=pts[i]&&pt<=pts[i+1]){i1=i;i2=i+1;break;} }
+  if(pt>=pts[pts.length-1]){i1=i2=pts.length-1;}
+  let j1=fks.length-2,j2=fks.length-1;
+  for(let j=0;j<fks.length-1;j++){ if(fck>=fks[j]&&fck<=fks[j+1]){j1=j;j2=j+1;break;} }
+  if(fck>=fks[fks.length-1]){j1=j2=fks.length-1;}
+  const t=i1===i2?0:(pt-pts[i1])/(pts[i2]-pts[i1]);
+  const u=j1===j2?0:(fck-fks[j1])/(fks[j2]-fks[j1]);
+  return tc[i1][j1]*(1-t)*(1-u)+tc[i1][j2]*(1-t)*u+tc[i2][j1]*t*(1-u)+tc[i2][j2]*t*u;
+}
+function _getTcMax456(fck_mpa) {
+  const T=_IS456_TCMAX;
+  const fck=Math.max(T[0].fck,Math.min(fck_mpa,T[T.length-1].fck));
+  for(let i=0;i<T.length-1;i++){
+    if(fck>=T[i].fck&&fck<=T[i+1].fck){const t=(fck-T[i].fck)/(T[i+1].fck-T[i].fck);return T[i].v+t*(T[i+1].v-T[i].v);}
+  }
+  return T[T.length-1].v;
+}
+
+// ── ACI 318-25 Column Shear ───────────────────────────────────────────────────
+function calcShCol_aci() {
+  const unit = curU.sh_aci || 'knm';
+  const U = UNITS[unit];
+  const isUS = unit === 'us';
+  const LS = U.lenS;   // mm per display unit (for bw, h, d, s)
+  const FS = U.forceS; // N per display unit
+  const fcS = U.fcScale; // MPa per display unit
+  const dbS = U.dbScale; // mm per db display unit (1 for SI, 25.4 for US)
+
+  const bw  = g('shc-aci-bw')  * LS;
+  const h   = g('shc-aci-h')   * LS;
+  const d   = g('shc-aci-d')   * LS;
+  const fc  = g('shc-aci-fc')  * fcS;
+  const fyt = g('shc-aci-fyt') * fcS;
+  const lam = g('shc-aci-lam') || 1.0;
+  const rho_l = Math.max(g('shc-aci-rho') / 100, 0.0025);
+  const Vu  = g('shc-aci-vu')  * FS;
+  const Nu  = g('shc-aci-nu')  * FS;
+  const dt  = g('shc-aci-dt')  * dbS;
+  const dbl = g('shc-aci-dbl') * dbS;
+  const s   = g('shc-aci-s')   * LS;
+  const nl  = Math.max(2, Math.round(g('shc-aci-nl')));
+
+  if (!bw||!h||!d||!fc||!fyt||!Vu) { alert('Please fill all required inputs.'); return; }
+
+  const Ag  = bw * h;
+  const Ab  = Math.PI * dt * dt / 4;
+  const Av  = nl * Ab;   // mm² per spacing s
+
+  // ACI 318-25 Table 22.5.5.1-a (SI): Vc = [0.66λ(ρw)^(1/3)(f'c)^(1/3) + Nu/(6Ag)]×bw×d
+  const Vc_detail = (0.66*lam*Math.pow(rho_l,1/3)*Math.pow(fc,1/3) + Math.max(Nu,0)/(6*Ag)) * bw * d;
+  // Simplified (lower bound): Vc = 0.17λ√f'c × bw × d (no axial benefit)
+  const Vc_simp   = 0.17 * lam * Math.sqrt(fc) * bw * d;
+  const Vc = Math.max(Vc_detail, Vc_simp);
+  const phi = 0.75;
+  const phiVc = phi * Math.max(Vc, 0);
+
+  // Provided Vs
+  const Vs_prov = Av * fyt * d / s;
+  const Vs_max  = 0.66 * Math.sqrt(fc) * bw * d;  // §22.5.1.2
+  const phiVn   = phi * (Math.max(Vc,0) + Math.min(Vs_prov, Vs_max));
+
+  // Required Vs
+  const Vs_req = Math.max(Vu/phi - Math.max(Vc,0), 0);
+  const Av_req = Vs_req > 0 ? Vs_req * s / (fyt * d) : 0;
+  // Required spacing for provided Av
+  const s_req  = Vs_req > 0 ? Av * fyt * d / Vs_req : Infinity;
+
+  // Av,min (§26.6.3.2)
+  const Av_min1 = 0.062 * Math.sqrt(fc) * bw * s / fyt;
+  const Av_min2 = 0.35 * bw * s / fyt;
+  const Av_min  = Math.max(Av_min1, Av_min2);
+
+  // Tie spacing limits (§10.7.6.2)
+  const s_lim_long  = 16 * dbl;
+  const s_lim_tie   = 48 * dt;
+  const s_lim_sec   = Math.min(bw, h);
+  const s_tie_max   = Math.min(s_lim_long, s_lim_tie, s_lim_sec);
+  // Shear spacing limit: d/2 normally, d/4 when Vs > 0.33√f'c×bw×d (§22.7.2.1)
+  const s_shear_lim = Vs_req > 0.33*Math.sqrt(fc)*bw*d ? d/4 : d/2;
+  const s_max_ctrl  = Math.min(s_tie_max, s_shear_lim);
+
+  const dcr = Vu / Math.max(phiVn, 1);
+  const st  = dcr <= 1.0 ? 'ok' : 'err';
+  const avOk  = Av >= Av_min;
+  const sOk   = s <= s_max_ctrl;
+  const vsOk  = Vs_prov <= Vs_max;
+  const icons = {ok:'✅',warn:'⚠️',err:'❌'};
+  const labels= {ok:'ADEQUATE',err:'INADEQUATE'};
+
+  const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
+  const fmtD = v => isUS ? (v/25.4).toFixed(3)+' in' : v.toFixed(0)+' mm';
+  const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
+  const fmtV = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
+  const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
+  const fmtS = v => isUS ? (v/0.006895).toFixed(0)+' psi' : v.toFixed(2)+' MPa';
+
+  const html = `
+  <div class="print-only">
+    <div>
+      <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Shear Design Report</div>
+      <div style="font-size:.68rem;color:#666;margin-top:1px;">ACI 318-25 &nbsp;·&nbsp; ${U.tag}</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      <div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div>
+    </div>
+  </div>
+  ${!vsOk?`<div class="report-warn"><span>⚠️</span><div><b>Vs exceeds maximum:</b> Vs = ${fmtV(Vs_prov)} > Vs,max = ${fmtV(Vs_max)}. Increase section size.</div></div>`:''}
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Section &amp; Materials</div>
+    <table class="res-tbl">
+      <tr><td>Width b<sub>w</sub></td><td>${fmtL(bw)}</td></tr>
+      <tr><td>Total depth h</td><td>${fmtL(h)}</td></tr>
+      <tr><td>Effective depth d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>Gross area A<sub>g</sub></td><td>${fmtA(Ag)}</td></tr>
+      <tr><td>f'c</td><td>${fmtS(fc)}</td></tr>
+      <tr><td>f<sub>yt</sub></td><td>${fmtS(fyt)}</td></tr>
+      <tr><td>λ</td><td>${lam.toFixed(2)}</td></tr>
+      <tr><td>ρ<sub>l</sub></td><td>${(rho_l*100).toFixed(2)}%</td></tr>
+    </table>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Applied Loads</div>
+    <table class="res-tbl">
+      <tr><td>V<sub>u</sub></td><td>${fmtV(Vu)}</td></tr>
+      <tr><td>N<sub>u</sub> (compression +)</td><td>${fmtV(Nu)}</td></tr>
+      <tr><td>N<sub>u</sub> / (6·A<sub>g</sub>)</td><td>${(Nu/(6*Ag)>0?'+':'')}${fmtS(Nu/(6*Ag))}</td></tr>
+    </table>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Shear Strength — ACI 318-25 §22.5</div>
+    <table class="res-tbl">
+      <tr><td>V<sub>c</sub> (detailed, Table 22.5.5.1-a)</td><td>${fmtV(Vc_detail)}</td></tr>
+      <tr><td>V<sub>c</sub> (simplified, 0.17λ√f'c·b·d)</td><td>${fmtV(Vc_simp)}</td></tr>
+      <tr><td>V<sub>c</sub> used</td><td class="vhl">${fmtV(Vc)}</td></tr>
+      <tr><td>φV<sub>c</sub> (φ=0.75)</td><td>${fmtV(phiVc)}</td></tr>
+      <tr><td>Tie: ${fmtD(dt)} × ${nl} legs @ ${fmtL(s)}</td><td>A<sub>v</sub> = ${fmtA(Av)}</td></tr>
+      <tr><td>V<sub>s,prov</sub> = A<sub>v</sub>·f<sub>yt</sub>·d/s</td><td class="${vsOk?'vok':'verr'}">${fmtV(Vs_prov)}</td></tr>
+      <tr><td>V<sub>s,max</sub> = 0.66√f'c·b·d</td><td>${fmtV(Vs_max)}</td></tr>
+      <tr><td>φV<sub>n</sub> = φ(V<sub>c</sub>+V<sub>s</sub>)</td><td class="vhl">${fmtV(phiVn)}</td></tr>
+      <tr><td>D/C = V<sub>u</sub> / φV<sub>n</sub></td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
+    </table>
+    <div class="dcr-banner ${st}" style="margin-top:10px;">
+      <div class="dcr-icon">${icons[st]}</div>
+      <div class="dcr-text">
+        <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+        <span>V<sub>u</sub> = ${fmtV(Vu)} &nbsp;·&nbsp; φV<sub>n</sub> = ${fmtV(phiVn)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Minimum Transverse Reinforcement — ACI 318-25 §26.6.3.2 &amp; §10.7.6.2</div>
+    <table class="res-tbl">
+      <tr><td>A<sub>v,min,1</sub> = 0.062√f'c·b<sub>w</sub>·s/f<sub>yt</sub></td><td>${fmtA(Av_min1)}</td></tr>
+      <tr><td>A<sub>v,min,2</sub> = 0.35·b<sub>w</sub>·s/f<sub>yt</sub></td><td>${fmtA(Av_min2)}</td></tr>
+      <tr><td>A<sub>v,min</sub> = max of above</td><td class="${avOk?'vok':'verr'}">${fmtA(Av_min)}</td></tr>
+      <tr><td>A<sub>v,provided</sub></td><td class="${avOk?'vok':'verr'}">${fmtA(Av)} ${avOk?'≥ A<sub>v,min</sub> ✓':'< A<sub>v,min</sub> ✗'}</td></tr>
+    </table>
+    <div style="margin-top:8px;">
+      <div class="rpt-sec-title" style="margin-bottom:6px;">Tie Spacing Limits (§10.7.6.2)</div>
+      <table class="res-tbl">
+        <tr><td>16 × d<sub>bl</sub> = 16 × ${fmtD(dbl)}</td><td>${fmtL(s_lim_long)}</td></tr>
+        <tr><td>48 × d<sub>t</sub> = 48 × ${fmtD(dt)}</td><td>${fmtL(s_lim_tie)}</td></tr>
+        <tr><td>Least column dim. min(b,h)</td><td>${fmtL(s_lim_sec)}</td></tr>
+        <tr><td>Shear spacing limit (${Vs_req>0.33*Math.sqrt(fc)*bw*d?'d/4':'d/2'})</td><td>${fmtL(s_shear_lim)}</td></tr>
+        <tr><td><b>s<sub>max</sub> (controlling)</b></td><td class="${sOk?'vok':'verr'}"><b>${fmtL(s_max_ctrl)}</b></td></tr>
+        <tr><td>s provided</td><td class="${sOk?'vok':'verr'}">${fmtL(s)} ${sOk?'≤ s<sub>max</sub> ✓':'> s<sub>max</sub> ✗'}</td></tr>
+      </table>
+    </div>
+    ${Vs_req>0?`<div style="margin-top:8px;"><div class="rpt-sec-title" style="margin-bottom:6px;">Shear Demand on Ties</div><table class="res-tbl"><tr><td>V<sub>s,req</sub> = V<sub>u</sub>/φ − V<sub>c</sub></td><td>${fmtV(Vs_req)}</td></tr><tr><td>A<sub>v,req</sub> for s=${fmtL(s)}</td><td>${fmtA(Av_req)}</td></tr><tr><td>Required spacing for A<sub>v</sub>=${fmtA(Av)}</td><td>${isFinite(s_req)?fmtL(s_req):'Not required'}</td></tr></table></div>`:'<div class="report-warn" style="background:var(--green-bg);border-color:#a8e0c0;"><span>✅</span><div>V<sub>u</sub> ≤ φV<sub>c</sub>/2 — shear reinforcement for demand not required. Ties govern by §10.7.6.2.</div></div>'}
+  </div>
+  <div class="print-disclaimer">⚠ For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer.</div>`;
+
+  document.getElementById('shc-aci-report-body').innerHTML = html;
+  document.getElementById('shc-aci-empty').style.display = 'none';
+  document.getElementById('shc-aci-report-wrap').style.display = '';
+}
+
+// ── Eurocode 2 Column Shear ───────────────────────────────────────────────────
+function calcShCol_ec2() {
+  const unit = curU.sh_ec2 || 'knm';
+  const U = UNITS[unit];
+  const isUS = unit === 'us';
+  const LS = U.lenS, FS = U.forceS, fcS = U.fcScale, dbS = U.dbScale;
+
+  const bw  = g('shc-ec2-bw')  * LS;
+  const h   = g('shc-ec2-h')   * LS;
+  const d   = g('shc-ec2-d')   * LS;
+  const fck = g('shc-ec2-fck') * fcS;
+  const fyk = g('shc-ec2-fyk') * fcS;
+  const rho_l = Math.min(Math.max(g('shc-ec2-rho')/100, 0.0001), 0.02);
+  const cotT  = Math.min(Math.max(g('shc-ec2-cot')||2.5, 1.0), 2.5);
+  const VEd = g('shc-ec2-ved') * FS;
+  const NEd = g('shc-ec2-ned') * FS;
+  const dt  = g('shc-ec2-dt')  * dbS;
+  const dbl = g('shc-ec2-dbl') * dbS;
+  const s   = g('shc-ec2-s')   * LS;
+  const nl  = Math.max(2, Math.round(g('shc-ec2-nl')));
+
+  if (!bw||!h||!d||!fck||!fyk||!VEd) { alert('Please fill all required inputs.'); return; }
+
+  const Ac   = bw * h;
+  const fcd  = fck / 1.5;
+  const fywd = Math.min(fyk / 1.15, 400);
+  const Ab   = Math.PI * dt * dt / 4;
+  const Asw  = nl * Ab;
+
+  // §6.2.2 VRd,c
+  const CRdc    = 0.12;
+  const k       = Math.min(1 + Math.sqrt(200/d), 2.0);
+  const sigma_cp= Math.min(NEd/Ac, 0.2*fcd);
+  const k1      = 0.15;
+  const vmin    = 0.035 * Math.pow(k, 1.5) * Math.sqrt(fck);
+  const VRdc_a  = (CRdc*k*Math.pow(100*rho_l*fck,1/3) + k1*sigma_cp) * bw * d;
+  const VRdc_b  = (vmin + k1*sigma_cp) * bw * d;
+  const VRdc    = Math.max(VRdc_a, VRdc_b);
+
+  // §6.2.3 VRd,s & VRd,max
+  const z       = 0.9 * d;
+  const tanT    = 1 / cotT;
+  const nu1     = 0.6 * (1 - fck/250);
+  const alpha_cw= Math.min(1 + sigma_cp/fcd, 2.5);  // §6.2.3(3) for compression
+  const VRdmax  = bw * z * alpha_cw * nu1 * fcd / (cotT + tanT);
+  const VRds    = (Asw/s) * z * fywd * cotT;
+
+  const needsStirrups = VEd > VRdc;
+  const VRd = needsStirrups ? Math.min(VRds, VRdmax) : VRdc;
+  const dcr = VEd / Math.max(VRd, 1);
+  const st  = dcr <= 1.0 ? 'ok' : 'err';
+
+  // Required Asw/s
+  const Asw_s_req = needsStirrups ? VEd / (z * fywd * cotT) : 0; // mm²/mm
+  const Asw_req   = Asw_s_req * s;
+  const s_req     = Asw_s_req > 0 ? Asw / Asw_s_req : Infinity;
+
+  // Min §9.2.2(5): ρw,min = 0.08√fck/fyk
+  const rho_w_min = 0.08 * Math.sqrt(fck) / fyk;
+  const Asw_min   = rho_w_min * bw * s;
+  const avOk      = Asw >= Asw_min;
+
+  // Tie spacing §9.5.3 columns: ≤ min(20·dbl, min(bw,h), 400mm)
+  const s_max1  = 20 * dbl;
+  const s_max2  = Math.min(bw, h);
+  const s_max3  = 400;
+  const s_ec2   = Math.min(s_max1, s_max2, s_max3);
+  const sOk     = s <= s_ec2;
+  const vsOk    = VRds <= VRdmax;
+
+  const icons = {ok:'✅',err:'❌'};
+  const labels = {ok:'ADEQUATE',err:'INADEQUATE'};
+  const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
+  const fmtD = v => isUS ? (v/25.4).toFixed(3)+' in' : v.toFixed(0)+' mm';
+  const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
+  const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
+  const fmtS = v => isUS ? (v/0.006895).toFixed(0)+' psi' : v.toFixed(2)+' MPa';
+
+  const html = `
+  <div class="print-only">
+    <div><div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Shear Design Report</div>
+    <div style="font-size:.68rem;color:#666;margin-top:1px;">EN 1992-1-1 (Eurocode 2) &nbsp;·&nbsp; ${U.tag}</div></div>
+    <div style="margin-left:auto;text-align:right;"><div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div><div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div></div>
+  </div>
+  ${!vsOk?`<div class="report-warn"><span>⚠️</span><div><b>V<sub>Rd,s</sub> exceeds V<sub>Rd,max</sub>:</b> ${fmtF(VRds)} > ${fmtF(VRdmax)}. Increase section size or reduce cot θ.</div></div>`:''}
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Section &amp; Materials</div>
+    <table class="res-tbl">
+      <tr><td>b<sub>w</sub></td><td>${fmtL(bw)}</td></tr>
+      <tr><td>h</td><td>${fmtL(h)}</td></tr>
+      <tr><td>d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>f<sub>ck</sub></td><td>${fmtS(fck)}</td></tr>
+      <tr><td>f<sub>cd</sub> = f<sub>ck</sub>/1.5</td><td>${fmtS(fcd)}</td></tr>
+      <tr><td>f<sub>yk</sub></td><td>${fmtS(fyk)}</td></tr>
+      <tr><td>f<sub>ywd</sub> = min(f<sub>yk</sub>/1.15, 400 MPa)</td><td>${fmtS(fywd)}</td></tr>
+      <tr><td>ρ<sub>l</sub></td><td>${(rho_l*100).toFixed(2)}%</td></tr>
+      <tr><td>cot θ</td><td>${cotT.toFixed(1)} (θ = ${(Math.atan(1/cotT)*180/Math.PI).toFixed(1)}°)</td></tr>
+    </table>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">V<sub>Rd,c</sub> — Concrete Contribution §6.2.2</div>
+    <table class="res-tbl">
+      <tr><td>k = 1+√(200/d)</td><td>${k.toFixed(3)} ${k>=2.0?'(capped at 2.0)':''}</td></tr>
+      <tr><td>σ<sub>cp</sub> = N<sub>Ed</sub>/A<sub>c</sub></td><td>${fmtS(NEd/Ac)} ${NEd/Ac>0.2*fcd?'→ capped at 0.2·f<sub>cd</sub>':''}</td></tr>
+      <tr><td>v<sub>min</sub> = 0.035·k<sup>1.5</sup>·√f<sub>ck</sub></td><td>${fmtS(vmin)}</td></tr>
+      <tr><td>V<sub>Rd,c</sub> (main formula)</td><td>${fmtF(VRdc_a)}</td></tr>
+      <tr><td>V<sub>Rd,c</sub> (v<sub>min</sub> formula)</td><td>${fmtF(VRdc_b)}</td></tr>
+      <tr><td>V<sub>Rd,c</sub> = max of above</td><td class="vhl">${fmtF(VRdc)}</td></tr>
+      <tr><td>Shear reinforcement required?</td><td class="${needsStirrups?'verr':'vok'}">${needsStirrups?'Yes — V<sub>Ed</sub> > V<sub>Rd,c</sub>':'No — V<sub>Ed</sub> ≤ V<sub>Rd,c</sub>'}</td></tr>
+    </table>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">V<sub>Rd,s</sub> &amp; V<sub>Rd,max</sub> — §6.2.3</div>
+    <table class="res-tbl">
+      <tr><td>Link: ${fmtD(dt)} × ${nl} legs @ ${fmtL(s)}</td><td>A<sub>sw</sub> = ${fmtA(Asw)}</td></tr>
+      <tr><td>z = 0.9d</td><td>${fmtL(z)}</td></tr>
+      <tr><td>α<sub>cw</sub> (§6.2.3, compression)</td><td>${alpha_cw.toFixed(3)}</td></tr>
+      <tr><td>ν<sub>1</sub> = 0.6(1−f<sub>ck</sub>/250)</td><td>${nu1.toFixed(3)}</td></tr>
+      <tr><td>V<sub>Rd,max</sub></td><td class="${vsOk?'vok':'verr'}">${fmtF(VRdmax)}</td></tr>
+      <tr><td>V<sub>Rd,s</sub> = (A<sub>sw</sub>/s)·z·f<sub>ywd</sub>·cot θ</td><td class="${vsOk?'vok':'verr'}">${fmtF(VRds)} ${vsOk?'≤ V<sub>Rd,max</sub> ✓':'> V<sub>Rd,max</sub> ✗'}</td></tr>
+      <tr><td>V<sub>Rd</sub> (design resistance)</td><td class="vhl">${fmtF(VRd)}</td></tr>
+      <tr><td>D/C = V<sub>Ed</sub> / V<sub>Rd</sub></td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
+    </table>
+    <div class="dcr-banner ${st}" style="margin-top:10px;">
+      <div class="dcr-icon">${icons[st]}</div>
+      <div class="dcr-text">
+        <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+        <span>V<sub>Ed</sub> = ${fmtF(VEd)} &nbsp;·&nbsp; V<sub>Rd</sub> = ${fmtF(VRd)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Minimum Transverse Reinforcement — EC2 §9.2.2 &amp; §9.5.3</div>
+    <table class="res-tbl">
+      <tr><td>ρ<sub>w,min</sub> = 0.08√f<sub>ck</sub>/f<sub>yk</sub></td><td>${(rho_w_min*1000).toFixed(4)}‰</td></tr>
+      <tr><td>A<sub>sw,min</sub> = ρ<sub>w,min</sub>·b<sub>w</sub>·s</td><td class="${avOk?'vok':'verr'}">${fmtA(Asw_min)}</td></tr>
+      <tr><td>A<sub>sw,provided</sub></td><td class="${avOk?'vok':'verr'}">${fmtA(Asw)} ${avOk?'≥ A<sub>sw,min</sub> ✓':'< A<sub>sw,min</sub> ✗'}</td></tr>
+    </table>
+    <div style="margin-top:8px;">
+      <div class="rpt-sec-title" style="margin-bottom:6px;">Link Spacing Limits — §9.5.3</div>
+      <table class="res-tbl">
+        <tr><td>20 × d<sub>bl</sub> = 20 × ${fmtD(dbl)}</td><td>${fmtL(s_max1)}</td></tr>
+        <tr><td>min(b<sub>w</sub>, h)</td><td>${fmtL(s_max2)}</td></tr>
+        <tr><td>400 mm</td><td>${fmtL(400)}</td></tr>
+        <tr><td><b>s<sub>max</sub> = min of above</b></td><td class="${sOk?'vok':'verr'}"><b>${fmtL(s_ec2)}</b></td></tr>
+        <tr><td>s provided</td><td class="${sOk?'vok':'verr'}">${fmtL(s)} ${sOk?'≤ s<sub>max</sub> ✓':'> s<sub>max</sub> ✗'}</td></tr>
+      </table>
+    </div>
+    ${needsStirrups?`<div style="margin-top:8px;"><div class="rpt-sec-title" style="margin-bottom:6px;">Required Shear Reinforcement</div><table class="res-tbl"><tr><td>A<sub>sw</sub>/s required</td><td>${(Asw_s_req).toFixed(4)} mm²/mm</td></tr><tr><td>A<sub>sw,req</sub> for s = ${fmtL(s)}</td><td>${fmtA(Asw_req)}</td></tr><tr><td>Required s for provided A<sub>sw</sub></td><td>${isFinite(s_req)?fmtL(s_req):'—'}</td></tr></table></div>`:'<div class="report-warn" style="background:var(--green-bg);border-color:#a8e0c0;"><span>✅</span><div>V<sub>Ed</sub> ≤ V<sub>Rd,c</sub> — shear reinforcement not required for demand. Minimum links per §9.5.3 govern.</div></div>'}
+  </div>
+  <div class="print-disclaimer">⚠ For educational and preliminary design purposes only.</div>`;
+
+  document.getElementById('shc-ec2-report-body').innerHTML = html;
+  document.getElementById('shc-ec2-empty').style.display = 'none';
+  document.getElementById('shc-ec2-report-wrap').style.display = '';
+}
+
+// ── IS 456:2000 Column Shear ──────────────────────────────────────────────────
+function calcShCol_is456() {
+  const unit = curU.sh_is456 || 'knm';
+  const U = UNITS[unit];
+  const LS = U.lenS, FS = U.forceS;
+
+  const bw  = g('shc-is456-bw')  * LS;
+  const h   = g('shc-is456-h')   * LS;
+  const d   = g('shc-is456-d')   * LS;
+  const fck = g('shc-is456-fck');   // always MPa
+  const fy  = g('shc-is456-fy');    // always MPa
+  const pt  = Math.min(Math.max(g('shc-is456-rho'),0.15),3.0);
+  const Vu  = g('shc-is456-vu')  * FS;
+  const Pu  = g('shc-is456-pu')  * FS;
+  const dt  = g('shc-is456-dt');    // always mm
+  const dbl = g('shc-is456-dbl');   // always mm
+  const sv  = g('shc-is456-sv')  * LS;
+  const nl  = Math.max(2, Math.round(g('shc-is456-nl')));
+
+  if (!bw||!h||!d||!fck||!fy||!Vu) { alert('Please fill all required inputs.'); return; }
+
+  const Ag   = bw * h;
+  const Ab   = Math.PI * dt * dt / 4;
+  const Asv  = nl * Ab;
+
+  // Nominal shear stress Cl 40.1
+  const tau_v = Vu / (bw * d);
+
+  // Table 19: τc
+  const tau_c = _getTc456(pt, fck);
+
+  // §40.2.2: δ = 1 + 3Pu/(Ag·fck) ≤ 1.5 (columns under compression)
+  const delta   = Math.min(1 + 3*Pu/(Ag*fck), 1.5);
+  const tau_c_e = delta * tau_c;
+
+  // Table 20: τc,max
+  const tau_cmax = _getTcMax456(fck);
+  const tau_c_use = Math.min(tau_c_e, tau_cmax);
+
+  const needsReinf = tau_v > tau_c_use;
+
+  // Required Asv/sv
+  const Asv_sv_req = needsReinf ? (tau_v - tau_c_use) * bw / (0.87 * fy) : 0; // mm²/mm
+  const Asv_req    = Asv_sv_req * sv;
+  const sv_req     = Asv_sv_req > 0 ? Asv / Asv_sv_req : Infinity;
+
+  // Provided
+  const Asv_sv_prov = Asv / sv;
+
+  // Minimum ties Cl 26.5.3.2(c): sv ≤ min(least dim, 16·dbl, 300mm)
+  const sv_lim1 = Math.min(bw, h);
+  const sv_lim2 = 16 * dbl;
+  const sv_lim3 = 300;
+  const sv_max  = Math.min(sv_lim1, sv_lim2, sv_lim3);
+  const svOk    = sv <= sv_max;
+
+  // Minimum tie diameter Cl 26.5.3.2(a): dt ≥ max(dbl/4, 6mm)
+  const dt_min  = Math.max(dbl / 4, 6);
+  const dtOk    = dt >= dt_min;
+
+  const dcr  = tau_v / tau_c_use;
+  const st   = dcr <= 1.0 ? 'ok' : 'err';
+  const icons = {ok:'✅',err:'❌'};
+  const labels = {ok:'ADEQUATE',err:'INADEQUATE'};
+
+  const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
+  const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
+  const fmtA = v => v.toFixed(1)+' mm²';
+  const fmtTs= v => v.toFixed(3)+' N/mm²';
+
+  const html = `
+  <div class="print-only">
+    <div><div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Column Shear Design Report</div>
+    <div style="font-size:.68rem;color:#666;margin-top:1px;">IS 456:2000 &nbsp;·&nbsp; ${U.tag}</div></div>
+    <div style="margin-left:auto;text-align:right;"><div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div><div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div></div>
+  </div>
+  ${tau_v>tau_cmax?`<div class="report-warn"><span>⚠️</span><div><b>τ<sub>v</sub> exceeds τ<sub>c,max</sub>:</b> Nominal shear stress ${fmtTs(tau_v)} > τ<sub>c,max</sub> = ${fmtTs(tau_cmax)}. Increase section size (IS 456 Cl 40.2.3).</div></div>`:''}
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Section &amp; Materials</div>
+    <table class="res-tbl">
+      <tr><td>Width b</td><td>${fmtL(bw)}</td></tr>
+      <tr><td>Total depth D</td><td>${fmtL(h)}</td></tr>
+      <tr><td>Effective depth d</td><td>${fmtL(d)}</td></tr>
+      <tr><td>f<sub>ck</sub></td><td>${fck.toFixed(0)} MPa</td></tr>
+      <tr><td>f<sub>y</sub></td><td>${fy.toFixed(0)} MPa</td></tr>
+      <tr><td>ρ<sub>l</sub> = 100·A<sub>st</sub>/(b·d)</td><td>${pt.toFixed(2)}%</td></tr>
+    </table>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Shear Demand &amp; Concrete Capacity — Cl 40.2</div>
+    <table class="res-tbl">
+      <tr><td>V<sub>u</sub></td><td>${fmtF(Vu)}</td></tr>
+      <tr><td>P<sub>u</sub></td><td>${fmtF(Pu)}</td></tr>
+      <tr><td>τ<sub>v</sub> = V<sub>u</sub>/(b·d)</td><td class="vhl">${fmtTs(tau_v)}</td></tr>
+      <tr><td>τ<sub>c</sub> (Table 19, ρ=${pt.toFixed(2)}%, M${fck.toFixed(0)})</td><td>${fmtTs(tau_c)}</td></tr>
+      <tr><td>δ = 1 + 3P<sub>u</sub>/(A<sub>g</sub>·f<sub>ck</sub>) ≤ 1.5 (Cl 40.2.2)</td><td>${delta.toFixed(3)}</td></tr>
+      <tr><td>τ<sub>c,enhanced</sub> = δ·τ<sub>c</sub></td><td>${fmtTs(tau_c_e)}</td></tr>
+      <tr><td>τ<sub>c,max</sub> (Table 20)</td><td>${fmtTs(tau_cmax)}</td></tr>
+      <tr><td>τ<sub>c,used</sub> = min(δ·τ<sub>c</sub>, τ<sub>c,max</sub>)</td><td class="vhl">${fmtTs(tau_c_use)}</td></tr>
+      <tr><td>D/C = τ<sub>v</sub> / τ<sub>c,used</sub></td><td class="${st==='ok'?'vok':'verr'} vhl">${dcr.toFixed(3)}</td></tr>
+      <tr><td>Shear reinforcement required?</td><td class="${needsReinf?'verr':'vok'}">${needsReinf?'Yes — τ<sub>v</sub> > τ<sub>c</sub>':'No — τ<sub>v</sub> ≤ τ<sub>c</sub>'}</td></tr>
+    </table>
+    <div class="dcr-banner ${st}" style="margin-top:10px;">
+      <div class="dcr-icon">${icons[st]}</div>
+      <div class="dcr-text">
+        <strong>${labels[st]} — D/C = ${dcr.toFixed(3)}</strong>
+        <span>τ<sub>v</sub> = ${fmtTs(tau_v)} &nbsp;·&nbsp; τ<sub>c</sub> = ${fmtTs(tau_c_use)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">Minimum Transverse Reinforcement — IS 456 Cl 26.5.3.2</div>
+    <table class="res-tbl">
+      <tr><td>Tie diameter d<sub>t</sub></td><td>${dt.toFixed(0)} mm</td></tr>
+      <tr><td>d<sub>t,min</sub> = max(d<sub>bl</sub>/4, 6 mm) = max(${(dbl/4).toFixed(1)}, 6)</td><td class="${dtOk?'vok':'verr'}">${dt_min.toFixed(1)} mm &nbsp; ${dtOk?'✓ OK':'✗ INCREASE TIE DIAMETER'}</td></tr>
+    </table>
+    <div style="margin-top:8px;">
+      <div class="rpt-sec-title" style="margin-bottom:6px;">Tie Spacing Limits Cl 26.5.3.2(c)</div>
+      <table class="res-tbl">
+        <tr><td>Least column dim. min(b, D)</td><td>${fmtL(sv_lim1)}</td></tr>
+        <tr><td>16 × d<sub>bl</sub> = 16 × ${dbl.toFixed(0)} mm</td><td>${fmtL(sv_lim2)}</td></tr>
+        <tr><td>300 mm</td><td>${fmtL(300)}</td></tr>
+        <tr><td><b>s<sub>v,max</sub> = min of above</b></td><td class="${svOk?'vok':'verr'}"><b>${fmtL(sv_max)}</b></td></tr>
+        <tr><td>s<sub>v</sub> provided</td><td class="${svOk?'vok':'verr'}">${fmtL(sv)} ${svOk?'≤ s<sub>v,max</sub> ✓':'> s<sub>v,max</sub> ✗'}</td></tr>
+      </table>
+    </div>
+    ${needsReinf?`<div style="margin-top:8px;"><div class="rpt-sec-title" style="margin-bottom:6px;">Required Shear Ties — Cl 40.3</div><table class="res-tbl"><tr><td>A<sub>sv</sub>/s<sub>v</sub> req = (τ<sub>v</sub>−τ<sub>c</sub>)·b / (0.87·f<sub>y</sub>)</td><td>${Asv_sv_req.toFixed(4)} mm²/mm</td></tr><tr><td>A<sub>sv,req</sub> for s<sub>v</sub> = ${fmtL(sv)}</td><td>${fmtA(Asv_req)}</td></tr><tr><td>A<sub>sv,provided</sub> (${nl}×Ø${dt.toFixed(0)})</td><td class="${Asv>=Asv_req?'vok':'verr'}">${fmtA(Asv)} ${Asv>=Asv_req?'≥ A<sub>sv,req</sub> ✓':'< A<sub>sv,req</sub> ✗'}</td></tr><tr><td>Required s<sub>v</sub> for provided A<sub>sv</sub></td><td>${isFinite(sv_req)?fmtL(sv_req):'—'}</td></tr></table></div>`:'<div class="report-warn" style="background:var(--green-bg);border-color:#a8e0c0;"><span>✅</span><div>τ<sub>v</sub> ≤ τ<sub>c,enhanced</sub> — shear reinforcement not required for demand. Minimum ties per Cl 26.5.3.2 govern.</div></div>'}
+  </div>
+  <div class="print-disclaimer">⚠ For educational and preliminary design purposes only.</div>`;
+
+  document.getElementById('shc-is456-report-body').innerHTML = html;
+  document.getElementById('shc-is456-empty').style.display = 'none';
+  document.getElementById('shc-is456-report-wrap').style.display = '';
+}
+
 // ── ACI Bar Number Input System (Column) ─────────────────────────────────────
 const _ACI_BAR_IN_COL=[{n:3,v:.375},{n:4,v:.500},{n:5,v:.625},{n:6,v:.750},{n:7,v:.875},{n:8,v:1.000},{n:9,v:1.128},{n:10,v:1.270},{n:11,v:1.410}];
 const _ACI_BAR_MM_COL=_ACI_BAR_IN_COL.map(b=>({n:b.n,v:+(b.v*25.4).toFixed(3)}));
@@ -2331,6 +3229,34 @@ function _swapColBarUI(isUS){
   const lu=document.getElementById('lu-aci-dbar'), u=document.getElementById('u-aci-dbar');
   if(lu) lu.textContent=isUS?'[bar #]':'['+UNITS[curU['aci']||'knm'].dbU+']';
   if(u)  u.textContent=isUS?'':UNITS[curU['aci']||'knm'].dbU;
+}
+
+// ── ACI Bar Selects for Shear Module ─────────────────────────────────────────
+// Tie diameter: #3–#5 most common; main bar: #3–#11
+(function _initShColBarInputs(){
+  const tieIds=[{id:'shc-aci-dt',def:3},{id:'shc-aci-dbl',def:6}];
+  tieIds.forEach(({id,def})=>{
+    const inp=document.getElementById(id);
+    if(!inp) return;
+    const sel=document.createElement('select');
+    sel.id=id+'_bn'; sel.className='bar-no-sel'; sel.style.display='none';
+    sel.innerHTML=_ACI_BAR_IN_COL.map(b=>`<option value="${b.v}"${b.n===def?' selected':''}>#${b.n}</option>`).join('');
+    sel.addEventListener('change',()=>{inp.value=sel.value;});
+    inp.parentNode.insertBefore(sel,inp.nextSibling);
+  });
+})();
+function _swapShColBarUI(isUS){
+  [{id:'shc-aci-dt',luId:'lu-shc-aci-dt',uId:'u-shc-aci-dt'},
+   {id:'shc-aci-dbl',luId:'lu-shc-aci-dbl',uId:'u-shc-aci-dbl'}
+  ].forEach(({id,luId,uId})=>{
+    const inp=document.getElementById(id), sel=document.getElementById(id+'_bn');
+    if(!inp||!sel) return;
+    if(isUS){sel.value=String(inp.value);inp.style.display='none';sel.style.display='';}
+    else{inp.style.display='';sel.style.display='none';}
+    const lu=document.getElementById(luId), u=document.getElementById(uId);
+    if(lu) lu.textContent=isUS?'[bar #]':'[mm]';
+    if(u)  u.textContent=isUS?'':'mm';
+  });
 }
 </script>
 
