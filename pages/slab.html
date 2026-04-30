@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -169,6 +169,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <div class="mod-tabs no-print">
   <button class="mod-tab active" id="mtab-flexdesign" onclick="modTab(this,'mod-flexdesign')">Flexural Design</button>
   <button class="mod-tab" id="mtab-flexcap" onclick="modTab(this,'mod-flexcap')">Flexural Capacity</button>
+  <button class="mod-tab" id="mtab-punchshear" onclick="modTab(this,'mod-punchshear')">Punching Shear</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -601,6 +602,311 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div><!-- end mod-flexcap -->
 
 <!-- ═══════════════════════════════════════════════════════
+     MODULE: PUNCHING SHEAR
+     ═══════════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-punchshear">
+<div class="sub-tabs no-print">
+  <button class="sub-tab active" onclick="setPunchCode('aci',this)">ACI 318-25</button>
+  <button class="sub-tab" onclick="setPunchCode('ec2',this)">Eurocode 2 (EN 1992-1-1)</button>
+  <button class="sub-tab" onclick="setPunchCode('is456',this)">IS 456:2000</button>
+</div>
+
+<!-- ── ACI 318-25 Punching Shear ── -->
+<div class="sub-pane active" id="punch-aci">
+<div class="calc-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="punch-aci-utag">ACI 318-25 · kN-m</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn punch-unit-btn active" data-unit="knm" onclick="setPunchUnit('knm',this)">kN-m &amp; mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="nmm" onclick="setPunchUnit('nmm',this)">N-mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="us" onclick="setPunchUnit('us',this)">US (kip, in)</button>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Slab Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Slab thickness h <span class="lu" id="lu-punch-h">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-h" value="250" step="5" oninput="updatePunchD()"><span class="us" id="u-punch-h">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label id="punch-fc-label">Concrete f'c <span class="lu" id="lu-punch-fc">[MPa]</span></label>
+          <div class="iw"><input type="number" id="punch-fc" value="28" step="1"><span class="us" id="u-punch-fc">MPa</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Clear cover c<sub>v</sub> <span class="lu" id="lu-punch-cv">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-cv" value="25" step="1" min="10" oninput="updatePunchD()"><span class="us" id="u-punch-cv">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Bar diameter d<sub>b</sub> <span class="lu" id="lu-punch-db">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-db" value="16" step="2" min="6" max="40" oninput="updatePunchD()"><span class="us" id="u-punch-db">mm</span></div>
+        </div>
+      </div>
+      <div class="form-group" id="punch-rho-group" style="display:none">
+        <label>Reinf. ratio ρ [%]</label>
+        <div class="iw"><input type="number" id="punch-rho" value="0.5" step="0.05" min="0.1" max="2"><span class="us">%</span></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Column Properties</div></div>
+      <div class="unit-switcher" style="margin-bottom:8px;">
+        <label>Shape:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="punch-shape-rect" onclick="setPunchColShape('rect',this)">Rectangular</button>
+          <button class="unit-btn" id="punch-shape-circ" onclick="setPunchColShape('circ',this)">Circular</button>
+        </div>
+      </div>
+      <div class="unit-switcher" style="margin-bottom:12px;">
+        <label>Type:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="punch-type-int" onclick="setPunchColType('int',this)">Interior</button>
+          <button class="unit-btn" id="punch-type-edge" onclick="setPunchColType('edge',this)">Edge</button>
+          <button class="unit-btn" id="punch-type-corner" onclick="setPunchColType('corner',this)">Corner</button>
+        </div>
+      </div>
+      <!-- Rectangular column dims -->
+      <div id="punch-rect-dims">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Column c<sub>1</sub> <span class="lu" id="lu-punch-c1">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-c1" value="400" step="10"><span class="us" id="u-punch-c1">mm</span></div>
+          </div>
+          <div class="form-group">
+            <label>Column c<sub>2</sub> <span class="lu" id="lu-punch-c2">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-c2" value="400" step="10"><span class="us" id="u-punch-c2">mm</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Circular column dim (hidden by default) -->
+      <div id="punch-circ-dims" style="display:none">
+        <div class="form-group">
+          <label>Column diameter D<sub>c</sub> <span class="lu" id="lu-punch-dc">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-dc" value="400" step="10"><span class="us" id="u-punch-dc">mm</span></div>
+        </div>
+      </div>
+      <!-- Edge/Corner direction inputs (hidden by default) -->
+      <div id="punch-edge-dims" style="display:none">
+        <div id="punch-edge-face-row" style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
+          <label style="font-size:.68rem;color:var(--text-dim);min-width:72px;">Free edge:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="punch-ef-N" onclick="setPunchEdgeFace('N',this)">N</button>
+            <button class="unit-btn" id="punch-ef-E" onclick="setPunchEdgeFace('E',this)">E</button>
+            <button class="unit-btn" id="punch-ef-S" onclick="setPunchEdgeFace('S',this)">S</button>
+            <button class="unit-btn" id="punch-ef-W" onclick="setPunchEdgeFace('W',this)">W</button>
+          </div>
+        </div>
+        <div id="punch-corner-face-row" style="display:none;align-items:center;gap:6px;margin-bottom:9px;">
+          <label style="font-size:.68rem;color:var(--text-dim);min-width:72px;">Corner:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="punch-cf-NE" onclick="setPunchCornerPos('NE',this)">NE</button>
+            <button class="unit-btn" id="punch-cf-NW" onclick="setPunchCornerPos('NW',this)">NW</button>
+            <button class="unit-btn" id="punch-cf-SE" onclick="setPunchCornerPos('SE',this)">SE</button>
+            <button class="unit-btn" id="punch-cf-SW" onclick="setPunchCornerPos('SW',this)">SW</button>
+          </div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">Column face assumed flush with slab edge.</div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Shear V<sub>u</sub> <span class="lu" id="lu-punch-vu">[kN]</span></label>
+          <div class="iw"><input type="number" id="punch-vu" value="500" step="10"><span class="us" id="u-punch-vu">kN</span></div>
+        </div>
+        <div class="form-group">
+          <label>Moment M<sub>ux</sub> <span class="lu" id="lu-punch-mu">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
+          <div class="iw"><input type="number" id="punch-mux" value="0" step="5"><span class="us" id="u-punch-mux">kN·m</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Moment M<sub>uy</sub> <span class="lu" id="lu-punch-mu2">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(optional)</span></label>
+        <div class="iw"><input type="number" id="punch-muy" value="0" step="5"><span class="us" id="u-punch-muy">kN·m</span></div>
+      </div>
+
+      <!-- ── Shear Reinforcement (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Shear Reinforcement
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="punch-has-reinf" onchange="setPunchHasReinf(this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="punch-reinf-inputs" style="display:none">
+        <div class="unit-switcher" style="margin-bottom:10px;">
+          <label>Type:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="punch-reinf-stud" onclick="setPunchReinfType('stud',this)">Stud Rail</button>
+            <button class="unit-btn" id="punch-reinf-stirrup" onclick="setPunchReinfType('stirrup',this)">Closed Stirrups</button>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label id="punch-reinf-nr-lbl">No. of stud rails</label>
+            <div class="iw"><input type="number" id="punch-reinf-nr" value="8" step="1" min="2" max="40" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">rails</span></div>
+            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="punch-reinf-nr-hint">Symmetrically around column</div>
+          </div>
+          <div class="form-group">
+            <label id="punch-reinf-db-lbl">Stud diameter <span class="lu" id="lu-punch-reinf-db">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-reinf-db" value="12" step="1" min="8" max="25" oninput="updatePunchAv()"><span class="us" id="u-punch-reinf-db">mm</span></div>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Stud spacing s <span class="lu" id="lu-punch-reinf-s">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-reinf-s" value="150" step="10" min="50"><span class="us" id="u-punch-reinf-s">mm</span></div>
+            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">ACI §22.6.7.1: s ≤ 0.75d</div>
+          </div>
+          <div class="form-group">
+            <label>f<sub>yt</sub> <span class="lu" id="lu-punch-fyt">[MPa]</span></label>
+            <div class="iw"><input type="number" id="punch-fyt" value="420" step="10" min="200" max="600"><span class="us" id="u-punch-fyt">MPa</span></div>
+          </div>
+        </div>
+        <div id="punch-av-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;">
+          A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">905</strong> mm² <span style="margin-left:4px;">per peripheral line</span>
+        </div>
+      </div>
+
+      <!-- ── Slab Opening (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Slab Opening
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="punch-has-op1" onchange="setPunchHasOp(1,this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="punch-op1-inputs" style="display:none">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
+          <label style="font-size:.68rem;color:var(--text-dim);min-width:60px;">Col. face:</label>
+          <div class="unit-btns">
+            <button class="unit-btn" id="punch-op1-N" onclick="setPunchOpFace(1,'N',this)">N</button>
+            <button class="unit-btn active" id="punch-op1-E" onclick="setPunchOpFace(1,'E',this)">E</button>
+            <button class="unit-btn" id="punch-op1-S" onclick="setPunchOpFace(1,'S',this)">S</button>
+            <button class="unit-btn" id="punch-op1-W" onclick="setPunchOpFace(1,'W',this)">W</button>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Width a<sub>o,1</sub> <span class="lu" id="lu-punch-ao1">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-ao1" value="300" step="10" min="0"><span class="us" id="u-punch-ao1">mm</span></div>
+          </div>
+          <div class="form-group">
+            <label>Depth b<sub>o,1</sub> <span class="lu" id="lu-punch-boop1">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-boop1" value="300" step="10" min="0"><span class="us" id="u-punch-boop1">mm</span></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>Col. face → near edge s<sub>o,1</sub> <span class="lu" id="lu-punch-so1">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-so1" value="500" step="10" min="0"><span class="us" id="u-punch-so1">mm</span></div>
+          <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">ACI §22.6.4.3: openings within 4h reduce b<sub>o</sub></div>
+        </div>
+        <!-- Opening 2 sub-header -->
+        <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);border-top:1px dashed var(--border);margin:8px 0 8px;padding-top:8px;">
+          Opening 2
+          <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+            <input type="checkbox" id="punch-has-op2" onchange="setPunchHasOp(2,this.checked)" style="cursor:pointer;"> Add
+          </label>
+        </div>
+        <div id="punch-op2-inputs" style="display:none">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
+            <label style="font-size:.68rem;color:var(--text-dim);min-width:60px;">Col. face:</label>
+            <div class="unit-btns">
+              <button class="unit-btn" id="punch-op2-N" onclick="setPunchOpFace(2,'N',this)">N</button>
+              <button class="unit-btn" id="punch-op2-E" onclick="setPunchOpFace(2,'E',this)">E</button>
+              <button class="unit-btn" id="punch-op2-S" onclick="setPunchOpFace(2,'S',this)">S</button>
+              <button class="unit-btn active" id="punch-op2-W" onclick="setPunchOpFace(2,'W',this)">W</button>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Width a<sub>o,2</sub> <span class="lu" id="lu-punch-ao2">[mm]</span></label>
+              <div class="iw"><input type="number" id="punch-ao2" value="300" step="10" min="0"><span class="us" id="u-punch-ao2">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Depth b<sub>o,2</sub> <span class="lu" id="lu-punch-boop2">[mm]</span></label>
+              <div class="iw"><input type="number" id="punch-boop2" value="300" step="10" min="0"><span class="us" id="u-punch-boop2">mm</span></div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>Col. face → near edge s<sub>o,2</sub> <span class="lu" id="lu-punch-so2">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-so2" value="500" step="10" min="0"><span class="us" id="u-punch-so2">mm</span></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="calcPunchShear()">&#9654; Calculate</button>
+    </div>
+  </div>
+  <div>
+    <div class="res-empty" id="punch_aci_empty"><div class="ri">&#128203;</div>Enter values and click Calculate.</div>
+    <div class="report-card" id="punch_aci_card" style="display:none">
+      <div class="report-hdr">
+        <h4>Punching Shear Report</h4>
+        <span class="rh-code">ACI 318-25 · Slab Punching Shear</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+      </div>
+      <div class="report-body" id="punch_aci_body"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── EC2 Punching Shear (coming soon) ── -->
+<div class="sub-pane" id="punch-ec2">
+<div class="calc-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">EN 1992-1-1</span></div>
+    <div class="card-body">
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn punch-unit-btn active" data-unit="knm" onclick="setPunchUnit('knm',this)">kN-m &amp; mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="nmm" onclick="setPunchUnit('nmm',this)">N-mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="us" onclick="setPunchUnit('us',this)">US (kip, in)</button>
+        </div>
+      </div>
+      <div style="background:#f0f5fb;border:1px solid #b8d0eb;border-radius:7px;padding:18px 20px;text-align:center;color:var(--text-mid);font-size:.84rem;line-height:1.7;">
+        <div style="font-size:1.3rem;margin-bottom:6px;">&#128736;</div>
+        <strong>Eurocode 2 punching shear — coming soon</strong><br>
+        EC2 §6.4 implementation (v<sub>Rd,c</sub>, basic control perimeter at 2d) is planned for a future release.
+      </div>
+    </div>
+  </div>
+  <div></div>
+</div>
+</div>
+
+<!-- ── IS 456 Punching Shear (coming soon) ── -->
+<div class="sub-pane" id="punch-is456">
+<div class="calc-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">IS 456:2000</span></div>
+    <div class="card-body">
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn punch-unit-btn active" data-unit="knm" onclick="setPunchUnit('knm',this)">kN-m &amp; mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="nmm" onclick="setPunchUnit('nmm',this)">N-mm</button>
+          <button class="unit-btn punch-unit-btn" data-unit="us" onclick="setPunchUnit('us',this)">US (kip, in)</button>
+        </div>
+      </div>
+      <div style="background:#f0f5fb;border:1px solid #b8d0eb;border-radius:7px;padding:18px 20px;text-align:center;color:var(--text-mid);font-size:.84rem;line-height:1.7;">
+        <div style="font-size:1.3rem;margin-bottom:6px;">&#128736;</div>
+        <strong>IS 456:2000 punching shear — coming soon</strong><br>
+        IS 456 Cl 31.6 implementation is planned for a future release.
+      </div>
+    </div>
+  </div>
+  <div></div>
+</div>
+</div>
+</div><!-- end mod-punchshear -->
+
+<!-- ═══════════════════════════════════════════════════════
      BACKGROUND SECTION
      ═══════════════════════════════════════════════════════ -->
 <div class="bg-section no-print">
@@ -844,7 +1150,7 @@ function updNotation(std){
   let txt='';
   if(std==='aci'){
     const match=ACI_NAMED_BARS.find(b=>Math.abs(b.d-db_mm)<0.5);
-    const lbl=match?match.n:(isUS?`${dbRaw}"`:`${dbRaw} mm`);
+    const lbl=isUS?(match?match.n:`${dbRaw}"`):`Ø${db_mm.toFixed(0)} mm`;
     txt=`${lbl} @ ${s_disp}`;
   } else if(std==='ec2'){
     txt=`\u00D8${db_mm.toFixed(0)} / ${s_disp}`;
@@ -886,6 +1192,7 @@ function showReport(id, html){
 
 // ── Spacing table ──
 const ACI_BARS=[{l:'#3',db:9.525},{l:'#4',db:12.70},{l:'#5',db:15.88},{l:'#6',db:19.05},{l:'#7',db:22.23},{l:'#8',db:25.40}];
+const ACI_BARS_SI=[{l:'Ø10',db:9.525},{l:'Ø13',db:12.70},{l:'Ø16',db:15.88},{l:'Ø19',db:19.05},{l:'Ø22',db:22.23},{l:'Ø25',db:25.40}];
 const EC2_BARS=[{l:'Ø6',db:6},{l:'Ø8',db:8},{l:'Ø10',db:10},{l:'Ø12',db:12},{l:'Ø14',db:14},{l:'Ø16',db:16},{l:'Ø20',db:20},{l:'Ø25',db:25}];
 const IS_BARS=[{l:'T6',db:6},{l:'T8',db:8},{l:'T10',db:10},{l:'T12',db:12},{l:'T16',db:16},{l:'T20',db:20},{l:'T25',db:25}];
 
@@ -977,7 +1284,7 @@ function calcDesACI(){
         <div class="fl-col"><div class="fl-lbl">A<sub>s'</sub> compr. (top)</div><div class="fl-val warn">${fAs(Asp)}</div><div class="fl-unit">${_uAs()}</div></div>
         <div class="fl-col"><div class="fl-lbl">s<sub>max</sub></div><div class="fl-val mid">${fH(s_max)}</div><div class="fl-unit">${_uH()}</div></div>
       </div></div>`;
-    const spcHTML=spacingTable(ACI_BARS, As_tension, s_max,'ACI 318-25 §7.7.2.3');
+    const spcHTML=spacingTable(slabCurUnit==='us'?ACI_BARS:ACI_BARS_SI, As_tension, s_max,'ACI 318-25 §7.7.2.3');
     showReport('des_aci', buildReport('Slab Flexural Design','ACI 318-25',inpRows,resHTML+spcHTML,steps,warns));
     return;
   }
@@ -1013,7 +1320,7 @@ function calcDesACI(){
       <div class="fl-col"><div class="fl-lbl">A<sub>s,min</sub></div><div class="fl-val mid">${fAs(As_min)}</div><div class="fl-unit">${_uAs()}</div><div style="font-size:.65rem;margin-top:4px;">${minGov?'<span style="color:var(--orange)">governs</span>':'<span style="color:var(--green)">satisfied</span>'}</div></div>
       <div class="fl-col"><div class="fl-lbl">s<sub>max</sub></div><div class="fl-val mid">${fH(s_max)}</div><div class="fl-unit">${_uH()}</div></div>
     </div></div>`;
-  const spcHTML=spacingTable(ACI_BARS, As_req, s_max,'ACI 318-25 §7.7.2.3');
+  const spcHTML=spacingTable(slabCurUnit==='us'?ACI_BARS:ACI_BARS_SI, As_req, s_max,'ACI 318-25 §7.7.2.3');
   showReport('des_aci', buildReport('Slab Flexural Design','ACI 318-25',inpRows,resHTML+spcHTML,steps,warns));
 }
 
@@ -1408,6 +1715,813 @@ function calcCapIS456(){
   showReport('cap_is456', html);
 }
 
+// ═══════════════════════════════════════════════
+// PUNCHING SHEAR — Tab / Toggle helpers
+// ═══════════════════════════════════════════════
+let _punchCode = 'aci';
+let _punchShape = 'rect';
+let _punchType  = 'int';
+
+// ── Punching Shear: Unit System ───────────────────────────────────────────────
+let _punchUnit = 'knm';
+const PUNCH_UNITS = {
+  knm: { lenU:'mm', fcU:'MPa', forceU:'kN', momU:'kN·m',
+         lenS:1, fcS:1, forceS:1000, momS:1e6, tag:'kN-m · mm',
+         defH:250, defCv:25, defDb:16, defC:400, defE:200, defVu:500, defFc:28, defFyt:420,
+         defReinfDb:12, defReinfS:150 },
+  nmm: { lenU:'mm', fcU:'MPa', forceU:'N', momU:'N·mm',
+         lenS:1, fcS:1, forceS:1, momS:1, tag:'N-mm',
+         defH:250, defCv:25, defDb:16, defC:400, defE:200, defVu:500000, defFc:28, defFyt:420,
+         defReinfDb:12, defReinfS:150 },
+  us:  { lenU:'in', fcU:'psi', forceU:'kip', momU:'kip·ft',
+         lenS:25.4, fcS:0.006895, forceS:4448.22, momS:1.355818e6, tag:'US Customary',
+         defH:10, defCv:1, defDb:0.625, defC:16, defE:8, defVu:112, defFc:4000, defFyt:60000,
+         defReinfDb:0.5, defReinfS:6 }
+};
+function setPunchUnit(unit, btn) {
+  _punchUnit = unit;
+  const U = PUNCH_UNITS[unit];
+  document.querySelectorAll('.punch-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === unit));
+  const st = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+  const sv2= (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+  // Unit labels
+  ['lu-punch-h','lu-punch-cv','lu-punch-db','lu-punch-c1','lu-punch-c2','lu-punch-dc',
+   'lu-punch-c1edge','lu-punch-c2edge',
+   'lu-punch-ao1','lu-punch-boop1','lu-punch-so1',
+   'lu-punch-ao2','lu-punch-boop2','lu-punch-so2',
+   'lu-punch-reinf-db','lu-punch-reinf-s'].forEach(id => st(id, '['+U.lenU+']'));
+  ['u-punch-h','u-punch-cv','u-punch-db','u-punch-c1','u-punch-c2','u-punch-dc',
+   'u-punch-c1edge','u-punch-c2edge',
+   'u-punch-ao1','u-punch-boop1','u-punch-so1',
+   'u-punch-ao2','u-punch-boop2','u-punch-so2',
+   'u-punch-reinf-db','u-punch-reinf-s'].forEach(id => st(id, U.lenU));
+  st('lu-punch-fc', '['+U.fcU+']'); st('u-punch-fc', U.fcU);
+  st('lu-punch-vu', '['+U.forceU+']'); st('u-punch-vu', U.forceU);
+  ['lu-punch-mu','lu-punch-mu2'].forEach(id => st(id, '['+U.momU+']'));
+  ['u-punch-mux','u-punch-muy'].forEach(id => st(id, U.momU));
+  st('lu-punch-fyt', '['+U.fcU+']'); st('u-punch-fyt', U.fcU);
+  // Default values
+  sv2('punch-h', U.defH); sv2('punch-cv', U.defCv); sv2('punch-db', U.defDb);
+  sv2('punch-c1', U.defC); sv2('punch-c2', U.defC);
+  sv2('punch-dc', U.defC); sv2('punch-c1edge', U.defE); sv2('punch-c2edge', U.defE);
+  sv2('punch-vu', U.defVu); sv2('punch-mux', 0); sv2('punch-muy', 0);
+  sv2('punch-fc', U.defFc); sv2('punch-fyt', U.defFyt);
+  sv2('punch-reinf-db', U.defReinfDb); sv2('punch-reinf-s', U.defReinfS);
+  st('punch-aci-utag', 'ACI 318-25 · '+U.tag);
+  updatePunchD();
+}
+function updatePunchD() {
+  const h  = parseFloat(document.getElementById('punch-h').value)  || 0;
+  const cv = parseFloat(document.getElementById('punch-cv').value) || 0;
+  const db = parseFloat(document.getElementById('punch-db').value) || 0;
+  const d  = Math.max(h - cv - db, 0);
+  const el = document.getElementById('punch-d-calc');
+  if (el) el.textContent = d % 1 === 0 ? d.toFixed(0) : d.toFixed(1);
+}
+function updatePunchAv() {
+  const nr = parseInt(document.getElementById('punch-reinf-nr').value) || 0;
+  const db = parseFloat(document.getElementById('punch-reinf-db').value) || 0;
+  const av = nr * Math.PI / 4 * db * db;
+  const el = document.getElementById('punch-av-calc');
+  if (el) el.textContent = av.toFixed(0);
+}
+
+function setPunchHasReinf(checked) {
+  const el = document.getElementById('punch-reinf-inputs');
+  if (el) el.style.display = checked ? '' : 'none';
+  if (checked) updatePunchAv();
+}
+let _punchReinfType = 'stud';
+function setPunchReinfType(type, btn) {
+  _punchReinfType = type;
+  document.getElementById('punch-reinf-stud').classList.toggle('active', type === 'stud');
+  document.getElementById('punch-reinf-stirrup').classList.toggle('active', type === 'stirrup');
+  const isStud = type === 'stud';
+  const nrLbl  = document.getElementById('punch-reinf-nr-lbl');
+  const dbLbl  = document.getElementById('punch-reinf-db-lbl');
+  const nrHint = document.getElementById('punch-reinf-nr-hint');
+  const sLbl   = document.querySelector('[for="punch-reinf-s"]');
+  if (nrLbl)  nrLbl.textContent  = isStud ? 'No. of stud rails' : 'No. of stirrup legs (per perimeter)';
+  if (dbLbl)  dbLbl.innerHTML    = (isStud ? 'Stud ⌀' : 'Stirrup bar ⌀') + ' <span class="lu" id="lu-punch-reinf-db">[mm]</span>';
+  if (nrHint) nrHint.textContent = isStud ? 'Symmetrically around column' : 'Total legs crossing critical perimeter';
+  const sDiv = document.getElementById('punch-reinf-s')?.closest('.form-group');
+  if (sDiv) sDiv.style.display = isStud ? '' : 'none';
+  updatePunchAv();
+}
+const _punchOpFace = { 1: 'E', 2: 'W' };
+function setPunchHasOp(num, checked) {
+  const el = document.getElementById('punch-op'+num+'-inputs');
+  if (el) el.style.display = checked ? '' : 'none';
+  if (num === 1 && !checked) {
+    // Also uncheck/hide op2 when op1 is disabled
+    const chk2 = document.getElementById('punch-has-op2');
+    if (chk2) { chk2.checked = false; setPunchHasOp(2, false); }
+  }
+}
+function setPunchOpFace(num, face, btn) {
+  _punchOpFace[num] = face;
+  ['N','E','S','W'].forEach(f => {
+    const b = document.getElementById('punch-op'+num+'-'+f);
+    if (b) b.classList.toggle('active', f === face);
+  });
+}
+
+function setPunchCode(code, btn) {
+  _punchCode = code;
+  // sub-tab visual switch (reuse stab logic but scoped to the punchshear pane)
+  const pane = document.getElementById('mod-punchshear');
+  pane.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pane.querySelectorAll('.sub-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('punch-' + code).classList.add('active');
+  // ρ input: show for EC2/IS456, hide for ACI
+  const rhoGrp = document.getElementById('punch-rho-group');
+  if (rhoGrp) rhoGrp.style.display = (code !== 'aci') ? '' : 'none';
+  // fc label
+  const fcLbl = document.getElementById('punch-fc-label');
+  if (fcLbl) fcLbl.innerHTML = (code === 'aci') ? "Concrete f'c [MPa]" : 'Concrete f<sub>ck</sub> [MPa]';
+}
+
+function setPunchColShape(shape, btn) {
+  _punchShape = shape;
+  document.getElementById('punch-shape-rect').classList.toggle('active', shape === 'rect');
+  document.getElementById('punch-shape-circ').classList.toggle('active', shape === 'circ');
+  document.getElementById('punch-rect-dims').style.display = shape === 'rect' ? '' : 'none';
+  document.getElementById('punch-circ-dims').style.display = shape === 'circ' ? '' : 'none';
+}
+
+let _punchEdgeFace  = 'N';
+let _punchCornerPos = 'NE';
+function setPunchEdgeFace(face, btn) {
+  _punchEdgeFace = face;
+  ['N','E','S','W'].forEach(f => { const b=document.getElementById('punch-ef-'+f); if(b) b.classList.toggle('active', f===face); });
+}
+function setPunchCornerPos(pos, btn) {
+  _punchCornerPos = pos;
+  ['NE','NW','SE','SW'].forEach(p => { const b=document.getElementById('punch-cf-'+p); if(b) b.classList.toggle('active', p===pos); });
+}
+function setPunchColType(type, btn) {
+  _punchType = type;
+  document.getElementById('punch-type-int').classList.toggle('active',    type === 'int');
+  document.getElementById('punch-type-edge').classList.toggle('active',   type === 'edge');
+  document.getElementById('punch-type-corner').classList.toggle('active', type === 'corner');
+  const edgeDims = document.getElementById('punch-edge-dims');
+  const efRow    = document.getElementById('punch-edge-face-row');
+  const cfRow    = document.getElementById('punch-corner-face-row');
+  if (type === 'int') {
+    if (edgeDims) edgeDims.style.display = 'none';
+  } else if (type === 'edge') {
+    if (edgeDims) edgeDims.style.display = '';
+    if (efRow)    efRow.style.display    = 'flex';
+    if (cfRow)    cfRow.style.display    = 'none';
+  } else { // corner
+    if (edgeDims) edgeDims.style.display = '';
+    if (efRow)    efRow.style.display    = 'none';
+    if (cfRow)    cfRow.style.display    = 'flex';
+  }
+}
+
+// ── Punching Shear — Professional Plan View SVG ───────────────────────────
+function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp }) {
+  const W = 340, H = 268, legH = 28;
+  const drawH = H - legH;
+  const isCirc = shape === 'circ';
+  const col_hw = isCirc ? Dc_mm/2 : c1_mm/2;
+  const col_hh = isCirc ? Dc_mm/2 : c2_mm/2;
+  const cp_hw  = col_hw + d_mm/2;
+  const cp_hh  = col_hh + d_mm/2;
+  const freeSet = { NE:['N','E'], NW:['N','W'], SE:['S','E'], SW:['S','W'] };
+  const freeFaces = type==='edge' ? [edgeFace||'N'] : type==='corner' ? (freeSet[cornerPos||'NE']||['N','E']) : [];
+  // Content extents FROM column centre (mm). Free face → small strip; slab side → CP half + margin.
+  const strip = 10, marg = 18;
+  const extN = freeFaces.includes('N') ? col_hh + strip : cp_hh + marg;
+  const extS = freeFaces.includes('S') ? col_hh + strip : cp_hh + marg;
+  const extE = freeFaces.includes('E') ? col_hw + strip : cp_hw + marg;
+  const extW = freeFaces.includes('W') ? col_hw + strip : cp_hw + marg;
+  // Scale so all extents fit in the draw area
+  const S = Math.min((W - 8) / (extE + extW), (drawH - 8) / (extN + extS), 2.0);
+  // Column centre: free-face sides are near the SVG border; slab interior is visible
+  const cx = 4 + extW * S;
+  const cy = 4 + extN * S;
+  const chw = col_hw * S, chh = col_hh * S;
+  const cphw = cp_hw * S, cphh = cp_hh * S;
+  const f = n => n.toFixed(1);
+
+  function _drawCpSide(side, ineff) {
+    if (ineff > 0) {
+      const mx = (side.x1+side.x2)/2, my = (side.y1+side.y2)/2;
+      const half = ineff/2;
+      if (side.horiz) {
+        s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(mx-half)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+        s += `<line x1="${f(mx+half)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+        s += `<line x1="${f(mx-half)}" y1="${f(side.y1)}" x2="${f(mx+half)}" y2="${f(side.y1)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
+        s += `<text x="${f(mx)}" y="${f(side.y1+(side.id==='N'?-5:12))}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b\u2080 ineff.</text>`;
+      } else {
+        s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x1)}" y2="${f(my-half)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+        s += `<line x1="${f(side.x1)}" y1="${f(my+half)}" x2="${f(side.x1)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+        s += `<line x1="${f(side.x1)}" y1="${f(my-half)}" x2="${f(side.x1)}" y2="${f(my+half)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
+        s += `<text x="${f(side.x1+(side.id==='E'?7:-7))}" y="${f(my)}" text-anchor="${side.id==='E'?'start':'end'}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b\u2080 ineff.</text>`;
+      }
+    } else {
+      s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+    }
+  }
+
+  const defs = `<defs>
+    <pattern id="ph-col" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#94a3b8" stroke-width="1.2"/>
+    </pattern>
+    <pattern id="ph-op" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#fca5a5" stroke-width="1.5"/>
+    </pattern>
+    <pattern id="ph-void" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="2"/>
+    </pattern>
+    <marker id="ph-a1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,1 L7,4 L0,7 Z" fill="#94a3b8"/>
+    </marker>
+    <marker id="ph-a2" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+      <path d="M8,1 L1,4 L8,7 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>`;
+
+  let s = defs;
+  // Background
+  s += `<rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/>`;
+  s += `<rect x="2" y="2" width="${W-4}" height="${drawH-2}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
+
+  // ── Slab region and void (outside slab) for edge/corner ──
+  const slabX1 = freeFaces.includes('W') ? cx-chw : 2;
+  const slabY1 = freeFaces.includes('N') ? cy-chh : 2;
+  const slabX2 = freeFaces.includes('E') ? cx+chw : W-2;
+  const slabY2 = freeFaces.includes('S') ? cy+chh : drawH-2;
+  // Slab clipPath prevents CP/stud bleed outside slab
+  s += `<defs><clipPath id="ph-slab-clip"><rect x="${f(slabX1)}" y="${f(slabY1)}" width="${f(slabX2-slabX1)}" height="${f(slabY2-slabY1)}"/></clipPath></defs>`;
+  // Full draw area background is white (already done). Draw "outside slab" overlay if edge/corner.
+  if (freeFaces.includes('N')) {
+    s += `<rect x="2" y="2" width="${W-4}" height="${f(slabY1-2)}" fill="#e2e8f0"/>`;
+    s += `<rect x="2" y="2" width="${W-4}" height="${f(slabY1-2)}" fill="url(#ph-void)" opacity="0.6"/>`;
+  }
+  if (freeFaces.includes('S')) {
+    s += `<rect x="2" y="${f(slabY2)}" width="${W-4}" height="${f(drawH-slabY2-2)}" fill="#e2e8f0"/>`;
+    s += `<rect x="2" y="${f(slabY2)}" width="${W-4}" height="${f(drawH-slabY2-2)}" fill="url(#ph-void)" opacity="0.6"/>`;
+  }
+  if (freeFaces.includes('E')) {
+    s += `<rect x="${f(slabX2)}" y="2" width="${f(W-2-slabX2)}" height="${f(drawH-4)}" fill="#e2e8f0"/>`;
+    s += `<rect x="${f(slabX2)}" y="2" width="${f(W-2-slabX2)}" height="${f(drawH-4)}" fill="url(#ph-void)" opacity="0.6"/>`;
+  }
+  if (freeFaces.includes('W')) {
+    s += `<rect x="2" y="2" width="${f(slabX1-2)}" height="${f(drawH-4)}" fill="#e2e8f0"/>`;
+    s += `<rect x="2" y="2" width="${f(slabX1-2)}" height="${f(drawH-4)}" fill="url(#ph-void)" opacity="0.6"/>`;
+  }
+
+  // Slab edge lines (bold solid lines at column face for edge/corner)
+  const edgeStroke = 'stroke="#1e293b" stroke-width="3" stroke-linecap="square"';
+  for (const ef of freeFaces) {
+    if (ef==='N') s += `<line x1="${f(slabX1)}" y1="${f(cy-chh)}" x2="${f(slabX2)}" y2="${f(cy-chh)}" ${edgeStroke}/>`;
+    if (ef==='S') s += `<line x1="${f(slabX1)}" y1="${f(cy+chh)}" x2="${f(slabX2)}" y2="${f(cy+chh)}" ${edgeStroke}/>`;
+    if (ef==='E') s += `<line x1="${f(cx+chw)}" y1="${f(slabY1)}" x2="${f(cx+chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
+    if (ef==='W') s += `<line x1="${f(cx-chw)}" y1="${f(slabY1)}" x2="${f(cx-chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
+  }
+  // "Slab edge" labels with white pill background for legibility
+  function _edgeLbl(tx, ty, anchor) {
+    const lw = 55, lh = 15;
+    const bx = anchor==='end' ? tx-lw : anchor==='middle' ? tx-lw/2 : tx;
+    s += `<rect x="${f(bx-2)}" y="${f(ty-11)}" width="${lw+4}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;
+    s += `<text x="${f(tx)}" y="${f(ty)}" text-anchor="${anchor||'start'}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;
+  }
+  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+10, 'start');
+  if (freeFaces.includes('S')) _edgeLbl(8, cy+chh-3, 'start');
+  if (freeFaces.includes('E')) _edgeLbl(cx+chw-4, Math.max(cy-cphh+12, 12), 'end');
+  if (freeFaces.includes('W')) _edgeLbl(cx-chw+4, Math.max(cy-cphh+12, 12), 'start');
+
+  // CP fill (light blue inside CP)
+  const ineffSegs = {};
+  for (const op of opData) {
+    if (op.within4h && op.bo_ineff > 0)
+      ineffSegs[op.face] = (ineffSegs[op.face]||0) + op.bo_ineff * S;
+  }
+
+  s += `<g clip-path="url(#ph-slab-clip)">`;
+  // ── Critical perimeter lines ──
+  if (isCirc) {
+    s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cphw)}" fill="rgba(37,99,235,0.05)" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
+  } else if (type === 'int') {
+    s += `<rect x="${f(cx-cphw)}" y="${f(cy-cphh)}" width="${f(cphw*2)}" height="${f(cphh*2)}" fill="rgba(37,99,235,0.05)" stroke="none"/>`;
+    const cpSides = [
+      { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
+      { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
+      { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
+      { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+    ];
+    for (const side of cpSides) _drawCpSide(side, ineffSegs[side.id]||0);
+  } else if (type === 'edge') {
+    const ef = edgeFace || 'N';
+    const allSides = {
+      N: { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
+      E: { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
+      S: { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
+      W: { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+    };
+    // Side directions: E=top→bottom, W=bottom→top, N=left→right, S=right→left
+    // Trim the endpoint nearest to the free face (correct endpoint per direction)
+    const sidesToDraw = ['N','E','S','W'].filter(id => id !== ef);
+    for (const id of sidesToDraw) {
+      let sd = {...allSides[id]};
+      if (ef==='N') { if (id==='E') sd.y1=cy-chh; else if (id==='W') sd.y2=cy-chh; }
+      if (ef==='S') { if (id==='E') sd.y2=cy+chh; else if (id==='W') sd.y1=cy+chh; }
+      if (ef==='E') { if (id==='N') sd.x2=cx+chw; else if (id==='S') sd.x1=cx+chw; }
+      if (ef==='W') { if (id==='N') sd.x1=cx-chw; else if (id==='S') sd.x2=cx-chw; }
+      _drawCpSide(sd, ineffSegs[id]||0);
+    }
+  } else { // corner
+    const cp = cornerPos || 'NE';
+    const free = freeSet[cp] || ['N','E'];
+    const allS = {
+      N: { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
+      E: { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
+      S: { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
+      W: { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+    };
+    // Trim each active side at any adjacent free-face boundary
+    const active = ['N','E','S','W'].filter(id => !free.includes(id));
+    for (const id of active) {
+      let sd = {...allS[id]};
+      if (id==='E') { if (free.includes('N')) sd.y1=cy-chh; if (free.includes('S')) sd.y2=cy+chh; }
+      if (id==='W') { if (free.includes('N')) sd.y2=cy-chh; if (free.includes('S')) sd.y1=cy+chh; }
+      if (id==='N') { if (free.includes('W')) sd.x1=cx-chw; if (free.includes('E')) sd.x2=cx+chw; }
+      if (id==='S') { if (free.includes('E')) sd.x1=cx+chw; if (free.includes('W')) sd.x2=cx-chw; }
+      _drawCpSide(sd, ineffSegs[id]||0);
+    }
+  }
+
+  // Openings
+  for (const op of opData) {
+    const ao_px = Math.max(op.ao_mm*S, 8), boop_px = Math.max(op.boop_mm*S, 10);
+    let ox, oy, ow, oh;
+    if (op.face==='E')      { ox=cx+chw+op.so_mm*S; oy=cy-ao_px/2; ow=boop_px; oh=ao_px; }
+    else if (op.face==='W') { ox=cx-chw-op.so_mm*S-boop_px; oy=cy-ao_px/2; ow=boop_px; oh=ao_px; }
+    else if (op.face==='N') { ox=cx-ao_px/2; oy=cy-chh-op.so_mm*S-boop_px; ow=ao_px; oh=boop_px; }
+    else                    { ox=cx-ao_px/2; oy=cy+chh+op.so_mm*S; ow=ao_px; oh=boop_px; }
+    s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="white" stroke="#ef4444" stroke-width="1.5" rx="1"/>`;
+    s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="url(#ph-op)" opacity="0.7" rx="1"/>`;
+    s += `<text x="${f(ox+ow/2)}" y="${f(oy+oh/2)}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#b91c1c">${op.num}</text>`;
+    const isH = op.face==='E'||op.face==='W';
+    const facePx = isH ? cx+(op.face==='E'?chw:-chw) : cy+(op.face==='S'?chh:-chh);
+    if (isH) {
+      const nearEdge = op.face==='E' ? ox : ox+ow;
+      const ay = Math.min(cy+chh+14, drawH-16);
+      s += `<line x1="${f(facePx)}" y1="${f(ay)}" x2="${f(nearEdge)}" y2="${f(ay)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+      s += `<text x="${f((facePx+nearEdge)/2)}" y="${f(ay-4)}" text-anchor="middle" font-size="7" fill="#94a3b8">s\u2080</text>`;
+    } else {
+      const nearEdge = op.face==='N' ? oy+oh : oy;
+      const ax = Math.min(cx+chw+14, W-16);
+      s += `<line x1="${f(ax)}" y1="${f(facePx)}" x2="${f(ax)}" y2="${f(nearEdge)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+      s += `<text x="${f(ax+3)}" y="${f((facePx+nearEdge)/2)}" font-size="7" fill="#94a3b8" dominant-baseline="middle">s\u2080</text>`;
+    }
+  }
+
+  // Stud/stirrup rails — multi-stud display, active (non-free) faces only
+  if (nr_disp > 0) {
+    // Build stud positions from column face outward (px)
+    const studPos = [];
+    let _p = d_mm / 2;
+    const _maxP = 2.5 * d_mm;
+    while (studPos.length < 4 && _p <= _maxP + 0.5) {
+      studPos.push(_p * S);
+      if (rs_mm <= 0) break;
+      _p += rs_mm;
+    }
+    if (studPos.length === 0) studPos.push(d_mm / 2 * S);
+    const railLen = studPos[studPos.length - 1] + 5;
+
+    if (isCirc) {
+      // Radial distribution for circular column based on active arc
+      const _arcTable = {
+        int: {start:0,span:360},
+        edge_N:{start:315,span:270}, edge_S:{start:135,span:270},
+        edge_E:{start:45, span:270}, edge_W:{start:225,span:270},
+        corner_NE:{start:45,span:180}, corner_NW:{start:315,span:180},
+        corner_SE:{start:135,span:180}, corner_SW:{start:225,span:180}
+      };
+      const _ak = type==='int'?'int':type==='edge'?`edge_${edgeFace||'N'}`:`corner_${cornerPos||'NE'}`;
+      const {start:_as, span:_sp} = _arcTable[_ak]||{start:0,span:360};
+      for (let i=0; i<nr_disp; i++) {
+        const frac = _sp<360 ? (nr_disp>1?i/(nr_disp-1):0.5) : i/nr_disp;
+        const ang = (_as + frac*_sp) * Math.PI / 180;
+        const dx=Math.cos(ang), dy=Math.sin(ang);
+        const rx=cx+dx*chw, ry=cy+dy*chw;
+        s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
+        for (const sp of studPos)
+          s += `<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="1"/>`;
+      }
+    } else {
+      // Rectangular column: distribute rails proportionally on active faces
+      const _af = [
+        {id:'N',len:c1_mm},{id:'E',len:c2_mm},
+        {id:'S',len:c1_mm},{id:'W',len:c2_mm}
+      ].filter(fc => !freeFaces.includes(fc.id));
+      const _tl = _af.reduce((a,fc)=>a+fc.len,0)||1;
+      let _rem = nr_disp;
+      _af.forEach((fc,i)=>{
+        fc.n = i<_af.length-1 ? Math.max(1,Math.round(nr_disp*fc.len/_tl)) : Math.max(1,_rem);
+        _rem -= fc.n;
+      });
+      for (const fc of _af) {
+        for (let i=0;i<fc.n;i++) {
+          const t=(i+0.5)/fc.n;
+          let rx,ry,dx,dy;
+          if(fc.id==='N'){rx=cx+(t-0.5)*2*chw;ry=cy-chh;dx=0;dy=-1;}
+          else if(fc.id==='E'){rx=cx+chw;ry=cy+(t-0.5)*2*chh;dx=1;dy=0;}
+          else if(fc.id==='S'){rx=cx+(0.5-t)*2*chw;ry=cy+chh;dx=0;dy=1;}
+          else{rx=cx-chw;ry=cy+(0.5-t)*2*chh;dx=-1;dy=0;}
+          s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
+          for (const sp of studPos)
+            s += `<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="1"/>`;
+        }
+      }
+    }
+  }
+
+  s += `</g>`; // end slab clip
+
+  // Column
+  if (isCirc) {
+    s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="#475569"/>`;
+    s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="url(#ph-col)" opacity="0.35"/>`;
+    s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
+    const cfs2 = Math.max(7, Math.min(11, chw*0.55));
+    s += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs2.toFixed(0)}" font-weight="700" fill="white">D=${c1_disp}</text>`;
+  } else {
+    s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="#475569"/>`;
+    s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="url(#ph-col)" opacity="0.35"/>`;
+    s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
+    const cfs = Math.max(7, Math.min(11, chw*0.55));
+    s += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs.toFixed(0)}" font-weight="700" fill="white">${c1_disp}\xd7${c2_disp}</text>`;
+  }
+
+  // d/2 dimension line (East side if not free)
+  if (!freeFaces.includes('E') && cphw-chw > 8) {
+    const dmy = cy + chh + 12;
+    const dmx1 = cx+chw, dmx2 = cx+cphw;
+    s += `<line x1="${f(dmx1)}" y1="${f(cy+chh+2)}" x2="${f(dmx1)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s += `<line x1="${f(dmx2)}" y1="${f(cy+chh+2)}" x2="${f(dmx2)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s += `<line x1="${f(dmx1)}" y1="${f(dmy)}" x2="${f(dmx2)}" y2="${f(dmy)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+    s += `<text x="${f((dmx1+dmx2)/2)}" y="${f(dmy-5)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
+  }
+
+  // b0 label on the nearest active (inside-slab) CP side
+  if (!freeFaces.includes('N') && cy-cphh > 8)
+    s += `<text x="${f(cx)}" y="${f(cy-cphh-6)}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">b₀</text>`;
+  else if (!freeFaces.includes('S'))
+    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+12, drawH-4))}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">b₀</text>`;
+  // Compass labels only for inside-slab directions
+  const compassNy = cy-cphh > 18 ? cy-cphh-14 : 12;
+  s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">N</text>`;
+  if (!freeFaces.includes('E'))
+    s += `<text x="${f(Math.min(cx+cphw+10, W-6))}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">E</text>`;
+  if (!freeFaces.includes('S'))
+    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+13, drawH-4))}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">S</text>`;
+  if (!freeFaces.includes('W'))
+    s += `<text x="${f(Math.max(cx-cphw-10, 6))}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">W</text>`;
+  // Legend
+  const ly = H - legH + 7;
+  let lx = 8;
+  s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="5,3" stroke-width="2.5"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#2563eb">Critical perimeter</text>`;
+  lx += 120;
+  if (freeFaces.length > 0) {
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#1e293b" stroke-width="3"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#334155">Slab edge</text>`;
+    lx += 80;
+  }
+  if (nr_disp > 0) {
+    s += `<circle cx="${lx+4}" cy="${ly+4}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="0.8"/><text x="${lx+11}" y="${ly+8}" font-size="9" fill="#ea580c">${reinfType==='stud'?'Stud':'Stirrup'}</text>`;
+    lx += 55;
+  }
+  if (opData.length > 0) {
+    s += `<rect x="${lx}" y="${ly}" width="11" height="9" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#dc2626">Opening</text>`;
+    lx += 58;
+  }
+  if (Object.values(ineffSegs).some(v=>v>0))
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#ef4444">b\u2080 ineff.</text>`;
+
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+}
+
+// ═══════════════════════════════════════════════
+// PUNCHING SHEAR — Main calculation (ACI 318-25)
+// ═══════════════════════════════════════════════
+function calcPunchShear() {
+  const code = _punchCode, shape = _punchShape, type = _punchType;
+  if (code !== 'aci') return;
+
+  const PU   = PUNCH_UNITS[_punchUnit];
+  const gv   = id => parseFloat(document.getElementById(id).value) || 0;
+  const h    = gv('punch-h')  * PU.lenS;
+  const cv   = gv('punch-cv') * PU.lenS;
+  const db_sl= gv('punch-db') * PU.lenS;
+  const d    = Math.max(h - cv - db_sl, 1);
+  const fc   = gv('punch-fc') * PU.fcS;
+  const c1   = gv('punch-c1') * PU.lenS;
+  const c2   = gv('punch-c2') * PU.lenS;
+  const Dc   = gv('punch-dc') * PU.lenS;
+  const Vu_N = gv('punch-vu') * PU.forceS;
+
+  if (!h||!cv||!d||!fc||!Vu_N) { _showPunchErr('Please fill in all required input fields.'); return; }
+  if (shape === 'rect' && (!c1||!c2)) { _showPunchErr('Please fill in column dimensions c₁ and c₂.'); return; }
+  if (shape === 'circ' && !Dc) { _showPunchErr('Please fill in column diameter Dc.'); return; }
+  if (d <= 0) { _showPunchErr('Effective depth d must be positive — check cover and bar diameter.'); return; }
+
+  const hasReinf   = document.getElementById('punch-has-reinf').checked;
+
+  // Display values
+  const h_disp   = gv('punch-h');
+  const cv_disp  = gv('punch-cv');
+  const db_disp  = gv('punch-db');
+  const d_disp   = h_disp - cv_disp - db_disp;
+  const fc_disp  = gv('punch-fc');
+  const c1_disp  = gv('punch-c1');
+  const c2_disp  = gv('punch-c2');
+  const Dc_disp  = gv('punch-dc');
+  const Vu_disp  = gv('punch-vu');
+  const Mux_disp = gv('punch-mux');
+  const Muy_disp = gv('punch-muy');
+  const Mux = Mux_disp * PU.momS;
+  const Muy = Muy_disp * PU.momS;
+
+  // Reinforcement inputs — n_r × (π/4 × d_bar²)
+  const isStud    = (_punchReinfType === 'stud');
+  const nr_disp   = hasReinf ? (parseInt(document.getElementById('punch-reinf-nr').value) || 0) : 0;
+  const rdb_disp  = hasReinf ? gv('punch-reinf-db') : 0;
+  const rs_disp   = hasReinf ? gv('punch-reinf-s')  : 0;
+  const rdb_mm    = rdb_disp * PU.lenS;
+  const rs_mm     = rs_disp  * PU.lenS;
+  const fyt_r     = hasReinf ? gv('punch-fyt') * PU.fcS : 0;
+  const fyt_disp  = hasReinf ? gv('punch-fyt') : 0;
+  const Av_1      = hasReinf ? nr_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;  // mm², one peripheral line
+  const Av_disp   = hasReinf ? nr_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
+
+  // Opening inputs — two openings
+  const hasOp1 = document.getElementById('punch-has-op1').checked;
+  const hasOp2 = hasOp1 && document.getElementById('punch-has-op2')?.checked;
+  const hasOpening = hasOp1;  // keep for compat
+  const _opRaw = [];
+  if (hasOp1) _opRaw.push({ num:1, face: _punchOpFace[1]||'E',
+    ao: gv('punch-ao1')*PU.lenS, boop: gv('punch-boop1')*PU.lenS, so: gv('punch-so1')*PU.lenS,
+    ao_d: gv('punch-ao1'), boop_d: gv('punch-boop1'), so_d: gv('punch-so1'),
+    ao_mm: gv('punch-ao1')*PU.lenS, boop_mm: gv('punch-boop1')*PU.lenS, so_mm: gv('punch-so1')*PU.lenS });
+  if (hasOp2) _opRaw.push({ num:2, face: _punchOpFace[2]||'W',
+    ao: gv('punch-ao2')*PU.lenS, boop: gv('punch-boop2')*PU.lenS, so: gv('punch-so2')*PU.lenS,
+    ao_d: gv('punch-ao2'), boop_d: gv('punch-boop2'), so_d: gv('punch-so2'),
+    ao_mm: gv('punch-ao2')*PU.lenS, boop_mm: gv('punch-boop2')*PU.lenS, so_mm: gv('punch-so2')*PU.lenS });
+
+  const lambda = 1.0, phi = 0.75;
+  // ── Geometry by type and shape ──
+  let bo_full, alphaS, beta, typeLabel, shapeLabel;
+  if (shape === 'circ') {
+    beta       = 1.0;
+    shapeLabel = `Circular (D=${Dc_disp} ${PU.lenU})`;
+    if (type === 'int') {
+      // Full circle at d/2 from column face
+      bo_full   = Math.PI * (Dc + d);
+      alphaS    = 40;
+      typeLabel = 'Interior';
+    } else if (type === 'edge') {
+      // 3/4 arc + 2 stub lines of d/2 at slab edge
+      bo_full   = 0.75 * Math.PI * (Dc + d) + d;
+      alphaS    = 30;
+      typeLabel = `Edge (free face: ${_punchEdgeFace})`;
+    } else {
+      // 1/2 arc + 2 stub lines of d/2 at slab edge
+      bo_full   = 0.5 * Math.PI * (Dc + d) + d;
+      alphaS    = 20;
+      typeLabel = `Corner (${_punchCornerPos})`;
+    }
+  } else {
+    // Rectangular
+    beta = Math.max(c1,c2) / Math.min(c1,c2);
+    shapeLabel = `Rectangular (${c1_disp}×${c2_disp} ${PU.lenU})`;
+    if (type === 'int') {
+      bo_full   = 2*(c1+d) + 2*(c2+d);
+      alphaS    = 40;
+      typeLabel = 'Interior';
+    } else if (type === 'edge') {
+      const ef = _punchEdgeFace;
+      bo_full   = (ef==='N'||ef==='S') ? (c1 + 2*c2 + 2*d) : (2*c1 + c2 + 2*d);
+      alphaS    = 30;
+      typeLabel = `Edge (free face: ${ef})`;
+    } else { // corner
+      bo_full   = c1 + c2 + d;
+      alphaS    = 20;
+      typeLabel = `Corner (${_punchCornerPos})`;
+    }
+  }
+
+  // ── ACI §22.6.4.3: Opening reduction (face-aware, two openings) ──
+  // colHalf toward face: N/S → c2/2, E/W → c1/2; perimeter side: N/S → c1+d, E/W → c2+d
+  const _faceColHalf = { N:c2/2, E:c1/2, S:c2/2, W:c1/2 };
+  const _faceSideLen = { N:c1+d, E:c2+d, S:c1+d, W:c2+d };
+  const _faceIneff   = { N:0, E:0, S:0, W:0 };
+  const opData = [];  // enriched with calc results for SVG
+  for (const op of _opRaw) {
+    op.within4h = op.ao > 0 && op.so < 4*h;
+    if (op.within4h) {
+      const ch = _faceColHalf[op.face], sl = _faceSideLen[op.face];
+      const raw = op.ao * (ch + d/2) / (ch + op.so);
+      op.bo_ineff = Math.min(raw, sl - _faceIneff[op.face]);
+      _faceIneff[op.face] += op.bo_ineff;
+    } else { op.bo_ineff = 0; }
+    opData.push(op);
+  }
+  const bo_ineff = Object.values(_faceIneff).reduce((a,b)=>a+b,0);
+  let bo = Math.max(bo_full - bo_ineff, bo_full * 0.1);
+  const openingWithin4h = opData.some(op => op.within4h && op.bo_ineff > 0);
+  const Ac = bo * d;
+  const vu = Vu_N / Ac;
+
+  // ── Shear capacity ──
+  const warns = [];
+  let vc, phiVn, DCR, isOK, govLbl = '', steps = [];
+
+  if (hasReinf) {
+    // ACI 318-25 §22.6.6 — with shear reinforcement
+    vc = isStud ? 0.25*lambda*Math.sqrt(fc)   // §22.6.6.1 headed studs
+                : 0.17*lambda*Math.sqrt(fc);   // §22.6.6.2 closed stirrups
+    const vs      = Av_1 * fyt_r / (bo * d);  // vs = Av_perimeter_line × fyt / (bo × d)
+    const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
+    const vn_cap  = Math.min(vc + vs, vn_max);
+    phiVn = phi * vn_cap;
+    DCR   = vu / Math.max(phiVn, 0.001);
+    isOK  = DCR <= 1.0;
+
+    const vc1u = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+    const vc2u = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
+    const vc3u = 0.33*lambda*Math.sqrt(fc);
+    const vc_unr = Math.min(vc1u,vc2u,vc3u);
+    const vs_req = Math.max(vu/phi - vc_unr, 0);
+
+    if (vs < vs_req && vs_req > 0)
+      warns.push(`<b>Insufficient shear reinforcement:</b> v<sub>s</sub> = ${vs.toFixed(3)} MPa &lt; required v<sub>s,req</sub> = v<sub>u</sub>/φ − v<sub>c,plain</sub> = ${vs_req.toFixed(3)} MPa.`);
+    if (vu/phi > vn_max)
+      warns.push(`<b>Section too small:</b> v<sub>u</sub>/φ (${(vu/phi).toFixed(3)} MPa) exceeds v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa. Increase slab thickness or column size.`);
+    if (isStud && rs_mm > 0 && rs_mm > 0.75*d)
+      warns.push(`<b>Stud spacing too large:</b> s = ${rs_disp} ${PU.lenU} exceeds 0.75d = ${(0.75*d/PU.lenS).toFixed(1)} ${PU.lenU} (ACI §22.6.7.1).`);
+
+    steps = [
+      {desc:'Critical perimeter b<sub>o</sub>', formula: shape==='circ' ? (type==='int'?'b<sub>o</sub> = π(D<sub>c</sub>+d)':type==='edge'?'b<sub>o</sub> = ¾π(D<sub>c</sub>+d)+d':'b<sub>o</sub> = ½π(D<sub>c</sub>+d)+d') : type==='int' ? 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)' : type==='edge' ? 'b<sub>o</sub> = (c+2c+2d) per free face' : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d', val:`${bo.toFixed(0)} mm`},
+      {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:`${(Ac/1e3).toFixed(1)} × 10³ mm²`},
+      {desc:'Factored shear stress v<sub>u</sub> = V<sub>u</sub>/A<sub>c</sub>', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      {desc:`A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`, formula:'Area at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
+      {desc:`v<sub>c</sub> with ${isStud?'headed studs (§22.6.6.1)':'closed stirrups (§22.6.6.2)'}`, formula:isStud?'v<sub>c</sub> = 0.25λ√f\'c':'v<sub>c</sub> = 0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
+      {desc:'v<sub>s</sub> = A<sub>v,1</sub> × f<sub>yt</sub> / (b<sub>o</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs.toFixed(4)} MPa`},
+      {desc:'v<sub>n</sub> = v<sub>c</sub> + v<sub>s</sub>',
+       formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs>vn_max?' → cap applied':''}`,
+       val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
+      {desc:'Design capacity φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn.toFixed(4)} MPa`},
+      {desc:'D/C = v<sub>u</sub> / φv<sub>n</sub>', formula:'', val:DCR.toFixed(3), cls:isOK?'ok':'err', check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}
+    ];
+  } else {
+    // ACI 318-25 §22.6.5.2 — no shear reinforcement
+    const vc1 = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+    const vc2 = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
+    const vc3 = 0.33*lambda*Math.sqrt(fc);
+    vc    = Math.min(vc1,vc2,vc3);
+    phiVn = phi * vc;
+    DCR   = vu / phiVn;
+    isOK  = DCR <= 1.0;
+    const govIdx = [vc1,vc2,vc3].indexOf(vc);
+    govLbl = ['Eq.(1) — β','Eq.(2) — α·d/b₀','Eq.(3) — 0.33λ√f\'c'][govIdx];
+
+    steps = [
+      {desc:'Critical perimeter b<sub>o</sub>', formula: shape==='circ' ? (type==='int'?'b<sub>o</sub> = π(D<sub>c</sub>+d)':type==='edge'?'b<sub>o</sub> = ¾π(D<sub>c</sub>+d)+d':'b<sub>o</sub> = ½π(D<sub>c</sub>+d)+d') : type==='int' ? 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)' : type==='edge' ? 'b<sub>o</sub> = (c+2c+2d) per free face' : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d', val:`${bo.toFixed(0)} mm`},
+      {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:`${(Ac/1e3).toFixed(1)} × 10³ mm²`},
+      {desc:'Factored shear stress v<sub>u</sub> = V<sub>u</sub>/A<sub>c</sub>', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      {desc:'Aspect ratio β = max(c<sub>1</sub>,c<sub>2</sub>) / min(c<sub>1</sub>,c<sub>2</sub>)', formula:'', val:beta.toFixed(3)},
+      {desc:'v<sub>c,1</sub> = 0.17(1+2/β)λ√f\'c', formula:'ACI 318-25 §22.6.5.2(a)', val:`${vc1.toFixed(4)} MPa`, cls:govIdx===0?'hl':''},
+      {desc:'v<sub>c,2</sub> = 0.083(α<sub>s</sub>·d/b<sub>o</sub>+2)λ√f\'c', formula:'ACI 318-25 §22.6.5.2(b)', val:`${vc2.toFixed(4)} MPa`, cls:govIdx===1?'hl':''},
+      {desc:'v<sub>c,3</sub> = 0.33λ√f\'c', formula:'ACI 318-25 §22.6.5.2(c)', val:`${vc3.toFixed(4)} MPa`, cls:govIdx===2?'hl':''},
+      {desc:'v<sub>c</sub> = min(v<sub>c,1</sub>, v<sub>c,2</sub>, v<sub>c,3</sub>)', formula:`Governed by: ${govLbl}`, val:`${vc.toFixed(4)} MPa`, cls:'hl'},
+      {desc:'Design capacity φv<sub>c</sub>', formula:'φ = 0.75 (ACI 318-25 §21.2.1)', val:`${phiVn.toFixed(4)} MPa`},
+      {desc:'D/C = v<sub>u</sub> / φv<sub>c</sub>', formula:'', val:DCR.toFixed(3), cls:isOK?'ok':'err', check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}
+    ];
+  }
+
+  // Insert opening steps after bo if applicable
+  if (opData.some(op=>op.within4h&&op.bo_ineff>0)) {
+    const opStepDesc = opData.filter(op=>op.within4h&&op.bo_ineff>0)
+      .map(op=>`Op.${op.num}(${op.face}): −${op.bo_ineff.toFixed(0)} mm`).join(', ');
+    steps.splice(1, 0, {
+      desc: `Opening reduction (ACI §22.6.4.3): ${opStepDesc}`,
+      formula: `b<sub>o,full</sub> = ${bo_full.toFixed(0)} mm → b<sub>o,eff</sub> = ${bo.toFixed(0)} mm`,
+      val: `−${bo_ineff.toFixed(0)} mm`,
+      cls: 'hl'
+    });
+  }
+  for (const op of opData) {
+    if (!op.within4h && op.ao > 0)
+      warns.push(`Opening ${op.num} (face ${op.face}): s<sub>o</sub> = ${op.so_d} ${PU.lenU} ≥ 4h = ${(4*h/PU.lenS).toFixed(0)} ${PU.lenU}. No b<sub>o</sub> reduction required per ACI §22.6.4.3.`);
+  }
+
+  if (Mux !== 0 || Muy !== 0)
+    warns.push('<b>Moment transfer noted:</b> M<sub>ux</sub> and/or M<sub>uy</sub> are non-zero. Shear stress amplification (ACI 318-25 §8.4.4) is not included. Verify that V<sub>u</sub> accounts for eccentric shear effects.');
+
+  // Input summary
+  const inpRows = [
+    ['Slab thickness h',              `${h_disp} ${PU.lenU}`],
+    ['Clear cover c<sub>v</sub>',     `${cv_disp} ${PU.lenU}`],
+    ['Bar diameter d<sub>b</sub>',    `${db_disp} ${PU.lenU}`],
+    ['Effective depth d',             `${d_disp.toFixed(1)} ${PU.lenU}`],
+    ["Concrete f'c",                  `${fc_disp} ${PU.fcU}`],
+    ...(shape==='rect' ? [
+      ['Column c<sub>1</sub>', `${c1_disp} ${PU.lenU}`],
+      ['Column c<sub>2</sub>', `${c2_disp} ${PU.lenU}`],
+    ] : [
+      ['Column diameter D<sub>c</sub>', `${Dc_disp} ${PU.lenU}`],
+    ]),
+    ['Column shape',  shapeLabel],
+    ['Column type',   typeLabel],
+    ['Factored shear V<sub>u</sub>',  `${Vu_disp} ${PU.forceU}`],
+    ['Moment M<sub>ux</sub>',         `${Mux_disp} ${PU.momU}`],
+    ['Moment M<sub>uy</sub>',         `${Muy_disp} ${PU.momU}`],
+    ['λ (normal-weight)',              lambda.toFixed(1)],
+    ['α<sub>s</sub>',                 alphaS.toString()],
+    ...(hasReinf ? [
+      ['Reinf. type',              isStud ? 'Headed Stud Rail' : 'Closed Stirrups'],
+      ['No. of rails / legs',      nr_disp.toString()],
+      ['Bar ⌀',                    `${rdb_disp} ${PU.lenU}`],
+      ['Stud spacing s',           `${rs_disp} ${PU.lenU}`],
+      ['A<sub>v,1</sub> (one peripheral line)', `${Av_disp.toFixed(0)} mm²`],
+      ['f<sub>yt</sub>',           `${fyt_disp} ${PU.fcU}`],
+    ] : []),
+    ...opData.flatMap(op => [
+      [`Opening ${op.num} face`, op.face],
+      [`Opening ${op.num} width a<sub>o</sub>`,  `${op.ao_d} ${PU.lenU}`],
+      [`Opening ${op.num} depth b<sub>oop</sub>`, `${op.boop_d} ${PU.lenU}`],
+      [`Opening ${op.num} s<sub>o</sub>`,         `${op.so_d} ${PU.lenU}`],
+    ]),
+  ];
+
+  // ── SVG plan diagram ──
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
+
+  // Result banner
+  const dcrCls  = DCR<=0.75?'ok':DCR<=1.0?'warn':'err';
+  const status  = DCR<=0.75?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
+  const capLabel = hasReinf ? 'φv<sub>n</sub>' : 'φv<sub>c</sub>';
+  const resHTML = `<div class="rpt-sec"><div class="rpt-sec-title">Punching Shear Check${hasReinf?' — With '+(isStud?'Stud Rails':'Stirrups'):''}</div>
+    <div class="dcr-banner dcr-${dcrCls}">
+      <div><div class="dcr-label">D/C &mdash; v<sub>u</sub> / ${capLabel}</div><div class="dcr-val">${DCR.toFixed(3)}</div></div>
+      <div class="dcr-status">${status}<br><span style="font-size:.7rem;font-weight:400;">v<sub>u</sub> = ${vu.toFixed(3)} MPa / ${capLabel} = ${phiVn.toFixed(3)} MPa</span></div>
+    </div>
+    <div class="fl-rb">
+      <div class="fl-col"><div class="fl-lbl">b<sub>o</sub></div><div class="fl-val mid">${bo.toFixed(0)}</div><div class="fl-unit">mm</div></div>
+      <div class="fl-col"><div class="fl-lbl">v<sub>u</sub></div><div class="fl-val mid">${vu.toFixed(3)}</div><div class="fl-unit">MPa</div></div>
+      <div class="fl-col"><div class="fl-lbl">${capLabel}</div><div class="fl-val mid">${phiVn.toFixed(3)}</div><div class="fl-unit">MPa</div></div>
+    </div>
+  </div>`;
+
+  const date     = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const warnHTML = warns.length ? warns.map(w=>`<div class="report-warn"><span>&#9888;&#65039;</span><div>${w}</div></div>`).join('') : '';
+  const inpHTML  = `<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>
+    <table class="inp-tbl">${inpRows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('')}</table></div>`;
+  const stepsHTML= `<div class="rpt-sec"><div class="rpt-sec-title">Calculation Steps</div>
+    <table class="steps-table">${steps.map((s,i)=>`
+      <tr>
+        <td style="width:34px;padding-right:10px"><div class="step-num">${i+1}</div></td>
+        <td><div class="step-desc">${s.desc}</div>${s.formula?`<div class="step-formula">${s.formula}</div>`:''}</td>
+        <td style="width:190px;text-align:right">
+          <span class="step-val ${s.cls||''}">${s.val}</span>
+          ${s.check?`<span class="step-check ${s.check.t==='ok'?'chk-ok':s.check.t==='warn'?'chk-warn':'chk-err'}">${s.check.l}</span>`:''}
+        </td>
+      </tr>`).join('')}
+    </table></div>`;
+  const footer   = `<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong></span><span>&copy; ${new Date().getFullYear()} CivilStrCalc.com &middot; ACI 318-25</span></div>`;
+  const disc     = `<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Results must be verified by a licensed structural engineer before use in any project.</div>`;
+  const diagHTML = `<div class="rpt-sec"><div class="rpt-sec-title">Plan View — Critical Perimeter</div>
+    <div style="padding:4px 0">${_svg}</div></div>`;
+  const fullHTML = `<div class="print-only"><div><div class="ph-title">Slab Punching Shear Check</div><div class="ph-sub">civilstrcalc.com &middot; ACI 318-25</div></div><div class="ph-date">${date}</div></div>
+    ${warnHTML}${inpHTML}${diagHTML}${resHTML}${stepsHTML}${disc}${footer}`;
+
+  document.getElementById('punch_aci_empty').style.display = 'none';
+  document.getElementById('punch_aci_card').style.display  = '';
+  document.getElementById('punch_aci_body').innerHTML      = fullHTML;
+}
+
+function _showPunchErr(msg) {
+  const emp = document.getElementById('punch_aci_empty');
+  const crd = document.getElementById('punch_aci_card');
+  emp.innerHTML = `<div class="ri">&#9888;&#65039;</div><div style="color:var(--red);font-size:.82rem;font-weight:500;">${msg}</div>`;
+  emp.style.display = '';
+  crd.style.display = 'none';
+}
+
+function _showPunchComingSoon(what) {
+  const emp = document.getElementById('punch_aci_empty');
+  const crd = document.getElementById('punch_aci_card');
+  emp.innerHTML = `<div class="ri">&#128736;</div><div style="font-size:.82rem;color:var(--text-mid);"><b>${what}</b> is coming in a future release.</div>`;
+  emp.style.display = '';
+  crd.style.display = 'none';
+}
+
 // ── ACI Bar Number Input System (Slab) ────────────────────────────────────────
 const _ACI_BAR_IN_SL=[{n:3,v:.375},{n:4,v:.500},{n:5,v:.625},{n:6,v:.750},{n:7,v:.875},{n:8,v:1.000},{n:9,v:1.128},{n:10,v:1.270},{n:11,v:1.410}];
 (function _initSlabBarInput(){
@@ -1429,6 +2543,9 @@ function _swapSlabBarUI(isUS){
   if(lu) lu.textContent=isUS?'[bar #]':'[mm]';
   if(u)  u.textContent=isUS?'':'mm';
 }
+// Init punching shear computed displays
+updatePunchD();
+updatePunchAv();
 </script>
 
 </body>
