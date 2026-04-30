@@ -1885,7 +1885,7 @@ function setPunchColType(type, btn) {
 
 // ── Punching Shear — Professional Plan View SVG ───────────────────────────
 function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp }) {
-  const W = 340, H = 268, legH = 28;
+  const W = 400, H = 310, legH = 30;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
   const col_hw = isCirc ? Dc_mm/2 : c1_mm/2;
@@ -1894,21 +1894,29 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const cp_hh  = col_hh + d_mm/2;
   const freeSet = { NE:['N','E'], NW:['N','W'], SE:['S','E'], SW:['S','W'] };
   const freeFaces = type==='edge' ? [edgeFace||'N'] : type==='corner' ? (freeSet[cornerPos||'NE']||['N','E']) : [];
-  // Content extents FROM column centre (mm). Free face → small strip; slab side → CP half + margin.
-  const strip = 10, marg = 18;
+
+  // Margin for labels/compass. Free face gets only a thin strip.
+  const strip = 8, marg = 28;
   const extN = freeFaces.includes('N') ? col_hh + strip : cp_hh + marg;
   const extS = freeFaces.includes('S') ? col_hh + strip : cp_hh + marg;
   const extE = freeFaces.includes('E') ? col_hw + strip : cp_hw + marg;
   const extW = freeFaces.includes('W') ? col_hw + strip : cp_hw + marg;
-  // Scale so all extents fit in the draw area
-  const S = Math.min((W - 8) / (extE + extW), (drawH - 8) / (extN + extS), 2.0);
-  // Column centre: free-face sides are near the SVG border; slab interior is visible
-  const cx = 4 + extW * S;
-  const cy = 4 + extN * S;
+
+  // Scale — use minimum of horizontal and vertical constraints
+  const S = Math.min((W - 8) / (extE + extW), (drawH - 8) / (extN + extS), 2.4);
+
+  // Centre the drawing within the available SVG area (avoids left-lean when height limits scale)
+  const usedW = (extE + extW) * S;
+  const usedH = (extN + extS) * S;
+  const offX = Math.max(0, (W - 8 - usedW) / 2);
+  const offY = Math.max(0, (drawH - 8 - usedH) / 2);
+  const cx = 4 + offX + extW * S;
+  const cy = 4 + offY + extN * S;
   const chw = col_hw * S, chh = col_hh * S;
   const cphw = cp_hw * S, cphh = cp_hh * S;
   const f = n => n.toFixed(1);
 
+  // ── Critical-perimeter side drawer ──────────────────────────────────────
   function _drawCpSide(side, ineff) {
     if (ineff > 0) {
       const mx = (side.x1+side.x2)/2, my = (side.y1+side.y2)/2;
@@ -1917,18 +1925,19 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(mx-half)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx+half)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx-half)}" y1="${f(side.y1)}" x2="${f(mx+half)}" y2="${f(side.y1)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        s += `<text x="${f(mx)}" y="${f(side.y1+(side.id==='N'?-5:12))}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b\u2080 ineff.</text>`;
+        s += `<text x="${f(mx)}" y="${f(side.y1+(side.id==='N'?-5:12))}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b₀ ineff.</text>`;
       } else {
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x1)}" y2="${f(my-half)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my+half)}" x2="${f(side.x1)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my-half)}" x2="${f(side.x1)}" y2="${f(my+half)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        s += `<text x="${f(side.x1+(side.id==='E'?7:-7))}" y="${f(my)}" text-anchor="${side.id==='E'?'start':'end'}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b\u2080 ineff.</text>`;
+        s += `<text x="${f(side.x1+(side.id==='E'?7:-7))}" y="${f(my)}" text-anchor="${side.id==='E'?'start':'end'}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b₀ ineff.</text>`;
       }
     } else {
       s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
     }
   }
 
+  // ── SVG defs ─────────────────────────────────────────────────────────────
   const defs = `<defs>
     <pattern id="ph-col" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="8" stroke="#94a3b8" stroke-width="1.2"/>
@@ -1948,18 +1957,19 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   </defs>`;
 
   let s = defs;
-  // Background
   s += `<rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/>`;
   s += `<rect x="2" y="2" width="${W-4}" height="${drawH-2}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
 
-  // ── Slab region and void (outside slab) for edge/corner ──
+  // Slab region bounds (for edge/corner)
   const slabX1 = freeFaces.includes('W') ? cx-chw : 2;
   const slabY1 = freeFaces.includes('N') ? cy-chh : 2;
   const slabX2 = freeFaces.includes('E') ? cx+chw : W-2;
   const slabY2 = freeFaces.includes('S') ? cy+chh : drawH-2;
-  // Slab clipPath prevents CP/stud bleed outside slab
+
+  // Slab clipPath
   s += `<defs><clipPath id="ph-slab-clip"><rect x="${f(slabX1)}" y="${f(slabY1)}" width="${f(slabX2-slabX1)}" height="${f(slabY2-slabY1)}"/></clipPath></defs>`;
-  // Full draw area background is white (already done). Draw "outside slab" overlay if edge/corner.
+
+  // Outside-slab void overlay
   if (freeFaces.includes('N')) {
     s += `<rect x="2" y="2" width="${W-4}" height="${f(slabY1-2)}" fill="#e2e8f0"/>`;
     s += `<rect x="2" y="2" width="${W-4}" height="${f(slabY1-2)}" fill="url(#ph-void)" opacity="0.6"/>`;
@@ -1977,7 +1987,7 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<rect x="2" y="2" width="${f(slabX1-2)}" height="${f(drawH-4)}" fill="url(#ph-void)" opacity="0.6"/>`;
   }
 
-  // Slab edge lines (bold solid lines at column face for edge/corner)
+  // Slab edge lines (span only the slab region)
   const edgeStroke = 'stroke="#1e293b" stroke-width="3" stroke-linecap="square"';
   for (const ef of freeFaces) {
     if (ef==='N') s += `<line x1="${f(slabX1)}" y1="${f(cy-chh)}" x2="${f(slabX2)}" y2="${f(cy-chh)}" ${edgeStroke}/>`;
@@ -1985,48 +1995,48 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     if (ef==='E') s += `<line x1="${f(cx+chw)}" y1="${f(slabY1)}" x2="${f(cx+chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
     if (ef==='W') s += `<line x1="${f(cx-chw)}" y1="${f(slabY1)}" x2="${f(cx-chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
   }
-  // "Slab edge" labels with white pill background for legibility
+  // Slab edge labels
   function _edgeLbl(tx, ty, anchor) {
     const lw = 55, lh = 15;
     const bx = anchor==='end' ? tx-lw : anchor==='middle' ? tx-lw/2 : tx;
     s += `<rect x="${f(bx-2)}" y="${f(ty-11)}" width="${lw+4}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;
     s += `<text x="${f(tx)}" y="${f(ty)}" text-anchor="${anchor||'start'}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;
   }
-  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+10, 'start');
+  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+11, 'start');
   if (freeFaces.includes('S')) _edgeLbl(8, cy+chh-3, 'start');
-  if (freeFaces.includes('E')) _edgeLbl(cx+chw-4, Math.max(cy-cphh+12, 12), 'end');
-  if (freeFaces.includes('W')) _edgeLbl(cx-chw+4, Math.max(cy-cphh+12, 12), 'start');
+  if (freeFaces.includes('E')) _edgeLbl(cx+chw-4, Math.max(cy-cphh+14, 14), 'end');
+  if (freeFaces.includes('W')) _edgeLbl(cx-chw+4, Math.max(cy-cphh+14, 14), 'start');
 
-  // CP fill (light blue inside CP)
+  // Ineffective CP segment map (openings)
   const ineffSegs = {};
   for (const op of opData) {
     if (op.within4h && op.bo_ineff > 0)
       ineffSegs[op.face] = (ineffSegs[op.face]||0) + op.bo_ineff * S;
   }
 
+  // ── Clipped group: CP lines + reinforcement ───────────────────────────────
   s += `<g clip-path="url(#ph-slab-clip)">`;
-  // ── Critical perimeter lines ──
+
+  // Critical perimeter
   if (isCirc) {
     s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cphw)}" fill="rgba(37,99,235,0.05)" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
   } else if (type === 'int') {
     s += `<rect x="${f(cx-cphw)}" y="${f(cy-cphh)}" width="${f(cphw*2)}" height="${f(cphh*2)}" fill="rgba(37,99,235,0.05)" stroke="none"/>`;
     const cpSides = [
-      { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
-      { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
-      { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
-      { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+      {id:'N',x1:cx-cphw,y1:cy-cphh,x2:cx+cphw,y2:cy-cphh,horiz:true},
+      {id:'E',x1:cx+cphw,y1:cy-cphh,x2:cx+cphw,y2:cy+cphh,horiz:false},
+      {id:'S',x1:cx+cphw,y1:cy+cphh,x2:cx-cphw,y2:cy+cphh,horiz:true},
+      {id:'W',x1:cx-cphw,y1:cy+cphh,x2:cx-cphw,y2:cy-cphh,horiz:false},
     ];
     for (const side of cpSides) _drawCpSide(side, ineffSegs[side.id]||0);
   } else if (type === 'edge') {
     const ef = edgeFace || 'N';
     const allSides = {
-      N: { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
-      E: { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
-      S: { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
-      W: { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+      N:{id:'N',x1:cx-cphw,y1:cy-cphh,x2:cx+cphw,y2:cy-cphh,horiz:true},
+      E:{id:'E',x1:cx+cphw,y1:cy-cphh,x2:cx+cphw,y2:cy+cphh,horiz:false},
+      S:{id:'S',x1:cx+cphw,y1:cy+cphh,x2:cx-cphw,y2:cy+cphh,horiz:true},
+      W:{id:'W',x1:cx-cphw,y1:cy+cphh,x2:cx-cphw,y2:cy-cphh,horiz:false},
     };
-    // Side directions: E=top→bottom, W=bottom→top, N=left→right, S=right→left
-    // Trim the endpoint nearest to the free face (correct endpoint per direction)
     const sidesToDraw = ['N','E','S','W'].filter(id => id !== ef);
     for (const id of sidesToDraw) {
       let sd = {...allSides[id]};
@@ -2040,12 +2050,11 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     const cp = cornerPos || 'NE';
     const free = freeSet[cp] || ['N','E'];
     const allS = {
-      N: { id:'N', x1:cx-cphw, y1:cy-cphh, x2:cx+cphw, y2:cy-cphh, horiz:true  },
-      E: { id:'E', x1:cx+cphw, y1:cy-cphh, x2:cx+cphw, y2:cy+cphh, horiz:false },
-      S: { id:'S', x1:cx+cphw, y1:cy+cphh, x2:cx-cphw, y2:cy+cphh, horiz:true  },
-      W: { id:'W', x1:cx-cphw, y1:cy+cphh, x2:cx-cphw, y2:cy-cphh, horiz:false },
+      N:{id:'N',x1:cx-cphw,y1:cy-cphh,x2:cx+cphw,y2:cy-cphh,horiz:true},
+      E:{id:'E',x1:cx+cphw,y1:cy-cphh,x2:cx+cphw,y2:cy+cphh,horiz:false},
+      S:{id:'S',x1:cx+cphw,y1:cy+cphh,x2:cx-cphw,y2:cy+cphh,horiz:true},
+      W:{id:'W',x1:cx-cphw,y1:cy+cphh,x2:cx-cphw,y2:cy-cphh,horiz:false},
     };
-    // Trim each active side at any adjacent free-face boundary
     const active = ['N','E','S','W'].filter(id => !free.includes(id));
     for (const id of active) {
       let sd = {...allS[id]};
@@ -2067,79 +2076,100 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     else                    { ox=cx-ao_px/2; oy=cy+chh+op.so_mm*S; ow=ao_px; oh=boop_px; }
     s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="white" stroke="#ef4444" stroke-width="1.5" rx="1"/>`;
     s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="url(#ph-op)" opacity="0.7" rx="1"/>`;
-    s += `<text x="${f(ox+ow/2)}" y="${f(oy+oh/2)}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#b91c1c">${op.num}</text>`;
+    s += `<text x="${f(ox+ow/2)}" y="${f(oy+oh/2)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="#b91c1c">${op.num}</text>`;
     const isH = op.face==='E'||op.face==='W';
     const facePx = isH ? cx+(op.face==='E'?chw:-chw) : cy+(op.face==='S'?chh:-chh);
     if (isH) {
       const nearEdge = op.face==='E' ? ox : ox+ow;
       const ay = Math.min(cy+chh+14, drawH-16);
       s += `<line x1="${f(facePx)}" y1="${f(ay)}" x2="${f(nearEdge)}" y2="${f(ay)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-      s += `<text x="${f((facePx+nearEdge)/2)}" y="${f(ay-4)}" text-anchor="middle" font-size="7" fill="#94a3b8">s\u2080</text>`;
+      s += `<text x="${f((facePx+nearEdge)/2)}" y="${f(ay-4)}" text-anchor="middle" font-size="8" fill="#94a3b8">s₀</text>`;
     } else {
       const nearEdge = op.face==='N' ? oy+oh : oy;
       const ax = Math.min(cx+chw+14, W-16);
       s += `<line x1="${f(ax)}" y1="${f(facePx)}" x2="${f(ax)}" y2="${f(nearEdge)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-      s += `<text x="${f(ax+3)}" y="${f((facePx+nearEdge)/2)}" font-size="7" fill="#94a3b8" dominant-baseline="middle">s\u2080</text>`;
+      s += `<text x="${f(ax+3)}" y="${f((facePx+nearEdge)/2)}" font-size="8" fill="#94a3b8" dominant-baseline="middle">s₀</text>`;
     }
   }
 
-  // Stud/stirrup rails — multi-stud display, active (non-free) faces only
+  // ── Stud / Stirrup rails ─────────────────────────────────────────────────
   if (nr_disp > 0) {
-    // Build stud positions from column face outward (px)
-    const studPos = [];
+    const isStud = reinfType !== 'stirrup';
+
+    // Stud positions from column face (mm → px)
+    const studPosPX = [];
     let _p = d_mm / 2;
-    const _maxP = 2.5 * d_mm;
-    while (studPos.length < 4 && _p <= _maxP + 0.5) {
-      studPos.push(_p * S);
+    while (studPosPX.length < 4 && _p <= 2.5 * d_mm + 0.5) {
+      studPosPX.push(_p * S);
       if (rs_mm <= 0) break;
       _p += rs_mm;
     }
-    if (studPos.length === 0) studPos.push(d_mm / 2 * S);
-    const railLen = studPos[studPos.length - 1] + 5;
+    if (studPosPX.length === 0) studPosPX.push(d_mm / 2 * S);
+    const railLen = studPosPX[studPosPX.length - 1] + 6;
+
+    // Draw single reinforcement symbol at (sx, sy)
+    function _drawReinf(sx, sy) {
+      if (isStud) {
+        // Headed stud: filled circle
+        s += `<circle cx="${f(sx)}" cy="${f(sy)}" r="3.8" fill="#f97316" stroke="#c2410c" stroke-width="1.2"/>`;
+      } else {
+        // Stirrup: open square (cross-section of the hoop), 8×8 px
+        const hw = 4;
+        s += `<rect x="${f(sx-hw)}" y="${f(sy-hw)}" width="${2*hw}" height="${2*hw}" fill="white" stroke="#c2410c" stroke-width="1.5"/>`;
+        s += `<line x1="${f(sx-hw+1)}" y1="${f(sy-hw+1)}" x2="${f(sx+hw-1)}" y2="${f(sy+hw-1)}" stroke="#c2410c" stroke-width="1"/>`;
+      }
+    }
 
     if (isCirc) {
-      // Radial distribution for circular column based on active arc
+      // Radial distribution for circular column
       const _arcTable = {
-        int: {start:0,span:360},
+        int:{start:0,span:360},
         edge_N:{start:315,span:270}, edge_S:{start:135,span:270},
-        edge_E:{start:45, span:270}, edge_W:{start:225,span:270},
+        edge_E:{start:45,span:270},  edge_W:{start:225,span:270},
         corner_NE:{start:45,span:180}, corner_NW:{start:315,span:180},
         corner_SE:{start:135,span:180}, corner_SW:{start:225,span:180}
       };
       const _ak = type==='int'?'int':type==='edge'?`edge_${edgeFace||'N'}`:`corner_${cornerPos||'NE'}`;
-      const {start:_as, span:_sp} = _arcTable[_ak]||{start:0,span:360};
-      for (let i=0; i<nr_disp; i++) {
-        const frac = _sp<360 ? (nr_disp>1?i/(nr_disp-1):0.5) : i/nr_disp;
+      const {start:_as,span:_sp} = _arcTable[_ak]||{start:0,span:360};
+      for (let i = 0; i < nr_disp; i++) {
+        const frac = _sp < 360 ? (nr_disp > 1 ? i/(nr_disp-1) : 0.5) : i/nr_disp;
         const ang = (_as + frac*_sp) * Math.PI / 180;
-        const dx=Math.cos(ang), dy=Math.sin(ang);
-        const rx=cx+dx*chw, ry=cy+dy*chw;
+        const dx = Math.cos(ang), dy = Math.sin(ang);
+        const rx = cx + dx*chw, ry = cy + dy*chw;
         s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
-        for (const sp of studPos)
-          s += `<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="1"/>`;
+        for (const sp of studPosPX) _drawReinf(rx+dx*sp, ry+dy*sp);
       }
     } else {
-      // Rectangular column: distribute rails proportionally on active faces
+      // Rectangular: distribute nr_disp rails across active faces (largest-remainder method)
       const _af = [
         {id:'N',len:c1_mm},{id:'E',len:c2_mm},
         {id:'S',len:c1_mm},{id:'W',len:c2_mm}
       ].filter(fc => !freeFaces.includes(fc.id));
-      const _tl = _af.reduce((a,fc)=>a+fc.len,0)||1;
-      let _rem = nr_disp;
-      _af.forEach((fc,i)=>{
-        fc.n = i<_af.length-1 ? Math.max(1,Math.round(nr_disp*fc.len/_tl)) : Math.max(1,_rem);
-        _rem -= fc.n;
-      });
-      for (const fc of _af) {
-        for (let i=0;i<fc.n;i++) {
-          const t=(i+0.5)/fc.n;
-          let rx,ry,dx,dy;
-          if(fc.id==='N'){rx=cx+(t-0.5)*2*chw;ry=cy-chh;dx=0;dy=-1;}
-          else if(fc.id==='E'){rx=cx+chw;ry=cy+(t-0.5)*2*chh;dx=1;dy=0;}
-          else if(fc.id==='S'){rx=cx+(0.5-t)*2*chw;ry=cy+chh;dx=0;dy=1;}
-          else{rx=cx-chw;ry=cy+(0.5-t)*2*chh;dx=-1;dy=0;}
-          s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
-          for (const sp of studPos)
-            s += `<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="1"/>`;
+
+      if (_af.length > 0) {
+        const _tl = _af.reduce((a,fc) => a+fc.len, 0) || 1;
+        const exact = _af.map(fc => nr_disp * fc.len / _tl);
+        const floors = exact.map(Math.floor);
+        let remCount = nr_disp - floors.reduce((a,b) => a+b, 0);
+        const fracs = exact.map((v,i) => ({i, r: v - floors[i]})).sort((a,b) => b.r-a.r);
+        const counts = [...floors];
+        for (let k = 0; k < remCount; k++) counts[fracs[k].i]++;
+        _af.forEach((fc,i) => fc.n = counts[i]);
+
+        for (const fc of _af) {
+          for (let i = 0; i < fc.n; i++) {
+            // Position along the column face (t goes 0→1)
+            const t = (i + 0.5) / fc.n;
+            let rx, ry, dx, dy;
+            if      (fc.id==='N') { rx=cx+(t-0.5)*2*chw;   ry=cy-chh; dx=0;  dy=-1; }
+            else if (fc.id==='E') { rx=cx+chw;  ry=cy+(t-0.5)*2*chh;  dx=1;  dy=0;  }
+            else if (fc.id==='S') { rx=cx+(0.5-t)*2*chw;   ry=cy+chh; dx=0;  dy=1;  }
+            else                  { rx=cx-chw;  ry=cy+(0.5-t)*2*chh;  dx=-1; dy=0;  }
+            // Rail bar line from column face
+            s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
+            // Stud/stirrup symbols
+            for (const sp of studPosPX) _drawReinf(rx+dx*sp, ry+dy*sp);
+          }
         }
       }
     }
@@ -2147,24 +2177,24 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
 
   s += `</g>`; // end slab clip
 
-  // Column
+  // ── Column ───────────────────────────────────────────────────────────────
   if (isCirc) {
     s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="#475569"/>`;
     s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="url(#ph-col)" opacity="0.35"/>`;
     s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
-    const cfs2 = Math.max(7, Math.min(11, chw*0.55));
+    const cfs2 = Math.max(8, Math.min(12, chw*0.55));
     s += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs2.toFixed(0)}" font-weight="700" fill="white">D=${c1_disp}</text>`;
   } else {
     s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="#475569"/>`;
     s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="url(#ph-col)" opacity="0.35"/>`;
     s += `<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
-    const cfs = Math.max(7, Math.min(11, chw*0.55));
+    const cfs = Math.max(8, Math.min(12, Math.min(chw,chh)*0.55));
     s += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs.toFixed(0)}" font-weight="700" fill="white">${c1_disp}\xd7${c2_disp}</text>`;
   }
 
-  // d/2 dimension line (East side if not free)
-  if (!freeFaces.includes('E') && cphw-chw > 8) {
-    const dmy = cy + chh + 12;
+  // ── d/2 dimension annotation (E face if not free) ────────────────────────
+  if (!freeFaces.includes('E') && cphw-chw > 10) {
+    const dmy = Math.min(cy + chh + 13, drawH - 20);
     const dmx1 = cx+chw, dmx2 = cx+cphw;
     s += `<line x1="${f(dmx1)}" y1="${f(cy+chh+2)}" x2="${f(dmx1)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
     s += `<line x1="${f(dmx2)}" y1="${f(cy+chh+2)}" x2="${f(dmx2)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
@@ -2172,39 +2202,47 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<text x="${f((dmx1+dmx2)/2)}" y="${f(dmy-5)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
   }
 
-  // b0 label on the nearest active (inside-slab) CP side
-  if (!freeFaces.includes('N') && cy-cphh > 8)
+  // ── b₀ label ─────────────────────────────────────────────────────────────
+  if (!freeFaces.includes('N') && cy-cphh > 12) {
     s += `<text x="${f(cx)}" y="${f(cy-cphh-6)}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">b₀</text>`;
-  else if (!freeFaces.includes('S'))
-    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+12, drawH-4))}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">b₀</text>`;
-  // Compass labels only for inside-slab directions
-  const compassNy = cy-cphh > 18 ? cy-cphh-14 : 12;
-  s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">N</text>`;
+  } else if (!freeFaces.includes('S')) {
+    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+13, drawH-5))}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">b₀</text>`;
+  }
+
+  // ── Compass labels (only toward slab interior) ────────────────────────────
+  const compassNy = Math.max(cy-cphh-14, 13);
+  s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">N</text>`;
   if (!freeFaces.includes('E'))
-    s += `<text x="${f(Math.min(cx+cphw+10, W-6))}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">E</text>`;
+    s += `<text x="${f(Math.min(cx+cphw+12, W-8))}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">E</text>`;
   if (!freeFaces.includes('S'))
-    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+13, drawH-4))}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">S</text>`;
+    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+16, drawH-5))}" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">S</text>`;
   if (!freeFaces.includes('W'))
-    s += `<text x="${f(Math.max(cx-cphw-10, 6))}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">W</text>`;
-  // Legend
-  const ly = H - legH + 7;
-  let lx = 8;
-  s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="5,3" stroke-width="2.5"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#2563eb">Critical perimeter</text>`;
-  lx += 120;
+    s += `<text x="${f(Math.max(cx-cphw-12, 8))}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">W</text>`;
+
+  // ── Legend ────────────────────────────────────────────────────────────────
+  const isStud2 = reinfType !== 'stirrup';
+  const ly = H - legH + 9;
+  let lx = 10;
+  s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="5,3" stroke-width="2.5"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#2563eb">Critical perimeter</text>`;
+  lx += 135;
   if (freeFaces.length > 0) {
-    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#1e293b" stroke-width="3"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#334155">Slab edge</text>`;
-    lx += 80;
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#1e293b" stroke-width="3"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#334155">Slab edge</text>`;
+    lx += 88;
   }
   if (nr_disp > 0) {
-    s += `<circle cx="${lx+4}" cy="${ly+4}" r="3.5" fill="#f97316" stroke="#c2410c" stroke-width="0.8"/><text x="${lx+11}" y="${ly+8}" font-size="9" fill="#ea580c">${reinfType==='stud'?'Stud':'Stirrup'}</text>`;
-    lx += 55;
+    if (isStud2) {
+      s += `<circle cx="${lx+5}" cy="${ly+4}" r="3.8" fill="#f97316" stroke="#c2410c" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#ea580c">Headed stud</text>`;
+    } else {
+      s += `<rect x="${lx+1}" y="${ly}" width="8" height="8" fill="white" stroke="#c2410c" stroke-width="1.5"/><line x1="${lx+2}" y1="${ly+1}" x2="${lx+8}" y2="${ly+7}" stroke="#c2410c" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#ea580c">Stirrup</text>`;
+    }
+    lx += 75;
   }
   if (opData.length > 0) {
     s += `<rect x="${lx}" y="${ly}" width="11" height="9" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#dc2626">Opening</text>`;
-    lx += 58;
+    lx += 65;
   }
   if (Object.values(ineffSegs).some(v=>v>0))
-    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+14}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+17}" y="${ly+8}" font-size="9" fill="#ef4444">b\u2080 ineff.</text>`;
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#ef4444">b₀ ineff.</text>`;
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
 }
