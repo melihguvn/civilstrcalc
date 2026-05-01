@@ -773,30 +773,37 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="form-row-2">
           <div class="form-group">
             <label id="punch-reinf-nr-lbl">No. of stud rails</label>
-            <div class="iw"><input type="number" id="punch-reinf-nr" value="8" step="1" min="2" max="40" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">rails</span></div>
+            <div class="iw"><input type="number" id="punch-reinf-nr" value="8" step="1" min="2" max="40" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;" id="punch-reinf-nr-unit">rails</span></div>
             <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="punch-reinf-nr-hint">Symmetrically around column</div>
           </div>
           <div class="form-group">
-            <label id="punch-reinf-db-lbl">Stud diameter <span class="lu" id="lu-punch-reinf-db">[mm]</span></label>
+            <label id="punch-reinf-db-lbl">Stud ⌀ <span class="lu" id="lu-punch-reinf-db">[mm]</span></label>
             <div class="iw"><input type="number" id="punch-reinf-db" value="12" step="1" min="8" max="25" oninput="updatePunchAv()"><span class="us" id="u-punch-reinf-db">mm</span></div>
           </div>
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label>Stud spacing s <span class="lu" id="lu-punch-reinf-s">[mm]</span></label>
+            <label id="punch-reinf-s-lbl">Stud spacing s <span class="lu" id="lu-punch-reinf-s">[mm]</span></label>
             <div class="iw"><input type="number" id="punch-reinf-s" value="150" step="10" min="50" oninput="updatePunchAv();updatePunchRailHint()"><span class="us" id="u-punch-reinf-s">mm</span></div>
-            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">ACI §22.6.7.1: s ≤ 0.75d</div>
+            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="punch-reinf-s-hint">ACI §22.6.7.1: s ≤ 0.75d</div>
           </div>
           <div class="form-group">
             <label>f<sub>yt</sub> <span class="lu" id="lu-punch-fyt">[MPa]</span></label>
             <div class="iw"><input type="number" id="punch-fyt" value="420" step="10" min="200" max="600"><span class="us" id="u-punch-fyt">MPa</span></div>
           </div>
         </div>
-        <div id="punch-av-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;">
-          A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">905</strong> mm² <span style="margin-left:4px;">per peripheral line</span>
+        <div id="punch-reinf-nlegs-row" style="display:none">
+          <div class="form-group">
+            <label>Stirrup legs per stirrup</label>
+            <div class="iw"><input type="number" id="punch-reinf-nlegs" value="2" step="1" min="1" max="8" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">legs</span></div>
+            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">e.g. 2 = rectangular closed stirrup</div>
+          </div>
+        </div>
+        <div id="punch-av-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;" id="punch-av-info">
+          <span id="punch-av-formula">A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">905</strong> mm² per peripheral line</span>
         </div>
         <div class="punch-rail-hint" id="punch-rail-hint">
-          Auto-calc: <strong id="punch-rail-rows">—</strong> stud row(s) required &bull; rail length ≈ <strong id="punch-rail-len">—</strong> mm from column face
+          Auto-calc: <strong id="punch-rail-rows">—</strong> row(s) required &bull; zone ≈ <strong id="punch-rail-len">—</strong> mm from column face
         </div>
         <div class="punch-reinf-warn-chip" id="punch-reinf-warn-chip"></div>
       </div>
@@ -1810,11 +1817,21 @@ function updatePunchD() {
   if (document.getElementById('punch-has-reinf')?.checked) updatePunchRailHint();
 }
 function updatePunchAv() {
-  const nr = parseInt(document.getElementById('punch-reinf-nr').value) || 0;
-  const db = parseFloat(document.getElementById('punch-reinf-db').value) || 0;
-  const av = nr * Math.PI / 4 * db * db;
-  const el = document.getElementById('punch-av-calc');
-  if (el) el.textContent = av.toFixed(0);
+  const isStud = _punchReinfType !== 'stirrup';
+  const nr    = parseInt(document.getElementById('punch-reinf-nr')?.value) || 0;
+  const db    = parseFloat(document.getElementById('punch-reinf-db')?.value) || 0;
+  const nLegs = isStud ? 1 : (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2);
+  const av    = nr * nLegs * Math.PI / 4 * db * db;
+  const fmlEl = document.getElementById('punch-av-formula');
+  if (fmlEl) {
+    if (isStud)
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
+    else
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>s</sub> × n<sub>legs</sub> × (π/4 × d<sub>b</sub>²) = ${nr} × ${nLegs} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
+  } else {
+    const el = document.getElementById('punch-av-calc');
+    if (el) el.textContent = av.toFixed(0);
+  }
   if (document.getElementById('punch-has-reinf')?.checked) updatePunchRailHint();
 }
 
@@ -2013,16 +2030,20 @@ function updatePunchRailHint() {
   if (dyn) {
     const s_dyn_disp = Math.round(dyn.s_outer_mm / PU.lenS);
     const vt_disp    = dyn.vu_target.toFixed(2);
-    hintEl.innerHTML = `Auto-calc: <strong id="punch-rail-rows">${n_needed}</strong> stud row(s) &bull; rail &asymp; <strong id="punch-rail-len">${rail_len_disp}</strong> ${PU.lenU} from col face`
+    const _isStud = _punchReinfType !== 'stirrup';
+    hintEl.innerHTML = `Auto-calc: <strong id="punch-rail-rows">${n_needed}</strong> ${_isStud ? 'row(s)' : 'set(s)'} &bull; zone &asymp; <strong id="punch-rail-len">${rail_len_disp}</strong> ${PU.lenU} from col face`
       + `<br><span style="font-size:.69rem;color:var(--text-dim)">Dynamic target (v<sub>u,out</sub>=&phi;v<sub>c</sub>/2=${vt_disp} MPa): s<sub>outer</sub>&asymp;${s_dyn_disp} ${PU.lenU}</span>`;
   }
   hintEl.classList.add('show');
 
   // Spacing warning
   if (warnEl) {
-    const s_max = 0.75 * d;
+    const isStud = _punchReinfType !== 'stirrup';
+    const s_max  = isStud ? 0.75 * d : 0.5 * d;
+    const s_ref  = isStud ? 'ACI §22.6.7.1' : 'ACI §22.6.7.2';
+    const s_lim  = isStud ? '0.75d' : '0.5d';
     if (s > s_max) {
-      warnEl.textContent = `s = ${Math.round(s/PU.lenS)} ${PU.lenU} exceeds 0.75d = ${(s_max/PU.lenS).toFixed(0)} ${PU.lenU} (ACI §22.6.7.1)`;
+      warnEl.textContent = `s = ${Math.round(s/PU.lenS)} ${PU.lenU} exceeds ${s_lim} = ${(s_max/PU.lenS).toFixed(0)} ${PU.lenU} (${s_ref})`;
       warnEl.classList.add('show');
     } else {
       warnEl.classList.remove('show');
@@ -2079,15 +2100,20 @@ function setPunchReinfType(type, btn) {
   document.getElementById('punch-reinf-stud').classList.toggle('active', type === 'stud');
   document.getElementById('punch-reinf-stirrup').classList.toggle('active', type === 'stirrup');
   const isStud = type === 'stud';
-  const nrLbl  = document.getElementById('punch-reinf-nr-lbl');
-  const dbLbl  = document.getElementById('punch-reinf-db-lbl');
-  const nrHint = document.getElementById('punch-reinf-nr-hint');
-  const sLbl   = document.querySelector('[for="punch-reinf-s"]');
-  if (nrLbl)  nrLbl.textContent  = isStud ? 'No. of stud rails' : 'No. of stirrup legs (per perimeter)';
-  if (dbLbl)  dbLbl.innerHTML    = (isStud ? 'Stud ⌀' : 'Stirrup bar ⌀') + ' <span class="lu" id="lu-punch-reinf-db">[mm]</span>';
-  if (nrHint) nrHint.textContent = isStud ? 'Symmetrically around column' : 'Total legs crossing critical perimeter';
-  const sDiv = document.getElementById('punch-reinf-s')?.closest('.form-group');
-  if (sDiv) sDiv.style.display = isStud ? '' : 'none';
+  const nrLbl    = document.getElementById('punch-reinf-nr-lbl');
+  const nrUnit   = document.getElementById('punch-reinf-nr-unit');
+  const nrHint   = document.getElementById('punch-reinf-nr-hint');
+  const dbLbl    = document.getElementById('punch-reinf-db-lbl');
+  const sLbl     = document.getElementById('punch-reinf-s-lbl');
+  const sHint    = document.getElementById('punch-reinf-s-hint');
+  const nlegsRow = document.getElementById('punch-reinf-nlegs-row');
+  if (nrLbl)    nrLbl.textContent   = isStud ? 'No. of stud rails' : 'No. of stirrups';
+  if (nrUnit)   nrUnit.textContent  = isStud ? 'rails' : 'stirrups';
+  if (nrHint)   nrHint.textContent  = isStud ? 'Symmetrically around column' : 'Symmetrically around column';
+  if (dbLbl)    dbLbl.innerHTML     = (isStud ? 'Stud ⌀' : 'Stirrup bar ⌀') + ' <span class="lu" id="lu-punch-reinf-db">[mm]</span>';
+  if (sLbl)     sLbl.innerHTML      = (isStud ? 'Stud spacing s' : 'Stirrup spacing s') + ' <span class="lu" id="lu-punch-reinf-s">[mm]</span>';
+  if (sHint)    sHint.textContent   = isStud ? 'ACI §22.6.7.1: s ≤ 0.75d' : 'ACI §22.6.7.2: s ≤ 0.5d';
+  if (nlegsRow) nlegsRow.style.display = isStud ? 'none' : '';
   updatePunchAv();
 }
 const _punchOpFace = { 1: 'E', 2: 'W' };
@@ -2434,11 +2460,7 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
       for (let i = 0; i < _opts.length; i += 2) _opstr.push(`${f(_opts[i])},${f(_opts[i+1])}`);
       s += `<polygon points="${_opstr.join(' ')}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
     }
-    // b₀,out label (place above outer CP on N side, or below on S side)
-    if (!freeFaces.includes('N') && cy - ocphh > 10)
-      s += `<text x="${f(cx)}" y="${f(cy - ocphh - 4)}" text-anchor="middle" font-size="9" font-weight="600" fill="#059669">b₀,out</text>`;
-    else if (!freeFaces.includes('S'))
-      s += `<text x="${f(cx)}" y="${f(Math.min(cy + ocphh + 12, drawH - 4))}" text-anchor="middle" font-size="9" font-weight="600" fill="#059669">b₀,out</text>`;
+    // b₀,out label is now placed after the d/2 annotation section below
 
     function _drawReinf(sx, sy) {
       if (isStud) {
@@ -2531,27 +2553,67 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<line x1="${f(dmx1)}" y1="${f(cy+chh+2)}" x2="${f(dmx1)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
     s += `<line x1="${f(dmx2)}" y1="${f(cy+chh+2)}" x2="${f(dmx2)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
     s += `<line x1="${f(dmx1)}" y1="${f(dmy)}" x2="${f(dmx2)}" y2="${f(dmy)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-    s += `<text x="${f((dmx1+dmx2)/2)}" y="${f(dmy-5)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
+    const _dmMid = (dmx1+dmx2)/2;
+    s += `<rect x="${f(_dmMid-12)}" y="${f(dmy-14)}" width="24" height="11" fill="white" opacity="0.9" rx="2"/>`;
+    s += `<text x="${f(_dmMid)}" y="${f(dmy-6)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
   }
 
-  // ── b₀ label — show "b₀,in" when studs present to distinguish from b₀,out ──
+  // ── b₀,in label — place INSIDE inner CP near top, with white background ──
   const _b0lbl = nr_disp > 0 ? 'b₀,in' : 'b₀';
-  if (!freeFaces.includes('N') && cy-cphh > 12) {
-    s += `<text x="${f(cx)}" y="${f(cy-cphh-6)}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">${_b0lbl}</text>`;
-  } else if (!freeFaces.includes('S')) {
-    s += `<text x="${f(cx)}" y="${f(Math.min(cy+cphh+13, drawH-5))}" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">${_b0lbl}</text>`;
+  if (!freeFaces.includes('N') && cphh > 18) {
+    const _b0y = cy - cphh + 14;
+    s += `<rect x="${f(cx-21)}" y="${f(_b0y-10)}" width="44" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+  } else if (!freeFaces.includes('S') && cphh > 18) {
+    const _b0y = cy + cphh - 4;
+    s += `<rect x="${f(cx-21)}" y="${f(_b0y-10)}" width="44" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+  }
+
+  // ── b₀,out label — place on E side of outer CP (avoids N/S compass conflict) ──
+  if (nr_disp > 0) {
+    const _ocpEx = cx + ocphw + 5;
+    const _ocpEy = cy;
+    const _ocpWx = cx - ocphw - 5;
+    if (!freeFaces.includes('E') && _ocpEx + 46 < W - 2) {
+      s += `<rect x="${f(_ocpEx-2)}" y="${f(_ocpEy-9)}" width="48" height="13" fill="white" opacity="0.92" rx="2"/>`;
+      s += `<text x="${f(_ocpEx)}" y="${f(_ocpEy)}" font-size="9" font-weight="700" fill="#059669">b₀,out</text>`;
+    } else if (!freeFaces.includes('W') && _ocpWx - 46 > 2) {
+      s += `<rect x="${f(_ocpWx-46)}" y="${f(_ocpEy-9)}" width="48" height="13" fill="white" opacity="0.92" rx="2"/>`;
+      s += `<text x="${f(_ocpWx-1)}" y="${f(_ocpEy)}" text-anchor="end" font-size="9" font-weight="700" fill="#059669">b₀,out</text>`;
+    } else if (!freeFaces.includes('S')) {
+      const _ocpSy = Math.min(cy + ocphh + 13, drawH - 5);
+      s += `<rect x="${f(cx-21)}" y="${f(_ocpSy-10)}" width="44" height="13" fill="white" opacity="0.92" rx="2"/>`;
+      s += `<text x="${f(cx)}" y="${f(_ocpSy)}" text-anchor="middle" font-size="9" font-weight="700" fill="#059669">b₀,out</text>`;
+    }
+  }
+
+  // ── Rail length dimension — E face (if not free, studs present) ──────────────
+  if (nr_disp > 0 && !freeFaces.includes('E') && studPosPX.length > 0) {
+    const _rlPX = studPosPX[studPosPX.length - 1];  // last stud px from col face
+    const _rlMM = Math.round(_rlPX / S);             // mm from col face
+    const _dimY = Math.min(cy + chh + 26, drawH - 10);
+    const _rx1  = cx + chw;
+    const _rx2  = cx + chw + _rlPX;
+    s += `<line x1="${f(_rx1)}" y1="${f(cy+chh+2)}" x2="${f(_rx1)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+    s += `<line x1="${f(_rx2)}" y1="${f(cy+chh+2)}" x2="${f(_rx2)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+    s += `<line x1="${f(_rx1)}" y1="${f(_dimY)}" x2="${f(_rx2)}" y2="${f(_dimY)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+    const _rlLabel = `Rail: ${_rlMM} mm`;
+    const _rlLblX = (_rx1 + _rx2) / 2;
+    s += `<rect x="${f(_rlLblX-28)}" y="${f(_dimY-14)}" width="56" height="11" fill="white" opacity="0.9" rx="2"/>`;
+    s += `<text x="${f(_rlLblX)}" y="${f(_dimY-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLabel}</text>`;
   }
 
   // ── Compass labels — positioned outside outer CP (or inner CP if no studs) ─
   const _rHW = _effHW * S, _rHH = _effHH * S;
-  const compassNy = Math.max(cy - _rHH - 14, 13);
+  const compassNy = Math.max(cy - _rHH - 16, 11);
   s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">N</text>`;
   if (!freeFaces.includes('E'))
-    s += `<text x="${f(Math.min(cx+_rHW+12, W-8))}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">E</text>`;
+    s += `<text x="${f(Math.min(cx+_rHW+14, W-7))}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">E</text>`;
   if (!freeFaces.includes('S'))
-    s += `<text x="${f(cx)}" y="${f(Math.min(cy+_rHH+16, drawH-5))}" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">S</text>`;
+    s += `<text x="${f(cx)}" y="${f(Math.min(cy+_rHH+17, drawH-4))}" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">S</text>`;
   if (!freeFaces.includes('W'))
-    s += `<text x="${f(Math.max(cx-_rHW-12, 8))}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">W</text>`;
+    s += `<text x="${f(Math.max(cx-_rHW-14, 7))}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="12" font-weight="700" fill="#94a3b8">W</text>`;
 
   // ── Legend ────────────────────────────────────────────────────────────────
   const isStud2 = reinfType !== 'stirrup';
@@ -2629,14 +2691,15 @@ function calcPunchShear() {
   // Reinforcement inputs — n_r × (π/4 × d_bar²)
   const isStud    = (_punchReinfType === 'stud');
   const nr_disp   = hasReinf ? (parseInt(document.getElementById('punch-reinf-nr').value) || 0) : 0;
+  const nLegs_disp = (!isStud && hasReinf) ? (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2) : 1;
   const rdb_disp  = hasReinf ? gv('punch-reinf-db') : 0;
   const rs_disp   = hasReinf ? gv('punch-reinf-s')  : 0;
   const rdb_mm    = rdb_disp * PU.lenS;
   const rs_mm     = rs_disp  * PU.lenS;
   const fyt_r     = hasReinf ? gv('punch-fyt') * PU.fcS : 0;
   const fyt_disp  = hasReinf ? gv('punch-fyt') : 0;
-  const Av_1      = hasReinf ? nr_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;  // mm², one peripheral line
-  const Av_disp   = hasReinf ? nr_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
+  const Av_1      = hasReinf ? nr_disp * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;  // mm², one peripheral line
+  const Av_disp   = hasReinf ? nr_disp * nLegs_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
 
   // Opening inputs — two openings
   const hasOp1 = document.getElementById('punch-has-op1').checked;
@@ -2823,7 +2886,10 @@ function calcPunchShear() {
       ] : [
         {desc:'v<sub>u,in</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
       ]),
-      {desc:`A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`, formula:'All rails at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
+      {desc: isStud
+        ? `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`
+        : `A<sub>v,1</sub> = n<sub>s</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`,
+       formula:'All stirrups/rails at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
       {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
       {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs_in.toFixed(4)} MPa`},
       {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
