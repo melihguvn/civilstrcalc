@@ -739,19 +739,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+      <div class="form-group">
+        <label>Shear V<sub>u</sub> <span class="lu" id="lu-punch-vu">[kN]</span></label>
+        <div class="iw"><input type="number" id="punch-vu" value="500" step="10" oninput="if(document.getElementById('punch-has-reinf')?.checked)updatePunchRailHint()"><span class="us" id="u-punch-vu">kN</span></div>
+      </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Shear V<sub>u</sub> <span class="lu" id="lu-punch-vu">[kN]</span></label>
-          <div class="iw"><input type="number" id="punch-vu" value="500" step="10" oninput="if(document.getElementById('punch-has-reinf')?.checked)updatePunchRailHint()"><span class="us" id="u-punch-vu">kN</span></div>
-        </div>
-        <div class="form-group">
-          <label>Moment M<sub>ux</sub> <span class="lu" id="lu-punch-mu">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
+          <label>M<sub>ux</sub> <span class="lu" id="lu-punch-mu">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
           <div class="iw"><input type="number" id="punch-mux" value="0" step="5"><span class="us" id="u-punch-mux">kN·m</span></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Moment M<sub>uy</sub> <span class="lu" id="lu-punch-mu2">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(optional)</span></label>
-        <div class="iw"><input type="number" id="punch-muy" value="0" step="5"><span class="us" id="u-punch-muy">kN·m</span></div>
+        <div class="form-group">
+          <label>M<sub>uy</sub> <span class="lu" id="lu-punch-mu2">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
+          <div class="iw"><input type="number" id="punch-muy" value="0" step="5"><span class="us" id="u-punch-muy">kN·m</span></div>
+        </div>
       </div>
 
       <!-- ── Shear Reinforcement (optional) ── -->
@@ -1922,6 +1922,43 @@ function _punchCalcRailLengthDynamic(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, 
   return { s_outer_mm: s_outer, bo_outer_req, vu_target };
 }
 
+// ── ACI 318-25 §8.4.4 — Moment transfer shear stress ──────────────────────────
+// Computes eccentric shear stress contributions from unbalanced moments Mux, Muy.
+// Returns null for circular columns (no standard Jc formula).
+// For edge/corner: b1/b2 reduced by d/2 on free faces (approximate per ACI R8.4.4).
+function _punchCalcMomentTransfer(Mux, Muy, Vu_N, bo, d, c1, c2, shape, type, ef) {
+  if (shape !== 'rect') return null;
+  const vu_dir = Vu_N / (bo * d);
+  let b1x, b2x, b1y, b2y;
+  if (type === 'int') {
+    b1x = c1+d; b2x = c2+d;
+    b1y = c2+d; b2y = c1+d;
+  } else if (type === 'edge') {
+    if (ef==='N'||ef==='S') { b1x=c1+d; b2x=c2+d/2; b1y=c2+d/2; b2y=c1+d; }
+    else                    { b1x=c1+d/2; b2x=c2+d;  b1y=c2+d;   b2y=c1+d/2; }
+  } else {
+    b1x=c1+d/2; b2x=c2+d/2;
+    b1y=c2+d/2; b2y=c1+d/2;
+  }
+  let vu_mx=0, vu_my=0, gfx=0, gvx=0, Jcx=0, cABx=0, gfy=0, gvy=0, Jcy=0, cABy=0;
+  if (Math.abs(Mux) > 1e-6) {
+    gfx  = 1/(1+(2/3)*Math.sqrt(b1x/b2x));
+    gvx  = 1-gfx;
+    Jcx  = d*Math.pow(b1x,3)/6 + Math.pow(d,3)*b1x/6 + b2x*d*b1x*b1x/2;
+    cABx = b1x/2;
+    vu_mx = gvx * Math.abs(Mux) * cABx / Jcx;
+  }
+  if (Math.abs(Muy) > 1e-6) {
+    gfy  = 1/(1+(2/3)*Math.sqrt(b1y/b2y));
+    gvy  = 1-gfy;
+    Jcy  = d*Math.pow(b1y,3)/6 + Math.pow(d,3)*b1y/6 + b2y*d*b1y*b1y/2;
+    cABy = b1y/2;
+    vu_my = gvy * Math.abs(Muy) * cABy / Jcy;
+  }
+  return { vu_dir, vu_mx, vu_my, vu_total: vu_dir+vu_mx+vu_my,
+           b1x, b2x, b1y, b2y, gfx, gvx, Jcx, cABx, gfy, gvy, Jcy, cABy };
+}
+
 function updatePunchRailHint() {
   const hintEl  = document.getElementById('punch-rail-hint');
   const warnEl  = document.getElementById('punch-reinf-warn-chip');
@@ -2672,7 +2709,11 @@ function calcPunchShear() {
   let bo = Math.max(bo_full - bo_ineff, bo_full * 0.1);
   const openingWithin4h = opData.some(op => op.within4h && op.bo_ineff > 0);
   const Ac = bo * d;
-  const vu = Vu_N / Ac;
+  const vu_dir = Vu_N / Ac;
+  const _mt = (Mux !== 0 || Muy !== 0)
+    ? _punchCalcMomentTransfer(Mux, Muy, Vu_N, bo, d, c1, c2, shape, type, _punchEdgeFace)
+    : null;
+  const vu = _mt ? _mt.vu_total : vu_dir;
 
   // ── Shear capacity ──
   const warns = [];
@@ -2756,7 +2797,27 @@ function calcPunchShear() {
       // ─── Inner critical section ───────────────────────────────────────────
       {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">INNER CRITICAL SECTION — b<sub>o,in</sub></b>', formula:'d/2 from column face, with shear reinforcement', val:''},
       {desc:'b<sub>o,in</sub> — inner critical perimeter', formula:boInFml, val:`${bo.toFixed(0)} mm`},
-      {desc:'v<sub>u,in</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      {desc:'v<sub>u,dir</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'Direct shear stress', val:`${vu_dir.toFixed(3)} MPa`, cls:_mt?'':'hl'},
+      ...(_mt ? [
+        {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">MOMENT TRANSFER — ACI §8.4.4</b>', formula:`b<sub>1x</sub>=${_mt.b1x.toFixed(0)} mm, b<sub>2x</sub>=${_mt.b2x.toFixed(0)} mm, b<sub>1y</sub>=${_mt.b1y.toFixed(0)} mm, b<sub>2y</sub>=${_mt.b2y.toFixed(0)} mm`, val:''},
+        ...(Math.abs(Mux)>1e-6 ? [
+          {desc:'γ<sub>fx</sub> = 1/(1+(2/3)√(b<sub>1x</sub>/b<sub>2x</sub>))', formula:'Fraction of M<sub>ux</sub> by flexure', val:_mt.gfx.toFixed(4)},
+          {desc:'γ<sub>vx</sub> = 1 − γ<sub>fx</sub>', formula:'Fraction transferred by eccentricity', val:_mt.gvx.toFixed(4)},
+          {desc:'J<sub>cx</sub> = d·b<sub>1x</sub>³/6 + d³·b<sub>1x</sub>/6 + b<sub>2x</sub>·d·b<sub>1x</sub>²/2', formula:'Polar moment of inertia (ACI R8.4.4.2)', val:`${(_mt.Jcx/1e6).toFixed(1)} ×10⁶ mm⁴`},
+          {desc:'c<sub>AB,x</sub> = b<sub>1x</sub>/2', formula:'', val:`${_mt.cABx.toFixed(0)} mm`},
+          {desc:'v<sub>u,Mx</sub> = γ<sub>vx</sub>·|M<sub>ux</sub>|·c<sub>AB,x</sub> / J<sub>cx</sub>', formula:'', val:`${_mt.vu_mx.toFixed(4)} MPa`, cls:'hl'},
+        ] : []),
+        ...(Math.abs(Muy)>1e-6 ? [
+          {desc:'γ<sub>fy</sub> = 1/(1+(2/3)√(b<sub>1y</sub>/b<sub>2y</sub>))', formula:'Fraction of M<sub>uy</sub> by flexure', val:_mt.gfy.toFixed(4)},
+          {desc:'γ<sub>vy</sub> = 1 − γ<sub>fy</sub>', formula:'Fraction transferred by eccentricity', val:_mt.gvy.toFixed(4)},
+          {desc:'J<sub>cy</sub> = d·b<sub>1y</sub>³/6 + d³·b<sub>1y</sub>/6 + b<sub>2y</sub>·d·b<sub>1y</sub>²/2', formula:'Polar moment of inertia', val:`${(_mt.Jcy/1e6).toFixed(1)} ×10⁶ mm⁴`},
+          {desc:'c<sub>AB,y</sub> = b<sub>1y</sub>/2', formula:'', val:`${_mt.cABy.toFixed(0)} mm`},
+          {desc:'v<sub>u,My</sub> = γ<sub>vy</sub>·|M<sub>uy</sub>|·c<sub>AB,y</sub> / J<sub>cy</sub>', formula:'', val:`${_mt.vu_my.toFixed(4)} MPa`, cls:'hl'},
+        ] : []),
+        {desc:'v<sub>u,in</sub> = v<sub>u,dir</sub> + v<sub>u,Mx</sub> + v<sub>u,My</sub>', formula:'Total design shear stress — inner section', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      ] : [
+        {desc:'v<sub>u,in</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      ]),
       {desc:`A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`, formula:'All rails at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
       {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
       {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs_in.toFixed(4)} MPa`},
@@ -2786,7 +2847,25 @@ function calcPunchShear() {
     steps = [
       {desc:'Critical perimeter b<sub>o</sub>', formula: shape==='circ' ? (type==='int'?'b<sub>o</sub> = π(D<sub>c</sub>+d)':type==='edge'?'b<sub>o</sub> = ¾π(D<sub>c</sub>+d)+d':'b<sub>o</sub> = ½π(D<sub>c</sub>+d)+d') : type==='int' ? 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)' : type==='edge' ? 'b<sub>o</sub> = (c+2c+2d) per free face' : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d', val:`${bo.toFixed(0)} mm`},
       {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:`${(Ac/1e3).toFixed(1)} × 10³ mm²`},
-      {desc:'Factored shear stress v<sub>u</sub> = V<sub>u</sub>/A<sub>c</sub>', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      {desc:'v<sub>u,dir</sub> = V<sub>u</sub>/A<sub>c</sub>', formula:'Direct shear stress', val:`${vu_dir.toFixed(3)} MPa`, cls:_mt?'':'hl'},
+      ...(_mt ? [
+        {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">MOMENT TRANSFER — ACI §8.4.4</b>', formula:`b<sub>1x</sub>=${_mt.b1x.toFixed(0)} mm, b<sub>2x</sub>=${_mt.b2x.toFixed(0)} mm, b<sub>1y</sub>=${_mt.b1y.toFixed(0)} mm, b<sub>2y</sub>=${_mt.b2y.toFixed(0)} mm`, val:''},
+        ...(Math.abs(Mux)>1e-6 ? [
+          {desc:'γ<sub>fx</sub> = 1/(1+(2/3)√(b<sub>1x</sub>/b<sub>2x</sub>))', formula:'Fraction of M<sub>ux</sub> by flexure', val:_mt.gfx.toFixed(4)},
+          {desc:'γ<sub>vx</sub> = 1 − γ<sub>fx</sub>', formula:'Fraction transferred by eccentricity', val:_mt.gvx.toFixed(4)},
+          {desc:'J<sub>cx</sub> = d·b<sub>1x</sub>³/6 + d³·b<sub>1x</sub>/6 + b<sub>2x</sub>·d·b<sub>1x</sub>²/2', formula:'Polar moment of inertia (ACI R8.4.4.2)', val:`${(_mt.Jcx/1e6).toFixed(1)} ×10⁶ mm⁴`},
+          {desc:'c<sub>AB,x</sub> = b<sub>1x</sub>/2', formula:'', val:`${_mt.cABx.toFixed(0)} mm`},
+          {desc:'v<sub>u,Mx</sub> = γ<sub>vx</sub>·|M<sub>ux</sub>|·c<sub>AB,x</sub> / J<sub>cx</sub>', formula:'', val:`${_mt.vu_mx.toFixed(4)} MPa`, cls:'hl'},
+        ] : []),
+        ...(Math.abs(Muy)>1e-6 ? [
+          {desc:'γ<sub>fy</sub> = 1/(1+(2/3)√(b<sub>1y</sub>/b<sub>2y</sub>))', formula:'Fraction of M<sub>uy</sub> by flexure', val:_mt.gfy.toFixed(4)},
+          {desc:'γ<sub>vy</sub> = 1 − γ<sub>fy</sub>', formula:'Fraction transferred by eccentricity', val:_mt.gvy.toFixed(4)},
+          {desc:'J<sub>cy</sub> = d·b<sub>1y</sub>³/6 + d³·b<sub>1y</sub>/6 + b<sub>2y</sub>·d·b<sub>1y</sub>²/2', formula:'Polar moment of inertia', val:`${(_mt.Jcy/1e6).toFixed(1)} ×10⁶ mm⁴`},
+          {desc:'c<sub>AB,y</sub> = b<sub>1y</sub>/2', formula:'', val:`${_mt.cABy.toFixed(0)} mm`},
+          {desc:'v<sub>u,My</sub> = γ<sub>vy</sub>·|M<sub>uy</sub>|·c<sub>AB,y</sub> / J<sub>cy</sub>', formula:'', val:`${_mt.vu_my.toFixed(4)} MPa`, cls:'hl'},
+        ] : []),
+        {desc:'v<sub>u</sub> = v<sub>u,dir</sub> + v<sub>u,Mx</sub> + v<sub>u,My</sub>', formula:'Total design shear stress (ACI §8.4.4)', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      ] : []),
       {desc:'Aspect ratio β = max(c<sub>1</sub>,c<sub>2</sub>) / min(c<sub>1</sub>,c<sub>2</sub>)', formula:'', val:beta.toFixed(3)},
       {desc:'v<sub>c,1</sub> = 0.17(1+2/β)λ√f\'c', formula:'ACI 318-25 §22.6.5.2(a)', val:`${vc1.toFixed(4)} MPa`, cls:govIdx===0?'hl':''},
       {desc:'v<sub>c,2</sub> = 0.083(α<sub>s</sub>·d/b<sub>o</sub>+2)λ√f\'c', formula:'ACI 318-25 §22.6.5.2(b)', val:`${vc2.toFixed(4)} MPa`, cls:govIdx===1?'hl':''},
@@ -2814,8 +2893,8 @@ function calcPunchShear() {
       warns.push(`Opening ${op.num} (face ${op.face}): s<sub>o</sub> = ${op.so_d} ${PU.lenU} ≥ 4h = ${(4*h/PU.lenS).toFixed(0)} ${PU.lenU}. No b<sub>o</sub> reduction required per ACI §22.6.4.3.`);
   }
 
-  if (Mux !== 0 || Muy !== 0)
-    warns.push('<b>Moment transfer noted:</b> M<sub>ux</sub> and/or M<sub>uy</sub> are non-zero. Shear stress amplification (ACI 318-25 §8.4.4) is not included. Verify that V<sub>u</sub> accounts for eccentric shear effects.');
+  if ((Mux !== 0 || Muy !== 0) && shape === 'circ')
+    warns.push('<b>Moment transfer (circular column):</b> J<sub>c</sub> formula for circular critical sections is not implemented. Verify shear stress amplification per ACI §8.4.4 manually.');
 
   // Input summary
   const inpRows = [
