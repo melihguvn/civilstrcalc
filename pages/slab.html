@@ -150,6 +150,30 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   footer{display:none!important;}
 }
 .bar-no-sel{font-size:.8rem;padding:5px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surface,var(--white));color:var(--text);width:100%;cursor:pointer;}
+/* Punching shear modal overlay */
+#punch-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}
+#punch-modal-overlay.show{display:flex;}
+.pm-box{background:var(--white,#fff);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:440px;width:calc(100% - 32px);overflow:hidden;}
+.pm-hdr{padding:16px 20px 14px;border-bottom:1px solid var(--border);}
+.pm-hdr h3{margin:0;font-size:.9rem;font-family:var(--sans);font-weight:700;display:flex;align-items:center;gap:8px;}
+.pm-body{padding:16px 20px;}
+.pm-body p{margin:0 0 10px;font-size:.82rem;color:var(--text-mid);line-height:1.55;}
+.pm-kv{width:100%;border-collapse:collapse;margin-bottom:12px;}
+.pm-kv td{padding:6px 8px;font-size:.8rem;border-bottom:1px solid var(--border);}
+.pm-kv td:first-child{color:var(--text-dim);width:60%;}
+.pm-kv td:last-child{font-weight:600;font-family:var(--mono);color:var(--text);text-align:right;}
+.pm-note{background:#fff8ed;border-left:3px solid #f4c97a;padding:9px 12px;font-size:.76rem;color:#7a5000;margin-bottom:14px;border-radius:0 4px 4px 0;line-height:1.5;}
+.pm-note.err{background:#fff0f0;border-left-color:var(--red);color:#8b1a1a;}
+.pm-footer{padding:0 20px 16px;display:flex;gap:8px;justify-content:flex-end;}
+.pm-btn{font-family:var(--sans);font-size:.78rem;font-weight:600;padding:7px 18px;border-radius:5px;border:none;cursor:pointer;transition:opacity .15s;}
+.pm-btn.ok{background:var(--accent);color:#fff;}.pm-btn.ok:hover{opacity:.87;}
+.pm-btn.cancel{background:var(--bg);color:var(--text-mid);border:1px solid var(--border);}
+.pm-btn.cancel:hover{background:var(--border);}
+/* Reinf hint chip in input panel */
+.punch-rail-hint{background:#f0f7ff;border:1px solid #b8d4f0;border-radius:5px;padding:7px 11px;font-size:.73rem;color:#1a4060;margin-top:6px;line-height:1.55;display:none;}
+.punch-rail-hint.show{display:block;}
+.punch-reinf-warn-chip{background:#fff8ed;border:1px solid #f4c97a;border-radius:5px;padding:6px 11px;font-size:.73rem;color:#7a5000;margin-top:6px;display:none;}
+.punch-reinf-warn-chip.show{display:block;}
 </style>
 <link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
 <link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
@@ -637,7 +661,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
         <div class="form-group">
           <label id="punch-fc-label">Concrete f'c <span class="lu" id="lu-punch-fc">[MPa]</span></label>
-          <div class="iw"><input type="number" id="punch-fc" value="28" step="1"><span class="us" id="u-punch-fc">MPa</span></div>
+          <div class="iw"><input type="number" id="punch-fc" value="28" step="1" oninput="if(document.getElementById('punch-has-reinf')?.checked)updatePunchRailHint()"><span class="us" id="u-punch-fc">MPa</span></div>
         </div>
       </div>
       <div class="form-row-2">
@@ -718,7 +742,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="form-row-2">
         <div class="form-group">
           <label>Shear V<sub>u</sub> <span class="lu" id="lu-punch-vu">[kN]</span></label>
-          <div class="iw"><input type="number" id="punch-vu" value="500" step="10"><span class="us" id="u-punch-vu">kN</span></div>
+          <div class="iw"><input type="number" id="punch-vu" value="500" step="10" oninput="if(document.getElementById('punch-has-reinf')?.checked)updatePunchRailHint()"><span class="us" id="u-punch-vu">kN</span></div>
         </div>
         <div class="form-group">
           <label>Moment M<sub>ux</sub> <span class="lu" id="lu-punch-mu">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
@@ -760,7 +784,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="form-row-2">
           <div class="form-group">
             <label>Stud spacing s <span class="lu" id="lu-punch-reinf-s">[mm]</span></label>
-            <div class="iw"><input type="number" id="punch-reinf-s" value="150" step="10" min="50"><span class="us" id="u-punch-reinf-s">mm</span></div>
+            <div class="iw"><input type="number" id="punch-reinf-s" value="150" step="10" min="50" oninput="updatePunchAv();updatePunchRailHint()"><span class="us" id="u-punch-reinf-s">mm</span></div>
             <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">ACI §22.6.7.1: s ≤ 0.75d</div>
           </div>
           <div class="form-group">
@@ -771,6 +795,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div id="punch-av-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;">
           A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">905</strong> mm² <span style="margin-left:4px;">per peripheral line</span>
         </div>
+        <div class="punch-rail-hint" id="punch-rail-hint">
+          Auto-calc: <strong id="punch-rail-rows">—</strong> stud row(s) required &bull; rail length ≈ <strong id="punch-rail-len">—</strong> mm from column face
+        </div>
+        <div class="punch-reinf-warn-chip" id="punch-reinf-warn-chip"></div>
       </div>
 
       <!-- ── Slab Opening (optional) ── -->
@@ -1779,6 +1807,7 @@ function updatePunchD() {
   const d  = Math.max(h - cv - db, 0);
   const el = document.getElementById('punch-d-calc');
   if (el) el.textContent = d % 1 === 0 ? d.toFixed(0) : d.toFixed(1);
+  if (document.getElementById('punch-has-reinf')?.checked) updatePunchRailHint();
 }
 function updatePunchAv() {
   const nr = parseInt(document.getElementById('punch-reinf-nr').value) || 0;
@@ -1786,12 +1815,208 @@ function updatePunchAv() {
   const av = nr * Math.PI / 4 * db * db;
   const el = document.getElementById('punch-av-calc');
   if (el) el.textContent = av.toFixed(0);
+  if (document.getElementById('punch-has-reinf')?.checked) updatePunchRailHint();
 }
 
 function setPunchHasReinf(checked) {
   const el = document.getElementById('punch-reinf-inputs');
-  if (el) el.style.display = checked ? '' : 'none';
-  if (checked) updatePunchAv();
+  if (!checked) {
+    if (el) el.style.display = 'none';
+    _punchHideRailHint();
+    return;
+  }
+  // Check whether reinforcement is actually needed before enabling
+  const chk = _punchCheckReinfNeeded();
+  if (chk !== null) {
+    if (chk.cannotHelp) {
+      _showPunchReinfModal('crush', chk);
+      document.getElementById('punch-has-reinf').checked = false;
+      return;
+    }
+    if (!chk.needed) {
+      _showPunchReinfModal('notneeded', chk);
+      // Modal will decide whether to proceed — show inputs anyway after a short delay so the modal is visible
+    }
+  }
+  if (el) el.style.display = '';
+  updatePunchAv();
+  updatePunchRailHint();
+}
+
+// ── Punching shear: check whether reinforcement is needed ────────────────────
+function _punchCheckReinfNeeded() {
+  const PU = PUNCH_UNITS[_punchUnit];
+  const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const h  = gv('punch-h')  * PU.lenS;
+  const cv = gv('punch-cv') * PU.lenS;
+  const db = gv('punch-db') * PU.lenS;
+  const d  = Math.max(h - cv - db, 0);
+  const fc = gv('punch-fc') * PU.fcS;
+  const c1 = gv('punch-c1') * PU.lenS;
+  const c2 = gv('punch-c2') * PU.lenS;
+  const Dc = gv('punch-dc') * PU.lenS;
+  const Vu = gv('punch-vu') * PU.forceS;
+  if (!h || !d || !fc || !Vu) return null;
+
+  const shape = _punchShape, type = _punchType;
+  const ef    = _punchEdgeFace;
+  const lambda = 1.0, phi = 0.75;
+  const beta   = (shape === 'rect' && c1 > 0 && c2 > 0) ? Math.max(c1,c2)/Math.min(c1,c2) : 1.0;
+  const alphaS = type === 'int' ? 40 : type === 'edge' ? 30 : 20;
+
+  let bo;
+  if (shape === 'circ') {
+    if (!Dc) return null;
+    if (type === 'int')       bo = Math.PI * (Dc + d);
+    else if (type === 'edge') bo = 0.75 * Math.PI * (Dc + d) + d;
+    else                      bo = 0.5  * Math.PI * (Dc + d) + d;
+  } else {
+    if (!c1 || !c2) return null;
+    if (type === 'int')       bo = 2*(c1+d) + 2*(c2+d);
+    else if (type === 'edge') bo = (ef==='N'||ef==='S') ? c1+2*c2+2*d : 2*c1+c2+2*d;
+    else                      bo = c1 + c2 + d;
+  }
+
+  const vu     = Vu / (bo * d);
+  const vc1    = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+  const vc2    = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
+  const vc3    = 0.33*lambda*Math.sqrt(fc);
+  const vc     = Math.min(vc1, vc2, vc3);
+  const phi_vc = phi * vc;
+  const isStud = _punchReinfType === 'stud';
+  const vn_max = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
+
+  if (vu > phi * vn_max) return { cannotHelp: true, needed: false, vu, phi_vc, phi_vn_max: phi * vn_max };
+  if (vu <= phi_vc)      return { needed: false, cannotHelp: false, vu, phi_vc, ratio: vu / phi_vc };
+  return { needed: true, cannotHelp: false, vu, phi_vc, phi_vn_max: phi * vn_max };
+}
+
+// ── Auto rail hint (rows needed + rail length) ───────────────────────────────
+function updatePunchRailHint() {
+  const hintEl  = document.getElementById('punch-rail-hint');
+  const warnEl  = document.getElementById('punch-reinf-warn-chip');
+  const rowsEl  = document.getElementById('punch-rail-rows');
+  const lenEl   = document.getElementById('punch-rail-len');
+  if (!hintEl) return;
+
+  const PU = PUNCH_UNITS[_punchUnit];
+  const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const h  = gv('punch-h')  * PU.lenS;
+  const cv = gv('punch-cv') * PU.lenS;
+  const db = gv('punch-db') * PU.lenS;
+  const d  = Math.max(h - cv - db, 0);
+  const fc = gv('punch-fc') * PU.fcS;
+  const c1 = gv('punch-c1') * PU.lenS;
+  const c2 = gv('punch-c2') * PU.lenS;
+  const Dc = gv('punch-dc') * PU.lenS;
+  const Vu = gv('punch-vu') * PU.forceS;
+  const s  = gv('punch-reinf-s') * PU.lenS;
+  if (!d || !fc || !Vu || !s) { hintEl.classList.remove('show'); if (warnEl) warnEl.classList.remove('show'); return; }
+
+  const shape = _punchShape, type = _punchType, ef = _punchEdgeFace;
+  const lambda = 1.0, phi = 0.75;
+  const beta   = (shape === 'rect' && c1 > 0 && c2 > 0) ? Math.max(c1,c2)/Math.min(c1,c2) : 1.0;
+  const alphaS = type === 'int' ? 40 : type === 'edge' ? 30 : 20;
+
+  let bo_in;
+  if (shape === 'circ') {
+    if (!Dc) return;
+    if (type === 'int')       bo_in = Math.PI * (Dc + d);
+    else if (type === 'edge') bo_in = 0.75 * Math.PI * (Dc + d) + d;
+    else                      bo_in = 0.5  * Math.PI * (Dc + d) + d;
+  } else {
+    if (!c1 || !c2) return;
+    if (type === 'int')       bo_in = 2*(c1+d) + 2*(c2+d);
+    else if (type === 'edge') bo_in = (ef==='N'||ef==='S') ? c1+2*c2+2*d : 2*c1+c2+2*d;
+    else                      bo_in = c1 + c2 + d;
+  }
+
+  // Find minimum stud rows so outer CP check passes (vu,out <= phi*vc,out)
+  const vc1u = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+  const vc3u = 0.33*lambda*Math.sqrt(fc);
+  let n_needed = 1;
+  for (let n = 1; n <= 4; n++) {
+    const ext = d/2 + (n-1)*s + d/2;
+    let bo_out;
+    if (shape === 'circ') {
+      if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + ext);
+      else if (type === 'edge') bo_out = 0.75*2*Math.PI*(Dc/2+ext) + 2*ext;
+      else                      bo_out = 0.5*2*Math.PI*(Dc/2+ext) + 2*ext;
+    } else {
+      if (type === 'int')       bo_out = 2*(c1+c2) + 4*Math.SQRT2*ext;
+      else if (type === 'edge') bo_out = (ef==='N'||ef==='S') ? c1+2*c2+2*Math.SQRT2*ext : 2*c1+c2+2*Math.SQRT2*ext;
+      else                      bo_out = c1+c2+Math.SQRT2*ext;
+    }
+    const vc2u = 0.083*(alphaS*d/bo_out+2)*lambda*Math.sqrt(fc);
+    const vc_out = Math.min(vc1u, vc2u, vc3u);
+    const vu_out = Vu / (bo_out * d);
+    if (vu_out <= phi * vc_out) { n_needed = n; break; }
+    n_needed = n;
+    if (n_needed >= 4) break;
+  }
+
+  // Rail length from column face to last stud row
+  const rail_len_mm = d/2 + (n_needed - 1) * s;
+  const rail_len_disp = Math.round(rail_len_mm / PU.lenS);
+
+  if (rowsEl) rowsEl.textContent = n_needed;
+  if (lenEl)  lenEl.textContent  = rail_len_disp;
+  hintEl.classList.add('show');
+
+  // Spacing warning
+  if (warnEl) {
+    const s_max = 0.75 * d;
+    if (s > s_max) {
+      warnEl.textContent = `s = ${Math.round(s/PU.lenS)} ${PU.lenU} exceeds 0.75d = ${(s_max/PU.lenS).toFixed(0)} ${PU.lenU} (ACI §22.6.7.1)`;
+      warnEl.classList.add('show');
+    } else {
+      warnEl.classList.remove('show');
+    }
+  }
+}
+function _punchHideRailHint() {
+  document.getElementById('punch-rail-hint')?.classList.remove('show');
+  document.getElementById('punch-reinf-warn-chip')?.classList.remove('show');
+}
+
+// ── Modal: warn (not needed) or error (crushing) ─────────────────────────────
+function _showPunchReinfModal(mode, chk) {
+  const overlay = document.getElementById('punch-modal-overlay');
+  const title   = document.getElementById('pm-title');
+  const body    = document.getElementById('pm-body');
+  const footer  = document.getElementById('pm-footer');
+  if (!overlay) return;
+
+  if (mode === 'notneeded') {
+    title.innerHTML = '<span style="color:#f39c12">&#9888;</span> Shear Reinforcement Not Required';
+    body.innerHTML = `
+      <p>Concrete capacity alone is sufficient for the current inputs.</p>
+      <table class="pm-kv">
+        <tr><td>Applied shear stress v<sub>u</sub></td><td>${chk.vu.toFixed(3)} MPa</td></tr>
+        <tr><td>Design capacity &phi;v<sub>c</sub></td><td>${chk.phi_vc.toFixed(3)} MPa</td></tr>
+        <tr><td>D/C ratio</td><td>${chk.ratio.toFixed(3)} &lt; 1.0 &check;</td></tr>
+      </table>
+      <div class="pm-note">Per ACI 318-25 §22.6.6, shear reinforcement is required only when v<sub>u</sub> &gt; &phi;v<sub>c</sub>. You may still add it for additional robustness.</div>`;
+    footer.innerHTML = `
+      <button class="pm-btn cancel" onclick="_closePunchModal();document.getElementById('punch-has-reinf').checked=false;setPunchHasReinf(false);">Remove Reinforcement</button>
+      <button class="pm-btn ok" onclick="_closePunchModal();">Add Anyway</button>`;
+  } else {
+    title.innerHTML = '<span style="color:var(--red)">&#10060;</span> Reinforcement Cannot Help';
+    body.innerHTML = `
+      <p>Applied shear stress exceeds the maximum permissible capacity. Stud rails <strong>cannot</strong> resolve this — the section must be enlarged.</p>
+      <table class="pm-kv">
+        <tr><td>Applied shear stress v<sub>u</sub></td><td>${chk.vu.toFixed(3)} MPa</td></tr>
+        <tr><td>Max capacity &phi;v<sub>n,max</sub></td><td>${chk.phi_vn_max.toFixed(3)} MPa</td></tr>
+      </table>
+      <div class="pm-note err">Per ACI 318-25, v<sub>u</sub> &gt; &phi;v<sub>n,max</sub>. Increase slab thickness, column size, or add a drop panel/capital.</div>`;
+    footer.innerHTML = `<button class="pm-btn ok" onclick="_closePunchModal();">OK, I Understand</button>`;
+  }
+
+  overlay.classList.add('show');
+  overlay.onclick = e => { if (e.target === overlay) _closePunchModal(); };
+}
+function _closePunchModal() {
+  document.getElementById('punch-modal-overlay')?.classList.remove('show');
 }
 let _punchReinfType = 'stud';
 function setPunchReinfType(type, btn) {
@@ -2135,11 +2360,24 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     const _outerExtMM = _lastStudMM + d_mm / 2;
     const ocphw = (col_hw + _outerExtMM) * S;
     const ocphh = (col_hh + _outerExtMM) * S;
-    // Draw outer CP rectangle — clipPath clips the free-face sides automatically
+    // Draw outer CP — octagon for rectangular columns (ACI 421.1R), circle for circular
     if (isCirc) {
       s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ocphw)}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
     } else {
-      s += `<rect x="${f(cx-ocphw)}" y="${f(cy-ocphh)}" width="${f(ocphw*2)}" height="${f(ocphh*2)}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
+      // 8-sided polygon: face segments + 45° diagonal corners per ACI 421.1R
+      const _opts = [
+        cx-chw,    cy-ocphh,
+        cx+chw,    cy-ocphh,
+        cx+ocphw,  cy-chh,
+        cx+ocphw,  cy+chh,
+        cx+chw,    cy+ocphh,
+        cx-chw,    cy+ocphh,
+        cx-ocphw,  cy+chh,
+        cx-ocphw,  cy-chh,
+      ];
+      const _opstr = [];
+      for (let i = 0; i < _opts.length; i += 2) _opstr.push(`${f(_opts[i])},${f(_opts[i+1])}`);
+      s += `<polygon points="${_opstr.join(' ')}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
     }
     // b₀,out label (place above outer CP on N side, or below on S side)
     if (!freeFaces.includes('N') && cy - ocphh > 10)
@@ -2426,82 +2664,95 @@ function calcPunchShear() {
   // ── Shear capacity ──
   const warns = [];
   let vc, phiVn, DCR, isOK, govLbl = '', steps = [];
+  let bo_out = bo, vu_out = vu;  // overwritten inside hasReinf block
 
   if (hasReinf) {
-    // ACI 318-25 §22.6.6 — with shear reinforcement
-    vc = isStud ? 0.25*lambda*Math.sqrt(fc)   // §22.6.6.1 headed studs
-                : 0.17*lambda*Math.sqrt(fc);   // §22.6.6.2 closed stirrups
-    const vs      = Av_1 * fyt_r / (bo * d);  // vs = Av_perimeter_line × fyt / (bo × d)
-    const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
-    const vn_cap  = Math.min(vc + vs, vn_max);
-    phiVn = phi * vn_cap;
-    DCR   = vu / Math.max(phiVn, 0.001);
-    isOK  = DCR <= 1.0;
+    // ACI 318-25 §22.6.6 — two-check approach: inner (reinforced) + outer (unreinforced)
 
-    const vc1u = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
-    const vc2u = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
-    const vc3u = 0.33*lambda*Math.sqrt(fc);
-    const vc_unr = Math.min(vc1u,vc2u,vc3u);
-    const vs_req = Math.max(vu/phi - vc_unr, 0);
-
-    if (vs < vs_req && vs_req > 0)
-      warns.push(`<b>Insufficient shear reinforcement:</b> v<sub>s</sub> = ${vs.toFixed(3)} MPa &lt; required v<sub>s,req</sub> = v<sub>u</sub>/φ − v<sub>c,plain</sub> = ${vs_req.toFixed(3)} MPa.`);
-    if (vu/phi > vn_max)
-      warns.push(`<b>Section too small:</b> v<sub>u</sub>/φ (${(vu/phi).toFixed(3)} MPa) exceeds v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa. Increase slab thickness or column size.`);
-    if (isStud && rs_mm > 0 && rs_mm > 0.75*d)
-      warns.push(`<b>Stud spacing too large:</b> s = ${rs_disp} ${PU.lenU} exceeds 0.75d = ${(0.75*d/PU.lenS).toFixed(1)} ${PU.lenU} (ACI §22.6.7.1).`);
-
-    steps = [
-      {desc:'Critical perimeter b<sub>o</sub>', formula: shape==='circ' ? (type==='int'?'b<sub>o</sub> = π(D<sub>c</sub>+d)':type==='edge'?'b<sub>o</sub> = ¾π(D<sub>c</sub>+d)+d':'b<sub>o</sub> = ½π(D<sub>c</sub>+d)+d') : type==='int' ? 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)' : type==='edge' ? 'b<sub>o</sub> = (c+2c+2d) per free face' : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d', val:`${bo.toFixed(0)} mm`},
-      {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:`${(Ac/1e3).toFixed(1)} × 10³ mm²`},
-      {desc:'Factored shear stress v<sub>u</sub> = V<sub>u</sub>/A<sub>c</sub>', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
-      {desc:`A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`, formula:'Area at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
-      {desc:`v<sub>c</sub> with ${isStud?'headed studs (§22.6.6.1)':'closed stirrups (§22.6.6.2)'}`, formula:isStud?'v<sub>c</sub> = 0.25λ√f\'c':'v<sub>c</sub> = 0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
-      {desc:'v<sub>s</sub> = A<sub>v,1</sub> × f<sub>yt</sub> / (b<sub>o</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs.toFixed(4)} MPa`},
-      {desc:'v<sub>n</sub> = v<sub>c</sub> + v<sub>s</sub>',
-       formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs>vn_max?' → cap applied':''}`,
-       val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
-      {desc:'Design capacity φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn.toFixed(4)} MPa`},
-      {desc:'D/C = v<sub>u</sub> / φv<sub>n</sub>', formula:'', val:DCR.toFixed(3), cls:isOK?'ok':'err', check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}
-    ];
-
-    // ── Outer critical perimeter check (ACI 318-25 §22.6.6) ──────────────────
-    // bo,out is at d/2 beyond the outermost row of studs
+    // ── Compute bo_out (octagonal outer CP at d/2 beyond last stud row) ─────
     let _pout = d/2, n_per = 0;
     while (n_per < 4 && _pout <= 2.5*d + 0.5) { n_per++; if (rs_mm <= 0) break; _pout += rs_mm; }
     const outer_cp_ext = d/2 + Math.max(0, n_per - 1)*rs_mm + d/2;
-    let bo_out;
+    const rail_len_mm  = d/2 + Math.max(0, n_per - 1)*rs_mm;  // column face → last stud
+    const ef2 = _punchEdgeFace;
     if (shape === 'circ') {
       if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + outer_cp_ext);
       else if (type === 'edge') bo_out = 0.75*2*Math.PI*(Dc/2+outer_cp_ext) + 2*outer_cp_ext;
       else                      bo_out = 0.5*2*Math.PI*(Dc/2+outer_cp_ext) + 2*outer_cp_ext;
     } else {
-      if (type === 'int') {
-        bo_out = 2*(c1+2*outer_cp_ext) + 2*(c2+2*outer_cp_ext);
-      } else if (type === 'edge') {
-        const ef2 = _punchEdgeFace;
-        bo_out = (ef2==='N'||ef2==='S') ? (c1+2*outer_cp_ext)+2*(c2+outer_cp_ext) : 2*(c1+outer_cp_ext)+(c2+2*outer_cp_ext);
-      } else {
-        bo_out = (c1+outer_cp_ext) + (c2+outer_cp_ext);
-      }
+      if (type === 'int')       bo_out = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
+      else if (type === 'edge') bo_out = (ef2==='N'||ef2==='S') ? c1+2*c2+2*Math.SQRT2*outer_cp_ext : 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
+      else                      bo_out = c1+c2+Math.SQRT2*outer_cp_ext;
     }
     if (bo_ineff > 0) bo_out = Math.max(bo_out - bo_ineff*(bo_out/bo_full), bo_out*0.1);
-    const vu_out = Vu_N / (bo_out * d);
-    const vc1o = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
-    const vc2o = 0.083*(alphaS*d/bo_out+2)*lambda*Math.sqrt(fc);
-    const vc3o = 0.33*lambda*Math.sqrt(fc);
-    const vc_out = Math.min(vc1o, vc2o, vc3o);
+
+    // ── Inner critical section (b₀,in — d/2 from column face, with vc+vs) ──
+    vc = isStud ? 0.25*lambda*Math.sqrt(fc) : 0.17*lambda*Math.sqrt(fc);
+    const vs_in   = Av_1 * fyt_r / (bo * d);
+    const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
+    const vn_cap  = Math.min(vc + vs_in, vn_max);
+    const phiVn_in = phi * vn_cap;
+    const DCR_in   = vu / Math.max(phiVn_in, 0.001);
+    const isOK_in  = DCR_in <= 1.0;
+
+    // ── Outer critical section (b₀,out — beyond studs, unreinforced vc) ─────
+    vu_out = Vu_N / (bo_out * d);
+    const vc1o     = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+    const vc2o     = 0.083*(alphaS*d/bo_out+2)*lambda*Math.sqrt(fc);
+    const vc3o     = 0.33*lambda*Math.sqrt(fc);
+    const vc_out   = Math.min(vc1o, vc2o, vc3o);
     const phi_vc_out = phi * vc_out;
-    const isOK_out = vu_out <= phi_vc_out;
-    steps.push(
-      {desc:'Stud rows n<sub>per</sub> (peripheral lines)', formula:'First row at d/2, spacing s (max 4, &le;2.5d)', val:String(n_per)},
-      {desc:'b<sub>o,out</sub> — outer critical perimeter', formula:'At d/2 beyond outermost stud row (ACI 318-25 §22.6.6)', val:`${bo_out.toFixed(0)} mm`},
-      {desc:'v<sub>u,out</sub> = V<sub>u</sub> / (b<sub>o,out</sub>&middot;d)', formula:'', val:`${vu_out.toFixed(3)} MPa`, cls:'hl'},
-      {desc:'&phi;v<sub>c,out</sub> — unreinforced v<sub>c</sub> (§22.6.5.2) at b<sub>o,out</sub>', formula:'', val:`${phi_vc_out.toFixed(4)} MPa`},
-      {desc:'Outer CP check', formula:'v<sub>u,out</sub> &le; &phi;v<sub>c,out</sub>', val:`${vu_out.toFixed(3)} &le; ${phi_vc_out.toFixed(3)} MPa`, cls:isOK_out?'ok':'err', check:isOK_out?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}
-    );
+    const DCR_out  = vu_out / Math.max(phi_vc_out, 0.001);
+    const isOK_out = DCR_out <= 1.0;
+
+    // ── Governing check ───────────────────────────────────────────────────────
+    isOK  = isOK_in && isOK_out;
+    DCR   = Math.max(DCR_in, DCR_out);
+    phiVn = DCR_in >= DCR_out ? phiVn_in : phi_vc_out;
+
+    // ── Warnings ─────────────────────────────────────────────────────────────
+    const vc1u  = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+    const vc2u  = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
+    const vc3u  = 0.33*lambda*Math.sqrt(fc);
+    const vc_unr  = Math.min(vc1u, vc2u, vc3u);
+    const vs_req  = Math.max(vu/phi - vc_unr, 0);
+    if (vs_in < vs_req && vs_req > 0)
+      warns.push(`<b>Insufficient shear reinforcement:</b> v<sub>s</sub> = ${vs_in.toFixed(3)} MPa &lt; required v<sub>s,req</sub> = ${vs_req.toFixed(3)} MPa.`);
+    if (vu/phi > vn_max)
+      warns.push(`<b>Section too small:</b> v<sub>u</sub>/φ (${(vu/phi).toFixed(3)} MPa) exceeds v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa. Increase slab thickness or column size.`);
+    if (isStud && rs_mm > 0 && rs_mm > 0.75*d)
+      warns.push(`<b>Stud spacing too large:</b> s = ${rs_disp} ${PU.lenU} exceeds 0.75d = ${(0.75*d/PU.lenS).toFixed(1)} ${PU.lenU} (ACI §22.6.7.1).`);
     if (!isOK_out)
-      warns.push(`<b>Outer critical section fails:</b> v<sub>u,out</sub> = ${vu_out.toFixed(3)} MPa &gt; &phi;v<sub>c,out</sub> = ${phi_vc_out.toFixed(3)} MPa &mdash; extend stud rails further from the column face.`);
+      warns.push(`<b>Outer critical section fails:</b> v<sub>u,out</sub> = ${vu_out.toFixed(3)} MPa &gt; &phi;v<sub>c,out</sub> = ${phi_vc_out.toFixed(3)} MPa — extend stud rails further (increase stud rows or reduce spacing).`);
+
+    // ── bo_in formula label ───────────────────────────────────────────────────
+    const boInFml = shape==='circ'
+      ? (type==='int'?'π(D<sub>c</sub>+d)':type==='edge'?'¾π(D<sub>c</sub>+d)+d':'½π(D<sub>c</sub>+d)+d')
+      : (type==='int'?'2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)':type==='edge'?'c+2c+2d (free face excluded)':'c<sub>1</sub>+c<sub>2</sub>+d');
+    const boOutFml = shape==='circ' ? 'perimeter at d/2 beyond studs'
+      : type==='int' ? '2(c<sub>1</sub>+c<sub>2</sub>)+4√2·ext (ACI 421.1R octagon)'
+      : type==='edge' ? 'c+2c+2√2·ext (ACI 421.1R)'
+      : 'c<sub>1</sub>+c<sub>2</sub>+√2·ext (ACI 421.1R)';
+
+    steps = [
+      // ─── Inner critical section ───────────────────────────────────────────
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">INNER CRITICAL SECTION — b<sub>o,in</sub></b>', formula:'d/2 from column face, with shear reinforcement', val:''},
+      {desc:'b<sub>o,in</sub> — inner critical perimeter', formula:boInFml, val:`${bo.toFixed(0)} mm`},
+      {desc:'v<sub>u,in</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
+      {desc:`A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`, formula:'All rails at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
+      {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
+      {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs_in.toFixed(4)} MPa`},
+      {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
+      {desc:'φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn_in.toFixed(4)} MPa`},
+      {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
+      // ─── Outer critical section ───────────────────────────────────────────
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond last stud row — unreinforced zone', val:''},
+      {desc:'Stud rows n<sub>per</sub>', formula:'First at d/2, spacing s (max 4, &le;2.5d from col face)', val:`${n_per}  |  rail ≈ ${(rail_len_mm/PU.lenS).toFixed(0)} ${PU.lenU} from col face`},
+      {desc:'b<sub>o,out</sub> — outer CP (octagonal, ACI 421.1R)', formula:boOutFml, val:`${bo_out.toFixed(0)} mm`},
+      {desc:'v<sub>u,out</sub> = V<sub>u</sub> / (b<sub>o,out</sub>·d)', formula:'', val:`${vu_out.toFixed(3)} MPa`, cls:'hl'},
+      {desc:'φv<sub>c,out</sub> — unreinforced v<sub>c</sub> (§22.6.5.2) at b<sub>o,out</sub>', formula:'', val:`${phi_vc_out.toFixed(4)} MPa`},
+      {desc:'Outer check: v<sub>u,out</sub> ≤ φv<sub>c,out</sub>', formula:'', val:`${vu_out.toFixed(3)} ≤ ${phi_vc_out.toFixed(3)} MPa`, cls:isOK_out?'ok':'err', check:isOK_out?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}
+    ];
   } else {
     // ACI 318-25 §22.6.5.2 — no shear reinforcement
     const vc1 = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
@@ -2532,7 +2783,8 @@ function calcPunchShear() {
   if (opData.some(op=>op.within4h&&op.bo_ineff>0)) {
     const opStepDesc = opData.filter(op=>op.within4h&&op.bo_ineff>0)
       .map(op=>`Op.${op.num}(${op.face}): −${op.bo_ineff.toFixed(0)} mm`).join(', ');
-    steps.splice(1, 0, {
+    const opSpliceIdx = hasReinf ? 2 : 1;  // reinf: after section header + bo_in; no-reinf: after bo
+    steps.splice(opSpliceIdx, 0, {
       desc: `Opening reduction (ACI §22.6.4.3): ${opStepDesc}`,
       formula: `b<sub>o,full</sub> = ${bo_full.toFixed(0)} mm → b<sub>o,eff</sub> = ${bo.toFixed(0)} mm`,
       val: `−${bo_ineff.toFixed(0)} mm`,
@@ -2586,18 +2838,22 @@ function calcPunchShear() {
   // ── SVG plan diagram ──
   const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
 
-  // Result banner
-  const dcrCls  = DCR<=0.75?'ok':DCR<=1.0?'warn':'err';
-  const status  = DCR<=0.75?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
-  const capLabel = hasReinf ? 'φv<sub>n</sub>' : 'φv<sub>c</sub>';
+  // Result banner — for reinf case, show outer CP values (governing section)
+  const _bannerBo  = hasReinf ? bo_out  : bo;
+  const _bannerVu  = hasReinf ? vu_out  : vu;
+  const _bannerBoLbl = hasReinf ? 'b<sub>o,out</sub>' : 'b<sub>o</sub>';
+  const _bannerVuLbl = hasReinf ? 'v<sub>u,out</sub>' : 'v<sub>u</sub>';
+  const dcrCls   = DCR<=0.75?'ok':DCR<=1.0?'warn':'err';
+  const status   = DCR<=0.75?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
+  const capLabel = hasReinf ? 'φv<sub>c,out</sub>' : 'φv<sub>c</sub>';
   const resHTML = `<div class="rpt-sec"><div class="rpt-sec-title">Punching Shear Check${hasReinf?' — With '+(isStud?'Stud Rails':'Stirrups'):''}</div>
     <div class="dcr-banner dcr-${dcrCls}">
-      <div><div class="dcr-label">D/C &mdash; v<sub>u</sub> / ${capLabel}</div><div class="dcr-val">${DCR.toFixed(3)}</div></div>
-      <div class="dcr-status">${status}<br><span style="font-size:.7rem;font-weight:400;">v<sub>u</sub> = ${vu.toFixed(3)} MPa / ${capLabel} = ${phiVn.toFixed(3)} MPa</span></div>
+      <div><div class="dcr-label">D/C (governing)</div><div class="dcr-val">${DCR.toFixed(3)}</div></div>
+      <div class="dcr-status">${status}<br><span style="font-size:.7rem;font-weight:400;">${_bannerVuLbl} = ${_bannerVu.toFixed(3)} MPa / ${capLabel} = ${phiVn.toFixed(3)} MPa</span></div>
     </div>
     <div class="fl-rb">
-      <div class="fl-col"><div class="fl-lbl">b<sub>o</sub></div><div class="fl-val mid">${bo.toFixed(0)}</div><div class="fl-unit">mm</div></div>
-      <div class="fl-col"><div class="fl-lbl">v<sub>u</sub></div><div class="fl-val mid">${vu.toFixed(3)}</div><div class="fl-unit">MPa</div></div>
+      <div class="fl-col"><div class="fl-lbl">${_bannerBoLbl}</div><div class="fl-val mid">${_bannerBo.toFixed(0)}</div><div class="fl-unit">mm</div></div>
+      <div class="fl-col"><div class="fl-lbl">${_bannerVuLbl}</div><div class="fl-val mid">${_bannerVu.toFixed(3)}</div><div class="fl-unit">MPa</div></div>
       <div class="fl-col"><div class="fl-lbl">${capLabel}</div><div class="fl-val mid">${phiVn.toFixed(3)}</div><div class="fl-unit">MPa</div></div>
     </div>
   </div>`;
@@ -2670,6 +2926,15 @@ function _swapSlabBarUI(isUS){
 updatePunchD();
 updatePunchAv();
 </script>
+
+<!-- Punching shear reinforcement modal overlay -->
+<div id="punch-modal-overlay" role="dialog" aria-modal="true">
+  <div class="pm-box">
+    <div class="pm-hdr"><h3 id="pm-title"></h3></div>
+    <div class="pm-body" id="pm-body"></div>
+    <div class="pm-footer" id="pm-footer"></div>
+  </div>
+</div>
 
 </body>
 </html>
