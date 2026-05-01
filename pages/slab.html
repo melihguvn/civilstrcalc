@@ -2422,11 +2422,13 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const _studBlocked = (sx, sy) => _opRects.some(r => sx>=r.x1 && sx<=r.x2 && sy>=r.y1 && sy<=r.y2);
 
   // ── Stud / Stirrup rails — orthogonal face-distributed (ACI 421.1R cruciform) ──
+  // studPosPX/ocphw/ocphh hoisted so annotations drawn outside clipped group can reference them
+  const studPosPX = [];
+  let ocphw = 0, ocphh = 0;
   if (nr_disp > 0) {
     const isStud = reinfType !== 'stirrup';
 
     // Stud row positions along each rail from column face (mm → px), max 4 peripheral lines
-    const studPosPX = [];
     let _p = d_mm / 2;
     while (studPosPX.length < 4 && _p <= 2.5 * d_mm + 0.5) {
       studPosPX.push(_p * S);
@@ -2439,8 +2441,8 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     // ── Outer critical perimeter (d/2 beyond last stud row) ──────────────────
     const _lastStudMM = studPosPX[studPosPX.length - 1] / S;
     const _outerExtMM = _lastStudMM + d_mm / 2;
-    const ocphw = (col_hw + _outerExtMM) * S;
-    const ocphh = (col_hh + _outerExtMM) * S;
+    ocphw = (col_hw + _outerExtMM) * S;
+    ocphh = (col_hh + _outerExtMM) * S;
     // Draw outer CP — octagon for rectangular columns (ACI 421.1R), circle for circular
     if (isCirc) {
       s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ocphw)}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
