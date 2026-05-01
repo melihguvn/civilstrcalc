@@ -1892,6 +1892,36 @@ function _punchCheckReinfNeeded() {
 }
 
 // ── Auto rail hint (rows needed + rail length) ───────────────────────────────
+// ── Dynamic rail length: find s_outer where vu,outer = φvc/2 ─────────────────
+// Returns { s_outer_mm, bo_outer_req, vu_target } in mm / MPa
+function _punchCalcRailLengthDynamic(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef) {
+  // Conservative target: vu_target = φ × vc3 / 2 (vc3 = 0.33λ√fc, doesn't depend on perimeter)
+  const vc3 = 0.33 * lambda * Math.sqrt(fc);
+  const vu_target = phi * vc3 / 2;
+  if (vu_target <= 0) return null;
+  const bo_outer_req = Vu / (vu_target * d);
+
+  // Iterate s_outer in 1mm steps until bo_out(outer_ext = s_outer + d/2) >= bo_outer_req
+  let s_outer = d / 2;   // minimum: single row at d/2 → outer CP at d from col face
+  const MAX_S = 6 * d;   // safety cap
+  while (s_outer < MAX_S) {
+    const outer_ext = s_outer + d / 2;
+    let bo;
+    if (shape === 'circ') {
+      if (type === 'int')       bo = 2*Math.PI*(Dc/2 + outer_ext);
+      else if (type === 'edge') bo = 0.75*2*Math.PI*(Dc/2+outer_ext) + 2*outer_ext;
+      else                      bo = 0.5*2*Math.PI*(Dc/2+outer_ext) + 2*outer_ext;
+    } else {
+      if (type === 'int')       bo = 2*(c1+c2) + 4*Math.SQRT2*outer_ext;
+      else if (type === 'edge') bo = (ef==='N'||ef==='S') ? c1+2*c2+2*Math.SQRT2*outer_ext : 2*c1+c2+2*Math.SQRT2*outer_ext;
+      else                      bo = c1+c2+Math.SQRT2*outer_ext;
+    }
+    if (bo >= bo_outer_req) break;
+    s_outer += 1;
+  }
+  return { s_outer_mm: s_outer, bo_outer_req, vu_target };
+}
+
 function updatePunchRailHint() {
   const hintEl  = document.getElementById('punch-rail-hint');
   const warnEl  = document.getElementById('punch-reinf-warn-chip');
@@ -1915,52 +1945,35 @@ function updatePunchRailHint() {
 
   const shape = _punchShape, type = _punchType, ef = _punchEdgeFace;
   const lambda = 1.0, phi = 0.75;
-  const beta   = (shape === 'rect' && c1 > 0 && c2 > 0) ? Math.max(c1,c2)/Math.min(c1,c2) : 1.0;
-  const alphaS = type === 'int' ? 40 : type === 'edge' ? 30 : 20;
 
-  let bo_in;
-  if (shape === 'circ') {
-    if (!Dc) return;
-    if (type === 'int')       bo_in = Math.PI * (Dc + d);
-    else if (type === 'edge') bo_in = 0.75 * Math.PI * (Dc + d) + d;
-    else                      bo_in = 0.5  * Math.PI * (Dc + d) + d;
-  } else {
-    if (!c1 || !c2) return;
-    if (type === 'int')       bo_in = 2*(c1+d) + 2*(c2+d);
-    else if (type === 'edge') bo_in = (ef==='N'||ef==='S') ? c1+2*c2+2*d : 2*c1+c2+2*d;
-    else                      bo_in = c1 + c2 + d;
-  }
+  if (shape === 'rect' && (!c1 || !c2)) { hintEl.classList.remove('show'); return; }
+  if (shape === 'circ' && !Dc)          { hintEl.classList.remove('show'); return; }
 
-  // Find minimum stud rows so outer CP check passes (vu,out <= phi*vc,out)
-  const vc1u = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
-  const vc3u = 0.33*lambda*Math.sqrt(fc);
+  // ── Dynamic target: s_outer where vu,outer = φvc3/2 ────────────────────────
+  const dyn = _punchCalcRailLengthDynamic(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef);
+
+  // ── Discrete rows: how many given-spacing rows to reach or exceed s_outer_dyn
   let n_needed = 1;
-  for (let n = 1; n <= 4; n++) {
-    const ext = d/2 + (n-1)*s + d/2;
-    let bo_out;
-    if (shape === 'circ') {
-      if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + ext);
-      else if (type === 'edge') bo_out = 0.75*2*Math.PI*(Dc/2+ext) + 2*ext;
-      else                      bo_out = 0.5*2*Math.PI*(Dc/2+ext) + 2*ext;
-    } else {
-      if (type === 'int')       bo_out = 2*(c1+c2) + 4*Math.SQRT2*ext;
-      else if (type === 'edge') bo_out = (ef==='N'||ef==='S') ? c1+2*c2+2*Math.SQRT2*ext : 2*c1+c2+2*Math.SQRT2*ext;
-      else                      bo_out = c1+c2+Math.SQRT2*ext;
-    }
-    const vc2u = 0.083*(alphaS*d/bo_out+2)*lambda*Math.sqrt(fc);
-    const vc_out = Math.min(vc1u, vc2u, vc3u);
-    const vu_out = Vu / (bo_out * d);
-    if (vu_out <= phi * vc_out) { n_needed = n; break; }
-    n_needed = n;
-    if (n_needed >= 4) break;
+  if (dyn) {
+    const s_target = dyn.s_outer_mm;
+    // n rows have last stud at d/2 + (n-1)*s  →  n = ceil((s_target - d/2) / s) + 1
+    n_needed = Math.max(1, Math.min(4, Math.ceil(Math.max(0, s_target - d/2) / s) + 1));
   }
 
-  // Rail length from column face to last stud row
-  const rail_len_mm = d/2 + (n_needed - 1) * s;
+  // ── Rail length from column face to last stud ───────────────────────────────
+  const rail_len_mm  = d/2 + (n_needed - 1) * s;
   const rail_len_disp = Math.round(rail_len_mm / PU.lenS);
 
   if (rowsEl) rowsEl.textContent = n_needed;
   if (lenEl)  lenEl.textContent  = rail_len_disp;
+
+  // Show dynamic target info in the hint text
+  if (dyn) {
+    const s_dyn_disp = Math.round(dyn.s_outer_mm / PU.lenS);
+    const vt_disp    = dyn.vu_target.toFixed(2);
+    hintEl.innerHTML = `Auto-calc: <strong id="punch-rail-rows">${n_needed}</strong> stud row(s) &bull; rail &asymp; <strong id="punch-rail-len">${rail_len_disp}</strong> ${PU.lenU} from col face`
+      + `<br><span style="font-size:.69rem;color:var(--text-dim)">Dynamic target (v<sub>u,out</sub>=&phi;v<sub>c</sub>/2=${vt_disp} MPa): s<sub>outer</sub>&asymp;${s_dyn_disp} ${PU.lenU}</span>`;
+  }
   hintEl.classList.add('show');
 
   // Spacing warning
@@ -2674,6 +2687,9 @@ function calcPunchShear() {
     while (n_per < 4 && _pout <= 2.5*d + 0.5) { n_per++; if (rs_mm <= 0) break; _pout += rs_mm; }
     const outer_cp_ext = d/2 + Math.max(0, n_per - 1)*rs_mm + d/2;
     const rail_len_mm  = d/2 + Math.max(0, n_per - 1)*rs_mm;  // column face → last stud
+
+    // Dynamic target: s_outer where vu,outer = φvc3/2 (ACI §22.6.6)
+    const _dyn = _punchCalcRailLengthDynamic(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace);
     const ef2 = _punchEdgeFace;
     if (shape === 'circ') {
       if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + outer_cp_ext);
@@ -2705,10 +2721,12 @@ function calcPunchShear() {
     const DCR_out  = vu_out / Math.max(phi_vc_out, 0.001);
     const isOK_out = DCR_out <= 1.0;
 
-    // ── Governing check ───────────────────────────────────────────────────────
-    isOK  = isOK_in && isOK_out;
-    DCR   = Math.max(DCR_in, DCR_out);
-    phiVn = DCR_in >= DCR_out ? phiVn_in : phi_vc_out;
+    // ── Governing D/C — inner section with stud contribution ─────────────────
+    // D/C banner uses inner check: vu,in / φ(vc+vs). Outer check is a separate
+    // code check; failure generates a warning but doesn't override the main D/C.
+    DCR   = DCR_in;
+    phiVn = phiVn_in;
+    isOK  = isOK_in;
 
     // ── Warnings ─────────────────────────────────────────────────────────────
     const vc1u  = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
@@ -2747,7 +2765,7 @@ function calcPunchShear() {
       {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
       // ─── Outer critical section ───────────────────────────────────────────
       {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond last stud row — unreinforced zone', val:''},
-      {desc:'Stud rows n<sub>per</sub>', formula:'First at d/2, spacing s (max 4, &le;2.5d from col face)', val:`${n_per}  |  rail ≈ ${(rail_len_mm/PU.lenS).toFixed(0)} ${PU.lenU} from col face`},
+      {desc:'Stud rows n<sub>per</sub> (provided)', formula:`First at d/2, spacing s — dynamic target: s<sub>out</sub>&asymp;${_dyn?(_dyn.s_outer_mm/PU.lenS).toFixed(0):'—'} ${PU.lenU} (v<sub>u,out</sub>=&phi;v<sub>c</sub>/2)`, val:`${n_per}  |  rail ≈ ${(rail_len_mm/PU.lenS).toFixed(0)} ${PU.lenU}`},
       {desc:'b<sub>o,out</sub> — outer CP (octagonal, ACI 421.1R)', formula:boOutFml, val:`${bo_out.toFixed(0)} mm`},
       {desc:'v<sub>u,out</sub> = V<sub>u</sub> / (b<sub>o,out</sub>·d)', formula:'', val:`${vu_out.toFixed(3)} MPa`, cls:'hl'},
       {desc:'φv<sub>c,out</sub> — unreinforced v<sub>c</sub> (§22.6.5.2) at b<sub>o,out</sub>', formula:'', val:`${phi_vc_out.toFixed(4)} MPa`},
@@ -2838,14 +2856,14 @@ function calcPunchShear() {
   // ── SVG plan diagram ──
   const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
 
-  // Result banner — for reinf case, show outer CP values (governing section)
-  const _bannerBo  = hasReinf ? bo_out  : bo;
-  const _bannerVu  = hasReinf ? vu_out  : vu;
-  const _bannerBoLbl = hasReinf ? 'b<sub>o,out</sub>' : 'b<sub>o</sub>';
-  const _bannerVuLbl = hasReinf ? 'v<sub>u,out</sub>' : 'v<sub>u</sub>';
+  // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
+  const _bannerBo    = bo;   // always inner CP (d/2 from col face)
+  const _bannerVu    = vu;   // vu,in
+  const _bannerBoLbl = hasReinf ? 'b<sub>o,in</sub>' : 'b<sub>o</sub>';
+  const _bannerVuLbl = hasReinf ? 'v<sub>u,in</sub>' : 'v<sub>u</sub>';
   const dcrCls   = DCR<=0.75?'ok':DCR<=1.0?'warn':'err';
   const status   = DCR<=0.75?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
-  const capLabel = hasReinf ? 'φv<sub>c,out</sub>' : 'φv<sub>c</sub>';
+  const capLabel = hasReinf ? 'φv<sub>n</sub>' : 'φv<sub>c</sub>';
   const resHTML = `<div class="rpt-sec"><div class="rpt-sec-title">Punching Shear Check${hasReinf?' — With '+(isStud?'Stud Rails':'Stirrups'):''}</div>
     <div class="dcr-banner dcr-${dcrCls}">
       <div><div class="dcr-label">D/C (governing)</div><div class="dcr-val">${DCR.toFixed(3)}</div></div>
