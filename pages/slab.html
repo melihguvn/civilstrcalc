@@ -1855,7 +1855,9 @@ function _punchCheckReinfNeeded() {
   const c1 = gv('punch-c1') * PU.lenS;
   const c2 = gv('punch-c2') * PU.lenS;
   const Dc = gv('punch-dc') * PU.lenS;
-  const Vu = gv('punch-vu') * PU.forceS;
+  const Vu  = gv('punch-vu')  * PU.forceS;
+  const Mux = gv('punch-mux') * PU.momS;
+  const Muy = gv('punch-muy') * PU.momS;
   if (!h || !d || !fc || !Vu) return null;
 
   const shape = _punchShape, type = _punchType;
@@ -1877,7 +1879,10 @@ function _punchCheckReinfNeeded() {
     else                      bo = c1 + c2 + d;
   }
 
-  const vu     = Vu / (bo * d);
+  const _mt = (Mux !== 0 || Muy !== 0)
+    ? _punchCalcMomentTransfer(Mux, Muy, Vu, bo, d, c1, c2, shape, type, ef)
+    : null;
+  const vu = _mt ? _mt.vu_total : Vu / (bo * d);
   const vc1    = 0.17*(1+2/beta)*lambda*Math.sqrt(fc);
   const vc2    = 0.083*(alphaS*d/bo+2)*lambda*Math.sqrt(fc);
   const vc3    = 0.33*lambda*Math.sqrt(fc);
