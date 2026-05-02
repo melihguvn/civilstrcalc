@@ -782,7 +782,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group" id="punch-reinf-nlegs-grp" style="display:none">
               <label>Legs per stirrup</label>
               <div class="iw"><input type="number" id="punch-reinf-nlegs" value="2" step="1" min="1" max="8" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">legs</span></div>
-              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">e.g. 2 = rectangular closed stirrup</div>
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">legs per face (×n_faces total)</div>
             </div>
           </div>
           <div class="form-group">
@@ -1820,17 +1820,20 @@ function updatePunchD() {
 }
 function updatePunchAv() {
   const isStud = _punchReinfType !== 'stirrup';
-  // Studs: nr rails × 1 leg each. Stirrups: nr=1 set, nLegs legs per stirrup
-  const nr    = isStud ? (parseInt(document.getElementById('punch-reinf-nr')?.value) || 0) : 1;
-  const db    = parseFloat(document.getElementById('punch-reinf-db')?.value) || 0;
-  const nLegs = isStud ? 1 : (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2);
-  const av    = nr * nLegs * Math.PI / 4 * db * db;
-  const fmlEl = document.getElementById('punch-av-formula');
+  // Studs: nr rails × 1 stud each. Stirrups: n_faces × nLegs per face × Abar
+  // n_faces = column faces covered by stirrups (4 interior, 3 edge, 2 corner)
+  const nr      = isStud ? (parseInt(document.getElementById('punch-reinf-nr')?.value) || 0) : 1;
+  const db      = parseFloat(document.getElementById('punch-reinf-db')?.value) || 0;
+  const nLegs   = isStud ? 1 : (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2);
+  const nFaces  = isStud ? 1 : (_punchType==='int' ? 4 : _punchType==='edge' ? 3 : 2);
+  const av      = nr * nFaces * nLegs * Math.PI / 4 * db * db;
+  const abar    = Math.PI / 4 * db * db;
+  const fmlEl   = document.getElementById('punch-av-formula');
   if (fmlEl) {
     if (isStud)
-      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = ${nr} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr} × ${abar.toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
     else
-      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>legs</sub> × (π/4 × d<sub>b</sub>²) = ${nLegs} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² · n<sub>sets</sub> from zone÷s`;
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nFaces} × ${nLegs} × ${abar.toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
   } else {
     const el = document.getElementById('punch-av-calc');
     if (el) el.textContent = av.toFixed(0);
@@ -2882,14 +2885,19 @@ function calcPunchShear() {
   // Studs: user enters nr_rails; Stirrups: nr auto = 1 (nLegs covers the perimeter)
   const nr_disp   = hasReinf ? (isStud ? (parseInt(document.getElementById('punch-reinf-nr').value) || 0) : 1) : 0;
   const nLegs_disp = (!isStud && hasReinf) ? (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2) : 1;
+  // Stirrups cross all active column faces: interior=4, edge=3, corner=2
+  const nFaces_disp = (!isStud && hasReinf) ? (type==='int' ? 4 : type==='edge' ? 3 : 2) : 1;
   const rdb_disp  = hasReinf ? gv('punch-reinf-db') : 0;
   const rs_disp   = hasReinf ? gv('punch-reinf-s')  : 0;
   const rdb_mm    = rdb_disp * PU.lenS;
   const rs_mm     = rs_disp  * PU.lenS;
   const fyt_r     = hasReinf ? gv('punch-fyt') * PU.fcS : 0;
   const fyt_disp  = hasReinf ? gv('punch-fyt') : 0;
-  const Av_1      = hasReinf ? nr_disp * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;  // mm², one peripheral line
-  const Av_disp   = hasReinf ? nr_disp * nLegs_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
+  // Av_1: area crossing ONE peripheral line
+  // Studs:    nr_rails × 1 stud × Abar
+  // Stirrups: n_faces × nLegs_per_face × Abar  (stirrups cross every column face)
+  const Av_1      = hasReinf ? nr_disp * nFaces_disp * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;
+  const Av_disp   = hasReinf ? nr_disp * nFaces_disp * nLegs_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
 
   // Opening inputs — two openings
   const hasOp1 = document.getElementById('punch-has-op1').checked;
@@ -3088,8 +3096,8 @@ function calcPunchShear() {
       ]),
       {desc: isStud
         ? `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`
-        : `A<sub>v,1</sub> = n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²  [n<sub>sets</sub> = ${n_sets} rows auto-calc]`,
-       formula: isStud ? 'All studs at one peripheral line' : 'Legs/stirrup × Abar — n_sets = zone ÷ s (auto)', val:`${Av_1.toFixed(0)} mm²`},
+        : `A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nFaces_disp} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`,
+       formula: isStud ? 'All studs at one peripheral line' : `Stirrups cross all ${nFaces_disp} column faces; n_sets = zone÷s = ${n_sets}`, val:`${Av_1.toFixed(0)} mm²`},
       {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
       {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·s)', formula:'ACI 318-25 §22.6.6 (s = stud spacing)', val:`${vs_in.toFixed(4)} MPa`},
       {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
@@ -3197,7 +3205,7 @@ function calcPunchShear() {
     ['α<sub>s</sub>',                 alphaS.toString()],
     ...(hasReinf ? [
       ['Reinf. type',              isStud ? 'Headed Stud Rail' : 'Closed Stirrups'],
-      ['No. of rails / legs',      nr_disp.toString()],
+      ['No. of rails / legs',      isStud ? nr_disp.toString() : `${nFaces_disp} faces × ${nLegs_disp} legs`],
       ['Bar ⌀',                    `${rdb_disp} ${PU.lenU}`],
       ['Stud spacing s',           `${rs_disp} ${PU.lenU}`],
       ['A<sub>v,1</sub> (one peripheral line)', `${Av_disp.toFixed(0)} mm²`],
