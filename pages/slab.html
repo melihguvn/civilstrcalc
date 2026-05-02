@@ -771,10 +771,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
         <div class="form-row-2">
-          <div class="form-group">
-            <label id="punch-reinf-nr-lbl">No. of stud rails</label>
-            <div class="iw"><input type="number" id="punch-reinf-nr" value="8" step="1" min="2" max="40" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;" id="punch-reinf-nr-unit">rails</span></div>
-            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="punch-reinf-nr-hint">Symmetrically around column</div>
+          <div id="punch-reinf-nr-col">
+            <!-- Studs: nr rails input -->
+            <div class="form-group" id="punch-reinf-nr-grp">
+              <label id="punch-reinf-nr-lbl">No. of stud rails</label>
+              <div class="iw"><input type="number" id="punch-reinf-nr" value="8" step="1" min="2" max="40" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;" id="punch-reinf-nr-unit">rails</span></div>
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="punch-reinf-nr-hint">Symmetrically around column</div>
+            </div>
+            <!-- Stirrups: legs per stirrup (replaces nr in the same column) -->
+            <div class="form-group" id="punch-reinf-nlegs-grp" style="display:none">
+              <label>Legs per stirrup</label>
+              <div class="iw"><input type="number" id="punch-reinf-nlegs" value="2" step="1" min="1" max="8" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">legs</span></div>
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">e.g. 2 = rectangular closed stirrup</div>
+            </div>
           </div>
           <div class="form-group">
             <label id="punch-reinf-db-lbl">Stud ⌀ <span class="lu" id="lu-punch-reinf-db">[mm]</span></label>
@@ -790,13 +799,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div class="form-group">
             <label>f<sub>yt</sub> <span class="lu" id="lu-punch-fyt">[MPa]</span></label>
             <div class="iw"><input type="number" id="punch-fyt" value="420" step="10" min="200" max="600"><span class="us" id="u-punch-fyt">MPa</span></div>
-          </div>
-        </div>
-        <div id="punch-reinf-nlegs-row" style="display:none">
-          <div class="form-group">
-            <label>Stirrup legs per stirrup</label>
-            <div class="iw"><input type="number" id="punch-reinf-nlegs" value="2" step="1" min="1" max="8" oninput="updatePunchAv()"><span class="us" style="font-size:.72rem;padding-right:4px;">legs</span></div>
-            <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">e.g. 2 = rectangular closed stirrup</div>
           </div>
         </div>
         <div id="punch-av-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;" id="punch-av-info">
@@ -1818,16 +1820,17 @@ function updatePunchD() {
 }
 function updatePunchAv() {
   const isStud = _punchReinfType !== 'stirrup';
-  const nr    = parseInt(document.getElementById('punch-reinf-nr')?.value) || 0;
+  // Studs: nr rails × 1 leg each. Stirrups: nr=1 set, nLegs legs per stirrup
+  const nr    = isStud ? (parseInt(document.getElementById('punch-reinf-nr')?.value) || 0) : 1;
   const db    = parseFloat(document.getElementById('punch-reinf-db')?.value) || 0;
   const nLegs = isStud ? 1 : (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2);
   const av    = nr * nLegs * Math.PI / 4 * db * db;
   const fmlEl = document.getElementById('punch-av-formula');
   if (fmlEl) {
     if (isStud)
-      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>r</sub> × (π/4 × d<sub>b</sub>²) = ${nr} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
     else
-      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>s</sub> × n<sub>legs</sub> × (π/4 × d<sub>b</sub>²) = ${nr} × ${nLegs} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² per peripheral line`;
+      fmlEl.innerHTML = `A<sub>v,1</sub> = n<sub>legs</sub> × (π/4 × d<sub>b</sub>²) = ${nLegs} × ${(Math.PI/4*db*db).toFixed(0)} = <strong id="punch-av-calc">${av.toFixed(0)}</strong> mm² · n<sub>sets</sub> from zone÷s`;
   } else {
     const el = document.getElementById('punch-av-calc');
     if (el) el.textContent = av.toFixed(0);
@@ -1914,6 +1917,55 @@ function _punchCheckReinfNeeded() {
 }
 
 // ── Auto rail hint (rows needed + rail length) ───────────────────────────────
+
+// ── Outer control perimeter at extension 'ext' from column face (ACI 421.1R octagonal) ──
+// ext = s_outer + d/2 (d/2 beyond last stud/stirrup row at s_outer from col face)
+function _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext) {
+  if (shape === 'circ') {
+    if (type === 'int')       return 2*Math.PI*(Dc/2 + ext);
+    else if (type === 'edge') return 0.75*2*Math.PI*(Dc/2+ext) + 2*ext;
+    else                      return 0.5*2*Math.PI*(Dc/2+ext) + 2*ext;
+  } else {
+    if (type === 'int')       return 2*(c1+c2) + 4*Math.SQRT2*ext;
+    else if (type === 'edge') return (ef==='N'||ef==='S') ? c1+2*c2+2*Math.SQRT2*ext : 2*c1+c2+2*Math.SQRT2*ext;
+    else                      return c1+c2+Math.SQRT2*ext;
+  }
+}
+
+// ── Rail length via shear stress interpolation per ACI §22.6.6.2 ─────────────
+// Marches r (last reinforcement row from col face) from d/2 outward in steps of d/10.
+// At each r, outer CP is at ext = r + d/2; vu(r) = Vu / (bo(ext) * d).
+// Interpolates to find exact r where vu = φvc/2.
+// Returns { s_outer_mm, bo_outer, vu_target, vu_at_outer, interpolated, warning? }
+function _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef) {
+  const vc3      = 0.33 * lambda * Math.sqrt(fc);  // conservative vc (§22.6.5.2 eq.3, perimeter-independent)
+  const vu_target = phi * vc3 / 2;
+  if (vu_target <= 0) return null;
+  const step = d / 10;
+  const MAX_R = 5 * d;
+  const samples = [];
+  for (let r = d/2; r <= MAX_R + 1e-9; r += step) {
+    const ext = r + d / 2;
+    const bo  = _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext);
+    const vu_r = Vu / (bo * d);
+    samples.push({ r, bo, vu_r });
+    if (vu_r <= vu_target && samples.length >= 2) {
+      // Linear interpolation between previous and current sample
+      const s1 = samples[samples.length - 2], s2 = samples[samples.length - 1];
+      const t  = (vu_target - s1.vu_r) / (s2.vu_r - s1.vu_r);
+      const r_exact  = s1.r  + (s2.r  - s1.r)  * t;
+      const bo_exact = s1.bo + (s2.bo - s1.bo)  * t;
+      return { s_outer_mm: Math.max(r_exact, d/2), bo_outer: bo_exact,
+               vu_target, vu_at_outer: vu_target, interpolated: true };
+    }
+  }
+  // Never reached target — return 5d with warning
+  const last = samples[samples.length - 1];
+  return { s_outer_mm: MAX_R, bo_outer: last ? last.bo : _punchCalcBoOuter(c1,c2,Dc,shape,type,ef,MAX_R+d/2),
+           vu_target, vu_at_outer: last ? last.vu_r : 0,
+           warning: 'Rail extends to 5d without reaching φvₙ/2 — section may need enlarging' };
+}
+
 // ── Dynamic rail length: find s_outer where vu,outer = φvc/2 ─────────────────
 // Returns { s_outer_mm, bo_outer_req, vu_target } in mm / MPa
 function _punchCalcRailLengthDynamic(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef) {
@@ -2008,31 +2060,29 @@ function updatePunchRailHint() {
   if (shape === 'rect' && (!c1 || !c2)) { hintEl.classList.remove('show'); return; }
   if (shape === 'circ' && !Dc)          { hintEl.classList.remove('show'); return; }
 
-  // ── Dynamic target: s_outer where vu,outer = φvc3/2 ────────────────────────
-  const dyn = _punchCalcRailLengthDynamic(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef);
+  // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ───────────
+  const interp = _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef);
 
-  // ── Discrete rows: how many given-spacing rows to reach or exceed s_outer_dyn
-  let n_needed = 1;
-  if (dyn) {
-    const s_target = dyn.s_outer_mm;
-    // n rows have last stud at d/2 + (n-1)*s  →  n = ceil((s_target - d/2) / s) + 1
-    n_needed = Math.max(1, Math.min(4, Math.ceil(Math.max(0, s_target - d/2) / s) + 1));
-  }
-
-  // ── Rail length from column face to last stud ───────────────────────────────
-  const rail_len_mm  = d/2 + (n_needed - 1) * s;
+  // ── Discrete rows: how many given-spacing rows to cover the target zone ─────
+  const rail_len_mm   = interp ? interp.s_outer_mm : 0;
   const rail_len_disp = Math.round(rail_len_mm / PU.lenS);
+  const s0_hint = d / 4;
+  const n_needed = interp
+    ? Math.max(1, Math.ceil(Math.max(0, interp.s_outer_mm - s0_hint) / s) + 1)
+    : 1;
+  const rail_provided_mm   = s0_hint + (n_needed - 1) * s;
+  const rail_provided_disp = Math.round(rail_provided_mm / PU.lenS);
 
   if (rowsEl) rowsEl.textContent = n_needed;
   if (lenEl)  lenEl.textContent  = rail_len_disp;
 
-  // Show dynamic target info in the hint text
-  if (dyn) {
-    const s_dyn_disp = Math.round(dyn.s_outer_mm / PU.lenS);
-    const vt_disp    = dyn.vu_target.toFixed(2);
+  // Show interpolation target info in the hint text
+  if (interp) {
+    const vt_disp    = interp.vu_target.toFixed(2);
     const _isStud = _punchReinfType !== 'stirrup';
-    hintEl.innerHTML = `Auto-calc: <strong id="punch-rail-rows">${n_needed}</strong> ${_isStud ? 'row(s)' : 'set(s)'} &bull; zone &asymp; <strong id="punch-rail-len">${rail_len_disp}</strong> ${PU.lenU} from col face`
-      + `<br><span style="font-size:.69rem;color:var(--text-dim)">Dynamic target (v<sub>u,out</sub>=&phi;v<sub>c</sub>/2=${vt_disp} MPa): s<sub>outer</sub>&asymp;${s_dyn_disp} ${PU.lenU}</span>`;
+    const provOK = rail_provided_mm >= rail_len_mm;
+    hintEl.innerHTML = `Target zone: <strong>${rail_len_disp}</strong> ${PU.lenU} (v<sub>u</sub>≤&phi;v<sub>c</sub>/2) &nbsp;|&nbsp; <strong>${n_needed}</strong> ${_isStud ? 'row(s)' : 'set(s)'} @ ${Math.round(s/PU.lenS)} ${PU.lenU} → provides <strong>${rail_provided_disp}</strong> ${PU.lenU} ${provOK ? '&#10003;' : '&#9888;'}`
+      + `<br><span style="font-size:.69rem;color:var(--text-dim)">Interpolated via shear stress (ACI §22.6.6.2): &phi;v<sub>c</sub>/2 = ${vt_disp} MPa${interp.warning ? ' — &#9888; '+interp.warning : ''}. Spacing → n only.</span>`;
   }
   hintEl.classList.add('show');
 
@@ -2100,20 +2150,17 @@ function setPunchReinfType(type, btn) {
   document.getElementById('punch-reinf-stud').classList.toggle('active', type === 'stud');
   document.getElementById('punch-reinf-stirrup').classList.toggle('active', type === 'stirrup');
   const isStud = type === 'stud';
-  const nrLbl    = document.getElementById('punch-reinf-nr-lbl');
-  const nrUnit   = document.getElementById('punch-reinf-nr-unit');
-  const nrHint   = document.getElementById('punch-reinf-nr-hint');
+  const nrGrp    = document.getElementById('punch-reinf-nr-grp');
+  const nlegsGrp = document.getElementById('punch-reinf-nlegs-grp');
   const dbLbl    = document.getElementById('punch-reinf-db-lbl');
   const sLbl     = document.getElementById('punch-reinf-s-lbl');
   const sHint    = document.getElementById('punch-reinf-s-hint');
-  const nlegsRow = document.getElementById('punch-reinf-nlegs-row');
-  if (nrLbl)    nrLbl.textContent   = isStud ? 'No. of stud rails' : 'No. of stirrups';
-  if (nrUnit)   nrUnit.textContent  = isStud ? 'rails' : 'stirrups';
-  if (nrHint)   nrHint.textContent  = isStud ? 'Symmetrically around column' : 'Symmetrically around column';
-  if (dbLbl)    dbLbl.innerHTML     = (isStud ? 'Stud ⌀' : 'Stirrup bar ⌀') + ' <span class="lu" id="lu-punch-reinf-db">[mm]</span>';
-  if (sLbl)     sLbl.innerHTML      = (isStud ? 'Stud spacing s' : 'Stirrup spacing s') + ' <span class="lu" id="lu-punch-reinf-s">[mm]</span>';
-  if (sHint)    sHint.textContent   = isStud ? 'ACI §22.6.7.1: s ≤ 0.75d' : 'ACI §22.6.7.2: s ≤ 0.5d';
-  if (nlegsRow) nlegsRow.style.display = isStud ? 'none' : '';
+  // Studs: show nr; Stirrups: show legs-per-stirrup in the same column
+  if (nrGrp)    nrGrp.style.display    = isStud ? '' : 'none';
+  if (nlegsGrp) nlegsGrp.style.display = isStud ? 'none' : '';
+  if (dbLbl)    dbLbl.innerHTML         = (isStud ? 'Stud ⌀' : 'Bar ⌀') + ' <span class="lu" id="lu-punch-reinf-db">[mm]</span>';
+  if (sLbl)     sLbl.innerHTML          = (isStud ? 'Stud spacing s' : 'Stirrup spacing s') + ' <span class="lu" id="lu-punch-reinf-s">[mm]</span>';
+  if (sHint)    sHint.textContent       = isStud ? 'ACI §22.6.7.1: s ≤ 0.75d' : 'ACI §22.6.7.2: s ≤ 0.5d';
   updatePunchAv();
 }
 const _punchOpFace = { 1: 'E', 2: 'W' };
@@ -2428,14 +2475,15 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   if (nr_disp > 0) {
     const isStud = reinfType !== 'stirrup';
 
-    // Stud row positions along each rail from column face (mm → px), max 4 peripheral lines
-    let _p = d_mm / 2;
+    // First row at d/4 from column face (ACI 421.1R; §22.6.6.3 max = d/2)
+    // bo,in is at d/2 from column face — first row is clearly inside it
+    let _p = d_mm / 4;
     while (studPosPX.length < 4 && _p <= 2.5 * d_mm + 0.5) {
       studPosPX.push(_p * S);
       if (rs_mm <= 0) break;
       _p += rs_mm;
     }
-    if (studPosPX.length === 0) studPosPX.push(d_mm / 2 * S);
+    if (studPosPX.length === 0) studPosPX.push(d_mm / 4 * S);
     const railLen = studPosPX[studPosPX.length - 1] + 6;
 
     // ── Outer critical perimeter (d/2 beyond last stud row) ──────────────────
@@ -2466,11 +2514,9 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
 
     function _drawReinf(sx, sy) {
       if (isStud) {
-        s += `<circle cx="${f(sx)}" cy="${f(sy)}" r="3.8" fill="#f97316" stroke="#c2410c" stroke-width="1.2"/>`;
+        s += `<circle cx="${f(sx)}" cy="${f(sy)}" r="3.5" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
       } else {
-        const hw = 4;
-        s += `<rect x="${f(sx-hw)}" y="${f(sy-hw)}" width="${2*hw}" height="${2*hw}" fill="white" stroke="#c2410c" stroke-width="1.5"/>`;
-        s += `<line x1="${f(sx-hw+1)}" y1="${f(sy-hw+1)}" x2="${f(sx+hw-1)}" y2="${f(sy+hw-1)}" stroke="#c2410c" stroke-width="1"/>`;
+        s += `<circle cx="${f(sx)}" cy="${f(sy)}" r="3.5" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
       }
     }
 
@@ -2490,7 +2536,11 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
           const ang = (_as + frac*_sp) * Math.PI / 180;
           const dx = Math.cos(ang), dy = Math.sin(ang);
           const rx = cx+dx*chw, ry = cy+dy*chw;
-          s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
+          // Double black rail lines for circular studs
+          const _cg = 1.2; // half-gap between twin lines
+          const _rpx = -dy * _cg, _rpy = dx * _cg;
+          s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
+          s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
           for (const sp of studPosPX) {
             const sx=rx+dx*sp, sy=ry+dy*sp;
             if (!_studBlocked(sx,sy)) _drawReinf(sx,sy);
@@ -2499,12 +2549,18 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
       } else {
         // Stirrups: concentric circular rings at each peripheral line distance
         for (const sp of studPosPX) {
-          s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw+sp)}" fill="rgba(249,115,22,0.08)" stroke="#c2410c" stroke-width="2.2"/>`;
+          s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw+sp)}" fill="none" stroke="#374151" stroke-width="2.2"/>`;
+          s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw+sp-4)}" fill="none" stroke="#374151" stroke-width="1.1"/>`;
         }
       }
     } else {
+      // Shared constants for double-line style
+      const _dlg = 1.2;    // half-gap between twin lines (px) — slightly narrower than rails
+      const _dlc = '#1f2937'; // near-black
+      const _dlw = 1.1;    // line width
+
       if (isStud) {
-        // Headed studs: orthogonal rails + dot symbols (largest-remainder distribution)
+        // Headed studs: double black rail lines + orange dot symbols
         const _af = [
           {id:'N', len:c1_mm}, {id:'E', len:c2_mm},
           {id:'S', len:c1_mm}, {id:'W', len:c2_mm}
@@ -2526,9 +2582,12 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
               let rx, ry, dx, dy;
               if      (fc.id==='N') { rx=cx+(t-0.5)*2*chw;  ry=cy-chh; dx=0;  dy=-1; }
               else if (fc.id==='E') { rx=cx+chw; ry=cy+(t-0.5)*2*chh;   dx=1;  dy=0;  }
-              else if (fc.id==='S') { rx=cx+(0.5-t)*2*chw;  ry=cy+chh; dx=0;  dy=1;  }
+              else if (fc.id==='S') { rx=cx+(0.5-t)*2*chw;  ry=cy+chh;  dx=0;  dy=1;  }
               else                  { rx=cx-chw; ry=cy+(0.5-t)*2*chh;   dx=-1; dy=0;  }
-              s += `<line x1="${f(rx)}" y1="${f(ry)}" x2="${f(rx+dx*railLen)}" y2="${f(ry+dy*railLen)}" stroke="#fdba74" stroke-width="1.5"/>`;
+              // Twin rail lines (perpendicular of (dx,dy) is (-dy,dx))
+              const _rpx = -dy*_dlg, _rpy = dx*_dlg;
+              s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+              s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
               for (const sp of studPosPX) {
                 const sx=rx+dx*sp, sy=ry+dy*sp;
                 if (!_studBlocked(sx,sy)) _drawReinf(sx,sy);
@@ -2537,13 +2596,54 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
           }
         }
       } else {
-        // Stirrups: closed rectangular rings parallel to the critical perimeter
-        for (let ri = 0; ri < studPosPX.length; ri++) {
-          const sp = studPosPX[ri];
-          const bx = cx-chw-sp, by = cy-chh-sp;
-          const bw = 2*(chw+sp), bh = 2*(chh+sp);
-          if (bw > 0 && bh > 0)
-            s += `<rect x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}" fill="rgba(249,115,22,${(0.12-ri*0.03).toFixed(2)})" stroke="#c2410c" stroke-width="2.2" rx="3"/>`;
+        // Stirrups: perpendicular twin leg lines + twin transverse bars (ladder pattern)
+        const _lastSP = studPosPX.length > 0 ? studPosPX[studPosPX.length - 1] : 0;
+        const _ext = _dlg + 3;
+        if (_lastSP > 0) {
+          const _af2 = [
+            {id:'N', len:c1_mm}, {id:'E', len:c2_mm},
+            {id:'S', len:c1_mm}, {id:'W', len:c2_mm}
+          ].filter(fc => !freeFaces.includes(fc.id));
+          if (_af2.length > 0) {
+            const _tl2 = _af2.reduce((a,fc) => a+fc.len, 0) || 1;
+            const _exact2 = _af2.map(fc => nr_disp * fc.len / _tl2);
+            const _floors2 = _exact2.map(Math.floor);
+            let _rem2 = nr_disp - _floors2.reduce((a,b)=>a+b,0);
+            const _fracs2 = _exact2.map((v,i)=>({i,r:v-_floors2[i]})).sort((a,b)=>b.r-a.r);
+            const _counts2 = [..._floors2];
+            for (let k=0; k<_rem2; k++) _counts2[_fracs2[k].i]++;
+            _af2.forEach((fc,i) => fc.n = _counts2[i]);
+
+            for (const fc of _af2) {
+              if (fc.n < 1) continue;
+              const legPos = [];
+              for (let i = 0; i < fc.n; i++) {
+                const t = (i + 0.5) / fc.n;
+                let rx, ry, dx, dy;
+                if      (fc.id==='N') { rx=cx+(t-0.5)*2*chw; ry=cy-chh; dx=0;  dy=-1; }
+                else if (fc.id==='E') { rx=cx+chw; ry=cy+(t-0.5)*2*chh;  dx=1;  dy=0;  }
+                else if (fc.id==='S') { rx=cx+(0.5-t)*2*chw; ry=cy+chh;  dx=0;  dy=1;  }
+                else                  { rx=cx-chw; ry=cy+(0.5-t)*2*chh;  dx=-1; dy=0;  }
+                legPos.push({rx, ry, dx, dy});
+                const _rpx = -dy*_dlg, _rpy = dx*_dlg;
+                s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*_lastSP+_rpx)}" y2="${f(ry+dy*_lastSP+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*_lastSP-_rpx)}" y2="${f(ry+dy*_lastSP-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+              }
+              if (legPos.length >= 2) {
+                const p0 = legPos[0], pN = legPos[legPos.length-1];
+                for (const sp of studPosPX) {
+                  const bx1 = p0.rx+p0.dx*sp, by1 = p0.ry+p0.dy*sp;
+                  const bx2 = pN.rx+pN.dx*sp, by2 = pN.ry+pN.dy*sp;
+                  const blen = Math.hypot(bx2-bx1, by2-by1);
+                  if (blen < 0.5) continue;
+                  const bdx = (bx2-bx1)/blen, bdy = (by2-by1)/blen;
+                  const _bpx = -bdy*_dlg, _bpy = bdx*_dlg;
+                  s += `<line x1="${f(bx1-bdx*_ext+_bpx)}" y1="${f(by1-bdy*_ext+_bpy)}" x2="${f(bx2+bdx*_ext+_bpx)}" y2="${f(by2+bdy*_ext+_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                  s += `<line x1="${f(bx1-bdx*_ext-_bpx)}" y1="${f(by1-bdy*_ext-_bpy)}" x2="${f(bx2+bdx*_ext-_bpx)}" y2="${f(by2+bdy*_ext-_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -2661,11 +2761,22 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   }
   if (nr_disp > 0) {
     if (isStud2) {
-      s += `<circle cx="${lx+5}" cy="${ly+4}" r="3.8" fill="#f97316" stroke="#c2410c" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#ea580c">Headed stud</text>`;
-      lx += 88;
+      // Legend: twin rail lines + hollow circle
+      s += `<line x1="${lx}" y1="${ly+3}" x2="${lx+14}" y2="${ly+3}" stroke="#1f2937" stroke-width="1.1"/>`;
+      s += `<line x1="${lx}" y1="${ly+6}" x2="${lx+14}" y2="${ly+6}" stroke="#1f2937" stroke-width="1.1"/>`;
+      s += `<circle cx="${lx+7}" cy="${ly+4}" r="3.2" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
+      s += `<text x="${lx+18}" y="${ly+8}" font-size="9" fill="#374151">Headed stud</text>`;
+      lx += 92;
     } else {
-      s += `<rect x="${lx}" y="${ly-1}" width="16" height="12" fill="rgba(249,115,22,0.1)" stroke="#c2410c" stroke-width="1.8" rx="2"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#ea580c">Stirrup (ring)</text>`;
-      lx += 100;
+      // Legend: ladder pattern — two twin leg lines + twin transverse bar
+      for (const _lx of [lx+3, lx+12]) {
+        s += `<line x1="${f(_lx-1.1)}" y1="${ly}" x2="${f(_lx-1.1)}" y2="${ly+10}" stroke="#1f2937" stroke-width="1.1"/>`;
+        s += `<line x1="${f(_lx+1.1)}" y1="${ly}" x2="${f(_lx+1.1)}" y2="${ly+10}" stroke="#1f2937" stroke-width="1.1"/>`;
+      }
+      s += `<line x1="${f(lx)}" y1="${f(ly+4-1.1)}" x2="${f(lx+15)}" y2="${f(ly+4-1.1)}" stroke="#1f2937" stroke-width="1.1"/>`;
+      s += `<line x1="${f(lx)}" y1="${f(ly+4+1.1)}" x2="${f(lx+15)}" y2="${f(ly+4+1.1)}" stroke="#1f2937" stroke-width="1.1"/>`;
+      s += `<text x="${lx+19}" y="${ly+8}" font-size="9" fill="#1f2937">Stirrup</text>`;
+      lx += 88;
     }
   }
   if (opData.length > 0) {
@@ -2721,7 +2832,8 @@ function calcPunchShear() {
 
   // Reinforcement inputs — n_r × (π/4 × d_bar²)
   const isStud    = (_punchReinfType === 'stud');
-  const nr_disp   = hasReinf ? (parseInt(document.getElementById('punch-reinf-nr').value) || 0) : 0;
+  // Studs: user enters nr_rails; Stirrups: nr auto = 1 (nLegs covers the perimeter)
+  const nr_disp   = hasReinf ? (isStud ? (parseInt(document.getElementById('punch-reinf-nr').value) || 0) : 1) : 0;
   const nLegs_disp = (!isStud && hasReinf) ? (parseInt(document.getElementById('punch-reinf-nlegs')?.value) || 2) : 1;
   const rdb_disp  = hasReinf ? gv('punch-reinf-db') : 0;
   const rs_disp   = hasReinf ? gv('punch-reinf-s')  : 0;
@@ -2822,14 +2934,20 @@ function calcPunchShear() {
   if (hasReinf) {
     // ACI 318-25 §22.6.6 — two-check approach: inner (reinforced) + outer (unreinforced)
 
-    // ── Compute bo_out (octagonal outer CP at d/2 beyond last stud row) ─────
-    let _pout = d/2, n_per = 0;
-    while (n_per < 4 && _pout <= 2.5*d + 0.5) { n_per++; if (rs_mm <= 0) break; _pout += rs_mm; }
-    const outer_cp_ext = d/2 + Math.max(0, n_per - 1)*rs_mm + d/2;
-    const rail_len_mm  = d/2 + Math.max(0, n_per - 1)*rs_mm;  // column face → last stud
-
-    // Dynamic target: s_outer where vu,outer = φvc3/2 (ACI §22.6.6)
-    const _dyn = _punchCalcRailLengthDynamic(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace);
+    // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ──────────
+    // s_outer = distance from column face to last stud/stirrup row, where vu,out ≤ φvc/2
+    const _interp = _punchCalcRailLengthViaInterpolation(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace);
+    const rail_len_target = _interp ? _interp.s_outer_mm : Math.max(d/4 + 3*rs_mm, 1.5*d);
+    const vu_target_interp = _interp ? _interp.vu_target : 0;
+    const s0_main          = d / 4;   // first row at d/4 from column face
+    // Spacing → number of rows (rail_len_target is spacing-independent)
+    const n_per = rs_mm > 0
+      ? Math.max(1, Math.ceil(Math.max(0, rail_len_target - s0_main) / rs_mm) + 1)
+      : 1;
+    const n_sets = n_per;  // same formula for studs and stirrups
+    const rail_len_provided = s0_main + (n_per - 1) * rs_mm;
+    const rail_len_mm  = rail_len_target;   // alias used in result display below
+    const outer_cp_ext = rail_len_provided + d/2;  // d/2 beyond last provided row
     const ef2 = _punchEdgeFace;
     if (shape === 'circ') {
       if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + outer_cp_ext);
@@ -2844,7 +2962,7 @@ function calcPunchShear() {
 
     // ── Inner critical section (b₀,in — d/2 from column face, with vc+vs) ──
     vc = isStud ? 0.25*lambda*Math.sqrt(fc) : 0.17*lambda*Math.sqrt(fc);
-    const vs_in   = Av_1 * fyt_r / (bo * d);
+    const vs_in   = rs_mm > 0 ? Av_1 * fyt_r / (bo * rs_mm) : 0;
     const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
     const vn_cap  = Math.min(vc + vs_in, vn_max);
     const phiVn_in = phi * vn_cap;
@@ -2919,16 +3037,19 @@ function calcPunchShear() {
       ]),
       {desc: isStud
         ? `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`
-        : `A<sub>v,1</sub> = n<sub>s</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`,
-       formula:'All stirrups/rails at one peripheral line', val:`${Av_1.toFixed(0)} mm²`},
+        : `A<sub>v,1</sub> = n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²  [n<sub>sets</sub> = ${n_sets} rows auto-calc]`,
+       formula: isStud ? 'All studs at one peripheral line' : 'Legs/stirrup × Abar — n_sets = zone ÷ s (auto)', val:`${Av_1.toFixed(0)} mm²`},
       {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
-      {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·d)', formula:'ACI 318-25 §22.6.6', val:`${vs_in.toFixed(4)} MPa`},
+      {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·s)', formula:'ACI 318-25 §22.6.6 (s = stud spacing)', val:`${vs_in.toFixed(4)} MPa`},
       {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
       {desc:'φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn_in.toFixed(4)} MPa`},
       {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
       // ─── Outer critical section ───────────────────────────────────────────
       {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond last stud row — unreinforced zone', val:''},
-      {desc:'Stud rows n<sub>per</sub> (provided)', formula:`First at d/2, spacing s — dynamic target: s<sub>out</sub>&asymp;${_dyn?(_dyn.s_outer_mm/PU.lenS).toFixed(0):'—'} ${PU.lenU} (v<sub>u,out</sub>=&phi;v<sub>c</sub>/2)`, val:`${n_per}  |  rail ≈ ${(rail_len_mm/PU.lenS).toFixed(0)} ${PU.lenU}`},
+      {desc:'&phi;v<sub>c</sub>/2 — target stress (ACI §22.6.6.2)', formula:'v<sub>u,out</sub> must not exceed this at outer CP; vc = 0.33λ√f\'c (perimeter-independent)', val:`${vu_target_interp.toFixed(4)} MPa`},
+      {desc:'Rail zone required (interpolation: v<sub>u</sub>→&phi;v<sub>c</sub>/2)', formula:`Marching r from d/2, outer CP at r+d/2; step = d/10${_interp&&_interp.warning?' ⚠ '+_interp.warning:''}`, val:`${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`},
+      {desc:`${isStud?'Stud rows':'Stirrup sets'} n = ⌈(zone − d/4) / s⌉ + 1`, formula:`First row at d/4; s = ${rs_disp} ${PU.lenU}; zone = target = ${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`, val:`${n_per} ${isStud?'row(s)':'set(s)'}`},
+      {desc:'Rail zone provided = d/4 + (n−1)·s', formula:'Actual extent of reinforcement from column face', val:`${(rail_len_provided/PU.lenS).toFixed(1)} ${PU.lenU}${rail_len_provided >= rail_len_target ? ' ✓' : ' ⚠'}`},
       {desc:'b<sub>o,out</sub> — outer CP (octagonal, ACI 421.1R)', formula:boOutFml, val:`${bo_out.toFixed(0)} mm`},
       {desc:'v<sub>u,out</sub> = V<sub>u</sub> / (b<sub>o,out</sub>·d)', formula:'', val:`${vu_out.toFixed(3)} MPa`, cls:'hl'},
       {desc:'φv<sub>c,out</sub> — unreinforced v<sub>c</sub> (§22.6.5.2) at b<sub>o,out</sub>', formula:'', val:`${phi_vc_out.toFixed(4)} MPa`},
@@ -3035,7 +3156,9 @@ function calcPunchShear() {
   ];
 
   // ── SVG plan diagram ──
-  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
+  // SVG: for stirrups use nLegs_disp as the "nr" to distribute leg lines around perimeter
+  const _svg_nr = isStud ? nr_disp : 8;
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
 
   // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
   const _bannerBo    = bo;   // always inner CP (d/2 from col face)
