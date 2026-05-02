@@ -3036,20 +3036,16 @@ function calcPunchShear() {
     op.within4h = op.ao > 0;  // flush → always within 4h (so = 0)
     if (op.within4h) {
       const sl = _faceSideLen[op.face];
-      // SMALL opening: studs placed on both sides → perimeter continuity maintained → no bo reduction
-      // LARGE opening: no reinf on face → perimeter segment lost → bo reduced by ao
-      if (!op.is_small) {
-        op.bo_ineff = Math.min(op.ao, sl - _faceIneff[op.face]);
-        _faceIneff[op.face] += op.bo_ineff;
-      } else {
-        op.bo_ineff = 0;
-      }
+      // Both SMALL and LARGE reduce bo — opening interrupts the critical perimeter regardless of size.
+      // Difference is in reinforcement: SMALL → studs on both sides; LARGE → no studs on that face.
+      op.bo_ineff = Math.min(op.ao, sl - _faceIneff[op.face]);
+      _faceIneff[op.face] += op.bo_ineff;
     } else { op.bo_ineff = 0; }
     opData.push(op);
   }
   const bo_ineff = Object.values(_faceIneff).reduce((a,b)=>a+b,0);
   let bo = Math.max(bo_full - bo_ineff, bo_full * 0.1);
-  console.log('bo calc:', { bo_full: bo_full.toFixed(0), bo_ineff: bo_ineff.toFixed(0), bo_eff: bo.toFixed(0), openings: opData.map(o=>({face:o.face,ao:o.ao_mm?.toFixed(0),is_small:o.is_small,bo_ineff:o.bo_ineff?.toFixed(0)})) });
+  console.log('bo calc:', { bo_full: bo_full.toFixed(0), bo_ineff: bo_ineff.toFixed(0), bo_eff: bo.toFixed(0), openings: opData.map(o=>({face:o.face,ao:o.ao?.toFixed(0),is_small:o.is_small,bo_ineff:o.bo_ineff?.toFixed(0)})) });
   const openingWithin4h = opData.some(op => op.within4h && op.bo_ineff > 0);
   const Ac = bo * d;
   const vu_dir = Vu_N / Ac;
@@ -3063,6 +3059,7 @@ function calcPunchShear() {
   let vc, phiVn, DCR, isOK, govLbl = '', steps = [];
   let bo_out = bo, vu_out = vu;  // overwritten inside hasReinf block
   let n_sets = 0, rail_len_target = 0;  // hoisted for SVG call below hasReinf block
+  let bo_out_nominal = 0;  // hoisted: captured before opening reduction inside hasReinf
 
   if (hasReinf) {
     // ACI 318-25 §22.6.6 — two-check approach: inner (reinforced) + outer (unreinforced)
@@ -3094,7 +3091,8 @@ function calcPunchShear() {
       else if (type === 'edge') bo_out = (ef2==='N'||ef2==='S') ? c1+2*c2+2*Math.SQRT2*outer_cp_ext : 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
       else                      bo_out = c1+c2+Math.SQRT2*outer_cp_ext;
     }
-    if (bo_ineff > 0) bo_out = Math.max(bo_out - bo_ineff*(bo_out/bo_full), bo_out*0.1);
+    bo_out_nominal = bo_out;
+    if (bo_ineff > 0) bo_out = Math.max(bo_out - bo_ineff, bo_out * 0.1);  // same ao reduction on outer CP
 
     // ── Av reduction for LARGE openings ──────────────────────────────────────
     // LARGE opening removes 1 rail (stud) or 1 face (stirrup) from active count
@@ -3275,15 +3273,25 @@ function calcPunchShear() {
 
   // Insert opening steps after bo if applicable
   if (opData.some(op=>op.within4h&&op.bo_ineff>0)) {
-    const opStepDesc = opData.filter(op=>op.within4h&&op.bo_ineff>0)
-      .map(op=>`${op.face} (${op.is_small?'SMALL':'LARGE'}): −${op.bo_ineff.toFixed(0)} mm`).join(', ');
+    const _opAffected = opData.filter(op=>op.within4h&&op.bo_ineff>0);
+    const opDir   = _opAffected.map(o=>o.face).join(', ');
+    const opSize  = _opAffected.map(o=>`${o.ao_d} ${PU.lenU}`).join(', ');
+    const opClass = _opAffected.map(o=>o.is_small?'SMALL':'LARGE').join(', ');
     const opSpliceIdx = hasReinf ? 2 : 1;
-    steps.splice(opSpliceIdx, 0, {
-      desc: `Opening (ACI §22.6.4.3, flush, centered): ${opStepDesc}`,
-      formula: `b<sub>o,full</sub> = ${bo_full.toFixed(0)} mm → b<sub>o,eff</sub> = ${bo.toFixed(0)} mm`,
-      val: `−${bo_ineff.toFixed(0)} mm`,
-      cls: 'hl'
-    });
+    const _opRows = [
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">CRITICAL PERIMETER — OPENING EFFECT (ACI §22.6.4.3)</b>',
+       formula:'Flush opening interrupts critical perimeter regardless of size; classification affects reinforcement only', val:''},
+      {desc:`Direction: ${opDir} · Size: ${opSize} · Classification: ${opClass}`,
+       formula:`Opening reduces critical perimeter by a<sub>o</sub> = ${bo_ineff.toFixed(0)} mm on affected face(s)`, val:''},
+      {desc:'b<sub>o,in</sub> nominal → reduced',
+       formula:`Full perimeter ${bo_full.toFixed(0)} mm − ${bo_ineff.toFixed(0)} mm opening`, val:`${bo_full.toFixed(0)} → ${bo.toFixed(0)} mm (−${bo_ineff.toFixed(0)} mm)`, cls:'hl'},
+      ...(hasReinf && bo_out_nominal > 0 ? [{
+        desc:'b<sub>o,out</sub> nominal → reduced',
+        formula:`Outer CP also reduced by same a<sub>o</sub>`, val:`${bo_out_nominal.toFixed(0)} → ${bo_out.toFixed(0)} mm (−${bo_ineff.toFixed(0)} mm)`, cls:'hl'
+      }] : []),
+    ];
+    steps.splice(opSpliceIdx, 0, ..._opRows);
+    console.log('bo opening steps:', { bo_full: bo_full.toFixed(0), bo_in_eff: bo.toFixed(0), bo_out_nom: bo_out_nominal.toFixed(0), bo_out_eff: bo_out.toFixed(0), bo_ineff: bo_ineff.toFixed(0) });
   }
   for (const op of opData) {
     if (op.ao > 0 && !op.is_small)
