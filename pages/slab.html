@@ -2237,7 +2237,7 @@ function setPunchColType(type, btn) {
 }
 
 // ── Punching Shear — Professional Plan View SVG ───────────────────────────
-function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp }) {
+function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm }) {
   const W = 500, H = 400, legH = 34;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
@@ -2476,9 +2476,11 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     const isStud = reinfType !== 'stirrup';
 
     // First row at d/4 from column face (ACI 421.1R; §22.6.6.3 max = d/2)
-    // bo,in is at d/2 from column face — first row is clearly inside it
+    // Use n_sets from calculation if provided; otherwise fall back to ≤4 rows capped at 2.5d
+    const _svg_n = (n_sets_svg > 0) ? n_sets_svg : 4;
+    const _svg_cap = rail_len_target_mm > 0 ? rail_len_target_mm : 2.5 * d_mm;
     let _p = d_mm / 4;
-    while (studPosPX.length < 4 && _p <= 2.5 * d_mm + 0.5) {
+    while (studPosPX.length < _svg_n && _p <= _svg_cap + 0.5) {
       studPosPX.push(_p * S);
       if (rs_mm <= 0) break;
       _p += rs_mm;
@@ -2930,6 +2932,7 @@ function calcPunchShear() {
   const warns = [];
   let vc, phiVn, DCR, isOK, govLbl = '', steps = [];
   let bo_out = bo, vu_out = vu;  // overwritten inside hasReinf block
+  let n_sets = 0, rail_len_target = 0;  // hoisted for SVG call below hasReinf block
 
   if (hasReinf) {
     // ACI 318-25 §22.6.6 — two-check approach: inner (reinforced) + outer (unreinforced)
@@ -2937,17 +2940,17 @@ function calcPunchShear() {
     // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ──────────
     // s_outer = distance from column face to last stud/stirrup row, where vu,out ≤ φvc/2
     const _interp = _punchCalcRailLengthViaInterpolation(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace);
-    const rail_len_target = _interp ? _interp.s_outer_mm : Math.max(d/4 + 3*rs_mm, 1.5*d);
+    rail_len_target = _interp ? _interp.s_outer_mm : 1.5*d;
     const vu_target_interp = _interp ? _interp.vu_target : 0;
     const s0_main          = d / 4;   // first row at d/4 from column face
     // Spacing → number of rows (rail_len_target is spacing-independent)
     const n_per = rs_mm > 0
       ? Math.max(1, Math.ceil(Math.max(0, rail_len_target - s0_main) / rs_mm) + 1)
       : 1;
-    const n_sets = n_per;  // same formula for studs and stirrups
+    n_sets = n_per;  // same formula for studs and stirrups
     const rail_len_provided = s0_main + (n_per - 1) * rs_mm;
     const rail_len_mm  = rail_len_target;   // alias used in result display below
-    const outer_cp_ext = rail_len_provided + d/2;  // d/2 beyond last provided row
+    const outer_cp_ext = rail_len_target + d/2;  // d/2 beyond required last row — spacing-independent
     const ef2 = _punchEdgeFace;
     if (shape === 'circ') {
       if (type === 'int')       bo_out = 2*Math.PI*(Dc/2 + outer_cp_ext);
@@ -3158,7 +3161,9 @@ function calcPunchShear() {
   // ── SVG plan diagram ──
   // SVG: for stirrups use nLegs_disp as the "nr" to distribute leg lines around perimeter
   const _svg_nr = isStud ? nr_disp : 8;
-  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp });
+  const _svg_n_sets = hasReinf ? n_sets : 0;
+  const _svg_rail_target = hasReinf ? rail_len_target : 0;
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target });
 
   // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
   const _bannerBo    = bo;   // always inner CP (d/2 from col face)
