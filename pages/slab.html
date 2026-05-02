@@ -2323,12 +2323,21 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(mx-half)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx+half)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx-half)}" y1="${f(side.y1)}" x2="${f(mx+half)}" y2="${f(side.y1)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        s += `<text x="${f(mx)}" y="${f(side.y1+(side.id==='N'?-5:12))}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b₀ ineff.</text>`;
+        // Label offset: N → above CP line (outside slab), S → below (outside)
+        const _ty = side.id==='N' ? side.y1-13 : side.y1+15;
+        s += `<rect x="${f(mx-22)}" y="${f(_ty-10)}" width="44" height="12" fill="white" opacity="0.93" rx="2"/>`;
+        s += `<text x="${f(mx)}" y="${f(_ty)}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b₀ ineff.</text>`;
       } else {
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x1)}" y2="${f(my-half)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my+half)}" x2="${f(side.x1)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my-half)}" x2="${f(side.x1)}" y2="${f(my+half)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        s += `<text x="${f(side.x1+(side.id==='E'?7:-7))}" y="${f(my)}" text-anchor="${side.id==='E'?'start':'end'}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b₀ ineff.</text>`;
+        // E → label to the right, W → label to the left
+        const _tx = side.id==='E' ? side.x1+5 : side.x1-5;
+        const _anchor = side.id==='E' ? 'start' : 'end';
+        const _tw = 44;
+        const _bx = side.id==='E' ? _tx-2 : _tx-_tw+2;
+        s += `<rect x="${f(_bx)}" y="${f(my-9)}" width="${_tw}" height="12" fill="white" opacity="0.93" rx="2"/>`;
+        s += `<text x="${f(_tx)}" y="${f(my)}" text-anchor="${_anchor}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b₀ ineff.</text>`;
       }
     } else {
       s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
@@ -2483,12 +2492,21 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
         const fx = cx + (op.face==='E' ? chw : -chw);
         const fy1 = cy - chh, fy2 = cy + chh;
         s += `<line x1="${f(fx)}" y1="${f(fy1)}" x2="${f(fx)}" y2="${f(fy2)}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4,3"/>`;
-        s += `<text x="${f(fx + (op.face==='E'?4:-4))}" y="${f(cy-chh-6)}" text-anchor="${op.face==='E'?'start':'end'}" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
+        // Position above opening box (opening is beside column, use cy-ao_px/2 top edge)
+        const _nrY_h = cy - ao_px/2 - 6;
+        const _nrX_h = fx + (op.face==='E' ? 4 : -4);
+        const _nrAn_h = op.face==='E' ? 'start' : 'end';
+        const _nrBx_h = op.face==='E' ? _nrX_h - 2 : _nrX_h - 46;
+        s += `<rect x="${f(_nrBx_h)}" y="${f(_nrY_h-10)}" width="48" height="12" fill="white" opacity="0.93" rx="2"/>`;
+        s += `<text x="${f(_nrX_h)}" y="${f(_nrY_h)}" text-anchor="${_nrAn_h}" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
       } else {
         const fy = cy + (op.face==='S' ? chh : -chh);
         const fx1 = cx - chw, fx2 = cx + chw;
         s += `<line x1="${f(fx1)}" y1="${f(fy)}" x2="${f(fx2)}" y2="${f(fy)}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4,3"/>`;
-        s += `<text x="${f(cx)}" y="${f(fy + (op.face==='S'?10:-4))}" text-anchor="middle" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
+        // Position outside opening box (above for N, below for S)
+        const _nrY_v = op.face==='S' ? oy + oh + 10 : oy - 6;
+        s += `<rect x="${f(cx-24)}" y="${f(_nrY_v-10)}" width="48" height="12" fill="white" opacity="0.93" rx="2"/>`;
+        s += `<text x="${f(cx)}" y="${f(_nrY_v)}" text-anchor="middle" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
       }
     }
   }
@@ -2792,22 +2810,24 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<text x="${f(_dmMid)}" y="${f(dmy-6)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
   }
 
-  // ── b₀,in label — place INSIDE inner CP near top, with white background ──
+  // ── b₀,in label — NW corner of inner CP (avoids center-N collision with "b₀ ineff.") ──
   const _b0lbl = nr_disp > 0 ? 'b₀,in' : 'b₀';
-  if (!freeFaces.includes('N') && cphh > 18) {
+  if (!freeFaces.includes('N') && cphh > 18 && cphw > 22) {
     const _b0y = cy - cphh + 14;
-    s += `<rect x="${f(cx-21)}" y="${f(_b0y-10)}" width="44" height="13" fill="white" opacity="0.92" rx="2"/>`;
-    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
-  } else if (!freeFaces.includes('S') && cphh > 18) {
+    const _b0x = cx - cphw + 4;
+    s += `<rect x="${f(_b0x-2)}" y="${f(_b0y-10)}" width="40" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(_b0x)}" y="${f(_b0y)}" text-anchor="start" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+  } else if (!freeFaces.includes('S') && cphh > 18 && cphw > 22) {
     const _b0y = cy + cphh - 4;
-    s += `<rect x="${f(cx-21)}" y="${f(_b0y-10)}" width="44" height="13" fill="white" opacity="0.92" rx="2"/>`;
-    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+    const _b0x = cx - cphw + 4;
+    s += `<rect x="${f(_b0x-2)}" y="${f(_b0y-10)}" width="40" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(_b0x)}" y="${f(_b0y)}" text-anchor="start" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
   }
 
-  // ── b₀,out label — place on E side of outer CP (avoids N/S compass conflict) ──
+  // ── b₀,out label — offset 14px above centre on E/W side to clear compass label ──
   if (nr_disp > 0) {
     const _ocpEx = cx + ocphw + 5;
-    const _ocpEy = cy;
+    const _ocpEy = cy - 14;   // shifted up to avoid compass E rect at cy
     const _ocpWx = cx - ocphw - 5;
     if (!freeFaces.includes('E') && _ocpEx + 46 < W - 2) {
       s += `<rect x="${f(_ocpEx-2)}" y="${f(_ocpEy-9)}" width="48" height="13" fill="white" opacity="0.92" rx="2"/>`;
