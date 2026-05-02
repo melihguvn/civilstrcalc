@@ -1933,37 +1933,70 @@ function _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext) {
 }
 
 // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ─────────────
-// Marches r (last reinforcement row from col face) from d/2 outward in steps of d/10.
-// At each r, outer CP is at ext = r + d/2; vu(r) = Vu / (bo(ext) * d).
-// Interpolates to find exact r where vu = φvc/2.
-// Returns { s_outer_mm, bo_outer, vu_target, vu_at_outer, interpolated, warning? }
-function _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef) {
-  const vc3      = 0.33 * lambda * Math.sqrt(fc);  // conservative vc (§22.6.5.2 eq.3, perimeter-independent)
-  const vu_target = phi * vc3 / 2;
-  if (vu_target <= 0) return null;
+// Marches r (last row from col face) from d/2 in steps of d/10.
+// At each r: outer CP ext = r+d/2; vc = min(vc1(bo),vc2(bo),vc3); vu = direct + moment.
+// Finds r where vu(r) ≤ φ·vc(r)/2 via gap-function linear interpolation.
+// beta, alphaS: column aspect ratio and ACI column location factor.
+// Mux_Nmm, Muy_Nmm: unbalanced moments in N·mm (0 if none).
+function _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef, beta, alphaS, Mux_Nmm, Muy_Nmm) {
+  beta     = beta     || 1;
+  alphaS   = alphaS   || 40;
+  Mux_Nmm  = Mux_Nmm  || 0;
+  Muy_Nmm  = Muy_Nmm  || 0;
+  const vc3 = 0.33 * lambda * Math.sqrt(fc);
+  if (vc3 <= 0) return null;
   const step = d / 10;
   const MAX_R = 5 * d;
   const samples = [];
+
   for (let r = d/2; r <= MAX_R + 1e-9; r += step) {
     const ext = r + d / 2;
     const bo  = _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext);
-    const vu_r = Vu / (bo * d);
-    samples.push({ r, bo, vu_r });
-    if (vu_r <= vu_target && samples.length >= 2) {
-      // Linear interpolation between previous and current sample
+
+    // Actual vc at this outer perimeter — use all three §22.6.5.2 equations
+    const vc1_r  = 0.17 * (1 + 2/beta) * lambda * Math.sqrt(fc);
+    const vc2_r  = 0.083 * (alphaS * d / bo + 2) * lambda * Math.sqrt(fc);
+    const vc_r   = Math.min(vc1_r, vc2_r, vc3);
+    const vu_lim = phi * vc_r / 2;
+
+    // Shear stress: direct component
+    let vu_r = Vu / (bo * d);
+
+    // Moment transfer at outer perimeter (rectangular approx — interior only)
+    if ((Math.abs(Mux_Nmm) > 0 || Math.abs(Muy_Nmm) > 0) && shape === 'rect' && type === 'int') {
+      const b1x = c1 + 2*ext, b2x = c2 + 2*ext;
+      if (Math.abs(Mux_Nmm) > 0 && b1x > 0 && b2x > 0) {
+        const gvx = 1 - 1/(1 + (2/3)*Math.sqrt(b1x/b2x));
+        const Jcx = d*b1x*b1x*b1x/6 + d*d*d*b1x/6 + b2x*d*b1x*b1x/2;
+        vu_r += gvx * Math.abs(Mux_Nmm) * (b1x/2) / Jcx;
+      }
+      const b1y = c2 + 2*ext, b2y = c1 + 2*ext;
+      if (Math.abs(Muy_Nmm) > 0 && b1y > 0 && b2y > 0) {
+        const gvy = 1 - 1/(1 + (2/3)*Math.sqrt(b1y/b2y));
+        const Jcy = d*b1y*b1y*b1y/6 + d*d*d*b1y/6 + b2y*d*b1y*b1y/2;
+        vu_r += gvy * Math.abs(Muy_Nmm) * (b1y/2) / Jcy;
+      }
+    }
+
+    const gap = vu_r - vu_lim;
+    samples.push({ r, bo, vu_r, vu_lim, gap });
+
+    if (gap <= 0 && samples.length >= 2) {
+      // Linear interpolation of gap function: g(r) = vu_r - vu_lim; find g=0
       const s1 = samples[samples.length - 2], s2 = samples[samples.length - 1];
-      const t  = (vu_target - s1.vu_r) / (s2.vu_r - s1.vu_r);
-      const r_exact  = s1.r  + (s2.r  - s1.r)  * t;
-      const bo_exact = s1.bo + (s2.bo - s1.bo)  * t;
+      const t  = s1.gap / (s1.gap - s2.gap);  // s1.gap>0, s2.gap≤0 → t∈[0,1]
+      const r_exact  = s1.r  + (s2.r  - s1.r)  * Math.max(0, Math.min(1, t));
+      const bo_exact = s1.bo + (s2.bo - s1.bo)  * Math.max(0, Math.min(1, t));
+      const vu_target_out = (s1.vu_lim + s2.vu_lim) / 2;
       return { s_outer_mm: Math.max(r_exact, d/2), bo_outer: bo_exact,
-               vu_target, vu_at_outer: vu_target, interpolated: true };
+               vu_target: vu_target_out, vu_at_outer: vu_target_out, interpolated: true };
     }
   }
-  // Never reached target — return 5d with warning
+  // Never reached target — 5d cap
   const last = samples[samples.length - 1];
   return { s_outer_mm: MAX_R, bo_outer: last ? last.bo : _punchCalcBoOuter(c1,c2,Dc,shape,type,ef,MAX_R+d/2),
-           vu_target, vu_at_outer: last ? last.vu_r : 0,
-           warning: 'Rail extends to 5d without reaching φvₙ/2 — section may need enlarging' };
+           vu_target: last ? last.vu_lim : 0, vu_at_outer: last ? last.vu_r : 0,
+           warning: 'Rail extends to 5d without reaching φvc/2 — section may need enlarging' };
 }
 
 // ── Dynamic rail length: find s_outer where vu,outer = φvc/2 ─────────────────
@@ -2054,14 +2087,20 @@ function updatePunchRailHint() {
   const s  = gv('punch-reinf-s') * PU.lenS;
   if (!d || !fc || !Vu || !s) { hintEl.classList.remove('show'); if (warnEl) warnEl.classList.remove('show'); return; }
 
+  const Mux = gv('punch-mux') * PU.momS;
+  const Muy = gv('punch-muy') * PU.momS;
   const shape = _punchShape, type = _punchType, ef = _punchEdgeFace;
   const lambda = 1.0, phi = 0.75;
 
   if (shape === 'rect' && (!c1 || !c2)) { hintEl.classList.remove('show'); return; }
   if (shape === 'circ' && !Dc)          { hintEl.classList.remove('show'); return; }
 
+  // beta and alphaS for vc formula in interpolation
+  const beta_h   = shape === 'circ' ? 1 : Math.max(c1, c2) / Math.min(c1 || c2, c2 || c1);
+  const alphaS_h = type === 'int' ? 40 : type === 'edge' ? 30 : 20;
+
   // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ───────────
-  const interp = _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef);
+  const interp = _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef, beta_h, alphaS_h, Mux, Muy);
 
   // ── Discrete rows: how many given-spacing rows to cover the target zone ─────
   const rail_len_mm   = interp ? interp.s_outer_mm : 0;
@@ -2939,7 +2978,7 @@ function calcPunchShear() {
 
     // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ──────────
     // s_outer = distance from column face to last stud/stirrup row, where vu,out ≤ φvc/2
-    const _interp = _punchCalcRailLengthViaInterpolation(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace);
+    const _interp = _punchCalcRailLengthViaInterpolation(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace, beta, alphaS, Mux, Muy);
     rail_len_target = _interp ? _interp.s_outer_mm : 1.5*d;
     const vu_target_interp = _interp ? _interp.vu_target : 0;
     const s0_main          = d / 4;   // first row at d/4 from column face
@@ -3049,8 +3088,8 @@ function calcPunchShear() {
       {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
       // ─── Outer critical section ───────────────────────────────────────────
       {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond last stud row — unreinforced zone', val:''},
-      {desc:'&phi;v<sub>c</sub>/2 — target stress (ACI §22.6.6.2)', formula:'v<sub>u,out</sub> must not exceed this at outer CP; vc = 0.33λ√f\'c (perimeter-independent)', val:`${vu_target_interp.toFixed(4)} MPa`},
-      {desc:'Rail zone required (interpolation: v<sub>u</sub>→&phi;v<sub>c</sub>/2)', formula:`Marching r from d/2, outer CP at r+d/2; step = d/10${_interp&&_interp.warning?' ⚠ '+_interp.warning:''}`, val:`${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`},
+      {desc:'&phi;v<sub>c</sub>/2 — interpolation target (ACI §22.6.6.2)', formula:'At outer CP: vc = min(vc1(β),vc2(b<sub>o</sub>),vc3) — both moment &amp; vc vary with r', val:`${vu_target_interp.toFixed(4)} MPa`},
+      {desc:'Rail zone required (stress interpolation)', formula:`vu(r) = direct+moment at each outer CP; step = d/10${_interp&&_interp.warning?' ⚠ '+_interp.warning:''}`, val:`${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`},
       {desc:`${isStud?'Stud rows':'Stirrup sets'} n = ⌈(zone − d/4) / s⌉ + 1`, formula:`First row at d/4; s = ${rs_disp} ${PU.lenU}; zone = target = ${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`, val:`${n_per} ${isStud?'row(s)':'set(s)'}`},
       {desc:'Rail zone provided = d/4 + (n−1)·s', formula:'Actual extent of reinforcement from column face', val:`${(rail_len_provided/PU.lenS).toFixed(1)} ${PU.lenU}${rail_len_provided >= rail_len_target ? ' ✓' : ' ⚠'}`},
       {desc:'b<sub>o,out</sub> — outer CP (octagonal, ACI 421.1R)', formula:boOutFml, val:`${bo_out.toFixed(0)} mm`},
