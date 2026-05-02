@@ -3089,9 +3089,34 @@ function calcPunchShear() {
     }
     if (bo_ineff > 0) bo_out = Math.max(bo_out - bo_ineff*(bo_out/bo_full), bo_out*0.1);
 
+    // ── Av reduction for LARGE openings ──────────────────────────────────────
+    // LARGE opening removes 1 rail (stud) or 1 face (stirrup) from active count
+    const _largeOps = opData.filter(op => op.ao > 0 && !op.is_small);
+    const _nLarge   = _largeOps.length;
+    let Av_1_eff = Av_1;
+    let n_nominal, n_active;
+    if (isStud) {
+      n_nominal = nr_disp;
+      n_active  = Math.max(nr_disp - _nLarge, 0);
+      Av_1_eff  = n_active * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm;
+    } else {
+      n_nominal = nFaces_disp;
+      n_active  = Math.max(nFaces_disp - _nLarge, 0);
+      Av_1_eff  = nr_disp * n_active * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm;
+    }
+    const _avReduced = _nLarge > 0 && n_active < n_nominal;
+    console.log('Opening Av reduction:', {
+      dir: _largeOps.map(o=>o.face).join(',') || 'none',
+      is_small: _largeOps.length === 0,
+      n_nominal, n_active,
+      Av_nominal: Av_1.toFixed(0),
+      Av_effective: Av_1_eff.toFixed(0),
+      reduced: _avReduced
+    });
+
     // ── Inner critical section (b₀,in — d/2 from column face, with vc+vs) ──
     vc = isStud ? 0.25*lambda*Math.sqrt(fc) : 0.17*lambda*Math.sqrt(fc);
-    const vs_in   = rs_mm > 0 ? Av_1 * fyt_r / (bo * rs_mm) : 0;
+    const vs_in   = rs_mm > 0 ? Av_1_eff * fyt_r / (bo * rs_mm) : 0;
     const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
     const vn_cap  = Math.min(vc + vs_in, vn_max);
     const phiVn_in = phi * vn_cap;
@@ -3165,11 +3190,18 @@ function calcPunchShear() {
         {desc:'v<sub>u,in</sub> = V<sub>u</sub> / (b<sub>o,in</sub>·d)', formula:'', val:`${vu.toFixed(3)} MPa`, cls:'hl'},
       ]),
       {desc: isStud
-        ? `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`
-        : `A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nFaces_disp} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`,
-       formula: isStud ? 'All studs at one peripheral line' : `Stirrups cross all ${nFaces_disp} column faces; n_sets = zone÷s = ${n_sets}`, val:`${Av_1.toFixed(0)} mm²`},
+        ? (_avReduced
+            ? `A<sub>v,1</sub> = n<sub>active</sub> × (π/4·d<sub>b</sub>²) = ${n_active} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm² <span style="color:#dc2626">(${nr_disp}−${_nLarge} rails: LARGE opening)</span>`
+            : `A<sub>v,1</sub> = n<sub>r</sub> × (π/4·d<sub>b</sub>²) = ${nr_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`)
+        : (_avReduced
+            ? `A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${n_active} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm² <span style="color:#dc2626">(${nFaces_disp}−${_nLarge} faces: LARGE opening)</span>`
+            : `A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = ${nFaces_disp} × ${nLegs_disp} × ${(Math.PI/4*rdb_mm*rdb_mm).toFixed(0)} mm²`),
+       formula: isStud
+        ? (_avReduced ? `${nr_disp} rails total − ${_nLarge} LARGE opening face = ${n_active} active` : 'All studs at one peripheral line')
+        : (_avReduced ? `${nFaces_disp} faces − ${_nLarge} LARGE opening = ${n_active} active faces; n_sets = ${n_sets}` : `Stirrups cross all ${nFaces_disp} column faces; n_sets = zone÷s = ${n_sets}`),
+       val:`${Av_1_eff.toFixed(0)} mm²`, cls: _avReduced ? 'hl' : ''},
       {desc:`v<sub>c,in</sub> ${isStud?'(headed studs §22.6.6.1)':'(closed stirrups §22.6.6.2)'}`, formula:isStud?'0.25λ√f\'c':'0.17λ√f\'c', val:`${vc.toFixed(4)} MPa`},
-      {desc:'v<sub>s</sub> = A<sub>v,1</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·s)', formula:'ACI 318-25 §22.6.6 (s = stud spacing)', val:`${vs_in.toFixed(4)} MPa`},
+      {desc:'v<sub>s</sub> = A<sub>v,1,eff</sub>·f<sub>yt</sub> / (b<sub>o,in</sub>·s)', formula:`ACI 318-25 §22.6.6${_avReduced?' — A<sub>v,1</sub> reduced: LARGE opening on affected face':''}`, val:`${vs_in.toFixed(4)} MPa`},
       {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
       {desc:'φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn_in.toFixed(4)} MPa`},
       {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
