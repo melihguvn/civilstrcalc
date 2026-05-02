@@ -2102,12 +2102,14 @@ function updatePunchRailHint() {
   // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ───────────
   const interp = _punchCalcRailLengthViaInterpolation(Vu, d, fc, lambda, phi, c1, c2, Dc, shape, type, ef, beta_h, alphaS_h, Mux, Muy);
 
-  // ── Discrete rows: how many given-spacing rows to cover the target zone ─────
-  const rail_len_mm   = interp ? interp.s_outer_mm : 0;
-  const rail_len_disp = Math.round(rail_len_mm / PU.lenS);
-  const s0_hint = d / 4;
-  const n_needed = interp
-    ? Math.max(1, Math.ceil(Math.max(0, interp.s_outer_mm - s0_hint) / s) + 1)
+  // ── Apply 2d practical minimum ───────────────────────────────────────────────
+  const rail_len_calc_h = interp ? interp.s_outer_mm : 0;
+  const override2d_h    = rail_len_calc_h > 0 && rail_len_calc_h < 2*d;
+  const rail_len_mm     = override2d_h ? 2*d : rail_len_calc_h;
+  const rail_len_disp   = Math.round(rail_len_mm / PU.lenS);
+  const s0_hint  = d / 4;
+  const n_needed = rail_len_mm > 0
+    ? Math.max(1, Math.ceil(Math.max(0, rail_len_mm - s0_hint) / s) + 1)
     : 1;
   const rail_provided_mm   = s0_hint + (n_needed - 1) * s;
   const rail_provided_disp = Math.round(rail_provided_mm / PU.lenS);
@@ -2117,11 +2119,14 @@ function updatePunchRailHint() {
 
   // Show interpolation target info in the hint text
   if (interp) {
-    const vt_disp    = interp.vu_target.toFixed(2);
+    const vt_disp = interp.vu_target.toFixed(2);
     const _isStud = _punchReinfType !== 'stirrup';
-    const provOK = rail_provided_mm >= rail_len_mm;
-    hintEl.innerHTML = `Target zone: <strong>${rail_len_disp}</strong> ${PU.lenU} (v<sub>u</sub>≤&phi;v<sub>c</sub>/2) &nbsp;|&nbsp; <strong>${n_needed}</strong> ${_isStud ? 'row(s)' : 'set(s)'} @ ${Math.round(s/PU.lenS)} ${PU.lenU} → provides <strong>${rail_provided_disp}</strong> ${PU.lenU} ${provOK ? '&#10003;' : '&#9888;'}`
-      + `<br><span style="font-size:.69rem;color:var(--text-dim)">Interpolated via shear stress (ACI §22.6.6.2): &phi;v<sub>c</sub>/2 = ${vt_disp} MPa${interp.warning ? ' — &#9888; '+interp.warning : ''}. Spacing → n only.</span>`;
+    const provOK  = rail_provided_mm >= rail_len_mm;
+    const calcPart = override2d_h
+      ? `Calc: ${Math.round(rail_len_calc_h/PU.lenS)} ${PU.lenU} (${(rail_len_calc_h/d).toFixed(2)}d) → <b>2d min: ${rail_len_disp} ${PU.lenU}</b>`
+      : `<strong>${rail_len_disp}</strong> ${PU.lenU} (${(rail_len_mm/d).toFixed(2)}d)`;
+    hintEl.innerHTML = `Zone: ${calcPart} &nbsp;|&nbsp; <strong>${n_needed}</strong> ${_isStud ? 'row(s)' : 'set(s)'} @ ${Math.round(s/PU.lenS)} ${PU.lenU} → provides <strong>${rail_provided_disp}</strong> ${PU.lenU} ${provOK ? '&#10003;' : '&#9888;'}`
+      + `<br><span style="font-size:.69rem;color:var(--text-dim)">&phi;v<sub>c</sub>/2 = ${vt_disp} MPa${interp.warning ? ' — &#9888; '+interp.warning : ''}. Spacing → n only; zone is spacing-independent.</span>`;
   }
   hintEl.classList.add('show');
 
@@ -2750,18 +2755,19 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   }
 
   // ── Rail length dimension — E face (if not free, studs present) ──────────────
+  // Shows the REQUIRED zone (rail_len_target_mm) — spacing-independent
   if (nr_disp > 0 && !freeFaces.includes('E') && studPosPX.length > 0) {
-    const _rlPX = studPosPX[studPosPX.length - 1];  // last stud px from col face
-    const _rlMM = Math.round(_rlPX / S);             // mm from col face
+    const _zoneMM = rail_len_target_mm > 0 ? rail_len_target_mm : (studPosPX[studPosPX.length-1] / S);
+    const _zonePX = _zoneMM * S;
     const _dimY = Math.min(cy + chh + 34, drawH - 12);
     const _rx1  = cx + chw;
-    const _rx2  = cx + chw + _rlPX;
+    const _rx2  = cx + chw + _zonePX;
     s += `<line x1="${f(_rx1)}" y1="${f(cy+chh+2)}" x2="${f(_rx1)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
     s += `<line x1="${f(_rx2)}" y1="${f(cy+chh+2)}" x2="${f(_rx2)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
     s += `<line x1="${f(_rx1)}" y1="${f(_dimY)}" x2="${f(_rx2)}" y2="${f(_dimY)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-    const _rlLabel = `Rail: ${_rlMM} mm`;
+    const _rlLabel = `Zone: ${Math.round(_zoneMM)} mm`;
     const _rlLblX = (_rx1 + _rx2) / 2;
-    s += `<rect x="${f(_rlLblX-28)}" y="${f(_dimY-14)}" width="56" height="11" fill="white" opacity="0.9" rx="2"/>`;
+    s += `<rect x="${f(_rlLblX-30)}" y="${f(_dimY-14)}" width="60" height="11" fill="white" opacity="0.9" rx="2"/>`;
     s += `<text x="${f(_rlLblX)}" y="${f(_dimY-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLabel}</text>`;
   }
 
@@ -2979,7 +2985,10 @@ function calcPunchShear() {
     // ── Rail length via shear stress interpolation per ACI §22.6.6.2 ──────────
     // s_outer = distance from column face to last stud/stirrup row, where vu,out ≤ φvc/2
     const _interp = _punchCalcRailLengthViaInterpolation(Vu_N, d, fc, lambda, phi, c1, c2, Dc, shape, type, _punchEdgeFace, beta, alphaS, Mux, Muy);
-    rail_len_target = _interp ? _interp.s_outer_mm : 1.5*d;
+    const rail_len_calc   = _interp ? _interp.s_outer_mm : 1.5*d;
+    const rail_len_2d_min = 2 * d;
+    const override2d      = rail_len_calc < rail_len_2d_min;
+    rail_len_target       = override2d ? rail_len_2d_min : rail_len_calc;
     const vu_target_interp = _interp ? _interp.vu_target : 0;
     const s0_main          = d / 4;   // first row at d/4 from column face
     // Spacing → number of rows (rail_len_target is spacing-independent)
@@ -3086,12 +3095,17 @@ function calcPunchShear() {
       {desc:'v<sub>n</sub> = v<sub>c,in</sub> + v<sub>s</sub>', formula:`v<sub>n,max</sub> = ${vn_max.toFixed(3)} MPa${vc+vs_in>vn_max?' → cap applied':''}`, val:`${vn_cap.toFixed(4)} MPa`, cls:'hl'},
       {desc:'φv<sub>n</sub>', formula:'φ = 0.75', val:`${phiVn_in.toFixed(4)} MPa`},
       {desc:'Inner check: v<sub>u,in</sub> ≤ φv<sub>n</sub>', formula:'', val:`${vu.toFixed(3)} ≤ ${phiVn_in.toFixed(3)} MPa`, cls:isOK_in?'ok':'err', check:isOK_in?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
-      // ─── Outer critical section ───────────────────────────────────────────
-      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond last stud row — unreinforced zone', val:''},
-      {desc:'&phi;v<sub>c</sub>/2 — interpolation target (ACI §22.6.6.2)', formula:'At outer CP: vc = min(vc1(β),vc2(b<sub>o</sub>),vc3) — both moment &amp; vc vary with r', val:`${vu_target_interp.toFixed(4)} MPa`},
-      {desc:'Rail zone required (stress interpolation)', formula:`vu(r) = direct+moment at each outer CP; step = d/10${_interp&&_interp.warning?' ⚠ '+_interp.warning:''}`, val:`${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`},
-      {desc:`${isStud?'Stud rows':'Stirrup sets'} n = ⌈(zone − d/4) / s⌉ + 1`, formula:`First row at d/4; s = ${rs_disp} ${PU.lenU}; zone = target = ${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}`, val:`${n_per} ${isStud?'row(s)':'set(s)'}`},
+      // ─── Reinforcement zone determination ────────────────────────────────────
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">REINFORCEMENT ZONE — ACI §22.6.6.2</b>', formula:'Extend rails to where v<sub>u,outer</sub> ≤ φv<sub>c</sub>/2 (stress interpolation, spacing-independent)', val:''},
+      {desc:'Target stress φv<sub>c</sub>/2', formula:'v<sub>c</sub> = min(vc1(β), vc2(b<sub>o</sub>), vc3) at outer CP; includes moment transfer', val:`${vu_target_interp.toFixed(4)} MPa`},
+      {desc:'Interpolation result: r<sub>outer</sub> from col. face', formula:`Step = d/10 = ${(d/10/PU.lenS).toFixed(1)} ${PU.lenU}; gap-fn crossing${_interp&&_interp.warning?' — ⚠ '+_interp.warning:''}`, val:`${(rail_len_calc/PU.lenS).toFixed(1)} ${PU.lenU} (${(rail_len_calc/d).toFixed(2)}d)`},
+      ...(override2d ? [{desc:'ℹ Practical minimum applied (2d)', formula:`Calc ${(rail_len_calc/PU.lenS).toFixed(1)} ${PU.lenU} = ${(rail_len_calc/d).toFixed(2)}d &lt; 2d minimum — engineering practice for constructability &amp; safety margin`, val:`→ ${(rail_len_2d_min/PU.lenS).toFixed(0)} ${PU.lenU} (2d)`, cls:'warn', check:{t:'warn',l:'2d min'}}] : []),
+      {desc:'Rail length applied', formula: override2d ? '2d practical minimum governs' : 'Stress interpolation governs', val:`${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU} (${(rail_len_target/d).toFixed(2)}d)`},
+      // ─── Row count & provided ────────────────────────────────────────────────
+      {desc:`${isStud?'Stud rows':'Stirrup sets'} n = ⌈(L<sub>rail</sub> − d/4) / s⌉ + 1`, formula:`L<sub>rail</sub> = ${(rail_len_target/PU.lenS).toFixed(1)} ${PU.lenU}; d/4 = ${(d/4/PU.lenS).toFixed(1)} ${PU.lenU}; s = ${rs_disp} ${PU.lenU}`, val:`${n_per} ${isStud?'row(s)':'set(s)'}`},
       {desc:'Rail zone provided = d/4 + (n−1)·s', formula:'Actual extent of reinforcement from column face', val:`${(rail_len_provided/PU.lenS).toFixed(1)} ${PU.lenU}${rail_len_provided >= rail_len_target ? ' ✓' : ' ⚠'}`},
+      // ─── Outer critical section ───────────────────────────────────────────
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">OUTER CRITICAL SECTION — b<sub>o,out</sub></b>', formula:'d/2 beyond applied rail length — unreinforced zone', val:''},
       {desc:'b<sub>o,out</sub> — outer CP (octagonal, ACI 421.1R)', formula:boOutFml, val:`${bo_out.toFixed(0)} mm`},
       {desc:'v<sub>u,out</sub> = V<sub>u</sub> / (b<sub>o,out</sub>·d)', formula:'', val:`${vu_out.toFixed(3)} MPa`, cls:'hl'},
       {desc:'φv<sub>c,out</sub> — unreinforced v<sub>c</sub> (§22.6.5.2) at b<sub>o,out</sub>', formula:'', val:`${phi_vc_out.toFixed(4)} MPa`},
