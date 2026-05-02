@@ -3036,13 +3036,20 @@ function calcPunchShear() {
     op.within4h = op.ao > 0;  // flush → always within 4h (so = 0)
     if (op.within4h) {
       const sl = _faceSideLen[op.face];
-      op.bo_ineff = Math.min(op.ao, sl - _faceIneff[op.face]);
-      _faceIneff[op.face] += op.bo_ineff;
+      // SMALL opening: studs placed on both sides → perimeter continuity maintained → no bo reduction
+      // LARGE opening: no reinf on face → perimeter segment lost → bo reduced by ao
+      if (!op.is_small) {
+        op.bo_ineff = Math.min(op.ao, sl - _faceIneff[op.face]);
+        _faceIneff[op.face] += op.bo_ineff;
+      } else {
+        op.bo_ineff = 0;
+      }
     } else { op.bo_ineff = 0; }
     opData.push(op);
   }
   const bo_ineff = Object.values(_faceIneff).reduce((a,b)=>a+b,0);
   let bo = Math.max(bo_full - bo_ineff, bo_full * 0.1);
+  console.log('bo calc:', { bo_full: bo_full.toFixed(0), bo_ineff: bo_ineff.toFixed(0), bo_eff: bo.toFixed(0), openings: opData.map(o=>({face:o.face,ao:o.ao_mm?.toFixed(0),is_small:o.is_small,bo_ineff:o.bo_ineff?.toFixed(0)})) });
   const openingWithin4h = opData.some(op => op.within4h && op.bo_ineff > 0);
   const Ac = bo * d;
   const vu_dir = Vu_N / Ac;
@@ -3117,6 +3124,7 @@ function calcPunchShear() {
     // ── Inner critical section (b₀,in — d/2 from column face, with vc+vs) ──
     vc = isStud ? 0.25*lambda*Math.sqrt(fc) : 0.17*lambda*Math.sqrt(fc);
     const vs_in   = rs_mm > 0 ? Av_1_eff * fyt_r / (bo * rs_mm) : 0;
+    console.log('Vs calc:', { Av_1_eff: Av_1_eff.toFixed(0), bo: bo.toFixed(0), rs_mm: rs_mm.toFixed(0), vs_in: vs_in.toFixed(4), note: _nLarge > 0 ? 'LARGE opening: Av reduced + bo reduced' : opData.some(o=>o.is_small&&o.ao>0) ? 'SMALL opening: Av unchanged, bo unchanged' : 'no opening' });
     const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
     const vn_cap  = Math.min(vc + vs_in, vn_max);
     const phiVn_in = phi * vn_cap;
