@@ -2618,6 +2618,35 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
           _af.forEach((fc,i) => fc.n = counts[i]);
 
           for (const fc of _af) {
+            // Opening on this face?
+            const _fOp = opData.find(op => op.face === fc.id && op.ao > 0);
+            if (_fOp && !_fOp.is_small) {
+              console.log(`[PunchSVG] Stud: LARGE opening on ${fc.id} — skip all rails`);
+              continue;
+            }
+            if (_fOp && _fOp.is_small) {
+              // SMALL opening: 1 stud rail each side of opening
+              const _fHalfPx = (fc.id==='N'||fc.id==='S') ? chw : chh;
+              const _aoHalfPx = _fOp.ao_mm * S / 2;
+              const _rem = Math.max(_fHalfPx - _aoHalfPx, 4);
+              const _lat = _aoHalfPx + _rem / 2;
+              console.log(`[PunchSVG] Stud: SMALL opening on ${fc.id} — rails at ±${(_lat/S).toFixed(0)} mm`);
+              for (const lat of [-_lat, +_lat]) {
+                let rx, ry, dx, dy;
+                if      (fc.id==='N') { rx=cx+lat; ry=cy-chh; dx=0;  dy=-1; }
+                else if (fc.id==='E') { rx=cx+chw; ry=cy+lat; dx=1;  dy=0;  }
+                else if (fc.id==='S') { rx=cx+lat; ry=cy+chh; dx=0;  dy=1;  }
+                else                  { rx=cx-chw; ry=cy+lat; dx=-1; dy=0;  }
+                const _rpx=-dy*_dlg, _rpy=dx*_dlg;
+                s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                for (const sp of studPosPX) {
+                  const sx=rx+dx*sp, sy=ry+dy*sp;
+                  if (!_studBlocked(sx,sy)) _drawReinf(sx,sy);
+                }
+              }
+              continue;
+            }
             for (let i = 0; i < fc.n; i++) {
               const t = (i + 0.5) / fc.n;
               let rx, ry, dx, dy;
@@ -2657,6 +2686,50 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
 
             for (const fc of _af2) {
               if (fc.n < 1) continue;
+              // Opening on this face?
+              const _fOp2 = opData.find(op => op.face === fc.id && op.ao > 0);
+              if (_fOp2 && !_fOp2.is_small) {
+                console.log(`[PunchSVG] Stirrup: LARGE opening on ${fc.id} — skip all stirrups`);
+                continue;
+              }
+              if (_fOp2 && _fOp2.is_small) {
+                // SMALL opening: 2 stirrups each side (4 total), flanking the opening
+                const _fHalfPx = (fc.id==='N'||fc.id==='S') ? chw : chh;
+                const _aoHalfPx = _fOp2.ao_mm * S / 2;
+                const _rem = Math.max(_fHalfPx - _aoHalfPx, 6);
+                const _step = _rem / 3;
+                const _lats = [
+                  -(_aoHalfPx + 2*_step), -(_aoHalfPx + _step),
+                  +(_aoHalfPx + _step),   +(_aoHalfPx + 2*_step)
+                ];
+                console.log(`[PunchSVG] Stirrup: SMALL opening on ${fc.id} — legs at ${_lats.map(l=>(l/S).toFixed(0)).join(', ')} mm`);
+                const _slegPos = [];
+                for (const lat of _lats) {
+                  let rx, ry, dx, dy;
+                  if      (fc.id==='N') { rx=cx+lat; ry=cy-chh; dx=0;  dy=-1; }
+                  else if (fc.id==='E') { rx=cx+chw; ry=cy+lat; dx=1;  dy=0;  }
+                  else if (fc.id==='S') { rx=cx+lat; ry=cy+chh; dx=0;  dy=1;  }
+                  else                  { rx=cx-chw; ry=cy+lat; dx=-1; dy=0;  }
+                  _slegPos.push({rx,ry,dx,dy});
+                  const _rpx=-dy*_dlg, _rpy=dx*_dlg;
+                  s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*_lastSP+_rpx)}" y2="${f(ry+dy*_lastSP+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                  s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*_lastSP-_rpx)}" y2="${f(ry+dy*_lastSP-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                }
+                // Transverse bars: left pair + right pair at each stirrup row
+                for (const sp of studPosPX) {
+                  for (const [pA, pB] of [[_slegPos[0],_slegPos[1]], [_slegPos[2],_slegPos[3]]]) {
+                    const bx1=pA.rx+pA.dx*sp, by1=pA.ry+pA.dy*sp;
+                    const bx2=pB.rx+pB.dx*sp, by2=pB.ry+pB.dy*sp;
+                    const blen=Math.hypot(bx2-bx1,by2-by1);
+                    if (blen<0.5) continue;
+                    const bdx=(bx2-bx1)/blen, bdy=(by2-by1)/blen;
+                    const _bpx=-bdy*_dlg, _bpy=bdx*_dlg;
+                    s += `<line x1="${f(bx1-bdx*_ext+_bpx)}" y1="${f(by1-bdy*_ext+_bpy)}" x2="${f(bx2+bdx*_ext+_bpx)}" y2="${f(by2+bdy*_ext+_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                    s += `<line x1="${f(bx1-bdx*_ext-_bpx)}" y1="${f(by1-bdy*_ext-_bpy)}" x2="${f(bx2+bdx*_ext-_bpx)}" y2="${f(by2+bdy*_ext-_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+                  }
+                }
+                continue;
+              }
               const legPos = [];
               for (let i = 0; i < fc.n; i++) {
                 const t = (i + 0.5) / fc.n;
@@ -2822,8 +2895,12 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     }
   }
   if (opData.length > 0) {
-    s += `<rect x="${lx}" y="${ly}" width="11" height="9" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/><text x="${lx+14}" y="${ly+8}" font-size="9" fill="#dc2626">Opening</text>`;
-    lx += 65;
+    s += `<rect x="${lx}" y="${ly}" width="11" height="9" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/>`;
+    const _hasLarge = opData.some(op => op.ao > 0 && !op.is_small);
+    const _opLbl  = _hasLarge ? 'Opening ≥0.6c: no reinf.' : 'Opening <0.6c: reinf. both sides';
+    const _opClr  = _hasLarge ? '#dc2626' : '#16a34a';
+    s += `<text x="${lx+14}" y="${ly+8}" font-size="9" fill="${_opClr}">${_opLbl}</text>`;
+    lx += _hasLarge ? 145 : 150;
   }
   if (Object.values(ineffSegs).some(v=>v>0))
     s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#ef4444">b₀ ineff.</text>`;
