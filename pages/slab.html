@@ -819,8 +819,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </label>
       </div>
       <div id="punch-op1-inputs" style="display:none">
+        <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
+          Centered on column face, flush with column edge (ACI §22.6.4.3)
+        </div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
-          <label style="font-size:.68rem;color:var(--text-dim);min-width:60px;">Col. face:</label>
+          <label style="font-size:.76rem;min-width:60px;">Direction:</label>
           <div class="unit-btns">
             <button class="unit-btn" id="punch-op1-N" onclick="setPunchOpFace(1,'N',this)">N</button>
             <button class="unit-btn active" id="punch-op1-E" onclick="setPunchOpFace(1,'E',this)">E</button>
@@ -828,53 +831,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <button class="unit-btn" id="punch-op1-W" onclick="setPunchOpFace(1,'W',this)">W</button>
           </div>
         </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label>Width a<sub>o,1</sub> <span class="lu" id="lu-punch-ao1">[mm]</span></label>
-            <div class="iw"><input type="number" id="punch-ao1" value="300" step="10" min="0"><span class="us" id="u-punch-ao1">mm</span></div>
-          </div>
-          <div class="form-group">
-            <label>Depth b<sub>o,1</sub> <span class="lu" id="lu-punch-boop1">[mm]</span></label>
-            <div class="iw"><input type="number" id="punch-boop1" value="300" step="10" min="0"><span class="us" id="u-punch-boop1">mm</span></div>
-          </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>Opening size a<sub>o</sub> <span class="lu" id="lu-punch-ao1">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-ao1" value="200" step="10" min="0" oninput="updatePunchOpStatus()"><span class="us" id="u-punch-ao1">mm</span></div>
         </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>Col. face → near edge s<sub>o,1</sub> <span class="lu" id="lu-punch-so1">[mm]</span></label>
-          <div class="iw"><input type="number" id="punch-so1" value="500" step="10" min="0"><span class="us" id="u-punch-so1">mm</span></div>
-          <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">ACI §22.6.4.3: openings within 4h reduce b<sub>o</sub></div>
-        </div>
-        <!-- Opening 2 sub-header -->
-        <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);border-top:1px dashed var(--border);margin:8px 0 8px;padding-top:8px;">
-          Opening 2
-          <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
-            <input type="checkbox" id="punch-has-op2" onchange="setPunchHasOp(2,this.checked)" style="cursor:pointer;"> Add
-          </label>
-        </div>
-        <div id="punch-op2-inputs" style="display:none">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
-            <label style="font-size:.68rem;color:var(--text-dim);min-width:60px;">Col. face:</label>
-            <div class="unit-btns">
-              <button class="unit-btn" id="punch-op2-N" onclick="setPunchOpFace(2,'N',this)">N</button>
-              <button class="unit-btn" id="punch-op2-E" onclick="setPunchOpFace(2,'E',this)">E</button>
-              <button class="unit-btn" id="punch-op2-S" onclick="setPunchOpFace(2,'S',this)">S</button>
-              <button class="unit-btn active" id="punch-op2-W" onclick="setPunchOpFace(2,'W',this)">W</button>
-            </div>
-          </div>
-          <div class="form-row-2">
-            <div class="form-group">
-              <label>Width a<sub>o,2</sub> <span class="lu" id="lu-punch-ao2">[mm]</span></label>
-              <div class="iw"><input type="number" id="punch-ao2" value="300" step="10" min="0"><span class="us" id="u-punch-ao2">mm</span></div>
-            </div>
-            <div class="form-group">
-              <label>Depth b<sub>o,2</sub> <span class="lu" id="lu-punch-boop2">[mm]</span></label>
-              <div class="iw"><input type="number" id="punch-boop2" value="300" step="10" min="0"><span class="us" id="u-punch-boop2">mm</span></div>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:10px;">
-            <label>Col. face → near edge s<sub>o,2</sub> <span class="lu" id="lu-punch-so2">[mm]</span></label>
-            <div class="iw"><input type="number" id="punch-so2" value="500" step="10" min="0"><span class="us" id="u-punch-so2">mm</span></div>
-          </div>
-        </div>
+        <div id="punch-op-status" style="font-size:.72rem;background:var(--bg-alt);border-radius:5px;padding:8px 10px;margin-top:4px;line-height:1.8;display:none;"></div>
       </div>
 
       <button class="btn-calc" onclick="calcPunchShear()">&#9654; Calculate</button>
@@ -2210,15 +2171,11 @@ function setPunchReinfType(type, btn) {
   if (sHint)    sHint.textContent       = isStud ? 'ACI §22.6.7.1: s ≤ 0.75d' : 'ACI §22.6.7.2: s ≤ 0.5d';
   updatePunchAv();
 }
-const _punchOpFace = { 1: 'E', 2: 'W' };
+const _punchOpFace = { 1: 'E' };
 function setPunchHasOp(num, checked) {
   const el = document.getElementById('punch-op'+num+'-inputs');
   if (el) el.style.display = checked ? '' : 'none';
-  if (num === 1 && !checked) {
-    // Also uncheck/hide op2 when op1 is disabled
-    const chk2 = document.getElementById('punch-has-op2');
-    if (chk2) { chk2.checked = false; setPunchHasOp(2, false); }
-  }
+  updatePunchOpStatus();
 }
 function setPunchOpFace(num, face, btn) {
   _punchOpFace[num] = face;
@@ -2226,6 +2183,37 @@ function setPunchOpFace(num, face, btn) {
     const b = document.getElementById('punch-op'+num+'-'+f);
     if (b) b.classList.toggle('active', f === face);
   });
+  updatePunchOpStatus();
+}
+function updatePunchOpStatus() {
+  const el = document.getElementById('punch-op-status');
+  if (!el) return;
+  const checked = document.getElementById('punch-has-op1')?.checked;
+  if (!checked) { el.style.display = 'none'; return; }
+  const PU = PUNCH_UNITS[_punchUnit];
+  const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const face    = _punchOpFace[1] || 'E';
+  const ao_raw  = gv('punch-ao1');
+  const ao      = ao_raw * PU.lenS;
+  const c1      = gv('punch-c1') * PU.lenS;
+  const c2      = gv('punch-c2') * PU.lenS;
+  const c_aff   = (face === 'N' || face === 'S') ? c2 : c1;
+  const thr     = 0.6 * c_aff;
+  const is_small = ao < thr;
+  const clr    = is_small ? '#16a34a' : '#dc2626';
+  const label  = is_small ? 'SMALL' : 'LARGE';
+  const reinf  = is_small ? 'Reinf. on both adjacent sides ✓' : 'No reinf. on opening face ✗';
+  el.innerHTML = `
+    <div><b>Direction:</b> ${face} &nbsp;&nbsp; <b>a<sub>o</sub>:</b> ${ao_raw.toFixed(0)} ${PU.lenU}</div>
+    <div><b>c<sub>affected</sub>:</b> ${(c_aff/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;&nbsp; <b>Threshold:</b> 0.6 × ${(c_aff/PU.lenS).toFixed(0)} = ${(thr/PU.lenS).toFixed(1)} ${PU.lenU}</div>
+    <div><b>Classification:</b> <span style="color:${clr};font-weight:700">${label}</span> &nbsp;(a<sub>o</sub> ${is_small ? '<' : '≥'} 0.6c)</div>
+    <div><b>Reinf. decision:</b> <span style="color:${clr}">${reinf}</span></div>
+    <div><b>b<sub>o</sub> reduction:</b> −${(ao/PU.lenS).toFixed(0)} ${PU.lenU} on ${face} face</div>
+  `;
+  el.style.display = '';
+}
+function shouldPlaceReinfOnSide(side, op_dir, is_small) {
+  return !(side === op_dir && !is_small);
 }
 
 function setPunchCode(code, btn) {
@@ -2476,42 +2464,46 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     }
   }
 
-  // Openings
+  // Openings — flush with column face, centered
   for (const op of opData) {
-    const ao_px = Math.max(op.ao_mm*S, 8), boop_px = Math.max(op.boop_mm*S, 10);
+    const ao_px   = Math.max(op.ao_mm * S, 8);
+    const dep_px  = Math.max(ao_px * 0.35, 10);  // visual depth into slab
     let ox, oy, ow, oh;
-    if (op.face==='E')      { ox=cx+chw+op.so_mm*S; oy=cy-ao_px/2; ow=boop_px; oh=ao_px; }
-    else if (op.face==='W') { ox=cx-chw-op.so_mm*S-boop_px; oy=cy-ao_px/2; ow=boop_px; oh=ao_px; }
-    else if (op.face==='N') { ox=cx-ao_px/2; oy=cy-chh-op.so_mm*S-boop_px; ow=ao_px; oh=boop_px; }
-    else                    { ox=cx-ao_px/2; oy=cy+chh+op.so_mm*S; ow=ao_px; oh=boop_px; }
+    if (op.face==='E')      { ox=cx+chw;          oy=cy-ao_px/2; ow=dep_px; oh=ao_px; }
+    else if (op.face==='W') { ox=cx-chw-dep_px;   oy=cy-ao_px/2; ow=dep_px; oh=ao_px; }
+    else if (op.face==='N') { ox=cx-ao_px/2; oy=cy-chh-dep_px;   ow=ao_px;  oh=dep_px; }
+    else                    { ox=cx-ao_px/2; oy=cy+chh;           ow=ao_px;  oh=dep_px; }
     s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="white" stroke="#ef4444" stroke-width="1.5" rx="1"/>`;
     s += `<rect x="${f(ox)}" y="${f(oy)}" width="${f(ow)}" height="${f(oh)}" fill="url(#ph-op)" opacity="0.7" rx="1"/>`;
-    s += `<text x="${f(ox+ow/2)}" y="${f(oy+oh/2)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="#b91c1c">${op.num}</text>`;
-    const isH = op.face==='E'||op.face==='W';
-    const facePx = isH ? cx+(op.face==='E'?chw:-chw) : cy+(op.face==='S'?chh:-chh);
-    if (isH) {
-      const nearEdge = op.face==='E' ? ox : ox+ow;
-      const ay = Math.min(cy+chh+14, drawH-16);
-      s += `<line x1="${f(facePx)}" y1="${f(ay)}" x2="${f(nearEdge)}" y2="${f(ay)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-      s += `<text x="${f((facePx+nearEdge)/2)}" y="${f(ay-4)}" text-anchor="middle" font-size="8" fill="#94a3b8">s₀</text>`;
-    } else {
-      const nearEdge = op.face==='N' ? oy+oh : oy;
-      const ax = Math.min(cx+chw+14, W-16);
-      s += `<line x1="${f(ax)}" y1="${f(facePx)}" x2="${f(ax)}" y2="${f(nearEdge)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
-      s += `<text x="${f(ax+3)}" y="${f((facePx+nearEdge)/2)}" font-size="8" fill="#94a3b8" dominant-baseline="middle">s₀</text>`;
+    s += `<text x="${f(ox+ow/2)}" y="${f(oy+oh/2)}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#b91c1c">op</text>`;
+    // LARGE opening: red "No reinf." label on that column face
+    if (!op.is_small) {
+      const isH = op.face==='E'||op.face==='W';
+      if (isH) {
+        const fx = cx + (op.face==='E' ? chw : -chw);
+        const fy1 = cy - chh, fy2 = cy + chh;
+        s += `<line x1="${f(fx)}" y1="${f(fy1)}" x2="${f(fx)}" y2="${f(fy2)}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4,3"/>`;
+        s += `<text x="${f(fx + (op.face==='E'?4:-4))}" y="${f(cy-chh-6)}" text-anchor="${op.face==='E'?'start':'end'}" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
+      } else {
+        const fy = cy + (op.face==='S' ? chh : -chh);
+        const fx1 = cx - chw, fx2 = cx + chw;
+        s += `<line x1="${f(fx1)}" y1="${f(fy)}" x2="${f(fx2)}" y2="${f(fy)}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4,3"/>`;
+        s += `<text x="${f(cx)}" y="${f(fy + (op.face==='S'?10:-4))}" text-anchor="middle" font-size="8" font-weight="700" fill="#dc2626">No reinf.</text>`;
+      }
     }
   }
 
-  // Pre-collect opening bounding boxes for stud exclusion
+  // Pre-collect opening bounding boxes for stud exclusion (flush with column face)
   const _opRects = [];
   for (const op of opData) {
-    const ao_px2 = Math.max(op.ao_mm*S, 8), boop_px2 = Math.max(op.boop_mm*S, 10);
+    const ao_px2  = Math.max(op.ao_mm * S, 8);
+    const dep_px2 = Math.max(ao_px2 * 0.35, 10);
     let ox2, oy2, ow2, oh2;
-    if (op.face==='E')      { ox2=cx+chw+op.so_mm*S;          oy2=cy-ao_px2/2;   ow2=boop_px2; oh2=ao_px2; }
-    else if (op.face==='W') { ox2=cx-chw-op.so_mm*S-boop_px2; oy2=cy-ao_px2/2;   ow2=boop_px2; oh2=ao_px2; }
-    else if (op.face==='N') { ox2=cx-ao_px2/2; oy2=cy-chh-op.so_mm*S-boop_px2; ow2=ao_px2; oh2=boop_px2; }
-    else                    { ox2=cx-ao_px2/2; oy2=cy+chh+op.so_mm*S;           ow2=ao_px2; oh2=boop_px2; }
-    _opRects.push({x1:ox2-3, y1:oy2-3, x2:ox2+ow2+3, y2:oy2+oh2+3});
+    if (op.face==='E')      { ox2=cx+chw;          oy2=cy-ao_px2/2; ow2=dep_px2; oh2=ao_px2; }
+    else if (op.face==='W') { ox2=cx-chw-dep_px2;  oy2=cy-ao_px2/2; ow2=dep_px2; oh2=ao_px2; }
+    else if (op.face==='N') { ox2=cx-ao_px2/2; oy2=cy-chh-dep_px2;  ow2=ao_px2;  oh2=dep_px2; }
+    else                    { ox2=cx-ao_px2/2; oy2=cy+chh;          ow2=ao_px2;  oh2=dep_px2; }
+    _opRects.push({ x1:ox2-3, y1:oy2-3, x2:ox2+ow2+3, y2:oy2+oh2+3 });
   }
   const _studBlocked = (sx, sy) => _opRects.some(r => sx>=r.x1 && sx<=r.x2 && sy>=r.y1 && sy<=r.y2);
 
@@ -2899,19 +2891,21 @@ function calcPunchShear() {
   const Av_1      = hasReinf ? nr_disp * nFaces_disp * nLegs_disp * Math.PI / 4 * rdb_mm * rdb_mm : 0;
   const Av_disp   = hasReinf ? nr_disp * nFaces_disp * nLegs_disp * Math.PI / 4 * rdb_disp * rdb_disp : 0;
 
-  // Opening inputs — two openings
-  const hasOp1 = document.getElementById('punch-has-op1').checked;
-  const hasOp2 = hasOp1 && document.getElementById('punch-has-op2')?.checked;
-  const hasOpening = hasOp1;  // keep for compat
+  // Opening inputs — single opening, flush with column face, centered
+  const hasOp1    = document.getElementById('punch-has-op1').checked;
+  const hasOpening = hasOp1;
   const _opRaw = [];
-  if (hasOp1) _opRaw.push({ num:1, face: _punchOpFace[1]||'E',
-    ao: gv('punch-ao1')*PU.lenS, boop: gv('punch-boop1')*PU.lenS, so: gv('punch-so1')*PU.lenS,
-    ao_d: gv('punch-ao1'), boop_d: gv('punch-boop1'), so_d: gv('punch-so1'),
-    ao_mm: gv('punch-ao1')*PU.lenS, boop_mm: gv('punch-boop1')*PU.lenS, so_mm: gv('punch-so1')*PU.lenS });
-  if (hasOp2) _opRaw.push({ num:2, face: _punchOpFace[2]||'W',
-    ao: gv('punch-ao2')*PU.lenS, boop: gv('punch-boop2')*PU.lenS, so: gv('punch-so2')*PU.lenS,
-    ao_d: gv('punch-ao2'), boop_d: gv('punch-boop2'), so_d: gv('punch-so2'),
-    ao_mm: gv('punch-ao2')*PU.lenS, boop_mm: gv('punch-boop2')*PU.lenS, so_mm: gv('punch-so2')*PU.lenS });
+  if (hasOp1) {
+    const _face1  = _punchOpFace[1] || 'E';
+    const _ao1    = gv('punch-ao1') * PU.lenS;
+    const _caff1  = (_face1 === 'N' || _face1 === 'S') ? c2 : c1;
+    const _thr1   = 0.6 * _caff1;
+    _opRaw.push({
+      num: 1, face: _face1,
+      ao: _ao1, ao_d: gv('punch-ao1'), ao_mm: _ao1,
+      c_affected: _caff1, threshold: _thr1, is_small: _ao1 < _thr1
+    });
+  }
 
   const lambda = 1.0, phi = 0.75;
   // ── Geometry by type and shape ──
@@ -2962,11 +2956,10 @@ function calcPunchShear() {
   const _faceIneff   = { N:0, E:0, S:0, W:0 };
   const opData = [];  // enriched with calc results for SVG
   for (const op of _opRaw) {
-    op.within4h = op.ao > 0 && op.so < 4*h;
+    op.within4h = op.ao > 0;  // flush → always within 4h (so = 0)
     if (op.within4h) {
-      const ch = _faceColHalf[op.face], sl = _faceSideLen[op.face];
-      const raw = op.ao * (ch + d/2) / (ch + op.so);
-      op.bo_ineff = Math.min(raw, sl - _faceIneff[op.face]);
+      const sl = _faceSideLen[op.face];
+      op.bo_ineff = Math.min(op.ao, sl - _faceIneff[op.face]);
       _faceIneff[op.face] += op.bo_ineff;
     } else { op.bo_ineff = 0; }
     opData.push(op);
@@ -3166,18 +3159,18 @@ function calcPunchShear() {
   // Insert opening steps after bo if applicable
   if (opData.some(op=>op.within4h&&op.bo_ineff>0)) {
     const opStepDesc = opData.filter(op=>op.within4h&&op.bo_ineff>0)
-      .map(op=>`Op.${op.num}(${op.face}): −${op.bo_ineff.toFixed(0)} mm`).join(', ');
-    const opSpliceIdx = hasReinf ? 2 : 1;  // reinf: after section header + bo_in; no-reinf: after bo
+      .map(op=>`${op.face} (${op.is_small?'SMALL':'LARGE'}): −${op.bo_ineff.toFixed(0)} mm`).join(', ');
+    const opSpliceIdx = hasReinf ? 2 : 1;
     steps.splice(opSpliceIdx, 0, {
-      desc: `Opening reduction (ACI §22.6.4.3): ${opStepDesc}`,
+      desc: `Opening (ACI §22.6.4.3, flush, centered): ${opStepDesc}`,
       formula: `b<sub>o,full</sub> = ${bo_full.toFixed(0)} mm → b<sub>o,eff</sub> = ${bo.toFixed(0)} mm`,
       val: `−${bo_ineff.toFixed(0)} mm`,
       cls: 'hl'
     });
   }
   for (const op of opData) {
-    if (!op.within4h && op.ao > 0)
-      warns.push(`Opening ${op.num} (face ${op.face}): s<sub>o</sub> = ${op.so_d} ${PU.lenU} ≥ 4h = ${(4*h/PU.lenS).toFixed(0)} ${PU.lenU}. No b<sub>o</sub> reduction required per ACI §22.6.4.3.`);
+    if (op.ao > 0 && !op.is_small)
+      warns.push(`Opening (face ${op.face}): a<sub>o</sub> = ${op.ao_d} ${PU.lenU} ≥ 0.6c = ${(op.threshold/PU.lenS).toFixed(1)} ${PU.lenU} — <b>LARGE</b>: no shear reinforcement placed on this face (ACI §22.6.4.3).`);
   }
 
   if ((Mux !== 0 || Muy !== 0) && shape === 'circ')
@@ -3212,10 +3205,10 @@ function calcPunchShear() {
       ['f<sub>yt</sub>',           `${fyt_disp} ${PU.fcU}`],
     ] : []),
     ...opData.flatMap(op => [
-      [`Opening ${op.num} face`, op.face],
-      [`Opening ${op.num} width a<sub>o</sub>`,  `${op.ao_d} ${PU.lenU}`],
-      [`Opening ${op.num} depth b<sub>oop</sub>`, `${op.boop_d} ${PU.lenU}`],
-      [`Opening ${op.num} s<sub>o</sub>`,         `${op.so_d} ${PU.lenU}`],
+      [`Opening face`,             op.face],
+      [`Opening a<sub>o</sub>`,    `${op.ao_d} ${PU.lenU}`],
+      [`Classification`,           op.is_small ? 'SMALL (< 0.6c)' : 'LARGE (≥ 0.6c)'],
+      [`b<sub>o</sub> reduction`,  `−${op.bo_ineff.toFixed(0)} mm`],
     ]),
   ];
 
