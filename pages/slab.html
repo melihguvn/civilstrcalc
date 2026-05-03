@@ -2283,12 +2283,19 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const freeSet = { NE:['N','E'], NW:['N','W'], SE:['S','E'], SW:['S','W'] };
   const freeFaces = type==='edge' ? [edgeFace||'N'] : type==='corner' ? (freeSet[cornerPos||'NE']||['N','E']) : [];
 
-  // Pre-compute outer CP extent so scale accommodates studs + outer perimeter
+  // Pre-compute outer CP extent — mirrors the actual SVG stud loop exactly
+  // (same first-stud offset d/4, same n_sets_svg cap, same rail_len_target_mm cap)
   let _studExtMM = 0;
   if (nr_disp > 0 && d_mm > 0) {
-    let _psc = d_mm / 2; let _nsc = 0;
-    while (_nsc < 4 && _psc <= 2.5 * d_mm + 0.5) { _nsc++; if (rs_mm <= 0) break; _psc += rs_mm; }
-    _studExtMM = d_mm / 2 + Math.max(0, _nsc - 1) * rs_mm + d_mm / 2;
+    const _estN   = n_sets_svg > 0 ? n_sets_svg : 4;
+    const _estCap = rail_len_target_mm > 0 ? rail_len_target_mm : 2.5 * d_mm;
+    let _psc = d_mm / 4, _lastP = _psc, _cnt = 0;
+    while (_cnt < _estN && _psc <= _estCap + 0.5) {
+      _lastP = _psc; _cnt++;
+      if (rs_mm <= 0) break;
+      _psc += rs_mm;
+    }
+    _studExtMM = _lastP + d_mm / 2;  // last stud face-distance + d/2 to outer CP
   }
   const _effHW = Math.max(cp_hw, col_hw + _studExtMM);
   const _effHH = Math.max(cp_hh, col_hh + _studExtMM);
