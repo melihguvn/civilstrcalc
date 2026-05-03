@@ -1721,6 +1721,8 @@ function calcCapIS456(){
 let _punchCode = 'aci';
 let _punchShape = 'rect';
 let _punchType  = 'int';
+// Test hook — populated at the end of every successful calcPunchShear() run
+let _lastPunchResults = null;
 
 // ── Punching Shear: Unit System ───────────────────────────────────────────────
 let _punchUnit = 'knm';
@@ -2941,6 +2943,7 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
 // PUNCHING SHEAR — Main calculation (ACI 318-25)
 // ═══════════════════════════════════════════════
 function calcPunchShear() {
+  _lastPunchResults = null;  // reset so tests can detect early-return / error
   const code = _punchCode, shape = _punchShape, type = _punchType;
   if (code !== 'aci') return;
 
@@ -3089,6 +3092,7 @@ function calcPunchShear() {
   let bo_out = bo, vu_out = vu;  // overwritten inside hasReinf block
   let n_sets = 0, rail_len_target = 0;  // hoisted for SVG call below hasReinf block
   let bo_out_nominal = 0;  // hoisted: captured before opening reduction inside hasReinf
+  let _vsIn = 0;  // hoisted for _lastPunchResults capture below
 
   if (hasReinf) {
     // ACI 318-25 §22.6.6 — two-check approach: inner (reinforced) + outer (unreinforced)
@@ -3151,6 +3155,7 @@ function calcPunchShear() {
     // ── Inner critical section (b₀,in — d/2 from column face, with vc+vs) ──
     vc = isStud ? 0.25*lambda*Math.sqrt(fc) : 0.17*lambda*Math.sqrt(fc);
     const vs_in   = rs_mm > 0 ? Av_1_eff * fyt_r / (bo * rs_mm) : 0;
+    _vsIn = vs_in;
     console.log('Vs calc:', { Av_1_eff: Av_1_eff.toFixed(0), bo: bo.toFixed(0), rs_mm: rs_mm.toFixed(0), vs_in: vs_in.toFixed(4), note: _nLarge > 0 ? 'LARGE opening: Av reduced + bo reduced' : opData.some(o=>o.is_small&&o.ao>0) ? 'SMALL opening: Av unchanged, bo unchanged' : 'no opening' });
     const vn_max  = isStud ? 0.66*lambda*Math.sqrt(fc) : 0.5*lambda*Math.sqrt(fc);
     const vn_cap  = Math.min(vc + vs_in, vn_max);
@@ -3414,6 +3419,8 @@ function calcPunchShear() {
     <div style="padding:4px 0">${_svg}</div></div>`;
   const fullHTML = `<div class="print-only"><div><div class="ph-title">Slab Punching Shear Check</div><div class="ph-sub">civilstrcalc.com &middot; ACI 318-25</div></div><div class="ph-date">${date}</div></div>
     ${warnHTML}${inpHTML}${diagHTML}${resHTML}${stepsHTML}${disc}${footer}`;
+
+  _lastPunchResults = { bo_inner: bo, bo_outer: bo_out, vc, vs: _vsIn, vu, DCR, phiVn, isOK, n_sets, rail_len_target, warns: warns.length, hasReinf };
 
   document.getElementById('punch_aci_empty').style.display = 'none';
   document.getElementById('punch_aci_card').style.display  = '';
