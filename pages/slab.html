@@ -2273,7 +2273,7 @@ function setPunchColType(type, btn) {
 
 // ── Punching Shear — Professional Plan View SVG ───────────────────────────
 function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm }) {
-  const W = 500, H = 400, legH = 34;
+  const W = 600, H = 500, legH = 34;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
   const col_hw = isCirc ? Dc_mm/2 : c1_mm/2;
@@ -2293,23 +2293,24 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const _effHW = Math.max(cp_hw, col_hw + _studExtMM);
   const _effHH = Math.max(cp_hh, col_hh + _studExtMM);
 
-  // Margin for labels/compass. Free face gets only a thin strip. NS needs room for compass.
-  const strip = 8, marg = 44;
-  const extN = freeFaces.includes('N') ? col_hh + strip : _effHH + marg;
-  const extS = freeFaces.includes('S') ? col_hh + strip : _effHH + marg;
-  const extE = freeFaces.includes('E') ? col_hw + strip : _effHW + marg;
-  const extW = freeFaces.includes('W') ? col_hw + strip : _effHW + marg;
+  // Fixed pixel padding for labels on all sides; free faces show a fixed mm slab-edge strip.
+  const PAD = 50;        // px reserved for labels/compass on every edge
+  const freeStrip = 50;  // mm of slab shown beyond column face on free (edge/corner) sides
+  const extN = freeFaces.includes('N') ? col_hh + freeStrip : _effHH;
+  const extS = freeFaces.includes('S') ? col_hh + freeStrip : _effHH;
+  const extE = freeFaces.includes('E') ? col_hw + freeStrip : _effHW;
+  const extW = freeFaces.includes('W') ? col_hw + freeStrip : _effHW;
 
-  // Scale — use minimum of horizontal and vertical constraints
-  const S = Math.min((W - 8) / (extE + extW), (drawH - 8) / (extN + extS), 2.4);
+  // Scale — fit content in (W - 2*PAD) × (drawH - 2*PAD) available area
+  const S = Math.min((W - 2*PAD) / (extE + extW), (drawH - 2*PAD) / (extN + extS), 2.4);
 
-  // Centre the drawing within the available SVG area (avoids left-lean when height limits scale)
+  // Centre content within the padded area
   const usedW = (extE + extW) * S;
   const usedH = (extN + extS) * S;
-  const offX = Math.max(0, (W - 8 - usedW) / 2);
-  const offY = Math.max(0, (drawH - 8 - usedH) / 2);
-  const cx = 4 + offX + extW * S;
-  const cy = 4 + offY + extN * S;
+  const offX = Math.max(0, (W - 2*PAD - usedW) / 2);
+  const offY = Math.max(0, (drawH - 2*PAD - usedH) / 2);
+  const cx = PAD + offX + extW * S;
+  const cy = PAD + offY + extN * S;
   const chw = col_hw * S, chh = col_hh * S;
   const cphw = cp_hw * S, cphh = cp_hh * S;
   const f = n => n.toFixed(1);
@@ -2925,7 +2926,7 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   if (Object.values(ineffSegs).some(v=>v>0))
     s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#ef4444">b₀ ineff.</text>`;
 
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto;max-width:100%;height:auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
 }
 
 // ═══════════════════════════════════════════════
