@@ -2851,9 +2851,10 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   }
 
   // ── Rail length dimension — E face (if not free, studs present) ──────────────
-  // Shows the REQUIRED zone (rail_len_target_mm) — spacing-independent
+  // Ends at the LAST stud/stirrup row (= rail_len_provided), which equals d/4 + (n-1)*s.
+  // This always coincides with where the drawn rail/perimeter actually ends.
   if (nr_disp > 0 && !freeFaces.includes('E') && studPosPX.length > 0) {
-    const _zoneMM = rail_len_target_mm > 0 ? rail_len_target_mm : (studPosPX[studPosPX.length-1] / S);
+    const _zoneMM = studPosPX[studPosPX.length - 1] / S;  // actual last row distance from col. face
     const _zonePX = _zoneMM * S;
     const _dimY = Math.min(cy + chh + 34, drawH - 12);
     const _rx1  = cx + chw;
