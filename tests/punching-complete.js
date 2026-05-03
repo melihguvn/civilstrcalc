@@ -6,20 +6,20 @@
  * Requires: _lastPunchResults global + calcPunchShear() in same window.
  */
 
-const PUNCH_COMPLETE = (() => {
+var PUNCH_COMPLETE = (() => {
 
   // ─── DOM helpers ─────────────────────────────────────────────────────────────
   const _sv = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
   const _sc = (id, v) => { const e = document.getElementById(id); if (e) e.checked = v; };
 
   function _setup(inp) {
-    if (typeof _punchCode      !== 'undefined') window._punchCode      = inp.code      ?? 'aci';
-    if (typeof _punchShape     !== 'undefined') window._punchShape     = inp.shape     ?? 'rect';
-    if (typeof _punchType      !== 'undefined') window._punchType      = inp.type      ?? 'int';
-    if (typeof _punchUnit      !== 'undefined') window._punchUnit      = inp.units     ?? 'knm';
-    if (typeof _punchReinfType !== 'undefined') window._punchReinfType = inp.reinfType ?? 'stud';
-    if (typeof _punchEdgeFace  !== 'undefined') window._punchEdgeFace  = inp.edgeFace  ?? 'N';
-    if (typeof _punchCornerPos !== 'undefined') window._punchCornerPos = inp.cornerPos ?? 'NE';
+    if (typeof setPunchCode      === 'function') setPunchCode(inp.code ?? 'aci', null);
+    if (typeof setPunchColShape  === 'function') setPunchColShape(inp.shape ?? 'rect', null);
+    if (typeof setPunchColType   === 'function') setPunchColType(inp.type ?? 'int', null);
+    if (typeof setPunchEdgeFace  === 'function') setPunchEdgeFace(inp.edgeFace ?? 'N', null);
+    if (typeof setPunchCornerPos === 'function') setPunchCornerPos(inp.cornerPos ?? 'NE', null);
+    if (typeof setPunchReinfType === 'function') setPunchReinfType(inp.reinfType ?? 'stud', null);
+    if (typeof setPunchOpFace    === 'function' && inp.openingDir) setPunchOpFace(1, inp.openingDir, null);
     _sv('punch-h',  inp.h  ?? 250);  _sv('punch-cv', inp.cv ?? 25);
     _sv('punch-db', inp.db ?? 16);   _sv('punch-fc', inp.fc ?? 28);
     _sv('punch-c1', inp.c1 ?? 400);  _sv('punch-c2', inp.c2 ?? 400);
@@ -33,7 +33,6 @@ const PUNCH_COMPLETE = (() => {
     _sv('punch-fyt',         inp.fyt   ?? 420);
     _sc('punch-has-op1', !!inp.hasOpening);
     _sv('punch-ao1', inp.ao ?? 0);
-    if (inp.openingDir && typeof _punchOpFace !== 'undefined') window._punchOpFace[1] = inp.openingDir;
   }
 
   function _run(inp) {
@@ -43,13 +42,13 @@ const PUNCH_COMPLETE = (() => {
   }
 
   // ─── Constants ───────────────────────────────────────────────────────────────
-  const D  = 217;           // d = 250 - 25 - 8
+  const D  = 209;           // d = h - cv - db = 250 - 25 - 16 = 209
   const C  = 400;
   const FC = 28;
   const phi = 0.75;
-  const bo_int    = 2*(C+D) + 2*(C+D);   // 2474
-  const bo_edge_N = C + 2*(C+D);         // 1634
-  const bo_corn   = C + C + D;           // 1017
+  const bo_int    = 2*(C+D) + 2*(C+D);   // 2436
+  const bo_edge_N = C + 2*(C+D);         // 1618
+  const bo_corn   = C + C + D;           // 1009
 
   const vc_int_noR = Math.min(
     0.51 * Math.sqrt(FC),
@@ -123,7 +122,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T05', name:'Opening-SMALL-ao200', type:'single',
-      desc:'Interior + opening N ao=200mm (SMALL < 0.6×400=240) → bo = 2474-200',
+      desc:'Interior + opening N ao=200mm (SMALL < 0.6×400=240) → bo = 2436-200 = 2236mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:200 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-200, tol:0.01 },
@@ -131,7 +130,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T06', name:'Opening-LARGE-ao300', type:'single',
-      desc:'Interior + opening N ao=300mm (LARGE ≥240) → bo = 2474-300',
+      desc:'Interior + opening N ao=300mm (LARGE ≥240) → bo = 2436-300 = 2136mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:300 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-300, tol:0.01 },
@@ -139,7 +138,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T07', name:'Opening-Threshold-ao240', type:'single',
-      desc:'ao=0.6×c=240mm exactly → LARGE classification, bo = 2474-240',
+      desc:'ao=0.6×c=240mm exactly → LARGE classification, bo = 2436-240 = 2196mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:240 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-240, tol:0.01 },
@@ -147,7 +146,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T08', name:'Edge-N-NoReinf', type:'single',
-      desc:'Edge N column 400×400 Vu=500kN → bo=1634, likely needs reinf',
+      desc:'Edge N column 400×400 Vu=500kN → bo=1618, likely needs reinf',
       inputs:{ type:'edge', edgeFace:'N', Vu:500, hasReinf:false },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_edge_N, tol:0.01 },
@@ -157,20 +156,19 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T09', name:'Corner-NE-NoReinf', type:'single',
-      desc:'Corner NE column 400×400 Vu=300kN → bo=1017',
+      desc:'Corner NE column 400×400 Vu=300kN → bo=1009',
       inputs:{ type:'corner', cornerPos:'NE', Vu:300, hasReinf:false },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_corn, tol:0.01 },
       ]},
 
     {
-      id:'T10', name:'US-Imperial-Units', type:'single',
-      desc:'Switch to US imperial units → DCR>0, bo>0 (smoke test)',
-      inputs:{ units:'kips', h:10, cv:1, db:0.625, fc:4, c1:16, c2:16, Vu:112.5,
-               hasReinf:false, type:'int' },
+      id:'T10', name:'Circular-Column-Interior', type:'single',
+      desc:'Circular column Dc=500mm d=209 Vu=500kN → bo = π×(500+209) ≈ 2228mm',
+      inputs:{ shape:'circ', type:'int', Dc:500, Vu:500, hasReinf:false },
       assertions:[
-        { field:'DCR',     op:'>',  value:0 },
-        { field:'bo_inner',op:'>',  value:0 },
+        { field:'bo_inner', op:'≈', value:Math.PI*(500+D), tol:0.03 },
+        { field:'vc',       op:'≈', value:0.33*Math.sqrt(FC), tol:0.02 },
       ]},
 
     {
@@ -183,12 +181,13 @@ const PUNCH_COMPLETE = (() => {
       ]},
 
     {
-      id:'T12', name:'Very-High-Vu-With-Studs', type:'single',
-      desc:'Vu=1200kN + heavy studs → calc completes, phiVn>0',
-      inputs:{ type:'int', Vu:1200, hasReinf:true, reinfType:'stud', nr:8, nLegs:1, rdb:16, s:75, fyt:420 },
+      id:'T12', name:'Very-High-Vu-NoReinf', type:'single',
+      desc:'Interior Vu=2500kN no reinf → DCR>3, section grossly undersized',
+      inputs:{ type:'int', Vu:2500, hasReinf:false },
       assertions:[
-        { field:'phiVn',    op:'>',  value:0 },
-        { field:'hasReinf', op:'=',  value:true },
+        { field:'bo_inner', op:'≈', value:bo_int, tol:0.01 },
+        { field:'DCR',      op:'>',  value:3.0 },
+        { field:'isOK',     op:'=',  value:false },
       ]},
 
     {
@@ -209,12 +208,22 @@ const PUNCH_COMPLETE = (() => {
       ]},
 
     {
-      id:'T15', name:'EC2-FlexReinfFallback', type:'single',
-      desc:'EC2 flex module smoke test (different code path, DCR>0)',
-      inputs:{ code:'aci', type:'int', Vu:500, hasReinf:false },
+      id:'T14', name:'Edge-N-Stud', type:'single',
+      desc:'Edge(N) + stud Ø12 s=100 Vu=300kN → bo=1618, vs>0, hasReinf=true',
+      inputs:{ type:'edge', edgeFace:'N', Vu:300, hasReinf:true, reinfType:'stud', nr:4, nLegs:1, rdb:12, s:100, fyt:420 },
       assertions:[
-        { field:'DCR',     op:'>',  value:0 },
-        { field:'bo_inner',op:'>',  value:0 },
+        { field:'bo_inner', op:'≈', value:bo_edge_N, tol:0.01 },
+        { field:'vs',       op:'>',  value:0 },
+        { field:'hasReinf', op:'=',  value:true },
+      ]},
+
+    {
+      id:'T15', name:'US-Units-SmokeTest', type:'single',
+      desc:'US units: c=16in fc=4000psi Vu=112kip → DCR>0, bo>0, no crash',
+      inputs:{ units:'us', type:'int', h:10, cv:1, db:0.625, fc:4000, c1:16, c2:16, Vu:112, hasReinf:false },
+      assertions:[
+        { field:'DCR',      op:'>',  value:0 },
+        { field:'bo_inner', op:'>',  value:0 },
       ]},
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -234,7 +243,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T17a', name:'Opening-Gradient-SMALL-150', type:'single',
-      desc:'ao=150mm (SMALL <240) → bo = 2474-150 = 2324mm',
+      desc:'ao=150mm (SMALL <240) → bo = 2436-150 = 2286mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:150 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-150, tol:0.005 },
@@ -242,7 +251,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T17b', name:'Opening-Gradient-SMALL-200', type:'single',
-      desc:'ao=200mm (SMALL <240) → bo = 2474-200 = 2274mm',
+      desc:'ao=200mm (SMALL <240) → bo = 2436-200 = 2236mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:200 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-200, tol:0.005 },
@@ -250,7 +259,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T17c', name:'Opening-Gradient-LARGE-250', type:'single',
-      desc:'ao=250mm (LARGE ≥240) → bo = 2474-250 = 2224mm',
+      desc:'ao=250mm (LARGE ≥240) → bo = 2436-250 = 2186mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, hasOpening:true, openingDir:'N', ao:250 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_int-250, tol:0.005 },
@@ -258,7 +267,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T18', name:'Min-Rail-2d', type:'single',
-      desc:'Studs → rail_len_target ≥ 2d = 434mm (ACI 318-25 §22.6.6)',
+      desc:'Studs → rail_len_target ≥ 2d = 418mm (ACI 318-25 §22.6.6)',
       inputs:{ type:'int', Vu:800, hasReinf:true, reinfType:'stud', nr:4, nLegs:1, rdb:12, s:100, fyt:420 },
       assertions:[
         { field:'rail_len_target', op:'>', value:2*D-1 },
@@ -266,7 +275,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T19', name:'Max-Spacing-Warning', type:'single',
-      desc:'s=200 > 0.75×217=162.75mm → warning count>0 and message mentions "0.75d"',
+      desc:'s=200 > 0.75×209=156.75mm → warning count>0 and message mentions "0.75d"',
       inputs:{ type:'int', Vu:800, hasReinf:true, reinfType:'stud', nr:4, nLegs:1, rdb:12, s:200, fyt:420 },
       assertions:[
         { field:'warns', op:'>',  value:0 },
@@ -275,7 +284,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T20', name:'Rectangular-Column-300x600', type:'single',
-      desc:'c1=300 c2=600 → bo = 2*(517)+2*(817) = 2668mm',
+      desc:'c1=300 c2=600 → bo = 2*(509)+2*(809) = 2636mm',
       inputs:{ type:'int', Vu:500, hasReinf:false, c1:300, c2:600 },
       assertions:[
         { field:'bo_inner', op:'≈', value:2*(300+D)+2*(600+D), tol:0.005 },
@@ -283,20 +292,20 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T21', name:'Thin-Slab-h150', type:'single',
-      desc:'h=150 cv=20 db=10 → d=125, bo=2100, DCR>1.0',
+      desc:'h=150 cv=20 db=10 → d=120 (h-cv-db), bo=2080, DCR>1.0',
       inputs:{ type:'int', Vu:500, hasReinf:false, h:150, cv:20, db:10 },
       assertions:[
-        { field:'bo_inner', op:'≈', value:2*(C+125)+2*(C+125), tol:0.01 },
+        { field:'bo_inner', op:'≈', value:2*(C+120)+2*(C+120), tol:0.01 },
         { field:'DCR',  op:'>',  value:1.0 },
         { field:'isOK', op:'=',  value:false },
       ]},
 
     {
       id:'T22', name:'Thick-Slab-h400', type:'single',
-      desc:'h=400 cv=40 db=20 → d=350, bo=3000, DCR<0.5',
+      desc:'h=400 cv=40 db=20 → d=340 (h-cv-db), bo=2960, DCR<0.5',
       inputs:{ type:'int', Vu:500, hasReinf:false, h:400, cv:40, db:20 },
       assertions:[
-        { field:'bo_inner', op:'≈', value:2*(C+350)+2*(C+350), tol:0.01 },
+        { field:'bo_inner', op:'≈', value:2*(C+340)+2*(C+340), tol:0.01 },
         { field:'DCR',  op:'<',  value:0.5 },
         { field:'isOK', op:'=',  value:true },
       ]},
@@ -330,7 +339,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T26', name:'Corner-Opening-N', type:'single',
-      desc:'Corner NE + opening N ao=200 (SMALL) → bo = 1017-200 = 817mm',
+      desc:'Corner NE + opening N ao=200 (SMALL) → bo = 1009-200 = 809mm',
       inputs:{ type:'corner', cornerPos:'NE', Vu:200, hasReinf:false, hasOpening:true, openingDir:'N', ao:200 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_corn-200, tol:0.01 },
@@ -338,7 +347,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T27', name:'Edge-Opening-SameSide', type:'single',
-      desc:'Edge N + opening N ao=200 (SMALL) → bo = 1634-200 = 1434mm',
+      desc:'Edge N + opening N ao=200 (SMALL) → bo = 1618-200 = 1418mm',
       inputs:{ type:'edge', edgeFace:'N', Vu:300, hasReinf:false, hasOpening:true, openingDir:'N', ao:200 },
       assertions:[
         { field:'bo_inner', op:'≈', value:bo_edge_N-200, tol:0.01 },
@@ -371,7 +380,7 @@ const PUNCH_COMPLETE = (() => {
 
     {
       id:'T31', name:'Circular-Column-Dc500', type:'single',
-      desc:'Circular Dc=500 → bo = π×(500+217) = π×717 ≈ 2252mm ±3%',
+      desc:'Circular Dc=500 → bo = π×(500+209) = π×709 ≈ 2228mm ±3%',
       inputs:{ shape:'circ', type:'int', Vu:500, hasReinf:false, Dc:500 },
       assertions:[
         { field:'bo_inner', op:'≈', value:Math.PI*(500+D), tol:0.03 },

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Headless Runner</title></head>
+<body>
+<div id="status">Initializing...</div>
+<iframe id="frame" src="/pages/slab.html" style="display:none"></iframe>
+<script>
+const statusEl = document.getElementById('status');
+const SERVER = 'http://localhost:8765';
+
+async function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function pollReady(win, name, maxMs = 8000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < maxMs) {
+    if (typeof win[name] !== 'undefined') return true;
+    await wait(100);
+  }
+  return false;
+}
+
+document.getElementById('frame').addEventListener('load', async () => {
+  const win = document.getElementById('frame').contentWindow;
+
+  statusEl.textContent = 'Waiting for slab.html to initialise...';
+  const ready = await pollReady(win, 'calcPunchShear', 8000);
+  if (!ready) {
+    statusEl.textContent = 'ERROR: calcPunchShear not found in iframe';
+    await fetch(SERVER + '/results', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify([{id:'LOAD',name:'IframeLoad',status:'ERROR',error:'calcPunchShear not defined',checks:[]}]) });
+    return;
+  }
+
+  statusEl.textContent = 'Loading test suite...';
+  const sc = win.document.createElement('script');
+  sc.src = SERVER + '/tests/punching-complete.js?' + Date.now();
+  win.document.head.appendChild(sc);
+  const suiteReady = await pollReady(win, 'PUNCH_COMPLETE', 5000);
+  if (!suiteReady) {
+    // Check if variable exists but not on window (const vs var)
+    let dbg = 'not defined';
+    try { dbg = String(win.eval('typeof PUNCH_COMPLETE')); } catch(e) {}
+    statusEl.textContent = 'ERROR: PUNCH_COMPLETE not on window (typeof=' + dbg + ')';
+    await fetch(SERVER + '/results', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify([{id:'LOAD',name:'SuiteLoad',status:'ERROR',error:'PUNCH_COMPLETE not on window (typeof='+dbg+')',checks:[]}]) });
+    return;
+  }
+
+  statusEl.textContent = 'Running 35 tests...';
+  let results;
+  try {
+    results = await win.PUNCH_COMPLETE.run({ download: false });
+  } catch(e) {
+    statusEl.textContent = 'ERROR running tests: ' + e.message;
+    await fetch(SERVER + '/results', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify([{id:'RUN',name:'RunError',status:'ERROR',error:e.message,checks:[]}]) });
+    return;
+  }
+
+  const passed = results.filter(r => r.status === 'PASS').length;
+  statusEl.textContent = `Done: ${passed}/${results.length} passed`;
+
+  // Strip large svgContent to keep payload manageable
+  const clean = results.map(r => ({
+    id:     r.id,
+    name:   r.name,
+    status: r.status,
+    error:  r.error,
+    checks: (r.checks || []).map(c => ({
+      label:   c.label,
+      pass:    c.pass,
+      info:    c.info,
+      expected: typeof c.expected === 'number' ? +c.expected.toFixed(6) : c.expected,
+      actual:   typeof c.actual   === 'number' ? +c.actual.toFixed(6)   : c.actual,
+      diffPct:  c.diffPct,
+    }))
+  }));
+
+  await fetch(SERVER + '/results', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(clean),
+  });
+});
+</script>
+</body>
+</html>
