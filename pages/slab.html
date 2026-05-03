@@ -2275,7 +2275,7 @@ function setPunchColType(type, btn) {
 
 // ── Punching Shear — Professional Plan View SVG ───────────────────────────
 function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm }) {
-  const W = 600, H = 500, legH = 34;
+  const W = 450, H = 375, legH = 26;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
   const col_hw = isCirc ? Dc_mm/2 : c1_mm/2;
@@ -2303,8 +2303,8 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const _effHH = Math.max(cp_hh, col_hh + _studExtMM);
 
   // Fixed pixel padding for labels on all sides; free faces show a fixed mm slab-edge strip.
-  const PAD = 50;        // px reserved for labels/compass on every edge
-  const freeStrip = 50;  // mm of slab shown beyond column face on free (edge/corner) sides
+  const PAD = 40;        // px reserved for labels/compass on every edge
+  const freeStrip = 40;  // mm of slab shown beyond column face on free (edge/corner) sides
   const extN = freeFaces.includes('N') ? col_hh + freeStrip : _effHH;
   const extS = freeFaces.includes('S') ? col_hh + freeStrip : _effHH;
   const extE = freeFaces.includes('E') ? col_hw + freeStrip : _effHW;
@@ -2333,21 +2333,22 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(mx-half)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx+half)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y1)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(mx-half)}" y1="${f(side.y1)}" x2="${f(mx+half)}" y2="${f(side.y1)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        // Label offset: N → above CP line (outside slab), S → below (outside)
-        const _ty = side.id==='N' ? side.y1-13 : side.y1+15;
+        // Label: always inside CP (below N line, above S line) — avoids compass overlap
+        const _ty = side.id==='N' ? side.y1+14 : side.y1-13;
         s += `<rect x="${f(mx-22)}" y="${f(_ty-10)}" width="44" height="12" fill="white" opacity="0.93" rx="2"/>`;
         s += `<text x="${f(mx)}" y="${f(_ty)}" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">b₀ ineff.</text>`;
       } else {
         s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x1)}" y2="${f(my-half)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my+half)}" x2="${f(side.x1)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
         s += `<line x1="${f(side.x1)}" y1="${f(my-half)}" x2="${f(side.x1)}" y2="${f(my+half)}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>`;
-        // E → label to the right, W → label to the left
-        const _tx = side.id==='E' ? side.x1+5 : side.x1-5;
-        const _anchor = side.id==='E' ? 'start' : 'end';
+        // E/W → label inside CP (left of E, right of W) at upper-quarter to clear compass at cy
+        const _iqy = side.y1 + (side.y2 - side.y1) * 0.25;  // upper-quarter of segment
+        const _tx = side.id==='E' ? side.x1-5 : side.x1+5;
+        const _anchor = side.id==='E' ? 'end' : 'start';
         const _tw = 44;
-        const _bx = side.id==='E' ? _tx-2 : _tx-_tw+2;
-        s += `<rect x="${f(_bx)}" y="${f(my-9)}" width="${_tw}" height="12" fill="white" opacity="0.93" rx="2"/>`;
-        s += `<text x="${f(_tx)}" y="${f(my)}" text-anchor="${_anchor}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b₀ ineff.</text>`;
+        const _bx = side.id==='E' ? _tx-_tw+2 : _tx-2;
+        s += `<rect x="${f(_bx)}" y="${f(_iqy-9)}" width="${_tw}" height="12" fill="white" opacity="0.93" rx="2"/>`;
+        s += `<text x="${f(_tx)}" y="${f(_iqy)}" text-anchor="${_anchor}" font-size="9" font-weight="600" fill="#dc2626" dominant-baseline="middle">b₀ ineff.</text>`;
       }
     } else {
       s += `<line x1="${f(side.x1)}" y1="${f(side.y1)}" x2="${f(side.x2)}" y2="${f(side.y2)}" stroke="#2563eb" stroke-dasharray="6,3" stroke-width="2.5"/>`;
@@ -2820,24 +2821,24 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<text x="${f(_dmMid)}" y="${f(dmy-6)}" text-anchor="middle" font-size="9" fill="#64748b">d/2</text>`;
   }
 
-  // ── b₀,in label — NW corner of inner CP (avoids center-N collision with "b₀ ineff.") ──
+  // ── b₀,in label — centred inside CP on N or S CP line (clear of all vertical lines) ──
   const _b0lbl = nr_disp > 0 ? 'b₀,in' : 'b₀';
-  if (!freeFaces.includes('N') && cphh > 18 && cphw > 22) {
-    const _b0y = cy - cphh + 14;
-    const _b0x = cx - cphw + 4;
-    s += `<rect x="${f(_b0x-2)}" y="${f(_b0y-10)}" width="40" height="13" fill="white" opacity="0.92" rx="2"/>`;
-    s += `<text x="${f(_b0x)}" y="${f(_b0y)}" text-anchor="start" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
-  } else if (!freeFaces.includes('S') && cphh > 18 && cphw > 22) {
-    const _b0y = cy + cphh - 4;
-    const _b0x = cx - cphw + 4;
-    s += `<rect x="${f(_b0x-2)}" y="${f(_b0y-10)}" width="40" height="13" fill="white" opacity="0.92" rx="2"/>`;
-    s += `<text x="${f(_b0x)}" y="${f(_b0y)}" text-anchor="start" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+  const _b0w = 42;
+  if (!freeFaces.includes('N') && cphh > 14 && cphw > 16) {
+    // Push down extra if N-face has an ineff segment (their labels share the same y-band)
+    const _b0y = cy - cphh + ((ineffSegs.N||0) > 0 ? 30 : 16);
+    s += `<rect x="${f(cx-_b0w/2)}" y="${f(_b0y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
+  } else if (!freeFaces.includes('S') && cphh > 14 && cphw > 16) {
+    const _b0y = cy + cphh - 14;
+    s += `<rect x="${f(cx-_b0w/2)}" y="${f(_b0y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
   }
 
   // ── b₀,out label — offset 14px above centre on E/W side to clear compass label ──
   if (nr_disp > 0) {
     const _ocpEx = cx + ocphw + 5;
-    const _ocpEy = cy - 14;   // shifted up to avoid compass E rect at cy
+    const _ocpEy = cy - 24;   // shifted up to clear compass E rect (at cy±9)
     const _ocpWx = cx - ocphw - 5;
     if (!freeFaces.includes('E') && _ocpEx + 46 < W - 2) {
       s += `<rect x="${f(_ocpEx-2)}" y="${f(_ocpEy-9)}" width="48" height="13" fill="white" opacity="0.92" rx="2"/>`;
@@ -2875,69 +2876,67 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
 
   // ── Compass labels — white bg ensures visibility even when near CP lines ──
   const _rHW = _effHW * S, _rHH = _effHH * S;
-  const compassNy = Math.max(cy - _rHH - 14, 13);
-  s += `<rect x="${f(cx-9)}" y="${f(compassNy-13)}" width="18" height="17" fill="white" opacity="0.88" rx="3"/>`;
-  s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">N</text>`;
+  const compassNy = Math.max(cy - _rHH - 18, 12);
+  s += `<rect x="${f(cx-9)}" y="${f(compassNy-11)}" width="18" height="14" fill="white" opacity="0.88" rx="3"/>`;
+  s += `<text x="${f(cx)}" y="${f(compassNy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">N</text>`;
   if (!freeFaces.includes('E')) {
-    const _ex = Math.min(cx+_rHW+13, W-8);
-    s += `<rect x="${f(_ex-2)}" y="${f(cy-9)}" width="18" height="18" fill="white" opacity="0.88" rx="3"/>`;
-    s += `<text x="${f(_ex)}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="13" font-weight="700" fill="#94a3b8">E</text>`;
+    const _ex = Math.min(cx+_rHW+16, W-6);
+    s += `<rect x="${f(_ex-2)}" y="${f(cy-7)}" width="15" height="15" fill="white" opacity="0.88" rx="3"/>`;
+    s += `<text x="${f(_ex)}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">E</text>`;
   }
   if (!freeFaces.includes('S')) {
-    const _sy = Math.min(cy+_rHH+16, drawH-5);
-    s += `<rect x="${f(cx-9)}" y="${f(_sy-13)}" width="18" height="17" fill="white" opacity="0.88" rx="3"/>`;
-    s += `<text x="${f(cx)}" y="${f(_sy)}" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">S</text>`;
+    const _sy = Math.min(cy+_rHH+18, drawH-4);
+    s += `<rect x="${f(cx-9)}" y="${f(_sy-11)}" width="18" height="14" fill="white" opacity="0.88" rx="3"/>`;
+    s += `<text x="${f(cx)}" y="${f(_sy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">S</text>`;
   }
   if (!freeFaces.includes('W')) {
-    const _wx = Math.max(cx-_rHW-13, 8);
-    s += `<rect x="${f(_wx-16)}" y="${f(cy-9)}" width="18" height="18" fill="white" opacity="0.88" rx="3"/>`;
-    s += `<text x="${f(_wx)}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="13" font-weight="700" fill="#94a3b8">W</text>`;
+    const _wx = Math.max(cx-_rHW-16, 7);
+    s += `<rect x="${f(_wx-13)}" y="${f(cy-7)}" width="15" height="15" fill="white" opacity="0.88" rx="3"/>`;
+    s += `<text x="${f(_wx)}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">W</text>`;
   }
 
   // ── Legend ────────────────────────────────────────────────────────────────
   const isStud2 = reinfType !== 'stirrup';
-  const ly = H - legH + 9;
-  let lx = 10;
-  s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="5,3" stroke-width="2.5"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#2563eb">b₀ (inner)</text>`;
-  lx += 90;
+  const ly = H - legH + 7;
+  let lx = 8;
+  s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="4,2" stroke-width="2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#2563eb">b₀ (inner)</text>`;
+  lx += 76;
   if (nr_disp > 0) {
-    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#059669" stroke-dasharray="4,3" stroke-width="1.5"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#059669">b₀,out</text>`;
-    lx += 72;
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#059669" stroke-dasharray="3,2" stroke-width="1.5"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#059669">b₀,out</text>`;
+    lx += 60;
   }
   if (freeFaces.length > 0) {
-    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#1e293b" stroke-width="3"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#334155">Slab edge</text>`;
-    lx += 82;
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#1e293b" stroke-width="2.5"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#334155">Slab edge</text>`;
+    lx += 70;
   }
   if (nr_disp > 0) {
     if (isStud2) {
-      // Legend: twin rail lines + hollow circle
-      s += `<line x1="${lx}" y1="${ly+3}" x2="${lx+14}" y2="${ly+3}" stroke="#1f2937" stroke-width="1.1"/>`;
-      s += `<line x1="${lx}" y1="${ly+6}" x2="${lx+14}" y2="${ly+6}" stroke="#1f2937" stroke-width="1.1"/>`;
-      s += `<circle cx="${lx+7}" cy="${ly+4}" r="3.2" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
-      s += `<text x="${lx+18}" y="${ly+8}" font-size="9" fill="#374151">Headed stud</text>`;
-      lx += 92;
+      s += `<line x1="${lx}" y1="${ly+3}" x2="${lx+12}" y2="${ly+3}" stroke="#1f2937" stroke-width="1"/>`;
+      s += `<line x1="${lx}" y1="${ly+6}" x2="${lx+12}" y2="${ly+6}" stroke="#1f2937" stroke-width="1"/>`;
+      s += `<circle cx="${lx+6}" cy="${ly+4}" r="2.8" fill="white" stroke="#1f2937" stroke-width="1.3"/>`;
+      s += `<text x="${lx+15}" y="${ly+8}" font-size="8" fill="#374151">Stud rail</text>`;
+      lx += 68;
     } else {
-      // Legend: ladder pattern — two twin leg lines + twin transverse bar
-      for (const _lx of [lx+3, lx+12]) {
-        s += `<line x1="${f(_lx-1.1)}" y1="${ly}" x2="${f(_lx-1.1)}" y2="${ly+10}" stroke="#1f2937" stroke-width="1.1"/>`;
-        s += `<line x1="${f(_lx+1.1)}" y1="${ly}" x2="${f(_lx+1.1)}" y2="${ly+10}" stroke="#1f2937" stroke-width="1.1"/>`;
+      for (const _lx of [lx+3, lx+10]) {
+        s += `<line x1="${f(_lx-1)}" y1="${ly}" x2="${f(_lx-1)}" y2="${ly+9}" stroke="#1f2937" stroke-width="1"/>`;
+        s += `<line x1="${f(_lx+1)}" y1="${ly}" x2="${f(_lx+1)}" y2="${ly+9}" stroke="#1f2937" stroke-width="1"/>`;
       }
-      s += `<line x1="${f(lx)}" y1="${f(ly+4-1.1)}" x2="${f(lx+15)}" y2="${f(ly+4-1.1)}" stroke="#1f2937" stroke-width="1.1"/>`;
-      s += `<line x1="${f(lx)}" y1="${f(ly+4+1.1)}" x2="${f(lx+15)}" y2="${f(ly+4+1.1)}" stroke="#1f2937" stroke-width="1.1"/>`;
-      s += `<text x="${lx+19}" y="${ly+8}" font-size="9" fill="#1f2937">Stirrup</text>`;
-      lx += 88;
+      s += `<line x1="${f(lx)}" y1="${f(ly+3.5)}" x2="${f(lx+13)}" y2="${f(ly+3.5)}" stroke="#1f2937" stroke-width="1"/>`;
+      s += `<line x1="${f(lx)}" y1="${f(ly+5.5)}" x2="${f(lx+13)}" y2="${f(ly+5.5)}" stroke="#1f2937" stroke-width="1"/>`;
+      s += `<text x="${lx+16}" y="${ly+8}" font-size="8" fill="#1f2937">Stirrup</text>`;
+      lx += 64;
     }
   }
   if (opData.length > 0) {
-    s += `<rect x="${lx}" y="${ly}" width="11" height="9" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/>`;
+    s += `<rect x="${lx}" y="${ly+1}" width="9" height="7" fill="url(#ph-op)" stroke="#ef4444" stroke-width="1"/>`;
     const _hasLarge = opData.some(op => op.ao > 0 && !op.is_small);
-    const _opLbl  = _hasLarge ? 'Opening ≥0.6c: no reinf.' : 'Opening <0.6c: reinf. both sides';
+    const _opLbl  = _hasLarge ? 'Opening ≥0.6c' : 'Opening <0.6c';
     const _opClr  = _hasLarge ? '#dc2626' : '#16a34a';
-    s += `<text x="${lx+14}" y="${ly+8}" font-size="9" fill="${_opClr}">${_opLbl}</text>`;
-    lx += _hasLarge ? 145 : 150;
+    s += `<text x="${lx+12}" y="${ly+8}" font-size="8" fill="${_opClr}">${_opLbl}</text>`;
+    lx += _hasLarge ? 88 : 88;
   }
   if (Object.values(ineffSegs).some(v=>v>0))
-    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+16}" y2="${ly+4}" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><text x="${lx+20}" y="${ly+8}" font-size="9" fill="#ef4444">b₀ ineff.</text>`;
+    s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#ef4444">b₀ ineff.</text>`;
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto;max-width:100%;height:auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
 }
