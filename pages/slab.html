@@ -2419,10 +2419,10 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<rect x="${f(bx-2)}" y="${f(ty-11)}" width="${lw+4}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;
     s += `<text x="${f(tx)}" y="${f(ty)}" text-anchor="${anchor||'start'}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;
   }
-  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+11, 'start');
-  if (freeFaces.includes('S')) _edgeLbl(8, cy+chh-3, 'start');
-  if (freeFaces.includes('E')) _edgeLbl(cx+chw-4, Math.max(cy-cphh+14, 14), 'end');
-  if (freeFaces.includes('W')) _edgeLbl(cx-chw+4, Math.max(cy-cphh+14, 14), 'start');
+  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+18, 'start');
+  if (freeFaces.includes('S')) _edgeLbl(8, cy+chh-9, 'start');
+  if (freeFaces.includes('E')) _edgeLbl(cx+chw-8, Math.max(cy-cphh+14, 14), 'end');
+  if (freeFaces.includes('W')) _edgeLbl(cx-chw+8, Math.max(cy-cphh+14, 14), 'start');
 
   // Ineffective CP segment map (openings)
   const ineffSegs = {};
@@ -2852,22 +2852,25 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     }
   }
 
-  // ── Rail length dimension — E face (if not free, studs present) ──────────────
-  // Ends at the LAST stud/stirrup row (= rail_len_provided), which equals d/4 + (n-1)*s.
-  // This always coincides with where the drawn rail/perimeter actually ends.
-  if (nr_disp > 0 && !freeFaces.includes('E') && studPosPX.length > 0) {
-    const _zoneMM = studPosPX[studPosPX.length - 1] / S;  // actual last row distance from col. face
+  // ── Rail length dimension (E face preferred; W face fallback for NE/SE corners) ──
+  if (nr_disp > 0 && studPosPX.length > 0) {
+    const _zoneMM = studPosPX[studPosPX.length - 1] / S;
     const _zonePX = _zoneMM * S;
-    const _dimY = Math.min(cy + chh + 34, drawH - 12);
-    const _rx1  = cx + chw;
-    const _rx2  = cx + chw + _zonePX;
-    s += `<line x1="${f(_rx1)}" y1="${f(cy+chh+2)}" x2="${f(_rx1)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
-    s += `<line x1="${f(_rx2)}" y1="${f(cy+chh+2)}" x2="${f(_rx2)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
-    s += `<line x1="${f(_rx1)}" y1="${f(_dimY)}" x2="${f(_rx2)}" y2="${f(_dimY)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+    const _dimY   = Math.min(cy + chh + 34, drawH - 12);
     const _rlLabel = `Zone: ${Math.round(_zoneMM)} mm`;
-    const _rlLblX = (_rx1 + _rx2) / 2;
-    s += `<rect x="${f(_rlLblX-30)}" y="${f(_dimY-14)}" width="60" height="11" fill="white" opacity="0.9" rx="2"/>`;
-    s += `<text x="${f(_rlLblX)}" y="${f(_dimY-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLabel}</text>`;
+    function _drawZoneDim(rx1, rx2) {
+      const _mid = (rx1 + rx2) / 2;
+      s += `<line x1="${f(rx1)}" y1="${f(cy+chh+2)}" x2="${f(rx1)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s += `<line x1="${f(rx2)}" y1="${f(cy+chh+2)}" x2="${f(rx2)}" y2="${f(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s += `<line x1="${f(rx1)}" y1="${f(_dimY)}" x2="${f(rx2)}" y2="${f(_dimY)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+      s += `<rect x="${f(_mid-30)}" y="${f(_dimY-14)}" width="60" height="11" fill="white" opacity="0.9" rx="2"/>`;
+      s += `<text x="${f(_mid)}" y="${f(_dimY-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLabel}</text>`;
+    }
+    if (!freeFaces.includes('E')) {
+      _drawZoneDim(cx + chw, cx + chw + _zonePX);
+    } else if (!freeFaces.includes('W') && cx - chw - _zonePX > 2) {
+      _drawZoneDim(cx - chw - _zonePX, cx - chw);
+    }
   }
 
   // ── Compass labels — white bg ensures visibility even when near CP lines ──
