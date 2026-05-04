@@ -16,8 +16,11 @@ var PUNCH_COMPLETE = (() => {
     if (typeof setPunchCode      === 'function') setPunchCode(inp.code ?? 'aci', null);
     if (typeof setPunchColShape  === 'function') setPunchColShape(inp.shape ?? 'rect', null);
     if (typeof setPunchColType   === 'function') setPunchColType(inp.type ?? 'int', null);
-    if (typeof setPunchEdgeFace  === 'function') setPunchEdgeFace(inp.edgeFace ?? 'N', null);
-    if (typeof setPunchCornerPos === 'function') setPunchCornerPos(inp.cornerPos ?? 'NE', null);
+    if (typeof setPunchEdgeFace    === 'function') setPunchEdgeFace(inp.edgeFace ?? 'N', null);
+    if (typeof setPunchCornerPos   === 'function') setPunchCornerPos(inp.cornerPos ?? 'NE', null);
+    if (typeof setPunchEdgeDist    === 'function') setPunchEdgeDist(inp.edgeDist    ?? 0);
+    if (typeof setPunchCornerDistX === 'function') setPunchCornerDistX(inp.cornerDistX ?? 0);
+    if (typeof setPunchCornerDistY === 'function') setPunchCornerDistY(inp.cornerDistY ?? 0);
     if (typeof setPunchReinfType === 'function') setPunchReinfType(inp.reinfType ?? 'stud', null);
     if (typeof setPunchOpFace    === 'function' && inp.openingDir) setPunchOpFace(1, inp.openingDir, null);
     _sv('punch-h',  inp.h  ?? 250);  _sv('punch-cv', inp.cv ?? 25);

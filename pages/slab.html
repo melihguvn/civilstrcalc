@@ -715,27 +715,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div class="iw"><input type="number" id="punch-dc" value="400" step="10"><span class="us" id="u-punch-dc">mm</span></div>
         </div>
       </div>
-      <!-- Edge/Corner direction inputs (hidden by default) -->
+      <!-- Edge/Corner distance inputs (hidden by default) -->
       <div id="punch-edge-dims" style="display:none">
-        <div id="punch-edge-face-row" style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
-          <label style="font-size:.68rem;color:var(--text-dim);min-width:72px;">Free edge:</label>
-          <div class="unit-btns">
-            <button class="unit-btn active" id="punch-ef-N" onclick="setPunchEdgeFace('N',this)">N</button>
-            <button class="unit-btn" id="punch-ef-E" onclick="setPunchEdgeFace('E',this)">E</button>
-            <button class="unit-btn" id="punch-ef-S" onclick="setPunchEdgeFace('S',this)">S</button>
-            <button class="unit-btn" id="punch-ef-W" onclick="setPunchEdgeFace('W',this)">W</button>
+        <div id="punch-edge-dist-row" style="display:none">
+          <div class="form-group">
+            <label>Distance from slab edge <span class="lu">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-edge-dist" value="0" min="0" step="10" oninput="setPunchEdgeDist(this.value)"><span class="us">mm</span></div>
           </div>
+          <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with slab edge (standard ACI).</div>
         </div>
-        <div id="punch-corner-face-row" style="display:none;align-items:center;gap:6px;margin-bottom:9px;">
-          <label style="font-size:.68rem;color:var(--text-dim);min-width:72px;">Corner:</label>
-          <div class="unit-btns">
-            <button class="unit-btn active" id="punch-cf-NE" onclick="setPunchCornerPos('NE',this)">NE</button>
-            <button class="unit-btn" id="punch-cf-NW" onclick="setPunchCornerPos('NW',this)">NW</button>
-            <button class="unit-btn" id="punch-cf-SE" onclick="setPunchCornerPos('SE',this)">SE</button>
-            <button class="unit-btn" id="punch-cf-SW" onclick="setPunchCornerPos('SW',this)">SW</button>
+        <div id="punch-corner-dist-row" style="display:none">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Edge dist. X (c₁) <span class="lu">[mm]</span></label>
+              <div class="iw"><input type="number" id="punch-corner-dist-x" value="0" min="0" step="10" oninput="setPunchCornerDistX(this.value)"><span class="us">mm</span></div>
+            </div>
+            <div class="form-group">
+              <label>Edge dist. Y (c₂) <span class="lu">[mm]</span></label>
+              <div class="iw"><input type="number" id="punch-corner-dist-y" value="0" min="0" step="10" oninput="setPunchCornerDistY(this.value)"><span class="us">mm</span></div>
+            </div>
           </div>
+          <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with slab edge on that side.</div>
         </div>
-        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">Column face assumed flush with slab edge.</div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
@@ -2242,8 +2243,11 @@ function setPunchColShape(shape, btn) {
   document.getElementById('punch-circ-dims').style.display = shape === 'circ' ? '' : 'none';
 }
 
-let _punchEdgeFace  = 'N';
-let _punchCornerPos = 'NE';
+let _punchEdgeFace    = 'N';
+let _punchCornerPos   = 'NE';
+let _punchEdgeDist    = 0;   // mm from col face to slab edge (edge column)
+let _punchCornerDistX = 0;   // mm setback in X dir (corner column)
+let _punchCornerDistY = 0;   // mm setback in Y dir (corner column)
 function setPunchEdgeFace(face, btn) {
   _punchEdgeFace = face;
   ['N','E','S','W'].forEach(f => { const b=document.getElementById('punch-ef-'+f); if(b) b.classList.toggle('active', f===face); });
@@ -2252,29 +2256,32 @@ function setPunchCornerPos(pos, btn) {
   _punchCornerPos = pos;
   ['NE','NW','SE','SW'].forEach(p => { const b=document.getElementById('punch-cf-'+p); if(b) b.classList.toggle('active', p===pos); });
 }
+function setPunchEdgeDist(v)    { _punchEdgeDist    = Math.max(0, parseFloat(v)||0); calcPunchShear(); }
+function setPunchCornerDistX(v) { _punchCornerDistX = Math.max(0, parseFloat(v)||0); calcPunchShear(); }
+function setPunchCornerDistY(v) { _punchCornerDistY = Math.max(0, parseFloat(v)||0); calcPunchShear(); }
 function setPunchColType(type, btn) {
   _punchType = type;
   document.getElementById('punch-type-int').classList.toggle('active',    type === 'int');
   document.getElementById('punch-type-edge').classList.toggle('active',   type === 'edge');
   document.getElementById('punch-type-corner').classList.toggle('active', type === 'corner');
   const edgeDims = document.getElementById('punch-edge-dims');
-  const efRow    = document.getElementById('punch-edge-face-row');
-  const cfRow    = document.getElementById('punch-corner-face-row');
+  const edDistRow = document.getElementById('punch-edge-dist-row');
+  const cnDistRow = document.getElementById('punch-corner-dist-row');
   if (type === 'int') {
-    if (edgeDims) edgeDims.style.display = 'none';
+    if (edgeDims)  edgeDims.style.display  = 'none';
   } else if (type === 'edge') {
-    if (edgeDims) edgeDims.style.display = '';
-    if (efRow)    efRow.style.display    = 'flex';
-    if (cfRow)    cfRow.style.display    = 'none';
+    if (edgeDims)  edgeDims.style.display  = '';
+    if (edDistRow) edDistRow.style.display = '';
+    if (cnDistRow) cnDistRow.style.display = 'none';
   } else { // corner
-    if (edgeDims) edgeDims.style.display = '';
-    if (efRow)    efRow.style.display    = 'none';
-    if (cfRow)    cfRow.style.display    = 'flex';
+    if (edgeDims)  edgeDims.style.display  = '';
+    if (edDistRow) edDistRow.style.display = 'none';
+    if (cnDistRow) cnDistRow.style.display = '';
   }
 }
 
 // ── Punching Shear — Professional Plan View SVG ───────────────────────────
-function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm }) {
+function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm, edgeDist_mm=0, cornerDistX_mm=0, cornerDistY_mm=0 }) {
   const W = 450, H = 375, legH = 26;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
@@ -2302,13 +2309,18 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const _effHW = Math.max(cp_hw, col_hw + _studExtMM);
   const _effHH = Math.max(cp_hh, col_hh + _studExtMM);
 
-  // Fixed pixel padding for labels on all sides; free faces show a fixed mm slab-edge strip.
+  // Fixed pixel padding for labels on all sides; free faces show slab edge at setback + margin.
   const PAD = 40;        // px reserved for labels/compass on every edge
-  const freeStrip = 40;  // mm of slab shown beyond column face on free (edge/corner) sides
-  const extN = freeFaces.includes('N') ? col_hh + freeStrip : _effHH;
-  const extS = freeFaces.includes('S') ? col_hh + freeStrip : _effHH;
-  const extE = freeFaces.includes('E') ? col_hw + freeStrip : _effHW;
-  const extW = freeFaces.includes('W') ? col_hw + freeStrip : _effHW;
+  const freeStrip = 40;  // mm of slab shown beyond slab edge on free (edge/corner) sides
+  // Setback distances: how far slab edge is from column face on each free side
+  const _setN = freeFaces.includes('N') ? (type==='edge' ? edgeDist_mm : cornerDistY_mm) : 0;
+  const _setS = freeFaces.includes('S') ? (type==='edge' ? edgeDist_mm : cornerDistY_mm) : 0;
+  const _setE = freeFaces.includes('E') ? (type==='edge' ? edgeDist_mm : cornerDistX_mm) : 0;
+  const _setW = freeFaces.includes('W') ? (type==='edge' ? edgeDist_mm : cornerDistX_mm) : 0;
+  const extN = freeFaces.includes('N') ? col_hh + _setN + freeStrip : _effHH;
+  const extS = freeFaces.includes('S') ? col_hh + _setS + freeStrip : _effHH;
+  const extE = freeFaces.includes('E') ? col_hw + _setE + freeStrip : _effHW;
+  const extW = freeFaces.includes('W') ? col_hw + _setW + freeStrip : _effHW;
 
   // Scale — fit content in (W - 2*PAD) × (drawH - 2*PAD) available area
   const S = Math.min((W - 2*PAD) / (extE + extW), (drawH - 2*PAD) / (extN + extS), 2.4);
@@ -2378,11 +2390,16 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   s += `<rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/>`;
   s += `<rect x="2" y="2" width="${W-4}" height="${drawH-2}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
 
-  // Slab region bounds (for edge/corner)
-  const slabX1 = freeFaces.includes('W') ? cx-chw : 2;
-  const slabY1 = freeFaces.includes('N') ? cy-chh : 2;
-  const slabX2 = freeFaces.includes('E') ? cx+chw : W-2;
-  const slabY2 = freeFaces.includes('S') ? cy+chh : drawH-2;
+  // Slab region bounds (for edge/corner) — slab edge at col face + setback distance
+  const slabX1 = freeFaces.includes('W') ? cx-chw-_setW*S : 2;
+  const slabY1 = freeFaces.includes('N') ? cy-chh-_setN*S : 2;
+  const slabX2 = freeFaces.includes('E') ? cx+chw+_setE*S : W-2;
+  const slabY2 = freeFaces.includes('S') ? cy+chh+_setS*S : drawH-2;
+  // Pixel positions of slab edge lines
+  const edgeLineN = cy-chh-_setN*S;
+  const edgeLineS = cy+chh+_setS*S;
+  const edgeLineE = cx+chw+_setE*S;
+  const edgeLineW = cx-chw-_setW*S;
 
   // Slab clipPath
   s += `<defs><clipPath id="ph-slab-clip"><rect x="${f(slabX1)}" y="${f(slabY1)}" width="${f(slabX2-slabX1)}" height="${f(slabY2-slabY1)}"/></clipPath></defs>`;
@@ -2405,13 +2422,26 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<rect x="2" y="2" width="${f(slabX1-2)}" height="${f(drawH-4)}" fill="url(#ph-void)" opacity="0.6"/>`;
   }
 
-  // Slab edge lines (span only the slab region)
+  // ── X / Y coordinate axes (drawn before structural elements — behind everything) ──
+  const _axClr = '#cbd5e1', _axArr = 14;
+  // X axis: horizontal through column centre
+  s += `<line x1="4" y1="${f(cy)}" x2="${f(W-_axArr-6)}" y2="${f(cy)}" stroke="${_axClr}" stroke-width="1" stroke-dasharray="5,4"/>`;
+  s += `<polygon points="${f(W-_axArr-6)},${f(cy-3.5)} ${f(W-5)},${f(cy)} ${f(W-_axArr-6)},${f(cy+3.5)}" fill="${_axClr}"/>`;
+  s += `<rect x="${f(W-38)}" y="${f(cy+4)}" width="34" height="13" fill="white" opacity="0.75" rx="2"/>`;
+  s += `<text x="${f(W-6)}" y="${f(cy+14)}" text-anchor="end" font-size="9" fill="#94a3b8">X (c₁)</text>`;
+  // Y axis: vertical through column centre (SVG y increases downward, arrow points up)
+  s += `<line x1="${f(cx)}" y1="${f(drawH-4)}" x2="${f(cx)}" y2="${f(_axArr+6)}" stroke="${_axClr}" stroke-width="1" stroke-dasharray="5,4"/>`;
+  s += `<polygon points="${f(cx-3.5)},${f(_axArr+6)} ${f(cx)},${f(5)} ${f(cx+3.5)},${f(_axArr+6)}" fill="${_axClr}"/>`;
+  s += `<rect x="${f(cx+4)}" y="3" width="32" height="13" fill="white" opacity="0.75" rx="2"/>`;
+  s += `<text x="${f(cx+6)}" y="${f(13)}" text-anchor="start" font-size="9" fill="#94a3b8">Y (c₂)</text>`;
+
+  // Slab edge lines (span only the slab region, at actual setback position)
   const edgeStroke = 'stroke="#1e293b" stroke-width="3" stroke-linecap="square"';
   for (const ef of freeFaces) {
-    if (ef==='N') s += `<line x1="${f(slabX1)}" y1="${f(cy-chh)}" x2="${f(slabX2)}" y2="${f(cy-chh)}" ${edgeStroke}/>`;
-    if (ef==='S') s += `<line x1="${f(slabX1)}" y1="${f(cy+chh)}" x2="${f(slabX2)}" y2="${f(cy+chh)}" ${edgeStroke}/>`;
-    if (ef==='E') s += `<line x1="${f(cx+chw)}" y1="${f(slabY1)}" x2="${f(cx+chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
-    if (ef==='W') s += `<line x1="${f(cx-chw)}" y1="${f(slabY1)}" x2="${f(cx-chw)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
+    if (ef==='N') s += `<line x1="${f(slabX1)}" y1="${f(edgeLineN)}" x2="${f(slabX2)}" y2="${f(edgeLineN)}" ${edgeStroke}/>`;
+    if (ef==='S') s += `<line x1="${f(slabX1)}" y1="${f(edgeLineS)}" x2="${f(slabX2)}" y2="${f(edgeLineS)}" ${edgeStroke}/>`;
+    if (ef==='E') s += `<line x1="${f(edgeLineE)}" y1="${f(slabY1)}" x2="${f(edgeLineE)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
+    if (ef==='W') s += `<line x1="${f(edgeLineW)}" y1="${f(slabY1)}" x2="${f(edgeLineW)}" y2="${f(slabY2)}" ${edgeStroke}/>`;
   }
   // Slab edge labels
   function _edgeLbl(tx, ty, anchor) {
@@ -2420,10 +2450,10 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     s += `<rect x="${f(bx-2)}" y="${f(ty-11)}" width="${lw+4}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;
     s += `<text x="${f(tx)}" y="${f(ty)}" text-anchor="${anchor||'start'}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;
   }
-  if (freeFaces.includes('N')) _edgeLbl(8, cy-chh+18, 'start');
-  if (freeFaces.includes('S')) _edgeLbl(8, cy+chh-9, 'start');
-  if (freeFaces.includes('E')) _edgeLbl(cx+chw-8, Math.max(cy-cphh+14, 14), 'end');
-  if (freeFaces.includes('W')) _edgeLbl(cx-chw+8, Math.max(cy-cphh+14, 14), 'start');
+  if (freeFaces.includes('N')) _edgeLbl(8, edgeLineN-5, 'start');
+  if (freeFaces.includes('S')) _edgeLbl(8, edgeLineS+16, 'start');
+  if (freeFaces.includes('E')) _edgeLbl(edgeLineE+6, Math.max(cy-cphh+14, 14), 'start');
+  if (freeFaces.includes('W')) _edgeLbl(edgeLineW-6, Math.max(cy-cphh+14, 14), 'end');
 
   // Ineffective CP segment map (openings)
   const ineffSegs = {};
@@ -2825,12 +2855,13 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   const _b0lbl = nr_disp > 0 ? 'b₀,in' : 'b₀';
   const _b0w = 42;
   if (!freeFaces.includes('N') && cphh > 14 && cphw > 16) {
-    // Push down extra if N-face has an ineff segment (their labels share the same y-band)
-    const _b0y = cy - cphh + ((ineffSegs.N||0) > 0 ? 30 : 16);
+    // Place above N CP dashed line (outside perimeter)
+    const _b0y = cy - cphh - 7;
     s += `<rect x="${f(cx-_b0w/2)}" y="${f(_b0y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
     s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
   } else if (!freeFaces.includes('S') && cphh > 14 && cphw > 16) {
-    const _b0y = cy + cphh - 14;
+    // Place below S CP dashed line (outside perimeter)
+    const _b0y = cy + cphh + 11;
     s += `<rect x="${f(cx-_b0w/2)}" y="${f(_b0y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
     s += `<text x="${f(cx)}" y="${f(_b0y)}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${_b0lbl}</text>`;
   }
@@ -3050,11 +3081,29 @@ function calcPunchShear() {
       typeLabel = 'Interior';
     } else if (type === 'edge') {
       const ef = _punchEdgeFace;
-      bo_full   = (ef==='N'||ef==='S') ? (c1 + 2*c2 + 2*d) : (2*c1 + c2 + 2*d);
+      const _boEdgeStd = (ef==='N'||ef==='S') ? (c1+2*c2+2*d) : (2*c1+c2+2*d);
+      if (_punchEdgeDist > 0 && d > 0) {
+        const _ext = Math.min(_punchEdgeDist, d/2);
+        const _boInt = 2*(c1+d)+2*(c2+d);
+        bo_full = _boEdgeStd + (_boInt - _boEdgeStd) * (_ext / (d/2));
+      } else {
+        bo_full = _boEdgeStd;
+      }
       alphaS    = 30;
       typeLabel = `Edge (free face: ${ef})`;
     } else { // corner
-      bo_full   = c1 + c2 + d;
+      const _boCornerStd = c1+c2+d;
+      if ((_punchCornerDistX > 0 || _punchCornerDistY > 0) && d > 0) {
+        const _fx = Math.min(_punchCornerDistX, d/2) / (d/2);
+        const _fy = Math.min(_punchCornerDistY, d/2) / (d/2);
+        const _cp = _punchCornerPos;
+        const _boEdgeX = (_cp==='NE'||_cp==='SE') ? (2*c1+c2+2*d) : (2*c1+c2+2*d);  // E or W free
+        const _boEdgeY = (_cp==='NE'||_cp==='NW') ? (c1+2*c2+2*d) : (c1+2*c2+2*d);  // N or S free
+        const _boInt = 2*(c1+d)+2*(c2+d);
+        bo_full = (1-_fx)*(1-_fy)*_boCornerStd + _fx*(1-_fy)*_boEdgeX + (1-_fx)*_fy*_boEdgeY + _fx*_fy*_boInt;
+      } else {
+        bo_full = _boCornerStd;
+      }
       alphaS    = 20;
       typeLabel = `Corner (${_punchCornerPos})`;
     }
@@ -3122,9 +3171,30 @@ function calcPunchShear() {
       else if (type === 'edge') bo_out = 0.75*2*Math.PI*(Dc/2+outer_cp_ext) + 2*outer_cp_ext;
       else                      bo_out = 0.5*2*Math.PI*(Dc/2+outer_cp_ext) + 2*outer_cp_ext;
     } else {
-      if (type === 'int')       bo_out = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
-      else if (type === 'edge') bo_out = (ef2==='N'||ef2==='S') ? c1+2*c2+2*Math.SQRT2*outer_cp_ext : 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
-      else                      bo_out = c1+c2+Math.SQRT2*outer_cp_ext;
+      if (type === 'int') {
+        bo_out = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
+      } else if (type === 'edge') {
+        const _boOutEdgeStd = (ef2==='N'||ef2==='S') ? c1+2*c2+2*Math.SQRT2*outer_cp_ext : 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
+        if (_punchEdgeDist > 0) {
+          const _extOut = Math.min(_punchEdgeDist, outer_cp_ext);
+          const _boOutInt = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
+          bo_out = _boOutEdgeStd + (_boOutInt - _boOutEdgeStd) * (_extOut / outer_cp_ext);
+        } else {
+          bo_out = _boOutEdgeStd;
+        }
+      } else { // corner
+        const _boOutCornerStd = c1+c2+Math.SQRT2*outer_cp_ext;
+        if (_punchCornerDistX > 0 || _punchCornerDistY > 0) {
+          const _fxOut = Math.min(_punchCornerDistX, outer_cp_ext) / outer_cp_ext;
+          const _fyOut = Math.min(_punchCornerDistY, outer_cp_ext) / outer_cp_ext;
+          const _boOutEdgeX = 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
+          const _boOutEdgeY = c1+2*c2+2*Math.SQRT2*outer_cp_ext;
+          const _boOutInt   = 2*(c1+c2)+4*Math.SQRT2*outer_cp_ext;
+          bo_out = (1-_fxOut)*(1-_fyOut)*_boOutCornerStd + _fxOut*(1-_fyOut)*_boOutEdgeX + (1-_fxOut)*_fyOut*_boOutEdgeY + _fxOut*_fyOut*_boOutInt;
+        } else {
+          bo_out = _boOutCornerStd;
+        }
+      }
     }
     bo_out_nominal = bo_out;
     if (bo_ineff > 0) bo_out = Math.max(bo_out - bo_ineff, bo_out * 0.1);  // same ao reduction on outer CP
@@ -3378,7 +3448,7 @@ function calcPunchShear() {
   const _svg_nr = isStud ? nr_disp : 8;
   const _svg_n_sets = hasReinf ? n_sets : 0;
   const _svg_rail_target = hasReinf ? rail_len_target : 0;
-  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target });
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target, edgeDist_mm: _punchEdgeDist, cornerDistX_mm: _punchCornerDistX, cornerDistY_mm: _punchCornerDistY });
 
   // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
   const _bannerBo    = bo;   // always inner CP (d/2 from col face)
