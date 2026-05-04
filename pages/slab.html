@@ -2620,51 +2620,42 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
       }
     }
 
-    if (isCirc) {
-      if (isStud) {
-        // Headed studs: radial rails + dot symbols
-        const _arcT = {
-          int:{start:0,span:360}, edge_N:{start:315,span:270}, edge_S:{start:135,span:270},
-          edge_E:{start:45,span:270}, edge_W:{start:225,span:270},
-          corner_NE:{start:45,span:180}, corner_NW:{start:315,span:180},
-          corner_SE:{start:135,span:180}, corner_SW:{start:225,span:180}
-        };
-        const _ak = type==='int'?'int':type==='edge'?`edge_${edgeFace||'N'}`:`corner_${cornerPos||'NE'}`;
-        const {start:_as,span:_sp} = _arcT[_ak]||{start:0,span:360};
-        for (let i = 0; i < nr_disp; i++) {
-          const frac = _sp >= 360 ? i/nr_disp : (nr_disp>1 ? i/(nr_disp-1) : 0.5);
-          const ang = (_as + frac*_sp) * Math.PI / 180;
-          const dx = Math.cos(ang), dy = Math.sin(ang);
-          const rx = cx+dx*chw, ry = cy+dy*chw;
-          // Double black rail lines for circular studs
-          const _cg = 1.2; // half-gap between twin lines
-          const _rpx = -dy * _cg, _rpy = dx * _cg;
-          s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
-          s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
-          for (const sp of studPosPX) {
-            const sx=rx+dx*sp, sy=ry+dy*sp;
-            if (!_studBlocked(sx,sy)) _drawReinf(sx,sy);
-          }
-        }
-      } else {
-        // Stirrups: concentric circular rings at each peripheral line distance
+    // Shared double-line style constants (used by studs and stirrups)
+    const _dlg = 1.2, _dlc = '#1f2937', _dlw = 1.1;
+    // Face lengths: circular uses Dc_mm (diameter) for all four faces
+    const _c1f = isCirc ? Dc_mm : c1_mm;
+    const _c2f = isCirc ? Dc_mm : c2_mm;
+
+    if (isCirc && isStud) {
+      // Circular column headed studs: radial rails spanning active arc only
+      const _arcT = {
+        int:{start:0,span:360}, edge_N:{start:315,span:270}, edge_S:{start:135,span:270},
+        edge_E:{start:45,span:270}, edge_W:{start:225,span:270},
+        corner_NE:{start:45,span:180}, corner_NW:{start:315,span:180},
+        corner_SE:{start:135,span:180}, corner_SW:{start:225,span:180}
+      };
+      const _ak = type==='int'?'int':type==='edge'?`edge_${edgeFace||'N'}`:`corner_${cornerPos||'NE'}`;
+      const {start:_as,span:_sp} = _arcT[_ak]||{start:0,span:360};
+      for (let i = 0; i < nr_disp; i++) {
+        const frac = _sp >= 360 ? i/nr_disp : (nr_disp>1 ? i/(nr_disp-1) : 0.5);
+        const ang = (_as + frac*_sp) * Math.PI / 180;
+        const dx = Math.cos(ang), dy = Math.sin(ang);
+        const rx = cx+dx*chw, ry = cy+dy*chw;
+        const _cg = 1.2;
+        const _rpx = -dy*_cg, _rpy = dx*_cg;
+        s += `<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
+        s += `<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="#374151" stroke-width="1.1"/>`;
         for (const sp of studPosPX) {
-          s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw+sp)}" fill="none" stroke="#374151" stroke-width="2.2"/>`;
-          s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw+sp-4)}" fill="none" stroke="#374151" stroke-width="1.1"/>`;
+          const sx=rx+dx*sp, sy=ry+dy*sp;
+          if (!_studBlocked(sx,sy)) _drawReinf(sx,sy);
         }
       }
-    } else {
-      // Shared constants for double-line style
-      const _dlg = 1.2;    // half-gap between twin lines (px) — slightly narrower than rails
-      const _dlc = '#1f2937'; // near-black
-      const _dlw = 1.1;    // line width
-
-      if (isStud) {
-        // Headed studs: double black rail lines + orange dot symbols
-        const _af = [
-          {id:'N', len:c1_mm}, {id:'E', len:c2_mm},
-          {id:'S', len:c1_mm}, {id:'W', len:c2_mm}
-        ].filter(fc => !freeFaces.includes(fc.id));
+    } else if (isStud) {
+      // Rectangular (or circular treated as square) headed studs: orthogonal face rails
+      const _af = [
+        {id:'N', len:_c1f}, {id:'E', len:_c2f},
+        {id:'S', len:_c1f}, {id:'W', len:_c2f}
+      ].filter(fc => !freeFaces.includes(fc.id));
 
         if (_af.length > 0) {
           const _tl = _af.reduce((a,fc) => a+fc.len, 0) || 1;
@@ -2724,15 +2715,17 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
             }
           }
         }
-      } else {
-        // Stirrups: perpendicular twin leg lines + twin transverse bars (ladder pattern)
-        const _lastSP = studPosPX.length > 0 ? studPosPX[studPosPX.length - 1] : 0;
-        const _ext = _dlg + 3;
-        if (_lastSP > 0) {
-          const _af2 = [
-            {id:'N', len:c1_mm}, {id:'E', len:c2_mm},
-            {id:'S', len:c1_mm}, {id:'W', len:c2_mm}
-          ].filter(fc => !freeFaces.includes(fc.id));
+    } else {
+      // Stirrups: rectangular ladder pattern for BOTH circular and rectangular columns.
+      // Circular columns use Dc_mm as face length on all sides (_c1f = _c2f = Dc_mm).
+      // Free faces excluded — no stirrups toward slab edge.
+      const _lastSP = studPosPX.length > 0 ? studPosPX[studPosPX.length - 1] : 0;
+      const _ext = _dlg + 3;
+      if (_lastSP > 0) {
+        const _af2 = [
+          {id:'N', len:_c1f}, {id:'E', len:_c2f},
+          {id:'S', len:_c1f}, {id:'W', len:_c2f}
+        ].filter(fc => !freeFaces.includes(fc.id));
           if (_af2.length > 0) {
             const _tl2 = _af2.reduce((a,fc) => a+fc.len, 0) || 1;
             const _exact2 = _af2.map(fc => nr_disp * fc.len / _tl2);
@@ -2819,7 +2812,6 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
           }
         }
       }
-    }
   }
 
   s += `</g>`; // end slab clip
