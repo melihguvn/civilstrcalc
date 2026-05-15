@@ -4082,12 +4082,23 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   s+=`<g clip-path="url(#ec2sc)">`;
 
   const u1C='#2563eb',u1DA='6,3';
+  // _ppFill: closed version of _pp for fill only — closes via slab edges to avoid diagonal implicit close
+  function _ppFill(r_sv) {
+    const o=_pp(r_sv);
+    if(type!=='corner') return o+' Z';
+    const _px1=cx-chw-r_sv, _px2=cx+chw+r_sv;
+    if(cp==='NE') return o+` V ${ff(actualEdgeN)} H ${ff(_px1)} Z`;
+    if(cp==='NW') return o+` V ${ff(actualEdgeN)} H ${ff(_px2)} Z`;
+    if(cp==='SW') return o+` V ${ff(actualEdgeS)} H ${ff(_px2)} Z`;
+    /* SE */       return o+` V ${ff(actualEdgeS)} H ${ff(_px1)} Z`;
+  }
   // u₁ control perimeter
   const r2d_sv=r2d*S;
   if(isCirc){
     s+=`<circle cx="${ff(cx)}" cy="${ff(cy)}" r="${ff(chw+r2d_sv)}" fill="rgba(37,99,235,0.05)" stroke="${u1C}" stroke-dasharray="${u1DA}" stroke-width="2.5"/>`;
   } else {
-    s+=`<path d="${_pp(r2d_sv)}" fill="rgba(37,99,235,0.05)" stroke="${u1C}" stroke-dasharray="${u1DA}" stroke-width="2.5"/>`;
+    s+=`<path d="${_ppFill(r2d_sv)}" fill="rgba(37,99,235,0.05)" stroke="none"/>`;
+    s+=`<path d="${_pp(r2d_sv)}" fill="none" stroke="${u1C}" stroke-dasharray="${u1DA}" stroke-width="2.5"/>`;
   }
 
   // reinforcement visualization
@@ -4181,8 +4192,8 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
       const r=ff(rO_sv);
       let opd='';
       if(type==='int') opd=`M ${ff(px1+rO_sv)} ${ff(py1)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+rO_sv)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2-rO_sv)} ${ff(py2)} H ${ff(px1+rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1)} ${ff(py2-rO_sv)} V ${ff(py1+rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1+rO_sv)} ${ff(py1)} Z`;
-      else if(type==='edge'){const ef3=edgeFace||'N';if(ef3==='N') opd=`M ${ff(px1)} ${ff(edgeLineN)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py2-rO_sv)} V ${ff(edgeLineN)}`;else if(ef3==='S') opd=`M ${ff(px1)} ${ff(edgeLineS)} V ${ff(py1+rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1+rO_sv)} ${ff(py1)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 0 ${ff(px2)} ${ff(py1+rO_sv)} V ${ff(edgeLineS)}`;else if(ef3==='W') opd=`M ${ff(edgeLineW)} ${ff(py1)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+rO_sv)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2-rO_sv)} ${ff(py2)} H ${ff(edgeLineW)}`;else opd=`M ${ff(edgeLineE)} ${ff(py1)} H ${ff(px1+rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1)} ${ff(py1+rO_sv)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(edgeLineE)}`;}
-      else opd=`M ${ff(px1)} ${ff(edgeLineN)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(edgeLineE)}`;
+      else if(type==='edge'){const ef3=edgeFace||'N';if(ef3==='N') opd=`M ${ff(px1)} ${ff(actualEdgeN)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py2-rO_sv)} V ${ff(actualEdgeN)}`;else if(ef3==='S') opd=`M ${ff(px1)} ${ff(actualEdgeS)} V ${ff(py1+rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1+rO_sv)} ${ff(py1)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 0 ${ff(px2)} ${ff(py1+rO_sv)} V ${ff(actualEdgeS)}`;else if(ef3==='W') opd=`M ${ff(actualEdgeW)} ${ff(py1)} H ${ff(px2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+rO_sv)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2-rO_sv)} ${ff(py2)} H ${ff(actualEdgeW)}`;else opd=`M ${ff(actualEdgeE)} ${ff(py1)} H ${ff(px1+rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1)} ${ff(py1+rO_sv)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(actualEdgeE)}`;}
+      else{if(cp==='NE') opd=`M ${ff(px1)} ${ff(actualEdgeN)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 0 ${ff(px1+rO_sv)} ${ff(py2)} H ${ff(actualEdgeE)}`;else if(cp==='NW') opd=`M ${ff(px2)} ${ff(actualEdgeN)} V ${ff(py2-rO_sv)} A ${r} ${r} 0 0 1 ${ff(px2-rO_sv)} ${ff(py2)} H ${ff(actualEdgeW)}`;else if(cp==='SW') opd=`M ${ff(px2)} ${ff(actualEdgeS)} V ${ff(py1+rO_sv)} A ${r} ${r} 0 0 0 ${ff(px2-rO_sv)} ${ff(py1)} H ${ff(actualEdgeW)}`;else opd=`M ${ff(px1)} ${ff(actualEdgeS)} V ${ff(py1+rO_sv)} A ${r} ${r} 0 0 1 ${ff(px1+rO_sv)} ${ff(py1)} H ${ff(actualEdgeE)}`;}
       if(opd) s+=`<path d="${opd}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
     }
   }
