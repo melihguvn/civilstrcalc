@@ -973,6 +973,37 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
         <div style="font-size:.68rem;color:var(--text-dim);margin-top:4px;">Column face flush with slab edge. N/S → c₁ ⊥ edge; E/W → c₂ ⊥ edge.</div>
       </div>
+      <!-- Edge: setback distance -->
+      <div id="ec2-edge-dist-row" style="display:none">
+        <div class="form-group" style="margin-bottom:4px">
+          <label>Distance to slab edge <span class="lu" id="lu-ec2-edist">[m]</span></label>
+          <div class="iw"><input type="number" id="ec2-edge-dist" value="0" min="0" step="0.05"><span class="us" id="u-ec2-edist">m</span></div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with slab edge (standard EC2).</div>
+      </div>
+      <!-- Corner: position selector + setback distances -->
+      <div id="ec2-corner-rows" style="display:none">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <label style="font-size:.76rem;min-width:68px;">Corner:</label>
+          <div class="unit-btns">
+            <button class="unit-btn active" id="ec2-cp-NE" onclick="setEC2CornerPos('NE',this)">NE</button>
+            <button class="unit-btn" id="ec2-cp-NW" onclick="setEC2CornerPos('NW',this)">NW</button>
+            <button class="unit-btn" id="ec2-cp-SW" onclick="setEC2CornerPos('SW',this)">SW</button>
+            <button class="unit-btn" id="ec2-cp-SE" onclick="setEC2CornerPos('SE',this)">SE</button>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Edge dist. X <span class="lu" id="lu-ec2-cdx">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-corner-dist-x" value="0" min="0" step="0.05"><span class="us" id="u-ec2-cdx">m</span></div>
+          </div>
+          <div class="form-group">
+            <label>Edge dist. Y <span class="lu" id="lu-ec2-cdy">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-corner-dist-y" value="0" min="0" step="0.05"><span class="us" id="u-ec2-cdy">m</span></div>
+          </div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with slab edge on that side.</div>
+      </div>
       <div id="ec2-rect-dims">
         <div class="form-row-2">
           <div class="form-group">
@@ -3849,6 +3880,7 @@ const EC2_UNITS = {
   us:  { lenU:'in', lenS:25.4,  forceU:'kip', forceS:4448.22,  momU:'kip·in', momS:113024.72, stressU:'MPa', tag:'kip-in' },
 };
 let _ec2Unit='knm', _ec2Shape='rect', _ec2Type='int', _ec2EdgeFace='N', _ec2OpFace='E', _ec2ReinfType='stud', _lastEC2Results=null;
+let _ec2CornerPos='NE', _ec2EdgeDist=0, _ec2CornerDistX=0, _ec2CornerDistY=0;
 
 function setEC2Unit(unit) {
   _ec2Unit = unit;
@@ -3856,7 +3888,7 @@ function setEC2Unit(unit) {
   document.querySelectorAll('.ec2-unit-btn').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
   const el = document.getElementById('ec2-punch-utag');
   if (el) el.textContent = `EN 1992-1-1 · ${U.tag}`;
-  const lmap = {h:U.lenU,cv:U.lenU,db:U.lenU,c1:U.lenU,c2:U.lenU,dc:U.lenU,sr:U.lenU,ao:U.lenU,ved:U.forceU,mux:U.momU,muy:U.momU};
+  const lmap = {h:U.lenU,cv:U.lenU,db:U.lenU,c1:U.lenU,c2:U.lenU,dc:U.lenU,sr:U.lenU,ao:U.lenU,ved:U.forceU,mux:U.momU,muy:U.momU,edist:U.lenU,cdx:U.lenU,cdy:U.lenU};
   for (const k of Object.keys(lmap)) {
     const lel=document.getElementById(`lu-ec2-${k}`), uel=document.getElementById(`u-ec2-${k}`);
     if(lel) lel.textContent=`[${lmap[k]}]`;
@@ -3885,11 +3917,20 @@ function setEC2Type(type) {
   _ec2Type=type;
   ['int','edge','corner'].forEach(t=>document.getElementById(`ec2-type-${t}`).classList.toggle('active',t===type));
   document.getElementById('ec2-edge-face-row').style.display=(type==='edge')?'':'none';
+  document.getElementById('ec2-edge-dist-row').style.display=(type==='edge')?'':'none';
+  document.getElementById('ec2-corner-rows').style.display=(type==='corner')?'':'none';
 }
 function setEC2EdgeFace(face) {
   _ec2EdgeFace=face;
   ['N','E','S','W'].forEach(f=>{const b=document.getElementById(`ec2-ef-${f}`);if(b)b.classList.toggle('active',f===face);});
 }
+function setEC2CornerPos(pos) {
+  _ec2CornerPos=pos;
+  ['NE','NW','SW','SE'].forEach(p=>{const b=document.getElementById(`ec2-cp-${p}`);if(b)b.classList.toggle('active',p===pos);});
+}
+function setEC2EdgeDist(v)    { _ec2EdgeDist    = Math.max(0, parseFloat(v)||0); }
+function setEC2CornerDistX(v) { _ec2CornerDistX = Math.max(0, parseFloat(v)||0); }
+function setEC2CornerDistY(v) { _ec2CornerDistY = Math.max(0, parseFloat(v)||0); }
 function setEC2HasReinf(checked) {
   document.getElementById('ec2-reinf-inputs').style.display=checked?'':'none';
   document.getElementById('ec2-reinf-type-row').style.display=checked?'':'none';
@@ -3948,32 +3989,40 @@ function _showEC2Err(msg) {
   emp.innerHTML=`<div class="ri">&#9888;&#65039;</div><div style="color:var(--red);font-size:.82rem;font-weight:500;">${msg}</div>`;
   emp.style.display=''; crd.style.display='none';
 }
-function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,opFace,ao_mm,n_rings,sr_mm,reinfType,nr}) {
+function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,opFace,ao_mm,n_rings,sr_mm,reinfType,nr,edgeDist_mm=0,cornerDistX_mm=0,cornerDistY_mm=0,cornerPos='NE'}) {
   const W=450,H=375,legH=26,drawH=H-legH;
   const isCirc=shape==='circ';
   const col_hw=isCirc?Dc_mm/2:c1_mm/2, col_hh=isCirc?Dc_mm/2:c2_mm/2;
-  const freeFaces=type==='int'?[]:type==='edge'?[edgeFace||'N']:['N','E'];
+  const cp=cornerPos||'NE';
+  const freeFaces=type==='int'?[]:type==='edge'?[edgeFace||'N']:
+    cp==='NE'?['N','E']:cp==='NW'?['N','W']:cp==='SW'?['S','W']:['S','E'];
   const r2d=2*d_mm;
   const r_out_mm=u_out_mm?(isCirc?u_out_mm/(2*Math.PI)-col_hw:Math.max((u_out_mm-2*(c1_mm+c2_mm))/(2*Math.PI),d_mm)):0;
   const lastRingMM=n_rings>0&&sr_mm>0?0.5*d_mm+(n_rings-1)*sr_mm:0;
   const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM)*1.18;
   const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM)*1.18;
   const PAD=40,freeStrip=35;
-  const extN=freeFaces.includes('N')?col_hh+freeStrip:maxExtV;
-  const extS=freeFaces.includes('S')?col_hh+freeStrip:maxExtV;
-  const extE=freeFaces.includes('E')?col_hw+freeStrip:maxExtH;
-  const extW=freeFaces.includes('W')?col_hw+freeStrip:maxExtH;
+  const _setN=freeFaces.includes('N')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
+  const _setS=freeFaces.includes('S')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
+  const _setE=freeFaces.includes('E')?(type==='edge'?edgeDist_mm:cornerDistX_mm):0;
+  const _setW=freeFaces.includes('W')?(type==='edge'?edgeDist_mm:cornerDistX_mm):0;
+  const extN=freeFaces.includes('N')?col_hh+_setN+freeStrip:maxExtV;
+  const extS=freeFaces.includes('S')?col_hh+_setS+freeStrip:maxExtV;
+  const extE=freeFaces.includes('E')?col_hw+_setE+freeStrip:maxExtH;
+  const extW=freeFaces.includes('W')?col_hw+_setW+freeStrip:maxExtH;
   const S=Math.min((W-2*PAD)/(extE+extW),(drawH-2*PAD)/(extN+extS),2.4);
   const offX=Math.max(0,(W-2*PAD-(extE+extW)*S)/2);
   const offY=Math.max(0,(drawH-2*PAD-(extN+extS)*S)/2);
   const cx=PAD+offX+extW*S, cy=PAD+offY+extN*S;
   const chw=col_hw*S, chh=col_hh*S;
   const ff=n=>n.toFixed(1);
-  const edgeLineN=cy-chh, edgeLineS=cy+chh, edgeLineE=cx+chw, edgeLineW=cx-chw;
-  const slabX1=freeFaces.includes('W')?edgeLineW:2;
-  const slabY1=freeFaces.includes('N')?edgeLineN:2;
-  const slabX2=freeFaces.includes('E')?edgeLineE:W-2;
-  const slabY2=freeFaces.includes('S')?edgeLineS:drawH-2;
+  // Actual slab edge positions (px) — setback from column face
+  const actualEdgeN=cy-(col_hh+_setN)*S, actualEdgeS=cy+(col_hh+_setS)*S;
+  const actualEdgeE=cx+(col_hw+_setE)*S, actualEdgeW=cx-(col_hw+_setW)*S;
+  const slabX1=freeFaces.includes('W')?actualEdgeW:2;
+  const slabY1=freeFaces.includes('N')?actualEdgeN:2;
+  const slabX2=freeFaces.includes('E')?actualEdgeE:W-2;
+  const slabY2=freeFaces.includes('S')?actualEdgeS:drawH-2;
 
   // Generate EC2 control perimeter SVG path (open or closed, with rounded corners = r_sv)
   function _pp(r_sv) {
@@ -3982,24 +4031,27 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
     if(type==='int') return `M ${ff(px1+r_sv)} ${ff(py1)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+r_sv)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2-r_sv)} ${ff(py2)} H ${ff(px1+r_sv)} A ${r} ${r} 0 0 1 ${ff(px1)} ${ff(py2-r_sv)} V ${ff(py1+r_sv)} A ${r} ${r} 0 0 1 ${ff(px1+r_sv)} ${ff(py1)} Z`;
     if(type==='edge'){
       const ef=edgeFace||'N';
-      if(ef==='N') return `M ${ff(px1)} ${ff(edgeLineN)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py2-r_sv)} V ${ff(edgeLineN)}`;
-      if(ef==='S') return `M ${ff(px1)} ${ff(edgeLineS)} V ${ff(py1+r_sv)} A ${r} ${r} 0 0 0 ${ff(px1+r_sv)} ${ff(py1)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 0 ${ff(px2)} ${ff(py1+r_sv)} V ${ff(edgeLineS)}`;
-      if(ef==='W') return `M ${ff(edgeLineW)} ${ff(py1)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+r_sv)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2-r_sv)} ${ff(py2)} H ${ff(edgeLineW)}`;
-      /* E */     return `M ${ff(edgeLineE)} ${ff(py1)} H ${ff(px1+r_sv)} A ${r} ${r} 0 0 0 ${ff(px1)} ${ff(py1+r_sv)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 0 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(edgeLineE)}`;
+      if(ef==='N') return `M ${ff(px1)} ${ff(actualEdgeN)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py2-r_sv)} V ${ff(actualEdgeN)}`;
+      if(ef==='S') return `M ${ff(px1)} ${ff(actualEdgeS)} V ${ff(py1+r_sv)} A ${r} ${r} 0 0 0 ${ff(px1+r_sv)} ${ff(py1)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 0 ${ff(px2)} ${ff(py1+r_sv)} V ${ff(actualEdgeS)}`;
+      if(ef==='W') return `M ${ff(actualEdgeW)} ${ff(py1)} H ${ff(px2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2)} ${ff(py1+r_sv)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px2-r_sv)} ${ff(py2)} H ${ff(actualEdgeW)}`;
+      /* E */     return `M ${ff(actualEdgeE)} ${ff(py1)} H ${ff(px1+r_sv)} A ${r} ${r} 0 0 0 ${ff(px1)} ${ff(py1+r_sv)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 0 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(actualEdgeE)}`;
     }
-    // corner NE: free faces N+E, single SW arc
-    return `M ${ff(px1)} ${ff(edgeLineN)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(edgeLineE)}`;
+    // corner — single arc at the interior corner
+    if(cp==='NE') return `M ${ff(px1)} ${ff(actualEdgeN)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 1 ${ff(px1+r_sv)} ${ff(py2)} H ${ff(actualEdgeE)}`;
+    if(cp==='NW') return `M ${ff(px2)} ${ff(actualEdgeN)} V ${ff(py2-r_sv)} A ${r} ${r} 0 0 0 ${ff(px2-r_sv)} ${ff(py2)} H ${ff(actualEdgeW)}`;
+    if(cp==='SW') return `M ${ff(px2)} ${ff(actualEdgeS)} V ${ff(py1+r_sv)} A ${r} ${r} 0 0 1 ${ff(px2-r_sv)} ${ff(py1)} H ${ff(actualEdgeW)}`;
+    /* SE */      return `M ${ff(px1)} ${ff(actualEdgeS)} V ${ff(py1+r_sv)} A ${r} ${r} 0 0 0 ${ff(px1+r_sv)} ${ff(py1)} H ${ff(actualEdgeE)}`;
   }
 
   let s='';
   s+=`<rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/>`;
   s+=`<rect x="2" y="2" width="${W-4}" height="${drawH-2}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
 
-  // void overlays (outside-slab hatching)
-  if(freeFaces.includes('N')){s+=`<rect x="2" y="2" width="${W-4}" height="${ff(edgeLineN-2)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="2" width="${W-4}" height="${ff(edgeLineN-2)}" fill="url(#ec2v)" opacity="0.6"/>`;}
-  if(freeFaces.includes('S')){s+=`<rect x="2" y="${ff(edgeLineS)}" width="${W-4}" height="${ff(drawH-edgeLineS-2)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="${ff(edgeLineS)}" width="${W-4}" height="${ff(drawH-edgeLineS-2)}" fill="url(#ec2v)" opacity="0.6"/>`;}
-  if(freeFaces.includes('E')){s+=`<rect x="${ff(edgeLineE)}" y="2" width="${ff(W-2-edgeLineE)}" height="${ff(drawH-4)}" fill="#e2e8f0"/>`;s+=`<rect x="${ff(edgeLineE)}" y="2" width="${ff(W-2-edgeLineE)}" height="${ff(drawH-4)}" fill="url(#ec2v)" opacity="0.6"/>`;}
-  if(freeFaces.includes('W')){s+=`<rect x="2" y="2" width="${ff(edgeLineW-2)}" height="${ff(drawH-4)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="2" width="${ff(edgeLineW-2)}" height="${ff(drawH-4)}" fill="url(#ec2v)" opacity="0.6"/>`;}
+  // void overlays (outside-slab hatching) — at actual edge position
+  if(freeFaces.includes('N')){s+=`<rect x="2" y="2" width="${W-4}" height="${ff(actualEdgeN-2)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="2" width="${W-4}" height="${ff(actualEdgeN-2)}" fill="url(#ec2v)" opacity="0.6"/>`;}
+  if(freeFaces.includes('S')){s+=`<rect x="2" y="${ff(actualEdgeS)}" width="${W-4}" height="${ff(drawH-actualEdgeS-2)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="${ff(actualEdgeS)}" width="${W-4}" height="${ff(drawH-actualEdgeS-2)}" fill="url(#ec2v)" opacity="0.6"/>`;}
+  if(freeFaces.includes('E')){s+=`<rect x="${ff(actualEdgeE)}" y="2" width="${ff(W-2-actualEdgeE)}" height="${ff(drawH-4)}" fill="#e2e8f0"/>`;s+=`<rect x="${ff(actualEdgeE)}" y="2" width="${ff(W-2-actualEdgeE)}" height="${ff(drawH-4)}" fill="url(#ec2v)" opacity="0.6"/>`;}
+  if(freeFaces.includes('W')){s+=`<rect x="2" y="2" width="${ff(actualEdgeW-2)}" height="${ff(drawH-4)}" fill="#e2e8f0"/>`;s+=`<rect x="2" y="2" width="${ff(actualEdgeW-2)}" height="${ff(drawH-4)}" fill="url(#ec2v)" opacity="0.6"/>`;}
 
   // X/Y axes
   const aC='#cbd5e1';
@@ -4012,19 +4064,19 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   s+=`<rect x="${ff(cx+4)}" y="7" width="32" height="13" fill="white" opacity="0.75" rx="2"/>`;
   s+=`<text x="${ff(cx+6)}" y="18" text-anchor="start" font-size="9" fill="#94a3b8">Y (c₂)</text>`;
 
-  // slab edge lines
+  // slab edge lines — at actual (setback) positions
   const eS='stroke="#1e293b" stroke-width="3" stroke-linecap="square"';
-  if(freeFaces.includes('N')) s+=`<line x1="${ff(slabX1)}" y1="${ff(edgeLineN)}" x2="${ff(slabX2)}" y2="${ff(edgeLineN)}" ${eS}/>`;
-  if(freeFaces.includes('S')) s+=`<line x1="${ff(slabX1)}" y1="${ff(edgeLineS)}" x2="${ff(slabX2)}" y2="${ff(edgeLineS)}" ${eS}/>`;
-  if(freeFaces.includes('E')) s+=`<line x1="${ff(edgeLineE)}" y1="${ff(slabY1)}" x2="${ff(edgeLineE)}" y2="${ff(slabY2)}" ${eS}/>`;
-  if(freeFaces.includes('W')) s+=`<line x1="${ff(edgeLineW)}" y1="${ff(slabY1)}" x2="${ff(edgeLineW)}" y2="${ff(slabY2)}" ${eS}/>`;
+  if(freeFaces.includes('N')) s+=`<line x1="${ff(slabX1)}" y1="${ff(actualEdgeN)}" x2="${ff(slabX2)}" y2="${ff(actualEdgeN)}" ${eS}/>`;
+  if(freeFaces.includes('S')) s+=`<line x1="${ff(slabX1)}" y1="${ff(actualEdgeS)}" x2="${ff(slabX2)}" y2="${ff(actualEdgeS)}" ${eS}/>`;
+  if(freeFaces.includes('E')) s+=`<line x1="${ff(actualEdgeE)}" y1="${ff(slabY1)}" x2="${ff(actualEdgeE)}" y2="${ff(slabY2)}" ${eS}/>`;
+  if(freeFaces.includes('W')) s+=`<line x1="${ff(actualEdgeW)}" y1="${ff(slabY1)}" x2="${ff(actualEdgeW)}" y2="${ff(slabY2)}" ${eS}/>`;
 
   // slab edge labels
   function _eLbl(tx,ty,anchor){const lw=55,lh=15,bx=anchor==='end'?tx-lw:anchor==='middle'?tx-lw/2:tx;s+=`<rect x="${ff(bx-2)}" y="${ff(ty-11)}" width="${lw+4}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="${ff(tx)}" y="${ff(ty)}" text-anchor="${anchor||'start'}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;}
-  if(freeFaces.includes('N')) _eLbl(8,Math.max(edgeLineN-5,8),'start');
-  if(freeFaces.includes('S')) _eLbl(8,edgeLineS-5,'start');
-  if(freeFaces.includes('E')) _eLbl(edgeLineE-6,Math.max(cy-chh+16,14),'end');
-  if(freeFaces.includes('W')) _eLbl(edgeLineW+6,Math.max(cy-chh+16,14),'start');
+  if(freeFaces.includes('N')) _eLbl(8,Math.max(actualEdgeN-5,8),'start');
+  if(freeFaces.includes('S')) _eLbl(8,actualEdgeS-5,'start');
+  if(freeFaces.includes('E')) _eLbl(actualEdgeE-6,Math.max(cy-chh+16,14),'end');
+  if(freeFaces.includes('W')) _eLbl(actualEdgeW+6,Math.max(cy-chh+16,14),'start');
 
   // clipped group
   s+=`<g clip-path="url(#ec2sc)">`;
@@ -4367,7 +4419,10 @@ function calcEC2PunchShear() {
     ...(hasReinf?[['n × d<sub>b</sub>',`${reinf_n} × ${reinf_db} mm`],['A<sub>sw</sub>',`${Asw_mm2.toFixed(0)} mm²/ring`],['f<sub>ywd</sub>',`${fywd_MPa} MPa`],['s<sub>r</sub>',`${(sr_mm/LS).toFixed(dp)} ${U.lenU}`],['f<sub>ywd,ef</sub>',`${fywdEf.toFixed(0)} MPa`]]:[]),
   ];
 
-  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:hasReinf?u_out_req:null,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0});
+  const _ec2EdgeDistMM   = _ec2EdgeDist    * LS;
+  const _ec2CornerDistXMM= _ec2CornerDistX * LS;
+  const _ec2CornerDistYMM= _ec2CornerDistY * LS;
+  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:hasReinf?u_out_req:null,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0,edgeDist_mm:_ec2EdgeDistMM,cornerDistX_mm:_ec2CornerDistXMM,cornerDistY_mm:_ec2CornerDistYMM,cornerPos:_ec2CornerPos});
   const dcrCls=DCR<=0.90?'ok':DCR<=1.0?'warn':'err';
   const status=DCR<=0.90?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
   const capLbl=hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>';
