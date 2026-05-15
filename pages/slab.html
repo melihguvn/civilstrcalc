@@ -3997,7 +3997,8 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   const freeFaces=type==='int'?[]:type==='edge'?[edgeFace||'N']:
     cp==='NE'?['N','E']:cp==='NW'?['N','W']:cp==='SW'?['S','W']:['S','E'];
   const r2d=2*d_mm;
-  const r_out_mm=u_out_mm?(isCirc?u_out_mm/(2*Math.PI)-col_hw:Math.max((u_out_mm-2*(c1_mm+c2_mm))/(2*Math.PI),d_mm)):0;
+  let r_out_mm=0;
+  if(u_out_mm){if(isCirc)r_out_mm=u_out_mm/(2*Math.PI)-col_hw;else if(type==='int')r_out_mm=Math.max((u_out_mm-2*(c1_mm+c2_mm))/(2*Math.PI),d_mm);else if(type==='edge'){const _cp=(edgeFace==='E'||edgeFace==='W')?c1_mm:c2_mm,_cpa=c1_mm+c2_mm-_cp;r_out_mm=Math.max((u_out_mm-_cpa-2*_cp)/Math.PI,d_mm);}else r_out_mm=Math.max(2*(u_out_mm-c1_mm-c2_mm)/Math.PI,d_mm);}
   const lastRingMM=n_rings>0&&sr_mm>0?0.5*d_mm+(n_rings-1)*sr_mm:0;
   const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM)*1.18;
   const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM)*1.18;
@@ -4347,7 +4348,7 @@ function calcEC2PunchShear() {
   const checkFace=vEd0<=vRdmax;
 
   // Reinforcement
-  let vRdcs=vRdc, fywdEf=0, n_rings=0, u_out_req=0;
+  let vRdcs=vRdc, fywdEf=0, n_rings=0, u_out_req=0, r_out=0, r_first=0, r_last=0;
   const warns=[];
   const _fLmm=v=>`${(v/LS).toFixed(U.lenU==='m'?3:U.lenU==='in'?2:0)} ${U.lenU}`;
   if(hasOp&&ao_mm>0) {
@@ -4360,11 +4361,12 @@ function calcEC2PunchShear() {
     fywdEf=Math.min(250+0.25*d_mm,fywd_MPa);
     vRdcs=0.75*vRdc+1.5*(d_mm/sr_mm)*Asw_mm2*fywdEf/(u1*d_mm);
     u_out_req=beta*VEd/(vRdc*d_mm);
-    let r_out;
     if(shape==='circ')       r_out=u_out_req/(2*Math.PI)-Dc_mm/2;
     else if(type==='int')    r_out=(u_out_req-2*(c1_mm+c2_mm))/(2*Math.PI);
-    else                     r_out=u_out_req/(2*Math.PI);
-    const r_first=0.5*d_mm, r_last=Math.max(r_out-1.5*d_mm, r_first+sr_mm);
+    else if(type==='edge')   r_out=(u_out_req-c_para-2*c_perp)/Math.PI;
+    else                     r_out=2*(u_out_req-c1_mm-c2_mm)/Math.PI;
+    r_out=Math.max(r_out,d_mm);
+    r_first=0.5*d_mm; r_last=Math.max(r_out-1.5*d_mm, r_first+sr_mm);
     n_rings=Math.max(1,Math.ceil((r_last-r_first)/sr_mm)+1);
     if(sr_mm>0.75*d_mm) warns.push(`<b>Spacing too large:</b> s<sub>r</sub>=${(sr_mm/LS).toFixed(3)} ${U.lenU} exceeds 0.75d=${(0.75*d_mm/LS).toFixed(3)} ${U.lenU} (EC2 §9.4.3).`);
     if(vRdcs<vEd) warns.push(`<b>Insufficient reinforcement:</b> v<sub>Rd,cs</sub>=${vRdcs.toFixed(3)} MPa &lt; v<sub>Ed</sub>=${vEd.toFixed(3)} MPa.`);
@@ -4410,7 +4412,9 @@ function calcEC2PunchShear() {
       {desc:'v<sub>Rd,cs</sub> = 0.75v<sub>Rd,c</sub> + 1.5(d/s<sub>r</sub>)A<sub>sw</sub>f<sub>ywd,ef</sub>/(u₁d)',formula:`= 0.75×${vRdc.toFixed(3)} + 1.5×(${d_mm.toFixed(0)}/${sr_mm.toFixed(0)})×${Asw_mm2.toFixed(0)}×${fywdEf.toFixed(0)}/(${u1.toFixed(0)}×${d_mm.toFixed(0)})`,val:_fv(vRdcs),cls:'hl'},
       {desc:'Punching check (with reinf.)',formula:'v<sub>Ed</sub> ≤ v<sub>Rd,cs</sub>',val:`${vEd.toFixed(3)} ≤ ${vRdcs.toFixed(3)} MPa`,cls:vEd<=vRdcs?'ok':'err',check:vEd<=vRdcs?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
       {desc:'Required outer perimeter u<sub>out,req</sub>',formula:'u<sub>out</sub> = β·V<sub>Ed</sub>/(v<sub>Rd,c</sub>·d)',val:_fL2(u_out_req)},
-      {desc:'Estimated reinforcement rings',formula:'First ring at 0.5d, spacing s<sub>r</sub>, last ring ≤ r<sub>out</sub>−1.5d',val:`${n_rings} rings`},
+      {desc:'Outer perimeter radius r<sub>out</sub>',formula:type==='int'?(shape==='circ'?'r=(u<sub>out</sub>)/(2π)−Dc/2':'r=(u<sub>out</sub>−2(c₁+c₂))/(2π)'):type==='edge'?'r=(u<sub>out</sub>−c<sub>∥</sub>−2c<sub>⊥</sub>)/π':'r=2(u<sub>out</sub>−c₁−c₂)/π',val:_fL2(r_out)},
+      {desc:'Reinf. zone extent (from col. face)',formula:'r₁=0.5d (first ring), r<sub>last</sub>=r<sub>out</sub>−1.5d',val:`${_fL2(r_first)} − ${_fL2(r_last)}`},
+      {desc:'Estimated reinforcement rings',formula:'n = ⌈(r<sub>last</sub>−r₁)/s<sub>r</sub>⌉ + 1',val:`${n_rings} rings`},
     ]),
     {desc:'D/C = v<sub>Ed</sub>/v<sub>Rd</sub>',formula:`v<sub>Rd</sub> = ${hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>'}`,val:DCR.toFixed(3),cls:isOK&&DCR<=0.9?'ok':DCR<=1.0?'warn':'err',check:isOK&&DCR<=0.9?{t:'ok',l:'OK ✓'}:DCR<=1.0?{t:'warn',l:'NEAR'}:{t:'err',l:'NG ✗'}},
   ];
