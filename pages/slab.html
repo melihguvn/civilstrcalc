@@ -4275,8 +4275,10 @@ function calcEC2PunchShear() {
   if(shape==='circ'&&Dc_mm<=0) return _showEC2Err('Column diameter must be positive.');
 
   // c_perp/c_para for edge columns
-  let c_perp=c1_mm, c_para=c2_mm;
-  if(type==='edge'&&shape==='rect'&&(ef==='E'||ef==='W')){c_perp=c2_mm;c_para=c1_mm;}
+  // N/S face (horizontal slab edge): c₁(X) is parallel, c₂(Y) is perpendicular
+  // E/W face (vertical slab edge):   c₁(X) is perpendicular, c₂(Y) is parallel
+  let c_perp=c2_mm, c_para=c1_mm;
+  if(type==='edge'&&shape==='rect'&&(ef==='E'||ef==='W')){c_perp=c1_mm;c_para=c2_mm;}
 
   // Control perimeter u₁
   let u1;
