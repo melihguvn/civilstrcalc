@@ -175,6 +175,25 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .print-footer{display:flex!important;margin-top:3px!important;padding-top:3px!important;font-size:5pt!important;}
   .print-disclaimer{display:block!important;font-size:4.5pt!important;margin-top:2px!important;padding:2px 4px!important;}
   footer{display:none!important;}
+  /* Issue 5: D/C banner — shift D/C inward from left edge, stress comparison inward from right */
+  .dcr-banner > div:first-child{padding-left:12px!important;}
+  .dcr-status{padding-right:12px!important;}
+  /* Issue 6: EC2 reinforced report — compress to fit one page */
+  .punch-report-reinf .step-desc{font-size:5.5pt!important;}
+  .punch-report-reinf .step-formula{font-size:4pt!important;margin-top:0!important;}
+  .punch-report-reinf .step-val{font-size:5.5pt!important;}
+  .punch-report-reinf .step-check{font-size:4pt!important;}
+  .punch-report-reinf .steps-table td{padding:0!important;}
+  .punch-report-reinf .rpt-sec{margin-bottom:2px!important;padding-bottom:2px!important;}
+  .punch-report-reinf .rpt-sec-title{font-size:.48rem!important;padding:1px 4px!important;margin-bottom:1px!important;}
+  .punch-report-reinf .dcr-banner{padding:5px 8px!important;margin-bottom:2px!important;}
+  .punch-report-reinf .dcr-val{font-size:1.2rem!important;}
+  .punch-report-reinf .fl-rb{margin-bottom:1px!important;}
+  .punch-report-reinf .fl-col{padding:4px!important;}
+  .punch-report-reinf .fl-val{font-size:.9rem!important;}
+  .punch-report-reinf .fl-lbl{font-size:.52rem!important;}
+  .punch-report-reinf .report-warn{padding:2px 4px!important;font-size:5pt!important;margin-bottom:2px!important;}
+  .punch-report-reinf .step-num{width:11px!important;height:11px!important;font-size:.44rem!important;}
 }
 .bar-no-sel{font-size:.8rem;padding:5px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surface,var(--white));color:var(--text);width:100%;cursor:pointer;}
 /* Punching shear modal overlay */
@@ -934,16 +953,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div class="iw"><input type="number" id="ec2-rho-y" value="0.50" step="0.05" min="0.05" max="2"><span class="us">%</span></div>
         </div>
       </div>
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>γ<sub>c</sub> <span style="font-size:.65rem;color:var(--text-dim)">(partial factor)</span></label>
-          <div class="iw"><input type="number" id="ec2-gammac" value="1.5" step="0.05" min="1.0" max="2.0"><span class="us">—</span></div>
-        </div>
-        <div class="form-group">
-          <label>σ<sub>cp</sub> <span style="font-size:.65rem;color:var(--text-dim)">[MPa]</span></label>
-          <div class="iw"><input type="number" id="ec2-sigmacp" value="0" step="0.1"><span class="us">MPa</span></div>
-        </div>
-      </div>
 
       <div class="form-div"><div class="form-div-lbl">Column Properties</div></div>
       <div class="unit-switcher" style="margin-bottom:8px;">
@@ -972,6 +981,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
         <div style="font-size:.68rem;color:var(--text-dim);margin-top:4px;">Column face flush with slab edge. N/S → c₁ ⊥ edge; E/W → c₂ ⊥ edge.</div>
+      </div>
+      <div id="ec2-rect-dims">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Column c<sub>1</sub> <span class="lu" id="lu-ec2-c1">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-c1" value="0.4" step="0.05"><span class="us" id="u-ec2-c1">m</span></div>
+          </div>
+          <div class="form-group">
+            <label>Column c<sub>2</sub> <span class="lu" id="lu-ec2-c2">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-c2" value="0.4" step="0.05"><span class="us" id="u-ec2-c2">m</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="ec2-circ-dims" style="display:none">
+        <div class="form-group">
+          <label>Column diameter D<sub>c</sub> <span class="lu" id="lu-ec2-dc">[m]</span></label>
+          <div class="iw"><input type="number" id="ec2-dc" value="0.4" step="0.05"><span class="us" id="u-ec2-dc">m</span></div>
+        </div>
       </div>
       <!-- Edge: setback distance -->
       <div id="ec2-edge-dist-row" style="display:none">
@@ -1003,24 +1030,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
         <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with slab edge on that side.</div>
-      </div>
-      <div id="ec2-rect-dims">
-        <div class="form-row-2">
-          <div class="form-group">
-            <label>Column c<sub>1</sub> <span class="lu" id="lu-ec2-c1">[m]</span></label>
-            <div class="iw"><input type="number" id="ec2-c1" value="0.4" step="0.05"><span class="us" id="u-ec2-c1">m</span></div>
-          </div>
-          <div class="form-group">
-            <label>Column c<sub>2</sub> <span class="lu" id="lu-ec2-c2">[m]</span></label>
-            <div class="iw"><input type="number" id="ec2-c2" value="0.4" step="0.05"><span class="us" id="u-ec2-c2">m</span></div>
-          </div>
-        </div>
-      </div>
-      <div id="ec2-circ-dims" style="display:none">
-        <div class="form-group">
-          <label>Column diameter D<sub>c</sub> <span class="lu" id="lu-ec2-dc">[m]</span></label>
-          <div class="iw"><input type="number" id="ec2-dc" value="0.4" step="0.05"><span class="us" id="u-ec2-dc">m</span></div>
-        </div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Loading</div></div>
@@ -2083,6 +2092,9 @@ function setPunchHasReinf(checked) {
 // ── Punching shear: check whether reinforcement is needed ────────────────────
 function _punchCheckReinfNeeded() {
   const PU = PUNCH_UNITS[_punchUnit];
+  const _edMM = (_punchEdgeDist    || 0) * PU.lenS;
+  const _cxMM = (_punchCornerDistX || 0) * PU.lenS;
+  const _cyMM = (_punchCornerDistY || 0) * PU.lenS;
   const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
   const h  = gv('punch-h')  * PU.lenS;
   const cv = gv('punch-cv') * PU.lenS;
@@ -2113,9 +2125,9 @@ function _punchCheckReinfNeeded() {
     if (type === 'int') {
       bo = Math.PI * (Dc + d);
     } else if (type === 'edge') {
-      bo = _punchEdgeDist >= _chkD2 ? Math.PI*(Dc+d) : _boE;
+      bo = _edMM >= _chkD2 ? Math.PI*(Dc+d) : _boE;
     } else {
-      const _cxB = _punchCornerDistX >= _chkD2, _cyB = _punchCornerDistY >= _chkD2;
+      const _cxB = _cxMM >= _chkD2, _cyB = _cyMM >= _chkD2;
       bo = (_cxB&&_cyB) ? Math.PI*(Dc+d) : (_cxB||_cyB) ? _boE : _boC;
     }
   } else {
@@ -2123,13 +2135,17 @@ function _punchCheckReinfNeeded() {
     if (type === 'int') {
       bo = 2*(c1+d) + 2*(c2+d);
     } else if (type === 'edge') {
-      bo = _punchEdgeDist >= _chkD2 ? 2*(c1+d)+2*(c2+d) : (ef==='N'||ef==='S') ? c1+2*c2+2*d : 2*c1+c2+2*d;
+      const _eClp = Math.min(_edMM, _chkD2);
+      bo = _edMM >= _chkD2 ? 2*(c1+d)+2*(c2+d) :
+           (ef==='N'||ef==='S') ? c1+2*(c2+_eClp)+2*d : 2*(c1+_eClp)+c2+2*d;
     } else {
-      const _xB = _punchCornerDistX >= _chkD2, _yB = _punchCornerDistY >= _chkD2;
+      const _xClp = Math.min(_cxMM, _chkD2);
+      const _yClp = Math.min(_cyMM, _chkD2);
+      const _xB = _cxMM >= _chkD2, _yB = _cyMM >= _chkD2;
       if (_xB && _yB) bo = 2*(c1+d)+2*(c2+d);
-      else if (_xB)   bo = c1+2*(c2+d);
-      else if (_yB)   bo = 2*(c1+d)+c2;
-      else            bo = c1+c2+d;
+      else if (_xB)   bo = c1+2*(c2+_yClp)+2*d;
+      else if (_yB)   bo = 2*(c1+_xClp)+c2+2*d;
+      else            bo = c1+c2+d+_xClp+_yClp;
     }
   }
 
@@ -2156,9 +2172,10 @@ function _punchCheckReinfNeeded() {
 // ext = s_outer + d/2 (d/2 beyond last stud/stirrup row at s_outer from col face)
 // Setback threshold: if slab edge ≥ ext from column face, that face behaves as interior.
 function _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext) {
-  const _ed  = _punchEdgeDist    || 0;
-  const _cxD = _punchCornerDistX || 0;
-  const _cyD = _punchCornerDistY || 0;
+  const _LS  = (PUNCH_UNITS[_punchUnit]||{lenS:1}).lenS;
+  const _ed  = (_punchEdgeDist    || 0) * _LS;
+  const _cxD = (_punchCornerDistX || 0) * _LS;
+  const _cyD = (_punchCornerDistY || 0) * _LS;
   if (shape === 'circ') {
     const R = Dc/2 + ext;
     const _phi = Math.asin((Dc/2)/R);
@@ -2171,13 +2188,15 @@ function _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext) {
     if (type === 'int') return 2*(c1+c2) + 4*Math.SQRT2*ext;
     if (type === 'edge') {
       if (_ed >= ext) return 2*(c1+c2) + 4*Math.SQRT2*ext;
-      return (ef==='N'||ef==='S') ? c1+2*c2+2*Math.SQRT2*ext : 2*c1+c2+2*Math.SQRT2*ext;
+      const _eS = Math.min(_ed, ext);
+      return (ef==='N'||ef==='S') ? c1+2*(c2+_eS)+2*Math.SQRT2*ext : 2*(c1+_eS)+c2+2*Math.SQRT2*ext;
     }
     const xB = _cxD >= ext, yB = _cyD >= ext;
+    const _xs = Math.min(_cxD, ext), _ys = Math.min(_cyD, ext);
     if (xB && yB) return 2*(c1+c2) + 4*Math.SQRT2*ext;
-    if (xB)       return c1+2*c2+2*Math.SQRT2*ext;
-    if (yB)       return 2*c1+c2+2*Math.SQRT2*ext;
-    return c1+c2+Math.SQRT2*ext;
+    if (xB)       return c1+2*(c2+_ys)+2*Math.SQRT2*ext;
+    if (yB)       return 2*(c1+_xs)+c2+2*Math.SQRT2*ext;
+    return c1+c2+Math.SQRT2*ext+_xs+_ys;
   }
 }
 
@@ -3279,6 +3298,9 @@ function calcPunchShear() {
   if (code !== 'aci') return;
 
   const PU   = PUNCH_UNITS[_punchUnit];
+  const _edgeDist_mm    = (_punchEdgeDist    || 0) * PU.lenS;
+  const _cornerDistX_mm = (_punchCornerDistX || 0) * PU.lenS;
+  const _cornerDistY_mm = (_punchCornerDistY || 0) * PU.lenS;
   const _fL  = v => `${(v/PU.lenS).toFixed(PU.lenS>=100?2:PU.lenS>=10?1:0)} ${PU.lenU}`;
   const _n2  = v => PU.lenS>=100 ? Number(v).toFixed(2) : v;
   const _fS  = (v, dp) => PU.stressS > 1 ? `${(v*PU.stressS).toFixed(0)} ${PU.stressU}` : `${v.toFixed(dp!==undefined?dp:3)} ${PU.stressU}`;
@@ -3371,10 +3393,10 @@ function calcPunchShear() {
       typeLabel  = 'Interior';
       _boFLabel  = 'b<sub>o</sub> = π(D<sub>c</sub>+d)';
     } else if (type === 'edge') {
-      if (_punchEdgeDist >= d/2) {
+      if (_edgeDist_mm >= d/2) {
         bo_full   = Math.PI * (Dc + d);
-        alphaS    = 40;
-        _boFLabel = 'b<sub>o</sub> = π(D<sub>c</sub>+d) <small>(setback≥d/2→interior)</small>';
+        alphaS    = 30;
+        _boFLabel = 'b<sub>o</sub> = π(D<sub>c</sub>+d) <small>(setback≥d/2→full arc)</small>';
       } else {
         bo_full   = _boCircEdge;
         alphaS    = 30;
@@ -3382,11 +3404,11 @@ function calcPunchShear() {
       }
       typeLabel = `Edge (free face: ${_punchEdgeFace})`;
     } else { // corner
-      const _cxB = _punchCornerDistX >= d/2, _cyB = _punchCornerDistY >= d/2;
+      const _cxB = _cornerDistX_mm >= d/2, _cyB = _cornerDistY_mm >= d/2;
       if (_cxB && _cyB) {
         bo_full   = Math.PI * (Dc + d);
-        alphaS    = 40;
-        _boFLabel = 'b<sub>o</sub> = π(D<sub>c</sub>+d) <small>(both setbacks≥d/2→interior)</small>';
+        alphaS    = 20;
+        _boFLabel = 'b<sub>o</sub> = π(D<sub>c</sub>+d) <small>(both setbacks≥d/2→full arc)</small>';
       } else if (_cxB || _cyB) {
         bo_full   = _boCircEdge;
         alphaS    = 30;
@@ -3409,38 +3431,43 @@ function calcPunchShear() {
       _boFLabel  = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)';
     } else if (type === 'edge') {
       const ef = _punchEdgeFace;
-      if (_punchEdgeDist >= d/2) {
+      const _eC = Math.min(_edgeDist_mm, d/2);
+      if (_edgeDist_mm >= d/2) {
         bo_full   = 2*(c1+d) + 2*(c2+d);
-        alphaS    = 40;
-        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(setback≥d/2→interior)</small>';
-      } else {
-        bo_full   = (ef==='N'||ef==='S') ? (c1+2*c2+2*d) : (2*c1+c2+2*d);
         alphaS    = 30;
-        _boFLabel = (ef==='N'||ef==='S')
-          ? 'b<sub>o</sub> = c<sub>1</sub>+2c<sub>2</sub>+2d'
-          : 'b<sub>o</sub> = 2c<sub>1</sub>+c<sub>2</sub>+2d';
+        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(setback≥d/2→full perimeter)</small>';
+      } else if (ef==='N'||ef==='S') {
+        bo_full   = c1+2*(c2+_eC)+2*d;
+        alphaS    = 30;
+        _boFLabel = _eC>0 ? `b<sub>o</sub> = c<sub>1</sub>+2(c<sub>2</sub>+e)+2d <small>e=${_eC.toFixed(0)} mm</small>`
+                          : 'b<sub>o</sub> = c<sub>1</sub>+2c<sub>2</sub>+2d';
+      } else {
+        bo_full   = 2*(c1+_eC)+c2+2*d;
+        alphaS    = 30;
+        _boFLabel = _eC>0 ? `b<sub>o</sub> = 2(c<sub>1</sub>+e)+c<sub>2</sub>+2d <small>e=${_eC.toFixed(0)} mm</small>`
+                          : 'b<sub>o</sub> = 2c<sub>1</sub>+c<sub>2</sub>+2d';
       }
       typeLabel = `Edge (free face: ${ef})`;
     } else { // corner
-      const _xB = _punchCornerDistX >= d/2, _yB = _punchCornerDistY >= d/2;
+      const _xB = _cornerDistX_mm >= d/2, _yB = _cornerDistY_mm >= d/2;
+      const _xC = Math.min(_cornerDistX_mm, d/2), _yC = Math.min(_cornerDistY_mm, d/2);
       if (_xB && _yB) {
         bo_full   = 2*(c1+d) + 2*(c2+d);
-        alphaS    = 40;
-        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(both≥d/2→interior)</small>';
-      } else if (_xB) {
-        // X-face freed → remaining free face is N/S → edge (N/S) formula
-        bo_full   = c1 + 2*(c2+d);
-        alphaS    = 30;
-        _boFLabel = 'b<sub>o</sub> = c<sub>1</sub>+2(c<sub>2</sub>+d) <small>(X setback≥d/2→edge)</small>';
-      } else if (_yB) {
-        // Y-face freed → remaining free face is E/W → edge (E/W) formula
-        bo_full   = 2*(c1+d) + c2;
-        alphaS    = 30;
-        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+c<sub>2</sub> <small>(Y setback≥d/2→edge)</small>';
-      } else {
-        bo_full   = c1 + c2 + d;
         alphaS    = 20;
-        _boFLabel = 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d';
+        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(both≥d/2→full perimeter)</small>';
+      } else if (_xB) {
+        bo_full   = c1+2*(c2+_yC)+2*d;
+        alphaS    = 30;
+        _boFLabel = `b<sub>o</sub> = c<sub>1</sub>+2(c<sub>2</sub>+e<sub>y</sub>)+2d <small>(X≥d/2→edge)</small>`;
+      } else if (_yB) {
+        bo_full   = 2*(c1+_xC)+c2+2*d;
+        alphaS    = 30;
+        _boFLabel = `b<sub>o</sub> = 2(c<sub>1</sub>+e<sub>x</sub>)+c<sub>2</sub>+2d <small>(Y≥d/2→edge)</small>`;
+      } else {
+        bo_full   = c1+c2+d+_xC+_yC;
+        alphaS    = 20;
+        _boFLabel = (_xC>0||_yC>0) ? `b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d+e<sub>x</sub>+e<sub>y</sub>`
+                                    : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d';
       }
       typeLabel = `Corner (${_punchCornerPos})`;
     }
@@ -3508,11 +3535,11 @@ function calcPunchShear() {
       if (type === 'int') {
         bo_out = 2*Math.PI*(Dc/2 + outer_cp_ext);
       } else if (type === 'edge') {
-        bo_out = _punchEdgeDist >= outer_cp_ext
+        bo_out = _edgeDist_mm >= outer_cp_ext
           ? 2*Math.PI*(Dc/2+outer_cp_ext)
           : 0.75*2*Math.PI*(Dc/2+outer_cp_ext) + 2*outer_cp_ext;
       } else { // corner
-        const _cxBo = _punchCornerDistX >= outer_cp_ext, _cyBo = _punchCornerDistY >= outer_cp_ext;
+        const _cxBo = _cornerDistX_mm >= outer_cp_ext, _cyBo = _cornerDistY_mm >= outer_cp_ext;
         bo_out = (_cxBo&&_cyBo) ? 2*Math.PI*(Dc/2+outer_cp_ext)
                : (_cxBo||_cyBo) ? 0.75*2*Math.PI*(Dc/2+outer_cp_ext)+2*outer_cp_ext
                : 0.5*2*Math.PI*(Dc/2+outer_cp_ext)+2*outer_cp_ext;
@@ -3521,13 +3548,13 @@ function calcPunchShear() {
       if (type === 'int') {
         bo_out = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
       } else if (type === 'edge') {
-        if (_punchEdgeDist >= outer_cp_ext) {
+        if (_edgeDist_mm >= outer_cp_ext) {
           bo_out = 2*(c1+c2) + 4*Math.SQRT2*outer_cp_ext;
         } else {
           bo_out = (ef2==='N'||ef2==='S') ? c1+2*c2+2*Math.SQRT2*outer_cp_ext : 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
         }
       } else { // corner
-        const _xBo = _punchCornerDistX >= outer_cp_ext, _yBo = _punchCornerDistY >= outer_cp_ext;
+        const _xBo = _cornerDistX_mm >= outer_cp_ext, _yBo = _cornerDistY_mm >= outer_cp_ext;
         if (_xBo && _yBo)     bo_out = 2*(c1+c2)+4*Math.SQRT2*outer_cp_ext;
         else if (_xBo)         bo_out = c1+2*c2+2*Math.SQRT2*outer_cp_ext;
         else if (_yBo)         bo_out = 2*c1+c2+2*Math.SQRT2*outer_cp_ext;
@@ -3763,10 +3790,10 @@ function calcPunchShear() {
     ]),
     ['Column shape',  shapeLabel,  'inp-diag'],
     ['Column type',   typeLabel,   'inp-diag'],
-    ...(type==='edge' ? [['Edge setback', _fL(_punchEdgeDist), 'inp-diag']] : []),
+    ...(type==='edge' ? [['Edge setback', _fL(_edgeDist_mm), 'inp-diag']] : []),
     ...(type==='corner' ? [
-      ['Corner setback X', _fL(_punchCornerDistX), 'inp-diag'],
-      ['Corner setback Y', _fL(_punchCornerDistY), 'inp-diag'],
+      ['Corner setback X', _fL(_cornerDistX_mm), 'inp-diag'],
+      ['Corner setback Y', _fL(_cornerDistY_mm), 'inp-diag'],
     ] : []),
     ['Factored shear V<sub>u</sub>',  `${Vu_disp} ${PU.forceU}`],
     ['Moment M<sub>ux</sub>',         `${Mux_disp} ${PU.momU}`],
@@ -3794,7 +3821,7 @@ function calcPunchShear() {
   const _svg_nr = isStud ? nr_disp : 8;
   const _svg_n_sets = hasReinf ? n_sets : 0;
   const _svg_rail_target = hasReinf ? rail_len_target : 0;
-  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target, edgeDist_mm: _punchEdgeDist, cornerDistX_mm: _punchCornerDistX, cornerDistY_mm: _punchCornerDistY });
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target, edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm });
 
   // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
   const _bannerBo    = bo;   // always inner CP (d/2 from col face)
@@ -3984,6 +4011,11 @@ function updateEC2OpStatus() {
 }
 function _ec2kFactor(d_mm) { return Math.min(1+Math.sqrt(200/d_mm),2.0); }
 function _ec2W1(c_ec,c_ot,d_mm) { return c_ec*c_ec/2+c_ec*c_ot+4*c_ot*d_mm+2*Math.PI*c_ec*d_mm+16*d_mm*d_mm; }
+// Edge column W₁ (flush): cP=c_para (parallel to free edge), cT=c_perp (perpendicular)
+function _ec2W1edge_para(cP,cT,d){return cP*cP/4+cP*cT+4*cT*d+Math.PI*cP*d+8*d*d;}
+function _ec2W1edge_perp(cP,cT,d){return cP*cT/2+cT*cT/2+2*cP*d+Math.PI*cT*d+8*d*d;}
+// Corner column W₁: cA=col dim in eccentricity direction, cB=other (one quarter-arc)
+function _ec2W1corner(cA,cB,d){return cA*cA/4+cA*cB/2+2*cB*d+Math.PI*cA*d/2+4*d*d;}
 function _showEC2Err(msg) {
   const emp=document.getElementById('ec2_punch_empty'), crd=document.getElementById('ec2_punch_card');
   emp.innerHTML=`<div class="ri">&#9888;&#65039;</div><div style="color:var(--red);font-size:.82rem;font-weight:500;">${msg}</div>`;
@@ -4000,8 +4032,11 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   let r_out_mm=0;
   if(u_out_mm){if(isCirc)r_out_mm=u_out_mm/(2*Math.PI)-col_hw;else if(type==='int')r_out_mm=Math.max((u_out_mm-2*(c1_mm+c2_mm))/(2*Math.PI),d_mm);else if(type==='edge'){const _cp=(edgeFace==='E'||edgeFace==='W')?c1_mm:c2_mm,_cpa=c1_mm+c2_mm-_cp;r_out_mm=Math.max((u_out_mm-_cpa-2*_cp)/Math.PI,d_mm);}else r_out_mm=Math.max(2*(u_out_mm-c1_mm-c2_mm)/Math.PI,d_mm);}
   const lastRingMM=n_rings>0&&sr_mm>0?0.5*d_mm+(n_rings-1)*sr_mm:0;
-  const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM)*1.18;
-  const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM)*1.18;
+  // Only scale SVG to fit rings when the outer perimeter is also being shown (u_out_mm set);
+  // otherwise the huge ring zone (from a failing design) would make the column microscopic.
+  const lastRingMM_scale=u_out_mm?lastRingMM:0;
+  const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM_scale)*1.18;
+  const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM_scale)*1.18;
   const PAD=40,freeStrip=35;
   const _setN=freeFaces.includes('N')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
   const _setS=freeFaces.includes('S')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
@@ -4104,8 +4139,10 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
 
   // reinforcement visualization
   if(n_rings>0&&sr_mm>0&&d_mm>0){
+    // When u_out not shown (design fails), cap drawn rings to those within ~3d to keep SVG readable
+    const n_rings_draw=u_out_mm?n_rings:Math.min(n_rings,Math.max(1,Math.ceil((3*d_mm-0.5*d_mm)/sr_mm)+1));
     const ringPosSV=[];
-    for(let i=0;i<n_rings;i++) ringPosSV.push((0.5*d_mm+i*sr_mm)*S);
+    for(let i=0;i<n_rings_draw;i++) ringPosSV.push((0.5*d_mm+i*sr_mm)*S);
 
     if(reinfType==='stud'&&nr>0){
       // Headed studs: radial rails with stud dots on each active face
@@ -4229,6 +4266,28 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
 
   s+=`</g>`;
 
+  // Zone length dimension (col. face → last ring), drawn outside clip so it's never cropped
+  // Only shown when outer perimeter is also shown (design passes inner check)
+  if(u_out_mm&&n_rings>0&&sr_mm>0&&d_mm>0){
+    const _zoneLastMM=0.5*d_mm+(n_rings-1)*sr_mm;
+    const _zonePX=_zoneLastMM*S;
+    const _dimY=Math.min(cy+chh+34,drawH-12);
+    const _rlLabel=`Zone: ${Math.round(_zoneLastMM)} mm`;
+    function _drawZoneDimEC2(rx1,rx2){
+      const _mid=(rx1+rx2)/2;
+      s+=`<line x1="${ff(rx1)}" y1="${ff(cy+chh+2)}" x2="${ff(rx1)}" y2="${ff(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s+=`<line x1="${ff(rx2)}" y1="${ff(cy+chh+2)}" x2="${ff(rx2)}" y2="${ff(_dimY+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s+=`<line x1="${ff(rx1)}" y1="${ff(_dimY)}" x2="${ff(rx2)}" y2="${ff(_dimY)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#ec2-a2)" marker-end="url(#ec2-a1)"/>`;
+      s+=`<rect x="${ff(_mid-30)}" y="${ff(_dimY-14)}" width="60" height="11" fill="white" opacity="0.9" rx="2"/>`;
+      s+=`<text x="${ff(_mid)}" y="${ff(_dimY-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLabel}</text>`;
+    }
+    if(!freeFaces.includes('E')){
+      _drawZoneDimEC2(cx+chw, cx+chw+_zonePX);
+    } else if(!freeFaces.includes('W')&&cx-chw-_zonePX>2){
+      _drawZoneDimEC2(cx-chw-_zonePX, cx-chw);
+    }
+  }
+
   // Legend
   const ly=H-8;
   s+=`<line x1="6" y1="${ly-3}" x2="22" y2="${ly-3}" stroke="${u1C}" stroke-dasharray="${u1DA}" stroke-width="2"/><text x="25" y="${ly}" font-size="9" fill="${u1C}">u₁ (2d)</text>`;
@@ -4244,6 +4303,8 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
     <pattern id="ec2op" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#fca5a5" stroke-width="1.5"/></pattern>
     <pattern id="ec2v" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="2"/></pattern>
     <clipPath id="ec2sc"><rect x="${ff(slabX1)}" y="${ff(slabY1)}" width="${ff(Math.max(slabX2-slabX1,0))}" height="${ff(Math.max(slabY2-slabY1,0))}"/></clipPath>
+    <marker id="ec2-a1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,1 L7,4 L0,7 Z" fill="#f97316"/></marker>
+    <marker id="ec2-a2" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M8,1 L1,4 L8,7 Z" fill="#f97316"/></marker>
   </defs>
   ${s}
   </svg>`;
@@ -4257,8 +4318,8 @@ function calcEC2PunchShear() {
   const fck  =parseFloat(document.getElementById('ec2-fck').value);
   const rho_x=parseFloat(document.getElementById('ec2-rho-x').value)/100;
   const rho_y=parseFloat(document.getElementById('ec2-rho-y').value)/100;
-  const gammac=parseFloat(document.getElementById('ec2-gammac').value);
-  const sigcp =parseFloat(document.getElementById('ec2-sigmacp').value);
+  const gammac=1.5;
+  const sigcp =0;
   const c1_ui =shape==='rect'?parseFloat(document.getElementById('ec2-c1').value):0;
   const c2_ui =shape==='rect'?parseFloat(document.getElementById('ec2-c2').value):0;
   const Dc_ui =shape==='circ'?parseFloat(document.getElementById('ec2-dc').value):0;
@@ -4275,7 +4336,7 @@ function calcEC2PunchShear() {
   const ao_ui    =hasOp?parseFloat(document.getElementById('ec2-ao').value)||0:0;
   const opFace   =_ec2OpFace;
 
-  if([h_ui,cv_ui,db_ui,fck,rho_x,rho_y,gammac,VEd_ui].some(v=>isNaN(v)||v<=0))
+  if([h_ui,cv_ui,db_ui,fck,rho_x,rho_y,VEd_ui].some(v=>isNaN(v)||v<=0))
     return _showEC2Err('Please fill in all required inputs (all positive values).');
 
   const LS=U.lenS, FS=U.forceS, MS=U.momS;
@@ -4286,13 +4347,18 @@ function calcEC2PunchShear() {
   if(shape==='rect'&&(c1_mm<=0||c2_mm<=0)) return _showEC2Err('Column dimensions must be positive.');
   if(shape==='circ'&&Dc_mm<=0) return _showEC2Err('Column diameter must be positive.');
 
+  // Slab edge setback distances (read early — needed for u₁ and β)
+  const edgeDist_mm    =(parseFloat(document.getElementById('ec2-edge-dist')?.value)||0)*LS;
+  const cornerDistX_mm =(parseFloat(document.getElementById('ec2-corner-dist-x')?.value)||0)*LS;
+  const cornerDistY_mm =(parseFloat(document.getElementById('ec2-corner-dist-y')?.value)||0)*LS;
+
   // c_perp/c_para for edge columns
   // N/S face (horizontal slab edge): c₁(X) is parallel, c₂(Y) is perpendicular
   // E/W face (vertical slab edge):   c₁(X) is perpendicular, c₂(Y) is parallel
   let c_perp=c2_mm, c_para=c1_mm;
   if(type==='edge'&&shape==='rect'&&(ef==='E'||ef==='W')){c_perp=c1_mm;c_para=c2_mm;}
 
-  // Control perimeter u₁
+  // Control perimeter u₁ — includes setback for edge/corner (EC2 §6.4.2)
   let u1;
   if(shape==='circ'){
     if(type==='int')         u1=2*Math.PI*(Dc_mm/2+2*d_mm);
@@ -4300,8 +4366,8 @@ function calcEC2PunchShear() {
     else                     u1=Math.PI/2*(Dc_mm/2+2*d_mm)+(Dc_mm/2+2*d_mm);
   } else {
     if(type==='int')         u1=2*(c1_mm+c2_mm)+2*Math.PI*2*d_mm;
-    else if(type==='edge')   u1=2*c_perp+c_para+2*Math.PI*d_mm;
-    else                     u1=c1_mm+c2_mm+Math.PI*d_mm;
+    else if(type==='edge')   u1=c_para+2*(c_perp+Math.min(edgeDist_mm,2*d_mm))+2*Math.PI*d_mm;
+    else                     u1=c1_mm+c2_mm+Math.PI*d_mm+Math.min(cornerDistX_mm,2*d_mm)+Math.min(cornerDistY_mm,2*d_mm);
   }
 
   // Opening reduction — EC2 §6.4.2(3)
@@ -4323,23 +4389,42 @@ function calcEC2PunchShear() {
   const vRdc=Math.max(vRdc_raw, v_min+k1*sigcp);
   const nu=0.6*(1-fck/250), fcd=fck/gammac, vRdmax=0.4*nu*fcd;
 
-  // β factor
+  // β factor — EC2 Eq.6.39 for rectangular columns; simplified for circular
   let beta, betaMethod;
   const hasMoment=(Mux!==0||Muy!==0);
   if(!hasMoment) {
     beta=type==='int'?1.0:type==='edge'?1.4:1.5;
     betaMethod=type==='int'?'No moment transfer → β=1.0':`Simplified EC2 Table 6.1 → β=${beta}`;
-  } else if(type==='int'&&shape==='rect') {
+  } else if(shape==='rect') {
     const eu_x=Math.abs(Muy)/VEd, eu_y=Math.abs(Mux)/VEd;
     const ratio=c1_mm/c2_mm;
-    let kec=ratio<=0.5?0.45:ratio<=1.0?0.45+(ratio-0.5)*0.30:ratio<=2.0?0.60+(ratio-1.0)*0.10:0.70;
-    const W1x=_ec2W1(c2_mm,c1_mm,d_mm), W1y=_ec2W1(c1_mm,c2_mm,d_mm);
-    const bx=1+kec*eu_x*u1/W1x, by=1+kec*eu_y*u1/W1y;
-    beta=Math.max(bx,by);
-    betaMethod=`EC2 Eq.6.39: β_x=${bx.toFixed(3)}, β_y=${by.toFixed(3)}, k_ec=${kec.toFixed(2)}`;
+    const kec=ratio<=0.5?0.45:ratio<=1.0?0.45+(ratio-0.5)*0.30:ratio<=2.0?0.60+(ratio-1.0)*0.10:0.70;
+    let bx,by;
+    if(type==='int'){
+      const W1x=_ec2W1(c2_mm,c1_mm,d_mm), W1y=_ec2W1(c1_mm,c2_mm,d_mm);
+      bx=1+kec*eu_x*u1/W1x; by=1+kec*eu_y*u1/W1y;
+      beta=Math.max(bx,by);
+      betaMethod=`EC2 Eq.6.39: β_x=${bx.toFixed(3)}, β_y=${by.toFixed(3)}, k=${kec.toFixed(2)}`;
+    } else if(type==='edge'){
+      // W₁_para: bending parallel to free edge (Muy for N/S face, Mux for E/W face)
+      // W₁_perp: bending perpendicular to free edge (Mux for N/S face, Muy for E/W face)
+      const W1p=_ec2W1edge_para(c_para,c_perp,d_mm);
+      const W1t=_ec2W1edge_perp(c_para,c_perp,d_mm);
+      const isNS=(ef==='N'||ef==='S');
+      const eu_para=isNS?eu_x:eu_y, eu_perp=isNS?eu_y:eu_x;
+      bx=1+kec*eu_para*u1/W1p; by=1+kec*eu_perp*u1/W1t;
+      beta=Math.max(Math.max(bx,by), 1.4);
+      betaMethod=`EC2 Eq.6.39 (edge): β_par=${bx.toFixed(3)}, β_perp=${by.toFixed(3)}, k=${kec.toFixed(2)}`;
+    } else { // corner
+      const W1x=_ec2W1corner(c1_mm,c2_mm,d_mm), W1y=_ec2W1corner(c2_mm,c1_mm,d_mm);
+      bx=1+kec*eu_x*u1/W1x; by=1+kec*eu_y*u1/W1y;
+      beta=Math.max(Math.max(bx,by), 1.5);
+      betaMethod=`EC2 Eq.6.39 (corner): β_x=${bx.toFixed(3)}, β_y=${by.toFixed(3)}, k=${kec.toFixed(2)}`;
+    }
   } else {
-    beta=type==='int'?1.0:type==='edge'?1.4:1.5;
-    betaMethod=`Simplified β=${beta} (exact β for ${type}/${shape} with moment requires numerical integration)`;
+    // Circular column with moment — simplified β
+    beta=type==='int'?1.15:type==='edge'?1.4:1.5;
+    betaMethod=`Simplified β=${beta} (circular column — exact W₁ requires integration)`;
   }
 
   // Stress
@@ -4363,8 +4448,8 @@ function calcEC2PunchShear() {
     u_out_req=beta*VEd/(vRdc*d_mm);
     if(shape==='circ')       r_out=u_out_req/(2*Math.PI)-Dc_mm/2;
     else if(type==='int')    r_out=(u_out_req-2*(c1_mm+c2_mm))/(2*Math.PI);
-    else if(type==='edge')   r_out=(u_out_req-c_para-2*c_perp)/Math.PI;
-    else                     r_out=2*(u_out_req-c1_mm-c2_mm)/Math.PI;
+    else if(type==='edge')   r_out=(u_out_req-c_para-2*(c_perp+Math.min(edgeDist_mm,2*d_mm)))/Math.PI;
+    else                     r_out=2*(u_out_req-c1_mm-c2_mm-Math.min(cornerDistX_mm,2*d_mm)-Math.min(cornerDistY_mm,2*d_mm))/Math.PI;
     r_out=Math.max(r_out,d_mm);
     r_first=0.5*d_mm; r_last=Math.max(r_out-1.5*d_mm, r_first+sr_mm);
     n_rings=Math.max(1,Math.ceil((r_last-r_first)/sr_mm)+1);
@@ -4436,10 +4521,10 @@ function calcEC2PunchShear() {
     ...(hasReinf?[['n × d<sub>b</sub>',`${reinf_n} × ${reinf_db} mm`],['A<sub>sw</sub>',`${Asw_mm2.toFixed(0)} mm²/ring`],['f<sub>ywd</sub>',`${fywd_MPa} MPa`],['s<sub>r</sub>',`${(sr_mm/LS).toFixed(dp)} ${U.lenU}`],['f<sub>ywd,ef</sub>',`${fywdEf.toFixed(0)} MPa`]]:[]),
   ];
 
-  const _ec2EdgeDistMM   = (parseFloat(document.getElementById('ec2-edge-dist')?.value)||0)    * LS;
-  const _ec2CornerDistXMM= (parseFloat(document.getElementById('ec2-corner-dist-x')?.value)||0) * LS;
-  const _ec2CornerDistYMM= (parseFloat(document.getElementById('ec2-corner-dist-y')?.value)||0) * LS;
-  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:hasReinf?u_out_req:null,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0,edgeDist_mm:_ec2EdgeDistMM,cornerDistX_mm:_ec2CornerDistXMM,cornerDistY_mm:_ec2CornerDistYMM,cornerPos:_ec2CornerPos});
+  // u_out_mm only passed when inner check passes; failing designs suppress the outer perimeter
+  // and zone annotation so the SVG stays readable and doesn't show a misleading huge zone.
+  const _svgUout=hasReinf&&vRdcs>=vEd?u_out_req:null;
+  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:_svgUout,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0,edgeDist_mm,cornerDistX_mm,cornerDistY_mm,cornerPos:_ec2CornerPos});
   const dcrCls=DCR<=0.90?'ok':DCR<=1.0?'warn':'err';
   const status=DCR<=0.90?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
   const capLbl=hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>';
