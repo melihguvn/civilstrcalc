@@ -1344,6 +1344,34 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
 
+      <!-- ── Slab Opening (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Slab Opening
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="is456-punch-has-op" onchange="setIS456HasOp(this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="is456-punch-op-inputs" style="display:none">
+        <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
+          IS 456:2000 does not address openings. Applying ACI §22.6.4.3 b<sub>o</sub> reduction.
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;">
+          <label style="font-size:.76rem;min-width:60px;">Direction:</label>
+          <div class="unit-btns">
+            <button class="unit-btn" id="is456-op-N" onclick="setIS456OpFace('N',this)">N</button>
+            <button class="unit-btn active" id="is456-op-E" onclick="setIS456OpFace('E',this)">E</button>
+            <button class="unit-btn" id="is456-op-S" onclick="setIS456OpFace('S',this)">S</button>
+            <button class="unit-btn" id="is456-op-W" onclick="setIS456OpFace('W',this)">W</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>Opening size a<sub>o</sub> [mm]</label>
+          <div class="iw"><input type="number" id="is456-punch-ao" value="200" step="10" min="0" oninput="updateIS456OpStatus()"><span class="us">mm</span></div>
+        </div>
+        <div id="is456-punch-op-status" style="font-size:.72rem;background:var(--bg-alt);border-radius:5px;padding:8px 10px;margin-top:4px;line-height:1.8;display:none;"></div>
+      </div>
+
       <button class="btn-calc" onclick="calcIS456PunchShear()">&#9654; Calculate</button>
     </div>
   </div>
@@ -4786,6 +4814,7 @@ let _is456ReinfType = 'stirrup';
 let _is456EdgeDist = 0, _is456CornerDistX = 0, _is456CornerDistY = 0;
 let _lastIS456Results = null;
 let _is456Unit = 'knm';
+let _is456OpFace = 'E';
 const IS456_PUNCH_UNITS = {
   knm: { lenU:'mm', fcU:'N/mm²', forceU:'kN', momU:'kN·m', stressU:'N/mm²',
          lenS:1, forceS:1000, momS:1e6, stressS:1, tag:'kN-m',
@@ -4890,6 +4919,45 @@ function setIS456EdgeDist(v)    { _is456EdgeDist    = Math.max(0, parseFloat(v)|
 function setIS456CornerDistX(v) { _is456CornerDistX = Math.max(0, parseFloat(v)||0); calcIS456PunchShear(); }
 function setIS456CornerDistY(v) { _is456CornerDistY = Math.max(0, parseFloat(v)||0); calcIS456PunchShear(); }
 
+function setIS456HasOp(checked) {
+  const el = document.getElementById('is456-punch-op-inputs');
+  if (el) el.style.display = checked ? '' : 'none';
+  updateIS456OpStatus();
+}
+function setIS456OpFace(face, btn) {
+  _is456OpFace = face;
+  ['N','E','S','W'].forEach(f => {
+    const b = document.getElementById('is456-op-' + f);
+    if (b) b.classList.toggle('active', f === face);
+  });
+  updateIS456OpStatus();
+}
+function updateIS456OpStatus() {
+  const el = document.getElementById('is456-punch-op-status');
+  if (!el) return;
+  const checked = document.getElementById('is456-punch-has-op')?.checked;
+  if (!checked) { el.style.display = 'none'; return; }
+  const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const face = _is456OpFace || 'E';
+  const ao = gv('is456-punch-ao');
+  const c1 = gv('is456-punch-c1');
+  const c2 = gv('is456-punch-c2');
+  const c_aff = (face === 'N' || face === 'S') ? c2 : c1;
+  const thr = 0.6 * c_aff;
+  const is_small = ao < thr;
+  const clr = is_small ? '#16a34a' : '#dc2626';
+  const label = is_small ? 'SMALL' : 'LARGE';
+  const reinf = is_small ? 'Reinf. on both adjacent sides ✓' : 'No reinf. on opening face ✗';
+  el.innerHTML = `
+    <div><b>Direction:</b> ${face} &nbsp;&nbsp; <b>a<sub>o</sub>:</b> ${ao.toFixed(0)} mm</div>
+    <div><b>c<sub>affected</sub>:</b> ${c_aff.toFixed(0)} mm &nbsp;&nbsp; <b>Threshold:</b> 0.6 × ${c_aff.toFixed(0)} = ${thr.toFixed(1)} mm</div>
+    <div><b>Classification:</b> <span style="color:${clr};font-weight:700">${label}</span> &nbsp;(a<sub>o</sub> ${is_small ? '<' : '≥'} 0.6c)</div>
+    <div><b>Reinf. decision:</b> <span style="color:${clr}">${reinf}</span></div>
+    <div><b>b<sub>o</sub> reduction:</b> −${ao.toFixed(0)} mm on ${face} face</div>
+  `;
+  el.style.display = '';
+}
+
 function calcIS456PunchShear() {
   _lastIS456Results = null;
   const shape = _is456Shape, type = _is456Type;
@@ -4927,6 +4995,17 @@ function calcIS456PunchShear() {
   const rs_mm    = hasReinf ? gv('is456-punch-reinf-s')  : 0;
   const fy_r     = hasReinf ? gv('is456-punch-fy') : 0;
   const Av_1     = hasReinf ? nFaces * nLegs * Math.PI/4 * rdb_mm * rdb_mm : 0;
+
+  // Opening input
+  const hasOp = document.getElementById('is456-punch-has-op')?.checked;
+  const _is456OpRaw = [];
+  if (hasOp) {
+    const _face = _is456OpFace || 'E';
+    const _ao = gv('is456-punch-ao');
+    const _caff = (_face === 'N' || _face === 'S') ? c2 : c1;
+    const _thr = 0.6 * _caff;
+    _is456OpRaw.push({ num:1, face:_face, ao:_ao, ao_mm:_ao, c_affected:_caff, threshold:_thr, is_small:_ao<_thr });
+  }
 
   // ── IS 456 Cl 31.6.2: βc = short/long ≤ 1.0 (rect); 1.0 for circular ──
   let betaC, shapeLabel;
@@ -4994,6 +5073,29 @@ function calcIS456PunchShear() {
     }
   }
 
+  // Opening reduction (ACI §22.6.4.3 methodology — IS 456 does not specify)
+  const _faceSideLen_is = { N:c1+d, E:c2+d, S:c1+d, W:c2+d };
+  const _faceIneff_is = { N:0, E:0, S:0, W:0 };
+  const opData = [];
+  for (const op of _is456OpRaw) {
+    op.within4h = op.ao > 0;
+    if (op.within4h && shape === 'rect') {
+      const sl = _faceSideLen_is[op.face] || bo;
+      op.bo_ineff = Math.min(op.ao, sl - _faceIneff_is[op.face]);
+      _faceIneff_is[op.face] += op.bo_ineff;
+    } else { op.bo_ineff = 0; }
+    opData.push(op);
+  }
+  const bo_ineff_is = Object.values(_faceIneff_is).reduce((a,b)=>a+b,0);
+  const bo_full_is = bo;
+  if (bo_ineff_is > 0) bo = Math.max(bo - bo_ineff_is, bo * 0.1);
+  const openingWithin4h = opData.some(op => op.within4h && op.bo_ineff > 0);
+  // n_sets for plan view (2d zone — IS 456 practice per Cl 31.6.3)
+  const _rail_len_is = 2 * d;
+  const _n_sets_is = hasReinf && rs_mm > 0
+    ? Math.max(1, Math.ceil(Math.max(0, _rail_len_is - d/4) / rs_mm) + 1)
+    : 0;
+
   const Ac    = bo * d;
   const tauDir = Vu_N / Ac;   // direct shear stress without moment
   // Moment transfer via ACI γv approach (optional, rectangular columns only)
@@ -5016,6 +5118,10 @@ function calcIS456PunchShear() {
     warns.push('<b>Moment transfer skipped:</b> ACI γ<sub>v</sub> formula applies to rectangular columns only. Circular column — verify manually.');
   if (hasMT && (Mux!==0||Muy!==0) && _mt)
     warns.push('ℹ <b>Moment transfer (ACI methodology):</b> IS 456:2000 Cl 31.6 does not define a moment transfer formula. Results use ACI 318 γ<sub>v</sub>·M·c/J<sub>c</sub> method for enhanced accuracy.');
+  if (hasOp && shape === 'circ')
+    warns.push('ℹ <b>Slab opening (circular column):</b> Opening b<sub>o</sub> reduction for circular columns is not implemented. Verify manually.');
+  if (hasOp && openingWithin4h)
+    warns.push('ℹ <b>Slab opening:</b> IS 456:2000 does not address openings. Applying ACI §22.6.4.3 b<sub>o</sub> reduction.');
   let DCR, capStress, isOK, steps = [];
 
   // ── Moment transfer steps (shared between reinf/no-reinf branches) ──
@@ -5044,7 +5150,12 @@ function calcIS456PunchShear() {
     capStress = tauPerm;
     isOK = DCR <= 1.0;
     steps = [
-      {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo)},
+      {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo_full_is)},
+      ...(openingWithin4h ? [{
+        desc:'b<sub>o</sub> reduction — opening (ACI §22.6.4.3)',
+        formula: opData.filter(op=>op.within4h&&op.bo_ineff>0).map(op=>`Face ${op.face}: a<sub>o</sub>=${op.ao.toFixed(0)} mm (${op.is_small?'SMALL':'LARGE'}) → −${op.bo_ineff.toFixed(0)} mm`).join('; '),
+        val: _fL(bo)
+      }] : []),
       {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:_fA(Ac)},
       {desc:'τ<sub>v,dir</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
        formula:U.forceS!==1?`V<sub>u</sub> = ${gv('is456-punch-vu').toFixed(1)} ${U.forceU} = ${Vu_N.toFixed(0)} N; A<sub>c</sub> = ${Ac.toFixed(0)} mm²`:'',
@@ -5072,7 +5183,12 @@ function calcIS456PunchShear() {
       warns.push(`<b>Insufficient reinforcement:</b> τ<sub>s</sub> = ${_fS(tau_s,3)} &lt; required ${_fS(Math.max(tauV-tauPerm,0),3)}. Add more legs or reduce spacing.`);
     const Vus = Math.max(Vu_N - tauPerm*Ac, 0);
     steps = [
-      {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo)},
+      {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo_full_is)},
+      ...(openingWithin4h ? [{
+        desc:'b<sub>o</sub> reduction — opening (ACI §22.6.4.3)',
+        formula: opData.filter(op=>op.within4h&&op.bo_ineff>0).map(op=>`Face ${op.face}: a<sub>o</sub>=${op.ao.toFixed(0)} mm (${op.is_small?'SMALL':'LARGE'}) → −${op.bo_ineff.toFixed(0)} mm`).join('; '),
+        val: _fL(bo)
+      }] : []),
       {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:_fA(Ac)},
       {desc:'τ<sub>v,dir</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
        formula:U.forceS!==1?`V<sub>u</sub> = ${gv('is456-punch-vu').toFixed(1)} ${U.forceU} = ${Vu_N.toFixed(0)} N`:'',
@@ -5117,6 +5233,10 @@ function calcIS456PunchShear() {
       ['M<sub>ux</sub>', `${Mux_disp.toFixed(1)} ${U.momU}`],
       ['M<sub>uy</sub>', `${Muy_disp.toFixed(1)} ${U.momU}`],
     ] : []),
+    ...(hasOp && opData.length ? [
+      ['Opening face', opData[0].face],
+      ['Opening a<sub>o</sub>', `${opData[0].ao.toFixed(0)} mm (${opData[0].is_small?'SMALL':'LARGE'})`],
+    ] : []),
     ...(hasReinf?[
       ['Reinf. type',              isBentup?'Bent-up Bars':'Closed Stirrups'],
       ['Faces × legs',             `${nFaces} × ${nLegs}`],
@@ -5131,10 +5251,12 @@ function calcIS456PunchShear() {
   const _svg = _punchPlanSVG({
     c1_mm: shape==='circ'?Dc:c1, c2_mm: shape==='circ'?Dc:c2, Dc_mm: Dc, d_mm: d,
     type, shape, edgeFace: _is456EdgeFace, cornerPos: _is456CornerPos,
-    nr_disp: 8, reinfType: 'stirrup', rs_mm: hasReinf?rs_mm:0, opData: [],
+    nr_disp: 8, reinfType: isBentup ? 'stud' : 'stirrup',
+    rs_mm: hasReinf ? rs_mm : 0, opData,
     c1_disp: shape==='circ'?Dc.toFixed(0):c1.toFixed(0),
     c2_disp: shape==='circ'?Dc.toFixed(0):c2.toFixed(0),
-    n_sets_svg: 0, rail_len_target_mm: 0,
+    n_sets_svg: hasReinf ? _n_sets_is : 0,
+    rail_len_target_mm: hasReinf ? _rail_len_is : 0,
     edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm
   });
 
