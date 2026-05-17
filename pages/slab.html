@@ -1153,13 +1153,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <div class="sub-pane" id="punch-is456">
 <div class="calc-layout">
   <div class="card no-print">
-    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456-punch-utag">IS 456:2000 · kN-mm</span></div>
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="is456-punch-utag">IS 456:2000 · kN-m</span></div>
     <div class="card-body">
 
       <div class="unit-switcher">
         <label>Units:</label>
         <div class="unit-btns">
-          <button class="unit-btn is456-unit-btn active" data-unit="knm" onclick="setIS456PunchUnit('knm',this)">kN-mm</button>
+          <button class="unit-btn is456-unit-btn active" data-unit="knm" onclick="setIS456PunchUnit('knm',this)">kN-m</button>
           <button class="unit-btn is456-unit-btn" data-unit="nmm" onclick="setIS456PunchUnit('nmm',this)">N-mm</button>
         </div>
       </div>
@@ -1273,7 +1273,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <label>Factored shear V<sub>u</sub> <span class="lu" id="lu-is456-vu">[kN]</span></label>
         <div class="iw"><input type="number" id="is456-punch-vu" value="500" step="10"><span class="us" id="u-is456-vu">kN</span></div>
       </div>
-      <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:10px;">IS 456:2000 Cl 31.6 — provide factored shear V<sub>u</sub>; moment transfer not explicitly formulated.</div>
+      <div style="font-size:.68rem;color:var(--text-dim);background:var(--bg-alt);border-radius:4px;padding:5px 9px;margin-bottom:10px;">
+        ℹ IS 456:2000 Cl 31.6 does not explicitly include moment transfer effects.
+      </div>
+      <!-- Moment Transfer Advanced Mode -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:10px 0 8px;padding-top:10px;">
+        Moment Transfer
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional — ACI approach)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="is456-punch-has-mt" onchange="setIS456HasMT(this.checked)" style="cursor:pointer;"> Include
+        </label>
+      </div>
+      <div id="is456-punch-mt-inputs" style="display:none">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>M<sub>ux</sub> <span class="lu" id="lu-is456-mux">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
+            <div class="iw"><input type="number" id="is456-punch-mux" value="0" step="5"><span class="us" id="u-is456-mux">kN·m</span></div>
+          </div>
+          <div class="form-group">
+            <label>M<sub>uy</sub> <span class="lu" id="lu-is456-muy">[kN·m]</span> <span style="font-size:.65rem;color:var(--text-dim)">(opt.)</span></label>
+            <div class="iw"><input type="number" id="is456-punch-muy" value="0" step="5"><span class="us" id="u-is456-muy">kN·m</span></div>
+          </div>
+        </div>
+        <div style="font-size:.68rem;background:#fff8e7;border:1px solid #f0c040;border-radius:4px;padding:5px 9px;margin-bottom:8px;">
+          ⚠ Moment transfer not specified in IS 456. Using ACI 318 methodology (γ<sub>v</sub>·M·c/J<sub>c</sub>) for enhanced accuracy.
+        </div>
+      </div>
 
       <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
         Shear Reinforcement
@@ -4762,15 +4787,19 @@ let _is456EdgeDist = 0, _is456CornerDistX = 0, _is456CornerDistY = 0;
 let _lastIS456Results = null;
 let _is456Unit = 'knm';
 const IS456_PUNCH_UNITS = {
-  knm: { lenU:'mm', fcU:'N/mm²', forceU:'kN', stressU:'N/mm²',
-         lenS:1, forceS:1000, stressS:1, tag:'kN-mm',
+  knm: { lenU:'mm', fcU:'N/mm²', forceU:'kN', momU:'kN·m', stressU:'N/mm²',
+         lenS:1, forceS:1000, momS:1e6, stressS:1, tag:'kN-m',
          defH:250, defCv:25, defDb:16, defC:400, defE:200, defVu:500, defFck:25, defFy:415,
          defReinfDb:12, defReinfS:150 },
-  nmm: { lenU:'mm', fcU:'N/mm²', forceU:'N', stressU:'N/mm²',
-         lenS:1, forceS:1, stressS:1, tag:'N-mm',
+  nmm: { lenU:'mm', fcU:'N/mm²', forceU:'N', momU:'N·mm', stressU:'N/mm²',
+         lenS:1, forceS:1, momS:1, stressS:1, tag:'N-mm',
          defH:250, defCv:25, defDb:16, defC:400, defE:200, defVu:500000, defFck:25, defFy:415,
          defReinfDb:12, defReinfS:150 }
 };
+function setIS456HasMT(checked) {
+  const el = document.getElementById('is456-punch-mt-inputs');
+  if (el) el.style.display = checked ? '' : 'none';
+}
 function setIS456PunchUnit(unit, btn) {
   _is456Unit = unit;
   const U = IS456_PUNCH_UNITS[unit];
@@ -4778,9 +4807,12 @@ function setIS456PunchUnit(unit, btn) {
   const st = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
   const sv = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
   st('lu-is456-vu', '['+U.forceU+']'); st('u-is456-vu', U.forceU);
+  st('lu-is456-mux', '['+U.momU+']'); st('u-is456-mux', U.momU);
+  st('lu-is456-muy', '['+U.momU+']'); st('u-is456-muy', U.momU);
   sv('is456-punch-h', U.defH); sv('is456-punch-cv', U.defCv); sv('is456-punch-db', U.defDb);
   sv('is456-punch-c1', U.defC); sv('is456-punch-c2', U.defC); sv('is456-punch-dc', U.defC);
-  sv('is456-punch-vu', U.defVu); sv('is456-punch-fck', U.defFck); sv('is456-punch-fy', U.defFy);
+  sv('is456-punch-vu', U.defVu); sv('is456-punch-mux', 0); sv('is456-punch-muy', 0);
+  sv('is456-punch-fck', U.defFck); sv('is456-punch-fy', U.defFy);
   sv('is456-punch-reinf-db', U.defReinfDb); sv('is456-punch-reinf-s', U.defReinfS);
   st('is456-punch-utag', 'IS 456:2000 · '+U.tag);
   updateIS456PunchD();
@@ -4882,6 +4914,11 @@ function calcIS456PunchShear() {
   if (shape==='rect' && (!c1||!c2))  { _showIS456PunchErr('Please fill in column dimensions c₁ and c₂.'); return; }
   if (shape==='circ' && !Dc)         { _showIS456PunchErr('Please fill in column diameter Dc.'); return; }
 
+  const hasMT    = document.getElementById('is456-punch-has-mt')?.checked;
+  const Mux_disp = hasMT ? gv('is456-punch-mux') : 0;
+  const Muy_disp = hasMT ? gv('is456-punch-muy') : 0;
+  const Mux      = Mux_disp * U.momS;   // N·mm
+  const Muy      = Muy_disp * U.momS;   // N·mm
   const hasReinf = document.getElementById('is456-punch-has-reinf').checked;
   const isBentup = (_is456ReinfType === 'bentup');
   const nLegs    = hasReinf ? (parseInt(document.getElementById('is456-punch-reinf-nlegs')?.value)||2) : 0;
@@ -4957,8 +4994,13 @@ function calcIS456PunchShear() {
     }
   }
 
-  const Ac   = bo * d;
-  const tauV = Vu_N / Ac;          // N/mm² — nominal shear stress
+  const Ac    = bo * d;
+  const tauDir = Vu_N / Ac;   // direct shear stress without moment
+  // Moment transfer via ACI γv approach (optional, rectangular columns only)
+  const _mt   = (hasMT && (Mux!==0 || Muy!==0))
+    ? _punchCalcMomentTransfer(Mux, Muy, Vu_N, bo, d, c1, c2, shape, type, _is456EdgeFace)
+    : null;
+  const tauV  = _mt ? _mt.vu_total : tauDir;   // N/mm² — design shear stress
   const tauPerm = ks * tauC;       // permissible without reinf
   const tauMax  = 1.5 * tauC;      // absolute limit with reinf (Cl 31.6.3)
 
@@ -4967,9 +5009,35 @@ function calcIS456PunchShear() {
   const _fL = v => `${v.toFixed(0)} mm`;
   const _fA = v => v>=1000?`${(v/1e3).toFixed(1)} ×10³ mm²`:`${v.toFixed(0)} mm²`;
   const _fF = v => `${(v/U.forceS).toFixed(U.forceS===1000?1:0)} ${U.forceU}`;
+  const _fM = v => U.momS!==1 ? `${(v/U.momS).toFixed(1)} ${U.momU}` : `${v.toFixed(0)} ${U.momU}`;
 
   const warns = [];
+  if (hasMT && _mt === null && (Mux!==0||Muy!==0))
+    warns.push('<b>Moment transfer skipped:</b> ACI γ<sub>v</sub> formula applies to rectangular columns only. Circular column — verify manually.');
+  if (hasMT && (Mux!==0||Muy!==0) && _mt)
+    warns.push('ℹ <b>Moment transfer (ACI methodology):</b> IS 456:2000 Cl 31.6 does not define a moment transfer formula. Results use ACI 318 γ<sub>v</sub>·M·c/J<sub>c</sub> method for enhanced accuracy.');
   let DCR, capStress, isOK, steps = [];
+
+  // ── Moment transfer steps (shared between reinf/no-reinf branches) ──
+  const _mtSteps = _mt ? [
+    {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">MOMENT TRANSFER — ACI 318 approach (IS 456 supplement)</b>',
+     formula:`b<sub>1x</sub>=${_fL(_mt.b1x)}, b<sub>2x</sub>=${_fL(_mt.b2x)}, b<sub>1y</sub>=${_fL(_mt.b1y)}, b<sub>2y</sub>=${_fL(_mt.b2y)}`, val:'', printSkip:true},
+    ...(Math.abs(Mux)>1e-6 ? [
+      {desc:'γ<sub>fx</sub> = 1/(1+(2/3)√(b<sub>1x</sub>/b<sub>2x</sub>))', formula:'Fraction of M<sub>ux</sub> by flexure', val:_mt.gfx.toFixed(4), printSkip:true},
+      {desc:'γ<sub>vx</sub> = 1 − γ<sub>fx</sub>', formula:'', val:_mt.gvx.toFixed(4), printSkip:true},
+      {desc:'J<sub>cx</sub>', formula:'Polar moment of inertia', val:`${(_mt.Jcx/1e6).toFixed(1)} ×10⁶ mm⁴`, printSkip:true},
+      {desc:'τ<sub>v,Mx</sub> = γ<sub>vx</sub>·|M<sub>ux</sub>|·c<sub>AB,x</sub>/J<sub>cx</sub>',
+       formula:U.momS!==1?`M<sub>ux</sub> = ${Mux_disp} ${U.momU} = ${Mux.toFixed(0)} N·mm`:'', val:_fS(_mt.vu_mx,4), cls:'hl'},
+    ] : []),
+    ...(Math.abs(Muy)>1e-6 ? [
+      {desc:'γ<sub>fy</sub> = 1/(1+(2/3)√(b<sub>1y</sub>/b<sub>2y</sub>))', formula:'Fraction of M<sub>uy</sub> by flexure', val:_mt.gfy.toFixed(4), printSkip:true},
+      {desc:'γ<sub>vy</sub> = 1 − γ<sub>fy</sub>', formula:'', val:_mt.gvy.toFixed(4), printSkip:true},
+      {desc:'J<sub>cy</sub>', formula:'Polar moment of inertia', val:`${(_mt.Jcy/1e6).toFixed(1)} ×10⁶ mm⁴`, printSkip:true},
+      {desc:'τ<sub>v,My</sub> = γ<sub>vy</sub>·|M<sub>uy</sub>|·c<sub>AB,y</sub>/J<sub>cy</sub>',
+       formula:U.momS!==1?`M<sub>uy</sub> = ${Muy_disp} ${U.momU} = ${Muy.toFixed(0)} N·mm`:'', val:_fS(_mt.vu_my,4), cls:'hl'},
+    ] : []),
+    {desc:'τ<sub>v</sub> = τ<sub>v,dir</sub> + τ<sub>v,Mx</sub> + τ<sub>v,My</sub>', formula:'Total design shear stress', val:_fS(tauV,3), cls:'hl'},
+  ] : [];
 
   if (!hasReinf) {
     DCR = tauV / Math.max(tauPerm, 0.001);
@@ -4978,9 +5046,10 @@ function calcIS456PunchShear() {
     steps = [
       {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo)},
       {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:_fA(Ac)},
-      {desc:'Nominal shear stress τ<sub>v</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
+      {desc:'τ<sub>v,dir</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
        formula:U.forceS!==1?`V<sub>u</sub> = ${gv('is456-punch-vu').toFixed(1)} ${U.forceU} = ${Vu_N.toFixed(0)} N; A<sub>c</sub> = ${Ac.toFixed(0)} mm²`:'',
-       val:_fS(tauV,4), cls:'hl'},
+       val:_fS(tauDir,4), cls:_mt?'':'hl'},
+      ..._mtSteps,
       {desc:'β<sub>c</sub> = min(c<sub>1</sub>,c<sub>2</sub>) / max(c<sub>1</sub>,c<sub>2</sub>)',
        formula:shape==='circ'?'Circular column → β<sub>c</sub> = 1.0':'Short / long side', val:betaC.toFixed(3)},
       {desc:'k<sub>s</sub> = 0.5 + β<sub>c</sub> ≤ 1.0', formula:'IS 456:2000 Cl 31.6.2', val:ks.toFixed(3)},
@@ -5005,9 +5074,10 @@ function calcIS456PunchShear() {
     steps = [
       {desc:'Critical perimeter b<sub>o</sub>', formula:_boFLabel, val:_fL(bo)},
       {desc:'Control area A<sub>c</sub> = b<sub>o</sub>·d', formula:'', val:_fA(Ac)},
-      {desc:'Nominal shear stress τ<sub>v</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
+      {desc:'τ<sub>v,dir</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)',
        formula:U.forceS!==1?`V<sub>u</sub> = ${gv('is456-punch-vu').toFixed(1)} ${U.forceU} = ${Vu_N.toFixed(0)} N`:'',
-       val:_fS(tauV,4), cls:'hl'},
+       val:_fS(tauDir,4), cls:_mt?'':'hl'},
+      ..._mtSteps,
       {desc:'β<sub>c</sub> = min(c<sub>1</sub>,c<sub>2</sub>) / max(c<sub>1</sub>,c<sub>2</sub>)',
        formula:shape==='circ'?'Circular column → β<sub>c</sub> = 1.0':'Short / long side', val:betaC.toFixed(3)},
       {desc:'k<sub>s</sub> = 0.5 + β<sub>c</sub> ≤ 1.0', formula:'IS 456:2000 Cl 31.6.2', val:ks.toFixed(3)},
@@ -5043,6 +5113,10 @@ function calcIS456PunchShear() {
     ...(type==='corner' ? [['Corner setback X', _fL(_cornerDistX_mm), 'inp-diag'],
                            ['Corner setback Y', _fL(_cornerDistY_mm), 'inp-diag']] : []),
     ['Factored shear V<sub>u</sub>',  `${gv('is456-punch-vu').toFixed(U.forceS===1000?1:0)} ${U.forceU}`],
+    ...(hasMT && (Mux_disp!==0||Muy_disp!==0) ? [
+      ['M<sub>ux</sub>', `${Mux_disp.toFixed(1)} ${U.momU}`],
+      ['M<sub>uy</sub>', `${Muy_disp.toFixed(1)} ${U.momU}`],
+    ] : []),
     ...(hasReinf?[
       ['Reinf. type',              isBentup?'Bent-up Bars':'Closed Stirrups'],
       ['Faces × legs',             `${nFaces} × ${nLegs}`],
