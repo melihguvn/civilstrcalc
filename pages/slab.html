@@ -898,6 +898,45 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div id="punch-op-status" style="font-size:.72rem;background:var(--bg-alt);border-radius:5px;padding:8px 10px;margin-top:4px;line-height:1.8;display:none;"></div>
       </div>
 
+      <!-- ── Drop Panel (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Drop Panel
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="punch-has-drop" onchange="setPunchHasDrop(this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="punch-drop-inputs" style="display:none">
+        <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
+          Rectangular drop panel, symmetric around column. Interior columns only (ACI §22.6.2.1).
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Ext. X each side <span class="lu" id="lu-punch-drp-extX">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-drp-extX" value="600" step="25" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-drp-extX">mm</span></div>
+          </div>
+          <div class="form-group">
+            <label>Ext. Y each side <span class="lu" id="lu-punch-drp-extY">[mm]</span></label>
+            <div class="iw"><input type="number" id="punch-drp-extY" value="600" step="25" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-drp-extY">mm</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Drop thickness t<sub>d</sub> (proj. below slab) <span class="lu" id="lu-punch-drp-td">[mm]</span></label>
+          <div class="iw"><input type="number" id="punch-drp-td" value="100" step="10" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-drp-td">mm</span></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Span L<sub>x</sub> <span class="lu" id="lu-punch-span-x">[mm]</span> <span style="font-size:.65rem;color:var(--text-dim)">(§8.2.4)</span></label>
+            <div class="iw"><input type="number" id="punch-span-x" value="6000" step="100" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-span-x">mm</span></div>
+          </div>
+          <div class="form-group">
+            <label>Span L<sub>y</sub> <span class="lu" id="lu-punch-span-y">[mm]</span> <span style="font-size:.65rem;color:var(--text-dim)">(§8.2.4)</span></label>
+            <div class="iw"><input type="number" id="punch-span-y" value="6000" step="100" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-span-y">mm</span></div>
+          </div>
+        </div>
+        <div id="punch-drop-hint" style="font-size:.72rem;background:var(--bg-alt);border-radius:5px;padding:8px 10px;margin-top:4px;line-height:1.8;display:none;"></div>
+      </div>
+
       <button class="btn-calc" onclick="calcPunchShear()">&#9654; Calculate</button>
     </div>
   </div>
@@ -2235,12 +2274,14 @@ function setPunchUnit(unit, btn) {
    'lu-punch-edge-dist','lu-punch-c1edge','lu-punch-c2edge',
    'lu-punch-ao1','lu-punch-boop1','lu-punch-so1',
    'lu-punch-ao2','lu-punch-boop2','lu-punch-so2',
-   'lu-punch-reinf-db','lu-punch-reinf-s'].forEach(id => st(id, '['+U.lenU+']'));
+   'lu-punch-reinf-db','lu-punch-reinf-s',
+   'lu-punch-drp-extX','lu-punch-drp-extY','lu-punch-drp-td','lu-punch-span-x','lu-punch-span-y'].forEach(id => st(id, '['+U.lenU+']'));
   ['u-punch-h','u-punch-cv','u-punch-db','u-punch-c1','u-punch-c2','u-punch-dc',
    'u-punch-edge-dist','u-punch-c1edge','u-punch-c2edge',
    'u-punch-ao1','u-punch-boop1','u-punch-so1',
    'u-punch-ao2','u-punch-boop2','u-punch-so2',
-   'u-punch-reinf-db','u-punch-reinf-s'].forEach(id => st(id, U.lenU));
+   'u-punch-reinf-db','u-punch-reinf-s',
+   'u-punch-drp-extX','u-punch-drp-extY','u-punch-drp-td','u-punch-span-x','u-punch-span-y'].forEach(id => st(id, U.lenU));
   st('lu-punch-fc', '['+U.fcU+']'); st('u-punch-fc', U.fcU);
   st('lu-punch-vu', '['+U.forceU+']'); st('u-punch-vu', U.forceU);
   ['lu-punch-mu','lu-punch-mu2'].forEach(id => st(id, '['+U.momU+']'));
@@ -2751,6 +2792,42 @@ function shouldPlaceReinfOnSide(side, op_dir, is_small) {
   return !(side === op_dir && !is_small);
 }
 
+let _punchHasDrop = false;
+function setPunchHasDrop(checked) {
+  _punchHasDrop = checked;
+  const el = document.getElementById('punch-drop-inputs');
+  if (el) el.style.display = checked ? '' : 'none';
+  updatePunchDropHint();
+}
+function updatePunchDropHint() {
+  const el = document.getElementById('punch-drop-hint');
+  if (!el) return;
+  if (!document.getElementById('punch-has-drop')?.checked) { el.style.display = 'none'; return; }
+  const PU = PUNCH_UNITS[_punchUnit];
+  const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const extX = gv('punch-drp-extX') * PU.lenS;
+  const extY = gv('punch-drp-extY') * PU.lenS;
+  const td   = gv('punch-drp-td')   * PU.lenS;
+  const spX  = gv('punch-span-x')   * PU.lenS;
+  const spY  = gv('punch-span-y')   * PU.lenS;
+  const h    = gv('punch-h')         * PU.lenS;
+  const hints = [];
+  if (spX > 0) {
+    const reqX = spX / 6, ok = extX >= reqX;
+    hints.push(`X: ext = ${(extX/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} L<sub>x</sub>/6 = ${(reqX/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
+  }
+  if (spY > 0) {
+    const reqY = spY / 6, ok = extY >= reqY;
+    hints.push(`Y: ext = ${(extY/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} L<sub>y</sub>/6 = ${(reqY/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
+  }
+  if (h > 0) {
+    const reqTd = h / 4, ok = td >= reqTd;
+    hints.push(`t<sub>d</sub> = ${(td/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} h/4 = ${(reqTd/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
+  }
+  el.innerHTML = `<div><b>ACI §8.2.4 geometry check:</b></div>${hints.map(h=>`<div>${h}</div>`).join('')}`;
+  el.style.display = '';
+}
+
 function setPunchCode(code, btn) {
   _punchCode = code;
   // sub-tab visual switch (reuse stab logic but scoped to the punchshear pane)
@@ -2813,7 +2890,7 @@ function setPunchColType(type, btn) {
 }
 
 // ── Punching Design — Professional Plan View SVG ───────────────────────────
-function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm, edgeDist_mm=0, cornerDistX_mm=0, cornerDistY_mm=0 }) {
+function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, cornerPos, nr_disp, reinfType, rs_mm, opData, c1_disp, c2_disp, n_sets_svg, rail_len_target_mm, edgeDist_mm=0, cornerDistX_mm=0, cornerDistY_mm=0, dropData=null }) {
   const W = 450, H = 375, legH = 26;
   const drawH = H - legH;
   const isCirc = shape === 'circ';
@@ -2838,8 +2915,10 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     }
     _studExtMM = _lastP + d_mm / 2;  // last stud face-distance + d/2 to outer CP
   }
-  const _effHW = Math.max(cp_hw, col_hw + _studExtMM);
-  const _effHH = Math.max(cp_hh, col_hh + _studExtMM);
+  const _dropEffX = dropData ? (col_hw + dropData.extX_mm + 60) : 0;
+  const _dropEffY = dropData ? (col_hh + dropData.extY_mm + 60) : 0;
+  const _effHW = Math.max(cp_hw, col_hw + _studExtMM, _dropEffX);
+  const _effHH = Math.max(cp_hh, col_hh + _studExtMM, _dropEffY);
 
   // Fixed pixel padding for labels on all sides; free faces show slab edge at setback + margin.
   const PAD = 40;        // px reserved for labels/compass on every edge
@@ -3367,6 +3446,29 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
       }
   }
 
+  // ── Drop Panel rectangle (inside slab-clip) ──────────────────────────────
+  if (dropData && !isCirc && type === 'int') {
+    const drpHW = (col_hw + dropData.extX_mm) * S;
+    const drpHH = (col_hh + dropData.extY_mm) * S;
+    // Filled drop panel area
+    s += `<rect x="${f(cx-drpHW)}" y="${f(cy-drpHH)}" width="${f(drpHW*2)}" height="${f(drpHH*2)}" fill="rgba(251,146,60,0.07)" stroke="#f97316" stroke-width="1.5" stroke-dasharray="6,3" rx="2"/>`;
+    // bo1 perimeter (inside drop, at d_drop/2 from col face) — only if valid
+    if (dropData.bo1_hw > 0) {
+      const b1HW = dropData.bo1_hw * S;
+      const b1HH = dropData.bo1_hh * S;
+      s += `<rect x="${f(cx-b1HW)}" y="${f(cy-b1HH)}" width="${f(b1HW*2)}" height="${f(b1HH*2)}" fill="none" stroke="#f97316" stroke-dasharray="8,4" stroke-width="2"/>`;
+      s += `<rect x="${f(cx-b1HW/2-12)}" y="${f(cy-b1HH-13)}" width="24" height="13" fill="white" opacity="0.9" rx="2"/>`;
+      s += `<text x="${f(cx)}" y="${f(cy-b1HH-4)}" text-anchor="middle" font-size="9" font-weight="700" fill="#f97316">b₀₁</text>`;
+    }
+    // bo2 label (at drop panel edge = drpHW/drpHH)
+    const _b2lx = cx + drpHW + 4;
+    const _b2ly = cy - 12;
+    if (_b2lx + 28 < W - 2) {
+      s += `<rect x="${f(_b2lx-1)}" y="${f(_b2ly-9)}" width="28" height="13" fill="white" opacity="0.9" rx="2"/>`;
+      s += `<text x="${f(_b2lx)}" y="${f(_b2ly)}" font-size="9" font-weight="700" fill="#f97316">b₀₂</text>`;
+    }
+  }
+
   s += `</g>`; // end slab clip
 
   // ── Column ───────────────────────────────────────────────────────────────
@@ -3477,6 +3579,10 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   let lx = 8;
   s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="4,2" stroke-width="2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#2563eb">b₀ (inner)</text>`;
   lx += 76;
+  if (dropData && !isCirc && type === 'int') {
+    s += `<rect x="${lx}" y="${ly}" width="13" height="9" fill="rgba(251,146,60,0.15)" stroke="#f97316" stroke-width="1" stroke-dasharray="4,2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#f97316">Drop panel</text>`;
+    lx += 82;
+  }
   if (nr_disp > 0 && n_sets_svg > 0) {
     s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#059669" stroke-dasharray="3,2" stroke-width="1.5"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#059669">b₀,out</text>`;
     lx += 60;
@@ -3600,6 +3706,14 @@ function calcPunchShear() {
       c_affected: _caff1, threshold: _thr1, is_small: _ao1 < _thr1
     });
   }
+
+  // Drop Panel inputs
+  const hasDrop   = document.getElementById('punch-has-drop')?.checked || false;
+  const drpExtX   = hasDrop ? gv('punch-drp-extX') * PU.lenS : 0;
+  const drpExtY   = hasDrop ? gv('punch-drp-extY') * PU.lenS : 0;
+  const drpTd     = hasDrop ? gv('punch-drp-td')   * PU.lenS : 0;
+  const drpSpX    = hasDrop ? gv('punch-span-x')    * PU.lenS : 0;
+  const drpSpY    = hasDrop ? gv('punch-span-y')    * PU.lenS : 0;
 
   const lambda = 1.0, phi = 0.75;
   // ── Geometry by type and shape ──
@@ -3973,6 +4087,111 @@ function calcPunchShear() {
     ];
   }
 
+  // ── Drop Panel: three-check analysis (ACI §22.6.2.1) ────────────────────────
+  let dropData = null;  // passed to SVG
+  if (hasDrop && shape === 'rect' && type === 'int') {
+    const d_drop = d + drpTd;
+    // ACI §8.2.4 geometry warnings
+    if (drpSpX > 0 && drpExtX < drpSpX/6) warns.push(`ACI §8.2.4: Drop ext. X = ${_fL(drpExtX)} < L<sub>x</sub>/6 = ${_fL(drpSpX/6)} — does not meet drop panel definition.`);
+    if (drpSpY > 0 && drpExtY < drpSpY/6) warns.push(`ACI §8.2.4: Drop ext. Y = ${_fL(drpExtY)} < L<sub>y</sub>/6 = ${_fL(drpSpY/6)} — does not meet drop panel definition.`);
+    if (drpTd < h/4) warns.push(`ACI §8.2.4: t<sub>d</sub> = ${_fL(drpTd)} < h/4 = ${_fL(h/4)} — thickness does not meet drop panel definition.`);
+    // Helper: three-term vc at given d_eff, bo_val
+    const _vcACI = (d_v, bo_v) => {
+      const a=0.17*(1+2/beta)*lambda*Math.sqrt(fc);
+      const b=0.083*(alphaS*d_v/bo_v+2)*lambda*Math.sqrt(fc);
+      const c=0.33*lambda*Math.sqrt(fc);
+      return { vc:Math.min(a,b,c), vc1:a, vc2:b, vc3:c, govLbl:['Eq.(1) β','Eq.(2) αd/bo','Eq.(3) 0.33λ'][[a,b,c].indexOf(Math.min(a,b,c))] };
+    };
+    // Check 1: d_drop/2 from col face — valid only when d_drop/2 ≤ both extensions
+    const c1_valid = d_drop/2 <= drpExtX && d_drop/2 <= drpExtY;
+    let chk1 = null;
+    if (c1_valid) {
+      const bo1 = 2*(c1+d_drop) + 2*(c2+d_drop);
+      const vu1 = Vu_N / (bo1 * d_drop);
+      const r1  = _vcACI(d_drop, bo1);
+      chk1 = { n:1, bo:bo1, d_eff:d_drop, vu:vu1, ...r1, phi_vc:phi*r1.vc, DCR:vu1/(phi*r1.vc) };
+    }
+    // Check 2: at drop panel edge (perimeter = drop panel face)
+    const bo2 = 2*(c1+2*drpExtX) + 2*(c2+2*drpExtY);
+    const vu2 = Vu_N / (bo2 * d);
+    const r2  = _vcACI(d, bo2);
+    const chk2 = { n:2, bo:bo2, d_eff:d, vu:vu2, ...r2, phi_vc:phi*r2.vc, DCR:vu2/(phi*r2.vc) };
+    // Check 3: standard at d/2 — only if d/2 > drop extension on either axis
+    const c3_valid = d/2 > Math.min(drpExtX, drpExtY);
+    let chk3 = null;
+    if (c3_valid) {
+      const r3 = _vcACI(d, bo);
+      chk3 = { n:3, bo:bo, d_eff:d, vu:vu, ...r3, phi_vc:phi*r3.vc, DCR:vu/(phi*r3.vc) };
+    }
+    // Governing
+    const allChks = [chk1, chk2, chk3].filter(Boolean);
+    const govChk  = allChks.reduce((a,b) => b.DCR > a.DCR ? b : a);
+    DCR   = govChk.DCR;
+    isOK  = DCR <= 1.0;
+    phiVn = govChk.phi_vc;
+
+    // Reinf conflict warning
+    if (hasReinf && rail_len_target > 0) {
+      if (rail_len_target > drpExtX || rail_len_target > drpExtY)
+        warns.push(`<b>Rail extends beyond drop panel:</b> rail zone = ${_fL(rail_len_target)} exceeds drop ext. X = ${_fL(drpExtX)}, Y = ${_fL(drpExtY)}. Studs must remain within the drop panel — reduce spacing or add rows.`);
+    }
+    // Drop edge check also applies in reinf case
+    if (hasReinf) {
+      const isOK2 = chk2.DCR <= 1.0;
+      if (chk2.DCR > DCR) { DCR = chk2.DCR; isOK = false; }
+      steps.push({desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — CHECK 2 AT EDGE (ACI §22.6.2.1)</b>', formula:`Unreinforced check at drop panel edge using slab d`, val:'', printSkip:true});
+      steps.push({desc:'b<sub>o2</sub> = 2(c<sub>1</sub>+2·ext<sub>X</sub>)+2(c<sub>2</sub>+2·ext<sub>Y</sub>)', formula:`ext<sub>X</sub>=${_fL(drpExtX)}, ext<sub>Y</sub>=${_fL(drpExtY)}`, val:_fL(bo2)});
+      steps.push({desc:'v<sub>u2</sub> = V<sub>u</sub> / (b<sub>o2</sub>·d)', formula:'', val:_fS(vu2,3), cls:'hl'});
+      steps.push({desc:'φv<sub>c,2</sub> (unreinforced §22.6.5.2)', formula:chk2.govLbl, val:_fS(chk2.phi_vc,4)});
+      steps.push({desc:'Drop edge check', formula:'', val:`${_fS(vu2,3)} ≤ ${_fS(chk2.phi_vc,3)}`, cls:isOK2?'ok':'err', check:isOK2?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
+      if (!isOK2) warns.push(`<b>Drop panel edge check fails (Check 2):</b> v<sub>u2</sub> = ${_fS(vu2,3)} > φv<sub>c,2</sub> = ${_fS(chk2.phi_vc,3)} — increase drop panel size or slab thickness.`);
+    } else {
+      // Replace steps with three-check output
+      const _s = [];
+      _s.push({desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — THREE-CHECK ANALYSIS (ACI §22.6.2.1)</b>', formula:`Int. rect., ext. X = ${_fL(drpExtX)}, ext. Y = ${_fL(drpExtY)}, t<sub>d</sub> = ${_fL(drpTd)}`, val:'', printSkip:true});
+      // Check 1
+      if (c1_valid && chk1) {
+        _s.push({desc:'<b>Check 1 — d<sub>drop</sub>/2 from column face (inside drop)</b>', formula:'Uses d<sub>drop</sub> = d + t<sub>d</sub>', val:'', printSkip:true});
+        _s.push({desc:'d<sub>drop</sub> = d + t<sub>d</sub>', formula:`d = ${_fL(d)}, t<sub>d</sub> = ${_fL(drpTd)}`, val:_fL(d_drop)});
+        _s.push({desc:'b<sub>o1</sub> = 2(c<sub>1</sub>+d<sub>drop</sub>)+2(c<sub>2</sub>+d<sub>drop</sub>)', formula:'ACI §22.6.4.1', val:_fL(chk1.bo)});
+        _s.push({desc:'v<sub>u1</sub> = V<sub>u</sub> / (b<sub>o1</sub>·d<sub>drop</sub>)', formula:`A<sub>c1</sub> = ${_fA(chk1.bo*d_drop)}`, val:_fS(chk1.vu,3), cls:govChk===chk1?'hl':''});
+        _s.push({desc:'v<sub>c,1</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk1.govLbl}`, val:_fS(chk1.vc,4)});
+        _s.push({desc:'φv<sub>c,1</sub>', formula:'φ = 0.75', val:_fS(chk1.phi_vc,4)});
+        _s.push({desc:'DCR₁ = v<sub>u1</sub>/φv<sub>c,1</sub>', formula:govChk===chk1?'◀ GOVERNS':'', val:chk1.DCR.toFixed(3), cls:chk1.DCR<=1.0?'ok':'err', check:chk1.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
+      } else {
+        _s.push({desc:'Check 1 — SKIPPED', formula:`d<sub>drop</sub>/2 = ${_fL(d_drop/2)} > drop ext. — critical section exits drop panel`, val:'—', printSkip:true});
+      }
+      // Check 2
+      _s.push({desc:'<b>Check 2 — Critical section at drop panel edge</b>', formula:'Uses slab effective depth d', val:'', printSkip:true});
+      _s.push({desc:'b<sub>o2</sub> = 2(c<sub>1</sub>+2·ext<sub>X</sub>)+2(c<sub>2</sub>+2·ext<sub>Y</sub>)', formula:`ext<sub>X</sub> = ${_fL(drpExtX)}, ext<sub>Y</sub> = ${_fL(drpExtY)}`, val:_fL(chk2.bo)});
+      _s.push({desc:'v<sub>u2</sub> = V<sub>u</sub> / (b<sub>o2</sub>·d)', formula:`A<sub>c2</sub> = ${_fA(chk2.bo*d)}`, val:_fS(chk2.vu,3), cls:govChk===chk2?'hl':''});
+      _s.push({desc:'v<sub>c,2</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk2.govLbl}`, val:_fS(chk2.vc,4)});
+      _s.push({desc:'φv<sub>c,2</sub>', formula:'φ = 0.75', val:_fS(chk2.phi_vc,4)});
+      _s.push({desc:'DCR₂ = v<sub>u2</sub>/φv<sub>c,2</sub>', formula:govChk===chk2?'◀ GOVERNS':'', val:chk2.DCR.toFixed(3), cls:chk2.DCR<=1.0?'ok':'err', check:chk2.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
+      // Check 3 (standard)
+      if (c3_valid && chk3) {
+        _s.push({desc:'<b>Check 3 — Standard at d/2 from col face</b>', formula:'d/2 extends outside drop — slab depth governs at this perimeter', val:'', printSkip:true});
+        _s.push({desc:'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)', formula:'ACI §22.6.4.1', val:_fL(chk3.bo)});
+        _s.push({desc:'v<sub>u</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)' + (_mt?' + MT':''), formula:`A<sub>c</sub> = ${_fA(chk3.bo*d)}`, val:_fS(chk3.vu,3), cls:govChk===chk3?'hl':''});
+        _s.push({desc:'v<sub>c</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk3.govLbl}`, val:_fS(chk3.vc,4)});
+        _s.push({desc:'φv<sub>c</sub>', formula:'φ = 0.75', val:_fS(chk3.phi_vc,4)});
+        _s.push({desc:'DCR₃ = v<sub>u</sub>/φv<sub>c</sub>', formula:govChk===chk3?'◀ GOVERNS':'', val:chk3.DCR.toFixed(3), cls:chk3.DCR<=1.0?'ok':'err', check:chk3.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
+      }
+      // Governing summary row
+      _s.push({desc:`<b>Governing: Check ${govChk.n} — DCR = ${DCR.toFixed(3)}</b>`, formula:'', val:DCR.toFixed(3), cls:isOK?'ok':'err', check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
+      steps = _s;
+    }
+
+    dropData = {
+      extX_mm: drpExtX, extY_mm: drpExtY,
+      bo1_hw: c1_valid && chk1 ? (c1/2 + (d+drpTd)/2) : 0,
+      bo1_hh: c1_valid && chk1 ? (c2/2 + (d+drpTd)/2) : 0,
+      _chk1: chk1, _chk2: chk2, _chk3: chk3
+    };
+  } else if (hasDrop && (shape !== 'rect' || type !== 'int')) {
+    warns.push('<b>Drop panel:</b> Three-check analysis is only implemented for interior rectangular columns. Standard d/2 critical section used.');
+  }
+
   // Insert opening steps after bo if applicable
   if (opData.some(op=>op.within4h&&op.bo_ineff>0)) {
     const _opAffected = opData.filter(op=>op.within4h&&op.bo_ineff>0);
@@ -4042,6 +4261,11 @@ function calcPunchShear() {
       [`Classification`,           op.is_small ? 'SMALL (< 0.6c)' : 'LARGE (≥ 0.6c)'],
       [`b<sub>o</sub> reduction`,  `−${_fL(op.bo_ineff)}`],
     ]),
+    ...(hasDrop ? [
+      ['Drop ext. X (each side)',  _fL(drpExtX)],
+      ['Drop ext. Y (each side)',  _fL(drpExtY)],
+      ['Drop thickness t<sub>d</sub>', _fL(drpTd)],
+    ] : []),
   ];
 
   // ── SVG plan diagram ──
@@ -4049,13 +4273,24 @@ function calcPunchShear() {
   const _svg_nr = isStud ? nr_disp : 8;
   const _svg_n_sets = hasReinf ? n_sets : 0;
   const _svg_rail_target = hasReinf ? rail_len_target : 0;
-  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target, edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm });
+  const _svg = _punchPlanSVG({ c1_mm: c1, c2_mm: c2, Dc_mm: Dc, d_mm: d, type, shape, edgeFace: _punchEdgeFace, cornerPos: _punchCornerPos, nr_disp: _svg_nr, reinfType: _punchReinfType, rs_mm, opData, c1_disp: shape==='circ'?Dc_disp:c1_disp, c2_disp: shape==='circ'?Dc_disp:c2_disp, n_sets_svg: _svg_n_sets, rail_len_target_mm: _svg_rail_target, edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm, dropData });
 
   // Result banner — for reinf case, D/C = vu,in / φvn (stud contribution included)
-  const _bannerBo    = bo;   // always inner CP (d/2 from col face)
-  const _bannerVu    = vu;   // vu,in
-  const _bannerBoLbl = hasReinf ? 'b<sub>o,in</sub>' : 'b<sub>o</sub>';
-  const _bannerVuLbl = hasReinf ? 'v<sub>u,in</sub>' : 'v<sub>u</sub>';
+  let _bannerBo    = bo;   // always inner CP (d/2 from col face)
+  let _bannerVu    = vu;   // vu,in
+  let _bannerBoLbl = hasReinf ? 'b<sub>o,in</sub>' : 'b<sub>o</sub>';
+  let _bannerVuLbl = hasReinf ? 'v<sub>u,in</sub>' : 'v<sub>u</sub>';
+  // Drop panel: update banner to reflect governing check
+  if (dropData && shape === 'rect' && type === 'int' && !hasReinf) {
+    const _allDropChks = [dropData._chk1, dropData._chk2, dropData._chk3].filter(Boolean);
+    if (_allDropChks.length > 0) {
+      const _govDrop = _allDropChks.reduce((a,b) => b.DCR > a.DCR ? b : a);
+      _bannerBo    = _govDrop.bo;
+      _bannerVu    = _govDrop.vu;
+      _bannerBoLbl = `b<sub>o</sub> (Check ${_govDrop.n})`;
+      _bannerVuLbl = `v<sub>u</sub> (Check ${_govDrop.n})`;
+    }
+  }
   const dcrCls   = DCR<=0.90?'ok':DCR<=1.0?'warn':'err';
   const status   = DCR<=0.90?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
   const capLabel = hasReinf ? 'φv<sub>n</sub>' : 'φv<sub>c</sub>';
