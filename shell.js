@@ -14,6 +14,7 @@
     if (/\/rebar\.html/.test(P))    return 'rebar';
     if (/\/steel\.html/.test(P))    return 'steel';
     if (/\/concrete\.html/.test(P)) return 'concrete';
+    if (/\/development-length\.html/.test(P)) return 'devlen';
     return '';
   }
   var ap = _ap();
@@ -90,6 +91,7 @@
   // ── SVG icons ───────────────────────────────────────────────────────────────
   var ic = {
     beam: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c12 6 12 6 24 0M4 20c12 6 12 6 24 0"/><path d="M4 12v8M28 12v8" opacity=".5"/></svg>',
+    devlen: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="16" x2="29" y2="16"/><circle cx="3" cy="16" r="2.5" fill="currentColor" stroke="none"/><circle cx="29" cy="16" r="2.5" fill="currentColor" stroke="none"/><path d="M9 11v10M16 11v10M23 11v10" stroke-width="1.5" opacity=".5"/></svg>',
     slab: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="24" height="12" rx="1.5"/><path d="M4 16h24" opacity=".5"/></svg>',
     col:  '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="20" height="20" rx="1.5"/><circle cx="10" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="22" r="1.5" fill="currentColor" stroke="none"/></svg>',
     st:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 3v18"/></svg>',
@@ -127,6 +129,10 @@
     grp(ic.col, 'Column Design', ['column'],
       sub('/pages/column.html#pmm',      'PMM Design', 'column') +
       sub('/pages/column.html#colshear', 'Shear Design', '')) +
+    grp(ic.devlen, 'Dev. & Splice Length', ['devlen'],
+      sub('/pages/development-length.html#straight', 'Straight Bar', 'devlen') +
+      sub('/pages/development-length.html#hook',     'Standard Hook', '') +
+      sub('/pages/development-length.html#splice',   'Lap Splice', '')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',   'steel') +

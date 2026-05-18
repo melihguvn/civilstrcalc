@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VPM6LCCWLN');
+</script>
+<title>Rebar Development &amp; Splice Length Calculator | ACI 318-25, Eurocode 2, IS 456 | CivilStrCalc</title>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<meta name="description" content="Free rebar development length and splice length calculator. ACI 318-25, Eurocode 2, IS 456:2000. Straight bar development, standard hooks (90°/180°), tension and compression lap splices with step-by-step calculations.">
+<link rel="canonical" href="https://civilstrcalc.com/pages/development-length.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/development-length.html">
+<meta property="og:title" content="Rebar Development &amp; Splice Length Calculator | CivilStrCalc">
+<meta property="og:description" content="Calculate rebar development and splice lengths per ACI 318-25, Eurocode 2, and IS 456:2000. Straight bars, hooks, and lap splices with full step-by-step reports.">
+<meta property="og:image" content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name" content="CivilStrCalc">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rebar Development &amp; Splice Length Calculator | CivilStrCalc">
+<meta name="twitter:description" content="Calculate rebar development and splice lengths per ACI 318-25, Eurocode 2, and IS 456:2000.">
+<meta name="twitter:image" content="https://civilstrcalc.com/images/og-image.png">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+/* ── Module tabs ── */
+.mod-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--white);padding:0 28px;flex-wrap:wrap;margin:16px -28px 14px;}
+.mod-tab{background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-family:var(--sans);font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.mod-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.mod-pane{display:none;}.mod-pane.active{display:block;}
+
+/* ── ACI unit toggle ── */
+.unit-toggle{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px;}
+.unit-btn{background:none;border:none;padding:5px 14px;font-size:.75rem;font-weight:500;font-family:var(--sans);cursor:pointer;color:var(--text-dim);transition:background .14s,color .14s;}
+.unit-btn.active{background:var(--accent);color:#fff;}
+
+/* ── Diagram container ── */
+.diagram-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px;text-align:center;}
+.diagram-wrap svg{max-width:100%;height:auto;}
+.diagram-label{font-size:.72rem;color:var(--text-dim);margin-top:8px;}
+
+/* ── Expandable steps ── */
+.steps-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;font-family:var(--sans);font-size:.78rem;font-weight:500;color:var(--accent);cursor:pointer;padding:10px 0 4px;width:100%;}
+.steps-toggle .arr{font-size:10px;transition:transform .18s;}
+.steps-toggle.open .arr{transform:rotate(180deg);}
+.steps-body{display:none;}.steps-body.open{display:block;}
+
+/* ── Result primary card ── */
+.res-primary{background:var(--accent-lt);border:1px solid var(--accent);border-radius:8px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.res-primary-val{font-family:var(--mono);font-size:1.45rem;font-weight:700;color:var(--accent);}
+.res-primary-lbl{font-size:.8rem;color:var(--text-mid);}
+.res-primary-min{font-size:.75rem;color:var(--text-dim);margin-left:auto;}
+
+/* ── Inline note ── */
+.calc-note{font-size:.74rem;color:var(--text-dim);line-height:1.55;margin-top:6px;padding:8px 12px;background:var(--bg2);border-radius:5px;border-left:3px solid var(--border);}
+
+/* ── bg-section collapsible ── */
+.bg-section{margin-top:40px;border-top:2px solid var(--border);padding-top:24px;}
+.bg-section h2{font-family:var(--cond);font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 12px;letter-spacing:.03em;}
+.bg-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.bg-tab{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:5px 13px;font-size:.75rem;font-weight:500;cursor:pointer;color:var(--text-dim);transition:all .14s;}
+.bg-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.bg-pane{display:none;font-size:.84rem;line-height:1.72;color:var(--text);}.bg-pane.active{display:block;}
+.bg-pane h3{font-family:var(--cond);font-weight:700;font-size:.92rem;color:var(--text);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.04em;border-left:3px solid var(--accent);padding-left:8px;}
+.bg-pane p{margin:0 0 10px;}
+.bg-pane ul{margin:0 0 10px;padding-left:22px;}
+.bg-pane li{margin-bottom:4px;}
+.bg-pane .formula-box{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin:8px 0;overflow-x:auto;}
+
+@media print{.mod-tabs,.unit-toggle,.btn-calc,.steps-toggle,.bg-section{display:none!important;}.mod-pane,.sub-pane{display:block!important;}}
+</style>
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Rebar Development & Splice Length Calculator","description":"Free online development length and lap splice calculator for reinforced concrete. ACI 318-25, Eurocode 2, IS 456:2000. Straight bars, hooks, and lap splices.","url":"https://civilstrcalc.com/pages/development-length.html","isPartOf":{"@type":"WebSite","name":"CivilStrCalc","url":"https://civilstrcalc.com"}}
+</script>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ══ PAGE TITLE ══ -->
+<div class="page-title-bar">
+  <h1 class="page-title">Rebar Development &amp; Splice Length</h1>
+  <p class="page-subtitle">Development length, standard hooks, and lap splices — ACI 318-25 · Eurocode 2 · IS 456:2000</p>
+</div>
+
+<!-- ══ MODULE TABS ══ -->
+<div class="mod-tabs" role="tablist">
+  <button class="mod-tab active" id="mtab-straight" role="tab" aria-selected="true"  onclick="modTab(this,'mod-straight')">Straight Bar Development</button>
+  <button class="mod-tab"        id="mtab-hook"     role="tab" aria-selected="false" onclick="modTab(this,'mod-hook')">Standard Hook</button>
+  <button class="mod-tab"        id="mtab-splice"   role="tab" aria-selected="false" onclick="modTab(this,'mod-splice')">Lap Splice</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MOD 1 — STRAIGHT BAR DEVELOPMENT
+═══════════════════════════════════════════════════════════ -->
+<div class="mod-pane active" id="mod-straight">
+
+  <div class="sub-tabs" role="tablist">
+    <button class="sub-tab active" onclick="stab(this,'st','aci')">ACI 318-25</button>
+    <button class="sub-tab"       onclick="stab(this,'st','ec2')">Eurocode 2</button>
+    <button class="sub-tab"       onclick="stab(this,'st','is')">IS 456:2000</button>
+  </div>
+
+  <!-- ── ACI Straight ── -->
+  <div class="sub-pane active" id="st-aci">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <span style="font-size:.75rem;color:var(--text-dim);font-weight:500;">Units:</span>
+      <div class="unit-toggle" id="st-aci-utog">
+        <button class="unit-btn active" onclick="setAciUnit('si',this,'st-aci')">SI (MPa · mm)</button>
+        <button class="unit-btn"        onclick="setAciUnit('us',this,'st-aci')">US (psi · in)</button>
+      </div>
+    </div>
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — ACI 318-25 §25.4.2</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Size</label>
+            <select class="iw" id="st-aci-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c <span class="lu" id="st-aci-fc-u">MPa</span></label>
+              <input class="iw" type="number" id="st-aci-fc" value="28" min="17" max="100">
+            </div>
+            <div class="form-group">
+              <label>fy <span class="lu" id="st-aci-fy-u">MPa</span></label>
+              <input class="iw" type="number" id="st-aci-fy" value="420" min="280" max="690">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>cb — confinement <span class="lu" id="st-aci-cb-u">mm</span></label>
+              <input class="iw" type="number" id="st-aci-cb" value="38" min="0">
+            </div>
+            <div class="form-group">
+              <label>Ktr <span style="font-size:.7rem;color:var(--text-dim)">(default 0)</span></label>
+              <input class="iw" type="number" id="st-aci-ktr" value="0" min="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>ψt — Casting position</label>
+            <select class="iw" id="st-aci-psi-t">
+              <option value="1.0">1.0 — Horizontal bars with ≤300mm concrete below</option>
+              <option value="1.3">1.3 — Top bars (>300mm fresh concrete below)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ψe — Bar coating</label>
+            <select class="iw" id="st-aci-psi-e">
+              <option value="1.0">1.0 — Uncoated / galvanized</option>
+              <option value="1.2">1.2 — Epoxy coated, cover ≥3db &amp; spacing ≥6db</option>
+              <option value="1.5">1.5 — Epoxy coated, cover &lt;3db or spacing &lt;6db</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>λ — Concrete weight</label>
+            <select class="iw" id="st-aci-lam">
+              <option value="1.0">1.0 — Normalweight</option>
+              <option value="0.85">0.85 — Sand-lightweight</option>
+              <option value="0.75">0.75 — All-lightweight</option>
+            </select>
+          </div>
+          <p class="calc-note">ψs (bar size factor) and ψg (grade factor) are determined automatically from bar diameter and fy.</p>
+          <button class="btn-calc" onclick="calcStAci()">Calculate ℓ<sub>d</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="st-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="st-aci-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EC2 Straight ── -->
+  <div class="sub-pane" id="st-ec2">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — EN 1992-1-1 §8.4</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="st-ec2-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>fck (MPa)</label>
+              <input class="iw" type="number" id="st-ec2-fck" value="25" min="12" max="90">
+            </div>
+            <div class="form-group">
+              <label>fyk (MPa)</label>
+              <input class="iw" type="number" id="st-ec2-fyk" value="500" min="400" max="600">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bond condition η1</label>
+            <select class="iw" id="st-ec2-eta1">
+              <option value="1.0">1.0 — Good (bars at 45–90° to horiz., or lower 250mm)</option>
+              <option value="0.7">0.7 — Poor (all other cases)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α1 — Bar shape</label>
+            <select class="iw" id="st-ec2-a1">
+              <option value="1.0">1.0 — Straight bar</option>
+              <option value="0.7">0.7 — Curved bar with cd &gt; 3φ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α2 — Concrete cover (cd/db)</label>
+            <select class="iw" id="st-ec2-a2">
+              <option value="1.0">1.0 — Minimum cover (cd = db)</option>
+              <option value="0.85">0.85 — cd = 2db</option>
+              <option value="0.70">0.70 — cd ≥ 3db (maximum benefit)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α3 — Transverse reinforcement</label>
+            <select class="iw" id="st-ec2-a3">
+              <option value="1.0">1.0 — No transverse steel (conservative)</option>
+              <option value="0.85">0.85 — Moderate confinement</option>
+              <option value="0.70">0.70 — Well confined (minimum per §8.4.4)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α4 — Welded transverse bar</label>
+            <select class="iw" id="st-ec2-a4">
+              <option value="1.0">1.0 — No welded transverse bar</option>
+              <option value="0.7">0.7 — Welded transverse bar present</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcStEc2()">Calculate l<sub>bd</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="st-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="st-ec2-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IS456 Straight ── -->
+  <div class="sub-pane" id="st-is">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — IS 456:2000 §26.2</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="st-is-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade</label>
+              <select class="iw" id="st-is-grade">
+                <option value="1.2">M20 — τbd 1.2 MPa</option>
+                <option value="1.4">M25 — τbd 1.4 MPa</option>
+                <option value="1.5" selected>M30 — τbd 1.5 MPa</option>
+                <option value="1.7">M35 — τbd 1.7 MPa</option>
+                <option value="1.9">M40 — τbd 1.9 MPa</option>
+                <option value="2.1">M45 — τbd 2.1 MPa</option>
+                <option value="2.2">M50 — τbd 2.2 MPa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade</label>
+              <select class="iw" id="st-is-fy">
+                <option value="250">Fe 250 (fy 250 MPa)</option>
+                <option value="415" selected>Fe 415 (fy 415 MPa)</option>
+                <option value="500">Fe 500 (fy 500 MPa)</option>
+                <option value="550">Fe 550 (fy 550 MPa)</option>
+                <option value="600">Fe 600 (fy 600 MPa)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bar Type</label>
+            <select class="iw" id="st-is-type">
+              <option value="1.6">Deformed / HYSD (τbd × 1.6)</option>
+              <option value="1.0">Plain round bar</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bar in</label>
+            <select class="iw" id="st-is-tension">
+              <option value="tension">Tension</option>
+              <option value="compression">Compression (τbd × 1.25 additional)</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcStIs()">Calculate L<sub>d</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="st-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="st-is-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mod-straight -->
+
+<!-- ══════════════════════════════════════════════════════════
+     MOD 2 — STANDARD HOOK
+═══════════════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-hook">
+
+  <div class="sub-tabs" role="tablist">
+    <button class="sub-tab active" onclick="stab(this,'hk','aci')">ACI 318-25</button>
+    <button class="sub-tab"       onclick="stab(this,'hk','ec2')">Eurocode 2</button>
+    <button class="sub-tab"       onclick="stab(this,'hk','is')">IS 456:2000</button>
+  </div>
+
+  <!-- ── ACI Hook ── -->
+  <div class="sub-pane active" id="hk-aci">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <span style="font-size:.75rem;color:var(--text-dim);font-weight:500;">Units:</span>
+      <div class="unit-toggle" id="hk-aci-utog">
+        <button class="unit-btn active" onclick="setAciUnit('si',this,'hk-aci')">SI (MPa · mm)</button>
+        <button class="unit-btn"        onclick="setAciUnit('us',this,'hk-aci')">US (psi · in)</button>
+      </div>
+    </div>
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — ACI 318-25 §25.4.3</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Size</label>
+            <select class="iw" id="hk-aci-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c <span class="lu" id="hk-aci-fc-u">MPa</span></label>
+              <input class="iw" type="number" id="hk-aci-fc" value="28" min="17" max="100">
+            </div>
+            <div class="form-group">
+              <label>fy <span class="lu" id="hk-aci-fy-u">MPa</span></label>
+              <input class="iw" type="number" id="hk-aci-fy" value="420" min="280" max="690">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Hook Type</label>
+            <select class="iw" id="hk-aci-type">
+              <option value="90">90° Standard Hook</option>
+              <option value="180">180° Standard Hook</option>
+              <option value="seismic">Seismic Hook (135° with extension)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ψe — Bar coating</label>
+            <select class="iw" id="hk-aci-psi-e">
+              <option value="1.0">1.0 — Uncoated / galvanized</option>
+              <option value="1.2">1.2 — Epoxy coated</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ψr — Confinement (90° hooks)</label>
+            <select class="iw" id="hk-aci-psi-r">
+              <option value="1.0">1.0 — Confined: ties at ≤3db throughout ℓdh, or side cover ≥64mm</option>
+              <option value="1.6">1.6 — No confinement (conservative)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ψo — Location</label>
+            <select class="iw" id="hk-aci-psi-o">
+              <option value="1.0">1.0 — Within joint enclosed by beams, or column core</option>
+              <option value="1.25">1.25 — Other locations</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>λ — Concrete weight</label>
+            <select class="iw" id="hk-aci-lam">
+              <option value="1.0">1.0 — Normalweight</option>
+              <option value="0.85">0.85 — Sand-lightweight</option>
+              <option value="0.75">0.75 — All-lightweight</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcHkAci()">Calculate ℓ<sub>dh</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="hk-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="hk-aci-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EC2 Hook ── -->
+  <div class="sub-pane" id="hk-ec2">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — EN 1992-1-1 §8.4.4 (Hooked Bars)</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="hk-ec2-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>fck (MPa)</label>
+              <input class="iw" type="number" id="hk-ec2-fck" value="25" min="12" max="90">
+            </div>
+            <div class="form-group">
+              <label>fyk (MPa)</label>
+              <input class="iw" type="number" id="hk-ec2-fyk" value="500" min="400" max="600">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Hook Type</label>
+            <select class="iw" id="hk-ec2-type">
+              <option value="90">90° Bend (internal radius ≥ 2db)</option>
+              <option value="180">180° Hook (internal radius ≥ 2db)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bond condition η1</label>
+            <select class="iw" id="hk-ec2-eta1">
+              <option value="1.0">1.0 — Good bond</option>
+              <option value="0.7">0.7 — Poor bond</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α1 — Shape factor for hook</label>
+            <select class="iw" id="hk-ec2-a1">
+              <option value="0.7">0.7 — cd &gt; 3db (cover benefit for hooked bar)</option>
+              <option value="1.0">1.0 — Other / conservative</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α2 — Cover effect</label>
+            <select class="iw" id="hk-ec2-a2">
+              <option value="1.0">1.0 — Minimum cover</option>
+              <option value="0.85">0.85 — cd ≈ 2db</option>
+              <option value="0.70">0.70 — cd ≥ 3db</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcHkEc2()">Calculate l<sub>bd</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="hk-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="hk-ec2-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IS456 Hook ── -->
+  <div class="sub-pane" id="hk-is">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — IS 456:2000 §26.2.2</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="hk-is-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade</label>
+              <select class="iw" id="hk-is-grade">
+                <option value="1.2">M20</option>
+                <option value="1.4">M25</option>
+                <option value="1.5" selected>M30</option>
+                <option value="1.7">M35</option>
+                <option value="1.9">M40</option>
+                <option value="2.1">M45</option>
+                <option value="2.2">M50</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade</label>
+              <select class="iw" id="hk-is-fy">
+                <option value="250">Fe 250</option>
+                <option value="415" selected>Fe 415</option>
+                <option value="500">Fe 500</option>
+                <option value="550">Fe 550</option>
+                <option value="600">Fe 600</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Hook Type (IS 456 §26.2.2)</label>
+            <select class="iw" id="hk-is-type">
+              <option value="16">180° U-hook — equivalent 16db</option>
+              <option value="8">90° bend — equivalent 8db</option>
+              <option value="12">135° bend — equivalent 12db</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bar Type</label>
+            <select class="iw" id="hk-is-bartype">
+              <option value="1.6">Deformed / HYSD</option>
+              <option value="1.0">Plain round</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcHkIs()">Calculate Required Embedment</button>
+        </div>
+      </div>
+      <div>
+        <div id="hk-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="hk-is-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mod-hook -->
+
+<!-- ══════════════════════════════════════════════════════════
+     MOD 3 — LAP SPLICE
+═══════════════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-splice">
+
+  <div class="sub-tabs" role="tablist">
+    <button class="sub-tab active" onclick="stab(this,'sp','aci')">ACI 318-25</button>
+    <button class="sub-tab"       onclick="stab(this,'sp','ec2')">Eurocode 2</button>
+    <button class="sub-tab"       onclick="stab(this,'sp','is')">IS 456:2000</button>
+  </div>
+
+  <!-- ── ACI Splice ── -->
+  <div class="sub-pane active" id="sp-aci">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <span style="font-size:.75rem;color:var(--text-dim);font-weight:500;">Units:</span>
+      <div class="unit-toggle" id="sp-aci-utog">
+        <button class="unit-btn active" onclick="setAciUnit('si',this,'sp-aci')">SI (MPa · mm)</button>
+        <button class="unit-btn"        onclick="setAciUnit('us',this,'sp-aci')">US (psi · in)</button>
+      </div>
+    </div>
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — ACI 318-25 §25.5</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Size</label>
+            <select class="iw" id="sp-aci-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>f'c <span class="lu" id="sp-aci-fc-u">MPa</span></label>
+              <input class="iw" type="number" id="sp-aci-fc" value="28" min="17" max="100">
+            </div>
+            <div class="form-group">
+              <label>fy <span class="lu" id="sp-aci-fy-u">MPa</span></label>
+              <input class="iw" type="number" id="sp-aci-fy" value="420" min="280" max="690">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Splice Type</label>
+            <select class="iw" id="sp-aci-stype">
+              <option value="A">Tension Class A — ≤50% bars spliced, or As,provided ≥ 2×required</option>
+              <option value="B">Tension Class B — other cases (most common)</option>
+              <option value="comp">Compression splice</option>
+            </select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>cb <span class="lu" id="sp-aci-cb-u">mm</span></label>
+              <input class="iw" type="number" id="sp-aci-cb" value="38" min="0">
+            </div>
+            <div class="form-group">
+              <label>Ktr (default 0)</label>
+              <input class="iw" type="number" id="sp-aci-ktr" value="0" min="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>ψt — Casting position</label>
+            <select class="iw" id="sp-aci-psi-t">
+              <option value="1.0">1.0 — Other bars</option>
+              <option value="1.3">1.3 — Top bars</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ψe — Bar coating</label>
+            <select class="iw" id="sp-aci-psi-e">
+              <option value="1.0">1.0 — Uncoated</option>
+              <option value="1.2">1.2 — Epoxy, cover ≥3db &amp; spacing ≥6db</option>
+              <option value="1.5">1.5 — Epoxy, cover &lt;3db or spacing &lt;6db</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>λ — Concrete weight</label>
+            <select class="iw" id="sp-aci-lam">
+              <option value="1.0">1.0 — Normalweight</option>
+              <option value="0.85">0.85 — Sand-lightweight</option>
+              <option value="0.75">0.75 — All-lightweight</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcSpAci()">Calculate ℓ<sub>st</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="sp-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="sp-aci-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EC2 Splice ── -->
+  <div class="sub-pane" id="sp-ec2">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — EN 1992-1-1 §8.7</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="sp-ec2-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>fck (MPa)</label>
+              <input class="iw" type="number" id="sp-ec2-fck" value="25" min="12" max="90">
+            </div>
+            <div class="form-group">
+              <label>fyk (MPa)</label>
+              <input class="iw" type="number" id="sp-ec2-fyk" value="500" min="400" max="600">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bond condition η1</label>
+            <select class="iw" id="sp-ec2-eta1">
+              <option value="1.0">1.0 — Good</option>
+              <option value="0.7">0.7 — Poor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α6 — % bars lapped at same section</label>
+            <select class="iw" id="sp-ec2-a6">
+              <option value="1.0">1.0 — ≤25% lapped</option>
+              <option value="1.15">1.15 — 33% lapped</option>
+              <option value="1.4">1.4 — 50% lapped</option>
+              <option value="1.5">1.5 — &gt;50% lapped</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α2 — Concrete cover</label>
+            <select class="iw" id="sp-ec2-a2">
+              <option value="1.0">1.0 — Minimum cover</option>
+              <option value="0.85">0.85 — cd ≈ 2db</option>
+              <option value="0.70">0.70 — cd ≥ 3db</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>α3 — Transverse reinforcement</label>
+            <select class="iw" id="sp-ec2-a3">
+              <option value="1.0">1.0 — No transverse steel</option>
+              <option value="0.85">0.85 — Moderate</option>
+              <option value="0.70">0.70 — Well confined</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcSpEc2()">Calculate l<sub>0</sub></button>
+        </div>
+      </div>
+      <div>
+        <div id="sp-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="sp-ec2-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IS456 Splice ── -->
+  <div class="sub-pane" id="sp-is">
+    <div class="calc-layout">
+      <div class="card">
+        <div class="card-hdr">Inputs — IS 456:2000 §26.2.5</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Bar Diameter db (mm)</label>
+            <select class="iw" id="sp-is-bar"></select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Concrete Grade</label>
+              <select class="iw" id="sp-is-grade">
+                <option value="1.2">M20</option>
+                <option value="1.4">M25</option>
+                <option value="1.5" selected>M30</option>
+                <option value="1.7">M35</option>
+                <option value="1.9">M40</option>
+                <option value="2.1">M45</option>
+                <option value="2.2">M50</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Steel Grade</label>
+              <select class="iw" id="sp-is-fy">
+                <option value="250">Fe 250</option>
+                <option value="415" selected>Fe 415</option>
+                <option value="500">Fe 500</option>
+                <option value="550">Fe 550</option>
+                <option value="600">Fe 600</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bar Type</label>
+            <select class="iw" id="sp-is-bartype">
+              <option value="1.6">Deformed / HYSD</option>
+              <option value="1.0">Plain round</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Splice in</label>
+            <select class="iw" id="sp-is-tension">
+              <option value="tension">Tension (×1.3)</option>
+              <option value="compression">Compression</option>
+            </select>
+          </div>
+          <button class="btn-calc" onclick="calcSpIs()">Calculate Lap Length</button>
+        </div>
+      </div>
+      <div>
+        <div id="sp-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div class="diagram-wrap" id="sp-is-diag" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mod-splice -->
+
+<!-- ══════════════════════════════════════════════════════════
+     SEO BACKGROUND SECTION
+═══════════════════════════════════════════════════════════ -->
+<div class="bg-section">
+  <h2>About Development Length &amp; Splice Length Calculations</h2>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'bg-overview')">Overview</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-aci')">ACI 318-25</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-ec2')">Eurocode 2</button>
+    <button class="bg-tab" onclick="bgTab(this,'bg-is456')">IS 456:2000</button>
+  </div>
+
+  <div class="bg-pane active" id="bg-overview">
+    <h3>What is Development Length?</h3>
+    <p>Development length (ℓd) is the minimum length of rebar that must be embedded in concrete to transfer the full bar yield force through bond stress alone. If a bar is cut short of this length, the bar cannot reach its yield strength and the structural member may fail prematurely.</p>
+    <p>Bond transfer depends on three mechanisms: chemical adhesion between the bar and hardened cement paste, friction along the bar surface, and mechanical bearing of the bar deformations (ribs) against the surrounding concrete. Deformed bars are significantly more effective than plain round bars because the ribs provide direct bearing resistance.</p>
+    <h3>Standard Hooks</h3>
+    <p>When straight embedment is not possible due to geometric constraints (e.g., at the end of a beam framing into a column), standard hooks provide an alternative mechanical anchorage. A 90° hook with an extension, or a 180° U-hook, engages the concrete in bearing around the bend, reducing the required embedment length. All three codes specify minimum hook geometry (internal bend diameter, tail extension length) that must be satisfied for the hook to be counted as effective.</p>
+    <h3>Lap Splices</h3>
+    <p>When bars must be connected end-to-end (e.g., at construction joints or when bar lengths are limited), lap splices transfer force from one bar to the next through the surrounding concrete. The required lap length is generally longer than the development length because the bond zone is shared between two bars and stress concentrations arise at the splice ends. ACI 318-25 classifies tension splices into Class A and Class B based on the proportion of bars spliced at a given section and the available reinforcement ratio.</p>
+    <h3>Key Variables</h3>
+    <ul>
+      <li><strong>Concrete strength (f'c / fck)</strong>: Higher strength concrete provides greater bond, reducing required lengths.</li>
+      <li><strong>Steel yield strength (fy / fyk)</strong>: Higher strength bars require longer embedment to develop the greater force.</li>
+      <li><strong>Bar diameter (db / φ)</strong>: Required lengths scale approximately linearly with bar diameter.</li>
+      <li><strong>Cover and confinement</strong>: Adequate cover and transverse reinforcement prevent splitting failures and allow shorter development lengths.</li>
+      <li><strong>Casting position</strong>: Top-cast bars (with more than 300mm of fresh concrete below) have reduced bond due to water migration and bleed water collecting below the bar.</li>
+    </ul>
+  </div>
+
+  <div class="bg-pane" id="bg-aci">
+    <h3>ACI 318-25 Straight Bar Development (§25.4.2)</h3>
+    <p>The general development length formula for deformed bars in tension is:</p>
+    <div class="formula-box">ℓd = (fy · ψt · ψe · ψs · ψg · db) / (1.1 · λ · √f'c · [(cb + Ktr)/db])</div>
+    <p>where (cb + Ktr)/db is limited to a maximum of 2.5, and ℓd ≥ max(300 mm, 8db).</p>
+    <h3>Modification Factors</h3>
+    <ul>
+      <li><strong>ψt (casting position)</strong>: 1.3 for top bars with more than 300 mm of fresh concrete below; 1.0 otherwise.</li>
+      <li><strong>ψe (coating)</strong>: 1.5 for epoxy-coated bars with cover &lt; 3db or clear spacing &lt; 6db; 1.2 for other epoxy; 1.0 for uncoated. The product ψt · ψe shall not exceed 1.7.</li>
+      <li><strong>ψs (bar size)</strong>: 0.8 for No. 6 (19 mm) and smaller bars; 1.0 for larger bars.</li>
+      <li><strong>ψg (grade)</strong>: 1.0 for fy ≤ 420 MPa; 1.15 for fy = 550 MPa; 1.3 for fy = 690 MPa.</li>
+      <li><strong>λ (lightweight)</strong>: 1.0 for normalweight; 0.85 sand-lightweight; 0.75 all-lightweight.</li>
+      <li><strong>cb</strong>: Smaller of (i) distance from bar centre to nearest concrete surface or (ii) half the centre-to-centre bar spacing.</li>
+      <li><strong>Ktr</strong>: Transverse reinforcement index = 40Atr/(sn); may conservatively be taken as 0.</li>
+    </ul>
+    <h3>Standard Hook Development (§25.4.3)</h3>
+    <p>For deformed bars in tension terminated with a standard 90° or 180° hook:</p>
+    <div class="formula-box">ℓdh = (fy · ψe · ψr · ψo · db) / (4.57 · λ · √f'c)</div>
+    <p>with ℓdh ≥ max(8db, 150 mm). The coefficient 4.57 is the SI equivalent of the ACI 318M-25 provision.</p>
+    <h3>Tension Lap Splices (§25.5)</h3>
+    <p>Class A splice: ℓst = 1.0 · ℓd (when ≤ 50% of bars are spliced and As,provided ≥ 2 × As,required throughout the lap). Class B splice: ℓst = 1.3 · ℓd (all other cases). For compression, ℓsc = max[(0.24fydb)/(λ√f'c), 0.043fydb] ≥ 200 mm.</p>
+  </div>
+
+  <div class="bg-pane" id="bg-ec2">
+    <h3>Eurocode 2 Anchorage (§8.4)</h3>
+    <p>The design anchorage length for a straight bar is:</p>
+    <div class="formula-box">l_bd = α1 · α2 · α3 · α4 · α5 · l_b,rqd ≥ l_b,min</div>
+    <p>The basic required anchorage length is determined from the bond stress:</p>
+    <div class="formula-box">l_b,rqd = (φ/4) · (fyd / fbd)</div>
+    <p>where fyd = fyk/1.15 (design yield strength) and fbd = 2.25 · η1 · η2 · fctd is the design bond strength.</p>
+    <h3>Bond Stress Parameters</h3>
+    <ul>
+      <li><strong>fctd</strong> = 0.7 × fctm / γc = 0.7 × 0.30 × fck^(2/3) / 1.5 = 0.14 · fck^(2/3) [for fck ≤ 50 MPa]</li>
+      <li><strong>η1</strong>: 1.0 good bond conditions; 0.7 poor bond conditions</li>
+      <li><strong>η2</strong>: 1.0 for db ≤ 32 mm; (132 − db)/100 for db &gt; 32 mm</li>
+    </ul>
+    <h3>Reduction Factors α1–α5</h3>
+    <p>α1 (bar shape), α2 (cover), α3 (transverse reinforcement), α4 (welded transverse bar), α5 (transverse pressure). The product α1·α2·α3 shall not be less than 0.7. l_b,min = max(0.3·l_b,rqd, 10φ, 100 mm) for tension.</p>
+    <h3>Lap Splice Length (§8.7)</h3>
+    <div class="formula-box">l_0 = α1 · α2 · α3 · α5 · α6 · l_b,rqd ≥ l_0,min</div>
+    <p>α6 accounts for the percentage of bars lapped: 1.0 (≤25%), 1.15 (33%), 1.4 (50%), 1.5 (&gt;50%). Minimum l_0,min = max(0.3·α6·l_b,rqd, 15φ, 200 mm).</p>
+  </div>
+
+  <div class="bg-pane" id="bg-is456">
+    <h3>IS 456:2000 Development Length (§26.2.1)</h3>
+    <p>The development length for a deformed bar in tension:</p>
+    <div class="formula-box">Ld = (φ · 0.87 · fy) / (4 · τbd)</div>
+    <p>where τbd is the design bond stress from Table 21 of IS 456:2000, multiplied by 1.6 for deformed bars (H.Y.S.D. bars). For bars in compression, an additional factor of 1.25 is applied to τbd.</p>
+    <h3>Design Bond Stress (Table 21)</h3>
+    <ul>
+      <li>M20: 1.2 MPa</li><li>M25: 1.4 MPa</li><li>M30: 1.5 MPa</li>
+      <li>M35: 1.7 MPa</li><li>M40: 1.9 MPa</li><li>M45: 2.1 MPa</li><li>M50: 2.2 MPa</li>
+    </ul>
+    <h3>Hooks and Bends (§26.2.2)</h3>
+    <p>Standard hooks provide equivalent anchorage that reduces the required straight embedment:</p>
+    <ul>
+      <li>180° U-hook: 16db equivalent</li>
+      <li>90° bend with 4db extension: 8db equivalent</li>
+      <li>135° bend: 12db equivalent</li>
+    </ul>
+    <p>The required straight length beyond the hook = Ld − (hook equivalent), subject to a practical minimum of 200 mm overall.</p>
+    <h3>Lap Splices (§26.2.5)</h3>
+    <p>Lap splices shall not be used for bars larger than 36 mm (welding required for larger diameters). Tension lap = 1.3 × Ld, minimum 300 mm. Compression lap = Ld, minimum 300 mm.</p>
+  </div>
+</div>
+
+</div><!-- end page-wrap -->
+
+<script src="../js/nav.js" defer></script>
+<script src="../shell.js" defer></script>
+<script>
+/* ============================================================
+   DEVELOPMENT LENGTH CALCULATOR
+   All ACI calculations are performed in SI (MPa, mm) internally.
+   US inputs are converted before calculation, outputs converted
+   for display.
+   ============================================================ */
+
+/* ── Bar size data ──────────────────────────────────────── */
+var ACI_BARS = {
+  si: [
+    {label:'No.10 — Ø9.5 mm',  db:9.5},
+    {label:'No.13 — Ø12.7 mm', db:12.7},
+    {label:'No.16 — Ø15.9 mm', db:15.9},
+    {label:'No.19 — Ø19.1 mm', db:19.1},
+    {label:'No.22 — Ø22.2 mm', db:22.2},
+    {label:'No.25 — Ø25.4 mm', db:25.4},
+    {label:'No.29 — Ø28.7 mm', db:28.7},
+    {label:'No.32 — Ø32.3 mm', db:32.3},
+    {label:'No.36 — Ø35.8 mm', db:35.8},
+    {label:'No.43 — Ø43.0 mm', db:43.0},
+    {label:'No.57 — Ø57.3 mm', db:57.3}
+  ],
+  us: [
+    {label:'#3 — 3/8"',    db:9.525},
+    {label:'#4 — 1/2"',    db:12.7},
+    {label:'#5 — 5/8"',    db:15.875},
+    {label:'#6 — 3/4"',    db:19.05},
+    {label:'#7 — 7/8"',    db:22.225},
+    {label:'#8 — 1"',      db:25.4},
+    {label:'#9 — 1.128"',  db:28.65},
+    {label:'#10 — 1.270"', db:32.26},
+    {label:'#11 — 1.410"', db:35.81},
+    {label:'#14 — 1.693"', db:43.0},
+    {label:'#18 — 2.257"', db:57.33}
+  ]
+};
+
+var METRIC_BARS = [
+  {label:'Ø6 mm',  db:6},  {label:'Ø8 mm',  db:8},  {label:'Ø10 mm', db:10},
+  {label:'Ø12 mm', db:12}, {label:'Ø16 mm', db:16}, {label:'Ø20 mm', db:20},
+  {label:'Ø25 mm', db:25}, {label:'Ø32 mm', db:32}, {label:'Ø40 mm', db:40}
+];
+
+var IS_BARS = [
+  {label:'Ø6 mm',  db:6},  {label:'Ø8 mm',  db:8},  {label:'Ø10 mm', db:10},
+  {label:'Ø12 mm', db:12}, {label:'Ø16 mm', db:16}, {label:'Ø20 mm', db:20},
+  {label:'Ø25 mm', db:25}, {label:'Ø28 mm', db:28}, {label:'Ø32 mm', db:32},
+  {label:'Ø36 mm', db:36}
+];
+
+/* ── ACI unit state (per calc-area) ─────────────────────── */
+var aciUnits = { 'st-aci': 'si', 'hk-aci': 'si', 'sp-aci': 'si' };
+
+function setAciUnit(u, btn, area) {
+  aciUnits[area] = u;
+  var tog = document.getElementById(area + '-utog');
+  tog.querySelectorAll('.unit-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  rebuildAciSelect(area);
+  updateAciLabels(area, u);
+}
+
+function rebuildAciSelect(area) {
+  var u = aciUnits[area];
+  var sel = document.getElementById(area + '-bar');
+  if (!sel) return;
+  var prev = parseFloat(sel.value) || 0;
+  sel.innerHTML = '';
+  ACI_BARS[u].forEach(function(b){
+    var o = document.createElement('option');
+    o.value = b.db;
+    o.textContent = b.label;
+    sel.appendChild(o);
+  });
+  if (prev) { for (var i=0;i<sel.options.length;i++) { if (Math.abs(parseFloat(sel.options[i].value)-prev)<1) { sel.selectedIndex=i; break; } } }
+}
+
+function updateAciLabels(area, u) {
+  var si = (u === 'si');
+  var fcEl = document.getElementById(area + '-fc-u');
+  var fyEl = document.getElementById(area + '-fy-u');
+  var cbEl = document.getElementById(area + '-cb-u');
+  if (fcEl) fcEl.textContent = si ? 'MPa' : 'psi';
+  if (fyEl) fyEl.textContent = si ? 'MPa' : 'psi';
+  if (cbEl) cbEl.textContent = si ? 'mm' : 'in';
+  // update default values
+  var fcIn = document.getElementById(area + '-fc');
+  var fyIn = document.getElementById(area + '-fy');
+  var cbIn = document.getElementById(area + '-cb');
+  if (fcIn && fyIn) {
+    if (si) { fcIn.value = '28'; fyIn.value = '420'; if (cbIn) cbIn.value = '38'; }
+    else    { fcIn.value = '4000'; fyIn.value = '60000'; if (cbIn) cbIn.value = '1.5'; }
+  }
+}
+
+/* ── Read ACI inputs in SI ──────────────────────────────── */
+function readAci(area) {
+  var u = aciUnits[area];
+  var db = parseFloat(document.getElementById(area+'-bar').value) || 0;
+  var fc = parseFloat(document.getElementById(area+'-fc').value) || 0;
+  var fy = parseFloat(document.getElementById(area+'-fy').value) || 0;
+  if (u === 'us') { fc = fc / 145.038; fy = fy / 145.038; }
+  return { db: db, fc: fc, fy: fy, u: u };
+}
+
+function dispAci(val_mm, u) {
+  if (u === 'us') return (val_mm / 25.4).toFixed(2) + ' in';
+  return Math.ceil(val_mm) + ' mm';
+}
+
+/* ── Module tab ─────────────────────────────────────────── */
+function modTab(btn, id) {
+  document.querySelectorAll('.mod-tab').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+  document.querySelectorAll('.mod-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── Background tab ─────────────────────────────────────── */
+function bgTab(btn, id) {
+  btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  btn.closest('.bg-section').querySelectorAll('.bg-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── Steps toggle ───────────────────────────────────────── */
+function toggleSteps(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+/* ── SVG: straight bar ──────────────────────────────────── */
+function svgStraight(ldMm, dbMm, label, unitStr) {
+  var W=340, H=80, pad=30, bW=W-2*pad;
+  var bH = Math.min(Math.max(dbMm*0.7, 6), 18);
+  var cy = H/2;
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<rect x="'+pad+'" y="'+(cy-bH/2)+'" width="'+bW+'" height="'+bH+'" rx="'+bH/4+'" fill="#3a8fd4" opacity="0.85"/>'
+    +'<line x1="'+pad+'" y1="'+(cy+bH/2+4)+'" x2="'+(W-pad)+'" y2="'+(cy+bH/2+4)+'" stroke="#555" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>'
+    +'<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>'
+    +'<text x="'+(W/2)+'" y="'+(cy+bH/2+20)+'" text-anchor="middle" font-size="11" fill="#333" font-family="IBM Plex Mono,monospace">'+label+' = '+unitStr+'</text>'
+    +'</svg>';
+}
+
+/* ── SVG: hooked bar ────────────────────────────────────── */
+function svgHook(ldMm, dbMm, hookType, unitStr) {
+  var W=300, H=140;
+  var bH = Math.min(Math.max(dbMm*0.6, 5), 14);
+  var stroke = '#3a8fd4';
+  var r = bH*2; // bend radius
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">';
+  // straight portion
+  svg += '<line x1="20" y1="50" x2="200" y2="50" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
+  // 90° bend
+  svg += '<path d="M '+(200)+' 50 Q '+(220)+' 50 '+(220)+' 70" fill="none" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
+  // vertical extension
+  svg += '<line x1="220" y1="70" x2="220" y2="115" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
+  // dimension line
+  svg += '<line x1="20" y1="28" x2="220" y2="28" stroke="#555" stroke-width="1"/>';
+  svg += '<text x="120" y="22" text-anchor="middle" font-size="10" fill="#333" font-family="IBM Plex Mono,monospace">ℓdh = '+unitStr+'</text>';
+  svg += '<text x="120" y="130" text-anchor="middle" font-size="10" fill="#888" font-family="IBM Plex Sans,sans-serif">'+hookType+' hook</text>';
+  svg += '</svg>';
+  return svg;
+}
+
+/* ── SVG: lap splice ────────────────────────────────────── */
+function svgSplice(lsMm, dbMm, unitStr) {
+  var W=340, H=90, pad=20, bW=W-2*pad;
+  var bH = Math.min(Math.max(dbMm*0.7, 5), 14);
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<rect x="'+pad+'" y="28" width="'+(bW*0.65)+'" height="'+bH+'" rx="'+bH/4+'" fill="#3a8fd4" opacity="0.9"/>'
+    +'<rect x="'+(pad+bW*0.35)+'" y="'+(28+bH+3)+'" width="'+(bW*0.65)+'" height="'+bH+'" rx="'+bH/4+'" fill="#1566b0" opacity="0.85"/>'
+    +'<line x1="'+(pad+bW*0.35)+'" y1="20" x2="'+(pad+bW)+'" y2="20" stroke="#555" stroke-width="1"/>'
+    +'<text x="'+(pad+bW*0.35+bW*0.325)+'" y="15" text-anchor="middle" font-size="11" fill="#333" font-family="IBM Plex Mono,monospace">'+unitStr+'</text>'
+    +'<text x="'+(W/2)+'" y="82" text-anchor="middle" font-size="10" fill="#888" font-family="IBM Plex Sans,sans-serif">Lap splice</text>'
+    +'</svg>';
+}
+
+/* ── Render result helper ────────────────────────────────── */
+function showResult(resId, diagId, primary, rows, steps, svgHtml, minNote) {
+  var html = '<div class="res-primary">'
+    +'<span class="res-primary-val">'+primary.val+'</span>'
+    +'<span class="res-primary-lbl">'+primary.lbl+'</span>'
+    +(minNote ? '<span class="res-primary-min">'+minNote+'</span>' : '')
+    +'</div>';
+  html += '<div class="res-card"><div class="res-body">';
+  html += '<table class="res-table">';
+  rows.forEach(function(r){ html += '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>'; });
+  html += '</table>';
+  if (steps && steps.length) {
+    html += '<button class="steps-toggle" onclick="toggleSteps(this)">▸ Calculation steps <span class="arr">▾</span></button>';
+    html += '<div class="steps-body"><table class="steps-table">';
+    steps.forEach(function(s){ html += '<tr><td class="step-num">'+s[0]+'</td><td class="step-desc">'+s[1]+'</td><td class="step-val">'+s[2]+'</td></tr>'; });
+    html += '</table></div>';
+  }
+  html += '</div></div>';
+  document.getElementById(resId).innerHTML = html;
+  var diagEl = document.getElementById(diagId);
+  if (diagEl) {
+    diagEl.style.display = 'block';
+    diagEl.innerHTML = svgHtml + '<p class="diagram-label">Schematic — not to scale</p>';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACI STRAIGHT BAR
+══════════════════════════════════════════════════════════ */
+function calcStAci() {
+  var inp = readAci('st-aci');
+  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
+  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+
+  var cb   = parseFloat(document.getElementById('st-aci-cb').value) || 0;
+  var Ktr  = parseFloat(document.getElementById('st-aci-ktr').value) || 0;
+  if (u === 'us') { cb = cb * 25.4; Ktr = Ktr * 25.4; }
+
+  var psi_t = parseFloat(document.getElementById('st-aci-psi-t').value);
+  var psi_e = parseFloat(document.getElementById('st-aci-psi-e').value);
+  var lam   = parseFloat(document.getElementById('st-aci-lam').value);
+
+  // Auto factors
+  var psi_s = (db <= 19) ? 0.8 : 1.0;
+  var psi_g = (fy <= 420) ? 1.0 : (fy <= 550 ? 1.15 : 1.3);
+  var psi_te = Math.min(psi_t * psi_e, 1.7);
+  var conf   = Math.min(2.5, (cb + Ktr) / db);
+  if (conf <= 0) conf = 1.0;
+
+  var ld = (fy * psi_te * psi_s * psi_g * db) / (1.1 * lam * Math.sqrt(fc) * conf);
+  var ld_min = Math.max(300, 8 * db);
+  var ld_req = Math.max(ld, ld_min);
+
+  var dispVal = dispAci(ld_req, u);
+  var dispCalc = dispAci(ld, u);
+  var dispMin  = dispAci(ld_min, u);
+
+  var rows = [
+    ['db (bar diameter)',         (u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in')],
+    ["f'c",                       (u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi')],
+    ['fy',                        (u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi')],
+    ['ψt (casting)',              psi_t.toFixed(1)],
+    ['ψe (coating)',              psi_e.toFixed(1)],
+    ['ψt×ψe (≤1.7)',             psi_te.toFixed(2)],
+    ['ψs (bar size)',             psi_s.toFixed(1)],
+    ['ψg (grade)',                psi_g.toFixed(2)],
+    ['λ (lightweight)',           lam.toFixed(2)],
+    ['(cb+Ktr)/db (≤2.5)',       conf.toFixed(2)],
+    ['ℓd (formula)',             dispCalc],
+    ['ℓd,min (max 300mm, 8db)', dispMin],
+    ['<strong>ℓd required</strong>', '<strong>'+dispVal+'</strong>']
+  ];
+
+  var steps = [
+    ['1','ψt × ψe = '+psi_t.toFixed(1)+' × '+psi_e.toFixed(1)+' (cap 1.7)', psi_te.toFixed(3)],
+    ['2','ψs: db='+(db.toFixed(1))+'mm '+(db<=19?'≤':'>')+'19mm → ψs', psi_s.toFixed(1)],
+    ['3','ψg: fy='+(fy.toFixed(0))+' MPa → ψg', psi_g.toFixed(2)],
+    ['4','conf = (cb+Ktr)/db = ('+(cb.toFixed(1))+'+'+(Ktr.toFixed(1))+')/'+db.toFixed(1)+' (cap 2.5)', conf.toFixed(3)],
+    ['5','ℓd = fy×ψt-e×ψs×ψg×db / (1.1×λ×√f\'c×conf)','= '+dispCalc],
+    ['6','ℓd,min = max(300mm, 8×'+db.toFixed(1)+')', dispMin],
+    ['7','ℓd,req = max(formula, minimum)', dispVal]
+  ];
+
+  showResult('st-aci-res','st-aci-diag',
+    {val: dispVal, lbl: 'Development Length ℓd'},
+    rows, steps,
+    svgStraight(ld_req, db, 'ℓd', dispVal),
+    (ld < ld_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   EC2 STRAIGHT BAR
+══════════════════════════════════════════════════════════ */
+function calcStEc2() {
+  var db  = parseFloat(document.getElementById('st-ec2-bar').value) || 0;
+  var fck = parseFloat(document.getElementById('st-ec2-fck').value) || 0;
+  var fyk = parseFloat(document.getElementById('st-ec2-fyk').value) || 0;
+  var eta1 = parseFloat(document.getElementById('st-ec2-eta1').value);
+  var a1   = parseFloat(document.getElementById('st-ec2-a1').value);
+  var a2   = parseFloat(document.getElementById('st-ec2-a2').value);
+  var a3   = parseFloat(document.getElementById('st-ec2-a3').value);
+  var a4   = parseFloat(document.getElementById('st-ec2-a4').value);
+  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+
+  var eta2 = (db <= 32) ? 1.0 : (132-db)/100;
+  var fctm = (fck <= 50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
+  var fctd = 0.7 * fctm / 1.5;
+  var fbd  = 2.25 * eta1 * eta2 * fctd;
+  var fyd  = fyk / 1.15;
+  var lb_rqd = (db/4) * (fyd/fbd);
+
+  var alpha_prod = a1*a2*a3*a4;
+  var alpha_min  = Math.max(alpha_prod, 0.7);
+  var lbd = alpha_min * lb_rqd;
+  var lb_min = Math.max(0.3*lb_rqd, 10*db, 100);
+  var lbd_req = Math.max(lbd, lb_min);
+
+  var rows = [
+    ['db',          db+' mm'],
+    ['fck',         fck+' MPa'],
+    ['fyk',         fyk+' MPa'],
+    ['η1 (bond)',   eta1.toFixed(1)],
+    ['η2 (size)',   eta2.toFixed(2)],
+    ['fctm',        fctm.toFixed(2)+' MPa'],
+    ['fctd',        fctd.toFixed(2)+' MPa'],
+    ['fbd',         fbd.toFixed(2)+' MPa'],
+    ['fyd = fyk/1.15', fyd.toFixed(1)+' MPa'],
+    ['l_b,rqd',     lb_rqd.toFixed(0)+' mm'],
+    ['α1×α2×α3×α4 (≥0.7)', alpha_min.toFixed(2)],
+    ['l_bd (formula)', lbd.toFixed(0)+' mm'],
+    ['l_b,min',      lb_min.toFixed(0)+' mm'],
+    ['<strong>l_bd required</strong>', '<strong>'+Math.ceil(lbd_req)+' mm</strong>']
+  ];
+
+  var steps = [
+    ['1','η2: db='+db+'mm → η2', eta2.toFixed(3)],
+    ['2','fctm = 0.30×fck^(2/3)', fctm.toFixed(3)+' MPa'],
+    ['3','fctd = 0.7×fctm/γc', fctd.toFixed(3)+' MPa'],
+    ['4','fbd = 2.25×η1×η2×fctd', fbd.toFixed(3)+' MPa'],
+    ['5','fyd = fyk/1.15', fyd.toFixed(1)+' MPa'],
+    ['6','l_b,rqd = (db/4)×(fyd/fbd)', lb_rqd.toFixed(0)+' mm'],
+    ['7','α1×α2×α3×α4 (cap 0.7 min)', alpha_min.toFixed(3)],
+    ['8','l_bd = α×l_b,rqd', lbd.toFixed(0)+' mm'],
+    ['9','l_b,min = max(0.3×l_b,rqd, 10db, 100)', lb_min.toFixed(0)+' mm'],
+    ['10','l_bd,req = max(l_bd, l_b,min)', Math.ceil(lbd_req)+' mm']
+  ];
+
+  showResult('st-ec2-res','st-ec2-diag',
+    {val: Math.ceil(lbd_req)+' mm', lbl: 'Anchorage Length l_bd'},
+    rows, steps,
+    svgStraight(lbd_req, db, 'l_bd', Math.ceil(lbd_req)+' mm'),
+    (lbd < lb_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   IS 456 STRAIGHT BAR
+══════════════════════════════════════════════════════════ */
+function calcStIs() {
+  var db      = parseFloat(document.getElementById('st-is-bar').value) || 0;
+  var tau_bd0 = parseFloat(document.getElementById('st-is-grade').value);
+  var fy      = parseFloat(document.getElementById('st-is-fy').value);
+  var barFac  = parseFloat(document.getElementById('st-is-type').value); // 1.6 deformed, 1.0 plain
+  var tens    = document.getElementById('st-is-tension').value;
+  if (!db) { alert('Please select a bar size.'); return; }
+
+  var tau_bd = tau_bd0 * barFac * (tens === 'compression' ? 1.25 : 1.0);
+  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
+  var Ld_min = 200;
+  var Ld_req = Math.max(Ld, Ld_min);
+
+  var rows = [
+    ['db',                   db+' mm'],
+    ['fy',                   fy+' MPa'],
+    ['τbd (Table 21)',       tau_bd0.toFixed(1)+' MPa'],
+    ['Deformed bar factor',  barFac.toFixed(1)],
+    ['Compression factor',   tens==='compression'?'×1.25':'—'],
+    ['τbd effective',        tau_bd.toFixed(2)+' MPa'],
+    ['Ld (formula)',         Ld.toFixed(0)+' mm'],
+    ['Ld,min',               Ld_min+' mm'],
+    ['<strong>Ld required</strong>', '<strong>'+Math.ceil(Ld_req)+' mm</strong>']
+  ];
+
+  var steps = [
+    ['1','τbd from Table 21', tau_bd0.toFixed(1)+' MPa'],
+    ['2','τbd × bar factor (deformed)', (tau_bd0*barFac).toFixed(3)+' MPa'],
+    ['3','τbd × compression factor', tau_bd.toFixed(3)+' MPa'],
+    ['4','Ld = (db×0.87×fy) / (4×τbd)', Ld.toFixed(0)+' mm'],
+    ['5','Ld,req = max(formula, 200mm)', Math.ceil(Ld_req)+' mm']
+  ];
+
+  showResult('st-is-res','st-is-diag',
+    {val: Math.ceil(Ld_req)+' mm', lbl: 'Development Length Ld'},
+    rows, steps,
+    svgStraight(Ld_req, db, 'Ld', Math.ceil(Ld_req)+' mm'),
+    (Ld < Ld_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACI HOOK
+══════════════════════════════════════════════════════════ */
+function calcHkAci() {
+  var inp = readAci('hk-aci');
+  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
+  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+
+  var hookType = document.getElementById('hk-aci-type').value;
+  var psi_e = parseFloat(document.getElementById('hk-aci-psi-e').value);
+  var psi_r = parseFloat(document.getElementById('hk-aci-psi-r').value);
+  var psi_o = parseFloat(document.getElementById('hk-aci-psi-o').value);
+  var lam   = parseFloat(document.getElementById('hk-aci-lam').value);
+
+  var ldh = (fy * psi_e * psi_r * psi_o * db) / (4.57 * lam * Math.sqrt(fc));
+  var ldh_min = Math.max(8*db, 150);
+  var ldh_req = Math.max(ldh, ldh_min);
+
+  var dispVal  = dispAci(ldh_req, u);
+  var dispCalc = dispAci(ldh, u);
+  var dispMin  = dispAci(ldh_min, u);
+
+  var hookLabel = hookType === '90' ? '90° hook' : hookType === '180' ? '180° hook' : 'Seismic hook';
+
+  var rows = [
+    ['db',          (u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in')],
+    ["f'c",         (u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi')],
+    ['fy',          (u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi')],
+    ['Hook type',   hookLabel],
+    ['ψe',         psi_e.toFixed(1)],
+    ['ψr',         psi_r.toFixed(1)],
+    ['ψo',         psi_o.toFixed(2)],
+    ['λ',          lam.toFixed(2)],
+    ['ℓdh (formula)', dispCalc],
+    ['ℓdh,min (max 8db,150mm)', dispMin],
+    ['<strong>ℓdh required</strong>', '<strong>'+dispVal+'</strong>']
+  ];
+
+  var steps = [
+    ['1','ℓdh = fy×ψe×ψr×ψo×db / (4.57×λ×√f\'c)','= '+dispCalc],
+    ['2','ℓdh,min = max(8×'+db.toFixed(1)+', 150mm)', dispMin],
+    ['3','ℓdh,req = max(formula, minimum)', dispVal]
+  ];
+
+  showResult('hk-aci-res','hk-aci-diag',
+    {val: dispVal, lbl: 'Hook Development Length ℓdh'},
+    rows, steps,
+    svgHook(ldh_req, db, hookLabel, dispVal),
+    (ldh < ldh_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   EC2 HOOK
+══════════════════════════════════════════════════════════ */
+function calcHkEc2() {
+  var db    = parseFloat(document.getElementById('hk-ec2-bar').value) || 0;
+  var fck   = parseFloat(document.getElementById('hk-ec2-fck').value) || 0;
+  var fyk   = parseFloat(document.getElementById('hk-ec2-fyk').value) || 0;
+  var eta1  = parseFloat(document.getElementById('hk-ec2-eta1').value);
+  var a1    = parseFloat(document.getElementById('hk-ec2-a1').value);
+  var a2    = parseFloat(document.getElementById('hk-ec2-a2').value);
+  var htype = document.getElementById('hk-ec2-type').value;
+  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+
+  var eta2  = (db <= 32) ? 1.0 : (132-db)/100;
+  var fctm  = (fck <= 50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
+  var fctd  = 0.7*fctm/1.5;
+  var fbd   = 2.25*eta1*eta2*fctd;
+  var fyd   = fyk/1.15;
+  var lb_rqd = (db/4)*(fyd/fbd);
+
+  var alpha = Math.max(a1*a2, 0.7);
+  var lbd   = alpha*lb_rqd;
+  var lb_min = Math.max(0.3*lb_rqd, 10*db, 100);
+  var lbd_req = Math.max(lbd, lb_min);
+
+  var rows = [
+    ['db',            db+' mm'],
+    ['Hook type',     htype+'°'],
+    ['η1 (bond)',     eta1.toFixed(1)],
+    ['η2 (size)',     eta2.toFixed(2)],
+    ['fbd',           fbd.toFixed(2)+' MPa'],
+    ['l_b,rqd',       lb_rqd.toFixed(0)+' mm'],
+    ['α1 (shape)',    a1.toFixed(1)],
+    ['α2 (cover)',    a2.toFixed(2)],
+    ['α1×α2 (≥0.7)', alpha.toFixed(2)],
+    ['l_bd (formula)',lbd.toFixed(0)+' mm'],
+    ['l_b,min',       lb_min.toFixed(0)+' mm'],
+    ['<strong>l_bd required</strong>', '<strong>'+Math.ceil(lbd_req)+' mm</strong>']
+  ];
+
+  var steps = [
+    ['1','fbd = 2.25×η1×η2×fctd', fbd.toFixed(3)+' MPa'],
+    ['2','l_b,rqd = (db/4)×(fyd/fbd)', lb_rqd.toFixed(0)+' mm'],
+    ['3','α1×α2 (cap 0.7 min)', alpha.toFixed(3)],
+    ['4','l_bd = α×l_b,rqd', lbd.toFixed(0)+' mm'],
+    ['5','l_b,min', lb_min.toFixed(0)+' mm'],
+    ['6','l_bd,req', Math.ceil(lbd_req)+' mm']
+  ];
+
+  showResult('hk-ec2-res','hk-ec2-diag',
+    {val: Math.ceil(lbd_req)+' mm', lbl: 'Hook Anchorage l_bd'},
+    rows, steps,
+    svgHook(lbd_req, db, htype+'° hook', Math.ceil(lbd_req)+' mm'),
+    (lbd < lb_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   IS 456 HOOK
+══════════════════════════════════════════════════════════ */
+function calcHkIs() {
+  var db      = parseFloat(document.getElementById('hk-is-bar').value) || 0;
+  var tau_bd0 = parseFloat(document.getElementById('hk-is-grade').value);
+  var fy      = parseFloat(document.getElementById('hk-is-fy').value);
+  var hookEq  = parseFloat(document.getElementById('hk-is-type').value);
+  var barFac  = parseFloat(document.getElementById('hk-is-bartype').value);
+  if (!db) { alert('Please select a bar size.'); return; }
+
+  var tau_bd = tau_bd0 * barFac;
+  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
+  var L_straight = Math.max(Ld - hookEq*db, 0);
+  var L_total = L_straight + hookEq*db; // = Ld
+  var Ld_min = 200;
+  var L_straight_req = Math.max(L_straight, Ld_min - hookEq*db);
+
+  var hookLabel = hookEq===16?'180° U-hook (16db)':hookEq===8?'90° bend (8db)':'135° bend (12db)';
+
+  var rows = [
+    ['db',                   db+' mm'],
+    ['fy',                   fy+' MPa'],
+    ['τbd (Table 21)',       tau_bd0.toFixed(1)+' MPa'],
+    ['Bar factor',           barFac.toFixed(1)],
+    ['τbd effective',        tau_bd.toFixed(2)+' MPa'],
+    ['Ld (full development)',Ld.toFixed(0)+' mm'],
+    ['Hook type',            hookLabel],
+    ['Hook equivalent',      (hookEq*db).toFixed(0)+' mm ('+hookEq+'db)'],
+    ['Required straight L',  Math.ceil(L_straight_req)+' mm'],
+    ['<strong>Total embedment Ld</strong>', '<strong>'+Math.ceil(Math.max(Ld,Ld_min))+' mm</strong>']
+  ];
+
+  var steps = [
+    ['1','Ld = (db×0.87×fy)/(4×τbd)', Ld.toFixed(0)+' mm'],
+    ['2','Hook equivalent = '+hookEq+'×db', (hookEq*db).toFixed(0)+' mm'],
+    ['3','Required straight = Ld − hook equiv.', L_straight.toFixed(0)+' mm'],
+    ['4','Total ≥ 200 mm min.', Math.ceil(Math.max(Ld,Ld_min))+' mm']
+  ];
+
+  showResult('hk-is-res','hk-is-diag',
+    {val: Math.ceil(Math.max(Ld,Ld_min))+' mm', lbl: 'Total Development Length Ld'},
+    rows, steps,
+    svgHook(Ld, db, hookLabel, Math.ceil(Math.max(Ld,Ld_min))+' mm'),
+    '');
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACI SPLICE
+══════════════════════════════════════════════════════════ */
+function calcSpAci() {
+  var inp = readAci('sp-aci');
+  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
+  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+
+  var stype = document.getElementById('sp-aci-stype').value;
+  var cb    = parseFloat(document.getElementById('sp-aci-cb').value) || 0;
+  var Ktr   = parseFloat(document.getElementById('sp-aci-ktr').value) || 0;
+  var psi_t = parseFloat(document.getElementById('sp-aci-psi-t').value);
+  var psi_e = parseFloat(document.getElementById('sp-aci-psi-e').value);
+  var lam   = parseFloat(document.getElementById('sp-aci-lam').value);
+  if (u === 'us') { cb = cb*25.4; Ktr = Ktr*25.4; }
+
+  if (stype === 'comp') {
+    // Compression splice
+    var lsc1 = (0.071*fy*db)/(lam); // simplified ACI compression splice
+    if (fy <= 420) lsc1 = Math.max((0.24*fy*db)/(lam*Math.sqrt(fc)), 0.043*fy*db);
+    else lsc1 = (0.13*fy - 24)*db;
+    var lsc_min = 300;
+    var lsc_req = Math.max(lsc1, lsc_min);
+    var dispVal = dispAci(lsc_req, u);
+
+    showResult('sp-aci-res','sp-aci-diag',
+      {val: dispVal, lbl: 'Compression Splice Length ℓsc'},
+      [['fy',fy.toFixed(0)+' MPa'],['db',db.toFixed(1)+' mm'],
+       ['<strong>ℓsc</strong>','<strong>'+dispVal+'</strong>']],
+      [['1','ℓsc per §25.5.5.1',dispAci(lsc1,u)],['2','ℓsc ≥ 300mm',dispVal]],
+      svgSplice(lsc_req, db, dispVal),
+      '');
+    return;
+  }
+
+  var psi_s  = (db<=19) ? 0.8 : 1.0;
+  var psi_g  = (fy<=420) ? 1.0 : (fy<=550 ? 1.15 : 1.3);
+  var psi_te = Math.min(psi_t*psi_e, 1.7);
+  var conf   = Math.min(2.5, (cb+Ktr)/db);
+  if (conf <= 0) conf = 1.0;
+
+  var ld = (fy * psi_te * psi_s * psi_g * db) / (1.1 * lam * Math.sqrt(fc) * conf);
+  var ld_min = Math.max(300, 8*db);
+  var ld_req = Math.max(ld, ld_min);
+
+  var factor = (stype === 'A') ? 1.0 : 1.3;
+  var ls = factor * ld_req;
+  var ls_min = Math.max(300, 8*db);
+  var ls_req = Math.max(ls, ls_min);
+
+  var dispVal  = dispAci(ls_req, u);
+  var dispLd   = dispAci(ld_req, u);
+
+  var rows = [
+    ['ℓd (base development)',  dispLd],
+    ['Splice class',           stype+' (×'+factor.toFixed(1)+')'],
+    ['ℓst = factor × ℓd',    dispAci(ls, u)],
+    ['ℓst,min',               dispAci(ls_min, u)],
+    ['<strong>ℓst required</strong>', '<strong>'+dispVal+'</strong>']
+  ];
+
+  showResult('sp-aci-res','sp-aci-diag',
+    {val: dispVal, lbl: 'Splice Length ℓst'},
+    rows,
+    [['1','ℓd (same as straight bar)',dispLd],
+     ['2','Class '+stype+' factor', factor.toFixed(1)],
+     ['3','ℓst = '+factor.toFixed(1)+'×ℓd', dispAci(ls,u)],
+     ['4','ℓst,req = max(ℓst, min)', dispVal]],
+    svgSplice(ls_req, db, dispVal),
+    (ls < ls_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   EC2 SPLICE
+══════════════════════════════════════════════════════════ */
+function calcSpEc2() {
+  var db    = parseFloat(document.getElementById('sp-ec2-bar').value) || 0;
+  var fck   = parseFloat(document.getElementById('sp-ec2-fck').value) || 0;
+  var fyk   = parseFloat(document.getElementById('sp-ec2-fyk').value) || 0;
+  var eta1  = parseFloat(document.getElementById('sp-ec2-eta1').value);
+  var a6    = parseFloat(document.getElementById('sp-ec2-a6').value);
+  var a2    = parseFloat(document.getElementById('sp-ec2-a2').value);
+  var a3    = parseFloat(document.getElementById('sp-ec2-a3').value);
+  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+
+  var eta2  = (db<=32) ? 1.0 : (132-db)/100;
+  var fctm  = (fck<=50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
+  var fctd  = 0.7*fctm/1.5;
+  var fbd   = 2.25*eta1*eta2*fctd;
+  var fyd   = fyk/1.15;
+  var lb_rqd = (db/4)*(fyd/fbd);
+
+  var alpha = Math.max(a2*a3, 0.7) * a6;
+  var l0    = alpha * lb_rqd;
+  var l0_min = Math.max(0.3*a6*lb_rqd, 15*db, 200);
+  var l0_req = Math.max(l0, l0_min);
+
+  var rows = [
+    ['db',         db+' mm'],
+    ['fbd',        fbd.toFixed(2)+' MPa'],
+    ['l_b,rqd',    lb_rqd.toFixed(0)+' mm'],
+    ['α6 (% lapped)', a6.toFixed(2)],
+    ['α2×α3',     (a2*a3).toFixed(2)],
+    ['Combined α',  alpha.toFixed(2)],
+    ['l_0 (formula)', l0.toFixed(0)+' mm'],
+    ['l_0,min',     l0_min.toFixed(0)+' mm'],
+    ['<strong>l_0 required</strong>', '<strong>'+Math.ceil(l0_req)+' mm</strong>']
+  ];
+
+  showResult('sp-ec2-res','sp-ec2-diag',
+    {val: Math.ceil(l0_req)+' mm', lbl: 'Lap Splice Length l_0'},
+    rows,
+    [['1','l_b,rqd',lb_rqd.toFixed(0)+' mm'],
+     ['2','α = α2×α3×α6',alpha.toFixed(3)],
+     ['3','l_0 = α×l_b,rqd',l0.toFixed(0)+' mm'],
+     ['4','l_0,min',l0_min.toFixed(0)+' mm'],
+     ['5','l_0,req',Math.ceil(l0_req)+' mm']],
+    svgSplice(l0_req, db, Math.ceil(l0_req)+' mm'),
+    (l0 < l0_min ? 'Minimum governs' : ''));
+}
+
+/* ══════════════════════════════════════════════════════════
+   IS 456 SPLICE
+══════════════════════════════════════════════════════════ */
+function calcSpIs() {
+  var db      = parseFloat(document.getElementById('sp-is-bar').value) || 0;
+  var tau_bd0 = parseFloat(document.getElementById('sp-is-grade').value);
+  var fy      = parseFloat(document.getElementById('sp-is-fy').value);
+  var barFac  = parseFloat(document.getElementById('sp-is-bartype').value);
+  var tens    = document.getElementById('sp-is-tension').value;
+  if (!db) { alert('Please select a bar size.'); return; }
+
+  var tau_bd = tau_bd0 * barFac;
+  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
+  var factor = (tens === 'tension') ? 1.3 : 1.0;
+  var Ls = factor * Ld;
+  var Ls_min = 300;
+  var Ls_req = Math.max(Ls, Ls_min);
+
+  var rows = [
+    ['db',          db+' mm'],
+    ['fy',          fy+' MPa'],
+    ['τbd effective', tau_bd.toFixed(2)+' MPa'],
+    ['Ld',          Ld.toFixed(0)+' mm'],
+    ['Splice type', tens === 'tension' ? 'Tension ×1.3' : 'Compression ×1.0'],
+    ['Ls = factor×Ld', Ls.toFixed(0)+' mm'],
+    ['Ls,min (300mm)', '300 mm'],
+    ['<strong>Ls required</strong>', '<strong>'+Math.ceil(Ls_req)+' mm</strong>']
+  ];
+
+  showResult('sp-is-res','sp-is-diag',
+    {val: Math.ceil(Ls_req)+' mm', lbl: 'Lap Splice Length Ls'},
+    rows,
+    [['1','Ld',Ld.toFixed(0)+' mm'],
+     ['2','Factor',factor.toFixed(1)],
+     ['3','Ls = factor×Ld',Ls.toFixed(0)+' mm'],
+     ['4','Ls ≥ 300mm min.',Math.ceil(Ls_req)+' mm']],
+    svgSplice(Ls_req, db, Math.ceil(Ls_req)+' mm'),
+    (Ls < Ls_min ? 'Minimum governs' : ''));
+}
+
+/* ── Hash-based tab activation (for sidebar navigation) ── */
+window.addEventListener('load', function() {
+  var hash = window.location.hash.replace('#','');
+  if (hash === 'hook' || hash === 'splice') {
+    var btn = document.getElementById('mtab-' + hash);
+    if (btn) modTab(btn, 'mod-' + hash);
+  }
+});
+
+/* ── Init bar selects ─────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  function fillSelect(id, bars) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    bars.forEach(function(b) {
+      var o = document.createElement('option');
+      o.value = b.db;
+      o.textContent = b.label;
+      sel.appendChild(o);
+    });
+    // default to 5th bar (≈25mm for metric, #8 for ACI)
+    sel.selectedIndex = Math.min(4, bars.length-1);
+  }
+
+  ['st-aci','hk-aci','sp-aci'].forEach(function(a){ fillSelect(a+'-bar', ACI_BARS.si); });
+  ['st-ec2','hk-ec2','sp-ec2'].forEach(function(a){ fillSelect(a+'-bar', METRIC_BARS); });
+  ['st-is','hk-is','sp-is'].forEach(function(a){ fillSelect(a+'-bar', IS_BARS); });
+});
+</script>
+</body>
+</html>
