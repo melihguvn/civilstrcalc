@@ -21,6 +21,7 @@
 <meta name="twitter:description" content="One-way slab design calculator. Flexural and shear reinforcement per ACI 318, Eurocode 2, IS 456.">
 <meta name="twitter:image" content="https://civilstrcalc.com/images/og-image.png">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/style.css">
@@ -908,7 +909,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div id="punch-drop-inputs" style="display:none">
         <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
-          Rectangular drop panel, symmetric around column. Interior columns only (ACI §22.6.2.1).
+          Rectangular drop panel, symmetric around column. Three-check analysis per ACI §22.6.2.1.
         </div>
         <div class="form-row-2">
           <div class="form-group">
@@ -923,16 +924,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="form-group">
           <label>Drop thickness t<sub>d</sub> (proj. below slab) <span class="lu" id="lu-punch-drp-td">[mm]</span></label>
           <div class="iw"><input type="number" id="punch-drp-td" value="100" step="10" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-drp-td">mm</span></div>
-        </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label>Span L<sub>x</sub> <span class="lu" id="lu-punch-span-x">[mm]</span> <span style="font-size:.65rem;color:var(--text-dim)">(§8.2.4)</span></label>
-            <div class="iw"><input type="number" id="punch-span-x" value="6000" step="100" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-span-x">mm</span></div>
-          </div>
-          <div class="form-group">
-            <label>Span L<sub>y</sub> <span class="lu" id="lu-punch-span-y">[mm]</span> <span style="font-size:.65rem;color:var(--text-dim)">(§8.2.4)</span></label>
-            <div class="iw"><input type="number" id="punch-span-y" value="6000" step="100" min="0" oninput="updatePunchDropHint()"><span class="us" id="u-punch-span-y">mm</span></div>
-          </div>
         </div>
         <div id="punch-drop-hint" style="font-size:.72rem;background:var(--bg-alt);border-radius:5px;padding:8px 10px;margin-top:4px;line-height:1.8;display:none;"></div>
       </div>
@@ -1140,6 +1131,34 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
         <div id="ec2-asw-info" style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;">
           <span id="ec2-asw-formula">A<sub>sw</sub> = n × (π/4 × d<sub>b</sub>²) = <strong id="ec2-asw-calc">628</strong> mm²/ring</span>
+        </div>
+      </div>
+
+      <!-- ── Drop Panel (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Drop Panel
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="ec2-has-drop" onchange="setEC2HasDrop(this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="ec2-drop-inputs" style="display:none">
+        <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
+          Rectangular drop panel, symmetric around column. EN 1992-1-1 §6.4.2: control perimeter uses enhanced depth d<sub>drop</sub> = d + t<sub>d</sub> when 2d falls inside drop.
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Ext. X each side <span class="lu" id="lu-ec2-drp-extX">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-drp-extX" value="0.6" step="0.05" min="0"><span class="us" id="u-ec2-drp-extX">m</span></div>
+          </div>
+          <div class="form-group">
+            <label>Ext. Y each side <span class="lu" id="lu-ec2-drp-extY">[m]</span></label>
+            <div class="iw"><input type="number" id="ec2-drp-extY" value="0.6" step="0.05" min="0"><span class="us" id="u-ec2-drp-extY">m</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Drop thickness t<sub>d</sub> (proj. below slab) <span class="lu" id="lu-ec2-drp-td">[m]</span></label>
+          <div class="iw"><input type="number" id="ec2-drp-td" value="0.1" step="0.02" min="0"><span class="us" id="u-ec2-drp-td">m</span></div>
         </div>
       </div>
 
@@ -1380,6 +1399,34 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
         <div style="font-size:.73rem;color:var(--text-dim);background:var(--bg);border-radius:5px;padding:6px 10px;margin-bottom:8px;">
           <span id="is456-av-formula">A<sub>v,1</sub> = n<sub>faces</sub> × n<sub>legs</sub> × (π/4·d<sub>b</sub>²) = <strong id="is456-av-calc">—</strong> mm²</span>
+        </div>
+      </div>
+
+      <!-- ── Drop Panel (optional) ── -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-top:1px solid var(--border);margin:14px 0 8px;padding-top:10px;">
+        Drop Panel
+        <span style="font-size:.65rem;text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="is456-has-drop" onchange="setIS456HasDrop(this.checked)" style="cursor:pointer;"> Enable
+        </label>
+      </div>
+      <div id="is456-drop-inputs" style="display:none">
+        <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">
+          Rectangular drop panel. Three-check approach analogous to ACI §22.6.2.1 (IS 456:2000 does not specify explicit checks).
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Ext. X each side [mm]</label>
+            <div class="iw"><input type="number" id="is456-drp-extX" value="600" step="25" min="0"><span class="us">mm</span></div>
+          </div>
+          <div class="form-group">
+            <label>Ext. Y each side [mm]</label>
+            <div class="iw"><input type="number" id="is456-drp-extY" value="600" step="25" min="0"><span class="us">mm</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Drop thickness t<sub>d</sub> (proj. below slab) [mm]</label>
+          <div class="iw"><input type="number" id="is456-drp-td" value="100" step="10" min="0"><span class="us">mm</span></div>
         </div>
       </div>
 
@@ -2253,15 +2300,15 @@ const PUNCH_UNITS = {
   knm: { lenU:'m', fcU:'MPa', forceU:'kN', momU:'kN·m',
          lenS:1000, fcS:1, forceS:1000, momS:1e6, stressU:'MPa', stressS:1, tag:'kN-m',
          defH:0.25, defCv:0.025, defDb:0.016, defC:0.4, defE:0.2, defVu:500, defFc:28, defFyt:420,
-         defReinfDb:0.012, defReinfS:0.15 },
+         defReinfDb:0.012, defReinfS:0.15, defDrpExt:0.6, defDrpTd:0.1 },
   nmm: { lenU:'mm', fcU:'MPa', forceU:'N', momU:'N·mm',
          lenS:1, fcS:1, forceS:1, momS:1, stressU:'MPa', stressS:1, tag:'N-mm',
          defH:250, defCv:25, defDb:16, defC:400, defE:200, defVu:500000, defFc:28, defFyt:420,
-         defReinfDb:12, defReinfS:150 },
+         defReinfDb:12, defReinfS:150, defDrpExt:600, defDrpTd:100 },
   us:  { lenU:'in', fcU:'psi', forceU:'kip', momU:'kip·ft',
          lenS:25.4, fcS:0.006895, forceS:4448.22, momS:1.355818e6, stressU:'psi', stressS:145.038, tag:'US Customary',
          defH:10, defCv:1, defDb:0.625, defC:16, defE:8, defVu:112, defFc:4000, defFyt:60000,
-         defReinfDb:0.5, defReinfS:6 }
+         defReinfDb:0.5, defReinfS:6, defDrpExt:24, defDrpTd:4 }
 };
 function setPunchUnit(unit, btn) {
   _punchUnit = unit;
@@ -2275,13 +2322,13 @@ function setPunchUnit(unit, btn) {
    'lu-punch-ao1','lu-punch-boop1','lu-punch-so1',
    'lu-punch-ao2','lu-punch-boop2','lu-punch-so2',
    'lu-punch-reinf-db','lu-punch-reinf-s',
-   'lu-punch-drp-extX','lu-punch-drp-extY','lu-punch-drp-td','lu-punch-span-x','lu-punch-span-y'].forEach(id => st(id, '['+U.lenU+']'));
+   'lu-punch-drp-extX','lu-punch-drp-extY','lu-punch-drp-td'].forEach(id => st(id, '['+U.lenU+']'));
   ['u-punch-h','u-punch-cv','u-punch-db','u-punch-c1','u-punch-c2','u-punch-dc',
    'u-punch-edge-dist','u-punch-c1edge','u-punch-c2edge',
    'u-punch-ao1','u-punch-boop1','u-punch-so1',
    'u-punch-ao2','u-punch-boop2','u-punch-so2',
    'u-punch-reinf-db','u-punch-reinf-s',
-   'u-punch-drp-extX','u-punch-drp-extY','u-punch-drp-td','u-punch-span-x','u-punch-span-y'].forEach(id => st(id, U.lenU));
+   'u-punch-drp-extX','u-punch-drp-extY','u-punch-drp-td'].forEach(id => st(id, U.lenU));
   st('lu-punch-fc', '['+U.fcU+']'); st('u-punch-fc', U.fcU);
   st('lu-punch-vu', '['+U.forceU+']'); st('u-punch-vu', U.forceU);
   ['lu-punch-mu','lu-punch-mu2'].forEach(id => st(id, '['+U.momU+']'));
@@ -2294,8 +2341,10 @@ function setPunchUnit(unit, btn) {
   sv2('punch-vu', U.defVu); sv2('punch-mux', 0); sv2('punch-muy', 0);
   sv2('punch-fc', U.defFc); sv2('punch-fyt', U.defFyt);
   sv2('punch-reinf-db', U.defReinfDb); sv2('punch-reinf-s', U.defReinfS);
+  sv2('punch-drp-extX', U.defDrpExt); sv2('punch-drp-extY', U.defDrpExt); sv2('punch-drp-td', U.defDrpTd);
   st('punch-aci-utag', 'ACI 318-25 · '+U.tag);
   updatePunchD();
+  updatePunchDropHint();
 }
 function updatePunchD() {
   const h  = parseFloat(document.getElementById('punch-h').value)  || 0;
@@ -2805,26 +2854,18 @@ function updatePunchDropHint() {
   if (!document.getElementById('punch-has-drop')?.checked) { el.style.display = 'none'; return; }
   const PU = PUNCH_UNITS[_punchUnit];
   const gv = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const extX = gv('punch-drp-extX') * PU.lenS;
-  const extY = gv('punch-drp-extY') * PU.lenS;
-  const td   = gv('punch-drp-td')   * PU.lenS;
-  const spX  = gv('punch-span-x')   * PU.lenS;
-  const spY  = gv('punch-span-y')   * PU.lenS;
-  const h    = gv('punch-h')         * PU.lenS;
+  // Use raw values in current user units — no mm conversion needed for the hint
+  const td_raw = gv('punch-drp-td');
+  const h_raw  = gv('punch-h');
   const hints = [];
-  if (spX > 0) {
-    const reqX = spX / 6, ok = extX >= reqX;
-    hints.push(`X: ext = ${(extX/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} L<sub>x</sub>/6 = ${(reqX/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
+  if (h_raw > 0) {
+    const reqTd = h_raw / 4;
+    const ok = td_raw >= reqTd;
+    const dec = PU.lenS >= 1000 ? 3 : 1; // mm → 1 dp; m → 3 dp
+    hints.push(`t<sub>d</sub> = ${td_raw.toFixed(dec)} ${PU.lenU} ${ok?'≥':'<'} h/4 = ${reqTd.toFixed(dec)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
   }
-  if (spY > 0) {
-    const reqY = spY / 6, ok = extY >= reqY;
-    hints.push(`Y: ext = ${(extY/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} L<sub>y</sub>/6 = ${(reqY/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
-  }
-  if (h > 0) {
-    const reqTd = h / 4, ok = td >= reqTd;
-    hints.push(`t<sub>d</sub> = ${(td/PU.lenS).toFixed(0)} ${PU.lenU} ${ok?'≥':'<'} h/4 = ${(reqTd/PU.lenS).toFixed(0)} ${PU.lenU} &nbsp;<b style="color:${ok?'#16a34a':'#dc2626'}">${ok?'✓ OK':'✗ NG'}</b>`);
-  }
-  el.innerHTML = `<div><b>ACI §8.2.4 geometry check:</b></div>${hints.map(h=>`<div>${h}</div>`).join('')}`;
+  const note = `<div style="color:var(--text-dim);margin-top:4px;font-size:.68rem;">ACI §8.2.4: Drop panel must also extend ≥ L/6 from column face each side (verify per project layout).</div>`;
+  el.innerHTML = `<div><b>ACI §8.2.4 geometry check:</b></div>${hints.map(h=>`<div>${h}</div>`).join('')}${note}`;
   el.style.display = '';
 }
 
@@ -2915,8 +2956,8 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
     }
     _studExtMM = _lastP + d_mm / 2;  // last stud face-distance + d/2 to outer CP
   }
-  const _dropEffX = dropData ? (col_hw + dropData.extX_mm + 60) : 0;
-  const _dropEffY = dropData ? (col_hh + dropData.extY_mm + 60) : 0;
+  const _dropEffX = dropData ? (col_hw + Math.max(dropData.extE_mm, dropData.extW_mm) + 60) : 0;
+  const _dropEffY = dropData ? (col_hh + Math.max(dropData.extN_mm, dropData.extS_mm) + 60) : 0;
   const _effHW = Math.max(cp_hw, col_hw + _studExtMM, _dropEffX);
   const _effHH = Math.max(cp_hh, col_hh + _studExtMM, _dropEffY);
 
@@ -3447,29 +3488,55 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   }
 
   // ── Drop Panel rectangle (inside slab-clip) ──────────────────────────────
-  if (dropData && !isCirc && type === 'int') {
-    const drpHW = (col_hw + dropData.extX_mm) * S;
-    const drpHH = (col_hh + dropData.extY_mm) * S;
-    // Filled drop panel area
-    s += `<rect x="${f(cx-drpHW)}" y="${f(cy-drpHH)}" width="${f(drpHW*2)}" height="${f(drpHH*2)}" fill="rgba(251,146,60,0.07)" stroke="#f97316" stroke-width="1.5" stroke-dasharray="6,3" rx="2"/>`;
-    // bo1 perimeter (inside drop, at d_drop/2 from col face) — only if valid
-    if (dropData.bo1_hw > 0) {
-      const b1HW = dropData.bo1_hw * S;
-      const b1HH = dropData.bo1_hh * S;
-      s += `<rect x="${f(cx-b1HW)}" y="${f(cy-b1HH)}" width="${f(b1HW*2)}" height="${f(b1HH*2)}" fill="none" stroke="#f97316" stroke-dasharray="8,4" stroke-width="2"/>`;
-      s += `<rect x="${f(cx-b1HW/2-12)}" y="${f(cy-b1HH-13)}" width="24" height="13" fill="white" opacity="0.9" rx="2"/>`;
-      s += `<text x="${f(cx)}" y="${f(cy-b1HH-4)}" text-anchor="middle" font-size="9" font-weight="700" fill="#f97316">b₀₁</text>`;
-    }
-    // bo2 label (at drop panel edge = drpHW/drpHH)
-    const _b2lx = cx + drpHW + 4;
-    const _b2ly = cy - 12;
+  let _drpPx = null;
+  if (dropData) {
+    const drpTop  = (col_hh + dropData.extN_mm) * S;
+    const drpBot  = (col_hh + dropData.extS_mm) * S;
+    const drpLeft = (col_hw + dropData.extW_mm) * S;
+    const drpRight= (col_hw + dropData.extE_mm) * S;
+    _drpPx = { drpTop, drpBot, drpLeft, drpRight };
+    const drpX = cx - drpLeft, drpY = cy - drpTop;
+    const drpW2 = drpLeft + drpRight, drpH2 = drpTop + drpBot;
+    s += `<rect x="${f(drpX)}" y="${f(drpY)}" width="${f(drpW2)}" height="${f(drpH2)}" fill="rgba(140,140,140,0.12)" stroke="#888" stroke-width="1.5" rx="1"/>`;
+    // bo2 label — right of drop panel, vertically centred (inside clip, clipping handles boundary)
+    const _b2lx = cx + drpRight + 4;
+    const _b2ly = cy - drpTop/2;
     if (_b2lx + 28 < W - 2) {
       s += `<rect x="${f(_b2lx-1)}" y="${f(_b2ly-9)}" width="28" height="13" fill="white" opacity="0.9" rx="2"/>`;
-      s += `<text x="${f(_b2lx)}" y="${f(_b2ly)}" font-size="9" font-weight="700" fill="#f97316">b₀₂</text>`;
+      s += `<text x="${f(_b2lx)}" y="${f(_b2ly)}" font-size="9" font-weight="700" fill="#888">b₀₂</text>`;
     }
   }
 
   s += `</g>`; // end slab clip
+
+  // ── Drop Panel dimension lines (outside slab clip — always visible) ─────
+  if (_drpPx) {
+    const { drpTop, drpBot, drpLeft, drpRight } = _drpPx;
+    const _b2lx2 = cx + drpRight + 4;
+    // Horizontal: col E face → drop E face (extX each side)
+    const _dmY  = cy + drpBot + 12;
+    const _dmX1 = cx + chw, _dmX2 = cx + drpRight;
+    if (_dmX2 - _dmX1 > 8) {
+      s += `<line x1="${f(_dmX1)}" y1="${f(cy+chh+1)}" x2="${f(_dmX1)}" y2="${f(_dmY+4)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s += `<line x1="${f(_dmX2)}" y1="${f(cy+drpBot+1)}" x2="${f(_dmX2)}" y2="${f(_dmY+4)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s += `<line x1="${f(_dmX1)}" y1="${f(_dmY)}" x2="${f(_dmX2)}" y2="${f(_dmY)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+      const _dmMx = (_dmX1+_dmX2)/2;
+      const _lbW = Math.min(dropData.extXdisp.length*5+4, 64);
+      s += `<rect x="${f(_dmMx-_lbW/2)}" y="${f(_dmY-13)}" width="${_lbW}" height="11" fill="white" opacity="0.92" rx="2"/>`;
+      s += `<text x="${f(_dmMx)}" y="${f(_dmY-5)}" text-anchor="middle" font-size="8" fill="#64748b">${dropData.extXdisp}</text>`;
+    }
+    // Vertical: col S face → drop S face (extY each side)
+    const _dvX  = cx + drpRight + ((_b2lx2 + 28 < W-2) ? 32 : 8);
+    const _dvY1 = cy + chh, _dvY2 = cy + drpBot;
+    if (_dvY2 - _dvY1 > 8) {
+      s += `<line x1="${f(cx+chw+1)}" y1="${f(_dvY1)}" x2="${f(_dvX+4)}" y2="${f(_dvY1)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s += `<line x1="${f(cx+drpRight+1)}" y1="${f(_dvY2)}" x2="${f(_dvX+4)}" y2="${f(_dvY2)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s += `<line x1="${f(_dvX)}" y1="${f(_dvY1)}" x2="${f(_dvX)}" y2="${f(_dvY2)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ph-a2)" marker-end="url(#ph-a1)"/>`;
+      const _dvMy = (_dvY1+_dvY2)/2;
+      s += `<rect x="${f(_dvX+4)}" y="${f(_dvMy-6)}" width="40" height="11" fill="white" opacity="0.92" rx="2"/>`;
+      s += `<text x="${f(_dvX+6)}" y="${f(_dvMy+3)}" font-size="8" fill="#64748b">${dropData.extYdisp}</text>`;
+    }
+  }
 
   // ── Column ───────────────────────────────────────────────────────────────
   if (isCirc) {
@@ -3579,8 +3646,8 @@ function _punchPlanSVG({ c1_mm, c2_mm, Dc_mm, d_mm, type, shape, edgeFace, corne
   let lx = 8;
   s += `<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#2563eb" stroke-dasharray="4,2" stroke-width="2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#2563eb">b₀ (inner)</text>`;
   lx += 76;
-  if (dropData && !isCirc && type === 'int') {
-    s += `<rect x="${lx}" y="${ly}" width="13" height="9" fill="rgba(251,146,60,0.15)" stroke="#f97316" stroke-width="1" stroke-dasharray="4,2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#f97316">Drop panel</text>`;
+  if (dropData && !isCirc) {
+    s += `<rect x="${lx}" y="${ly}" width="13" height="9" fill="rgba(140,140,140,0.12)" stroke="#888" stroke-width="1"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#888">Drop panel</text>`;
     lx += 82;
   }
   if (nr_disp > 0 && n_sets_svg > 0) {
@@ -3712,8 +3779,6 @@ function calcPunchShear() {
   const drpExtX   = hasDrop ? gv('punch-drp-extX') * PU.lenS : 0;
   const drpExtY   = hasDrop ? gv('punch-drp-extY') * PU.lenS : 0;
   const drpTd     = hasDrop ? gv('punch-drp-td')   * PU.lenS : 0;
-  const drpSpX    = hasDrop ? gv('punch-span-x')    * PU.lenS : 0;
-  const drpSpY    = hasDrop ? gv('punch-span-y')    * PU.lenS : 0;
 
   const lambda = 1.0, phi = 0.75;
   // ── Geometry by type and shape ──
@@ -4089,12 +4154,101 @@ function calcPunchShear() {
 
   // ── Drop Panel: three-check analysis (ACI §22.6.2.1) ────────────────────────
   let dropData = null;  // passed to SVG
-  if (hasDrop && shape === 'rect' && type === 'int') {
+  if (hasDrop) {
     const d_drop = d + drpTd;
-    // ACI §8.2.4 geometry warnings
-    if (drpSpX > 0 && drpExtX < drpSpX/6) warns.push(`ACI §8.2.4: Drop ext. X = ${_fL(drpExtX)} < L<sub>x</sub>/6 = ${_fL(drpSpX/6)} — does not meet drop panel definition.`);
-    if (drpSpY > 0 && drpExtY < drpSpY/6) warns.push(`ACI §8.2.4: Drop ext. Y = ${_fL(drpExtY)} < L<sub>y</sub>/6 = ${_fL(drpSpY/6)} — does not meet drop panel definition.`);
+    // ACI §8.2.4 geometry warning
     if (drpTd < h/4) warns.push(`ACI §8.2.4: t<sub>d</sub> = ${_fL(drpTd)} < h/4 = ${_fL(h/4)} — thickness does not meet drop panel definition.`);
+
+    // Actual drop panel extensions — capped at slab edge on free faces
+    const _freeSet = { NE:['N','E'], NW:['N','W'], SE:['S','E'], SW:['S','W'] };
+    const _freeFacesDrp = type==='edge' ? [_punchEdgeFace] : type==='corner' ? (_freeSet[_punchCornerPos]||['N','E']) : [];
+    let drpN=drpExtY, drpS=drpExtY, drpE=drpExtX, drpW=drpExtX;
+    if (type==='edge') {
+      const ef=_punchEdgeFace;
+      if (ef==='N') drpN=Math.min(_edgeDist_mm,drpExtY);
+      else if (ef==='S') drpS=Math.min(_edgeDist_mm,drpExtY);
+      else if (ef==='E') drpE=Math.min(_edgeDist_mm,drpExtX);
+      else drpW=Math.min(_edgeDist_mm,drpExtX);
+    } else if (type==='corner') {
+      const _fX=_freeFacesDrp.find(f=>f==='E'||f==='W'), _fY=_freeFacesDrp.find(f=>f==='N'||f==='S');
+      if (_fX==='E') drpE=Math.min(_cornerDistX_mm,drpExtX); else if (_fX==='W') drpW=Math.min(_cornerDistX_mm,drpExtX);
+      if (_fY==='N') drpN=Math.min(_cornerDistY_mm,drpExtY); else if (_fY==='S') drpS=Math.min(_cornerDistY_mm,drpExtY);
+    }
+
+    // bo at d_eff (Check 1) — same formula as standard bo but with d→d_eff
+    const _boAtD = (d_eff) => {
+      const eC=Math.min(_edgeDist_mm,d_eff/2), xC=Math.min(_cornerDistX_mm,d_eff/2), yC=Math.min(_cornerDistY_mm,d_eff/2);
+      if (shape==='circ') {
+        // Circular column: π*(Dc+d_eff) for interior; arc reduction for edge/corner
+        if (type==='int') return Math.PI*(Dc+d_eff);
+        if (type==='edge') {
+          if (_edgeDist_mm>=d_eff/2) return Math.PI*(Dc+d_eff);
+          return Math.PI*(Dc/2+eC*2+d_eff); // simplified arc at edge
+        }
+        const xB2=_cornerDistX_mm>=d_eff/2, yB2=_cornerDistY_mm>=d_eff/2;
+        if (xB2&&yB2) return Math.PI*(Dc+d_eff);
+        if (xB2||yB2) return Math.PI/2*(Dc+d_eff)+(Dc/2+d_eff);
+        return Math.PI/2*(Dc/2+d_eff)+xC+yC;
+      }
+      if (type==='int') return 2*(c1+d_eff)+2*(c2+d_eff);
+      if (type==='edge') {
+        if (_edgeDist_mm>=d_eff/2) return 2*(c1+d_eff)+2*(c2+d_eff);
+        const ef=_punchEdgeFace;
+        return (ef==='N'||ef==='S') ? c1+2*(c2+eC)+2*d_eff : 2*(c1+eC)+c2+2*d_eff;
+      }
+      const xB=_cornerDistX_mm>=d_eff/2, yB=_cornerDistY_mm>=d_eff/2;
+      if (xB&&yB) return 2*(c1+d_eff)+2*(c2+d_eff);
+      if (xB) return c1+2*(c2+yC)+2*d_eff;
+      if (yB) return 2*(c1+xC)+c2+2*d_eff;
+      return c1+c2+d_eff+xC+yC;
+    };
+
+    // bo2 at drop panel edge — perimeter along drop panel boundary, free faces excluded
+    const _bo2 = (() => {
+      if (shape==='circ') {
+        // Treat circular column as equivalent square of side Dc for rectangular drop perimeter
+        const Dc_eq=Dc;
+        if (type==='int') return 2*(Dc_eq+2*drpExtX)+2*(Dc_eq+2*drpExtY);
+        if (type==='edge') {
+          const ef=_punchEdgeFace;
+          if (ef==='N'||ef==='S') {
+            const eF=Math.min(_edgeDist_mm,drpExtY);
+            return (_edgeDist_mm>=drpExtY)?2*(Dc_eq+2*drpExtX)+2*(Dc_eq+2*drpExtY):(Dc_eq+2*drpExtX)+2*(Dc_eq+eF+drpExtY);
+          } else {
+            const eF=Math.min(_edgeDist_mm,drpExtX);
+            return (_edgeDist_mm>=drpExtX)?2*(Dc_eq+2*drpExtX)+2*(Dc_eq+2*drpExtY):2*(Dc_eq+eF+drpExtX)+(Dc_eq+2*drpExtY);
+          }
+        }
+        const extX2=Math.min(_cornerDistX_mm,drpExtX), extY2=Math.min(_cornerDistY_mm,drpExtY);
+        const xB=_cornerDistX_mm>=drpExtX, yB=_cornerDistY_mm>=drpExtY;
+        if (xB&&yB) return 2*(Dc_eq+2*drpExtX)+2*(Dc_eq+2*drpExtY);
+        if (xB) return (Dc_eq+2*drpExtX)+2*(Dc_eq+extY2+drpExtY);
+        if (yB) return 2*(Dc_eq+extX2+drpExtX)+(Dc_eq+2*drpExtY);
+        return (Dc_eq+extX2+drpExtX)+(Dc_eq+extY2+drpExtY);
+      }
+      if (type==='int') return 2*(c1+2*drpExtX)+2*(c2+2*drpExtY);
+      if (type==='edge') {
+        const ef=_punchEdgeFace;
+        if (ef==='N'||ef==='S') {
+          const eF=Math.min(_edgeDist_mm,drpExtY);
+          return (_edgeDist_mm>=drpExtY) ? 2*(c1+2*drpExtX)+2*(c2+2*drpExtY) : (c1+2*drpExtX)+2*(c2+eF+drpExtY);
+        } else {
+          const eF=Math.min(_edgeDist_mm,drpExtX);
+          return (_edgeDist_mm>=drpExtX) ? 2*(c1+2*drpExtX)+2*(c2+2*drpExtY) : 2*(c1+eF+drpExtX)+(c2+2*drpExtY);
+        }
+      }
+      // corner: two free faces → two sides of drop perimeter only
+      const extX2=Math.min(_cornerDistX_mm,drpExtX), extY2=Math.min(_cornerDistY_mm,drpExtY);
+      const xB=_cornerDistX_mm>=drpExtX, yB=_cornerDistY_mm>=drpExtY;
+      if (xB&&yB) return 2*(c1+2*drpExtX)+2*(c2+2*drpExtY);
+      if (xB) return (c1+2*drpExtX)+2*(c2+extY2+drpExtY);
+      if (yB) return 2*(c1+extX2+drpExtX)+(c2+2*drpExtY);
+      return (c1+extX2+drpExtX)+(c2+extY2+drpExtY);
+    })();
+
+    // bo2 label formula for steps
+    const _bo2Lbl = type==='int' ? `2(c₁+2·extX)+2(c₂+2·extY)` : type==='edge' ? `Drop panel edge perimeter (${_punchEdgeFace} free)` : `Drop panel edge perimeter (corner ${_punchCornerPos})`;
+
     // Helper: three-term vc at given d_eff, bo_val
     const _vcACI = (d_v, bo_v) => {
       const a=0.17*(1+2/beta)*lambda*Math.sqrt(fc);
@@ -4102,17 +4256,18 @@ function calcPunchShear() {
       const c=0.33*lambda*Math.sqrt(fc);
       return { vc:Math.min(a,b,c), vc1:a, vc2:b, vc3:c, govLbl:['Eq.(1) β','Eq.(2) αd/bo','Eq.(3) 0.33λ'][[a,b,c].indexOf(Math.min(a,b,c))] };
     };
-    // Check 1: d_drop/2 from col face — valid only when d_drop/2 ≤ both extensions
+
+    // Check 1: d_drop/2 from col face (inside drop) — valid only when d_drop/2 ≤ both extensions
     const c1_valid = d_drop/2 <= drpExtX && d_drop/2 <= drpExtY;
     let chk1 = null;
     if (c1_valid) {
-      const bo1 = 2*(c1+d_drop) + 2*(c2+d_drop);
+      const bo1 = _boAtD(d_drop);
       const vu1 = Vu_N / (bo1 * d_drop);
       const r1  = _vcACI(d_drop, bo1);
       chk1 = { n:1, bo:bo1, d_eff:d_drop, vu:vu1, ...r1, phi_vc:phi*r1.vc, DCR:vu1/(phi*r1.vc) };
     }
-    // Check 2: at drop panel edge (perimeter = drop panel face)
-    const bo2 = 2*(c1+2*drpExtX) + 2*(c2+2*drpExtY);
+    // Check 2: at drop panel edge
+    const bo2 = _bo2;
     const vu2 = Vu_N / (bo2 * d);
     const r2  = _vcACI(d, bo2);
     const chk2 = { n:2, bo:bo2, d_eff:d, vu:vu2, ...r2, phi_vc:phi*r2.vc, DCR:vu2/(phi*r2.vc) };
@@ -4135,25 +4290,23 @@ function calcPunchShear() {
       if (rail_len_target > drpExtX || rail_len_target > drpExtY)
         warns.push(`<b>Rail extends beyond drop panel:</b> rail zone = ${_fL(rail_len_target)} exceeds drop ext. X = ${_fL(drpExtX)}, Y = ${_fL(drpExtY)}. Studs must remain within the drop panel — reduce spacing or add rows.`);
     }
-    // Drop edge check also applies in reinf case
     if (hasReinf) {
       const isOK2 = chk2.DCR <= 1.0;
       if (chk2.DCR > DCR) { DCR = chk2.DCR; isOK = false; }
       steps.push({desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — CHECK 2 AT EDGE (ACI §22.6.2.1)</b>', formula:`Unreinforced check at drop panel edge using slab d`, val:'', printSkip:true});
-      steps.push({desc:'b<sub>o2</sub> = 2(c<sub>1</sub>+2·ext<sub>X</sub>)+2(c<sub>2</sub>+2·ext<sub>Y</sub>)', formula:`ext<sub>X</sub>=${_fL(drpExtX)}, ext<sub>Y</sub>=${_fL(drpExtY)}`, val:_fL(bo2)});
+      steps.push({desc:`b<sub>o2</sub> — ${_bo2Lbl}`, formula:`ext<sub>X</sub>=${_fL(drpExtX)}, ext<sub>Y</sub>=${_fL(drpExtY)}`, val:_fL(bo2)});
       steps.push({desc:'v<sub>u2</sub> = V<sub>u</sub> / (b<sub>o2</sub>·d)', formula:'', val:_fS(vu2,3), cls:'hl'});
       steps.push({desc:'φv<sub>c,2</sub> (unreinforced §22.6.5.2)', formula:chk2.govLbl, val:_fS(chk2.phi_vc,4)});
       steps.push({desc:'Drop edge check', formula:'', val:`${_fS(vu2,3)} ≤ ${_fS(chk2.phi_vc,3)}`, cls:isOK2?'ok':'err', check:isOK2?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
       if (!isOK2) warns.push(`<b>Drop panel edge check fails (Check 2):</b> v<sub>u2</sub> = ${_fS(vu2,3)} > φv<sub>c,2</sub> = ${_fS(chk2.phi_vc,3)} — increase drop panel size or slab thickness.`);
     } else {
-      // Replace steps with three-check output
+      const _typeTag = type==='int' ? 'Interior rect.' : type==='edge' ? `Edge (${_punchEdgeFace} free)` : `Corner (${_punchCornerPos})`;
       const _s = [];
-      _s.push({desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — THREE-CHECK ANALYSIS (ACI §22.6.2.1)</b>', formula:`Int. rect., ext. X = ${_fL(drpExtX)}, ext. Y = ${_fL(drpExtY)}, t<sub>d</sub> = ${_fL(drpTd)}`, val:'', printSkip:true});
-      // Check 1
+      _s.push({desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — THREE-CHECK ANALYSIS (ACI §22.6.2.1)</b>', formula:`${_typeTag}, ext. X = ${_fL(drpExtX)}, ext. Y = ${_fL(drpExtY)}, t<sub>d</sub> = ${_fL(drpTd)}`, val:'', printSkip:true});
       if (c1_valid && chk1) {
         _s.push({desc:'<b>Check 1 — d<sub>drop</sub>/2 from column face (inside drop)</b>', formula:'Uses d<sub>drop</sub> = d + t<sub>d</sub>', val:'', printSkip:true});
         _s.push({desc:'d<sub>drop</sub> = d + t<sub>d</sub>', formula:`d = ${_fL(d)}, t<sub>d</sub> = ${_fL(drpTd)}`, val:_fL(d_drop)});
-        _s.push({desc:'b<sub>o1</sub> = 2(c<sub>1</sub>+d<sub>drop</sub>)+2(c<sub>2</sub>+d<sub>drop</sub>)', formula:'ACI §22.6.4.1', val:_fL(chk1.bo)});
+        _s.push({desc:'b<sub>o1</sub>', formula:`${_typeTag} perimeter at d<sub>drop</sub>/2 from col face`, val:_fL(chk1.bo)});
         _s.push({desc:'v<sub>u1</sub> = V<sub>u</sub> / (b<sub>o1</sub>·d<sub>drop</sub>)', formula:`A<sub>c1</sub> = ${_fA(chk1.bo*d_drop)}`, val:_fS(chk1.vu,3), cls:govChk===chk1?'hl':''});
         _s.push({desc:'v<sub>c,1</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk1.govLbl}`, val:_fS(chk1.vc,4)});
         _s.push({desc:'φv<sub>c,1</sub>', formula:'φ = 0.75', val:_fS(chk1.phi_vc,4)});
@@ -4161,35 +4314,30 @@ function calcPunchShear() {
       } else {
         _s.push({desc:'Check 1 — SKIPPED', formula:`d<sub>drop</sub>/2 = ${_fL(d_drop/2)} > drop ext. — critical section exits drop panel`, val:'—', printSkip:true});
       }
-      // Check 2
       _s.push({desc:'<b>Check 2 — Critical section at drop panel edge</b>', formula:'Uses slab effective depth d', val:'', printSkip:true});
-      _s.push({desc:'b<sub>o2</sub> = 2(c<sub>1</sub>+2·ext<sub>X</sub>)+2(c<sub>2</sub>+2·ext<sub>Y</sub>)', formula:`ext<sub>X</sub> = ${_fL(drpExtX)}, ext<sub>Y</sub> = ${_fL(drpExtY)}`, val:_fL(chk2.bo)});
+      _s.push({desc:`b<sub>o2</sub> — ${_bo2Lbl}`, formula:`ext<sub>X</sub> = ${_fL(drpExtX)}, ext<sub>Y</sub> = ${_fL(drpExtY)}`, val:_fL(chk2.bo)});
       _s.push({desc:'v<sub>u2</sub> = V<sub>u</sub> / (b<sub>o2</sub>·d)', formula:`A<sub>c2</sub> = ${_fA(chk2.bo*d)}`, val:_fS(chk2.vu,3), cls:govChk===chk2?'hl':''});
       _s.push({desc:'v<sub>c,2</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk2.govLbl}`, val:_fS(chk2.vc,4)});
       _s.push({desc:'φv<sub>c,2</sub>', formula:'φ = 0.75', val:_fS(chk2.phi_vc,4)});
       _s.push({desc:'DCR₂ = v<sub>u2</sub>/φv<sub>c,2</sub>', formula:govChk===chk2?'◀ GOVERNS':'', val:chk2.DCR.toFixed(3), cls:chk2.DCR<=1.0?'ok':'err', check:chk2.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
-      // Check 3 (standard)
       if (c3_valid && chk3) {
         _s.push({desc:'<b>Check 3 — Standard at d/2 from col face</b>', formula:'d/2 extends outside drop — slab depth governs at this perimeter', val:'', printSkip:true});
-        _s.push({desc:'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)', formula:'ACI §22.6.4.1', val:_fL(chk3.bo)});
+        _s.push({desc:'b<sub>o</sub>', formula:`${_typeTag} standard perimeter at d/2`, val:_fL(chk3.bo)});
         _s.push({desc:'v<sub>u</sub> = V<sub>u</sub> / (b<sub>o</sub>·d)' + (_mt?' + MT':''), formula:`A<sub>c</sub> = ${_fA(chk3.bo*d)}`, val:_fS(chk3.vu,3), cls:govChk===chk3?'hl':''});
         _s.push({desc:'v<sub>c</sub> = min(v<sub>c1</sub>,v<sub>c2</sub>,v<sub>c3</sub>)', formula:`§22.6.5.2 — governed by: ${chk3.govLbl}`, val:_fS(chk3.vc,4)});
         _s.push({desc:'φv<sub>c</sub>', formula:'φ = 0.75', val:_fS(chk3.phi_vc,4)});
         _s.push({desc:'DCR₃ = v<sub>u</sub>/φv<sub>c</sub>', formula:govChk===chk3?'◀ GOVERNS':'', val:chk3.DCR.toFixed(3), cls:chk3.DCR<=1.0?'ok':'err', check:chk3.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
       }
-      // Governing summary row
       _s.push({desc:`<b>Governing: Check ${govChk.n} — DCR = ${DCR.toFixed(3)}</b>`, formula:'', val:DCR.toFixed(3), cls:isOK?'ok':'err', check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}});
       steps = _s;
     }
 
     dropData = {
+      extN_mm: drpN, extS_mm: drpS, extE_mm: drpE, extW_mm: drpW,
       extX_mm: drpExtX, extY_mm: drpExtY,
-      bo1_hw: c1_valid && chk1 ? (c1/2 + (d+drpTd)/2) : 0,
-      bo1_hh: c1_valid && chk1 ? (c2/2 + (d+drpTd)/2) : 0,
+      extXdisp: _fL(drpExtX), extYdisp: _fL(drpExtY),
       _chk1: chk1, _chk2: chk2, _chk3: chk3
     };
-  } else if (hasDrop && (shape !== 'rect' || type !== 'int')) {
-    warns.push('<b>Drop panel:</b> Three-check analysis is only implemented for interior rectangular columns. Standard d/2 critical section used.');
   }
 
   // Insert opening steps after bo if applicable
@@ -4281,7 +4429,7 @@ function calcPunchShear() {
   let _bannerBoLbl = hasReinf ? 'b<sub>o,in</sub>' : 'b<sub>o</sub>';
   let _bannerVuLbl = hasReinf ? 'v<sub>u,in</sub>' : 'v<sub>u</sub>';
   // Drop panel: update banner to reflect governing check
-  if (dropData && shape === 'rect' && type === 'int' && !hasReinf) {
+  if (dropData && shape === 'rect' && !hasReinf) {
     const _allDropChks = [dropData._chk1, dropData._chk2, dropData._chk3].filter(Boolean);
     if (_allDropChks.length > 0) {
       const _govDrop = _allDropChks.reduce((a,b) => b.DCR > a.DCR ? b : a);
@@ -4365,12 +4513,18 @@ function _showPunchComingSoon(what) {
 
 // ── EC2 Punching Shear — EN 1992-1-1:2004 §6.4 ───────────────────────────────
 const EC2_UNITS = {
-  knm: { lenU:'m',  lenS:1000,  forceU:'kN',  forceS:1000,     momU:'kN·m',   momS:1e6,       stressU:'MPa', tag:'kN-m' },
-  nmm: { lenU:'mm', lenS:1,     forceU:'N',   forceS:1,        momU:'N·mm',   momS:1,         stressU:'MPa', tag:'N-mm' },
-  us:  { lenU:'in', lenS:25.4,  forceU:'kip', forceS:4448.22,  momU:'kip·in', momS:113024.72, stressU:'MPa', tag:'kip-in' },
+  knm: { lenU:'m',  lenS:1000,  forceU:'kN',  forceS:1000,     momU:'kN·m',   momS:1e6,       stressU:'MPa', tag:'kN-m',    defDrpExt:0.6, defDrpTd:0.1 },
+  nmm: { lenU:'mm', lenS:1,     forceU:'N',   forceS:1,        momU:'N·mm',   momS:1,         stressU:'MPa', tag:'N-mm',    defDrpExt:600, defDrpTd:100 },
+  us:  { lenU:'in', lenS:25.4,  forceU:'kip', forceS:4448.22,  momU:'kip·in', momS:113024.72, stressU:'MPa', tag:'kip-in',  defDrpExt:24,  defDrpTd:4   },
 };
 let _ec2Unit='knm', _ec2Shape='rect', _ec2Type='int', _ec2EdgeFace='N', _ec2OpFace='E', _ec2ReinfType='stud', _lastEC2Results=null;
 let _ec2CornerPos='NE', _ec2EdgeDist=0, _ec2CornerDistX=0, _ec2CornerDistY=0;
+let _ec2HasDrop=false;
+
+function setEC2HasDrop(on) {
+  _ec2HasDrop = on;
+  document.getElementById('ec2-drop-inputs').style.display = on ? '' : 'none';
+}
 
 function setEC2Unit(unit) {
   _ec2Unit = unit;
@@ -4378,12 +4532,14 @@ function setEC2Unit(unit) {
   document.querySelectorAll('.ec2-unit-btn').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
   const el = document.getElementById('ec2-punch-utag');
   if (el) el.textContent = `EN 1992-1-1 · ${U.tag}`;
-  const lmap = {h:U.lenU,cv:U.lenU,db:U.lenU,c1:U.lenU,c2:U.lenU,dc:U.lenU,sr:U.lenU,ao:U.lenU,ved:U.forceU,mux:U.momU,muy:U.momU,edist:U.lenU,cdx:U.lenU,cdy:U.lenU};
+  const lmap = {h:U.lenU,cv:U.lenU,db:U.lenU,c1:U.lenU,c2:U.lenU,dc:U.lenU,sr:U.lenU,ao:U.lenU,ved:U.forceU,mux:U.momU,muy:U.momU,edist:U.lenU,cdx:U.lenU,cdy:U.lenU,'drp-extX':U.lenU,'drp-extY':U.lenU,'drp-td':U.lenU};
   for (const k of Object.keys(lmap)) {
     const lel=document.getElementById(`lu-ec2-${k}`), uel=document.getElementById(`u-ec2-${k}`);
     if(lel) lel.textContent=`[${lmap[k]}]`;
     if(uel) uel.textContent=lmap[k];
   }
+  const _sv = (id,v) => { const e=document.getElementById(id); if(e) e.value=v; };
+  _sv('ec2-drp-extX', U.defDrpExt); _sv('ec2-drp-extY', U.defDrpExt); _sv('ec2-drp-td', U.defDrpTd);
   updateEC2D();
 }
 function updateEC2D() {
@@ -4484,7 +4640,7 @@ function _showEC2Err(msg) {
   emp.innerHTML=`<div class="ri">&#9888;&#65039;</div><div style="color:var(--red);font-size:.82rem;font-weight:500;">${msg}</div>`;
   emp.style.display=''; crd.style.display='none';
 }
-function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,opFace,ao_mm,n_rings,sr_mm,reinfType,nr,edgeDist_mm=0,cornerDistX_mm=0,cornerDistY_mm=0,cornerPos='NE'}) {
+function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,opFace,ao_mm,n_rings,sr_mm,reinfType,nr,edgeDist_mm=0,cornerDistX_mm=0,cornerDistY_mm=0,cornerPos='NE',dropData=null}) {
   const W=450,H=375,legH=26,drawH=H-legH;
   const isCirc=shape==='circ';
   const col_hw=isCirc?Dc_mm/2:c1_mm/2, col_hh=isCirc?Dc_mm/2:c2_mm/2;
@@ -4498,8 +4654,10 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   // Only scale SVG to fit rings when the outer perimeter is also being shown (u_out_mm set);
   // otherwise the huge ring zone (from a failing design) would make the column microscopic.
   const lastRingMM_scale=u_out_mm?lastRingMM:0;
-  const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM_scale)*1.18;
-  const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM_scale)*1.18;
+  const _dropEffH=dropData?col_hw+Math.max(dropData.extE_mm,dropData.extW_mm)+60:0;
+  const _dropEffV=dropData?col_hh+Math.max(dropData.extN_mm,dropData.extS_mm)+60:0;
+  const maxExtH=Math.max(col_hw+r2d,col_hw+r_out_mm,col_hw+lastRingMM_scale,_dropEffH)*1.18;
+  const maxExtV=Math.max(col_hh+r2d,col_hh+r_out_mm,col_hh+lastRingMM_scale,_dropEffV)*1.18;
   const PAD=40,freeStrip=35;
   const _setN=freeFaces.includes('N')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
   const _setS=freeFaces.includes('S')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
@@ -4712,6 +4870,17 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
     s+=`<text x="${ff(opx+opw/2)}" y="${ff(opy+oph/2)}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#b91c1c">op</text>`;
   }
 
+  // Drop panel rectangle (inside clip)
+  let _ec2DrpPx=null;
+  if(dropData){
+    const drpTop2=(col_hh+dropData.extN_mm)*S, drpBot2=(col_hh+dropData.extS_mm)*S;
+    const drpLeft2=(col_hw+dropData.extW_mm)*S, drpRight2=(col_hw+dropData.extE_mm)*S;
+    _ec2DrpPx={drpTop2,drpBot2,drpLeft2,drpRight2};
+    s+=`<rect x="${ff(cx-drpLeft2)}" y="${ff(cy-drpTop2)}" width="${ff(drpLeft2+drpRight2)}" height="${ff(drpTop2+drpBot2)}" fill="rgba(140,140,140,0.12)" stroke="#888" stroke-width="1.5" rx="1"/>`;
+    const _b2lx=cx+drpRight2+4;
+    if(_b2lx+28<W-2) s+=`<text x="${ff(_b2lx)}" y="${ff(cy-drpTop2/2)}" font-size="9" font-weight="700" fill="#888">u<tspan baseline-shift="sub" font-size="7">edge</tspan></text>`;
+  }
+
   // Column (hatched)
   s+=`<rect x="${ff(cx-chw)}" y="${ff(cy-chh)}" width="${ff(chw*2)}" height="${ff(chh*2)}" fill="white" stroke="#334155" stroke-width="1.5" rx="1"/>`;
   s+=`<rect x="${ff(cx-chw)}" y="${ff(cy-chh)}" width="${ff(chw*2)}" height="${ff(chh*2)}" fill="url(#ec2c)" opacity="0.7" rx="1"/>`;
@@ -4728,6 +4897,30 @@ function _ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace,u_out_mm,hasOp,
   }
 
   s+=`</g>`;
+
+  // Drop panel dimension lines (outside clip — always visible)
+  if(_ec2DrpPx){
+    const {drpTop2,drpBot2,drpLeft2,drpRight2}=_ec2DrpPx;
+    const _dmY=cy+drpBot2+12,_dmX1=cx+chw,_dmX2=cx+drpRight2;
+    if(_dmX2-_dmX1>8){
+      s+=`<line x1="${ff(_dmX1)}" y1="${ff(cy+chh+1)}" x2="${ff(_dmX1)}" y2="${ff(_dmY+4)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s+=`<line x1="${ff(_dmX2)}" y1="${ff(cy+drpBot2+1)}" x2="${ff(_dmX2)}" y2="${ff(_dmY+4)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s+=`<line x1="${ff(_dmX1)}" y1="${ff(_dmY)}" x2="${ff(_dmX2)}" y2="${ff(_dmY)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ec2-a2)" marker-end="url(#ec2-a1)"/>`;
+      const _dmMx=(_dmX1+_dmX2)/2;
+      const _lbW=Math.min(dropData.extXdisp.length*5+4,64);
+      s+=`<rect x="${ff(_dmMx-_lbW/2)}" y="${ff(_dmY-13)}" width="${_lbW}" height="11" fill="white" opacity="0.92" rx="2"/>`;
+      s+=`<text x="${ff(_dmMx)}" y="${ff(_dmY-5)}" text-anchor="middle" font-size="8" fill="#64748b">${dropData.extXdisp}</text>`;
+    }
+    const _dvX=cx+drpRight2+32,_dvY1=cy+chh,_dvY2=cy+drpBot2;
+    if(_dvY2-_dvY1>8){
+      s+=`<line x1="${ff(cx+chw+1)}" y1="${ff(_dvY1)}" x2="${ff(_dvX+4)}" y2="${ff(_dvY1)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s+=`<line x1="${ff(cx+drpRight2+1)}" y1="${ff(_dvY2)}" x2="${ff(_dvX+4)}" y2="${ff(_dvY2)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+      s+=`<line x1="${ff(_dvX)}" y1="${ff(_dvY1)}" x2="${ff(_dvX)}" y2="${ff(_dvY2)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#ec2-a2)" marker-end="url(#ec2-a1)"/>`;
+      const _dvMy=(_dvY1+_dvY2)/2;
+      s+=`<rect x="${ff(_dvX+4)}" y="${ff(_dvMy-6)}" width="40" height="11" fill="white" opacity="0.92" rx="2"/>`;
+      s+=`<text x="${ff(_dvX+6)}" y="${ff(_dvMy+3)}" font-size="8" fill="#64748b">${dropData.extYdisp}</text>`;
+    }
+  }
 
   // Zone length dimension (col. face → last ring), drawn outside clip so it's never cropped
   // Only shown when outer perimeter is also shown (design passes inner check)
@@ -4798,6 +4991,10 @@ function calcEC2PunchShear() {
   const hasOp    =document.getElementById('ec2-has-op').checked;
   const ao_ui    =hasOp?parseFloat(document.getElementById('ec2-ao').value)||0:0;
   const opFace   =_ec2OpFace;
+  const hasDrop  =_ec2HasDrop;
+  const drpExtX_ui=hasDrop?(parseFloat(document.getElementById('ec2-drp-extX').value)||0):0;
+  const drpExtY_ui=hasDrop?(parseFloat(document.getElementById('ec2-drp-extY').value)||0):0;
+  const drpTd_ui  =hasDrop?(parseFloat(document.getElementById('ec2-drp-td').value)||0):0;
 
   if([h_ui,cv_ui,db_ui,fck,rho_x,rho_y,VEd_ui].some(v=>isNaN(v)||v<=0))
     return _showEC2Err('Please fill in all required inputs (all positive values).');
@@ -4806,6 +5003,7 @@ function calcEC2PunchShear() {
   const h_mm=h_ui*LS, cv_mm=cv_ui*LS, db_mm=db_ui*LS, d_mm=h_mm-cv_mm-db_mm;
   if(d_mm<=0) return _showEC2Err('Effective depth d ≤ 0. Check slab thickness and cover.');
   const c1_mm=c1_ui*LS, c2_mm=c2_ui*LS, Dc_mm=Dc_ui*LS, sr_mm=sr_ui*LS;
+  const drpExtX_mm=drpExtX_ui*LS, drpExtY_mm=drpExtY_ui*LS, drpTd_mm=drpTd_ui*LS;
   const VEd=VEd_ui*FS, Mux=Mux_ui*MS, Muy=Muy_ui*MS;
   if(shape==='rect'&&(c1_mm<=0||c2_mm<=0)) return _showEC2Err('Column dimensions must be positive.');
   if(shape==='circ'&&Dc_mm<=0) return _showEC2Err('Column diameter must be positive.');
@@ -4824,9 +5022,11 @@ function calcEC2PunchShear() {
   // Control perimeter u₁ — includes setback for edge/corner (EC2 §6.4.2)
   let u1;
   if(shape==='circ'){
-    if(type==='int')         u1=2*Math.PI*(Dc_mm/2+2*d_mm);
-    else if(type==='edge')   u1=Math.PI*(Dc_mm/2+2*d_mm)+(Dc_mm+4*d_mm);
-    else                     u1=Math.PI/2*(Dc_mm/2+2*d_mm)+(Dc_mm/2+2*d_mm);
+    const R_circ=Dc_mm/2+2*d_mm;
+    const alpha_circ=Math.asin((Dc_mm/2)/R_circ);
+    if(type==='int')         u1=2*Math.PI*R_circ;
+    else if(type==='edge')   u1=R_circ*(Math.PI+2*alpha_circ);
+    else                     u1=R_circ*(Math.PI/2+2*alpha_circ);
   } else {
     if(type==='int')         u1=2*(c1_mm+c2_mm)+2*Math.PI*2*d_mm;
     else if(type==='edge')   u1=c_para+2*(c_perp+Math.min(edgeDist_mm,2*d_mm))+2*Math.PI*d_mm;
@@ -4923,11 +5123,82 @@ function calcEC2PunchShear() {
   if(!hasReinf && vEd>vRdc) warns.push(`<b>Punching capacity exceeded:</b> v<sub>Ed</sub>=${vEd.toFixed(3)} MPa &gt; v<sub>Rd,c</sub>=${vRdc.toFixed(3)} MPa. Add shear reinforcement or increase slab/column size.`);
 
   const vRd=hasReinf?vRdcs:vRdc;
-  const DCR=vEd/vRd, isOK=DCR<=1.0&&checkFace;
+  let DCR=vEd/vRd, isOK=DCR<=1.0&&checkFace;
   const _fv=v=>`${v.toFixed(3)} MPa`;
   const _dp=U.lenU==='m'?3:U.lenU==='in'?2:0;
   const _fL2=v=>`${(v/LS).toFixed(_dp)} ${U.lenU}`;
   const dp=_dp;
+
+  // ── Drop Panel: two-check analysis (EC2 §6.4.2) ──────────────────────────
+  let ec2DropSteps=[], ec2DropData=null;
+  if (hasDrop && drpExtX_mm>0 && drpExtY_mm>0 && drpTd_mm>0) {
+    const d_drop=d_mm+drpTd_mm;
+    const k_drop=Math.min(1+Math.sqrt(200/d_drop),2.0);
+    const vmin_drop=0.035*Math.pow(k_drop,1.5)*Math.pow(fck,0.5);
+    const vRdc_drop_raw=CRdc*k_drop*Math.pow(100*rho_l*fck,1/3)+k1*sigcp;
+    const vRdc_drop=Math.max(vRdc_drop_raw,vmin_drop+k1*sigcp);
+    // u1 at 2*d_drop using same EC2 formula
+    const _u1Drop=()=>{
+      if(shape==='circ'){
+        if(type==='int')       return 2*Math.PI*(Dc_mm/2+2*d_drop);
+        if(type==='edge')      return Math.PI*(Dc_mm/2+2*d_drop)+(Dc_mm+4*d_drop);
+        return Math.PI/2*(Dc_mm/2+2*d_drop)+(Dc_mm/2+2*d_drop);
+      }
+      if(type==='int')         return 2*(c1_mm+c2_mm)+2*Math.PI*2*d_drop;
+      if(type==='edge')        return c_para+2*(c_perp+Math.min(edgeDist_mm,2*d_drop))+2*Math.PI*d_drop;
+      return c1_mm+c2_mm+Math.PI*d_drop+Math.min(cornerDistX_mm,2*d_drop)+Math.min(cornerDistY_mm,2*d_drop);
+    };
+    // u_edge: rectangular perimeter at drop panel edge (unreinforced slab d)
+    const _c1e=shape==='circ'?Dc_mm:c1_mm, _c2e=shape==='circ'?Dc_mm:c2_mm;
+    const _uEdge=()=>{
+      if(type==='int') return 2*(_c1e+2*drpExtX_mm)+2*(_c2e+2*drpExtY_mm);
+      if(type==='edge'){
+        if(ef==='N'||ef==='S'){const eF=Math.min(edgeDist_mm,drpExtY_mm);return (edgeDist_mm>=drpExtY_mm)?2*(_c1e+2*drpExtX_mm)+2*(_c2e+2*drpExtY_mm):(_c1e+2*drpExtX_mm)+2*(_c2e+eF+drpExtY_mm);}
+        const eF=Math.min(edgeDist_mm,drpExtX_mm);return (edgeDist_mm>=drpExtX_mm)?2*(_c1e+2*drpExtX_mm)+2*(_c2e+2*drpExtY_mm):2*(_c1e+eF+drpExtX_mm)+(_c2e+2*drpExtY_mm);
+      }
+      const xB=cornerDistX_mm>=drpExtX_mm, yB=cornerDistY_mm>=drpExtY_mm;
+      const extX2=Math.min(cornerDistX_mm,drpExtX_mm), extY2=Math.min(cornerDistY_mm,drpExtY_mm);
+      if(xB&&yB) return 2*(_c1e+2*drpExtX_mm)+2*(_c2e+2*drpExtY_mm);
+      if(xB) return (_c1e+2*drpExtX_mm)+2*(_c2e+extY2+drpExtY_mm);
+      if(yB) return 2*(_c1e+extX2+drpExtX_mm)+(_c2e+2*drpExtY_mm);
+      return (_c1e+extX2+drpExtX_mm)+(_c2e+extY2+drpExtY_mm);
+    };
+    // Check 1: 2d inside drop
+    const chk1valid=2*d_drop<=drpExtX_mm&&2*d_drop<=drpExtY_mm;
+    let chk1=null;
+    if(chk1valid){
+      const u1d=_u1Drop();
+      const vEd1=beta*VEd/(u1d*d_drop);
+      const DCR1=vEd1/vRdc_drop;
+      chk1={u:u1d,d:d_drop,vEd:vEd1,vRdc:vRdc_drop,DCR:DCR1};
+      if(DCR1>DCR){DCR=DCR1;isOK=DCR<=1.0&&checkFace;}
+    }
+    // Check 2: at drop edge with slab d
+    const u_edge=_uEdge();
+    const vEd2=beta*VEd/(u_edge*d_mm);
+    const DCR2=vEd2/vRdc;
+    const chk2={u:u_edge,d:d_mm,vEd:vEd2,vRdc,DCR:DCR2};
+    if(DCR2>DCR){DCR=DCR2;isOK=DCR<=1.0&&checkFace;}
+    ec2DropData={extX_mm:drpExtX_mm,extY_mm:drpExtY_mm,extXdisp:_fL2(drpExtX_mm),extYdisp:_fL2(drpExtY_mm),extN_mm:drpExtY_mm,extS_mm:drpExtY_mm,extE_mm:drpExtX_mm,extW_mm:drpExtX_mm};
+    ec2DropSteps=[
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — EC2 §6.4.2 CHECK</b>',formula:`ext.X=${_fL2(drpExtX_mm)}, ext.Y=${_fL2(drpExtY_mm)}, t<sub>d</sub>=${_fL2(drpTd_mm)}`,val:'',printSkip:true},
+      ...(chk1valid&&chk1?[
+        {desc:'<b>Check 1 — inside drop: 2d<sub>drop</sub> from col face</b>',formula:'d<sub>drop</sub> = d + t<sub>d</sub>',val:'',printSkip:true},
+        {desc:'d<sub>drop</sub> = d + t<sub>d</sub>',formula:'',val:_fL2(d_drop)},
+        {desc:'k<sub>drop</sub>',formula:'min(1+√(200/d<sub>drop</sub>), 2.0)',val:k_drop.toFixed(3)},
+        {desc:'v<sub>Rd,c,drop</sub>',formula:'C<sub>Rd,c</sub>·k<sub>drop</sub>·(100ρ<sub>l</sub>f<sub>ck</sub>)^(1/3)',val:_fv(vRdc_drop)},
+        {desc:'u<sub>1,drop</sub> at 2d<sub>drop</sub>',formula:'Same formula as u₁ with d→d<sub>drop</sub>',val:_fL2(chk1.u)},
+        {desc:'v<sub>Ed,1</sub> = β·V<sub>Ed</sub>/(u<sub>1,drop</sub>·d<sub>drop</sub>)',formula:'',val:_fv(chk1.vEd),cls:'hl'},
+        {desc:'DCR₁ = v<sub>Ed,1</sub>/v<sub>Rd,c,drop</sub>',formula:'',val:chk1.DCR.toFixed(3),cls:chk1.DCR<=1.0?'ok':'err',check:chk1.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
+      ]:[
+        {desc:'Check 1 SKIPPED',formula:`2d<sub>drop</sub>=${_fL2(2*d_drop)} exceeds drop ext. — section exits drop`,val:'—',printSkip:true},
+      ]),
+      {desc:'<b>Check 2 — at drop panel edge (slab d)</b>',formula:'Rectangular perimeter at drop boundary',val:'',printSkip:true},
+      {desc:'u<sub>edge</sub>',formula:`ext.X=${_fL2(drpExtX_mm)}, ext.Y=${_fL2(drpExtY_mm)}`,val:_fL2(u_edge)},
+      {desc:'v<sub>Ed,2</sub> = β·V<sub>Ed</sub>/(u<sub>edge</sub>·d)',formula:'',val:_fv(vEd2),cls:'hl'},
+      {desc:'DCR₂ = v<sub>Ed,2</sub>/v<sub>Rd,c</sub>',formula:'',val:DCR2.toFixed(3),cls:DCR2<=1.0?'ok':'err',check:DCR2<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
+    ];
+  }
 
   // Display values
   const shapeLabel=shape==='rect'?'Rectangular':'Circular';
@@ -4964,7 +5235,8 @@ function calcEC2PunchShear() {
       {desc:'Reinf. zone extent (from col. face)',formula:'r₁=0.5d (first ring), r<sub>last</sub>=r<sub>out</sub>−1.5d',val:`${_fL2(r_first)} − ${_fL2(r_last)}`},
       {desc:'Estimated reinforcement rings',formula:'n = ⌈(r<sub>last</sub>−r₁)/s<sub>r</sub>⌉ + 1',val:`${n_rings} rings`},
     ]),
-    {desc:'D/C = v<sub>Ed</sub>/v<sub>Rd</sub>',formula:`v<sub>Rd</sub> = ${hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>'}`,val:DCR.toFixed(3),cls:isOK&&DCR<=0.9?'ok':DCR<=1.0?'warn':'err',check:isOK&&DCR<=0.9?{t:'ok',l:'OK ✓'}:DCR<=1.0?{t:'warn',l:'NEAR'}:{t:'err',l:'NG ✗'}},
+    ...ec2DropSteps,
+    {desc:'D/C = v<sub>Ed</sub>/v<sub>Rd</sub>',formula:`v<sub>Rd</sub> = ${hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>'}${hasDrop?' (governing check)':''}`,val:DCR.toFixed(3),cls:isOK&&DCR<=0.9?'ok':DCR<=1.0?'warn':'err',check:isOK&&DCR<=0.9?{t:'ok',l:'OK ✓'}:DCR<=1.0?{t:'warn',l:'NEAR'}:{t:'err',l:'NG ✗'}},
   ];
 
   // Input rows
@@ -4981,13 +5253,14 @@ function calcEC2PunchShear() {
     ['V<sub>Ed</sub>',`${(VEd/FS).toFixed(1)} ${U.forceU}`],
     ['M<sub>Edx</sub>',`${(Mux/MS).toFixed(1)} ${U.momU}`],['M<sub>Edy</sub>',`${(Muy/MS).toFixed(1)} ${U.momU}`],
     ...(hasOp&&ao_mm>0?[['Opening a<sub>o</sub>',`${(ao_mm/LS).toFixed(dp)} ${U.lenU} (face ${opFace})`]]:[]),
+    ...(hasDrop&&ec2DropData?[['Drop ext. X',_fL2(drpExtX_mm)],['Drop ext. Y',_fL2(drpExtY_mm)],['Drop t<sub>d</sub>',_fL2(drpTd_mm)]]:[]),
     ...(hasReinf?[['n × d<sub>b</sub>',`${reinf_n} × ${reinf_db} mm`],['A<sub>sw</sub>',`${Asw_mm2.toFixed(0)} mm²/ring`],['f<sub>ywd</sub>',`${fywd_MPa} MPa`],['s<sub>r</sub>',`${(sr_mm/LS).toFixed(dp)} ${U.lenU}`],['f<sub>ywd,ef</sub>',`${fywdEf.toFixed(0)} MPa`]]:[]),
   ];
 
   // u_out_mm only passed when inner check passes; failing designs suppress the outer perimeter
   // and zone annotation so the SVG stays readable and doesn't show a misleading huge zone.
   const _svgUout=hasReinf&&vRdcs>=vEd?u_out_req:null;
-  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:_svgUout,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0,edgeDist_mm,cornerDistX_mm,cornerDistY_mm,cornerPos:_ec2CornerPos});
+  const _svg=_ec2PlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,type,shape,edgeFace:ef,u_out_mm:_svgUout,hasOp,opFace,ao_mm,n_rings:hasReinf?n_rings:0,sr_mm:hasReinf?sr_mm:0,reinfType:_ec2ReinfType,nr:hasReinf?reinf_n:0,edgeDist_mm,cornerDistX_mm,cornerDistY_mm,cornerPos:_ec2CornerPos,dropData:ec2DropData});
   const dcrCls=DCR<=0.90?'ok':DCR<=1.0?'warn':'err';
   const status=DCR<=0.90?'Adequate':DCR<=1.0?'Near Capacity':'EXCEEDS CAPACITY';
   const capLbl=hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>';
@@ -5050,6 +5323,12 @@ let _is456EdgeDist = 0, _is456CornerDistX = 0, _is456CornerDistY = 0;
 let _lastIS456Results = null;
 let _is456Unit = 'knm';
 let _is456OpFace = 'E';
+let _is456HasDrop = false;
+
+function setIS456HasDrop(on) {
+  _is456HasDrop = on;
+  document.getElementById('is456-drop-inputs').style.display = on ? '' : 'none';
+}
 const IS456_PUNCH_UNITS = {
   knm: { lenU:'mm', fcU:'N/mm²', forceU:'kN', momU:'kN·m', stressU:'N/mm²',
          lenS:1, forceS:1000, momS:1e6, stressS:1, tag:'kN-m',
@@ -5241,6 +5520,12 @@ function calcIS456PunchShear() {
     const _thr = 0.6 * _caff;
     _is456OpRaw.push({ num:1, face:_face, ao:_ao, ao_mm:_ao, c_affected:_caff, threshold:_thr, is_small:_ao<_thr });
   }
+
+  // Drop panel input
+  const hasDrop_is = _is456HasDrop;
+  const drpExtX_is = hasDrop_is ? gv('is456-drp-extX') : 0;
+  const drpExtY_is = hasDrop_is ? gv('is456-drp-extY') : 0;
+  const drpTd_is   = hasDrop_is ? gv('is456-drp-td')   : 0;
 
   // ── IS 456 Cl 31.6.2: βc = short/long ≤ 1.0 (rect); 1.0 for circular ──
   let betaC, shapeLabel;
@@ -5447,6 +5732,91 @@ function calcIS456PunchShear() {
     ];
   }
 
+  // ── Drop Panel: three-check analysis (IS 456 — analogous to ACI §22.6.2.1) ──
+  let is456DropData = null;
+  if (hasDrop_is && drpExtX_is > 0 && drpExtY_is > 0 && drpTd_is > 0) {
+    const d_drop_is = d + drpTd_is;
+    // bo at d_eff from column face (same formula as standard bo, d→d_eff)
+    const _boAtD_is = (d_eff) => {
+      const eC=Math.min(_edgeDist_mm,d_eff/2), xC=Math.min(_cornerDistX_mm,d_eff/2), yC=Math.min(_cornerDistY_mm,d_eff/2);
+      if (shape==='circ') {
+        if (type==='int') return Math.PI*(Dc+d_eff);
+        if (type==='edge') return _edgeDist_mm>=d_eff/2 ? Math.PI*(Dc+d_eff) : Math.PI*(Dc/2+eC*2+d_eff);
+        const xB=_cornerDistX_mm>=d_eff/2, yB=_cornerDistY_mm>=d_eff/2;
+        if (xB&&yB) return Math.PI*(Dc+d_eff);
+        if (xB||yB) return Math.PI/2*(Dc+d_eff)+(Dc/2+d_eff);
+        return Math.PI/2*(Dc/2+d_eff)+xC+yC;
+      }
+      if (type==='int') return 2*(c1+d_eff)+2*(c2+d_eff);
+      if (type==='edge') {
+        const ef_is=_is456EdgeFace;
+        if (_edgeDist_mm>=d_eff/2) return 2*(c1+d_eff)+2*(c2+d_eff);
+        return (ef_is==='N'||ef_is==='S') ? c1+2*(c2+eC)+2*d_eff : 2*(c1+eC)+c2+2*d_eff;
+      }
+      const xB=_cornerDistX_mm>=d_eff/2, yB=_cornerDistY_mm>=d_eff/2;
+      if (xB&&yB) return 2*(c1+d_eff)+2*(c2+d_eff);
+      if (xB) return c1+2*(c2+yC)+2*d_eff;
+      if (yB) return 2*(c1+xC)+c2+2*d_eff;
+      return c1+c2+d_eff+xC+yC;
+    };
+    // bo2 at drop panel edge
+    const _c1d=shape==='circ'?Dc:c1, _c2d=shape==='circ'?Dc:c2;
+    const _bo2_is = () => {
+      if (type==='int') return 2*(_c1d+2*drpExtX_is)+2*(_c2d+2*drpExtY_is);
+      if (type==='edge') {
+        const ef_is=_is456EdgeFace;
+        if (ef_is==='N'||ef_is==='S') { const eF=Math.min(_edgeDist_mm,drpExtY_is); return (_edgeDist_mm>=drpExtY_is)?2*(_c1d+2*drpExtX_is)+2*(_c2d+2*drpExtY_is):(_c1d+2*drpExtX_is)+2*(_c2d+eF+drpExtY_is); }
+        const eF=Math.min(_edgeDist_mm,drpExtX_is); return (_edgeDist_mm>=drpExtX_is)?2*(_c1d+2*drpExtX_is)+2*(_c2d+2*drpExtY_is):2*(_c1d+eF+drpExtX_is)+(_c2d+2*drpExtY_is);
+      }
+      const xB=_cornerDistX_mm>=drpExtX_is, yB=_cornerDistY_mm>=drpExtY_is;
+      const extX2=Math.min(_cornerDistX_mm,drpExtX_is), extY2=Math.min(_cornerDistY_mm,drpExtY_is);
+      if (xB&&yB) return 2*(_c1d+2*drpExtX_is)+2*(_c2d+2*drpExtY_is);
+      if (xB) return (_c1d+2*drpExtX_is)+2*(_c2d+extY2+drpExtY_is);
+      if (yB) return 2*(_c1d+extX2+drpExtX_is)+(_c2d+2*drpExtY_is);
+      return (_c1d+extX2+drpExtX_is)+(_c2d+extY2+drpExtY_is);
+    };
+    // Geometry check
+    if (drpTd_is < h/4) warns.push(`IS 456/ACI §8.2.4: t<sub>d</sub> = ${drpTd_is.toFixed(0)} mm < h/4 = ${(h/4).toFixed(0)} mm — thickness does not meet drop panel definition.`);
+    // Check 1: d_drop/2 from col face
+    const c1v_is = d_drop_is/2 <= drpExtX_is && d_drop_is/2 <= drpExtY_is;
+    let isChk1=null;
+    if (c1v_is) {
+      const bo1_is=_boAtD_is(d_drop_is), tau1_is=Vu_N/(bo1_is*d_drop_is);
+      const DCR1_is=tau1_is/Math.max(tauPerm,0.001);
+      isChk1={bo:bo1_is,tau:tau1_is,DCR:DCR1_is};
+      if (DCR1_is>DCR) { DCR=DCR1_is; isOK=DCR<=1.0; capStress=tauPerm; }
+    }
+    // Check 2: at drop panel edge
+    const bo2_is=_bo2_is(), tau2_is=Vu_N/(bo2_is*d);
+    const DCR2_is=tau2_is/Math.max(tauPerm,0.001);
+    const isChk2={bo:bo2_is,tau:tau2_is,DCR:DCR2_is};
+    if (DCR2_is>DCR) { DCR=DCR2_is; isOK=DCR<=1.0; capStress=tauPerm; }
+    // Check 3: standard at d/2 (already in main steps; only note if d/2 > drop ext)
+    const c3v_is = d/2 > Math.min(drpExtX_is,drpExtY_is);
+    is456DropData = {
+      extN_mm:drpExtY_is, extS_mm:drpExtY_is, extE_mm:drpExtX_is, extW_mm:drpExtX_is,
+      extX_mm:drpExtX_is, extY_mm:drpExtY_is, extXdisp:drpExtX_is.toFixed(0)+' mm', extYdisp:drpExtY_is.toFixed(0)+' mm'
+    };
+    // Append drop steps
+    const _is_dp_steps = [
+      {desc:'<b style="color:var(--text-dim);font-size:.75rem;letter-spacing:.06em">DROP PANEL — THREE-CHECK ANALYSIS (IS 456 / ACI §22.6.2.1)</b>',
+       formula:`ext.X=${drpExtX_is.toFixed(0)} mm, ext.Y=${drpExtY_is.toFixed(0)} mm, t<sub>d</sub>=${drpTd_is.toFixed(0)} mm`,val:'',printSkip:true},
+      ...(c1v_is&&isChk1?[
+        {desc:'<b>Check 1 — d<sub>drop</sub>/2 from column face</b>',formula:'d<sub>drop</sub> = d + t<sub>d</sub>',val:'',printSkip:true},
+        {desc:'d<sub>drop</sub> = d + t<sub>d</sub>',formula:'',val:_fL(d_drop_is)},
+        {desc:'b<sub>o1</sub>',formula:'Standard perimeter formula with d→d<sub>drop</sub>',val:_fL(isChk1.bo)},
+        {desc:'τ<sub>v1</sub> = V<sub>u</sub>/(b<sub>o1</sub>·d<sub>drop</sub>)',formula:'',val:_fS(isChk1.tau,4),cls:'hl'},
+        {desc:'DCR₁ = τ<sub>v1</sub>/τ<sub>perm</sub>',formula:'',val:isChk1.DCR.toFixed(3),cls:isChk1.DCR<=1.0?'ok':'err',check:isChk1.DCR<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
+      ]:[{desc:'Check 1 SKIPPED',formula:`d<sub>drop</sub>/2 = ${_fL(d_drop_is/2)} exceeds drop ext. — section exits drop`,val:'—',printSkip:true}]),
+      {desc:'<b>Check 2 — at drop panel edge</b>',formula:'Rectangular perimeter at drop boundary',val:'',printSkip:true},
+      {desc:'b<sub>o2</sub>',formula:`ext.X=${drpExtX_is.toFixed(0)} mm, ext.Y=${drpExtY_is.toFixed(0)} mm`,val:_fL(isChk2.bo)},
+      {desc:'τ<sub>v2</sub> = V<sub>u</sub>/(b<sub>o2</sub>·d)',formula:'',val:_fS(isChk2.tau,4),cls:'hl'},
+      {desc:'DCR₂ = τ<sub>v2</sub>/τ<sub>perm</sub>',formula:'',val:DCR2_is.toFixed(3),cls:DCR2_is<=1.0?'ok':'err',check:DCR2_is<=1.0?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}},
+      ...(c3v_is?[{desc:'Check 3 — d/2 from col face (standard)',formula:'d/2 extends beyond drop panel — see standard calculation above',val:'—',printSkip:true}]:[]),
+    ];
+    steps = [...steps, ..._is_dp_steps, {desc:'<b>Governing DCR (all checks)</b>',formula:'',val:DCR.toFixed(3),cls:isOK?'ok':'err',check:isOK?{t:'ok',l:'OK ✓'}:{t:'err',l:'NG ✗'}}];
+  }
+
   // Input summary rows
   const inpRows = [
     ['Slab thickness h',              `${h.toFixed(0)} mm`,         'inp-diag'],
@@ -5472,6 +5842,11 @@ function calcIS456PunchShear() {
       ['Opening face', opData[0].face],
       ['Opening a<sub>o</sub>', `${opData[0].ao.toFixed(0)} mm (${opData[0].is_small?'SMALL':'LARGE'})`],
     ] : []),
+    ...(hasDrop_is?[
+      ['Drop ext. X',  `${drpExtX_is.toFixed(0)} mm`],
+      ['Drop ext. Y',  `${drpExtY_is.toFixed(0)} mm`],
+      ['Drop t<sub>d</sub>',  `${drpTd_is.toFixed(0)} mm`],
+    ]:[]),
     ...(hasReinf?[
       ['Reinf. type',              isBentup?'Bent-up Bars':'Closed Stirrups'],
       ['Faces × legs',             `${nFaces} × ${nLegs}`],
@@ -5492,7 +5867,8 @@ function calcIS456PunchShear() {
     c2_disp: shape==='circ'?Dc.toFixed(0):c2.toFixed(0),
     n_sets_svg: hasReinf ? _n_sets_is : 0,
     rail_len_target_mm: hasReinf ? _rail_len_is : 0,
-    edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm
+    edgeDist_mm: _edgeDist_mm, cornerDistX_mm: _cornerDistX_mm, cornerDistY_mm: _cornerDistY_mm,
+    dropData: is456DropData
   });
 
   const dcrCls   = DCR<=0.90?'ok':DCR<=1.0?'warn':'err';
