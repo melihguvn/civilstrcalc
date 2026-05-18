@@ -47,11 +47,8 @@
 .diagram-wrap svg{max-width:100%;height:auto;}
 .diagram-label{font-size:.72rem;color:var(--text-dim);margin-top:8px;}
 
-/* ── Expandable steps ── */
-.steps-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;font-family:var(--sans);font-size:.78rem;font-weight:500;color:var(--accent);cursor:pointer;padding:10px 0 4px;width:100%;}
-.steps-toggle .arr{font-size:10px;transition:transform .18s;}
-.steps-toggle.open .arr{transform:rotate(180deg);}
-.steps-body{display:none;}.steps-body.open{display:block;}
+/* ── Steps separator (between params table and steps) ── */
+.steps-sep{height:1px;background:var(--border);margin:6px 0 2px;}
 
 /* ── Result primary card ── */
 .res-primary{background:var(--accent-lt);border:1px solid var(--accent);border-radius:8px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
@@ -75,7 +72,41 @@
 .bg-pane li{margin-bottom:4px;}
 .bg-pane .formula-box{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin:8px 0;overflow-x:auto;}
 
-@media print{.mod-tabs,.unit-toggle,.btn-calc,.steps-toggle,.bg-section{display:none!important;}.mod-pane,.sub-pane{display:block!important;}}
+@media print{
+  .mod-tabs,.unit-toggle,.btn-calc,.bg-section,.btn-print{display:none!important;}
+  .mod-pane,.sub-pane{display:block!important;}
+  .dual-primary{flex-direction:row!important;}
+  .res-primary{break-inside:avoid;}
+  .res-card{break-inside:avoid;}
+}
+
+/* ── Select boxes: smaller font so long option text fits ── */
+.card-body select { font-size: .76rem; }
+/* ── Tension/Compression section headers ── */
+.tc-section-hdr{font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:8px 0 4px;border-bottom:2px solid var(--accent);margin-bottom:4px;margin-top:10px;}
+.tc-section-hdr:first-child{margin-top:2px;}
+.tc-section-div{height:14px;}
+/* ── Calculation steps (numbered circles, beam-style) ── */
+.steps-table{width:100%;border-collapse:collapse;}
+.steps-table tr{border-bottom:1px solid var(--border);}
+.steps-table tr:last-child{border-bottom:none;}
+.steps-table tr:hover{background:var(--bg);}
+.steps-table td{padding:7px 5px;font-size:.79rem;vertical-align:middle;}
+.step-desc{font-size:.79rem;color:var(--text-mid);}
+.step-val{font-family:var(--mono);font-size:.79rem;font-weight:600;color:var(--accent);white-space:nowrap;}
+/* ── Unified tension+compression banner ── */
+.dual-primary{display:flex;align-items:stretch;padding:0!important;overflow:hidden;}
+.dual-primary-half{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 18px;gap:3px;}
+.dual-primary-div{width:1px;background:var(--accent);opacity:.35;flex-shrink:0;margin:10px 0;}
+.dual-primary-tag{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);opacity:.8;}
+.dual-primary-val{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--accent);}
+.dual-primary-note{font-size:.7rem;color:var(--text-dim);}
+@media(max-width:480px){.dual-primary{flex-direction:column;}.dual-primary-div{width:auto;height:1px;margin:0 10px;}}
+/* ── Print button ── */
+.btn-print{background:none;border:1px solid var(--border);color:var(--text-mid);border-radius:5px;padding:5px 11px;font-size:.76rem;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-print:hover{background:var(--bg2);color:var(--text);}
+/* ── Page title row with print button ── */
+.page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px;}
 </style>
 <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg">
@@ -89,12 +120,17 @@
 </script>
 </head>
 <body>
-<div class="page-wrap">
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
 
-<!-- ══ PAGE TITLE ══ -->
-<div class="page-title-bar">
-  <h1 class="page-title">Rebar Development &amp; Splice Length</h1>
-  <p class="page-subtitle">Development length, standard hooks, and lap splices — ACI 318-25 · Eurocode 2 · IS 456:2000</p>
+<div class="page-title-row">
+  <div class="page-title" style="margin-bottom:0">
+    <h1>Rebar Development &amp; Splice Length</h1>
+    <p>Development length, standard hooks, and lap splices — ACI 318-25 · Eurocode 2 · IS 456:2000</p>
+  </div>
+  <button class="btn-print" onclick="window.print()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print / PDF
+  </button>
 </div>
 
 <!-- ══ MODULE TABS ══ -->
@@ -176,11 +212,11 @@
             </select>
           </div>
           <p class="calc-note">ψs (bar size factor) and ψg (grade factor) are determined automatically from bar diameter and fy.</p>
-          <button class="btn-calc" onclick="calcStAci()">Calculate ℓ<sub>d</sub></button>
+          <button class="btn-calc" onclick="calcStAci()">Calculate L<sub>d</sub></button>
         </div>
       </div>
       <div>
-        <div id="st-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="st-aci-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="st-aci-diag" style="display:none"></div>
       </div>
     </div>
@@ -247,7 +283,7 @@
         </div>
       </div>
       <div>
-        <div id="st-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="st-ec2-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="st-ec2-diag" style="display:none"></div>
       </div>
     </div>
@@ -294,18 +330,12 @@
               <option value="1.0">Plain round bar</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Bar in</label>
-            <select class="iw" id="st-is-tension">
-              <option value="tension">Tension</option>
-              <option value="compression">Compression (τbd × 1.25 additional)</option>
-            </select>
-          </div>
+          <p class="calc-note">Both tension and compression development lengths are calculated simultaneously.</p>
           <button class="btn-calc" onclick="calcStIs()">Calculate L<sub>d</sub></button>
         </div>
       </div>
       <div>
-        <div id="st-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="st-is-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="st-is-diag" style="display:none"></div>
       </div>
     </div>
@@ -388,11 +418,11 @@
               <option value="0.75">0.75 — All-lightweight</option>
             </select>
           </div>
-          <button class="btn-calc" onclick="calcHkAci()">Calculate ℓ<sub>dh</sub></button>
+          <button class="btn-calc" onclick="calcHkAci()">Calculate L<sub>dh</sub></button>
         </div>
       </div>
       <div>
-        <div id="hk-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="hk-aci-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="hk-aci-diag" style="display:none"></div>
       </div>
     </div>
@@ -451,7 +481,7 @@
         </div>
       </div>
       <div>
-        <div id="hk-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="hk-ec2-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="hk-ec2-diag" style="display:none"></div>
       </div>
     </div>
@@ -510,7 +540,7 @@
         </div>
       </div>
       <div>
-        <div id="hk-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="hk-is-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="hk-is-diag" style="display:none"></div>
       </div>
     </div>
@@ -597,11 +627,11 @@
               <option value="0.75">0.75 — All-lightweight</option>
             </select>
           </div>
-          <button class="btn-calc" onclick="calcSpAci()">Calculate ℓ<sub>st</sub></button>
+          <button class="btn-calc" onclick="calcSpAci()">Calculate L<sub>st</sub></button>
         </div>
       </div>
       <div>
-        <div id="sp-aci-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="sp-aci-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="sp-aci-diag" style="display:none"></div>
       </div>
     </div>
@@ -663,7 +693,7 @@
         </div>
       </div>
       <div>
-        <div id="sp-ec2-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="sp-ec2-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="sp-ec2-diag" style="display:none"></div>
       </div>
     </div>
@@ -721,7 +751,7 @@
         </div>
       </div>
       <div>
-        <div id="sp-is-res"><div class="res-placeholder">Enter inputs and click Calculate.</div></div>
+        <div id="sp-is-res"><div class="res-empty"><div class="ri">📊</div>Configure inputs and click Calculate.</div></div>
         <div class="diagram-wrap" id="sp-is-diag" style="display:none"></div>
       </div>
     </div>
@@ -825,32 +855,29 @@
   </div>
 </div>
 
-</div><!-- end page-wrap -->
+</main>
 
 <script src="../js/nav.js" defer></script>
 <script src="../shell.js" defer></script>
 <script>
 /* ============================================================
-   DEVELOPMENT LENGTH CALCULATOR
-   All ACI calculations are performed in SI (MPa, mm) internally.
-   US inputs are converted before calculation, outputs converted
-   for display.
+   DEVELOPMENT LENGTH CALCULATOR  v2
+   ACI performed in SI (MPa, mm) internally; US inputs converted.
    ============================================================ */
 
-/* ── Bar size data ──────────────────────────────────────── */
+/* ── Bar size data ── */
 var ACI_BARS = {
   si: [
-    {label:'No.10 — Ø9.5 mm',  db:9.5},
-    {label:'No.13 — Ø12.7 mm', db:12.7},
-    {label:'No.16 — Ø15.9 mm', db:15.9},
-    {label:'No.19 — Ø19.1 mm', db:19.1},
-    {label:'No.22 — Ø22.2 mm', db:22.2},
-    {label:'No.25 — Ø25.4 mm', db:25.4},
-    {label:'No.29 — Ø28.7 mm', db:28.7},
-    {label:'No.32 — Ø32.3 mm', db:32.3},
-    {label:'No.36 — Ø35.8 mm', db:35.8},
-    {label:'No.43 — Ø43.0 mm', db:43.0},
-    {label:'No.57 — Ø57.3 mm', db:57.3}
+    {label:'Ø8 mm',  db:8},
+    {label:'Ø10 mm', db:10},
+    {label:'Ø12 mm', db:12},
+    {label:'Ø16 mm', db:16},
+    {label:'Ø20 mm', db:20},
+    {label:'Ø25 mm', db:25},
+    {label:'Ø28 mm', db:28},
+    {label:'Ø32 mm', db:32},
+    {label:'Ø36 mm', db:36},
+    {label:'Ø40 mm', db:40}
   ],
   us: [
     {label:'#3 — 3/8"',    db:9.525},
@@ -880,67 +907,39 @@ var IS_BARS = [
   {label:'Ø36 mm', db:36}
 ];
 
-/* ── ACI unit state (per calc-area) ─────────────────────── */
+/* ── ACI unit state ── */
 var aciUnits = { 'st-aci': 'si', 'hk-aci': 'si', 'sp-aci': 'si' };
 
 function setAciUnit(u, btn, area) {
   aciUnits[area] = u;
-  var tog = document.getElementById(area + '-utog');
-  tog.querySelectorAll('.unit-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById(area+'-utog').querySelectorAll('.unit-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
-  rebuildAciSelect(area);
-  updateAciLabels(area, u);
+  rebuildAciSelect(area); updateAciLabels(area, u);
 }
-
 function rebuildAciSelect(area) {
-  var u = aciUnits[area];
-  var sel = document.getElementById(area + '-bar');
+  var u = aciUnits[area], sel = document.getElementById(area+'-bar');
   if (!sel) return;
-  var prev = parseFloat(sel.value) || 0;
+  var prev = parseFloat(sel.value)||0;
   sel.innerHTML = '';
-  ACI_BARS[u].forEach(function(b){
-    var o = document.createElement('option');
-    o.value = b.db;
-    o.textContent = b.label;
-    sel.appendChild(o);
-  });
+  ACI_BARS[u].forEach(function(b){ var o=document.createElement('option'); o.value=b.db; o.textContent=b.label; sel.appendChild(o); });
   if (prev) { for (var i=0;i<sel.options.length;i++) { if (Math.abs(parseFloat(sel.options[i].value)-prev)<1) { sel.selectedIndex=i; break; } } }
 }
-
 function updateAciLabels(area, u) {
-  var si = (u === 'si');
-  var fcEl = document.getElementById(area + '-fc-u');
-  var fyEl = document.getElementById(area + '-fy-u');
-  var cbEl = document.getElementById(area + '-cb-u');
-  if (fcEl) fcEl.textContent = si ? 'MPa' : 'psi';
-  if (fyEl) fyEl.textContent = si ? 'MPa' : 'psi';
-  if (cbEl) cbEl.textContent = si ? 'mm' : 'in';
-  // update default values
-  var fcIn = document.getElementById(area + '-fc');
-  var fyIn = document.getElementById(area + '-fy');
-  var cbIn = document.getElementById(area + '-cb');
-  if (fcIn && fyIn) {
-    if (si) { fcIn.value = '28'; fyIn.value = '420'; if (cbIn) cbIn.value = '38'; }
-    else    { fcIn.value = '4000'; fyIn.value = '60000'; if (cbIn) cbIn.value = '1.5'; }
-  }
+  var si=(u==='si');
+  ['fc-u','fy-u','cb-u'].forEach(function(s){ var e=document.getElementById(area+'-'+s); if(e) e.textContent=(s==='fc-u'||s==='fy-u')?(si?'MPa':'psi'):(si?'mm':'in'); });
+  var fcIn=document.getElementById(area+'-fc'), fyIn=document.getElementById(area+'-fy'), cbIn=document.getElementById(area+'-cb');
+  if (fcIn&&fyIn) { if(si){fcIn.value='28';fyIn.value='420';if(cbIn)cbIn.value='38';}else{fcIn.value='4000';fyIn.value='60000';if(cbIn)cbIn.value='1.5';} }
 }
-
-/* ── Read ACI inputs in SI ──────────────────────────────── */
 function readAci(area) {
-  var u = aciUnits[area];
-  var db = parseFloat(document.getElementById(area+'-bar').value) || 0;
-  var fc = parseFloat(document.getElementById(area+'-fc').value) || 0;
-  var fy = parseFloat(document.getElementById(area+'-fy').value) || 0;
-  if (u === 'us') { fc = fc / 145.038; fy = fy / 145.038; }
-  return { db: db, fc: fc, fy: fy, u: u };
+  var u=aciUnits[area], db=parseFloat(document.getElementById(area+'-bar').value)||0,
+      fc=parseFloat(document.getElementById(area+'-fc').value)||0,
+      fy=parseFloat(document.getElementById(area+'-fy').value)||0;
+  if(u==='us'){fc=fc/145.038;fy=fy/145.038;}
+  return {db:db,fc:fc,fy:fy,u:u};
 }
+function dispAci(v,u){ return u==='us'?(v/25.4).toFixed(2)+' in':Math.ceil(v)+' mm'; }
 
-function dispAci(val_mm, u) {
-  if (u === 'us') return (val_mm / 25.4).toFixed(2) + ' in';
-  return Math.ceil(val_mm) + ' mm';
-}
-
-/* ── Module tab ─────────────────────────────────────────── */
+/* ── Module tab ── */
 function modTab(btn, id) {
   document.querySelectorAll('.mod-tab').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
   btn.classList.add('active'); btn.setAttribute('aria-selected','true');
@@ -948,7 +947,7 @@ function modTab(btn, id) {
   document.getElementById(id).classList.add('active');
 }
 
-/* ── Background tab ─────────────────────────────────────── */
+/* ── Background tab ── */
 function bgTab(btn, id) {
   btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
@@ -956,599 +955,636 @@ function bgTab(btn, id) {
   document.getElementById(id).classList.add('active');
 }
 
-/* ── Steps toggle ───────────────────────────────────────── */
-function toggleSteps(btn) {
-  btn.classList.toggle('open');
-  btn.nextElementSibling.classList.toggle('open');
-}
 
-/* ── SVG: straight bar ──────────────────────────────────── */
+/* ── SVG: straight bar — hollow rebar in concrete block with surface line ── */
 function svgStraight(ldMm, dbMm, label, unitStr) {
-  var W=340, H=80, pad=30, bW=W-2*pad;
-  var bH = Math.min(Math.max(dbMm*0.7, 6), 18);
-  var cy = H/2;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">'
-    +'<rect x="'+pad+'" y="'+(cy-bH/2)+'" width="'+bW+'" height="'+bH+'" rx="'+bH/4+'" fill="#3a8fd4" opacity="0.85"/>'
-    +'<line x1="'+pad+'" y1="'+(cy+bH/2+4)+'" x2="'+(W-pad)+'" y2="'+(cy+bH/2+4)+'" stroke="#555" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>'
-    +'<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>'
-    +'<text x="'+(W/2)+'" y="'+(cy+bH/2+20)+'" text-anchor="middle" font-size="11" fill="#333" font-family="IBM Plex Mono,monospace">'+label+' = '+unitStr+'</text>'
-    +'</svg>';
+  var W=380, H=108, bH=Math.min(Math.max(dbMm*0.5,8),20), cy=66;
+  var cL=22, cR=344, cT=cy-bH/2-14, cB=cy+bH/2+14;
+  var bL=cL+12, bR=cR-2;
+  var dY=cT-9;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><marker id="aL" markerWidth="7" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="7,0 7,5 0,2.5" fill="#333"/></marker>';
+  s+='<marker id="aR" markerWidth="7" markerHeight="5" refX="6.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 7,2.5" fill="#333"/></marker></defs>';
+  // concrete block
+  s+='<rect x="'+cL+'" y="'+cT+'" width="'+(cR-cL)+'" height="'+(cB-cT)+'" fill="#e6e6e6" stroke="#999" stroke-width="1.2" rx="2"/>';
+  // concrete face (right — bold vertical)
+  s+='<line x1="'+cR+'" y1="'+(cT-7)+'" x2="'+cR+'" y2="'+(cB+7)+'" stroke="#222" stroke-width="3"/>';
+  s+='<text x="'+(cR+5)+'" y="'+(cB+4)+'" font-size="8" fill="#555" font-family="IBM Plex Sans,sans-serif">face</text>';
+  // free-end hatching (left edge)
+  for(var i=0;i<5;i++){var hy=cT+i*(cB-cT)/4; s+='<line x1="'+(cL-2)+'" y1="'+(hy+2)+'" x2="'+(cL+10)+'" y2="'+(hy+14)+'" stroke="#ccc" stroke-width="1.2"/>';}
+  // rebar — hollow, black outline
+  s+='<rect x="'+bL+'" y="'+(cy-bH/2)+'" width="'+(bR-bL)+'" height="'+bH+'" rx="'+Math.round(bH/2.5)+'" fill="white" stroke="#111" stroke-width="2"/>';
+  // dimension line + text
+  s+='<line x1="'+bL+'" y1="'+dY+'" x2="'+cR+'" y2="'+dY+'" stroke="#333" stroke-width="1" marker-start="url(#aL)" marker-end="url(#aR)"/>';
+  s+='<text x="'+((bL+cR)/2)+'" y="'+(dY-5)+'" text-anchor="middle" font-size="10.5" fill="#111" font-family="IBM Plex Mono,monospace">'+label+' = '+unitStr+'</text>';
+  s+='</svg>';
+  return s;
 }
 
-/* ── SVG: hooked bar ────────────────────────────────────── */
+/* ── SVG: hooked bar diagrams with dimension annotations ── */
 function svgHook(ldMm, dbMm, hookType, unitStr) {
-  var W=300, H=140;
-  var bH = Math.min(Math.max(dbMm*0.6, 5), 14);
-  var stroke = '#3a8fd4';
-  var r = bH*2; // bend radius
-  var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">';
-  // straight portion
-  svg += '<line x1="20" y1="50" x2="200" y2="50" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
-  // 90° bend
-  svg += '<path d="M '+(200)+' 50 Q '+(220)+' 50 '+(220)+' 70" fill="none" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
-  // vertical extension
-  svg += '<line x1="220" y1="70" x2="220" y2="115" stroke="'+stroke+'" stroke-width="'+bH+'" stroke-linecap="round"/>';
-  // dimension line
-  svg += '<line x1="20" y1="28" x2="220" y2="28" stroke="#555" stroke-width="1"/>';
-  svg += '<text x="120" y="22" text-anchor="middle" font-size="10" fill="#333" font-family="IBM Plex Mono,monospace">ℓdh = '+unitStr+'</text>';
-  svg += '<text x="120" y="130" text-anchor="middle" font-size="10" fill="#888" font-family="IBM Plex Sans,sans-serif">'+hookType+' hook</text>';
-  svg += '</svg>';
-  return svg;
+  var bH=Math.min(Math.max(dbMm*0.5,7),17);
+  var arcR=Math.round(bH*2.3);
+  var is180=String(hookType).indexOf('180')>=0;
+  return is180 ? _svgHook180(bH,arcR,unitStr) : _svgHook90(bH,arcR,unitStr);
 }
 
-/* ── SVG: lap splice ────────────────────────────────────── */
-function svgSplice(lsMm, dbMm, unitStr) {
-  var W=340, H=90, pad=20, bW=W-2*pad;
-  var bH = Math.min(Math.max(dbMm*0.7, 5), 14);
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">'
-    +'<rect x="'+pad+'" y="28" width="'+(bW*0.65)+'" height="'+bH+'" rx="'+bH/4+'" fill="#3a8fd4" opacity="0.9"/>'
-    +'<rect x="'+(pad+bW*0.35)+'" y="'+(28+bH+3)+'" width="'+(bW*0.65)+'" height="'+bH+'" rx="'+bH/4+'" fill="#1566b0" opacity="0.85"/>'
-    +'<line x1="'+(pad+bW*0.35)+'" y1="20" x2="'+(pad+bW)+'" y2="20" stroke="#555" stroke-width="1"/>'
-    +'<text x="'+(pad+bW*0.35+bW*0.325)+'" y="15" text-anchor="middle" font-size="11" fill="#333" font-family="IBM Plex Mono,monospace">'+unitStr+'</text>'
-    +'<text x="'+(W/2)+'" y="82" text-anchor="middle" font-size="10" fill="#888" font-family="IBM Plex Sans,sans-serif">Lap splice</text>'
-    +'</svg>';
+function _svgHook90(bH,arcR,unitStr){
+  var W=380,H=212,sw=bH;
+  var fX=42,cT=26,cR=285,cB=194;
+  var barY=70;
+  var bendSX=Math.min(230,cR-arcR-sw-10);
+  var arcCX=bendSX,arcCY=barY+arcR;
+  var tailX=bendSX+arcR,tailBot=cB-18;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs>'
+   +'<marker id="h90a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
+   +'<marker id="h90b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
+   +'<marker id="h90c" markerWidth="5" markerHeight="6" refX="2.5" refY="0.5" orient="auto"><polygon points="0,6 5,6 2.5,0" fill="#333"/></marker>'
+   +'<marker id="h90d" markerWidth="5" markerHeight="6" refX="2.5" refY="5.5" orient="auto"><polygon points="0,0 5,0 2.5,6" fill="#333"/></marker>'
+   +'</defs>';
+  // Concrete block
+  s+='<rect x="'+fX+'" y="'+cT+'" width="'+(cR-fX)+'" height="'+(cB-cT)+'" fill="#dde7f3" stroke="#8aab" stroke-width="1.2" rx="3"/>';
+  // Face line
+  s+='<line x1="'+fX+'" y1="'+(cT-8)+'" x2="'+fX+'" y2="'+(cB+8)+'" stroke="#1a2332" stroke-width="3.5"/>';
+  s+='<text x="'+fX+'" y="'+(cB+18)+'" text-anchor="middle" font-size="7.5" fill="#666" font-family="IBM Plex Sans,sans-serif">face</text>';
+  // Rebar — solid black continuous path
+  s+='<path d="M '+(fX-16)+','+barY+' L '+bendSX+','+barY
+    +' A '+arcR+','+arcR+' 0 0,1 '+tailX+','+arcCY
+    +' L '+tailX+','+tailBot+'"'
+    +' fill="none" stroke="#1a2332" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  // === Dimension: Ldh (above bar) ===
+  var ldY=barY-sw/2-15;
+  s+='<line x1="'+fX+'" y1="'+ldY+'" x2="'+bendSX+'" y2="'+ldY+'" stroke="#444" stroke-width="1" marker-start="url(#h90a)" marker-end="url(#h90b)"/>';
+  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendSX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendSX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  var midLd=(fX+bendSX)/2;
+  s+='<text x="'+midLd+'" y="'+(ldY-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a2332" font-family="IBM Plex Mono,monospace">'
+    +'L<tspan dy="2" font-size="7.5">dh</tspan><tspan dy="-2"> = '+unitStr+'</tspan></text>';
+  // === Dimension: db (left of face) ===
+  var dbX=fX-24;
+  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
+  s+='<line x1="'+(fX-6)+'" y1="'+(barY-sw/2)+'" x2="'+(dbX-2)+'" y2="'+(barY-sw/2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+(fX-6)+'" y1="'+(barY+sw/2)+'" x2="'+(dbX-2)+'" y2="'+(barY+sw/2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="2,2"/>';
+  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9" fill="#444" font-family="IBM Plex Sans,sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
+  // === r label at bend ===
+  s+='<line x1="'+arcCX+'" y1="'+arcCY+'" x2="'+(arcCX+arcR*0.6)+'" y2="'+(arcCY-arcR*0.7)+'" stroke="#aaa" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<text x="'+(arcCX+arcR*0.6+4)+'" y="'+(arcCY-arcR*0.7-2)+'" font-size="8.5" fill="#555" font-family="IBM Plex Sans,sans-serif">r</text>';
+  // === Right annotations: ext, c, h ===
+  var rX=cR+16;
+  var extMid=(arcCY+tailBot)/2;
+  // ext
+  s+='<line x1="'+rX+'" y1="'+arcCY+'" x2="'+rX+'" y2="'+tailBot+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
+  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+arcCY+'" x2="'+(rX+1)+'" y2="'+arcCY+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+tailBot+'" x2="'+(rX+1)+'" y2="'+tailBot+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<text x="'+(rX+5)+'" y="'+(extMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">ext</text>';
+  // c
+  var cAnnotX=rX,cMid=(tailBot+cB)/2;
+  s+='<line x1="'+cAnnotX+'" y1="'+tailBot+'" x2="'+cAnnotX+'" y2="'+cB+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
+  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+cB+'" x2="'+(cAnnotX+1)+'" y2="'+cB+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<text x="'+(cAnnotX+5)+'" y="'+(cMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">c</text>';
+  // h
+  var hX=rX+30,hMid=(barY+cB)/2;
+  s+='<line x1="'+hX+'" y1="'+barY+'" x2="'+hX+'" y2="'+cB+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
+  s+='<line x1="'+(rX+24)+'" y1="'+barY+'" x2="'+(hX+1)+'" y2="'+barY+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+(rX+24)+'" y1="'+cB+'" x2="'+(hX+1)+'" y2="'+cB+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<text x="'+(hX+5)+'" y="'+(hMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">h</text>';
+  s+='</svg>';
+  return s;
 }
 
-/* ── Render result helper ────────────────────────────────── */
-function showResult(resId, diagId, primary, rows, steps, svgHtml, minNote) {
-  var html = '<div class="res-primary">'
-    +'<span class="res-primary-val">'+primary.val+'</span>'
-    +'<span class="res-primary-lbl">'+primary.lbl+'</span>'
-    +(minNote ? '<span class="res-primary-min">'+minNote+'</span>' : '')
-    +'</div>';
-  html += '<div class="res-card"><div class="res-body">';
-  html += '<table class="res-table">';
-  rows.forEach(function(r){ html += '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>'; });
-  html += '</table>';
-  if (steps && steps.length) {
-    html += '<button class="steps-toggle" onclick="toggleSteps(this)">▸ Calculation steps <span class="arr">▾</span></button>';
-    html += '<div class="steps-body"><table class="steps-table">';
-    steps.forEach(function(s){ html += '<tr><td class="step-num">'+s[0]+'</td><td class="step-desc">'+s[1]+'</td><td class="step-val">'+s[2]+'</td></tr>'; });
-    html += '</table></div>';
-  }
-  html += '</div></div>';
-  document.getElementById(resId).innerHTML = html;
-  var diagEl = document.getElementById(diagId);
-  if (diagEl) {
-    diagEl.style.display = 'block';
-    diagEl.innerHTML = svgHtml + '<p class="diagram-label">Schematic — not to scale</p>';
-  }
+function _svgHook180(bH,arcR,unitStr){
+  var W=380,H=180,sw=bH;
+  var fX=42,cT=26,cR=302,cB=168;
+  var barY=64;
+  var bendSX=238,arcCY=barY+arcR;
+  var tailBot=barY+2*arcR;
+  var extLen=Math.min(80,bendSX-fX-20);
+  var tailEnd=bendSX-extLen;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs>'
+   +'<marker id="h18a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
+   +'<marker id="h18b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
+   +'<marker id="h18c" markerWidth="5" markerHeight="6" refX="2.5" refY="0.5" orient="auto"><polygon points="0,6 5,6 2.5,0" fill="#333"/></marker>'
+   +'<marker id="h18d" markerWidth="5" markerHeight="6" refX="2.5" refY="5.5" orient="auto"><polygon points="0,0 5,0 2.5,6" fill="#333"/></marker>'
+   +'</defs>';
+  // Concrete
+  s+='<rect x="'+fX+'" y="'+cT+'" width="'+(cR-fX)+'" height="'+(cB-cT)+'" fill="#dde7f3" stroke="#8aab" stroke-width="1.2" rx="3"/>';
+  s+='<line x1="'+fX+'" y1="'+(cT-8)+'" x2="'+fX+'" y2="'+(cB+8)+'" stroke="#1a2332" stroke-width="3.5"/>';
+  s+='<text x="'+fX+'" y="'+(cB+18)+'" text-anchor="middle" font-size="7.5" fill="#666" font-family="IBM Plex Sans,sans-serif">face</text>';
+  // Rebar: horizontal → two 90° arcs → tail left
+  s+='<path d="M '+(fX-16)+','+barY+' L '+bendSX+','+barY
+    +' A '+arcR+','+arcR+' 0 0,1 '+(bendSX+arcR)+','+arcCY
+    +' A '+arcR+','+arcR+' 0 0,1 '+bendSX+','+tailBot
+    +' L '+tailEnd+','+tailBot+'"'
+    +' fill="none" stroke="#1a2332" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  // === Ldh (above bar) ===
+  var ldY=barY-sw/2-15;
+  s+='<line x1="'+fX+'" y1="'+ldY+'" x2="'+bendSX+'" y2="'+ldY+'" stroke="#444" stroke-width="1" marker-start="url(#h18a)" marker-end="url(#h18b)"/>';
+  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendSX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendSX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<text x="'+((fX+bendSX)/2)+'" y="'+(ldY-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a2332" font-family="IBM Plex Mono,monospace">'
+    +'L<tspan dy="2" font-size="7.5">dh</tspan><tspan dy="-2"> = '+unitStr+'</tspan></text>';
+  // === db (left of face) ===
+  var dbX=fX-24;
+  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#444" stroke-width="1" marker-start="url(#h18c)" marker-end="url(#h18d)"/>';
+  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9" fill="#444" font-family="IBM Plex Sans,sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
+  // === r label at rightmost arc point ===
+  s+='<text x="'+(bendSX+arcR+6)+'" y="'+(arcCY+3)+'" font-size="8.5" fill="#555" font-family="IBM Plex Sans,sans-serif">r</text>';
+  // === ext (below tail, horizontal) ===
+  var extY=tailBot+sw/2+14;
+  s+='<line x1="'+tailEnd+'" y1="'+extY+'" x2="'+bendSX+'" y2="'+extY+'" stroke="#444" stroke-width="1" marker-start="url(#h18a)" marker-end="url(#h18b)"/>';
+  s+='<line x1="'+tailEnd+'" y1="'+(tailBot+sw/2+2)+'" x2="'+tailEnd+'" y2="'+(extY+2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendSX+'" y1="'+(tailBot+sw/2+2)+'" x2="'+bendSX+'" y2="'+(extY+2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
+  s+='<text x="'+((tailEnd+bendSX)/2)+'" y="'+(extY+13)+'" text-anchor="middle" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">ext</text>';
+  // === h (right of arc, vertical) ===
+  var hX=bendSX+arcR+24,hMid=(barY+tailBot)/2;
+  s+='<line x1="'+hX+'" y1="'+barY+'" x2="'+hX+'" y2="'+tailBot+'" stroke="#444" stroke-width="1" marker-start="url(#h18c)" marker-end="url(#h18d)"/>';
+  s+='<text x="'+(hX+5)+'" y="'+(hMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">h</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ── Result HTML helpers ── */
+function _fmt(s){
+  if(!s) return s;
+  return s.replace(/([^\s<])_([A-Za-z0-9,]+)/g,'$1<sub>$2</sub>')
+           .replace(/\^(\([^)]+\)|[\d./]+)/g,'<sup>$1</sup>');
+}
+function _primH(val,lbl,note,acc){
+  var bg=acc?'background:'+acc.bg+';border-color:'+acc.bd+';':'';
+  var vc=acc?'color:'+acc.col+';':'';
+  return '<div class="res-primary" style="'+bg+'"><span class="res-primary-val" style="'+vc+'">'+val+'</span>'
+    +'<span class="res-primary-lbl">'+lbl+'</span>'+(note?'<span class="res-primary-min">'+note+'</span>':'')+'</div>';
+}
+function _tblH(rows){
+  return '<table class="res-table">'+rows.map(function(r){return '<tr><td>'+_fmt(r[0])+'</td><td>'+r[1]+'</td></tr>';}).join('')+'</table>';
+}
+function _stepsH(steps){
+  if(!steps||!steps.length) return '';
+  var h='<div class="steps-sep"></div><table class="steps-table">';
+  steps.forEach(function(s){
+    h+='<tr>'
+      +'<td><div class="step-desc">'+_fmt(s[1])+'</div></td>'
+      +'<td style="text-align:right;width:110px"><span class="step-val">'+s[2]+'</span></td>'
+      +'</tr>';
+  });
+  h+='</table>';
+  return h;
+}
+
+function showResult(resId,diagId,primary,rows,steps,svgHtml,minNote){
+  var html=_primH(primary.val,primary.lbl,minNote);
+  html+='<div class="res-card"><div class="res-body">'+_tblH(rows)+_stepsH(steps)+'</div></div>';
+  document.getElementById(resId).innerHTML=html;
+  var d=document.getElementById(diagId);
+  if(d){if(svgHtml){d.style.display='block';d.innerHTML=svgHtml+'<p class="diagram-label">Schematic — not to scale</p>';}else{d.style.display='none';}}
+}
+
+function showTwoResults(resId,diagId,t,c,svgHtml){
+  var html='<div class="res-primary dual-primary">'
+    +'<div class="dual-primary-half">'
+      +'<div class="dual-primary-tag">Tension</div>'
+      +'<div class="dual-primary-val">'+t.val+'</div>'
+      +(t.note?'<div class="dual-primary-note">'+t.note+'</div>':'')
+    +'</div>'
+    +'<div class="dual-primary-div"></div>'
+    +'<div class="dual-primary-half">'
+      +'<div class="dual-primary-tag">Compression</div>'
+      +'<div class="dual-primary-val">'+c.val+'</div>'
+      +(c.note?'<div class="dual-primary-note">'+c.note+'</div>':'')
+    +'</div>'
+  +'</div>';
+  html+='<div class="res-card"><div class="res-body">';
+  html+='<div class="tc-section-hdr">Tension</div>';
+  html+=_tblH(t.rows)+_stepsH(t.steps);
+  html+='<div class="tc-section-div"></div>';
+  html+='<div class="tc-section-hdr">Compression</div>';
+  html+=_tblH(c.rows)+_stepsH(c.steps);
+  html+='</div></div>';
+  document.getElementById(resId).innerHTML=html;
+  var d=document.getElementById(diagId);
+  if(d){if(svgHtml){d.style.display='block';d.innerHTML=svgHtml+'<p class="diagram-label">Schematic — not to scale</p>';}else{d.style.display='none';}}
 }
 
 /* ══════════════════════════════════════════════════════════
-   ACI STRAIGHT BAR
+   ACI STRAIGHT BAR — Tension + Compression
 ══════════════════════════════════════════════════════════ */
 function calcStAci() {
-  var inp = readAci('st-aci');
-  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
-  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+  var inp=readAci('st-aci'), db=inp.db, fc=inp.fc, fy=inp.fy, u=inp.u;
+  if(!db||!fc||!fy){alert('Please fill all required fields.');return;}
+  var cb=parseFloat(document.getElementById('st-aci-cb').value)||0;
+  var Ktr=parseFloat(document.getElementById('st-aci-ktr').value)||0;
+  if(u==='us'){cb*=25.4;Ktr*=25.4;}
+  var psi_t=parseFloat(document.getElementById('st-aci-psi-t').value);
+  var psi_e=parseFloat(document.getElementById('st-aci-psi-e').value);
+  var lam=parseFloat(document.getElementById('st-aci-lam').value);
+  var psi_s=(db<=19)?0.8:1.0, psi_g=(fy<=420)?1.0:(fy<=550?1.15:1.3);
+  var psi_te=Math.min(psi_t*psi_e,1.7);
+  var conf=Math.min(2.5,(cb+Ktr)/db); if(conf<=0) conf=1.0;
+  var sqFc=Math.sqrt(fc);
 
-  var cb   = parseFloat(document.getElementById('st-aci-cb').value) || 0;
-  var Ktr  = parseFloat(document.getElementById('st-aci-ktr').value) || 0;
-  if (u === 'us') { cb = cb * 25.4; Ktr = Ktr * 25.4; }
+  // ─ Tension ─
+  var num_t=fy*psi_te*psi_s*psi_g*db, den_t=1.1*lam*sqFc*conf;
+  var ld_tf=num_t/den_t, ld_tmin=Math.max(300,8*db), ld_t=Math.max(ld_tf,ld_tmin);
 
-  var psi_t = parseFloat(document.getElementById('st-aci-psi-t').value);
-  var psi_e = parseFloat(document.getElementById('st-aci-psi-e').value);
-  var lam   = parseFloat(document.getElementById('st-aci-lam').value);
+  // ─ Compression ─
+  var ld_cf, cf1, cf2;
+  if(fy<=420){ cf1=(0.24*fy*db)/(lam*sqFc); cf2=0.043*fy*db; ld_cf=Math.max(cf1,cf2); }
+  else { ld_cf=(0.13*fy-24)*db; }
+  var ld_c=Math.max(ld_cf,200);
 
-  // Auto factors
-  var psi_s = (db <= 19) ? 0.8 : 1.0;
-  var psi_g = (fy <= 420) ? 1.0 : (fy <= 550 ? 1.15 : 1.3);
-  var psi_te = Math.min(psi_t * psi_e, 1.7);
-  var conf   = Math.min(2.5, (cb + Ktr) / db);
-  if (conf <= 0) conf = 1.0;
+  var dDb=u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in';
+  var dFc=u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi';
+  var dFy=u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi';
+  var dT=dispAci(ld_t,u), dTf=dispAci(ld_tf,u), dTm=dispAci(ld_tmin,u);
+  var dC=dispAci(ld_c,u), dCf=dispAci(ld_cf,u);
 
-  var ld = (fy * psi_te * psi_s * psi_g * db) / (1.1 * lam * Math.sqrt(fc) * conf);
-  var ld_min = Math.max(300, 8 * db);
-  var ld_req = Math.max(ld, ld_min);
-
-  var dispVal = dispAci(ld_req, u);
-  var dispCalc = dispAci(ld, u);
-  var dispMin  = dispAci(ld_min, u);
-
-  var rows = [
-    ['db (bar diameter)',         (u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in')],
-    ["f'c",                       (u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi')],
-    ['fy',                        (u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi')],
-    ['ψt (casting)',              psi_t.toFixed(1)],
-    ['ψe (coating)',              psi_e.toFixed(1)],
-    ['ψt×ψe (≤1.7)',             psi_te.toFixed(2)],
-    ['ψs (bar size)',             psi_s.toFixed(1)],
-    ['ψg (grade)',                psi_g.toFixed(2)],
-    ['λ (lightweight)',           lam.toFixed(2)],
-    ['(cb+Ktr)/db (≤2.5)',       conf.toFixed(2)],
-    ['ℓd (formula)',             dispCalc],
-    ['ℓd,min (max 300mm, 8db)', dispMin],
-    ['<strong>ℓd required</strong>', '<strong>'+dispVal+'</strong>']
+  var tRows=[
+    ['ψ_t × ψ_e (cap 1.7)',psi_te.toFixed(2)],
+    ['ψ_s (bar size factor)',psi_s.toFixed(1)],
+    ['ψ_g (grade factor)',psi_g.toFixed(2)],
+    ['(c_b + K_tr)/d_b (cap 2.5)',conf.toFixed(3)],
+    ['√f\'c',sqFc.toFixed(3)+' MPa^0.5'],
+    ['L_d (formula)',dTf],
+    ['L_d,min = max(300mm, 8d_b)',dTm],
+    ['<strong>L_d — Tension</strong>','<strong>'+dT+'</strong>']
+  ];
+  var tSteps=[
+    ['','Numerator = f_y × ψ_te × ψ_s × ψ_g × d_b = '+fy.toFixed(0)+'×'+psi_te.toFixed(2)+'×'+psi_s.toFixed(1)+'×'+psi_g.toFixed(2)+'×'+db.toFixed(1),num_t.toFixed(1)],
+    ['','Denominator = 1.1 × λ × √f\'c × conf = 1.1×'+lam.toFixed(2)+'×'+sqFc.toFixed(3)+'×'+conf.toFixed(3),den_t.toFixed(3)]
   ];
 
-  var steps = [
-    ['1','ψt × ψe = '+psi_t.toFixed(1)+' × '+psi_e.toFixed(1)+' (cap 1.7)', psi_te.toFixed(3)],
-    ['2','ψs: db='+(db.toFixed(1))+'mm '+(db<=19?'≤':'>')+'19mm → ψs', psi_s.toFixed(1)],
-    ['3','ψg: fy='+(fy.toFixed(0))+' MPa → ψg', psi_g.toFixed(2)],
-    ['4','conf = (cb+Ktr)/db = ('+(cb.toFixed(1))+'+'+(Ktr.toFixed(1))+')/'+db.toFixed(1)+' (cap 2.5)', conf.toFixed(3)],
-    ['5','ℓd = fy×ψt-e×ψs×ψg×db / (1.1×λ×√f\'c×conf)','= '+dispCalc],
-    ['6','ℓd,min = max(300mm, 8×'+db.toFixed(1)+')', dispMin],
-    ['7','ℓd,req = max(formula, minimum)', dispVal]
-  ];
+  var cRows=[];
+  var cSteps=[];
+  if(fy<=420){
+    cRows.push(['0.24·f_y·d_b / (λ·√f\'c)',dispAci(cf1,u)]);
+    cRows.push(['0.043·f_y·d_b',dispAci(cf2,u)]);
+    cRows.push(['L_d,comp (raw)',dCf]);
+  } else {
+    cRows.push(['(0.13·f_y − 24)·d_b',dCf]);
+  }
+  cRows.push(['L_d,min (compression)','200 mm']);
+  cRows.push(['<strong>L_d — Compression</strong>','<strong>'+dC+'</strong>']);
 
-  showResult('st-aci-res','st-aci-diag',
-    {val: dispVal, lbl: 'Development Length ℓd'},
-    rows, steps,
-    svgStraight(ld_req, db, 'ℓd', dispVal),
-    (ld < ld_min ? 'Minimum governs' : ''));
+  showTwoResults('st-aci-res','st-aci-diag',
+    {val:dT, lbl:'Development Length — Tension', rows:tRows, steps:tSteps, note:ld_tf<ld_tmin?'Min governs':''},
+    {val:dC, lbl:'Development Length — Compression', rows:cRows, steps:cSteps, note:ld_cf<200?'Min governs':''},
+    ''
+  );
 }
 
 /* ══════════════════════════════════════════════════════════
-   EC2 STRAIGHT BAR
+   EC2 STRAIGHT BAR — Tension + Compression
 ══════════════════════════════════════════════════════════ */
 function calcStEc2() {
-  var db  = parseFloat(document.getElementById('st-ec2-bar').value) || 0;
-  var fck = parseFloat(document.getElementById('st-ec2-fck').value) || 0;
-  var fyk = parseFloat(document.getElementById('st-ec2-fyk').value) || 0;
-  var eta1 = parseFloat(document.getElementById('st-ec2-eta1').value);
-  var a1   = parseFloat(document.getElementById('st-ec2-a1').value);
-  var a2   = parseFloat(document.getElementById('st-ec2-a2').value);
-  var a3   = parseFloat(document.getElementById('st-ec2-a3').value);
-  var a4   = parseFloat(document.getElementById('st-ec2-a4').value);
-  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+  var db=parseFloat(document.getElementById('st-ec2-bar').value)||0;
+  var fck=parseFloat(document.getElementById('st-ec2-fck').value)||0;
+  var fyk=parseFloat(document.getElementById('st-ec2-fyk').value)||0;
+  var eta1=parseFloat(document.getElementById('st-ec2-eta1').value);
+  var a1=parseFloat(document.getElementById('st-ec2-a1').value);
+  var a2=parseFloat(document.getElementById('st-ec2-a2').value);
+  var a3=parseFloat(document.getElementById('st-ec2-a3').value);
+  var a4=parseFloat(document.getElementById('st-ec2-a4').value);
+  if(!db||!fck||!fyk){alert('Please fill all required fields.');return;}
 
-  var eta2 = (db <= 32) ? 1.0 : (132-db)/100;
-  var fctm = (fck <= 50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
-  var fctd = 0.7 * fctm / 1.5;
-  var fbd  = 2.25 * eta1 * eta2 * fctd;
-  var fyd  = fyk / 1.15;
-  var lb_rqd = (db/4) * (fyd/fbd);
+  var eta2=(db<=32)?1.0:(132-db)/100;
+  var fctm=(fck<=50)?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+  var fctd=0.7*fctm/1.5, fbd=2.25*eta1*eta2*fctd, fyd=fyk/1.15;
+  var lb_rqd=(db/4)*(fyd/fbd);
 
-  var alpha_prod = a1*a2*a3*a4;
-  var alpha_min  = Math.max(alpha_prod, 0.7);
-  var lbd = alpha_min * lb_rqd;
-  var lb_min = Math.max(0.3*lb_rqd, 10*db, 100);
-  var lbd_req = Math.max(lbd, lb_min);
+  // Tension
+  var alpha_t=Math.max(a1*a2*a3*a4, 0.7);
+  var lbd_t=alpha_t*lb_rqd, lbmin_t=Math.max(0.3*lb_rqd,10*db,100), lbd_treq=Math.max(lbd_t,lbmin_t);
 
-  var rows = [
-    ['db',          db+' mm'],
-    ['fck',         fck+' MPa'],
-    ['fyk',         fyk+' MPa'],
-    ['η1 (bond)',   eta1.toFixed(1)],
-    ['η2 (size)',   eta2.toFixed(2)],
-    ['fctm',        fctm.toFixed(2)+' MPa'],
-    ['fctd',        fctd.toFixed(2)+' MPa'],
-    ['fbd',         fbd.toFixed(2)+' MPa'],
-    ['fyd = fyk/1.15', fyd.toFixed(1)+' MPa'],
-    ['l_b,rqd',     lb_rqd.toFixed(0)+' mm'],
-    ['α1×α2×α3×α4 (≥0.7)', alpha_min.toFixed(2)],
-    ['l_bd (formula)', lbd.toFixed(0)+' mm'],
-    ['l_b,min',      lb_min.toFixed(0)+' mm'],
-    ['<strong>l_bd required</strong>', '<strong>'+Math.ceil(lbd_req)+' mm</strong>']
+  // Compression — α1=1.0 forced, min uses 0.6 coefficient per §8.4.4
+  var alpha_c=Math.max(1.0*a2*a3*a4, 0.7);
+  var lbd_c=alpha_c*lb_rqd, lbmin_c=Math.max(0.6*lb_rqd,10*db,100), lbd_creq=Math.max(lbd_c,lbmin_c);
+
+  var dT=Math.ceil(lbd_treq)+' mm', dTf=lbd_t.toFixed(0)+' mm', dTm=lbmin_t.toFixed(0)+' mm';
+  var dC=Math.ceil(lbd_creq)+' mm', dCf=lbd_c.toFixed(0)+' mm', dCm=lbmin_c.toFixed(0)+' mm';
+
+  var tRows=[
+    ['η_2 (bar size)',eta2.toFixed(2)],
+    ['f_ctm',fctm.toFixed(3)+' MPa'],
+    ['f_ctd = 0.7·f_ctm/γ_c',fctd.toFixed(3)+' MPa'],
+    ['f_bd = 2.25·η_1·η_2·f_ctd',fbd.toFixed(3)+' MPa'],
+    ['f_yd = f_yk/1.15',fyd.toFixed(1)+' MPa'],
+    ['l_b,rqd = (d_b/4)·(f_yd/f_bd)',lb_rqd.toFixed(0)+' mm'],
+    ['α_1×α_2×α_3×α_4 (≥0.7)',alpha_t.toFixed(3)],
+    ['l_bd (formula)',dTf],
+    ['l_b,min (tension)',dTm],
+    ['<strong>l_bd — Tension</strong>','<strong>'+dT+'</strong>']
   ];
+  var tSteps=[];
 
-  var steps = [
-    ['1','η2: db='+db+'mm → η2', eta2.toFixed(3)],
-    ['2','fctm = 0.30×fck^(2/3)', fctm.toFixed(3)+' MPa'],
-    ['3','fctd = 0.7×fctm/γc', fctd.toFixed(3)+' MPa'],
-    ['4','fbd = 2.25×η1×η2×fctd', fbd.toFixed(3)+' MPa'],
-    ['5','fyd = fyk/1.15', fyd.toFixed(1)+' MPa'],
-    ['6','l_b,rqd = (db/4)×(fyd/fbd)', lb_rqd.toFixed(0)+' mm'],
-    ['7','α1×α2×α3×α4 (cap 0.7 min)', alpha_min.toFixed(3)],
-    ['8','l_bd = α×l_b,rqd', lbd.toFixed(0)+' mm'],
-    ['9','l_b,min = max(0.3×l_b,rqd, 10db, 100)', lb_min.toFixed(0)+' mm'],
-    ['10','l_bd,req = max(l_bd, l_b,min)', Math.ceil(lbd_req)+' mm']
+  var cRows=[
+    ['α_1 (compression)','1.0 (§8.4.1 — no shape benefit)'],
+    ['α_2×α_3×α_4 (≥0.7)',alpha_c.toFixed(3)],
+    ['l_bd (formula)',dCf],
+    ['l_b,min (compression)',dCm],
+    ['<strong>l_bd — Compression</strong>','<strong>'+dC+'</strong>']
   ];
+  var cSteps=[];
 
-  showResult('st-ec2-res','st-ec2-diag',
-    {val: Math.ceil(lbd_req)+' mm', lbl: 'Anchorage Length l_bd'},
-    rows, steps,
-    svgStraight(lbd_req, db, 'l_bd', Math.ceil(lbd_req)+' mm'),
-    (lbd < lb_min ? 'Minimum governs' : ''));
+  showTwoResults('st-ec2-res','st-ec2-diag',
+    {val:dT, lbl:'Anchorage Length l_bd — Tension', rows:tRows, steps:tSteps, note:lbd_t<lbmin_t?'Min governs':''},
+    {val:dC, lbl:'Anchorage Length l_bd — Compression', rows:cRows, steps:cSteps, note:lbd_c<lbmin_c?'Min governs':''},
+    ''
+  );
 }
 
 /* ══════════════════════════════════════════════════════════
-   IS 456 STRAIGHT BAR
+   IS 456 STRAIGHT BAR — Tension + Compression (always both)
 ══════════════════════════════════════════════════════════ */
 function calcStIs() {
-  var db      = parseFloat(document.getElementById('st-is-bar').value) || 0;
-  var tau_bd0 = parseFloat(document.getElementById('st-is-grade').value);
-  var fy      = parseFloat(document.getElementById('st-is-fy').value);
-  var barFac  = parseFloat(document.getElementById('st-is-type').value); // 1.6 deformed, 1.0 plain
-  var tens    = document.getElementById('st-is-tension').value;
-  if (!db) { alert('Please select a bar size.'); return; }
+  var db=parseFloat(document.getElementById('st-is-bar').value)||0;
+  var tau_bd0=parseFloat(document.getElementById('st-is-grade').value);
+  var fy=parseFloat(document.getElementById('st-is-fy').value);
+  var barFac=parseFloat(document.getElementById('st-is-type').value);
+  if(!db){alert('Please select a bar size.');return;}
 
-  var tau_bd = tau_bd0 * barFac * (tens === 'compression' ? 1.25 : 1.0);
-  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
-  var Ld_min = 200;
-  var Ld_req = Math.max(Ld, Ld_min);
+  // Tension: τbd_table × barFac
+  var tau_t=tau_bd0*barFac;
+  var Ld_t=(db*0.87*fy)/(4*tau_t), Ld_t_req=Math.max(Ld_t,200);
 
-  var rows = [
-    ['db',                   db+' mm'],
-    ['fy',                   fy+' MPa'],
-    ['τbd (Table 21)',       tau_bd0.toFixed(1)+' MPa'],
-    ['Deformed bar factor',  barFac.toFixed(1)],
-    ['Compression factor',   tens==='compression'?'×1.25':'—'],
-    ['τbd effective',        tau_bd.toFixed(2)+' MPa'],
-    ['Ld (formula)',         Ld.toFixed(0)+' mm'],
-    ['Ld,min',               Ld_min+' mm'],
-    ['<strong>Ld required</strong>', '<strong>'+Math.ceil(Ld_req)+' mm</strong>']
+  // Compression: τbd_table × barFac × 1.25
+  var tau_c=tau_bd0*barFac*1.25;
+  var Ld_c=(db*0.87*fy)/(4*tau_c), Ld_c_req=Math.max(Ld_c,200);
+
+  var dT=Math.ceil(Ld_t_req)+' mm', dTf=Ld_t.toFixed(0)+' mm';
+  var dC=Math.ceil(Ld_c_req)+' mm', dCf=Ld_c.toFixed(0)+' mm';
+  var num=db*0.87*fy;
+
+  var tRows=[
+    ['τ_bd,eff (tension)',tau_t.toFixed(3)+' MPa'],
+    ['Numerator = d_b × 0.87 × f_y',num.toFixed(1)],
+    ['L_d = Numerator / (4 × τ_bd)',dTf],
+    ['L_d,min','200 mm'],
+    ['<strong>L_d — Tension</strong>','<strong>'+dT+'</strong>']
   ];
+  var tSteps=[];
 
-  var steps = [
-    ['1','τbd from Table 21', tau_bd0.toFixed(1)+' MPa'],
-    ['2','τbd × bar factor (deformed)', (tau_bd0*barFac).toFixed(3)+' MPa'],
-    ['3','τbd × compression factor', tau_bd.toFixed(3)+' MPa'],
-    ['4','Ld = (db×0.87×fy) / (4×τbd)', Ld.toFixed(0)+' mm'],
-    ['5','Ld,req = max(formula, 200mm)', Math.ceil(Ld_req)+' mm']
+  var cRows=[
+    ['Compression factor','×1.25 (§26.2.1.1)'],
+    ['τ_bd,eff (compression)',tau_c.toFixed(3)+' MPa'],
+    ['L_d = d_b × 0.87 × f_y / (4 × τ_bd)',dCf],
+    ['L_d,min','200 mm'],
+    ['<strong>L_d — Compression</strong>','<strong>'+dC+'</strong>']
   ];
+  var cSteps=[];
 
-  showResult('st-is-res','st-is-diag',
-    {val: Math.ceil(Ld_req)+' mm', lbl: 'Development Length Ld'},
-    rows, steps,
-    svgStraight(Ld_req, db, 'Ld', Math.ceil(Ld_req)+' mm'),
-    (Ld < Ld_min ? 'Minimum governs' : ''));
+  showTwoResults('st-is-res','st-is-diag',
+    {val:dT, lbl:'Development Length — Tension', rows:tRows, steps:tSteps, note:Ld_t<200?'Min governs':''},
+    {val:dC, lbl:'Development Length — Compression', rows:cRows, steps:cSteps, note:Ld_c<200?'Min governs':''},
+    ''
+  );
 }
 
 /* ══════════════════════════════════════════════════════════
    ACI HOOK
 ══════════════════════════════════════════════════════════ */
 function calcHkAci() {
-  var inp = readAci('hk-aci');
-  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
-  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+  var inp=readAci('hk-aci'), db=inp.db, fc=inp.fc, fy=inp.fy, u=inp.u;
+  if(!db||!fc||!fy){alert('Please fill all required fields.');return;}
+  var hookType=document.getElementById('hk-aci-type').value;
+  var psi_e=parseFloat(document.getElementById('hk-aci-psi-e').value);
+  var psi_r=parseFloat(document.getElementById('hk-aci-psi-r').value);
+  var psi_o=parseFloat(document.getElementById('hk-aci-psi-o').value);
+  var lam=parseFloat(document.getElementById('hk-aci-lam').value);
+  var sqFc=Math.sqrt(fc);
+  var ldh=(fy*psi_e*psi_r*psi_o*db)/(4.57*lam*sqFc);
+  var ldh_min=Math.max(8*db,150), ldh_req=Math.max(ldh,ldh_min);
+  var dV=dispAci(ldh_req,u), dF=dispAci(ldh,u), dM=dispAci(ldh_min,u);
+  var hookLabel=hookType==='90'?'90° hook':hookType==='180'?'180° hook':'Seismic hook (135°)';
+  var dDb=u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in';
+  var dFc=u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi';
+  var dFy=u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi';
 
-  var hookType = document.getElementById('hk-aci-type').value;
-  var psi_e = parseFloat(document.getElementById('hk-aci-psi-e').value);
-  var psi_r = parseFloat(document.getElementById('hk-aci-psi-r').value);
-  var psi_o = parseFloat(document.getElementById('hk-aci-psi-o').value);
-  var lam   = parseFloat(document.getElementById('hk-aci-lam').value);
-
-  var ldh = (fy * psi_e * psi_r * psi_o * db) / (4.57 * lam * Math.sqrt(fc));
-  var ldh_min = Math.max(8*db, 150);
-  var ldh_req = Math.max(ldh, ldh_min);
-
-  var dispVal  = dispAci(ldh_req, u);
-  var dispCalc = dispAci(ldh, u);
-  var dispMin  = dispAci(ldh_min, u);
-
-  var hookLabel = hookType === '90' ? '90° hook' : hookType === '180' ? '180° hook' : 'Seismic hook';
-
-  var rows = [
-    ['db',          (u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in')],
-    ["f'c",         (u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi')],
-    ['fy',          (u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi')],
-    ['Hook type',   hookLabel],
-    ['ψe',         psi_e.toFixed(1)],
-    ['ψr',         psi_r.toFixed(1)],
-    ['ψo',         psi_o.toFixed(2)],
-    ['λ',          lam.toFixed(2)],
-    ['ℓdh (formula)', dispCalc],
-    ['ℓdh,min (max 8db,150mm)', dispMin],
-    ['<strong>ℓdh required</strong>', '<strong>'+dispVal+'</strong>']
+  var rows=[
+    ['√f\'c',sqFc.toFixed(3)+' MPa^0.5'],
+    ['L_dh (formula)',dF],['L_dh,min = max(8d_b, 150mm)',dM],
+    ['<strong>L_dh required</strong>','<strong>'+dV+'</strong>']
   ];
-
-  var steps = [
-    ['1','ℓdh = fy×ψe×ψr×ψo×db / (4.57×λ×√f\'c)','= '+dispCalc],
-    ['2','ℓdh,min = max(8×'+db.toFixed(1)+', 150mm)', dispMin],
-    ['3','ℓdh,req = max(formula, minimum)', dispVal]
+  var num_h=fy*psi_e*psi_r*psi_o*db, den_h=4.57*lam*sqFc;
+  var steps=[
+    ['','Numerator = f_y × ψ_e × ψ_r × ψ_o × d_b = '+fy.toFixed(0)+'×'+psi_e.toFixed(1)+'×'+psi_r.toFixed(1)+'×'+psi_o.toFixed(2)+'×'+db.toFixed(1),num_h.toFixed(1)],
+    ['','Denominator = 4.57 × λ × √f\'c = 4.57×'+lam.toFixed(2)+'×'+sqFc.toFixed(3),den_h.toFixed(3)]
   ];
-
   showResult('hk-aci-res','hk-aci-diag',
-    {val: dispVal, lbl: 'Hook Development Length ℓdh'},
-    rows, steps,
-    svgHook(ldh_req, db, hookLabel, dispVal),
-    (ldh < ldh_min ? 'Minimum governs' : ''));
+    {val:dV, lbl:'Hook Development Length L_dh'},
+    rows, steps, svgHook(ldh_req,db,hookLabel,dV),
+    ldh<ldh_min?'Min governs':'');
 }
 
 /* ══════════════════════════════════════════════════════════
    EC2 HOOK
 ══════════════════════════════════════════════════════════ */
 function calcHkEc2() {
-  var db    = parseFloat(document.getElementById('hk-ec2-bar').value) || 0;
-  var fck   = parseFloat(document.getElementById('hk-ec2-fck').value) || 0;
-  var fyk   = parseFloat(document.getElementById('hk-ec2-fyk').value) || 0;
-  var eta1  = parseFloat(document.getElementById('hk-ec2-eta1').value);
-  var a1    = parseFloat(document.getElementById('hk-ec2-a1').value);
-  var a2    = parseFloat(document.getElementById('hk-ec2-a2').value);
-  var htype = document.getElementById('hk-ec2-type').value;
-  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+  var db=parseFloat(document.getElementById('hk-ec2-bar').value)||0;
+  var fck=parseFloat(document.getElementById('hk-ec2-fck').value)||0;
+  var fyk=parseFloat(document.getElementById('hk-ec2-fyk').value)||0;
+  var eta1=parseFloat(document.getElementById('hk-ec2-eta1').value);
+  var a1=parseFloat(document.getElementById('hk-ec2-a1').value);
+  var a2=parseFloat(document.getElementById('hk-ec2-a2').value);
+  var htype=document.getElementById('hk-ec2-type').value;
+  if(!db||!fck||!fyk){alert('Please fill all required fields.');return;}
 
-  var eta2  = (db <= 32) ? 1.0 : (132-db)/100;
-  var fctm  = (fck <= 50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
-  var fctd  = 0.7*fctm/1.5;
-  var fbd   = 2.25*eta1*eta2*fctd;
-  var fyd   = fyk/1.15;
-  var lb_rqd = (db/4)*(fyd/fbd);
+  var eta2=(db<=32)?1.0:(132-db)/100;
+  var fctm=(fck<=50)?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+  var fctd=0.7*fctm/1.5, fbd=2.25*eta1*eta2*fctd, fyd=fyk/1.15;
+  var lb_rqd=(db/4)*(fyd/fbd);
+  var alpha=Math.max(a1*a2,0.7);
+  var lbd=alpha*lb_rqd, lb_min=Math.max(0.3*lb_rqd,10*db,100), lbd_req=Math.max(lbd,lb_min);
 
-  var alpha = Math.max(a1*a2, 0.7);
-  var lbd   = alpha*lb_rqd;
-  var lb_min = Math.max(0.3*lb_rqd, 10*db, 100);
-  var lbd_req = Math.max(lbd, lb_min);
-
-  var rows = [
-    ['db',            db+' mm'],
-    ['Hook type',     htype+'°'],
-    ['η1 (bond)',     eta1.toFixed(1)],
-    ['η2 (size)',     eta2.toFixed(2)],
-    ['fbd',           fbd.toFixed(2)+' MPa'],
-    ['l_b,rqd',       lb_rqd.toFixed(0)+' mm'],
-    ['α1 (shape)',    a1.toFixed(1)],
-    ['α2 (cover)',    a2.toFixed(2)],
-    ['α1×α2 (≥0.7)', alpha.toFixed(2)],
-    ['l_bd (formula)',lbd.toFixed(0)+' mm'],
-    ['l_b,min',       lb_min.toFixed(0)+' mm'],
-    ['<strong>l_bd required</strong>', '<strong>'+Math.ceil(lbd_req)+' mm</strong>']
+  var rows=[
+    ['η_2 (size)',eta2.toFixed(2)],
+    ['f_ctm',fctm.toFixed(3)+' MPa'],['f_ctd',fctd.toFixed(3)+' MPa'],
+    ['f_bd = 2.25·η_1·η_2·f_ctd',fbd.toFixed(3)+' MPa'],
+    ['f_yd = f_yk/1.15',fyd.toFixed(1)+' MPa'],
+    ['l_b,rqd = (d_b/4)·(f_yd/f_bd)',lb_rqd.toFixed(0)+' mm'],
+    ['α_1×α_2 (≥0.7)',alpha.toFixed(3)],
+    ['l_bd (formula)',lbd.toFixed(0)+' mm'],['l_b,min',lb_min.toFixed(0)+' mm'],
+    ['<strong>l_bd required</strong>','<strong>'+Math.ceil(lbd_req)+' mm</strong>']
   ];
-
-  var steps = [
-    ['1','fbd = 2.25×η1×η2×fctd', fbd.toFixed(3)+' MPa'],
-    ['2','l_b,rqd = (db/4)×(fyd/fbd)', lb_rqd.toFixed(0)+' mm'],
-    ['3','α1×α2 (cap 0.7 min)', alpha.toFixed(3)],
-    ['4','l_bd = α×l_b,rqd', lbd.toFixed(0)+' mm'],
-    ['5','l_b,min', lb_min.toFixed(0)+' mm'],
-    ['6','l_bd,req', Math.ceil(lbd_req)+' mm']
-  ];
-
+  var steps=[];
   showResult('hk-ec2-res','hk-ec2-diag',
-    {val: Math.ceil(lbd_req)+' mm', lbl: 'Hook Anchorage l_bd'},
-    rows, steps,
-    svgHook(lbd_req, db, htype+'° hook', Math.ceil(lbd_req)+' mm'),
-    (lbd < lb_min ? 'Minimum governs' : ''));
+    {val:Math.ceil(lbd_req)+' mm', lbl:'Hook Anchorage l_bd'},
+    rows, steps, svgHook(lbd_req,db,htype+'° hook',Math.ceil(lbd_req)+' mm'),
+    lbd<lb_min?'Min governs':'');
 }
 
 /* ══════════════════════════════════════════════════════════
    IS 456 HOOK
 ══════════════════════════════════════════════════════════ */
 function calcHkIs() {
-  var db      = parseFloat(document.getElementById('hk-is-bar').value) || 0;
-  var tau_bd0 = parseFloat(document.getElementById('hk-is-grade').value);
-  var fy      = parseFloat(document.getElementById('hk-is-fy').value);
-  var hookEq  = parseFloat(document.getElementById('hk-is-type').value);
-  var barFac  = parseFloat(document.getElementById('hk-is-bartype').value);
-  if (!db) { alert('Please select a bar size.'); return; }
+  var db=parseFloat(document.getElementById('hk-is-bar').value)||0;
+  var tau_bd0=parseFloat(document.getElementById('hk-is-grade').value);
+  var fy=parseFloat(document.getElementById('hk-is-fy').value);
+  var hookEq=parseFloat(document.getElementById('hk-is-type').value);
+  var barFac=parseFloat(document.getElementById('hk-is-bartype').value);
+  if(!db){alert('Please select a bar size.');return;}
+  var tau_bd=tau_bd0*barFac;
+  var Ld=(db*0.87*fy)/(4*tau_bd);
+  var L_hook=hookEq*db, L_straight=Math.max(Ld-L_hook,0);
+  var Ld_min=200, Ld_req=Math.max(Ld,Ld_min);
+  var hookLabel=hookEq===16?'180° U-hook (16d_b)':hookEq===8?'90° bend (8d_b)':'135° bend (12d_b)';
+  var num=db*0.87*fy;
 
-  var tau_bd = tau_bd0 * barFac;
-  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
-  var L_straight = Math.max(Ld - hookEq*db, 0);
-  var L_total = L_straight + hookEq*db; // = Ld
-  var Ld_min = 200;
-  var L_straight_req = Math.max(L_straight, Ld_min - hookEq*db);
-
-  var hookLabel = hookEq===16?'180° U-hook (16db)':hookEq===8?'90° bend (8db)':'135° bend (12db)';
-
-  var rows = [
-    ['db',                   db+' mm'],
-    ['fy',                   fy+' MPa'],
-    ['τbd (Table 21)',       tau_bd0.toFixed(1)+' MPa'],
-    ['Bar factor',           barFac.toFixed(1)],
-    ['τbd effective',        tau_bd.toFixed(2)+' MPa'],
-    ['Ld (full development)',Ld.toFixed(0)+' mm'],
-    ['Hook type',            hookLabel],
-    ['Hook equivalent',      (hookEq*db).toFixed(0)+' mm ('+hookEq+'db)'],
-    ['Required straight L',  Math.ceil(L_straight_req)+' mm'],
-    ['<strong>Total embedment Ld</strong>', '<strong>'+Math.ceil(Math.max(Ld,Ld_min))+' mm</strong>']
+  var rows=[
+    ['τ_bd,eff',tau_bd.toFixed(3)+' MPa'],
+    ['L_d (full development)',Ld.toFixed(0)+' mm'],
+    ['Hook type',hookLabel],['Hook equivalent = '+hookEq+'×d_b',L_hook.toFixed(0)+' mm'],
+    ['Required straight length',Math.ceil(L_straight)+' mm'],
+    ['<strong>Total embedment L_d</strong>','<strong>'+Math.ceil(Ld_req)+' mm</strong>']
   ];
-
-  var steps = [
-    ['1','Ld = (db×0.87×fy)/(4×τbd)', Ld.toFixed(0)+' mm'],
-    ['2','Hook equivalent = '+hookEq+'×db', (hookEq*db).toFixed(0)+' mm'],
-    ['3','Required straight = Ld − hook equiv.', L_straight.toFixed(0)+' mm'],
-    ['4','Total ≥ 200 mm min.', Math.ceil(Math.max(Ld,Ld_min))+' mm']
-  ];
-
+  var steps=[];
   showResult('hk-is-res','hk-is-diag',
-    {val: Math.ceil(Math.max(Ld,Ld_min))+' mm', lbl: 'Total Development Length Ld'},
-    rows, steps,
-    svgHook(Ld, db, hookLabel, Math.ceil(Math.max(Ld,Ld_min))+' mm'),
-    '');
+    {val:Math.ceil(Ld_req)+' mm', lbl:'Total Development Length L_d'},
+    rows, steps, svgHook(Ld,db,hookLabel,Math.ceil(Ld_req)+' mm'), '');
 }
 
 /* ══════════════════════════════════════════════════════════
-   ACI SPLICE
+   ACI SPLICE — no visual
 ══════════════════════════════════════════════════════════ */
 function calcSpAci() {
-  var inp = readAci('sp-aci');
-  var db = inp.db, fc = inp.fc, fy = inp.fy, u = inp.u;
-  if (!db || !fc || !fy) { alert('Please fill all required fields.'); return; }
+  var inp=readAci('sp-aci'), db=inp.db, fc=inp.fc, fy=inp.fy, u=inp.u;
+  if(!db||!fc||!fy){alert('Please fill all required fields.');return;}
+  var stype=document.getElementById('sp-aci-stype').value;
+  var cb=parseFloat(document.getElementById('sp-aci-cb').value)||0;
+  var Ktr=parseFloat(document.getElementById('sp-aci-ktr').value)||0;
+  var psi_t=parseFloat(document.getElementById('sp-aci-psi-t').value);
+  var psi_e=parseFloat(document.getElementById('sp-aci-psi-e').value);
+  var lam=parseFloat(document.getElementById('sp-aci-lam').value);
+  if(u==='us'){cb*=25.4;Ktr*=25.4;}
+  var sqFc=Math.sqrt(fc);
+  var dDb=u==='si'?db.toFixed(1)+' mm':(db/25.4).toFixed(3)+' in';
+  var dFc=u==='si'?fc.toFixed(1)+' MPa':(fc*145.038).toFixed(0)+' psi';
+  var dFy=u==='si'?fy.toFixed(0)+' MPa':(fy*145.038).toFixed(0)+' psi';
 
-  var stype = document.getElementById('sp-aci-stype').value;
-  var cb    = parseFloat(document.getElementById('sp-aci-cb').value) || 0;
-  var Ktr   = parseFloat(document.getElementById('sp-aci-ktr').value) || 0;
-  var psi_t = parseFloat(document.getElementById('sp-aci-psi-t').value);
-  var psi_e = parseFloat(document.getElementById('sp-aci-psi-e').value);
-  var lam   = parseFloat(document.getElementById('sp-aci-lam').value);
-  if (u === 'us') { cb = cb*25.4; Ktr = Ktr*25.4; }
-
-  if (stype === 'comp') {
-    // Compression splice
-    var lsc1 = (0.071*fy*db)/(lam); // simplified ACI compression splice
-    if (fy <= 420) lsc1 = Math.max((0.24*fy*db)/(lam*Math.sqrt(fc)), 0.043*fy*db);
-    else lsc1 = (0.13*fy - 24)*db;
-    var lsc_min = 300;
-    var lsc_req = Math.max(lsc1, lsc_min);
-    var dispVal = dispAci(lsc_req, u);
-
-    showResult('sp-aci-res','sp-aci-diag',
-      {val: dispVal, lbl: 'Compression Splice Length ℓsc'},
-      [['fy',fy.toFixed(0)+' MPa'],['db',db.toFixed(1)+' mm'],
-       ['<strong>ℓsc</strong>','<strong>'+dispVal+'</strong>']],
-      [['1','ℓsc per §25.5.5.1',dispAci(lsc1,u)],['2','ℓsc ≥ 300mm',dispVal]],
-      svgSplice(lsc_req, db, dispVal),
-      '');
+  if(stype==='comp'){
+    var lsc; var cf1,cf2;
+    if(fy<=420){cf1=(0.24*fy*db)/(lam*sqFc);cf2=0.043*fy*db;lsc=Math.max(cf1,cf2);}
+    else{lsc=(0.13*fy-24)*db;}
+    var lsc_req=Math.max(lsc,300), dV=dispAci(lsc_req,u), dF=dispAci(lsc,u);
+    var rows=[];
+    var steps=[];
+    if(fy<=420){
+      rows.push(['0.24·f_y·d_b/(λ·√f\'c)',dispAci(cf1,u)],['0.043·f_y·d_b',dispAci(cf2,u)]);
+    } else {
+      rows.push(['(0.13·f_y−24)·d_b',dF]);
+    }
+    rows.push(['L_sc,min','300 mm'],['<strong>L_sc (compression splice)</strong>','<strong>'+dV+'</strong>']);
+    showResult('sp-aci-res','sp-aci-diag',{val:dV,lbl:'Compression Splice Length L_sc'},rows,steps,'',lsc<300?'Min governs':'');
     return;
   }
 
-  var psi_s  = (db<=19) ? 0.8 : 1.0;
-  var psi_g  = (fy<=420) ? 1.0 : (fy<=550 ? 1.15 : 1.3);
-  var psi_te = Math.min(psi_t*psi_e, 1.7);
-  var conf   = Math.min(2.5, (cb+Ktr)/db);
-  if (conf <= 0) conf = 1.0;
+  var psi_s=(db<=19)?0.8:1.0, psi_g=(fy<=420)?1.0:(fy<=550?1.15:1.3);
+  var psi_te=Math.min(psi_t*psi_e,1.7);
+  var conf=Math.min(2.5,(cb+Ktr)/db); if(conf<=0) conf=1.0;
+  var num_t=fy*psi_te*psi_s*psi_g*db, den_t=1.1*lam*sqFc*conf;
+  var ld_f=num_t/den_t, ld_min=Math.max(300,8*db), ld_req=Math.max(ld_f,ld_min);
+  var factor=(stype==='A')?1.0:1.3;
+  var ls=factor*ld_req, ls_min=Math.max(300,8*db), ls_req=Math.max(ls,ls_min);
+  var dV=dispAci(ls_req,u), dLd=dispAci(ld_req,u), dLdf=dispAci(ld_f,u), dLdm=dispAci(ld_min,u);
 
-  var ld = (fy * psi_te * psi_s * psi_g * db) / (1.1 * lam * Math.sqrt(fc) * conf);
-  var ld_min = Math.max(300, 8*db);
-  var ld_req = Math.max(ld, ld_min);
-
-  var factor = (stype === 'A') ? 1.0 : 1.3;
-  var ls = factor * ld_req;
-  var ls_min = Math.max(300, 8*db);
-  var ls_req = Math.max(ls, ls_min);
-
-  var dispVal  = dispAci(ls_req, u);
-  var dispLd   = dispAci(ld_req, u);
-
-  var rows = [
-    ['ℓd (base development)',  dispLd],
-    ['Splice class',           stype+' (×'+factor.toFixed(1)+')'],
-    ['ℓst = factor × ℓd',    dispAci(ls, u)],
-    ['ℓst,min',               dispAci(ls_min, u)],
-    ['<strong>ℓst required</strong>', '<strong>'+dispVal+'</strong>']
+  var rows=[
+    ['ψ_te = ψ_t×ψ_e (cap 1.7)',psi_te.toFixed(2)],['ψ_s',psi_s.toFixed(1)],
+    ['ψ_g',psi_g.toFixed(2)],['(c_b+K_tr)/d_b (cap 2.5)',conf.toFixed(3)],
+    ['√f\'c',sqFc.toFixed(3)+' MPa^0.5'],
+    ['L_d (base development)',dLd],
+    ['Splice class',stype+' (factor × '+factor.toFixed(1)+')'],
+    ['L_st = factor × L_d',dispAci(ls,u)],
+    ['L_st,min',dispAci(ls_min,u)],
+    ['<strong>L_st required</strong>','<strong>'+dV+'</strong>']
   ];
-
-  showResult('sp-aci-res','sp-aci-diag',
-    {val: dispVal, lbl: 'Splice Length ℓst'},
-    rows,
-    [['1','ℓd (same as straight bar)',dispLd],
-     ['2','Class '+stype+' factor', factor.toFixed(1)],
-     ['3','ℓst = '+factor.toFixed(1)+'×ℓd', dispAci(ls,u)],
-     ['4','ℓst,req = max(ℓst, min)', dispVal]],
-    svgSplice(ls_req, db, dispVal),
-    (ls < ls_min ? 'Minimum governs' : ''));
+  var steps=[
+    ['','Numerator = f_y×ψ_te×ψ_s×ψ_g×d_b = '+fy.toFixed(0)+'×'+psi_te.toFixed(3)+'×'+psi_s.toFixed(1)+'×'+psi_g.toFixed(2)+'×'+db.toFixed(1),num_t.toFixed(1)],
+    ['','Denominator = 1.1×λ×√f\'c×conf = 1.1×'+lam.toFixed(2)+'×'+sqFc.toFixed(3)+'×'+conf.toFixed(3),den_t.toFixed(4)]
+  ];
+  showResult('sp-aci-res','sp-aci-diag',{val:dV,lbl:'Splice Length L_st'},rows,steps,'',ls<ls_min?'Min governs':'');
 }
 
 /* ══════════════════════════════════════════════════════════
-   EC2 SPLICE
+   EC2 SPLICE — no visual
 ══════════════════════════════════════════════════════════ */
 function calcSpEc2() {
-  var db    = parseFloat(document.getElementById('sp-ec2-bar').value) || 0;
-  var fck   = parseFloat(document.getElementById('sp-ec2-fck').value) || 0;
-  var fyk   = parseFloat(document.getElementById('sp-ec2-fyk').value) || 0;
-  var eta1  = parseFloat(document.getElementById('sp-ec2-eta1').value);
-  var a6    = parseFloat(document.getElementById('sp-ec2-a6').value);
-  var a2    = parseFloat(document.getElementById('sp-ec2-a2').value);
-  var a3    = parseFloat(document.getElementById('sp-ec2-a3').value);
-  if (!db || !fck || !fyk) { alert('Please fill all required fields.'); return; }
+  var db=parseFloat(document.getElementById('sp-ec2-bar').value)||0;
+  var fck=parseFloat(document.getElementById('sp-ec2-fck').value)||0;
+  var fyk=parseFloat(document.getElementById('sp-ec2-fyk').value)||0;
+  var eta1=parseFloat(document.getElementById('sp-ec2-eta1').value);
+  var a6=parseFloat(document.getElementById('sp-ec2-a6').value);
+  var a2=parseFloat(document.getElementById('sp-ec2-a2').value);
+  var a3=parseFloat(document.getElementById('sp-ec2-a3').value);
+  if(!db||!fck||!fyk){alert('Please fill all required fields.');return;}
+  var eta2=(db<=32)?1.0:(132-db)/100;
+  var fctm=(fck<=50)?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+  var fctd=0.7*fctm/1.5, fbd=2.25*eta1*eta2*fctd, fyd=fyk/1.15;
+  var lb_rqd=(db/4)*(fyd/fbd);
+  var alpha=Math.max(a2*a3,0.7)*a6;
+  var l0=alpha*lb_rqd, l0_min=Math.max(0.3*a6*lb_rqd,15*db,200), l0_req=Math.max(l0,l0_min);
 
-  var eta2  = (db<=32) ? 1.0 : (132-db)/100;
-  var fctm  = (fck<=50) ? 0.30*Math.pow(fck,2/3) : 2.12*Math.log(1+(fck+8)/10);
-  var fctd  = 0.7*fctm/1.5;
-  var fbd   = 2.25*eta1*eta2*fctd;
-  var fyd   = fyk/1.15;
-  var lb_rqd = (db/4)*(fyd/fbd);
-
-  var alpha = Math.max(a2*a3, 0.7) * a6;
-  var l0    = alpha * lb_rqd;
-  var l0_min = Math.max(0.3*a6*lb_rqd, 15*db, 200);
-  var l0_req = Math.max(l0, l0_min);
-
-  var rows = [
-    ['db',         db+' mm'],
-    ['fbd',        fbd.toFixed(2)+' MPa'],
-    ['l_b,rqd',    lb_rqd.toFixed(0)+' mm'],
-    ['α6 (% lapped)', a6.toFixed(2)],
-    ['α2×α3',     (a2*a3).toFixed(2)],
-    ['Combined α',  alpha.toFixed(2)],
-    ['l_0 (formula)', l0.toFixed(0)+' mm'],
-    ['l_0,min',     l0_min.toFixed(0)+' mm'],
-    ['<strong>l_0 required</strong>', '<strong>'+Math.ceil(l0_req)+' mm</strong>']
+  var rows=[
+    ['η_2',eta2.toFixed(2)],
+    ['f_ctm',fctm.toFixed(3)+' MPa'],['f_ctd',fctd.toFixed(3)+' MPa'],
+    ['f_bd',fbd.toFixed(3)+' MPa'],['f_yd',fyd.toFixed(1)+' MPa'],
+    ['l_b,rqd',lb_rqd.toFixed(0)+' mm'],
+    ['α_6 (% bars lapped)',a6.toFixed(2)],
+    ['α_2×α_3 (≥0.7 before α_6)',(Math.max(a2*a3,0.7)).toFixed(3)],
+    ['Combined α = α_2×α_3×α_6',alpha.toFixed(3)],
+    ['l_0 (formula)',l0.toFixed(0)+' mm'],['l_0,min',l0_min.toFixed(0)+' mm'],
+    ['<strong>l_0 required</strong>','<strong>'+Math.ceil(l0_req)+' mm</strong>']
   ];
-
-  showResult('sp-ec2-res','sp-ec2-diag',
-    {val: Math.ceil(l0_req)+' mm', lbl: 'Lap Splice Length l_0'},
-    rows,
-    [['1','l_b,rqd',lb_rqd.toFixed(0)+' mm'],
-     ['2','α = α2×α3×α6',alpha.toFixed(3)],
-     ['3','l_0 = α×l_b,rqd',l0.toFixed(0)+' mm'],
-     ['4','l_0,min',l0_min.toFixed(0)+' mm'],
-     ['5','l_0,req',Math.ceil(l0_req)+' mm']],
-    svgSplice(l0_req, db, Math.ceil(l0_req)+' mm'),
-    (l0 < l0_min ? 'Minimum governs' : ''));
+  var steps=[];
+  showResult('sp-ec2-res','sp-ec2-diag',{val:Math.ceil(l0_req)+' mm',lbl:'Lap Splice Length l_0'},
+    rows, steps, '', l0<l0_min?'Min governs':'');
 }
 
 /* ══════════════════════════════════════════════════════════
-   IS 456 SPLICE
+   IS 456 SPLICE — no visual
 ══════════════════════════════════════════════════════════ */
 function calcSpIs() {
-  var db      = parseFloat(document.getElementById('sp-is-bar').value) || 0;
-  var tau_bd0 = parseFloat(document.getElementById('sp-is-grade').value);
-  var fy      = parseFloat(document.getElementById('sp-is-fy').value);
-  var barFac  = parseFloat(document.getElementById('sp-is-bartype').value);
-  var tens    = document.getElementById('sp-is-tension').value;
-  if (!db) { alert('Please select a bar size.'); return; }
+  var db=parseFloat(document.getElementById('sp-is-bar').value)||0;
+  var tau_bd0=parseFloat(document.getElementById('sp-is-grade').value);
+  var fy=parseFloat(document.getElementById('sp-is-fy').value);
+  var barFac=parseFloat(document.getElementById('sp-is-bartype').value);
+  var tens=document.getElementById('sp-is-tension').value;
+  if(!db){alert('Please select a bar size.');return;}
+  var tau_bd=tau_bd0*barFac;
+  var Ld=(db*0.87*fy)/(4*tau_bd);
+  var factor=(tens==='tension')?1.3:1.0;
+  var Ls=factor*Ld, Ls_req=Math.max(Ls,300), num=db*0.87*fy;
 
-  var tau_bd = tau_bd0 * barFac;
-  var Ld = (db * 0.87 * fy) / (4 * tau_bd);
-  var factor = (tens === 'tension') ? 1.3 : 1.0;
-  var Ls = factor * Ld;
-  var Ls_min = 300;
-  var Ls_req = Math.max(Ls, Ls_min);
-
-  var rows = [
-    ['db',          db+' mm'],
-    ['fy',          fy+' MPa'],
-    ['τbd effective', tau_bd.toFixed(2)+' MPa'],
-    ['Ld',          Ld.toFixed(0)+' mm'],
-    ['Splice type', tens === 'tension' ? 'Tension ×1.3' : 'Compression ×1.0'],
-    ['Ls = factor×Ld', Ls.toFixed(0)+' mm'],
-    ['Ls,min (300mm)', '300 mm'],
-    ['<strong>Ls required</strong>', '<strong>'+Math.ceil(Ls_req)+' mm</strong>']
+  var rows=[
+    ['τ_bd,eff',tau_bd.toFixed(3)+' MPa'],
+    ['L_d = d_b×0.87×f_y / (4×τ_bd)',Ld.toFixed(0)+' mm'],
+    ['Splice type',tens==='tension'?'Tension (×1.3, §26.2.5.1)':'Compression (×1.0, §26.2.5.2)'],
+    ['L_s = factor × L_d',Ls.toFixed(0)+' mm'],
+    ['L_s,min','300 mm'],
+    ['<strong>L_s required</strong>','<strong>'+Math.ceil(Ls_req)+' mm</strong>']
   ];
-
-  showResult('sp-is-res','sp-is-diag',
-    {val: Math.ceil(Ls_req)+' mm', lbl: 'Lap Splice Length Ls'},
-    rows,
-    [['1','Ld',Ld.toFixed(0)+' mm'],
-     ['2','Factor',factor.toFixed(1)],
-     ['3','Ls = factor×Ld',Ls.toFixed(0)+' mm'],
-     ['4','Ls ≥ 300mm min.',Math.ceil(Ls_req)+' mm']],
-    svgSplice(Ls_req, db, Math.ceil(Ls_req)+' mm'),
-    (Ls < Ls_min ? 'Minimum governs' : ''));
+  var steps=[];
+  showResult('sp-is-res','sp-is-diag',{val:Math.ceil(Ls_req)+' mm',lbl:'Lap Splice Length L_s'},
+    rows, steps, '', Ls<300?'Min governs':'');
 }
 
-/* ── Hash-based tab activation (for sidebar navigation) ── */
+/* ── Hash-based tab activation ── */
 window.addEventListener('load', function() {
-  var hash = window.location.hash.replace('#','');
-  if (hash === 'hook' || hash === 'splice') {
-    var btn = document.getElementById('mtab-' + hash);
-    if (btn) modTab(btn, 'mod-' + hash);
-  }
+  var hash=window.location.hash.replace('#','');
+  if(hash==='hook'||hash==='splice'){ var btn=document.getElementById('mtab-'+hash); if(btn) modTab(btn,'mod-'+hash); }
 });
 
-/* ── Init bar selects ─────────────────────────────────── */
+/* ── Init bar selects ── */
 document.addEventListener('DOMContentLoaded', function() {
-  function fillSelect(id, bars) {
-    var sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '';
-    bars.forEach(function(b) {
-      var o = document.createElement('option');
-      o.value = b.db;
-      o.textContent = b.label;
-      sel.appendChild(o);
-    });
-    // default to 5th bar (≈25mm for metric, #8 for ACI)
-    sel.selectedIndex = Math.min(4, bars.length-1);
+  function fillSelect(id,bars){
+    var sel=document.getElementById(id); if(!sel) return;
+    sel.innerHTML='';
+    bars.forEach(function(b){var o=document.createElement('option');o.value=b.db;o.textContent=b.label;sel.appendChild(o);});
+    sel.selectedIndex=Math.min(4,bars.length-1);
   }
-
-  ['st-aci','hk-aci','sp-aci'].forEach(function(a){ fillSelect(a+'-bar', ACI_BARS.si); });
-  ['st-ec2','hk-ec2','sp-ec2'].forEach(function(a){ fillSelect(a+'-bar', METRIC_BARS); });
-  ['st-is','hk-is','sp-is'].forEach(function(a){ fillSelect(a+'-bar', IS_BARS); });
+  ['st-aci','hk-aci','sp-aci'].forEach(function(a){fillSelect(a+'-bar',ACI_BARS.si);});
+  ['st-ec2','hk-ec2','sp-ec2'].forEach(function(a){fillSelect(a+'-bar',METRIC_BARS);});
+  ['st-is','hk-is','sp-is'].forEach(function(a){fillSelect(a+'-bar',IS_BARS);});
 });
 </script>
 </body>
