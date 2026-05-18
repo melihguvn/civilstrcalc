@@ -2453,17 +2453,17 @@ function _punchCheckReinfNeeded() {
     if (type === 'int') {
       bo = 2*(c1+d) + 2*(c2+d);
     } else if (type === 'edge') {
-      const _eClp = Math.min(_edMM, _chkD2);
-      bo = _edMM >= _chkD2 ? 2*(c1+d)+2*(c2+d) :
-           (ef==='N'||ef==='S') ? c1+2*(c2+_eClp)+2*d : 2*(c1+_eClp)+c2+2*d;
+      // ACI 318 §22.6.4.1: bo is located to minimise perimeter. Always compare closed
+      // (4-sided) vs open (3-sided extending to free edge) and use the minimum.
+      const bo_closed = 2*(c1+d) + 2*(c2+d);
+      const bo_open = (ef==='N'||ef==='S')
+        ? (c1+d) + 2*(c2 + d/2 + _edMM)   // c1 ∥ free edge
+        : (c2+d) + 2*(c1 + d/2 + _edMM);  // c2 ∥ free edge
+      bo = Math.min(bo_closed, bo_open);
     } else {
-      const _xClp = Math.min(_cxMM, _chkD2);
-      const _yClp = Math.min(_cyMM, _chkD2);
-      const _xB = _cxMM >= _chkD2, _yB = _cyMM >= _chkD2;
-      if (_xB && _yB) bo = 2*(c1+d)+2*(c2+d);
-      else if (_xB)   bo = c1+2*(c2+_yClp)+2*d;
-      else if (_yB)   bo = 2*(c1+_xClp)+c2+2*d;
-      else            bo = c1+c2+d+_xClp+_yClp;
+      // Corner: minimum of closed (4-sided) and most-open (2-sided) perimeter.
+      // The 2-sided perimeter bo_xy = c1+c2+d+ex+ey is always ≤ the other open options.
+      bo = Math.min(2*(c1+d)+2*(c2+d), c1+c2+d+_cxMM+_cyMM);
     }
   }
 
@@ -2505,16 +2505,13 @@ function _punchCalcBoOuter(c1, c2, Dc, shape, type, ef, ext) {
   } else {
     if (type === 'int') return 2*(c1+c2) + 4*Math.SQRT2*ext;
     if (type === 'edge') {
-      if (_ed >= ext) return 2*(c1+c2) + 4*Math.SQRT2*ext;
-      const _eS = Math.min(_ed, ext);
-      return (ef==='N'||ef==='S') ? c1+2*(c2+_eS)+2*Math.SQRT2*ext : 2*(c1+_eS)+c2+2*Math.SQRT2*ext;
+      const _bo_closed = 2*(c1+c2) + 4*Math.SQRT2*ext;
+      const _bo_open = (ef==='N'||ef==='S')
+        ? c1 + 2*(c2+_ed) + 2*Math.SQRT2*ext
+        : 2*(c1+_ed) + c2 + 2*Math.SQRT2*ext;
+      return Math.min(_bo_closed, _bo_open);
     }
-    const xB = _cxD >= ext, yB = _cyD >= ext;
-    const _xs = Math.min(_cxD, ext), _ys = Math.min(_cyD, ext);
-    if (xB && yB) return 2*(c1+c2) + 4*Math.SQRT2*ext;
-    if (xB)       return c1+2*(c2+_ys)+2*Math.SQRT2*ext;
-    if (yB)       return 2*(c1+_xs)+c2+2*Math.SQRT2*ext;
-    return c1+c2+Math.SQRT2*ext+_xs+_ys;
+    return Math.min(2*(c1+c2)+4*Math.SQRT2*ext, c1+c2+Math.SQRT2*ext+_cxD+_cyD);
   }
 }
 
@@ -3782,8 +3779,9 @@ function calcPunchShear() {
 
   const lambda = 1.0, phi = 0.75;
   // ── Geometry by type and shape ──
-  // ACI 318-25 §22.6.4.1: if slab edge is ≥ d/2 from column face, that face is treated as interior.
-  // Threshold is discrete (step function), not interpolated.
+  // ACI 318-25 §22.6.4.1: bo is located to minimise the critical perimeter.
+  // For edge/corner columns, both closed (4-sided) and open (3-sided/2-sided extending to
+  // the free edge) options are evaluated; the minimum governs.
   let bo_full, alphaS, beta, typeLabel, shapeLabel, _boFLabel;
   if (shape === 'circ') {
     beta       = 1.0;
@@ -3837,46 +3835,41 @@ function calcPunchShear() {
       typeLabel  = 'Interior';
       _boFLabel  = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d)';
     } else if (type === 'edge') {
+      // ACI 318 §22.6.4.1: locate bo to minimise — always compare 4-sided vs 3-sided (open to free edge).
       const ef = _punchEdgeFace;
-      const _eC = Math.min(_edgeDist_mm, d/2);
-      if (_edgeDist_mm >= d/2) {
-        bo_full   = 2*(c1+d) + 2*(c2+d);
-        alphaS    = 30;
-        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(setback≥d/2→full perimeter)</small>';
-      } else if (ef==='N'||ef==='S') {
-        bo_full   = c1+2*(c2+_eC)+2*d;
-        alphaS    = 30;
-        _boFLabel = _eC>0 ? `b<sub>o</sub> = c<sub>1</sub>+2(c<sub>2</sub>+e)+2d <small>e=${_eC.toFixed(0)} mm</small>`
-                          : 'b<sub>o</sub> = c<sub>1</sub>+2c<sub>2</sub>+2d';
-      } else {
-        bo_full   = 2*(c1+_eC)+c2+2*d;
-        alphaS    = 30;
-        _boFLabel = _eC>0 ? `b<sub>o</sub> = 2(c<sub>1</sub>+e)+c<sub>2</sub>+2d <small>e=${_eC.toFixed(0)} mm</small>`
-                          : 'b<sub>o</sub> = 2c<sub>1</sub>+c<sub>2</sub>+2d';
-      }
+      alphaS    = 30;
       typeLabel = `Edge (free face: ${ef})`;
-    } else { // corner
-      const _xB = _cornerDistX_mm >= d/2, _yB = _cornerDistY_mm >= d/2;
-      const _xC = Math.min(_cornerDistX_mm, d/2), _yC = Math.min(_cornerDistY_mm, d/2);
-      if (_xB && _yB) {
-        bo_full   = 2*(c1+d) + 2*(c2+d);
-        alphaS    = 20;
-        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>(both≥d/2→full perimeter)</small>';
-      } else if (_xB) {
-        bo_full   = c1+2*(c2+_yC)+2*d;
-        alphaS    = 30;
-        _boFLabel = `b<sub>o</sub> = c<sub>1</sub>+2(c<sub>2</sub>+e<sub>y</sub>)+2d <small>(X≥d/2→edge)</small>`;
-      } else if (_yB) {
-        bo_full   = 2*(c1+_xC)+c2+2*d;
-        alphaS    = 30;
-        _boFLabel = `b<sub>o</sub> = 2(c<sub>1</sub>+e<sub>x</sub>)+c<sub>2</sub>+2d <small>(Y≥d/2→edge)</small>`;
+      const _bo4 = 2*(c1+d) + 2*(c2+d);
+      let _bo3;
+      if (ef==='N'||ef==='S') {
+        _bo3 = (c1+d) + 2*(c2 + d/2 + _edgeDist_mm);  // c1 ∥ free edge
       } else {
-        bo_full   = c1+c2+d+_xC+_yC;
-        alphaS    = 20;
-        _boFLabel = (_xC>0||_yC>0) ? `b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d+e<sub>x</sub>+e<sub>y</sub>`
-                                    : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d';
+        _bo3 = (c2+d) + 2*(c1 + d/2 + _edgeDist_mm);  // c2 ∥ free edge
       }
+      if (_bo3 <= _bo4) {
+        bo_full   = _bo3;
+        const _e  = _edgeDist_mm;
+        _boFLabel = (ef==='N'||ef==='S')
+          ? `b<sub>o</sub> = (c<sub>1</sub>+d)+2(c<sub>2</sub>+d/2+e) <small>3-sided governs, e=${_fL(_e)}</small>`
+          : `b<sub>o</sub> = (c<sub>2</sub>+d)+2(c<sub>1</sub>+d/2+e) <small>3-sided governs, e=${_fL(_e)}</small>`;
+      } else {
+        bo_full   = _bo4;
+        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>4-sided governs</small>';
+      }
+    } else { // corner
+      alphaS    = 20;
       typeLabel = `Corner (${_punchCornerPos})`;
+      const _bo4  = 2*(c1+d) + 2*(c2+d);
+      const _bo2  = c1 + c2 + d + _cornerDistX_mm + _cornerDistY_mm;
+      if (_bo2 <= _bo4) {
+        bo_full   = _bo2;
+        _boFLabel = (_cornerDistX_mm>0||_cornerDistY_mm>0)
+          ? `b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d+e<sub>x</sub>+e<sub>y</sub> <small>2-sided governs</small>`
+          : 'b<sub>o</sub> = c<sub>1</sub>+c<sub>2</sub>+d <small>flush corner</small>';
+      } else {
+        bo_full   = _bo4;
+        _boFLabel = 'b<sub>o</sub> = 2(c<sub>1</sub>+d)+2(c<sub>2</sub>+d) <small>4-sided governs</small>';
+      }
     }
   }
 
