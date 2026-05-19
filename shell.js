@@ -129,10 +129,7 @@
     grp(ic.col, 'Column Design', ['column'],
       sub('/pages/column.html#pmm',      'PMM Design', 'column') +
       sub('/pages/column.html#colshear', 'Shear Design', '')) +
-    grp(ic.devlen, 'Dev. & Splice Length', ['devlen'],
-      sub('/pages/development-length.html#straight', 'Straight Bar', 'devlen') +
-      sub('/pages/development-length.html#hook',     'Standard Hook', '') +
-      sub('/pages/development-length.html#splice',   'Lap Splice', '')) +
+    item('/pages/development-length.html', ic.devlen, 'Dev. & Splice Length', 'devlen') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',   'steel') +
