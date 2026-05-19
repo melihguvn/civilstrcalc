@@ -56,6 +56,8 @@
 .hook-col{padding:10px 14px;border-right:1px solid var(--border);}
 .hook-col:last-child{border-right:none;}
 .hook-col-lbl{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+.hook-svg-wrap{height:215px;overflow:hidden;display:flex;align-items:flex-start;}
+.hook-svg-wrap svg{width:100%;height:auto;}
 .hook-vals{margin-top:6px;}
 .hook-val-row{display:flex;align-items:baseline;gap:6px;padding:1px 0;font-size:.76rem;}
 .hook-val-lbl{color:var(--text-mid);flex-shrink:0;min-width:90px;}
@@ -703,6 +705,7 @@ function _svgHook90(bH,arcR,unitStr){
   var arcCX=bendSX,arcCY=barY+arcR;
   var tailX=bendSX+arcR,tailBot=cB-18;
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="'+W+'" height="'+H+'" fill="#f5f7fb"/>';
   s+='<defs>'
    +'<marker id="h90a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
    +'<marker id="h90b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
@@ -768,6 +771,7 @@ function _svgHook180(bH,arcR,unitStr){
   var extLen=Math.min(80,bendSX-fX-20);
   var tailEnd=bendSX-extLen;
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="'+W+'" height="'+H+'" fill="#f5f7fb"/>';
   s+='<defs>'
    +'<marker id="h18a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
    +'<marker id="h18b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
@@ -901,7 +905,7 @@ function _hookHtml(hdr, c90, c180) {
   function col(data) {
     return '<div class="hook-col">'
       +'<div class="hook-col-lbl">'+data.lbl+'</div>'
-      +svgHook(data.ldh, data.db, data.lbl, data.dispLdh)
+      +'<div class="hook-svg-wrap">'+svgHook(data.ldh, data.db, data.lbl, data.dispLdh)+'</div>'
       +'<div class="hook-vals">'
       +data.rows.map(function(r){
         return '<div class="hook-val-row">'
@@ -968,15 +972,13 @@ function calcAci() {
 
   var hookHtml=_hookHtml('Standard Hook Development Length (ACI 318-25 §25.4.3)',
     {lbl:'90° Standard Hook', ldh:ldh90, db:db, dispLdh:disp(ldh90),
-     rows:[['L<sub>dh</sub>',(ldh90/db).toFixed(2)+' × d<sub>b</sub>'],
-           ['L<sub>dh</sub>',disp(ldh90)],
-           ['r<sub>int</sub>',rDb+' × d<sub>b</sub> = '+disp(r_int)],
-           ['ext<sub>min</sub>','12 × d<sub>b</sub> = '+disp(ext90)]]},
+     rows:[['L<sub>dh</sub>',(ldh90/db).toFixed(1)+' d<sub>b</sub> ('+disp(ldh90)+')'],
+           ['r<sub>int</sub>',rDb+' d<sub>b</sub> ('+disp(r_int)+')'],
+           ['ext<sub>min</sub>','12 d<sub>b</sub> ('+disp(ext90)+')']]},
     {lbl:'180° Standard Hook', ldh:ldh180, db:db, dispLdh:disp(ldh180),
-     rows:[['L<sub>dh</sub>',(ldh180/db).toFixed(2)+' × d<sub>b</sub>'],
-           ['L<sub>dh</sub>',disp(ldh180)],
-           ['r<sub>int</sub>',rDb+' × d<sub>b</sub> = '+disp(r_int)],
-           ['ext<sub>min</sub>','max(4d<sub>b</sub>, 65mm) = '+disp(ext180)]]}
+     rows:[['L<sub>dh</sub>',(ldh180/db).toFixed(1)+' d<sub>b</sub> ('+disp(ldh180)+')'],
+           ['r<sub>int</sub>',rDb+' d<sub>b</sub> ('+disp(r_int)+')'],
+           ['ext<sub>min</sub>','max(4 d<sub>b</sub>, 65mm) = '+disp(ext180)]]}
   );
 
   var el=document.getElementById('aci-res');
@@ -1033,15 +1035,13 @@ function calcEc2() {
 
   var hookHtml=_hookHtml('Hook Anchorage Length (EC2 §8.4.4)',
     {lbl:'90° Bend', ldh:lbd_h, db:db, dispLdh:Math.ceil(lbd_h)+' mm',
-     rows:[['l<sub>bd</sub>',(lbd_h/db).toFixed(2)+' × d<sub>b</sub>'],
-           ['l<sub>bd</sub>',Math.ceil(lbd_h)+' mm'],
-           ['r<sub>min</sub>',rDb+' × d<sub>b</sub> = '+Math.ceil(r_int)+' mm'],
-           ['ext<sub>min</sub>','max(5d<sub>b</sub>, 50mm) = '+Math.ceil(ext)+' mm']]},
+     rows:[['l<sub>bd</sub>',(lbd_h/db).toFixed(1)+' d<sub>b</sub> ('+Math.ceil(lbd_h)+' mm)'],
+           ['r<sub>min</sub>',rDb+' d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','max(5 d<sub>b</sub>, 50mm) = '+Math.ceil(ext)+' mm']]},
     {lbl:'180° Hook', ldh:lbd_h, db:db, dispLdh:Math.ceil(lbd_h)+' mm',
-     rows:[['l<sub>bd</sub>',(lbd_h/db).toFixed(2)+' × d<sub>b</sub>'],
-           ['l<sub>bd</sub>',Math.ceil(lbd_h)+' mm'],
-           ['r<sub>min</sub>',rDb+' × d<sub>b</sub> = '+Math.ceil(r_int)+' mm'],
-           ['ext<sub>min</sub>','max(5d<sub>b</sub>, 50mm) = '+Math.ceil(ext)+' mm']]}
+     rows:[['l<sub>bd</sub>',(lbd_h/db).toFixed(1)+' d<sub>b</sub> ('+Math.ceil(lbd_h)+' mm)'],
+           ['r<sub>min</sub>',rDb+' d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','max(5 d<sub>b</sub>, 50mm) = '+Math.ceil(ext)+' mm']]}
   );
 
   var el=document.getElementById('ec2-res');
@@ -1080,15 +1080,15 @@ function calcIs() {
 
   var hookHtml=_hookHtml('Hook Anchorage (IS 456:2000 §26.2.2)',
     {lbl:'90° Bend (8d<sub>b</sub> equiv.)', ldh:hook90_emb, db:db, dispLdh:Math.ceil(hook90_emb)+' mm',
-     rows:[['Equiv. anchorage','8 × d<sub>b</sub> = '+Math.ceil(8*db)+' mm'],
+     rows:[['Equiv. anchorage','8 d<sub>b</sub> ('+Math.ceil(8*db)+' mm)'],
            ['Req. straight L',Math.ceil(hook90_emb)+' mm'],
-           ['r<sub>internal</sub>','2 × d<sub>b</sub> = '+Math.ceil(r_int)+' mm'],
-           ['ext<sub>min</sub>','4 × d<sub>b</sub> = '+Math.ceil(ext90)+' mm']]},
+           ['r<sub>internal</sub>','2 d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','4 d<sub>b</sub> ('+Math.ceil(ext90)+' mm)']]},
     {lbl:'180° U-Hook (16d<sub>b</sub> equiv.)', ldh:hook180_emb, db:db, dispLdh:Math.ceil(hook180_emb)+' mm',
-     rows:[['Equiv. anchorage','16 × d<sub>b</sub> = '+Math.ceil(16*db)+' mm'],
+     rows:[['Equiv. anchorage','16 d<sub>b</sub> ('+Math.ceil(16*db)+' mm)'],
            ['Req. straight L',Math.ceil(hook180_emb)+' mm'],
-           ['r<sub>internal</sub>','2 × d<sub>b</sub> = '+Math.ceil(r_int)+' mm'],
-           ['ext<sub>min</sub>','4 × d<sub>b</sub> = '+Math.ceil(ext180)+' mm']]}
+           ['r<sub>internal</sub>','2 d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','4 d<sub>b</sub> ('+Math.ceil(ext180)+' mm)']]}
   );
 
   var el=document.getElementById('is-res');
