@@ -56,12 +56,13 @@
 .hook-col{padding:10px 14px;border-right:1px solid var(--border);}
 .hook-col:last-child{border-right:none;}
 .hook-col-lbl{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-.hook-svg-wrap{height:215px;overflow:hidden;display:flex;align-items:flex-start;}
+.hook-svg-wrap{height:192px;overflow:hidden;display:flex;align-items:flex-start;}
 .hook-svg-wrap svg{width:100%;height:auto;}
-.hook-vals{margin-top:6px;}
-.hook-val-row{display:flex;align-items:baseline;gap:6px;padding:1px 0;font-size:.76rem;}
-.hook-val-lbl{color:var(--text-mid);flex-shrink:0;min-width:90px;}
-.hook-val-num{font-family:var(--mono);font-weight:600;color:var(--accent);}
+.hook-vals{margin-top:4px;border-top:1px solid var(--border);padding-top:2px;}
+.hook-val-row{display:flex;align-items:baseline;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);}
+.hook-val-row:last-child{border-bottom:none;}
+.hook-val-lbl{font-size:.70rem;letter-spacing:.03em;color:var(--text-dim);flex-shrink:0;min-width:56px;}
+.hook-val-num{font-family:var(--mono);font-weight:600;font-size:.83rem;color:var(--text);}
 @media(max-width:580px){.hook-cols{grid-template-columns:1fr;}.hook-col{border-right:none;border-bottom:1px solid var(--border);}.hook-col:last-child{border-bottom:none;}}
 /* ── Background code tables ── */
 .bg-pane table.code-tbl{width:100%;border-collapse:collapse;font-size:.80rem;margin:8px 0 14px;}
@@ -698,119 +699,104 @@ function svgHook(ldMm, dbMm, hookType, unitStr) {
 }
 
 function _svgHook90(bH,arcR,unitStr){
-  var W=380,H=212,sw=bH;
-  var fX=42,cT=26,cR=285,cB=194;
-  var barY=70;
-  var bendSX=Math.min(230,cR-arcR-sw-10);
-  var arcCX=bendSX,arcCY=barY+arcR;
-  var tailX=bendSX+arcR,tailBot=cB-18;
+  var W=340,H=192,sw=bH;
+  var fX=46, barY=66;
+  var bendX=Math.min(228, W-arcR-sw/2-58);
+  var tailX=bendX+arcR, arcCY=barY+arcR;
+  var tailY=Math.min(162, arcCY+55);
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
   s+='<rect width="'+W+'" height="'+H+'" fill="#f5f7fb"/>';
+  // Arrow markers: fixed-direction for dimension lines
   s+='<defs>'
-   +'<marker id="h90a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
-   +'<marker id="h90b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
-   +'<marker id="h90c" markerWidth="5" markerHeight="6" refX="2.5" refY="0.5" orient="auto"><polygon points="0,6 5,6 2.5,0" fill="#333"/></marker>'
-   +'<marker id="h90d" markerWidth="5" markerHeight="6" refX="2.5" refY="5.5" orient="auto"><polygon points="0,0 5,0 2.5,6" fill="#333"/></marker>'
+   +'<marker id="a90l" viewBox="0 0 9 7" markerWidth="9" markerHeight="7" refX="0.6" refY="3.5" orient="0"><polygon points="9,0 9,7 0,3.5" fill="#2a5fa8"/></marker>'
+   +'<marker id="a90r" viewBox="0 0 9 7" markerWidth="9" markerHeight="7" refX="8.4" refY="3.5" orient="0"><polygon points="0,0 0,7 9,3.5" fill="#2a5fa8"/></marker>'
+   +'<marker id="a90u" viewBox="0 0 7 9" markerWidth="7" markerHeight="9" refX="3.5" refY="0.6" orient="0"><polygon points="0,9 7,9 3.5,0" fill="#2a5fa8"/></marker>'
+   +'<marker id="a90d" viewBox="0 0 7 9" markerWidth="7" markerHeight="9" refX="3.5" refY="8.4" orient="0"><polygon points="0,0 7,0 3.5,9" fill="#2a5fa8"/></marker>'
    +'</defs>';
   // Concrete block
-  s+='<rect x="'+fX+'" y="'+cT+'" width="'+(cR-fX)+'" height="'+(cB-cT)+'" fill="#dde7f3" stroke="#8aab" stroke-width="1.2" rx="3"/>';
+  s+='<rect x="'+fX+'" y="14" width="'+(W-fX-14)+'" height="161" rx="3" fill="#ddeaf8" stroke="#89aed4" stroke-width="1.3"/>';
   // Face line
-  s+='<line x1="'+fX+'" y1="'+(cT-8)+'" x2="'+fX+'" y2="'+(cB+8)+'" stroke="#1a2332" stroke-width="3.5"/>';
-  s+='<text x="'+fX+'" y="'+(cB+18)+'" text-anchor="middle" font-size="7.5" fill="#666" font-family="IBM Plex Sans,sans-serif">face</text>';
-  // Rebar — solid black continuous path
-  s+='<path d="M '+(fX-16)+','+barY+' L '+bendSX+','+barY
-    +' A '+arcR+','+arcR+' 0 0,1 '+tailX+','+arcCY
-    +' L '+tailX+','+tailBot+'"'
-    +' fill="none" stroke="#1a2332" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
-  // === Dimension: Ldh (above bar) ===
-  var ldY=barY-sw/2-15;
-  s+='<line x1="'+fX+'" y1="'+ldY+'" x2="'+bendSX+'" y2="'+ldY+'" stroke="#444" stroke-width="1" marker-start="url(#h90a)" marker-end="url(#h90b)"/>';
-  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
-  s+='<line x1="'+bendSX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendSX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
-  var midLd=(fX+bendSX)/2;
-  s+='<text x="'+midLd+'" y="'+(ldY-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a2332" font-family="IBM Plex Mono,monospace">'
-    +'L<tspan dy="2" font-size="7.5">dh</tspan><tspan dy="-2"> = '+unitStr+'</tspan></text>';
-  // === Dimension: db (left of face) ===
-  var dbX=fX-24;
-  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
-  s+='<line x1="'+(fX-6)+'" y1="'+(barY-sw/2)+'" x2="'+(dbX-2)+'" y2="'+(barY-sw/2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="2,2"/>';
-  s+='<line x1="'+(fX-6)+'" y1="'+(barY+sw/2)+'" x2="'+(dbX-2)+'" y2="'+(barY+sw/2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="2,2"/>';
-  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9" fill="#444" font-family="IBM Plex Sans,sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
-  // === r label at bend ===
-  s+='<line x1="'+arcCX+'" y1="'+arcCY+'" x2="'+(arcCX+arcR*0.6)+'" y2="'+(arcCY-arcR*0.7)+'" stroke="#aaa" stroke-width="0.8" stroke-dasharray="2,2"/>';
-  s+='<text x="'+(arcCX+arcR*0.6+4)+'" y="'+(arcCY-arcR*0.7-2)+'" font-size="8.5" fill="#555" font-family="IBM Plex Sans,sans-serif">r</text>';
-  // === Right annotations: ext, c, h ===
-  var rX=cR+16;
-  var extMid=(arcCY+tailBot)/2;
-  // ext
-  s+='<line x1="'+rX+'" y1="'+arcCY+'" x2="'+rX+'" y2="'+tailBot+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
-  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+arcCY+'" x2="'+(rX+1)+'" y2="'+arcCY+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+tailBot+'" x2="'+(rX+1)+'" y2="'+tailBot+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<text x="'+(rX+5)+'" y="'+(extMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">ext</text>';
-  // c
-  var cAnnotX=rX,cMid=(tailBot+cB)/2;
-  s+='<line x1="'+cAnnotX+'" y1="'+tailBot+'" x2="'+cAnnotX+'" y2="'+cB+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
-  s+='<line x1="'+(tailX+sw/2+2)+'" y1="'+cB+'" x2="'+(cAnnotX+1)+'" y2="'+cB+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<text x="'+(cAnnotX+5)+'" y="'+(cMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">c</text>';
-  // h
-  var hX=rX+30,hMid=(barY+cB)/2;
-  s+='<line x1="'+hX+'" y1="'+barY+'" x2="'+hX+'" y2="'+cB+'" stroke="#444" stroke-width="1" marker-start="url(#h90c)" marker-end="url(#h90d)"/>';
-  s+='<line x1="'+(rX+24)+'" y1="'+barY+'" x2="'+(hX+1)+'" y2="'+barY+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<line x1="'+(rX+24)+'" y1="'+cB+'" x2="'+(hX+1)+'" y2="'+cB+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<text x="'+(hX+5)+'" y="'+(hMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">h</text>';
+  s+='<line x1="'+fX+'" y1="6" x2="'+fX+'" y2="183" stroke="#1b2c48" stroke-width="4.5" stroke-linecap="round"/>';
+  s+='<text x="'+fX+'" y="191" text-anchor="middle" font-size="8" fill="#7d95b0" font-family="sans-serif">face</text>';
+  // Bar
+  s+='<path d="M '+(fX-16)+' '+barY+' L '+bendX+' '+barY
+    +' A '+arcR+' '+arcR+' 0 0 1 '+tailX+' '+arcCY
+    +' L '+tailX+' '+tailY+'"'
+    +' fill="none" stroke="#1b2c48" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  // ── Ldh: horizontal dimension above bar ──
+  var dY=barY-sw/2-16;
+  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(dY+3)+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendX+'" y2="'+(dY+3)+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+fX+'" y1="'+dY+'" x2="'+bendX+'" y2="'+dY+'" stroke="#2a5fa8" stroke-width="1.3" marker-start="url(#a90l)" marker-end="url(#a90r)"/>';
+  var lx=(fX+bendX)/2;
+  s+='<text x="'+lx+'" y="'+(dY-7)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b2c48" font-family="monospace,sans-serif">L<tspan dy="2.5" font-size="7.5">dh</tspan><tspan dy="-2.5"> = '+unitStr+'</tspan></text>';
+  // ── db: vertical indicator left of face ──
+  var dbX=fX-21;
+  s+='<line x1="'+(fX-4)+'" y1="'+(barY-sw/2)+'" x2="'+(dbX+1)+'" y2="'+(barY-sw/2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+(fX-4)+'" y1="'+(barY+sw/2)+'" x2="'+(dbX+1)+'" y2="'+(barY+sw/2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#2a5fa8" stroke-width="1.1" marker-start="url(#a90u)" marker-end="url(#a90d)"/>';
+  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9.5" fill="#2a5fa8" font-family="sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
+  // ── r: leader at bend ──
+  var rLX=bendX+arcR*0.42, rLY=arcCY-arcR*0.62;
+  s+='<line x1="'+(bendX+sw/2*0.7)+'" y1="'+(barY+sw/2*0.7)+'" x2="'+rLX+'" y2="'+rLY+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="2.5,2"/>';
+  s+='<text x="'+(rLX+3)+'" y="'+rLY+'" dominant-baseline="middle" font-size="10.5" font-weight="500" fill="#2a5fa8" font-family="sans-serif">r</text>';
+  // ── ext: vertical dimension right of tail ──
+  var extX=tailX+sw/2+13;
+  s+='<line x1="'+(tailX+sw/2+1)+'" y1="'+arcCY+'" x2="'+(extX+2)+'" y2="'+arcCY+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+(tailX+sw/2+1)+'" y1="'+tailY+'" x2="'+(extX+2)+'" y2="'+tailY+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+extX+'" y1="'+arcCY+'" x2="'+extX+'" y2="'+tailY+'" stroke="#2a5fa8" stroke-width="1.1" marker-start="url(#a90u)" marker-end="url(#a90d)"/>';
+  s+='<text x="'+(extX+6)+'" y="'+((arcCY+tailY)/2)+'" dominant-baseline="middle" font-size="10.5" font-weight="500" fill="#2a5fa8" font-family="sans-serif">ext</text>';
   s+='</svg>';
   return s;
 }
 
 function _svgHook180(bH,arcR,unitStr){
-  var W=380,H=180,sw=bH;
-  var fX=42,cT=26,cR=302,cB=168;
-  var barY=64;
-  var bendSX=238,arcCY=barY+arcR;
-  var tailBot=barY+2*arcR;
-  var extLen=Math.min(80,bendSX-fX-20);
+  var W=340,H=192,sw=bH;
+  var fX=46, barY=62;
+  var bendSX=Math.min(220, W-arcR-sw/2-62);
+  var arcCY=barY+arcR, tailBot=barY+2*arcR;
+  var extLen=Math.min(76, bendSX-fX-24);
   var tailEnd=bendSX-extLen;
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
   s+='<rect width="'+W+'" height="'+H+'" fill="#f5f7fb"/>';
   s+='<defs>'
-   +'<marker id="h18a" markerWidth="6" markerHeight="5" refX="0.5" refY="2.5" orient="auto"><polygon points="6,0 6,5 0,2.5" fill="#333"/></marker>'
-   +'<marker id="h18b" markerWidth="6" markerHeight="5" refX="5.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 6,2.5" fill="#333"/></marker>'
-   +'<marker id="h18c" markerWidth="5" markerHeight="6" refX="2.5" refY="0.5" orient="auto"><polygon points="0,6 5,6 2.5,0" fill="#333"/></marker>'
-   +'<marker id="h18d" markerWidth="5" markerHeight="6" refX="2.5" refY="5.5" orient="auto"><polygon points="0,0 5,0 2.5,6" fill="#333"/></marker>'
+   +'<marker id="a18l" viewBox="0 0 9 7" markerWidth="9" markerHeight="7" refX="0.6" refY="3.5" orient="0"><polygon points="9,0 9,7 0,3.5" fill="#2a5fa8"/></marker>'
+   +'<marker id="a18r" viewBox="0 0 9 7" markerWidth="9" markerHeight="7" refX="8.4" refY="3.5" orient="0"><polygon points="0,0 0,7 9,3.5" fill="#2a5fa8"/></marker>'
+   +'<marker id="a18u" viewBox="0 0 7 9" markerWidth="7" markerHeight="9" refX="3.5" refY="0.6" orient="0"><polygon points="0,9 7,9 3.5,0" fill="#2a5fa8"/></marker>'
+   +'<marker id="a18d" viewBox="0 0 7 9" markerWidth="7" markerHeight="9" refX="3.5" refY="8.4" orient="0"><polygon points="0,0 7,0 3.5,9" fill="#2a5fa8"/></marker>'
    +'</defs>';
-  // Concrete
-  s+='<rect x="'+fX+'" y="'+cT+'" width="'+(cR-fX)+'" height="'+(cB-cT)+'" fill="#dde7f3" stroke="#8aab" stroke-width="1.2" rx="3"/>';
-  s+='<line x1="'+fX+'" y1="'+(cT-8)+'" x2="'+fX+'" y2="'+(cB+8)+'" stroke="#1a2332" stroke-width="3.5"/>';
-  s+='<text x="'+fX+'" y="'+(cB+18)+'" text-anchor="middle" font-size="7.5" fill="#666" font-family="IBM Plex Sans,sans-serif">face</text>';
-  // Rebar: horizontal → two 90° arcs → tail left
-  s+='<path d="M '+(fX-16)+','+barY+' L '+bendSX+','+barY
-    +' A '+arcR+','+arcR+' 0 0,1 '+(bendSX+arcR)+','+arcCY
-    +' A '+arcR+','+arcR+' 0 0,1 '+bendSX+','+tailBot
-    +' L '+tailEnd+','+tailBot+'"'
-    +' fill="none" stroke="#1a2332" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
-  // === Ldh (above bar) ===
-  var ldY=barY-sw/2-15;
-  s+='<line x1="'+fX+'" y1="'+ldY+'" x2="'+bendSX+'" y2="'+ldY+'" stroke="#444" stroke-width="1" marker-start="url(#h18a)" marker-end="url(#h18b)"/>';
-  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
-  s+='<line x1="'+bendSX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendSX+'" y2="'+(ldY+2)+'" stroke="#bbb" stroke-width="0.8" stroke-dasharray="3,2"/>';
-  s+='<text x="'+((fX+bendSX)/2)+'" y="'+(ldY-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a2332" font-family="IBM Plex Mono,monospace">'
-    +'L<tspan dy="2" font-size="7.5">dh</tspan><tspan dy="-2"> = '+unitStr+'</tspan></text>';
-  // === db (left of face) ===
-  var dbX=fX-24;
-  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#444" stroke-width="1" marker-start="url(#h18c)" marker-end="url(#h18d)"/>';
-  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9" fill="#444" font-family="IBM Plex Sans,sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
-  // === r label at rightmost arc point ===
-  s+='<text x="'+(bendSX+arcR+6)+'" y="'+(arcCY+3)+'" font-size="8.5" fill="#555" font-family="IBM Plex Sans,sans-serif">r</text>';
-  // === ext (below tail, horizontal) ===
+  // Concrete block
+  s+='<rect x="'+fX+'" y="14" width="'+(W-fX-14)+'" height="161" rx="3" fill="#ddeaf8" stroke="#89aed4" stroke-width="1.3"/>';
+  // Face line
+  s+='<line x1="'+fX+'" y1="6" x2="'+fX+'" y2="183" stroke="#1b2c48" stroke-width="4.5" stroke-linecap="round"/>';
+  s+='<text x="'+fX+'" y="191" text-anchor="middle" font-size="8" fill="#7d95b0" font-family="sans-serif">face</text>';
+  // Bar: horizontal → two quarter-arcs (full 180° turn) → horizontal tail
+  s+='<path d="M '+(fX-16)+' '+barY+' L '+bendSX+' '+barY
+    +' A '+arcR+' '+arcR+' 0 0 1 '+(bendSX+arcR)+' '+arcCY
+    +' A '+arcR+' '+arcR+' 0 0 1 '+bendSX+' '+tailBot
+    +' L '+tailEnd+' '+tailBot+'"'
+    +' fill="none" stroke="#1b2c48" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  // ── Ldh: horizontal dimension above bar ──
+  var dY=barY-sw/2-16;
+  s+='<line x1="'+fX+'" y1="'+(barY-sw/2-3)+'" x2="'+fX+'" y2="'+(dY+3)+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendSX+'" y1="'+(barY-sw/2-3)+'" x2="'+bendSX+'" y2="'+(dY+3)+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+fX+'" y1="'+dY+'" x2="'+bendSX+'" y2="'+dY+'" stroke="#2a5fa8" stroke-width="1.3" marker-start="url(#a18l)" marker-end="url(#a18r)"/>';
+  s+='<text x="'+((fX+bendSX)/2)+'" y="'+(dY-7)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b2c48" font-family="monospace,sans-serif">L<tspan dy="2.5" font-size="7.5">dh</tspan><tspan dy="-2.5"> = '+unitStr+'</tspan></text>';
+  // ── db: vertical indicator left of face ──
+  var dbX=fX-21;
+  s+='<line x1="'+(fX-4)+'" y1="'+(barY-sw/2)+'" x2="'+(dbX+1)+'" y2="'+(barY-sw/2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+(fX-4)+'" y1="'+(barY+sw/2)+'" x2="'+(dbX+1)+'" y2="'+(barY+sw/2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+dbX+'" y1="'+(barY-sw/2)+'" x2="'+dbX+'" y2="'+(barY+sw/2)+'" stroke="#2a5fa8" stroke-width="1.1" marker-start="url(#a18u)" marker-end="url(#a18d)"/>';
+  s+='<text x="'+(dbX-4)+'" y="'+(barY+3.5)+'" text-anchor="end" font-size="9.5" fill="#2a5fa8" font-family="sans-serif">d<tspan dy="1.5" font-size="7">b</tspan></text>';
+  // ── r: label at rightmost arc point ──
+  s+='<line x1="'+bendSX+'" y1="'+arcCY+'" x2="'+(bendSX+arcR-2)+'" y2="'+arcCY+'" stroke="#a8c0dc" stroke-width="0.9" stroke-dasharray="2.5,2"/>';
+  s+='<text x="'+(bendSX+arcR+4)+'" y="'+arcCY+'" dominant-baseline="middle" font-size="10.5" font-weight="500" fill="#2a5fa8" font-family="sans-serif">r</text>';
+  // ── ext: horizontal dimension below tail ──
   var extY=tailBot+sw/2+14;
-  s+='<line x1="'+tailEnd+'" y1="'+extY+'" x2="'+bendSX+'" y2="'+extY+'" stroke="#444" stroke-width="1" marker-start="url(#h18a)" marker-end="url(#h18b)"/>';
-  s+='<line x1="'+tailEnd+'" y1="'+(tailBot+sw/2+2)+'" x2="'+tailEnd+'" y2="'+(extY+2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<line x1="'+bendSX+'" y1="'+(tailBot+sw/2+2)+'" x2="'+bendSX+'" y2="'+(extY+2)+'" stroke="#ccc" stroke-width="0.7" stroke-dasharray="3,2"/>';
-  s+='<text x="'+((tailEnd+bendSX)/2)+'" y="'+(extY+13)+'" text-anchor="middle" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">ext</text>';
-  // === h (right of arc, vertical) ===
-  var hX=bendSX+arcR+24,hMid=(barY+tailBot)/2;
-  s+='<line x1="'+hX+'" y1="'+barY+'" x2="'+hX+'" y2="'+tailBot+'" stroke="#444" stroke-width="1" marker-start="url(#h18c)" marker-end="url(#h18d)"/>';
-  s+='<text x="'+(hX+5)+'" y="'+(hMid+3.5)+'" font-size="9" fill="#333" font-family="IBM Plex Sans,sans-serif">h</text>';
+  s+='<line x1="'+tailEnd+'" y1="'+(tailBot+sw/2+2)+'" x2="'+tailEnd+'" y2="'+(extY+2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+bendSX+'" y1="'+(tailBot+sw/2+2)+'" x2="'+bendSX+'" y2="'+(extY+2)+'" stroke="#a8c0dc" stroke-width="0.8" stroke-dasharray="3,2"/>';
+  s+='<line x1="'+tailEnd+'" y1="'+extY+'" x2="'+bendSX+'" y2="'+extY+'" stroke="#2a5fa8" stroke-width="1.1" marker-start="url(#a18l)" marker-end="url(#a18r)"/>';
+  s+='<text x="'+((tailEnd+bendSX)/2)+'" y="'+(extY+12)+'" text-anchor="middle" font-size="10.5" font-weight="500" fill="#2a5fa8" font-family="sans-serif">ext</text>';
   s+='</svg>';
   return s;
 }
