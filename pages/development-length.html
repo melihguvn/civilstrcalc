@@ -72,7 +72,7 @@
 .hook-vals{margin-top:4px;border-top:1px solid var(--border);padding-top:2px;}
 .hook-val-row{display:flex;align-items:baseline;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);}
 .hook-val-row:last-child{border-bottom:none;}
-.hook-val-lbl{font-size:.70rem;letter-spacing:.03em;color:var(--text-dim);flex-shrink:0;min-width:56px;}
+.hook-val-lbl{font-size:.70rem;letter-spacing:.03em;color:var(--text-dim);flex-shrink:0;min-width:82px;}
 .hook-val-num{font-family:var(--mono);font-weight:600;font-size:.83rem;color:var(--text);}
 @media(max-width:580px){.hook-cols{grid-template-columns:1fr;}.hook-col{border-right:none;border-bottom:1px solid var(--border);}.hook-col:last-child{border-bottom:none;}}
 /* ── Background code tables ── */
@@ -445,9 +445,9 @@
           <div class="form-group">
             <label>Steel grade — f<sub>yk</sub></label>
             <select class="iw" id="dl-ts-fy">
-              <option value="220">B220 — 220 MPa</option>
-              <option value="420" selected>B420 — 420 MPa</option>
-              <option value="500">B500 — 500 MPa</option>
+              <option value="220">S220 — 220 MPa (plain / smooth)</option>
+              <option value="420" selected>B420C — 420 MPa</option>
+              <option value="500">B500C — 500 MPa</option>
             </select>
           </div>
         </div>
@@ -468,7 +468,6 @@
             <option value="tension">Full tension section — α₁ = 1.80</option>
           </select>
         </div>
-        <p class="calc-note">Ribbed (deformed) bars. f<sub>bd,t</sub> = 0.40 × √f<sub>ck</sub> (Position II base); Position I: ℓ<sub>b</sub> × 1.4. f<sub>bd,c</sub> = 0.50 × √f<sub>ck</sub>. Hook equiv. = 5φ (§7.1.4).</p>
         <button class="btn-calc" onclick="calcTs()">Calculate</button>
       </div>
     </div>
@@ -678,8 +677,8 @@
     <p>For ribbed bars, each standard hook or bend provides an equivalent anchorage of <strong>5φ</strong>. The required straight embedment with a hook is therefore l<sub>b</sub> − 5φ, with a minimum of max(5φ, 100 mm). Hooks are effective in tension only.</p>
     <table class="code-tbl">
       <tr><th>Hook type</th><th>Equiv. anchorage</th><th>Min. r<sub>int</sub></th><th>Min. tail</th></tr>
-      <tr><td>90° hook</td><td>5φ</td><td>2φ (φ ≤ 16 mm) / 3φ (φ &gt; 16 mm)</td><td>12φ</td></tr>
-      <tr><td>180° U-hook</td><td>5φ</td><td>2φ (φ ≤ 16 mm) / 3φ (φ &gt; 16 mm)</td><td>max(4φ, 65 mm)</td></tr>
+      <tr><td>90° hook</td><td>5φ</td><td>3φ (d<sub>m</sub> ≥ 6φ)</td><td>12φ</td></tr>
+      <tr><td>180° U-hook</td><td>5φ</td><td>3φ (d<sub>m</sub> ≥ 6φ)</td><td>max(6φ, 60 mm)</td></tr>
     </table>
     <h3>Lap Splices (§7.2 / §9.2)</h3>
     <div class="formula-box">ℓ<sub>0</sub> = α<sub>1</sub> · ℓ<sub>b</sub> ≥ max(15φ, 200 mm) &nbsp;|&nbsp; α<sub>1</sub> = 1 + 0.5r</div>
@@ -696,9 +695,9 @@
     <h3>Steel and Concrete Grades</h3>
     <table class="code-tbl">
       <tr><th>Steel designation</th><th>f<sub>yk</sub> (MPa)</th><th>Bar type</th></tr>
-      <tr><td>B220</td><td>220</td><td>Plain round</td></tr>
-      <tr><td>B420</td><td>420</td><td>Ribbed / deformed</td></tr>
-      <tr><td>B500</td><td>500</td><td>Ribbed / deformed</td></tr>
+      <tr><td>S220</td><td>220</td><td>Plain / smooth (nervürsüz)</td></tr>
+      <tr><td>B420C</td><td>420</td><td>Ribbed / deformed</td></tr>
+      <tr><td>B500C</td><td>500</td><td>Ribbed / deformed</td></tr>
     </table>
   </div>
 </div>
@@ -1257,12 +1256,15 @@ function calcTs() {
   var fbd_t = 0.40 * sqFck;                     // tension — Position II base
   var fbd_c = 0.50 * sqFck;                     // compression (no position factor)
 
+  // Plain (smooth) bars: ×2 per TS 500 §7.1.3
+  var plainFac = (fyk === 220) ? 2.0 : 1.0;
+
   // Basic development lengths — eta1 is position length factor (1.0 or 1.4)
-  var lb_t_raw = (db / 4) * (fsd / fbd_t) * eta1;
+  var lb_t_raw = (db / 4) * (fsd / fbd_t) * eta1 * plainFac;
   var lb_t_min = Math.max(10 * db, 100);
   var lb_t     = Math.max(lb_t_raw, lb_t_min);
 
-  var lb_c_raw = (db / 4) * (fsd / fbd_c);
+  var lb_c_raw = (db / 4) * (fsd / fbd_c) * plainFac;
   var lb_c_min = Math.max(10 * db, 100);
   var lb_c     = Math.max(lb_c_raw, lb_c_min);
 
@@ -1277,23 +1279,22 @@ function calcTs() {
 
   function fmtR(v) { return {ratio:(v/db).toFixed(1), len:Math.ceil(v)+' mm'}; }
 
-  // Hook geometry (TS 500 §7.1.4)
-  var r_int = (db <= 16) ? 2*db : 3*db;
+  // Hook geometry per TS 500 §7.1.4 figures: dₘ ≥ 6φ → r_int = 3φ for all sizes
+  var r_int = 3*db;
   var ext90 = 12*db;
-  var ext180 = Math.max(4*db, 65);
-  var rDb   = (db <= 16) ? '2' : '3';
+  var ext180 = Math.max(6*db, 60);  // figure (a): tail ≥ 6φ and ≥ 60 mm
 
   var hookHtml = _hookHtml('Hook Anchorage (TS 500:2000 §7.1.4)',
     {lbl:'90° Hook', ldh:hook90_emb, db:db, dispLdh:Math.ceil(hook90_emb)+' mm',
-     rows:[['L<sub>dh</sub>',(hook90_emb/db).toFixed(1)+' φ ('+Math.ceil(hook90_emb)+' mm)'],
-           ['Hook equiv.','5 φ ('+Math.ceil(hookEq)+' mm)'],
-           ['r<sub>int</sub>',  rDb+' φ ('+Math.ceil(r_int)+' mm)'],
-           ['ext<sub>min</sub>','12 φ ('+Math.ceil(ext90)+' mm)']]},
+     rows:[['L<sub>dh</sub>',(hook90_emb/db).toFixed(1)+' d<sub>b</sub> ('+Math.ceil(hook90_emb)+' mm)'],
+           ['Hook equiv.','5 d<sub>b</sub> ('+Math.ceil(hookEq)+' mm)'],
+           ['r<sub>int</sub>','3 d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','12 d<sub>b</sub> ('+Math.ceil(ext90)+' mm)']]},
     {lbl:'180° U-Hook', ldh:hook180_emb, db:db, dispLdh:Math.ceil(hook180_emb)+' mm',
-     rows:[['L<sub>dh</sub>',(hook180_emb/db).toFixed(1)+' φ ('+Math.ceil(hook180_emb)+' mm)'],
-           ['Hook equiv.','5 φ ('+Math.ceil(hookEq)+' mm)'],
-           ['r<sub>int</sub>',  rDb+' φ ('+Math.ceil(r_int)+' mm)'],
-           ['ext<sub>min</sub>','max(4φ, 65mm) = '+Math.ceil(ext180)+' mm']]}
+     rows:[['L<sub>dh</sub>',(hook180_emb/db).toFixed(1)+' d<sub>b</sub> ('+Math.ceil(hook180_emb)+' mm)'],
+           ['Hook equiv.','5 d<sub>b</sub> ('+Math.ceil(hookEq)+' mm)'],
+           ['r<sub>int</sub>','3 d<sub>b</sub> ('+Math.ceil(r_int)+' mm)'],
+           ['ext<sub>min</sub>','max(6 d<sub>b</sub>, 60mm) = '+Math.ceil(ext180)+' mm']]}
   );
 
   var el = document.getElementById('ts-res');
