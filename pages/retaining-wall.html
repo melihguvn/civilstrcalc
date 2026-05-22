@@ -94,6 +94,9 @@
 /* ── Small unit label tweak for iw inputs ── */
 .iw input[type=number]{padding-right:52px;}
 
+/* ── Prevent uppercase inheritance from conf-case-lbl into sub/sup ── */
+.conf-case-lbl sub,.conf-case-lbl sup{text-transform:none;letter-spacing:0;}
+
 /* ── Remove spinner arrows from number inputs ── */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
@@ -187,13 +190,24 @@ input[type=number]{-moz-appearance:textfield;}
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="lbl-tip" data-tip="Footing (base slab) thickness t_f.&#10;Preliminary rule: t_f ≈ B / 12 to B / 10 where B = total base width.&#10;Range: 0.25 – 1.20 m">
-          Footing thickness t<sub>f</sub> <span class="lbl-tip-icon">?</span>
-        </label>
-        <div class="iw" style="max-width:180px">
-          <input type="number" id="rw-tf" value="0.45" min="0.25" max="1.20" step="0.05" onchange="calcRW()">
-          <span class="us">m</span>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Footing (base slab) thickness t_f.&#10;Preliminary rule: t_f ≈ B / 12 to B / 10 where B = total base width.&#10;Range: 0.25 – 1.20 m">
+            Footing thickness t<sub>f</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-tf" value="0.45" min="0.25" max="1.20" step="0.05" onchange="calcRW()">
+            <span class="us">m</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Fill depth on top of the toe slab h_toe.&#10;Adds vertical stabilizing weight and increases passive resistance depth.&#10;Set to 0 if the toe is at grade or exposed.&#10;Range: 0.0 – 2.0 m">
+            Toe fill depth h<sub>toe</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-htoe" value="0" min="0" max="2.0" step="0.1" onchange="calcRW()">
+            <span class="us">m</span>
+          </div>
         </div>
       </div>
 
@@ -690,11 +704,12 @@ function updateDeltaAutoLabel() {
    ═══════════════════════════════════════════════════ */
 
 function drawSketch() {
-  var H  = parseFloat(document.getElementById('rw-H').value)  || 4.5;
-  var ts = parseFloat(document.getElementById('rw-ts').value) || 0.35;
-  var Lh = parseFloat(document.getElementById('rw-Lh').value) || 2.5;
-  var Lt = parseFloat(document.getElementById('rw-Lt').value) || 0;
-  var tf = parseFloat(document.getElementById('rw-tf').value) || 0.45;
+  var H    = parseFloat(document.getElementById('rw-H').value)    || 4.5;
+  var ts   = parseFloat(document.getElementById('rw-ts').value)   || 0.35;
+  var Lh   = parseFloat(document.getElementById('rw-Lh').value)   || 2.5;
+  var Lt   = parseFloat(document.getElementById('rw-Lt').value)   || 0;
+  var tf   = parseFloat(document.getElementById('rw-tf').value)   || 0.45;
+  var htoe = parseFloat(document.getElementById('rw-htoe').value) || 0;
 
   var totalW = Lt + ts + Lh;
   var totalH = H + tf;
@@ -740,18 +755,30 @@ function drawSketch() {
   var fsoilH = 8;
   s += '<rect x="' + px(0) + '" y="' + (py(0)+1) + '" width="' + (totalW*sc) + '" height="' + fsoilH + '" fill="' + colSoil + '" opacity=".4" rx="1"/>';
 
+  // Toe fill (soil above toe slab)
+  if (Lt > 0.01 && htoe > 0.01) {
+    var toeX = px(0), toeY = py(tf + htoe), toeW = Lt * sc, toeH2 = htoe * sc;
+    s += '<rect x="' + toeX + '" y="' + toeY + '" width="' + toeW + '" height="' + toeH2 + '" fill="' + colSoil + '" opacity=".55"/>';
+    s += '<clipPath id="toeClip"><rect x="' + toeX + '" y="' + toeY + '" width="' + toeW + '" height="' + toeH2 + '"/></clipPath>';
+    s += '<g clip-path="url(#toeClip)" stroke="' + colSoilStroke + '" stroke-width=".7" opacity=".4">';
+    for (var xj = -toeH2; xj < toeW + toeH2; xj += hSpacing) {
+      s += '<line x1="' + (toeX + xj) + '" y1="' + toeY + '" x2="' + (toeX + xj + toeH2) + '" y2="' + (toeY + toeH2) + '"/>';
+    }
+    s += '</g>';
+  }
+
   // Footing
   s += '<rect x="' + px(0) + '" y="' + py(tf) + '" width="' + (totalW*sc) + '" height="' + (tf*sc) + '" fill="' + colFill + '" stroke="' + colStroke + '" stroke-width="1.2" rx="1"/>';
 
   // Stem
   s += '<rect x="' + px(Lt) + '" y="' + py(H+tf) + '" width="' + (ts*sc) + '" height="' + (H*sc) + '" fill="' + colFill + '" stroke="' + colStroke + '" stroke-width="1.2" rx="1"/>';
 
-  // Ground line toe side
+  // Ground line toe side (at top of footing or top of toe fill)
   if (Lt > 0.01) {
-    s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + px(Lt) + '" y2="' + py(tf) + '" stroke="#666" stroke-width="1.5"/>';
-    // hatch below ground on toe side
-    s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + (px(0)-14) + '" y2="' + (py(tf)+6) + '" stroke="#888" stroke-width="1"/>';
-    s += '<line x1="' + (px(0)-2) + '" y1="' + py(tf) + '" x2="' + (px(0)-8) + '" y2="' + (py(tf)+6) + '" stroke="#888" stroke-width="1"/>';
+    var toeGradeY = py(tf + (htoe > 0.01 ? htoe : 0));
+    s += '<line x1="' + (px(0)-8) + '" y1="' + toeGradeY + '" x2="' + px(Lt) + '" y2="' + toeGradeY + '" stroke="' + colSoilStroke + '" stroke-width="1.5"/>';
+    s += '<line x1="' + (px(0)-8) + '" y1="' + toeGradeY + '" x2="' + (px(0)-14) + '" y2="' + (toeGradeY+6) + '" stroke="#888" stroke-width="1"/>';
+    s += '<line x1="' + (px(0)-2) + '" y1="' + toeGradeY + '" x2="' + (px(0)-8) + '" y2="' + (toeGradeY+6) + '" stroke="#888" stroke-width="1"/>';
   }
 
   // Backfill surface
@@ -773,9 +800,9 @@ function drawSketch() {
   var bLabel = 'B=' + totalW.toFixed(2) + 'm';
   s += '<text ' + txtSm + ' text-anchor="middle" x="' + (ox + drawW/2) + '" y="' + (H_svg - 6) + '">' + bLabel + '</text>';
 
-  // tf label inside footing
+  // tf label inside footing (SVG subscript via tspan)
   if (tf * sc > 14) {
-    s += '<text font-family="sans-serif" font-size="8" fill="#fff" opacity=".8" text-anchor="middle" x="' + (ox + drawW/2) + '" y="' + (py(tf/2)+3) + '">t_f</text>';
+    s += '<text font-family="sans-serif" font-size="8" fill="#fff" opacity=".8" text-anchor="middle" x="' + (ox + drawW/2) + '" y="' + (py(tf/2)+3) + '">t<tspan font-size="6" dy="2">f</tspan></text>';
   }
 
   s += '</svg>';
