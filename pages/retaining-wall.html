@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VPM6LCCWLN');
+</script>
+<title>Cantilever Retaining Wall Calculator | ACI 318-19 | SI Units | CivilStrCalc</title>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<meta name="description" content="Free cantilever retaining wall calculator per ACI 318-19. Stability checks (overturning, sliding, bearing), passive pressure, and reinforcement design with seismic loads. SI units.">
+<link rel="canonical" href="https://civilstrcalc.com/pages/retaining-wall.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/retaining-wall.html">
+<meta property="og:title" content="Cantilever Retaining Wall Calculator | ACI 318-19 | CivilStrCalc">
+<meta property="og:description" content="Calculate cantilever retaining wall stability and reinforcement per ACI 318-19. Overturning, sliding, bearing, and seismic loads. SI units.">
+<meta property="og:image" content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name" content="CivilStrCalc">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cantilever Retaining Wall Calculator | ACI 318-19 | CivilStrCalc">
+<meta name="twitter:description" content="Calculate cantilever retaining wall stability and reinforcement per ACI 318-19.">
+<meta name="twitter:image" content="https://civilstrcalc.com/images/og-image.png">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+
+/* ── Section headers inside card ── */
+.rw-sec-hdr{font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:10px 0 5px;border-bottom:2px solid var(--accent);margin-bottom:12px;margin-top:18px;}
+.rw-sec-hdr:first-child{margin-top:2px;}
+
+/* ── Checkbox rows ── */
+.rw-check-row{margin-bottom:10px;}
+.rw-check-lbl{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;font-weight:500;color:var(--text);user-select:none;}
+.rw-check-lbl input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;}
+.rw-check-note{display:block;font-size:.72rem;color:var(--text-dim);margin-top:4px;padding-left:23px;}
+
+/* ── Radio groups (confinement-style) ── */
+.conf-case-row{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin:10px 0;}
+.conf-case-lbl{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px;}
+.conf-case-opt{display:flex;align-items:flex-start;gap:7px;font-size:.79rem;color:var(--text);cursor:pointer;padding:3px 0;line-height:1.4;user-select:none;}
+.conf-case-opt input[type=radio]{margin-top:2px;flex-shrink:0;accent-color:var(--accent);cursor:pointer;}
+.conf-case-row.disabled .conf-case-lbl,.conf-case-row.disabled .conf-case-opt{opacity:.38;pointer-events:none;}
+
+/* ── Hint text ── */
+.rw-hint{font-size:.7rem;color:var(--text-dim);margin-top:3px;}
+
+/* ── Label tooltip ── */
+.lbl-tip{position:relative;cursor:help;display:inline-flex;align-items:center;gap:4px;}
+.lbl-tip::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);width:280px;background:var(--bg2);border:1px solid var(--accent);border-radius:6px;padding:8px 11px;font-size:.74rem;color:var(--text);line-height:1.6;z-index:200;display:none;white-space:pre-wrap;box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.lbl-tip:hover::after{display:block;}
+.lbl-tip-icon{font-size:.68rem;font-weight:700;background:var(--accent);color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
+
+/* ── Inline calc note ── */
+.calc-note{font-size:.74rem;color:var(--text-dim);line-height:1.55;margin-top:6px;padding:8px 12px;background:var(--bg2);border-radius:5px;border-left:3px solid var(--border);}
+
+/* ── Inline warning ── */
+.rw-warn{font-size:.74rem;color:#856404;line-height:1.55;padding:8px 12px;background:#fff8e1;border-radius:5px;border-left:3px solid #ffc107;margin:6px 0;}
+
+/* ── Button ── */
+.rw-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-family:var(--sans);font-size:.78rem;font-weight:600;cursor:pointer;transition:background .14s;letter-spacing:.02em;}
+.rw-btn:hover{background:#2a7fc4;}
+.rw-btn-sm{padding:5px 12px;font-size:.73rem;}
+
+/* ── kh result display ── */
+.rw-kh-result{background:var(--accent-lt);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;margin-top:8px;}
+.rw-kh-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--accent);}
+.rw-kh-row{display:flex;justify-content:space-between;font-size:.76rem;padding:2px 0;border-bottom:1px solid rgba(58,143,212,.12);}
+.rw-kh-row:last-child{border-bottom:none;}
+.rw-kh-row span:first-child{color:var(--text-dim);}
+.rw-kh-row span:last-child{font-family:var(--mono);font-weight:600;color:var(--text);}
+
+/* ── Results placeholder ── */
+.res-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--text-dim);font-size:.84rem;text-align:center;border:1px dashed var(--border);border-radius:8px;min-height:180px;}
+.ri{font-size:2.2rem;margin-bottom:10px;}
+
+/* ── Code tabs ── */
+.sub-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.sub-tab{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 16px;font-size:.78rem;font-weight:500;cursor:pointer;color:var(--text-dim);font-family:var(--sans);transition:all .14s;}
+.sub-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.sub-tab:disabled{opacity:.38;cursor:not-allowed;}
+
+/* ── Geometry sketch card ── */
+.rw-sketch-wrap{text-align:center;padding:12px 8px 6px;}
+.rw-sketch-note{font-size:.7rem;color:var(--text-dim);margin-top:4px;}
+
+/* ── Small unit label tweak for iw inputs ── */
+.iw input[type=number]{padding-right:52px;}
+
+@media print{
+  .sub-tabs,.rw-btn{display:none!important;}
+}
+</style>
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Cantilever Retaining Wall Calculator","description":"Free cantilever retaining wall stability and reinforcement calculator per ACI 318-19. Overturning, sliding, bearing, seismic loads. SI units.","url":"https://civilstrcalc.com/pages/retaining-wall.html","isPartOf":{"@type":"WebSite","name":"CivilStrCalc","url":"https://civilstrcalc.com"}}
+</script>
+</head>
+<body>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title">
+  <h1>Cantilever Retaining Wall Design</h1>
+  <p>Stability &amp; reinforcement — ACI 318-19 · Rankine / Coulomb · Mononobe–Okabe seismic · SI units (kN, m, MPa)</p>
+</div>
+
+<!-- ══ CODE TABS ══ -->
+<div class="sub-tabs" role="tablist">
+  <button class="sub-tab active" aria-selected="true">ACI 318-19</button>
+  <button class="sub-tab" disabled title="Coming soon">Eurocode 2</button>
+  <button class="sub-tab" disabled title="Coming soon">TS 500</button>
+  <button class="sub-tab" disabled title="Coming soon">IS 456</button>
+</div>
+
+<!-- ══ MAIN LAYOUT ══ -->
+<div class="calc-layout">
+
+  <!-- ─────────────── LEFT PANEL — INPUTS ─────────────── -->
+  <div class="card">
+    <div class="card-hdr">
+      Inputs — ACI 318-19 &nbsp;·&nbsp; SI Units
+      <span class="ctag">Phase 1A</span>
+    </div>
+    <div class="card-body">
+
+      <!-- ═══ WALL CONFIGURATION ═══ -->
+      <div class="rw-sec-hdr">Wall Configuration</div>
+
+      <div class="rw-check-row form-group">
+        <label class="rw-check-lbl">
+          <input type="checkbox" id="rw-includeToe" checked onchange="onToeChange()">
+          Include toe slab
+        </label>
+        <span class="rw-check-note">Uncheck if wall is at a property line with no space in front</span>
+      </div>
+
+      <!-- ═══ GEOMETRY ═══ -->
+      <div class="rw-sec-hdr">Geometry</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Retained height H: top of footing to finished grade behind the wall.&#10;Rule of thumb: total footing width B ≈ 0.5–0.7 × H.&#10;Range: 1.0 – 12.0 m">
+            Retained height H <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-H" value="4.5" min="1.0" max="12.0" step="0.1" onchange="calcRW()">
+            <span class="us">m</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Stem thickness t_s: constant (prismatic) wall cross-section.&#10;ACI 318-19 minimum for walls: 100 mm.&#10;Typical preliminary: H / 12 to H / 14.&#10;Range: 250 – 600 mm">
+            Stem thickness t<sub>s</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-ts" value="350" min="250" max="600" step="10" onchange="calcRW()">
+            <span class="us">mm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Heel length L_h: footing projection behind the stem (under backfill side).&#10;Larger heel → better overturning resistance.&#10;Typical: 0.5 × H to 0.7 × H.&#10;Range: 1.0 – 5.0 m">
+            Heel length L<sub>h</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-Lh" value="2.5" min="1.0" max="5.0" step="0.1" onchange="calcRW()">
+            <span class="us">m</span>
+          </div>
+        </div>
+        <div class="form-group" id="rw-toe-grp">
+          <label class="lbl-tip" data-tip="Toe length L_t: footing projection in front of the stem.&#10;Helps reduce bearing pressure under the toe.&#10;Typical: 0.3 × H to 0.5 × H.&#10;Range: 0.5 – 2.0 m">
+            Toe length L<sub>t</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-Lt" value="1.0" min="0.5" max="2.0" step="0.1" onchange="calcRW()">
+            <span class="us">m</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="lbl-tip" data-tip="Footing (base slab) thickness t_f.&#10;Preliminary rule: t_f ≈ B / 12 to B / 10 where B = total base width.&#10;Range: 250 – 1200 mm">
+          Footing thickness t<sub>f</sub> <span class="lbl-tip-icon">?</span>
+        </label>
+        <div class="iw" style="max-width:180px">
+          <input type="number" id="rw-tf" value="450" min="250" max="1200" step="10" onchange="calcRW()">
+          <span class="us">mm</span>
+        </div>
+      </div>
+
+      <!-- ═══ SOIL — BACKFILL ═══ -->
+      <div class="rw-sec-hdr">Soil — Backfill</div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Backfill unit weight γ.&#10;Sand/gravel: 17–20 kN/m³&#10;Silty sand: 16–19 kN/m³&#10;Range: 16 – 25 kN/m³">
+            γ<sub>s</sub> <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-gamma" value="18" min="16" max="25" step="0.5" onchange="calcRW()">
+            <span class="us">kN/m³</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Internal friction angle φ of backfill.&#10;Loose sand: 28–32°&#10;Dense sand: 34–38°&#10;Gravel: 34–40°&#10;Range: 28 – 40°">
+            φ (friction) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-phi" value="30" min="28" max="40" step="1" onchange="calcRW()">
+            <span class="us">°</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Cohesion c of backfill soil.&#10;Use c = 0 for granular fills (sand, gravel).&#10;Cohesion improves Rankine Ka but should be ignored for conservative design.&#10;Range: 0 – 50 kPa">
+            c (cohesion) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-c" value="0" min="0" max="50" step="1" onchange="calcRW()">
+            <span class="us">kPa</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SOIL — FOUNDATION ═══ -->
+      <div class="rw-sec-hdr">Soil — Foundation</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Allowable bearing capacity q_a of foundation soil.&#10;Soft clay: 100–150 kPa&#10;Stiff clay: 200–400 kPa&#10;Dense sand/gravel: 300–600 kPa&#10;Range: 100 – 1000 kPa">
+            q<sub>a</sub> (bearing) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-qa" value="200" min="100" max="1000" step="10" onchange="calcRW()">
+            <span class="us">kPa</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Sliding friction coefficient μ between footing base and soil.&#10;Sand: 0.40–0.55&#10;Gravel: 0.50–0.65&#10;Silt/clay: 0.30–0.45&#10;Range: 0.30 – 0.70">
+            μ (base friction) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-mu" value="0.50" min="0.30" max="0.70" step="0.01" onchange="calcRW()">
+          </div>
+        </div>
+      </div>
+
+      <div class="conf-case-row">
+        <div class="conf-case-lbl">Passive pressure coefficient K<sub>p</sub></div>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-kpMethod" value="auto" checked onchange="setKpMethod('auto')">
+          <span>Auto — K<sub>p</sub> = (1 + sin φ) / (1 − sin φ) &nbsp;<span style="color:var(--text-dim);font-family:var(--mono);font-size:.78rem" id="rw-kp-auto-val"></span></span>
+        </label>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-kpMethod" value="manual" onchange="setKpMethod('manual')">
+          <span>Manual — enter K<sub>p</sub></span>
+        </label>
+        <div id="rw-kp-manual" style="display:none;padding:6px 0 2px 22px">
+          <div class="iw" style="max-width:140px">
+            <input type="number" id="rw-Kp" value="3.0" min="2.0" max="5.0" step="0.1" onchange="calcRW()">
+          </div>
+          <div class="rw-hint" style="padding-left:2px">Range: 2.0 – 5.0</div>
+        </div>
+      </div>
+
+      <!-- ═══ LOADS ═══ -->
+      <div class="rw-sec-hdr">Loads</div>
+
+      <!-- Surcharge -->
+      <div class="rw-check-row">
+        <label class="rw-check-lbl">
+          <input type="checkbox" id="rw-inclSurcharge" onchange="onSurchargeChange()">
+          <span style="font-weight:600">Surcharge load</span>
+        </label>
+      </div>
+      <div id="rw-surcharge-panel" style="display:none;margin-left:22px;margin-bottom:14px">
+        <div class="form-group" style="max-width:200px">
+          <label class="lbl-tip" data-tip="Uniform surcharge q on top of backfill (e.g. traffic load, building load near wall).&#10;Traffic: 10–20 kPa&#10;Building: 10–50 kPa&#10;Range: 5 – 50 kPa">
+            q (surcharge) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-q" value="10" min="5" max="50" step="1" onchange="calcRW()">
+            <span class="us">kPa</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seismic -->
+      <div class="rw-check-row">
+        <label class="rw-check-lbl">
+          <input type="checkbox" id="rw-inclSeismic" onchange="onSeismicChange()">
+          <span style="font-weight:600">Seismic load (Mononobe–Okabe)</span>
+        </label>
+      </div>
+      <div id="rw-seismic-panel" style="display:none;margin-left:22px">
+
+        <!-- Method selection -->
+        <div class="conf-case-row">
+          <div class="conf-case-lbl">Input method</div>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-seismicMethod" value="quick" checked onchange="setSeismicMethod('quick')">
+            <span>Quick — direct k<sub>h</sub> input</span>
+          </label>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-seismicMethod" value="asce7" onchange="setSeismicMethod('asce7')">
+            <span>ASCE 7-16 — calculate from S<sub>S</sub> &amp; S<sub>1</sub></span>
+          </label>
+        </div>
+
+        <!-- Quick method panel -->
+        <div id="rw-quick-panel">
+          <div class="form-group" style="max-width:200px">
+            <label class="lbl-tip" data-tip="Horizontal seismic coefficient k_h for Mononobe–Okabe method.&#10;SDC A/B (Low): 0.05–0.10&#10;SDC C (Moderate): 0.10–0.20&#10;SDC D (High): 0.20–0.30&#10;SDC E/F (Very High): 0.30–0.40&#10;Range: 0.05 – 0.40">
+              k<sub>h</sub> (seismic coeff.) <span class="lbl-tip-icon">?</span>
+            </label>
+            <div class="iw">
+              <input type="number" id="rw-kh" value="0.20" min="0.05" max="0.40" step="0.01" onchange="calcRW()">
+            </div>
+          </div>
+          <div class="calc-note" style="margin-bottom:10px">
+            SDC A/B: 0.05–0.10 &nbsp;·&nbsp; SDC C: 0.10–0.20 &nbsp;·&nbsp; SDC D: 0.20–0.30 &nbsp;·&nbsp; SDC E/F: 0.30–0.40
+          </div>
+        </div>
+
+        <!-- ASCE 7 panel -->
+        <div id="rw-asce7-panel" style="display:none">
+          <div class="form-group">
+            <label>Site class</label>
+            <select id="rw-siteClass" onchange="calcRW()" style="max-width:280px">
+              <option value="A">A — Hard rock</option>
+              <option value="B">B — Rock</option>
+              <option value="C">C — Very dense soil / soft rock</option>
+              <option value="D" selected>D — Stiff soil (default)</option>
+              <option value="E">E — Soft soil</option>
+              <option value="F">F — Special (site-specific required)</option>
+            </select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="lbl-tip" data-tip="Mapped MCE spectral acceleration at 0.2 s (short period).&#10;From USGS seismic hazard tool or ASCE 7 Figure 22-1.&#10;Range: 0.10 – 2.50 g">
+                S<sub>S</sub> (0.2 s) <span class="lbl-tip-icon">?</span>
+              </label>
+              <div class="iw">
+                <input type="number" id="rw-SS" value="0.50" min="0.10" max="2.50" step="0.01" onchange="calcRW()">
+                <span class="us">g</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="lbl-tip" data-tip="Mapped MCE spectral acceleration at 1.0 s (long period).&#10;From USGS seismic hazard tool or ASCE 7 Figure 22-2.&#10;Range: 0.05 – 1.00 g">
+                S<sub>1</sub> (1.0 s) <span class="lbl-tip-icon">?</span>
+              </label>
+              <div class="iw">
+                <input type="number" id="rw-S1" value="0.20" min="0.05" max="1.00" step="0.01" onchange="calcRW()">
+                <span class="us">g</span>
+              </div>
+            </div>
+          </div>
+          <button class="rw-btn rw-btn-sm" onclick="computeKhASCE7()" style="margin-bottom:8px">Calculate k<sub>h</sub> from ASCE 7</button>
+          <div id="rw-asce7-result" style="display:none"></div>
+          <div id="rw-asce7-warn" class="rw-warn" style="display:none"></div>
+        </div>
+
+        <!-- Vertical seismic -->
+        <div class="conf-case-row">
+          <div class="conf-case-lbl">Vertical seismic coefficient k<sub>v</sub></div>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-kvOpt" value="none" onchange="calcRW()">
+            <span>k<sub>v</sub> = 0 &nbsp;(neglect vertical component)</span>
+          </label>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-kvOpt" value="auto" checked onchange="calcRW()">
+            <span>k<sub>v</sub> = 0.5 × k<sub>h</sub> &nbsp;(ASCE 7-16 §11.8.3)</span>
+          </label>
+        </div>
+
+      </div><!-- /seismic-panel -->
+
+      <!-- ═══ MATERIALS ═══ -->
+      <div class="rw-sec-hdr">Materials</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f'<sub>c</sub> (concrete)</label>
+          <div class="iw">
+            <input type="number" id="rw-fc" value="25" min="20" max="50" step="1" onchange="calcRW()">
+            <span class="us">MPa</span>
+          </div>
+          <div class="rw-hint">Range: 20 – 50 MPa</div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Unit weight of reinforced concrete.&#10;Normal-weight: 23.5–24.5 kN/m³.&#10;Range: 23 – 25 kN/m³">
+            γ<sub>c</sub> (concrete wt) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-gc" value="24" min="23" max="25" step="0.5" onchange="calcRW()">
+            <span class="us">kN/m³</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="conf-case-row" style="margin-bottom:14px">
+        <div class="conf-case-lbl">Steel grade — f<sub>y</sub></div>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-fy" value="420" checked onchange="calcRW()">
+          <span>Grade 60 — f<sub>y</sub> = 420 MPa &nbsp;(ASTM A615/A706)</span>
+        </label>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-fy" value="520" onchange="calcRW()">
+          <span>Grade 75 — f<sub>y</sub> = 520 MPa &nbsp;(ASTM A615)</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="lbl-tip" data-tip="Clear cover to outermost reinforcement.&#10;ACI 318-19 §26.4.1.3:&#10;· Cast against earth: 75 mm (3 in)&#10;· Formed, exposed to earth: 50 mm (2 in)&#10;Range: 50 – 100 mm">
+          Clear cover <span class="lbl-tip-icon">?</span>
+        </label>
+        <div class="iw" style="max-width:180px">
+          <input type="number" id="rw-cover" value="75" min="50" max="100" step="5" onchange="calcRW()">
+          <span class="us">mm</span>
+        </div>
+      </div>
+
+      <!-- ═══ DESIGN CRITERIA ═══ -->
+      <div class="rw-sec-hdr">Design Criteria</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Required factor of safety against overturning.&#10;Typical minimum: 2.0 (static), 1.5 (seismic).&#10;Range: 1.5 – 3.0">
+            FS<sub>ot</sub> (overturning) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-FSo" value="2.0" min="1.5" max="3.0" step="0.1" onchange="calcRW()">
+          </div>
+          <div class="rw-hint">Min. 2.0 static · 1.5 seismic</div>
+        </div>
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Required factor of safety against sliding.&#10;Typical minimum: 1.5 (static), 1.2 (seismic).&#10;Range: 1.5 – 2.5">
+            FS<sub>sl</sub> (sliding) <span class="lbl-tip-icon">?</span>
+          </label>
+          <div class="iw">
+            <input type="number" id="rw-FSs" value="1.5" min="1.5" max="2.5" step="0.1" onchange="calcRW()">
+          </div>
+          <div class="rw-hint">Min. 1.5 static · 1.2 seismic</div>
+        </div>
+      </div>
+
+      <div class="conf-case-row">
+        <div class="conf-case-lbl">Earth pressure method</div>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-pMethod" value="rankine" checked onchange="setPressureMethod('rankine')">
+          <span>Rankine — smooth vertical wall, horizontal backfill (conservative)</span>
+        </label>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-pMethod" value="coulomb" onchange="setPressureMethod('coulomb')">
+          <span>Coulomb — includes wall–soil friction δ (more accurate)</span>
+        </label>
+      </div>
+
+      <!-- Coulomb wall friction (conditional) -->
+      <div id="rw-coulomb-panel" style="display:none;margin-left:10px">
+        <div class="conf-case-row">
+          <div class="conf-case-lbl">Wall friction angle δ</div>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-deltaOpt" value="auto" checked onchange="setDeltaOpt('auto')">
+            <span>Auto — δ = 2φ/3 &nbsp;<span style="color:var(--text-dim);font-family:var(--mono);font-size:.78rem" id="rw-delta-auto-val"></span></span>
+          </label>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-deltaOpt" value="manual" onchange="setDeltaOpt('manual')">
+            <span>Manual — enter δ</span>
+          </label>
+          <div id="rw-delta-manual-wrap" style="display:none;padding:6px 0 2px 22px">
+            <div class="iw" style="max-width:140px">
+              <input type="number" id="rw-delta" value="20" min="0" max="27" step="1" onchange="calcRW()">
+              <span class="us">°</span>
+            </div>
+            <div class="rw-hint" style="padding-left:2px">Max ≈ 2φ/3</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /card-body -->
+  </div><!-- /card -->
+
+  <!-- ─────────────── RIGHT PANEL ─────────────── -->
+  <div>
+
+    <!-- Geometry sketch -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-hdr">Wall Cross-Section</div>
+      <div class="card-body rw-sketch-wrap" style="padding:16px 12px 10px">
+        <div id="rw-sketch"></div>
+        <div class="rw-sketch-note">Proportional preview — updates with inputs</div>
+      </div>
+    </div>
+
+    <!-- Results (Phase 1A placeholder) -->
+    <div id="rw-res">
+      <div class="res-empty">
+        <div class="ri">🏗</div>
+        Results — Phase 1B
+        <div style="font-size:.74rem;color:var(--text-dim);margin-top:8px;max-width:260px;line-height:1.6">
+          Input panel is complete. Stability checks (overturning, sliding, bearing pressure) and reinforcement design will be added in Phase 1B.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right panel -->
+
+</div><!-- /calc-layout -->
+
+</main>
+<script src="../shell.js"></script>
+<script>
+
+/* ═══════════════════════════════════════════════════
+   ASCE 7-16 site coefficient tables (Tables 11.4-1 / 11.4-2)
+   ═══════════════════════════════════════════════════ */
+
+// Fa: keyed by site class → [Ss breakpoints], [Fa values]
+var FA_TABLE = {
+  A: { ss: [0.25, 0.50, 0.75, 1.00, 1.25], fa: [0.8, 0.8, 0.8, 0.8, 0.8] },
+  B: { ss: [0.25, 0.50, 0.75, 1.00, 1.25], fa: [0.9, 0.9, 0.9, 0.9, 0.9] },
+  C: { ss: [0.25, 0.50, 0.75, 1.00, 1.25], fa: [1.3, 1.3, 1.2, 1.2, 1.2] },
+  D: { ss: [0.25, 0.50, 0.75, 1.00, 1.25], fa: [1.6, 1.4, 1.2, 1.1, 1.0] },
+  E: { ss: [0.25, 0.50, 0.75],             fa: [2.4, 1.7, 1.3]           }  // >0.75: note required
+};
+
+// Fv: keyed by site class → [S1 breakpoints], [Fv values]
+var FV_TABLE = {
+  A: { s1: [0.10, 0.20, 0.30, 0.40, 0.50], fv: [0.8, 0.8, 0.8, 0.8, 0.8] },
+  B: { s1: [0.10, 0.20, 0.30, 0.40, 0.50], fv: [0.8, 0.8, 0.8, 0.8, 0.8] },
+  C: { s1: [0.10, 0.20, 0.30, 0.40, 0.50], fv: [1.5, 1.5, 1.5, 1.5, 1.5] },
+  D: { s1: [0.10, 0.20, 0.30, 0.40, 0.50], fv: [2.4, 2.2, 2.0, 1.9, 1.8] },
+  E: { s1: [0.10, 0.20, 0.30, 0.40, 0.50], fv: [4.2, 3.3, 2.8, 2.4, 2.4] }
+};
+
+function interpCoeff(xArr, yArr, x) {
+  if (x <= xArr[0]) return yArr[0];
+  if (x >= xArr[xArr.length-1]) return yArr[yArr.length-1];
+  for (var i = 0; i < xArr.length-1; i++) {
+    if (x >= xArr[i] && x <= xArr[i+1]) {
+      var t = (x - xArr[i]) / (xArr[i+1] - xArr[i]);
+      return yArr[i] + t * (yArr[i+1] - yArr[i]);
+    }
+  }
+  return yArr[yArr.length-1];
+}
+
+function computeKhASCE7() {
+  var siteClass = document.getElementById('rw-siteClass').value;
+  var SS = parseFloat(document.getElementById('rw-SS').value) || 0;
+  var S1 = parseFloat(document.getElementById('rw-S1').value) || 0;
+
+  var warnEl = document.getElementById('rw-asce7-warn');
+  var resEl  = document.getElementById('rw-asce7-result');
+
+  if (siteClass === 'F') {
+    warnEl.style.display = 'block';
+    warnEl.textContent = 'Site Class F requires a site-specific ground motion analysis. A direct kₕ value must be entered.';
+    resEl.style.display = 'none';
+    return;
+  }
+  warnEl.style.display = 'none';
+
+  var faData = FA_TABLE[siteClass];
+  var fvData = FV_TABLE[siteClass];
+
+  // Check E limits
+  if (siteClass === 'E' && SS > 0.75) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = 'ASCE 7-16 Table 11.4-1 Note d: Site Class E with SS > 0.75 g requires site-specific analysis for Fa.';
+  }
+  if (siteClass === 'E' && S1 >= 0.3) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = (warnEl.textContent ? warnEl.textContent + ' ' : '') +
+      'Site Class E with S1 ≥ 0.3 g: site-specific analysis required for Fv.';
+  }
+
+  var Fa = interpCoeff(faData.ss, faData.fa, SS);
+  var Fv = interpCoeff(fvData.s1, fvData.fv, S1);
+
+  var SMS = Fa * SS;
+  var SM1 = Fv * S1;
+  var SDS = (2/3) * SMS;
+  var SD1 = (2/3) * SM1;
+  var kh  = 0.5 * SDS;
+  kh = Math.round(kh * 1000) / 1000;
+
+  // Update quick-input kh field
+  document.getElementById('rw-kh').value = kh.toFixed(3);
+
+  resEl.style.display = 'block';
+  resEl.innerHTML =
+    '<div style="margin-bottom:6px;font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)">ASCE 7-16 Seismic Parameters</div>' +
+    '<div class="rw-kh-row"><span>F<sub>a</sub></span><span>' + Fa.toFixed(3) + '</span></div>' +
+    '<div class="rw-kh-row"><span>F<sub>v</sub></span><span>' + Fv.toFixed(3) + '</span></div>' +
+    '<div class="rw-kh-row"><span>S<sub>MS</sub> = F<sub>a</sub> × S<sub>S</sub></span><span>' + SMS.toFixed(3) + ' g</span></div>' +
+    '<div class="rw-kh-row"><span>S<sub>M1</sub> = F<sub>v</sub> × S<sub>1</sub></span><span>' + SM1.toFixed(3) + ' g</span></div>' +
+    '<div class="rw-kh-row"><span>S<sub>DS</sub> = (2/3) × S<sub>MS</sub></span><span>' + SDS.toFixed(3) + ' g</span></div>' +
+    '<div class="rw-kh-row"><span>S<sub>D1</sub> = (2/3) × S<sub>M1</sub></span><span>' + SD1.toFixed(3) + ' g</span></div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(58,143,212,.2)">' +
+      '<span style="font-size:.75rem;color:var(--text-mid)">k<sub>h</sub> = 0.5 × S<sub>DS</sub> =</span>' +
+      '<span class="rw-kh-val">' + kh.toFixed(3) + '</span>' +
+    '</div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   CONDITIONAL SHOW / HIDE
+   ═══════════════════════════════════════════════════ */
+
+function onToeChange() {
+  var on = document.getElementById('rw-includeToe').checked;
+  document.getElementById('rw-toe-grp').style.display = on ? '' : 'none';
+  calcRW();
+}
+
+function onSurchargeChange() {
+  var on = document.getElementById('rw-inclSurcharge').checked;
+  document.getElementById('rw-surcharge-panel').style.display = on ? 'block' : 'none';
+  calcRW();
+}
+
+function onSeismicChange() {
+  var on = document.getElementById('rw-inclSeismic').checked;
+  document.getElementById('rw-seismic-panel').style.display = on ? 'block' : 'none';
+  calcRW();
+}
+
+function setSeismicMethod(m) {
+  document.getElementById('rw-quick-panel').style.display  = (m === 'quick')  ? 'block' : 'none';
+  document.getElementById('rw-asce7-panel').style.display  = (m === 'asce7')  ? 'block' : 'none';
+  calcRW();
+}
+
+function setKpMethod(m) {
+  document.getElementById('rw-kp-manual').style.display = (m === 'manual') ? 'block' : 'none';
+  updateKpAutoLabel();
+  calcRW();
+}
+
+function setPressureMethod(m) {
+  document.getElementById('rw-coulomb-panel').style.display = (m === 'coulomb') ? 'block' : 'none';
+  updateDeltaAutoLabel();
+  calcRW();
+}
+
+function setDeltaOpt(opt) {
+  document.getElementById('rw-delta-manual-wrap').style.display = (opt === 'manual') ? 'block' : 'none';
+  calcRW();
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTO LABELS (Kp and δ derived from φ)
+   ═══════════════════════════════════════════════════ */
+
+function updateKpAutoLabel() {
+  var phi = parseFloat(document.getElementById('rw-phi').value) || 30;
+  var phiR = phi * Math.PI / 180;
+  var Kp = (1 + Math.sin(phiR)) / (1 - Math.sin(phiR));
+  var el = document.getElementById('rw-kp-auto-val');
+  if (el) el.textContent = '= ' + Kp.toFixed(2);
+}
+
+function updateDeltaAutoLabel() {
+  var phi = parseFloat(document.getElementById('rw-phi').value) || 30;
+  var delta = (2/3) * phi;
+  var el = document.getElementById('rw-delta-auto-val');
+  if (el) el.textContent = '= ' + delta.toFixed(1) + '°';
+}
+
+/* ═══════════════════════════════════════════════════
+   GEOMETRY SKETCH
+   ═══════════════════════════════════════════════════ */
+
+function drawSketch() {
+  var H       = parseFloat(document.getElementById('rw-H').value)  || 4.5;
+  var ts_mm   = parseFloat(document.getElementById('rw-ts').value) || 350;
+  var Lh      = parseFloat(document.getElementById('rw-Lh').value) || 2.5;
+  var Lt_mm   = parseFloat(document.getElementById('rw-Lt').value) || 1.0;
+  var tf_mm   = parseFloat(document.getElementById('rw-tf').value) || 450;
+  var inclToe = document.getElementById('rw-includeToe').checked;
+
+  var ts = ts_mm / 1000;
+  var tf = tf_mm / 1000;
+  var Lt = inclToe ? (parseFloat(document.getElementById('rw-Lt').value) || 1.0) : 0;
+
+  var totalW = Lt + ts + Lh;
+  var totalH = H + tf;
+
+  var W = 280, H_svg = 200, pad = 30, labPad = 22;
+  var scW = (W - pad - labPad) / totalW;
+  var scH = (H_svg - pad - labPad) / totalH;
+  var sc  = Math.min(scW, scH);
+
+  var drawW = totalW * sc;
+  var drawH = totalH * sc;
+  var ox = labPad + (W - labPad - pad - drawW) / 2;
+  var oy = H_svg - pad;
+
+  function px(xm) { return ox + xm * sc; }
+  function py(ym) { return oy - ym * sc; }
+
+  // Colors matching --bg / --accent scheme
+  var colFill   = '#b0c4d8';  // footing + stem
+  var colStroke = '#4a6d8c';
+  var colSoil   = '#d4c39a';
+  var colSoilStroke = '#a89260';
+
+  var s = '<svg width="' + W + '" height="' + H_svg + '" viewBox="0 0 ' + W + ' ' + H_svg + '" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">';
+
+  // Backfill area
+  var bfX  = px(Lt + ts);
+  var bfY  = py(H + tf);
+  var bfW  = Lh * sc;
+  var bfH2 = (H + tf) * sc;
+  s += '<rect x="' + bfX + '" y="' + bfY + '" width="' + bfW + '" height="' + bfH2 + '" fill="' + colSoil + '" opacity=".55"/>';
+
+  // Hatching on backfill
+  var hSpacing = 10;
+  s += '<clipPath id="bfClip"><rect x="' + bfX + '" y="' + bfY + '" width="' + bfW + '" height="' + bfH2 + '"/></clipPath>';
+  s += '<g clip-path="url(#bfClip)" stroke="' + colSoilStroke + '" stroke-width=".7" opacity=".4">';
+  for (var xi = -bfH2; xi < bfW + bfH2; xi += hSpacing) {
+    s += '<line x1="' + (bfX + xi) + '" y1="' + bfY + '" x2="' + (bfX + xi + bfH2) + '" y2="' + (bfY + bfH2) + '"/>';
+  }
+  s += '</g>';
+
+  // Foundation soil (below footing) — thin strip
+  var fsoilH = 8;
+  s += '<rect x="' + px(0) + '" y="' + (py(0)+1) + '" width="' + (totalW*sc) + '" height="' + fsoilH + '" fill="' + colSoil + '" opacity=".4" rx="1"/>';
+
+  // Footing
+  s += '<rect x="' + px(0) + '" y="' + py(tf) + '" width="' + (totalW*sc) + '" height="' + (tf*sc) + '" fill="' + colFill + '" stroke="' + colStroke + '" stroke-width="1.2" rx="1"/>';
+
+  // Stem
+  s += '<rect x="' + px(Lt) + '" y="' + py(H+tf) + '" width="' + (ts*sc) + '" height="' + (H*sc) + '" fill="' + colFill + '" stroke="' + colStroke + '" stroke-width="1.2" rx="1"/>';
+
+  // Ground line toe side
+  if (inclToe && Lt > 0.01) {
+    s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + px(Lt) + '" y2="' + py(tf) + '" stroke="#666" stroke-width="1.5"/>';
+    // hatch below ground on toe side
+    s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + (px(0)-14) + '" y2="' + (py(tf)+6) + '" stroke="#888" stroke-width="1"/>';
+    s += '<line x1="' + (px(0)-2) + '" y1="' + py(tf) + '" x2="' + (px(0)-8) + '" y2="' + (py(tf)+6) + '" stroke="#888" stroke-width="1"/>';
+  }
+
+  // Backfill surface
+  s += '<line x1="' + px(Lt+ts) + '" y1="' + py(H+tf) + '" x2="' + (px(totalW)+8) + '" y2="' + py(H+tf) + '" stroke="' + colSoilStroke + '" stroke-width="1.5"/>';
+
+  // ── Dimension labels ──
+  var accent = '#3a8fd4';
+  var txtSm = 'font-family="sans-serif" font-size="9" fill="' + accent + '"';
+
+  // H arrow (left side)
+  var hx = px(0) - 14;
+  s += '<line x1="' + hx + '" y1="' + py(tf) + '" x2="' + hx + '" y2="' + py(H+tf) + '" stroke="' + accent + '" stroke-width="1"/>';
+  s += '<line x1="' + (hx-3) + '" y1="' + py(tf) + '" x2="' + (hx+3) + '" y2="' + py(tf) + '" stroke="' + accent + '" stroke-width="1"/>';
+  s += '<line x1="' + (hx-3) + '" y1="' + py(H+tf) + '" x2="' + (hx+3) + '" y2="' + py(H+tf) + '" stroke="' + accent + '" stroke-width="1"/>';
+  var hmid = (py(tf) + py(H+tf)) / 2;
+  s += '<text ' + txtSm + ' text-anchor="middle" transform="rotate(-90 ' + (hx-7) + ' ' + hmid + ')" x="' + (hx-7) + '" y="' + (hmid+3) + '">H=' + H.toFixed(1) + 'm</text>';
+
+  // B total label at bottom
+  var bLabel = 'B=' + totalW.toFixed(2) + 'm';
+  s += '<text ' + txtSm + ' text-anchor="middle" x="' + (ox + drawW/2) + '" y="' + (H_svg - 6) + '">' + bLabel + '</text>';
+
+  // tf label inside footing
+  if (tf * sc > 14) {
+    s += '<text font-family="sans-serif" font-size="8" fill="#fff" opacity=".8" text-anchor="middle" x="' + (ox + drawW/2) + '" y="' + (py(tf/2)+3) + '">t_f</text>';
+  }
+
+  s += '</svg>';
+  document.getElementById('rw-sketch').innerHTML = s;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN CALC (Phase 1A stub)
+   ═══════════════════════════════════════════════════ */
+
+function calcRW() {
+  updateKpAutoLabel();
+  updateDeltaAutoLabel();
+  drawSketch();
+  // Phase 1B: stability checks, bearing pressure, reinforcement design
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateKpAutoLabel();
+  updateDeltaAutoLabel();
+  drawSketch();
+});
+
+</script>
+</body>
+</html>
