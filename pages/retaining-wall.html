@@ -94,6 +94,15 @@
 /* ── Small unit label tweak for iw inputs ── */
 .iw input[type=number]{padding-right:52px;}
 
+/* ── Remove spinner arrows from number inputs ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;}
+
+/* ── Inline limit warning (beam module pattern) ── */
+.limit-warn{display:none;background:#fff8ed;border:1px solid #f4c97a;border-radius:5px;padding:7px 11px;font-size:.75rem;color:#7a5000;margin-top:4px;line-height:1.5;}
+.limit-warn.show{display:block;}
+
 @media print{
   .sub-tabs,.rw-btn{display:none!important;}
 }
@@ -130,22 +139,8 @@
 
   <!-- ─────────────── LEFT PANEL — INPUTS ─────────────── -->
   <div class="card">
-    <div class="card-hdr">
-      Inputs — ACI 318-19 &nbsp;·&nbsp; SI Units
-      <span class="ctag">Phase 1A</span>
-    </div>
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">kN · m</span></div>
     <div class="card-body">
-
-      <!-- ═══ WALL CONFIGURATION ═══ -->
-      <div class="rw-sec-hdr">Wall Configuration</div>
-
-      <div class="rw-check-row form-group">
-        <label class="rw-check-lbl">
-          <input type="checkbox" id="rw-includeToe" checked onchange="onToeChange()">
-          Include toe slab
-        </label>
-        <span class="rw-check-note">Uncheck if wall is at a property line with no space in front</span>
-      </div>
 
       <!-- ═══ GEOMETRY ═══ -->
       <div class="rw-sec-hdr">Geometry</div>
@@ -161,12 +156,12 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="lbl-tip" data-tip="Stem thickness t_s: constant (prismatic) wall cross-section.&#10;ACI 318-19 minimum for walls: 100 mm.&#10;Typical preliminary: H / 12 to H / 14.&#10;Range: 250 – 600 mm">
+          <label class="lbl-tip" data-tip="Stem thickness t_s: constant (prismatic) wall cross-section.&#10;ACI 318-19 minimum for walls: 0.10 m.&#10;Typical preliminary: H / 12 to H / 14.&#10;Range: 0.25 – 0.60 m">
             Stem thickness t<sub>s</sub> <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
-            <input type="number" id="rw-ts" value="350" min="250" max="600" step="10" onchange="calcRW()">
-            <span class="us">mm</span>
+            <input type="number" id="rw-ts" value="0.35" min="0.25" max="0.60" step="0.05" onchange="calcRW()">
+            <span class="us">m</span>
           </div>
         </div>
       </div>
@@ -181,24 +176,24 @@
             <span class="us">m</span>
           </div>
         </div>
-        <div class="form-group" id="rw-toe-grp">
-          <label class="lbl-tip" data-tip="Toe length L_t: footing projection in front of the stem.&#10;Helps reduce bearing pressure under the toe.&#10;Typical: 0.3 × H to 0.5 × H.&#10;Range: 0.5 – 2.0 m">
+        <div class="form-group">
+          <label class="lbl-tip" data-tip="Toe length L_t: footing projection in front of the stem.&#10;Set to 0 for a wall at a property line with no toe.&#10;Typical: 0.3 × H to 0.5 × H.&#10;Range: 0.0 – 2.0 m">
             Toe length L<sub>t</sub> <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
-            <input type="number" id="rw-Lt" value="1.0" min="0.5" max="2.0" step="0.1" onchange="calcRW()">
+            <input type="number" id="rw-Lt" value="1.0" min="0" max="2.0" step="0.1" onchange="calcRW()">
             <span class="us">m</span>
           </div>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="lbl-tip" data-tip="Footing (base slab) thickness t_f.&#10;Preliminary rule: t_f ≈ B / 12 to B / 10 where B = total base width.&#10;Range: 250 – 1200 mm">
+        <label class="lbl-tip" data-tip="Footing (base slab) thickness t_f.&#10;Preliminary rule: t_f ≈ B / 12 to B / 10 where B = total base width.&#10;Range: 0.25 – 1.20 m">
           Footing thickness t<sub>f</sub> <span class="lbl-tip-icon">?</span>
         </label>
         <div class="iw" style="max-width:180px">
-          <input type="number" id="rw-tf" value="450" min="250" max="1200" step="10" onchange="calcRW()">
-          <span class="us">mm</span>
+          <input type="number" id="rw-tf" value="0.45" min="0.25" max="1.20" step="0.05" onchange="calcRW()">
+          <span class="us">m</span>
         </div>
       </div>
 
@@ -391,36 +386,24 @@
       <!-- ═══ MATERIALS ═══ -->
       <div class="rw-sec-hdr">Materials</div>
 
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f'<sub>c</sub> (concrete)</label>
+          <label>f'<sub>c</sub> — Concrete <span class="lu">[MPa]</span></label>
           <div class="iw">
-            <input type="number" id="rw-fc" value="25" min="20" max="50" step="1" onchange="calcRW()">
+            <input type="number" id="rw-fc" value="25" oninput="checkRWLimits()">
             <span class="us">MPa</span>
           </div>
-          <div class="rw-hint">Range: 20 – 50 MPa</div>
+          <div class="limit-warn" id="warn-rw-fc"></div>
         </div>
         <div class="form-group">
-          <label class="lbl-tip" data-tip="Unit weight of reinforced concrete.&#10;Normal-weight: 23.5–24.5 kN/m³.&#10;Range: 23 – 25 kN/m³">
-            γ<sub>c</sub> (concrete wt) <span class="lbl-tip-icon">?</span>
-          </label>
+          <label>f<sub>y</sub> — Rebar <span class="lu">[MPa]</span></label>
           <div class="iw">
-            <input type="number" id="rw-gc" value="24" min="23" max="25" step="0.5" onchange="calcRW()">
-            <span class="us">kN/m³</span>
+            <input type="number" id="rw-fy" value="420" oninput="checkRWLimits()">
+            <span class="us">MPa</span>
           </div>
+          <div class="limit-warn" id="warn-rw-fy"></div>
         </div>
-      </div>
-
-      <div class="conf-case-row" style="margin-bottom:14px">
-        <div class="conf-case-lbl">Steel grade — f<sub>y</sub></div>
-        <label class="conf-case-opt">
-          <input type="radio" name="rw-fy" value="420" checked onchange="calcRW()">
-          <span>Grade 60 — f<sub>y</sub> = 420 MPa &nbsp;(ASTM A615/A706)</span>
-        </label>
-        <label class="conf-case-opt">
-          <input type="radio" name="rw-fy" value="520" onchange="calcRW()">
-          <span>Grade 75 — f<sub>y</sub> = 520 MPa &nbsp;(ASTM A615)</span>
-        </label>
       </div>
 
       <div class="form-group">
@@ -436,24 +419,50 @@
       <!-- ═══ DESIGN CRITERIA ═══ -->
       <div class="rw-sec-hdr">Design Criteria</div>
 
+      <div class="form-row-2" style="margin-bottom:4px">
+        <div style="font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);padding-bottom:4px">Static</div>
+        <div style="font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);padding-bottom:4px"></div>
+      </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label class="lbl-tip" data-tip="Required factor of safety against overturning.&#10;Typical minimum: 2.0 (static), 1.5 (seismic).&#10;Range: 1.5 – 3.0">
+          <label class="lbl-tip" data-tip="Required FS against overturning — static loads.&#10;Typical minimum: 2.0.&#10;Range: 1.5 – 3.0">
             FS<sub>ot</sub> (overturning) <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
             <input type="number" id="rw-FSo" value="2.0" min="1.5" max="3.0" step="0.1" onchange="calcRW()">
           </div>
-          <div class="rw-hint">Min. 2.0 static · 1.5 seismic</div>
         </div>
         <div class="form-group">
-          <label class="lbl-tip" data-tip="Required factor of safety against sliding.&#10;Typical minimum: 1.5 (static), 1.2 (seismic).&#10;Range: 1.5 – 2.5">
+          <label class="lbl-tip" data-tip="Required FS against sliding — static loads.&#10;Typical minimum: 1.5.&#10;Range: 1.2 – 2.5">
             FS<sub>sl</sub> (sliding) <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
-            <input type="number" id="rw-FSs" value="1.5" min="1.5" max="2.5" step="0.1" onchange="calcRW()">
+            <input type="number" id="rw-FSs" value="1.5" min="1.2" max="2.5" step="0.1" onchange="calcRW()">
           </div>
-          <div class="rw-hint">Min. 1.5 static · 1.2 seismic</div>
+        </div>
+      </div>
+      <div id="rw-seismic-fs-row" style="display:none">
+        <div class="form-row-2" style="margin-bottom:4px;margin-top:8px">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);padding-bottom:4px">Seismic</div>
+          <div></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="lbl-tip" data-tip="Required FS against overturning — seismic loads.&#10;Typical minimum: 1.5.&#10;Range: 1.0 – 2.0">
+              FS<sub>ot,seis</sub> <span class="lbl-tip-icon">?</span>
+            </label>
+            <div class="iw">
+              <input type="number" id="rw-FSo-seis" value="1.5" min="1.0" max="2.0" step="0.1" onchange="calcRW()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="lbl-tip" data-tip="Required FS against sliding — seismic loads.&#10;Typical minimum: 1.2.&#10;Range: 1.0 – 1.8">
+              FS<sub>sl,seis</sub> <span class="lbl-tip-icon">?</span>
+            </label>
+            <div class="iw">
+              <input type="number" id="rw-FSs-seis" value="1.2" min="1.0" max="1.8" step="0.1" onchange="calcRW()">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -621,12 +630,6 @@ function computeKhASCE7() {
    CONDITIONAL SHOW / HIDE
    ═══════════════════════════════════════════════════ */
 
-function onToeChange() {
-  var on = document.getElementById('rw-includeToe').checked;
-  document.getElementById('rw-toe-grp').style.display = on ? '' : 'none';
-  calcRW();
-}
-
 function onSurchargeChange() {
   var on = document.getElementById('rw-inclSurcharge').checked;
   document.getElementById('rw-surcharge-panel').style.display = on ? 'block' : 'none';
@@ -636,6 +639,7 @@ function onSurchargeChange() {
 function onSeismicChange() {
   var on = document.getElementById('rw-inclSeismic').checked;
   document.getElementById('rw-seismic-panel').style.display = on ? 'block' : 'none';
+  document.getElementById('rw-seismic-fs-row').style.display = on ? 'block' : 'none';
   calcRW();
 }
 
@@ -686,16 +690,11 @@ function updateDeltaAutoLabel() {
    ═══════════════════════════════════════════════════ */
 
 function drawSketch() {
-  var H       = parseFloat(document.getElementById('rw-H').value)  || 4.5;
-  var ts_mm   = parseFloat(document.getElementById('rw-ts').value) || 350;
-  var Lh      = parseFloat(document.getElementById('rw-Lh').value) || 2.5;
-  var Lt_mm   = parseFloat(document.getElementById('rw-Lt').value) || 1.0;
-  var tf_mm   = parseFloat(document.getElementById('rw-tf').value) || 450;
-  var inclToe = document.getElementById('rw-includeToe').checked;
-
-  var ts = ts_mm / 1000;
-  var tf = tf_mm / 1000;
-  var Lt = inclToe ? (parseFloat(document.getElementById('rw-Lt').value) || 1.0) : 0;
+  var H  = parseFloat(document.getElementById('rw-H').value)  || 4.5;
+  var ts = parseFloat(document.getElementById('rw-ts').value) || 0.35;
+  var Lh = parseFloat(document.getElementById('rw-Lh').value) || 2.5;
+  var Lt = parseFloat(document.getElementById('rw-Lt').value) || 0;
+  var tf = parseFloat(document.getElementById('rw-tf').value) || 0.45;
 
   var totalW = Lt + ts + Lh;
   var totalH = H + tf;
@@ -748,7 +747,7 @@ function drawSketch() {
   s += '<rect x="' + px(Lt) + '" y="' + py(H+tf) + '" width="' + (ts*sc) + '" height="' + (H*sc) + '" fill="' + colFill + '" stroke="' + colStroke + '" stroke-width="1.2" rx="1"/>';
 
   // Ground line toe side
-  if (inclToe && Lt > 0.01) {
+  if (Lt > 0.01) {
     s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + px(Lt) + '" y2="' + py(tf) + '" stroke="#666" stroke-width="1.5"/>';
     // hatch below ground on toe side
     s += '<line x1="' + (px(0)-8) + '" y1="' + py(tf) + '" x2="' + (px(0)-14) + '" y2="' + (py(tf)+6) + '" stroke="#888" stroke-width="1"/>';
@@ -784,8 +783,47 @@ function drawSketch() {
 }
 
 /* ═══════════════════════════════════════════════════
+   LIMIT WARNINGS (beam module pattern)
+   ═══════════════════════════════════════════════════ */
+
+function checkRWLimits() {
+  var fc = parseFloat(document.getElementById('rw-fc').value);
+  var fy = parseFloat(document.getElementById('rw-fy').value);
+  var wFc = document.getElementById('warn-rw-fc');
+  var wFy = document.getElementById('warn-rw-fy');
+
+  if (!isNaN(fc)) {
+    if (fc < 17 || fc > 69) {
+      wFc.textContent = 'ACI 318-19 §19.2.1.1: f\'c must be 17 – 69 MPa.';
+      wFc.classList.add('show');
+    } else if (fc < 20) {
+      wFc.textContent = 'f\'c below 20 MPa is uncommon for retaining walls.';
+      wFc.classList.add('show');
+    } else {
+      wFc.classList.remove('show');
+    }
+  }
+
+  if (!isNaN(fy)) {
+    if (fy > 550) {
+      wFy.textContent = 'ACI 318-19 §20.2.2.4: f_y ≤ 550 MPa for design.';
+      wFy.classList.add('show');
+    } else if (fy < 280) {
+      wFy.textContent = 'f_y below 280 MPa is uncommon.';
+      wFy.classList.add('show');
+    } else {
+      wFy.classList.remove('show');
+    }
+  }
+
+  calcRW();
+}
+
+/* ═══════════════════════════════════════════════════
    MAIN CALC (Phase 1A stub)
    ═══════════════════════════════════════════════════ */
+
+var gc = 25; // kN/m³ — normal-weight reinforced concrete (hardcoded)
 
 function calcRW() {
   updateKpAutoLabel();
