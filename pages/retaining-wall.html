@@ -53,10 +53,10 @@
 .rw-hint{font-size:.7rem;color:var(--text-dim);margin-top:3px;}
 
 /* ── Label tooltip ── */
-.lbl-tip{position:relative;cursor:help;display:inline-flex;align-items:center;gap:4px;}
+.lbl-tip{position:relative;cursor:help;}
 .lbl-tip::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);width:280px;background:var(--bg2);border:1px solid var(--accent);border-radius:6px;padding:8px 11px;font-size:.74rem;color:var(--text);line-height:1.6;z-index:200;display:none;white-space:pre-wrap;box-shadow:0 4px 12px rgba(0,0,0,.18);}
 .lbl-tip:hover::after{display:block;}
-.lbl-tip-icon{font-size:.68rem;font-weight:700;background:var(--accent);color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
+.lbl-tip-icon{font-size:.68rem;font-weight:700;background:var(--accent);color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;line-height:1;vertical-align:middle;margin-left:3px;}
 
 /* ── Inline calc note ── */
 .calc-note{font-size:.74rem;color:var(--text-dim);line-height:1.55;margin-top:6px;padding:8px 12px;background:var(--bg2);border-radius:5px;border-left:3px solid var(--border);}
@@ -852,7 +852,24 @@ function checkRWLimits() {
 
 var gc = 25; // kN/m³ — normal-weight reinforced concrete (hardcoded)
 
+function updateToeState() {
+  var Lt = parseFloat(document.getElementById('rw-Lt').value) || 0;
+  var htoeEl = document.getElementById('rw-htoe');
+  var htoeGrp = htoeEl.closest('.form-group');
+  if (Lt <= 0) {
+    htoeEl.value = 0;
+    htoeEl.disabled = true;
+    htoeGrp.style.opacity = '0.38';
+    htoeGrp.style.pointerEvents = 'none';
+  } else {
+    htoeEl.disabled = false;
+    htoeGrp.style.opacity = '';
+    htoeGrp.style.pointerEvents = '';
+  }
+}
+
 function calcRW() {
+  updateToeState();
   updateKpAutoLabel();
   updateDeltaAutoLabel();
   drawSketch();
@@ -864,6 +881,7 @@ function calcRW() {
    ═══════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', function () {
+  updateToeState();
   updateKpAutoLabel();
   updateDeltaAutoLabel();
   drawSketch();
