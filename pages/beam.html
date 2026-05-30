@@ -1578,11 +1578,46 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   <div class="bg-section">
     <div class="bg-hdr"><h3>📚 Design Background &amp; Code References</h3></div>
     <div class="bg-tabs">
-      <button class="bg-tab active" onclick="bgTab(this,'shear-bg-aci')">ACI 318-25</button>
+      <button class="bg-tab active" onclick="bgTab(this,'shear-bg-theory')">Theory</button>
+      <button class="bg-tab" onclick="bgTab(this,'shear-bg-aci')">ACI 318-25</button>
       <button class="bg-tab" onclick="bgTab(this,'shear-bg-ec2')">Eurocode 2</button>
       <button class="bg-tab" onclick="bgTab(this,'shear-bg-is456')">IS 456:2000</button>
+      <button class="bg-tab" onclick="bgTab(this,'shear-bg-refs')">References</button>
     </div>
-    <div class="bg-pane active" id="shear-bg-aci">
+
+    <div class="bg-pane active" id="shear-bg-theory">
+      <div class="tb">
+        <h4>Shear Behaviour of Reinforced Concrete Beams</h4>
+        <p>An uncracked reinforced concrete beam resists shear through a combination of concrete tensile and compressive stresses acting on inclined planes. Once diagonal (inclined) cracks form, the internal force path changes fundamentally — and the beam transitions from beam action to a more complex arch-and-truss mechanism.</p>
+        <h4>Mechanisms of Shear Transfer</h4>
+        <ul>
+          <li><strong>Compression zone contribution:</strong> The uncracked concrete above the neutral axis carries significant shear directly.</li>
+          <li><strong>Aggregate interlock:</strong> The rough crack faces interlock and transfer shear across diagonal cracks; this is sensitive to crack width.</li>
+          <li><strong>Dowel action:</strong> The longitudinal tension bars crossing a crack resist shear by bending — typically a minor contribution but not negligible.</li>
+          <li><strong>Stirrup contribution:</strong> Vertical stirrups cross diagonal cracks and carry the remaining shear demand after the concrete mechanisms are exhausted.</li>
+        </ul>
+        <h4>Truss Analogy</h4>
+        <p>The classical design model treats the cracked beam as a parallel-chord truss: the longitudinal steel acts as the tension chord, the concrete compression zone as the compression chord, inclined concrete struts carry compression, and stirrups act as vertical tension members. This model, due to Ritter (1899) and Mörsch (1902), underpins all three codes.</p>
+        <p>Eurocode 2 extends this to the <strong>variable-angle strut</strong> model — the strut angle θ is chosen by the designer between 21.8° and 45°, trading a shallower angle (fewer stirrups, more horizontal force in the chord) against a steeper one (more stirrups, less chord force).</p>
+        <h4>Size Effect</h4>
+        <p>Shear capacity per unit area decreases as beam depth increases — a phenomenon not captured by simple √f'c scaling. ACI 318-19 onward addresses this through the size effect factor λ<sub>s</sub> in §22.5.5.1; EC2 captures it via the k = 1 + √(200/d) term in V<sub>Rd,c</sub>.</p>
+        <h4>Design Approach</h4>
+        <div class="fml-blk">
+          <div class="ft">General Design Requirement</div>
+          φV<sub>n</sub> ≥ V<sub>u</sub> &nbsp; (ACI) &nbsp;&nbsp; V<sub>Rd</sub> ≥ V<sub>Ed</sub> &nbsp; (EC2) &nbsp;&nbsp; V<sub>u</sub> ≤ V<sub>c</sub> + V<sub>us</sub> &nbsp; (IS 456)<br>
+          <div class="fn">All three codes use the same additive model: concrete contribution + stirrup contribution ≥ factored shear demand. When V<sub>u</sub> exceeds the concrete capacity alone, stirrups are required to carry the excess. When V<sub>u</sub> exceeds the maximum strut capacity, the section must be enlarged.</div>
+        </div>
+        <h4>Why Minimum Stirrups Are Required</h4>
+        <p>Even when the applied shear is below the concrete's capacity (V<sub>u</sub> &lt; φV<sub>c</sub>), all three codes mandate a minimum quantity of shear reinforcement in beams. This is because:</p>
+        <ul>
+          <li>Diagonal cracking can occur suddenly; minimum stirrups prevent brittle failure after cracking.</li>
+          <li>Shear demand is often uncertain — construction loads, load redistribution, and dynamic effects can produce higher-than-designed shear.</li>
+          <li>Stirrups also confine the core concrete and hold the main bars in place against dowel splitting.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="shear-bg-aci">
       <div class="tb">
         <h4><span class="rtag">ACI 318-25 §22.5</span> Shear Strength</h4>
         <p>The nominal shear strength of a section is V<sub>n</sub> = V<sub>c</sub> + V<sub>s</sub>. The design requirement is φV<sub>n</sub> ≥ V<sub>u</sub>, where φ = 0.75 for shear.</p>
@@ -1651,6 +1686,24 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
           <div class="ft">Minimum Shear Reinforcement — Cl. 26.5.1.6</div>
           A<sub>sv</sub> / (b·s<sub>v</sub>) ≥ 0.4 / (0.87·f<sub>y</sub>)<br>
           Max spacing: s<sub>v,max</sub> = min(0.75d, 300 mm) — Cl. 26.5.1.5
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-pane" id="shear-bg-refs">
+      <div class="tb">
+        <h4>References</h4>
+        <ul class="ref-list">
+          <li><span class="ref-num">[1]</span><div><strong>ACI 318-25</strong> — Building Code Requirements for Structural Concrete. American Concrete Institute, 2025. §22.5 (Shear strength), §9.7.6.2 (Maximum stirrup spacing), §26.6.3 (Minimum shear reinforcement).</div></li>
+          <li><span class="ref-num">[2]</span><div><strong>EN 1992-1-1:2004</strong> — Eurocode 2: Design of Concrete Structures. CEN, Brussels. §6.2 (Shear), §9.2.2 (Shear reinforcement in beams). Variable-angle strut inclination method.</div></li>
+          <li><span class="ref-num">[3]</span><div><strong>IS 456:2000</strong> — Plain and Reinforced Concrete — Code of Practice, 4th Rev. Bureau of Indian Standards. Cl. 40 (Shear), Table 19 (Design shear strength τ<sub>c</sub>), Table 20 (Maximum τ<sub>c,max</sub>), Cl. 26.5.1 (Stirrup spacing limits).</div></li>
+          <li><span class="ref-num">[4]</span><div><strong>Ritter, W.</strong> — Die Bauweise Hennebique. Schweizerische Bauzeitung, Vol. 33, 1899. (Original truss analogy model for shear in RC beams.)</div></li>
+          <li><span class="ref-num">[5]</span><div><strong>Collins, M.P. &amp; Mitchell, D.</strong> — Prestressed Concrete Structures. Prentice-Hall, 1991. Chapter 7 (Compression Field Theory — basis of EC2 variable-angle truss method).</div></li>
+          <li><span class="ref-num">[6]</span><div><strong>Wight, J.K. &amp; MacGregor, J.G.</strong> — Reinforced Concrete: Mechanics and Design, 7th Ed. Pearson, 2016. Chapter 6 (Shear in Beams).</div></li>
+          <li><span class="ref-num">[7]</span><div><strong>Kani, G.N.J.</strong> — The Riddle of Shear Failure and Its Solution. ACI Journal, Vol. 61, No. 4, 1964. (Landmark study on size effect and shear span ratio influence.)</div></li>
+        </ul>
+        <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:10px 13px;font-size:.78rem;color:var(--text-mid);margin-top:14px;line-height:1.7;">
+          <strong>Disclaimer:</strong> For educational and preliminary design only. Verify all results with a licensed structural engineer.
         </div>
       </div>
     </div>
