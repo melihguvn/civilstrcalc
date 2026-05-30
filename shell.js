@@ -132,7 +132,7 @@
       sub('/pages/column.html#pmm',      'PMM Design', 'column') +
       sub('/pages/column.html#colshear', 'Shear Design', '')) +
     item('/pages/development-length.html', ic.devlen, 'Dev. & Splice Length', 'devlen') +
-    item('/pages/retaining-wall.html',    ic.rw,    'Retaining Wall',       'retwall') +
+    item('/pages/retaining-wall-aci-si.html',    ic.rw,    'Retaining Wall',       'retwall') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',   'steel') +
