@@ -98,7 +98,8 @@
     st:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 3v18"/></svg>',
     rb:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18"/><path d="M7 6l10-2M7 11l10-2M7 16l10-2M7 21l10-2"/></svg>',
     cn:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>',
-    rw:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="4" height="14" rx="0.5"/><rect x="3" y="17" width="16" height="4" rx="0.5"/><line x1="9" y1="5" x2="19" y2="5" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="10" x2="19" y2="10" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="15" x2="19" y2="15" stroke-width="1.3" opacity="0.55"/></svg>'
+    rw:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="4" height="14" rx="0.5"/><rect x="3" y="17" width="16" height="4" rx="0.5"/><line x1="9" y1="5" x2="19" y2="5" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="10" x2="19" y2="10" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="15" x2="19" y2="15" stroke-width="1.3" opacity="0.55"/></svg>',
+    fnd:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="15" width="18" height="6" rx="1"/><rect x="8" y="9" width="8" height="6" rx="0.5"/><rect x="10" y="4" width="4" height="5" rx="0.5"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -133,6 +134,7 @@
       sub('/pages/column.html#colshear', 'Shear Design', '')) +
     item('/pages/development-length.html', ic.devlen, 'Dev. & Splice Length', 'devlen') +
     item('/pages/retaining-wall-aci-si.html',    ic.rw,    'Retaining Wall',       'retwall') +
+    item('/pages/foundation.html',               ic.fnd,   'Foundation Design',    'foundation') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',   'steel') +
