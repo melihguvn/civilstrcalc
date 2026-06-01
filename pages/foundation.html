@@ -24,6 +24,7 @@
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/style.css">
+<script src="../shell.js" defer></script>
 <style>
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
@@ -117,6 +118,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .ref-list li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text-mid);line-height:1.6;}
 .ref-list li:last-child{border-bottom:none;}
 .ref-num{font-family:var(--mono);font-size:.7rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
+/* ── Reinf modal ── */
+#fnd-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}
+#fnd-modal-overlay.show{display:flex;}
+.fnd-pm-box{background:var(--white);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:440px;width:calc(100% - 32px);overflow:hidden;}
+.fnd-pm-hdr{padding:16px 20px 14px;border-bottom:1px solid var(--border);}
+.fnd-pm-hdr h3{margin:0;font-size:.9rem;font-family:var(--sans);font-weight:700;display:flex;align-items:center;gap:8px;}
+.fnd-pm-body{padding:16px 20px;}
+.fnd-pm-body p{margin:0 0 10px;font-size:.82rem;color:var(--text-mid);line-height:1.55;}
+.fnd-pm-kv{width:100%;border-collapse:collapse;margin-bottom:12px;}
+.fnd-pm-kv td{padding:6px 8px;font-size:.8rem;border-bottom:1px solid var(--border);}
+.fnd-pm-kv td:first-child{color:var(--text-dim);width:60%;}
+.fnd-pm-kv td:last-child{font-weight:600;font-family:var(--mono);color:var(--text);text-align:right;}
+.fnd-pm-note{background:#fff8ed;border-left:3px solid #f4c97a;padding:9px 12px;font-size:.76rem;color:#7a5000;margin-bottom:14px;border-radius:0 4px 4px 0;line-height:1.5;}
+.fnd-pm-note.err{background:#fff0f0;border-left-color:var(--red);color:#8b1a1a;}
+.fnd-pm-footer{padding:0 20px 16px;display:flex;gap:8px;justify-content:flex-end;}
+.fnd-pm-btn{font-family:var(--sans);font-size:.78rem;font-weight:600;padding:7px 18px;border-radius:5px;border:none;cursor:pointer;transition:opacity .15s;}
+.fnd-pm-btn.ok{background:var(--accent);color:#fff;}.fnd-pm-btn.ok:hover{opacity:.87;}
+.fnd-pm-btn.cancel{background:var(--bg);color:var(--text-mid);border:1px solid var(--border);}.fnd-pm-btn.cancel:hover{background:var(--border);}
+/* plan view layout (screen: SVG centered; print: table + SVG side-by-side) */
+.punch-plan-layout{display:block;text-align:center;}
+.punch-plan-props{display:none;}
+.punch-plan-props table{width:100%;border-collapse:collapse;}
+.punch-plan-props tr{border-bottom:1px solid var(--border);}
+.punch-plan-props tr:last-child td{border-bottom:none;}
+.punch-plan-props td{padding:4px 6px;font-size:.78rem;}
+.punch-plan-svg{text-align:center;}
 /* print */
 .print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
 .ph-title{font-family:var(--cond);font-weight:700;font-size:1rem;}
@@ -151,12 +178,35 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .print-only{display:flex!important;}
   .print-footer{display:flex!important;}
   .print-disclaimer{display:block!important;}
+  .rpt-inp-sec{display:none!important;}
+  .punch-plan-layout{display:flex!important;align-items:stretch!important;gap:10px!important;}
+  .punch-plan-props{display:block!important;flex:0 0 auto!important;max-width:47mm!important;}
+  .punch-plan-inp-tbl{width:auto!important;}
+  .punch-plan-inp-tbl td{font-size:8pt!important;padding:3px 5px!important;}
+  .punch-plan-inp-tbl td:last-child{text-align:right!important;white-space:nowrap!important;padding-left:8px!important;}
+  .punch-plan-svg{flex:1!important;position:relative!important;min-width:0!important;}
+  .punch-plan-svg svg{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;}
+  .fl-col{padding:6px!important;}
+  .fl-lbl{font-size:.58rem!important;}
+  .fl-val{font-size:1.1rem!important;}
+  .fl-unit-inline{font-size:.55rem!important;}
+  .steps-table td{padding:1.5px 2px!important;}
+  .step-num{width:13px!important;height:13px!important;font-size:.48rem!important;}
+  .step-desc{font-size:6pt!important;}
+  .step-formula{font-size:5pt!important;margin-top:0!important;}
+  .step-val{font-size:6pt!important;}
+  .step-check{font-size:5pt!important;padding:1px 2px!important;}
+  .report-warn{padding:3px 6px!important;font-size:5.5pt!important;margin-bottom:4px!important;line-height:1.3!important;}
+  .print-footer{display:flex!important;margin-top:3px!important;padding-top:3px!important;font-size:5pt!important;}
+  .print-disclaimer{display:block!important;font-size:4.5pt!important;margin-top:2px!important;padding:2px 4px!important;}
+  .dcr-banner>div:first-child{padding-left:12px!important;}
+  .dcr-status{padding-right:12px!important;}
 }
 </style>
 </head>
-<body>
-<script src="../shell.js" defer></script>
-<div class="page-wrap">
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
 <div class="page-title no-print">
   <h1>Foundation Design</h1>
   <p>Punching shear check — Isolated Footing &amp; Raft Foundation · ACI 318-25 · Eurocode 2 · IS 456:2000</p>
@@ -200,8 +250,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="form-div"><div class="form-div-lbl" id="aci-sec1-lbl">Slab Properties</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label id="aci-h-lbl">Slab thickness h <span class="lu" id="lu-aci-h">[mm]</span></label>
-          <div class="iw"><input type="number" id="aci-h" value="300" step="25" oninput="aciUpdateD()"><span class="us" id="u-aci-h">mm</span></div>
+          <label id="aci-h-lbl">Slab thickness h <span class="lu" id="lu-aci-h">[m]</span></label>
+          <div class="iw"><input type="number" id="aci-h" value="0.300" step="0.025" oninput="aciUpdateD()"><span class="us" id="u-aci-h">m</span></div>
         </div>
         <div class="form-group">
           <label>Concrete f'c <span class="lu" id="lu-aci-fc">[MPa]</span></label>
@@ -210,16 +260,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Clear cover c<sub>v</sub> <span class="lu" id="lu-aci-cv">[mm]</span></label>
-          <div class="iw"><input type="number" id="aci-cv" value="25" step="5" min="10" oninput="aciUpdateD()"><span class="us" id="u-aci-cv">mm</span></div>
+          <label>Clear cover c<sub>v</sub> <span class="lu" id="lu-aci-cv">[m]</span></label>
+          <div class="iw"><input type="number" id="aci-cv" value="0.025" step="0.005" min="0.005" oninput="aciUpdateD()"><span class="us" id="u-aci-cv">m</span></div>
         </div>
         <div class="form-group">
-          <label>Bar ⌀ d<sub>b</sub> <span class="lu" id="lu-aci-db">[mm]</span></label>
-          <div class="iw"><input type="number" id="aci-db" value="16" step="2" min="6" max="40" oninput="aciUpdateD()"><span class="us" id="u-aci-db">mm</span></div>
+          <label>Bar ⌀ d<sub>b</sub> <span class="lu" id="lu-aci-db">[m]</span></label>
+          <div class="iw"><input type="number" id="aci-db" value="0.016" step="0.002" min="0.006" oninput="aciUpdateD()"><span class="us" id="u-aci-db">m</span></div>
         </div>
       </div>
       <div style="font-size:.72rem;color:var(--text-dim);padding:2px 0 8px;">
-        d = h − c<sub>v</sub> − d<sub>b</sub> = <strong id="aci-d-disp">259</strong> <span id="aci-d-unit">mm</span>
+        d = h − c<sub>v</sub> − d<sub>b</sub> = <strong id="aci-d-disp">0.259</strong> <span id="aci-d-unit">m</span>
       </div>
 
       <!-- Column -->
@@ -242,29 +292,29 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div id="aci-rect-dims">
         <div class="form-row-2">
           <div class="form-group">
-            <label>c<sub>1</sub> <span class="lu" id="lu-aci-c1">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-c1" value="500" step="25"><span class="us" id="u-aci-c1">mm</span></div>
+            <label>c<sub>1</sub> <span class="lu" id="lu-aci-c1">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-c1" value="0.500" step="0.025"><span class="us" id="u-aci-c1">m</span></div>
           </div>
           <div class="form-group">
-            <label>c<sub>2</sub> <span class="lu" id="lu-aci-c2">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-c2" value="500" step="25"><span class="us" id="u-aci-c2">mm</span></div>
+            <label>c<sub>2</sub> <span class="lu" id="lu-aci-c2">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-c2" value="0.500" step="0.025"><span class="us" id="u-aci-c2">m</span></div>
           </div>
         </div>
       </div>
       <div id="aci-circ-dims" style="display:none">
         <div class="form-group">
-          <label>Diameter D<sub>c</sub> <span class="lu" id="lu-aci-dc">[mm]</span></label>
-          <div class="iw"><input type="number" id="aci-dc" value="500" step="25"><span class="us" id="u-aci-dc">mm</span></div>
+          <label>Diameter D<sub>c</sub> <span class="lu" id="lu-aci-dc">[m]</span></label>
+          <div class="iw"><input type="number" id="aci-dc" value="0.500" step="0.025"><span class="us" id="u-aci-dc">m</span></div>
         </div>
       </div>
       <!-- Edge/corner setbacks -->
       <div id="aci-edge-dims" style="display:none">
         <div id="aci-edge-dist-row" style="display:none">
           <div class="form-group">
-            <label>Distance from edge <span class="lu" id="lu-aci-edist">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-edist" value="0" min="0" step="10"><span class="us" id="u-aci-edist">mm</span></div>
+            <label>Distance from edge <span class="lu" id="lu-aci-edist">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-edist" value="0" min="0" step="0.010"><span class="us" id="u-aci-edist">m</span></div>
           </div>
-          <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with edge.</div>
+          <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with edge (standard ACI).</div>
           <div class="unit-switcher" style="margin-bottom:10px;">
             <label>Free face:</label>
             <div class="unit-btns">
@@ -278,12 +328,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div id="aci-corner-dist-row" style="display:none">
           <div class="form-row-2">
             <div class="form-group">
-              <label>Edge dist. X (c₁) <span class="lu" id="lu-aci-cdx">[mm]</span></label>
-              <div class="iw"><input type="number" id="aci-cdx" value="0" min="0" step="10"><span class="us" id="u-aci-cdx">mm</span></div>
+              <label>Edge dist. X (c₁) <span class="lu" id="lu-aci-cdx">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-cdx" value="0" min="0" step="0.010"><span class="us" id="u-aci-cdx">m</span></div>
             </div>
             <div class="form-group">
-              <label>Edge dist. Y (c₂) <span class="lu" id="lu-aci-cdy">[mm]</span></label>
-              <div class="iw"><input type="number" id="aci-cdy" value="0" min="0" step="10"><span class="us" id="u-aci-cdy">mm</span></div>
+              <label>Edge dist. Y (c₂) <span class="lu" id="lu-aci-cdy">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-cdy" value="0" min="0" step="0.010"><span class="us" id="u-aci-cdy">m</span></div>
             </div>
           </div>
           <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">0 = column face flush with corner.</div>
@@ -304,12 +354,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="form-div"><div class="form-div-lbl">Footing Plan</div></div>
         <div class="form-row-2">
           <div class="form-group">
-            <label>Width B <span class="lu" id="lu-aci-B">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-B" value="2500" step="100"><span class="us" id="u-aci-B">mm</span></div>
+            <label>Width B <span class="lu" id="lu-aci-B">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-B" value="2.500" step="0.100"><span class="us" id="u-aci-B">m</span></div>
           </div>
           <div class="form-group">
-            <label>Length L <span class="lu" id="lu-aci-L">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-L" value="2500" step="100"><span class="us" id="u-aci-L">mm</span></div>
+            <label>Length L <span class="lu" id="lu-aci-L">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-L" value="2.500" step="0.100"><span class="us" id="u-aci-L">m</span></div>
           </div>
         </div>
         <div style="font-size:.69rem;color:var(--text-dim);margin-bottom:8px;">q<sub>u</sub> = P<sub>u</sub>/(B×L) uniform. V<sub>u,net</sub> = P<sub>u</sub> − q<sub>u</sub>·A<sub>crit</sub>  (ACI §13.4.4.1)</div>
@@ -353,14 +403,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="iw"><input type="number" id="aci-nr" value="8" step="1" min="2" max="40" oninput="aciUpdateAv()"><span class="us" id="u-aci-nr">rails</span></div>
           </div>
           <div class="form-group">
-            <label id="aci-rdb-lbl">Stud ⌀ <span class="lu" id="lu-aci-rdb">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-rdb" value="12" step="1" min="8" max="25" oninput="aciUpdateAv()"><span class="us" id="u-aci-rdb">mm</span></div>
+            <label id="aci-rdb-lbl">Stud ⌀ <span class="lu" id="lu-aci-rdb">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-rdb" value="0.012" step="0.001" min="0.008" max="0.025" oninput="aciUpdateAv()"><span class="us" id="u-aci-rdb">m</span></div>
           </div>
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label id="aci-rs-lbl">Spacing s <span class="lu" id="lu-aci-rs">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-rs" value="150" step="10" min="50"><span class="us" id="u-aci-rs">mm</span></div>
+            <label id="aci-rs-lbl">Spacing s <span class="lu" id="lu-aci-rs">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-rs" value="0.150" step="0.025" min="0.050"><span class="us" id="u-aci-rs">m</span></div>
             <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;" id="aci-rs-hint">ACI §22.6.7.1: s ≤ 0.75d (studs)</div>
           </div>
           <div class="form-group">
@@ -385,17 +435,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div style="font-size:.69rem;color:var(--text-dim);background:var(--bg-alt);padding:5px 9px;border-radius:4px;margin-bottom:9px;">Rectangular drop panel, symmetric. Three-check analysis per ACI §22.6.2.1.</div>
           <div class="form-row-2">
             <div class="form-group">
-              <label>Ext. X each side <span class="lu" id="lu-aci-drpX">[mm]</span></label>
-              <div class="iw"><input type="number" id="aci-drpX" value="600" step="25" min="0"><span class="us" id="u-aci-drpX">mm</span></div>
+              <label>Ext. X each side <span class="lu" id="lu-aci-drpX">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-drpX" value="0.600" step="0.025" min="0"><span class="us" id="u-aci-drpX">m</span></div>
             </div>
             <div class="form-group">
-              <label>Ext. Y each side <span class="lu" id="lu-aci-drpY">[mm]</span></label>
-              <div class="iw"><input type="number" id="aci-drpY" value="600" step="25" min="0"><span class="us" id="u-aci-drpY">mm</span></div>
+              <label>Ext. Y each side <span class="lu" id="lu-aci-drpY">[m]</span></label>
+              <div class="iw"><input type="number" id="aci-drpY" value="0.600" step="0.025" min="0"><span class="us" id="u-aci-drpY">m</span></div>
             </div>
           </div>
           <div class="form-group">
-            <label>Drop thickness t<sub>d</sub> (proj. below slab) <span class="lu" id="lu-aci-drpTd">[mm]</span></label>
-            <div class="iw"><input type="number" id="aci-drpTd" value="150" step="25" min="0"><span class="us" id="u-aci-drpTd">mm</span></div>
+            <label>Drop thickness t<sub>d</sub> (proj. below slab) <span class="lu" id="lu-aci-drpTd">[m]</span></label>
+            <div class="iw"><input type="number" id="aci-drpTd" value="0.150" step="0.025" min="0"><span class="us" id="u-aci-drpTd">m</span></div>
           </div>
         </div>
       </div>
@@ -907,9 +957,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   </div>
 </div>
 
-</div><!-- /page-wrap -->
-<script src="../js/nav.js" defer></script>
-<script src="../shell.js" defer></script>
+<!-- Reinf modal -->
+<div id="fnd-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="fnd-pm-title">
+  <div class="fnd-pm-box">
+    <div class="fnd-pm-hdr"><h3 id="fnd-pm-title"></h3></div>
+    <div class="fnd-pm-body" id="fnd-pm-body"></div>
+    <div class="fnd-pm-footer" id="fnd-pm-footer"></div>
+  </div>
+</div>
+</main>
 <script>
 /* ════════════════════════════════════════════════════════════
    FOUNDATION PUNCHING SHEAR — ACI 318-25 / EC2 / IS 456:2000
@@ -934,6 +990,148 @@ function _showErr(emptyId,cardId,msg){
   e.innerHTML=`<div class="ri">&#9888;&#65039;</div><div style="color:var(--red);font-size:.82rem;font-weight:500;">${msg}</div>`;
   e.style.display='';document.getElementById(cardId).style.display='none';
 }
+/* ════════════════════════════════════════════════════════════
+   REINF MODAL — "not needed" / "section too small"
+   ════════════════════════════════════════════════════════════ */
+function _closeFndModal(){document.getElementById('fnd-modal-overlay').classList.remove('show');}
+
+function _showFndModal(result, removeCb){
+  const overlay=document.getElementById('fnd-modal-overlay');
+  const title=document.getElementById('fnd-pm-title');
+  const body=document.getElementById('fnd-pm-body');
+  const footer=document.getElementById('fnd-pm-footer');
+  const codeLabels={aci:'ACI 318-25',ec2:'EC2 §6.4.5',is456:'IS 456 Cl 31.6.3'};
+  const lbl=codeLabels[result.code]||'';
+
+  if(result.mode==='notneeded'){
+    const vuLbl  = result.code==='ec2' ? 'v<sub>Ed</sub>' : result.code==='is456' ? 'τ<sub>v</sub>' : 'v<sub>u</sub>';
+    const capLbl = result.code==='ec2' ? 'v<sub>Rd,c</sub>' : result.code==='is456' ? 'k<sub>s</sub>τ<sub>c</sub>' : 'φv<sub>c</sub>';
+    const noteLbl= result.code==='ec2' ? 'v<sub>Ed</sub> ≤ v<sub>Rd,c</sub>'
+                 : result.code==='is456' ? 'τ<sub>v</sub> ≤ k<sub>s</sub>τ<sub>c</sub>'
+                 : 'v<sub>u</sub> ≤ φv<sub>c</sub>';
+    title.innerHTML='<span style="color:#f39c12">&#9888;</span> Shear Reinforcement Not Required';
+    body.innerHTML=`
+      <p>Concrete capacity alone is sufficient for the current inputs.</p>
+      <table class="fnd-pm-kv">
+        <tr><td>Applied shear stress ${vuLbl}</td><td>${result.vuS}</td></tr>
+        <tr><td>Design capacity ${capLbl}</td><td>${result.capS}</td></tr>
+        <tr><td>D/C ratio</td><td>${result.ratio.toFixed(3)} &lt; 1.0 &check;</td></tr>
+      </table>
+      <div class="fnd-pm-note">Per ${lbl}, shear reinforcement is required only when ${noteLbl}. You may still add it for additional robustness.</div>`;
+    footer.innerHTML=`
+      <button class="fnd-pm-btn cancel" onclick="_closeFndModal();(arguments[0]||{_cb:removeCb})._cb();" data-cb="">Remove Reinforcement</button>
+      <button class="fnd-pm-btn ok" onclick="_closeFndModal();">Add Anyway</button>`;
+    // Bind remove callback
+    footer.querySelector('.fnd-pm-btn.cancel').onclick=()=>{_closeFndModal();removeCb();};
+  } else {
+    // crush — section too small
+    const vuLbl  = result.code==='is456'?'τ<sub>v</sub>':'v<sub>u</sub>';
+    const capLbl = result.code==='is456'?'τ<sub>max</sub>':result.code==='ec2'?'v<sub>Rd,max</sub>':'φv<sub>n,max</sub>';
+    title.innerHTML='<span style="color:var(--red)">&#10060;</span> Reinforcement Cannot Help';
+    body.innerHTML=`
+      <p>Applied shear stress exceeds the maximum permissible capacity. Shear reinforcement <strong>cannot</strong> resolve this — the section must be enlarged.</p>
+      <table class="fnd-pm-kv">
+        <tr><td>Applied shear stress ${vuLbl}</td><td>${result.vuS}</td></tr>
+        <tr><td>Max capacity ${capLbl}</td><td>${result.capS}</td></tr>
+      </table>
+      <div class="fnd-pm-note err">Per ${lbl}, increase foundation thickness, column size, or add a drop panel.</div>`;
+    footer.innerHTML=`<button class="fnd-pm-btn ok" onclick="_closeFndModal();(window._fndModalRemoveCb&&_fndModalRemoveCb());">OK, I Understand</button>`;
+    footer.querySelector('.fnd-pm-btn.ok').onclick=()=>{_closeFndModal();removeCb();};
+  }
+  overlay.classList.add('show');
+  overlay.onclick=e=>{if(e.target===overlay)_closeFndModal();};
+}
+
+/* ── Pre-check: is reinforcement needed? ── */
+function _aciPreCheck(){
+  const U=ACI_U[aciUnit];const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const h=gv('aci-h')*U.lenS,cv=gv('aci-cv')*U.lenS,db=gv('aci-db')*U.lenS,d=h-cv-db;
+  if(!d||d<=0||!gv('aci-fc')||!gv('aci-vu'))return null;
+  const fc=gv('aci-fc')*U.fcS,Vu=gv('aci-vu')*U.fS;
+  const c1=gv('aci-c1')*U.lenS,c2=gv('aci-c2')*U.lenS;
+  const type=aciColType,ef=aciEdgeFace;
+  const e=gv('aci-edist')*U.lenS,cx_=gv('aci-cdx')*U.lenS,cy_=gv('aci-cdy')*U.lenS;
+  let bo;
+  if(type==='int')bo=2*(c1+d)+2*(c2+d);
+  else if(type==='edge'){const b4=2*(c1+d)+2*(c2+d),b3=(ef==='N'||ef==='S')?(c1+d)+2*(c2+d/2+e):(c2+d)+2*(c1+d/2+e);bo=Math.min(b4,b3);}
+  else bo=Math.min(2*(c1+d)+2*(c2+d),c1+c2+d+cx_+cy_);
+  if(!bo||bo<=0)return null;
+  let Vu_net=Vu;
+  if(aciFoundType==='isolated'){const B=gv('aci-B')*U.lenS,L=gv('aci-L')*U.lenS;if(B&&L)Vu_net=Math.max(Vu-Vu/(B*L)*(c1+d)*(c2+d),0.01*Vu);}
+  const beta=c1&&c2?Math.max(c1,c2)/Math.min(c1,c2):1,alphaS=type==='int'?40:type==='edge'?30:20;
+  const vc=Math.min(0.17*(1+2/beta)*Math.sqrt(fc),0.083*(alphaS*d/bo+2)*Math.sqrt(fc),0.33*Math.sqrt(fc));
+  // Include moment transfer (same as calcACI) so pre-check matches report
+  let vu=Vu_net/(bo*d);
+  const Mux=gv('aci-mux')*U.mS,Muy=gv('aci-muy')*U.mS;
+  if((Mux||Muy)&&aciShape==='rect'&&type==='int'&&c1&&c2){
+    const b1x=c1+d,b2x=c2+d,gvx_=1-1/(1+(2/3)*Math.sqrt(b1x/b2x));
+    const Jcx=d*b1x*b1x*b1x/6+d*d*d*b1x/6+b2x*d*b1x*b1x/2;
+    const b1y=c2+d,b2y=c1+d,gvy_=1-1/(1+(2/3)*Math.sqrt(b1y/b2y));
+    const Jcy=d*b1y*b1y*b1y/6+d*d*d*b1y/6+b2y*d*b1y*b1y/2;
+    if(Mux&&Jcx)vu+=(1-gvx_)*Math.abs(Mux)*(b1x/2)/Jcx;
+    if(Muy&&Jcy)vu+=(1-gvy_)*Math.abs(Muy)*(b1y/2)/Jcy;
+  }
+  const phi_vc=0.75*vc;
+  const vn_max=(aciReinfType==='stud'?0.66:0.5)*Math.sqrt(fc);
+  const _fS=v=>U.lenU==='in'?(v/U.fcS).toFixed(0)+' psi':v.toFixed(3)+' MPa';
+  if(vu/0.75>vn_max)return{mode:'crush',vuS:_fS(vu),capS:_fS(0.75*vn_max),code:'aci'};
+  if(vu<=phi_vc)return{mode:'notneeded',vuS:_fS(vu),capS:_fS(phi_vc),ratio:vu/phi_vc,code:'aci'};
+  return{mode:'needed'};
+}
+
+function _ec2PreCheck(){
+  const U=EC2_U[ec2Unit];const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const h=gv('ec2-h')*U.lenS,cv=gv('ec2-cv')*U.lenS,db=gv('ec2-db')*U.lenS,d=h-cv-db;
+  if(!d||d<=0||!gv('ec2-fck')||!gv('ec2-ved'))return null;
+  const fck=gv('ec2-fck'),VEd=gv('ec2-ved')*U.fS;
+  const rho_x=Math.max(gv('ec2-rhox')/100,0.001),rho_y=Math.max(gv('ec2-rhoy')/100,0.001);
+  const c1=gv('ec2-c1')*U.lenS,c2=gv('ec2-c2')*U.lenS;
+  const type=ec2ColType;
+  // Simplified u1 (interior rectangular, close enough for pre-check)
+  let u1;
+  if(type==='int')u1=2*(c1+c2)+2*Math.PI*2*d;
+  else if(type==='edge')u1=c1+2*c2+Math.PI*2*d;
+  else u1=(c1+c2)/2+Math.PI*d;
+  if(!u1||u1<=0)return null;
+  // β factor for moment transfer (EC2 §6.4.3)
+  const Mux=gv('ec2-mux')*U.mS,Muy=gv('ec2-muy')*U.mS;
+  let beta=1.0;
+  if(type==='int'&&(Mux||Muy)&&u1&&d){
+    const e_u=Math.sqrt((Mux?Math.abs(Mux)/VEd:0)**2+(Muy?Math.abs(Muy)/VEd:0)**2);
+    beta=1+0.6*Math.PI*e_u/Math.sqrt(c1*c2);
+  } else if(type==='edge')beta=1.4;
+  else if(type==='corner')beta=1.5;
+  const vEd=beta*VEd/(u1*d);
+  const k=Math.min(1+Math.sqrt(200/d),2.0);
+  const rho_l=Math.sqrt(rho_x*rho_y);
+  const vRdc=Math.max(0.12*k*Math.pow(100*rho_l*fck,1/3),0.035*Math.pow(k,1.5)*Math.sqrt(fck));
+  const _fS=v=>v.toFixed(3)+' MPa';
+  if(vEd<=vRdc)return{mode:'notneeded',vuS:_fS(vEd),capS:_fS(vRdc),ratio:vEd/vRdc,code:'ec2'};
+  return{mode:'needed'};
+}
+
+function _is456PreCheck(){
+  const U=IS456_U[is456Unit];const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const h=gv('is456-h'),cv=gv('is456-cv'),db=gv('is456-db'),d=h-cv-db;
+  if(!d||d<=0||!gv('is456-fck')||!gv('is456-vu'))return null;
+  const fck=gv('is456-fck'),Pu=gv('is456-vu')*U.fS;
+  const c1=gv('is456-c1'),c2=gv('is456-c2');
+  const type=is456ColType;
+  let bo;
+  if(type==='int')bo=2*(c1+d)+2*(c2+d);
+  else if(type==='edge')bo=1.5*(c1+d)+2*(c2+d);
+  else bo=c1+c2+2*d;
+  if(!bo||bo<=0)return null;
+  let V_net=Pu;
+  if(is456FoundType==='isolated'){const B=gv('is456-B'),L=gv('is456-L');if(B&&L)V_net=Math.max(Pu-Pu/(B*L)*(c1+d)*(c2+d),0.01*Pu);}
+  const tauV=V_net/(bo*d);
+  const betaC=c1&&c2?Math.min(c1,c2)/Math.max(c1,c2):1;
+  const tauPerm=Math.min(0.5+betaC,1.0)*0.25*Math.sqrt(fck);
+  const _fS=v=>v.toFixed(3)+' N/mm²';
+  if(tauV<=tauPerm)return{mode:'notneeded',vuS:_fS(tauV),capS:_fS(tauPerm),ratio:tauV/tauPerm,code:'is456'};
+  return{mode:'needed'};
+}
+
 function _showResult(emptyId,cardId,html){
   document.getElementById(emptyId).style.display='none';
   const c=document.getElementById(cardId);c.style.display='';
@@ -972,74 +1170,331 @@ function _dcrBanner(DCR,bo_str,vu_str,cap_str,cap_lbl,title){
 }
 
 function _inpHTML(rows){
-  return `<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>
+  return `<div class="rpt-sec rpt-inp-sec"><div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">${rows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('')}</table>
   </div>`;
 }
+function _diagHTML(inpRows,svg){
+  return `<div class="rpt-sec"><div class="rpt-sec-title">Input Summary &amp; Plan View</div>
+    <div class="punch-plan-layout">
+      <div class="punch-plan-props"><table class="inp-tbl punch-plan-inp-tbl">${inpRows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('')}</table></div>
+      <div class="punch-plan-svg">${svg}</div>
+    </div></div>`;
+}
 
-function _planSVG(c1,c2,Dc,d,shape,type,ef,cp,crit_r,code,B,L){
-  const isIso=B>0&&L>0;
-  const W=380,H=310,ff=n=>n.toFixed(1);
-  const cpC=code==='ec2'?'#2563eb':'#dc2626';
+function _fndPlanSVG({c1_mm,c2_mm,Dc_mm,d_mm,crit_r_mm,type,shape,edgeFace,cornerPos,code,isIso=false,B_mm=0,L_mm=0,c1_disp='',c2_disp='',edgeDist_mm=0,cornerDistX_mm=0,cornerDistY_mm=0,dropData=null,nr_disp=0,reinfType='stud',rs_mm=0,n_sets_svg=0}){
+  const W=450,H=375,legH=26,drawH=H-legH;
+  const isCirc=shape==='circ';
+  const col_hw=isCirc?Dc_mm/2:c1_mm/2, col_hh=isCirc?Dc_mm/2:c2_mm/2;
+  const cp_hw=col_hw+crit_r_mm, cp_hh=col_hh+crit_r_mm;
+  const freeSet={NE:['N','E'],NW:['N','W'],SE:['S','E'],SW:['S','W']};
+  const freeFaces=type==='edge'?[edgeFace||'N']:type==='corner'?(freeSet[cornerPos||'NE']||['N','E']):[];
+  const _dX=dropData?(col_hw+Math.max(dropData.extE_mm,dropData.extW_mm)+60):0;
+  const _dY=dropData?(col_hh+Math.max(dropData.extN_mm,dropData.extS_mm)+60):0;
+  // Pre-compute outer CP extent for scale
+  let _studExtMM=0;
+  if(nr_disp>0&&n_sets_svg>0&&rs_mm>0){const _lastMM=d_mm/4+(n_sets_svg-1)*Math.max(rs_mm,1);_studExtMM=_lastMM+d_mm/2;}
+  let _effHW=isIso?Math.max(B_mm/2,cp_hw,_dX,col_hw+_studExtMM):Math.max(cp_hw,_dX||cp_hw,col_hw+_studExtMM);
+  let _effHH=isIso?Math.max(L_mm/2,cp_hh,_dY,col_hh+_studExtMM):Math.max(cp_hh,_dY||cp_hh,col_hh+_studExtMM);
+  const PAD=40,freeStrip=40;
+  const _sN=freeFaces.includes('N')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
+  const _sS=freeFaces.includes('S')?(type==='edge'?edgeDist_mm:cornerDistY_mm):0;
+  const _sE=freeFaces.includes('E')?(type==='edge'?edgeDist_mm:cornerDistX_mm):0;
+  const _sW=freeFaces.includes('W')?(type==='edge'?edgeDist_mm:cornerDistX_mm):0;
+  const extN=freeFaces.includes('N')?col_hh+_sN+freeStrip:_effHH;
+  const extS=freeFaces.includes('S')?col_hh+_sS+freeStrip:_effHH;
+  const extE=freeFaces.includes('E')?col_hw+_sE+freeStrip:_effHW;
+  const extW=freeFaces.includes('W')?col_hw+_sW+freeStrip:_effHW;
+  const S=Math.min((W-2*PAD)/(extE+extW),(drawH-2*PAD)/(extN+extS),2.4);
+  const offX=Math.max(0,(W-2*PAD-(extE+extW)*S)/2), offY=Math.max(0,(drawH-2*PAD-(extN+extS)*S)/2);
+  const cx=PAD+offX+extW*S, cy=PAD+offY+extN*S;
+  const chw=col_hw*S,chh=col_hh*S,cphw=cp_hw*S,cphh=cp_hh*S;
+  const f=n=>n.toFixed(1);
+  const cpClr=code==='ec2'?'#2563eb':'#dc2626';
   const cpDA=code==='ec2'?'6,3':'4,3';
-  const chw=shape==='circ'?Dc/2*1:c1/2;
-  const chh=shape==='circ'?Dc/2*1:c2/2;
-  const maxE=isIso?Math.max(B/2,L/2)*1.05:Math.max(chw+crit_r,chh+crit_r)*1.5;
-  const S=Math.min((W-50)/(2*maxE),(H-40)/(2*maxE),2.2);
-  const cx=W/2,cy=H/2-8;
-  const cr=crit_r*S,bw=isIso?B/2*S:0,bh=isIso?L/2*S:0;
-  const chws=chw*S,chhs=chh*S;
-  let s='';
+  const critLbl=code==='ec2'?'u₁':'b₀';
+  const critAnn=code==='ec2'?'2d':'d/2';
+
+  const defs=`<defs>
+    <pattern id="fh-col" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#94a3b8" stroke-width="1.2"/></pattern>
+    <pattern id="fh-fnd" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="1.2"/></pattern>
+    <marker id="fh-a1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,1 L7,4 L0,7 Z" fill="#94a3b8"/></marker>
+    <marker id="fh-a2" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M8,1 L1,4 L8,7 Z" fill="#94a3b8"/></marker>
+  </defs>`;
+  let s=defs;
   s+=`<rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/>`;
-  s+=`<rect x="2" y="2" width="${W-4}" height="${H-14}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
-  if(isIso){
-    s+=`<defs><pattern id="fh" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="1.2"/></pattern></defs>`;
-    s+=`<rect x="${ff(cx-bw)}" y="${ff(cy-bh)}" width="${ff(2*bw)}" height="${ff(2*bh)}" fill="url(#fh)" stroke="#64748b" stroke-width="2" rx="2"/>`;
+  s+=`<rect x="2" y="2" width="${W-4}" height="${drawH-2}" fill="white" stroke="#e2e8f0" stroke-width="1" rx="3"/>`;
+
+  const slabX1=freeFaces.includes('W')?cx-chw-_sW*S:2;
+  const slabY1=freeFaces.includes('N')?cy-chh-_sN*S:2;
+  const slabX2=freeFaces.includes('E')?cx+chw+_sE*S:W-2;
+  const slabY2=freeFaces.includes('S')?cy+chh+_sS*S:drawH-2;
+  const elN=cy-chh-_sN*S,elS=cy+chh+_sS*S,elE=cx+chw+_sE*S,elW=cx-chw-_sW*S;
+  s+=`<defs><clipPath id="fh-clip"><rect x="${f(slabX1)}" y="${f(slabY1)}" width="${f(slabX2-slabX1)}" height="${f(slabY2-slabY1)}"/></clipPath></defs>`;
+  if(freeFaces.includes('N'))s+=`<rect x="2" y="2" width="${W-4}" height="${f(Math.max(0,slabY1-2))}" fill="#e2e8f0"/>`;
+  if(freeFaces.includes('S'))s+=`<rect x="2" y="${f(slabY2)}" width="${W-4}" height="${f(Math.max(0,drawH-slabY2-2))}" fill="#e2e8f0"/>`;
+  if(freeFaces.includes('E'))s+=`<rect x="${f(slabX2)}" y="2" width="${f(Math.max(0,W-2-slabX2))}" height="${f(drawH-4)}" fill="#e2e8f0"/>`;
+  if(freeFaces.includes('W'))s+=`<rect x="2" y="2" width="${f(Math.max(0,slabX1-2))}" height="${f(drawH-4)}" fill="#e2e8f0"/>`;
+
+  // X/Y axes
+  const _axC='#cbd5e1',_axA=14;
+  const _cNy=Math.max(cy-_effHH*S-18,12),_yLY=Math.max(_cNy+17,13);
+  s+=`<line x1="4" y1="${f(cy)}" x2="${f(W-_axA-6)}" y2="${f(cy)}" stroke="${_axC}" stroke-width="1" stroke-dasharray="5,4"/>`;
+  s+=`<polygon points="${f(W-_axA-6)},${f(cy-3.5)} ${f(W-5)},${f(cy)} ${f(W-_axA-6)},${f(cy+3.5)}" fill="${_axC}"/>`;
+  s+=`<rect x="${f(W-38)}" y="${f(cy+4)}" width="34" height="13" fill="white" opacity="0.75" rx="2"/>`;
+  s+=`<text x="${f(W-6)}" y="${f(cy+14)}" text-anchor="end" font-size="9" fill="#94a3b8">X (c₁)</text>`;
+  s+=`<line x1="${f(cx)}" y1="${f(drawH-4)}" x2="${f(cx)}" y2="${f(_axA+6)}" stroke="${_axC}" stroke-width="1" stroke-dasharray="5,4"/>`;
+  s+=`<polygon points="${f(cx-3.5)},${f(_axA+6)} ${f(cx)},${f(5)} ${f(cx+3.5)},${f(_axA+6)}" fill="${_axC}"/>`;
+  s+=`<rect x="${f(cx+4)}" y="${f(_yLY-11)}" width="32" height="13" fill="white" opacity="0.75" rx="2"/>`;
+  s+=`<text x="${f(cx+6)}" y="${f(_yLY)}" text-anchor="start" font-size="9" fill="#94a3b8">Y (c₂)</text>`;
+
+  // Slab edge lines
+  const eS='stroke="#1e293b" stroke-width="3" stroke-linecap="square"';
+  for(const ff of freeFaces){
+    if(ff==='N')s+=`<line x1="${f(slabX1)}" y1="${f(elN)}" x2="${f(slabX2)}" y2="${f(elN)}" ${eS}/>`;
+    if(ff==='S')s+=`<line x1="${f(slabX1)}" y1="${f(elS)}" x2="${f(slabX2)}" y2="${f(elS)}" ${eS}/>`;
+    if(ff==='E')s+=`<line x1="${f(elE)}" y1="${f(slabY1)}" x2="${f(elE)}" y2="${f(slabY2)}" ${eS}/>`;
+    if(ff==='W')s+=`<line x1="${f(elW)}" y1="${f(slabY1)}" x2="${f(elW)}" y2="${f(slabY2)}" ${eS}/>`;
   }
-  // critical perimeter
+  for(const ff of freeFaces){
+    const lw=55,lh=15;
+    if(ff==='N'){s+=`<rect x="6" y="${f(elN-15)}" width="${lw}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="8" y="${f(elN-4)}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;}
+    if(ff==='S'){s+=`<rect x="6" y="${f(elS-4)}" width="${lw}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="8" y="${f(elS+8)}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;}
+    if(ff==='E'){s+=`<rect x="${f(elE-57)}" y="${f(Math.max(cy-cphh+3,14))}" width="${lw}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="${f(elE-4)}" y="${f(Math.max(cy-cphh+14,25))}" text-anchor="end" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;}
+    if(ff==='W'){s+=`<rect x="${f(elW+4)}" y="${f(Math.max(cy-cphh+3,14))}" width="${lw}" height="${lh}" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="${f(elW+6)}" y="${f(Math.max(cy-cphh+14,25))}" font-size="10" font-weight="700" fill="#1e293b">Slab edge</text>`;}
+  }
+
+  s+=`<g clip-path="url(#fh-clip)">`;
+
+  // Isolated footing outline
+  if(isIso){
+    const fw=B_mm/2*S,fhh2=L_mm/2*S;
+    s+=`<rect x="${f(cx-fw)}" y="${f(cy-fhh2)}" width="${f(2*fw)}" height="${f(2*fhh2)}" fill="url(#fh-fnd)" stroke="#64748b" stroke-width="2" rx="2"/>`;
+  }
+
+  // Critical perimeter
   if(code==='ec2'&&type==='int'){
-    const r2=cr;const px1=cx-chws-r2,py1=cy-chhs-r2,px2=cx+chws+r2,py2=cy+chhs+r2;
-    s+=`<path d="M ${ff(px1+r2)} ${ff(py1)} H ${ff(px2-r2)} A ${ff(r2)} ${ff(r2)} 0 0 1 ${ff(px2)} ${ff(py1+r2)} V ${ff(py2-r2)} A ${ff(r2)} ${ff(r2)} 0 0 1 ${ff(px2-r2)} ${ff(py2)} H ${ff(px1+r2)} A ${ff(r2)} ${ff(r2)} 0 0 1 ${ff(px1)} ${ff(py2-r2)} V ${ff(py1+r2)} A ${ff(r2)} ${ff(r2)} 0 0 1 ${ff(px1+r2)} ${ff(py1)} Z" fill="rgba(37,99,235,0.05)" stroke="${cpC}" stroke-width="1.8" stroke-dasharray="${cpDA}"/>`;
+    const r2=crit_r_mm*S;
+    s+=`<path d="M ${f(cx-chw)} ${f(cy-chh-r2)} H ${f(cx+chw)} A ${f(r2)} ${f(r2)} 0 0 1 ${f(cx+chw+r2)} ${f(cy-chh)} V ${f(cy+chh)} A ${f(r2)} ${f(r2)} 0 0 1 ${f(cx+chw)} ${f(cy+chh+r2)} H ${f(cx-chw)} A ${f(r2)} ${f(r2)} 0 0 1 ${f(cx-chw-r2)} ${f(cy+chh)} V ${f(cy-chh)} A ${f(r2)} ${f(r2)} 0 0 1 ${f(cx-chw)} ${f(cy-chh-r2)} Z" fill="rgba(37,99,235,0.05)" stroke="${cpClr}" stroke-dasharray="${cpDA}" stroke-width="2.5"/>`;
   } else {
-    s+=`<rect x="${ff(cx-chws-cr)}" y="${ff(cy-chhs-cr)}" width="${ff(2*(chws+cr))}" height="${ff(2*(chhs+cr))}" fill="rgba(220,38,38,0.04)" stroke="${cpC}" stroke-width="1.8" stroke-dasharray="${cpDA}" rx="2"/>`;
+    const fillClr=code==='ec2'?'rgba(37,99,235,0.04)':'rgba(220,38,38,0.04)';
+    s+=`<rect x="${f(cx-cphw)}" y="${f(cy-cphh)}" width="${f(cphw*2)}" height="${f(cphh*2)}" fill="${fillClr}" stroke="${cpClr}" stroke-dasharray="${cpDA}" stroke-width="2.5" rx="2"/>`;
   }
-  // free edge lines
-  const eS='stroke="#1e293b" stroke-width="2.5" stroke-linecap="square"';
-  const freeFaces=type==='int'?[]:type==='edge'?[ef||'N']:cp==='NE'?['N','E']:cp==='NW'?['N','W']:cp==='SW'?['S','W']:['S','E'];
-  if(!isIso){
-    freeFaces.forEach(f=>{
-      if(f==='N')s+=`<line x1="2" y1="${ff(cy-chhs)}" x2="${ff(W-2)}" y2="${ff(cy-chhs)}" ${eS}/>`;
-      if(f==='S')s+=`<line x1="2" y1="${ff(cy+chhs)}" x2="${ff(W-2)}" y2="${ff(cy+chhs)}" ${eS}/>`;
-      if(f==='E')s+=`<line x1="${ff(cx+chws)}" y1="2" x2="${ff(cx+chws)}" y2="${ff(H-14)}" ${eS}/>`;
-      if(f==='W')s+=`<line x1="${ff(cx-chws)}" y1="2" x2="${ff(cx-chws)}" y2="${ff(H-14)}" ${eS}/>`;
-    });
+
+  // Drop panel
+  if(dropData&&!isCirc){
+    const dT=(col_hh+dropData.extN_mm)*S,dB=(col_hh+dropData.extS_mm)*S;
+    const dL=(col_hw+dropData.extW_mm)*S,dR=(col_hw+dropData.extE_mm)*S;
+    s+=`<rect x="${f(cx-dL)}" y="${f(cy-dT)}" width="${f(dL+dR)}" height="${f(dT+dB)}" fill="rgba(140,140,140,0.12)" stroke="#888" stroke-width="1.5" rx="1"/>`;
+    const _blx=cx+dR+4;
+    if(_blx+28<W-2){s+=`<rect x="${f(_blx-1)}" y="${f(cy-9)}" width="28" height="13" fill="white" opacity="0.9" rx="2"/>`;s+=`<text x="${f(_blx)}" y="${f(cy)}" font-size="9" font-weight="700" fill="#888">b₀₂</text>`;}
   }
-  // column
-  if(shape==='circ')s+=`<circle cx="${ff(cx)}" cy="${ff(cy)}" r="${ff(chws)}" fill="#475569" stroke="#1e293b" stroke-width="1.5"/>`;
-  else s+=`<rect x="${ff(cx-chws)}" y="${ff(cy-chhs)}" width="${ff(2*chws)}" height="${ff(2*chhs)}" fill="#475569" stroke="#1e293b" stroke-width="1.5" rx="1"/>`;
-  // B,L labels for isolated
-  if(isIso){
-    const fL=v=>v>=1000?`${(v/1000).toFixed(2)}m`:`${Math.round(v)}mm`;
-    const dy=cy+bh+18;
-    s+=`<line x1="${ff(cx-bw)}" y1="${ff(dy)}" x2="${ff(cx+bw)}" y2="${ff(dy)}" stroke="#94a3b8" stroke-width="1"/>`;
-    s+=`<text x="${ff(cx)}" y="${ff(dy+10)}" text-anchor="middle" font-size="9" fill="#475569" font-weight="600">B=${fL(B)}</text>`;
-    const dx=cx+bw+20;
-    s+=`<line x1="${ff(dx)}" y1="${ff(cy-bh)}" x2="${ff(dx)}" y2="${ff(cy+bh)}" stroke="#94a3b8" stroke-width="1"/>`;
-    s+=`<text x="${ff(dx+4)}" y="${ff(cy+4)}" font-size="9" fill="#475569" font-weight="600">L=${fL(L)}</text>`;
+
+  // Column
+  if(isCirc){
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="#475569"/>`;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="url(#fh-col)" opacity="0.35"/>`;
+    s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(chw)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
+    const cfs=Math.max(8,Math.min(12,chw*0.55));
+    s+=`<text x="${f(cx)}" y="${f(cy)}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs.toFixed(0)}" font-weight="700" fill="white">D=${c1_disp}</text>`;
+  } else {
+    s+=`<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="#475569"/>`;
+    s+=`<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="url(#fh-col)" opacity="0.35"/>`;
+    s+=`<rect x="${f(cx-chw)}" y="${f(cy-chh)}" width="${f(chw*2)}" height="${f(chh*2)}" fill="none" stroke="#1e293b" stroke-width="2"/>`;
+    const cfs=Math.max(8,Math.min(12,Math.min(chw,chh)*0.55));
+    s+=`<text x="${f(cx)}" y="${f(cy)}" text-anchor="middle" dominant-baseline="middle" font-size="${cfs.toFixed(0)}" font-weight="700" fill="white">${c1_disp}\xd7${c2_disp}</text>`;
   }
-  // legend
-  const ly=H-6;
-  if(isIso)s+=`<rect x="6" y="${ly-9}" width="12" height="8" fill="url(#fh)" stroke="#64748b" stroke-width="1.5" rx="1"/><text x="21" y="${ly}" font-size="8" fill="#475569">Footing</text>`;
-  s+=`<line x1="${isIso?88:6}" y1="${ly-5}" x2="${isIso?102:20}" y2="${ly-5}" stroke="${cpC}" stroke-dasharray="${cpDA}" stroke-width="1.8"/><text x="${isIso?105:23}" y="${ly}" font-size="8" fill="${cpC}">b₀${code==='ec2'?' (2d)':' (d/2)'}</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;display:block;margin:auto">${s}</svg>`;
+  // Reinforcement + outer CP
+  let ocphw=0,ocphh=0,studPosPX=[];
+  if(nr_disp>0&&n_sets_svg>0&&rs_mm>0){
+    let _p=d_mm/4;
+    while(studPosPX.length<n_sets_svg){studPosPX.push(_p*S);if(rs_mm<=0)break;_p+=rs_mm;}
+    if(studPosPX.length===0)studPosPX.push(d_mm/4*S);
+    const _lastMM=studPosPX[studPosPX.length-1]/S;
+    const _outerMM=_lastMM+d_mm/2;
+    ocphw=(col_hw+_outerMM)*S; ocphh=(col_hh+_outerMM)*S;
+    // Outer CP
+    if(isCirc){
+      s+=`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ocphw)}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`;
+    } else {
+      const _opts=[cx-chw,cy-ocphh,cx+chw,cy-ocphh,cx+ocphw,cy-chh,cx+ocphw,cy+chh,cx+chw,cy+ocphh,cx-chw,cy+ocphh,cx-ocphw,cy+chh,cx-ocphw,cy-chh];
+      const _opstr=[];for(let i=0;i<_opts.length;i+=2)_opstr.push(`${f(_opts[i])},${f(_opts[i+1])}`);
+      s+=freeFaces.length===0
+        ?`<polygon points="${_opstr.join(' ')}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>`
+        :`<rect x="${f(cx-ocphw)}" y="${f(cy-ocphh)}" width="${f(ocphw*2)}" height="${f(ocphh*2)}" fill="none" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5" rx="2"/>`;
+    }
+    const railLen=studPosPX[studPosPX.length-1]+6;
+    const _dlg=1.2,_dlc='#1f2937',_dlw=1.1;
+    const _isStud=reinfType!=='stirrup';
+
+    if(isCirc&&_isStud){
+      // Circular column — radial stud rails distributed around active arc
+      const _arcT={
+        int:{start:0,span:360},
+        edge_N:{start:315,span:270},edge_S:{start:135,span:270},
+        edge_E:{start:45,span:270},edge_W:{start:225,span:270},
+        corner_NE:{start:45,span:180},corner_NW:{start:315,span:180},
+        corner_SE:{start:135,span:180},corner_SW:{start:225,span:180}
+      };
+      const _ak=type==='int'?'int':type==='edge'?`edge_${edgeFace||'N'}`:`corner_${cornerPos||'NE'}`;
+      const {start:_as,span:_sp}=_arcT[_ak]||{start:0,span:360};
+      for(let i=0;i<nr_disp;i++){
+        const frac=_sp>=360?i/nr_disp:(nr_disp>1?i/(nr_disp-1):0.5);
+        const ang=(_as+frac*_sp)*Math.PI/180;
+        const dx=Math.cos(ang),dy=Math.sin(ang);
+        const rx=cx+dx*chw,ry=cy+dy*chw;
+        const _rpx=-dy*_dlg,_rpy=dx*_dlg;
+        s+=`<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+        s+=`<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+        for(const sp of studPosPX)s+=`<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
+      }
+    } else {
+      // Rectangular column (or circular with stirrups — use Dc as face length)
+      const _faceLen=isCirc?Dc_mm:null; // null → use c1/c2 per face
+      const actFaces=['N','E','S','W'].filter(ff=>!freeFaces.includes(ff));
+      const fLen={N:_faceLen??c1_mm,E:_faceLen??c2_mm,S:_faceLen??c1_mm,W:_faceLen??c2_mm};
+      const totLen=actFaces.reduce((a,ff)=>a+fLen[ff],0)||1;
+      const exct=actFaces.map(ff=>nr_disp*fLen[ff]/totLen);
+      const flrs=exct.map(Math.floor);
+      let remC=nr_disp-flrs.reduce((a,b)=>a+b,0);
+      const frcs=exct.map((v,i)=>({i,r:v-flrs[i]})).sort((a,b)=>b.r-a.r);
+      const cnts=[...flrs];
+      for(let k=0;k<remC;k++)cnts[frcs[k].i]++;
+      if(_isStud){
+        actFaces.forEach((ff,i)=>{
+          const n=cnts[i];
+          for(let j=0;j<n;j++){
+            const t=(j+0.5)/n;
+            let rx,ry,dx,dy;
+            if(ff==='N'){rx=cx+(t-0.5)*2*chw;ry=cy-chh;dx=0;dy=-1;}
+            else if(ff==='E'){rx=cx+chw;ry=cy+(t-0.5)*2*chh;dx=1;dy=0;}
+            else if(ff==='S'){rx=cx+(0.5-t)*2*chw;ry=cy+chh;dx=0;dy=1;}
+            else{rx=cx-chw;ry=cy+(0.5-t)*2*chh;dx=-1;dy=0;}
+            const _rpx=-dy*_dlg,_rpy=dx*_dlg;
+            s+=`<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*railLen+_rpx)}" y2="${f(ry+dy*railLen+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+            s+=`<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*railLen-_rpx)}" y2="${f(ry+dy*railLen-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+            for(const sp of studPosPX)s+=`<circle cx="${f(rx+dx*sp)}" cy="${f(ry+dy*sp)}" r="3.5" fill="white" stroke="#1f2937" stroke-width="1.4"/>`;
+          }
+        });
+      } else {
+        const _lastSP=studPosPX[studPosPX.length-1],_ext=_dlg+3;
+        actFaces.forEach((ff,i)=>{
+          const n=cnts[i];if(n<1)return;
+          const legPos=[];
+          for(let j=0;j<n;j++){
+            const t=(j+0.5)/n;
+            let rx,ry,dx,dy;
+            if(ff==='N'){rx=cx+(t-0.5)*2*chw;ry=cy-chh;dx=0;dy=-1;}
+            else if(ff==='E'){rx=cx+chw;ry=cy+(t-0.5)*2*chh;dx=1;dy=0;}
+            else if(ff==='S'){rx=cx+(0.5-t)*2*chw;ry=cy+chh;dx=0;dy=1;}
+            else{rx=cx-chw;ry=cy+(0.5-t)*2*chh;dx=-1;dy=0;}
+            legPos.push({rx,ry,dx,dy});
+            const _rpx=-dy*_dlg,_rpy=dx*_dlg;
+            s+=`<line x1="${f(rx+_rpx)}" y1="${f(ry+_rpy)}" x2="${f(rx+dx*_lastSP+_rpx)}" y2="${f(ry+dy*_lastSP+_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+            s+=`<line x1="${f(rx-_rpx)}" y1="${f(ry-_rpy)}" x2="${f(rx+dx*_lastSP-_rpx)}" y2="${f(ry+dy*_lastSP-_rpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+          }
+          if(legPos.length>=2){
+            const p0=legPos[0],pN=legPos[legPos.length-1];
+            for(const sp of studPosPX){
+              const bx1=p0.rx+p0.dx*sp,by1=p0.ry+p0.dy*sp;
+              const bx2=pN.rx+pN.dx*sp,by2=pN.ry+pN.dy*sp;
+              const blen=Math.hypot(bx2-bx1,by2-by1);if(blen<0.5)continue;
+              const bdx=(bx2-bx1)/blen,bdy=(by2-by1)/blen;
+              const _bpx=-bdy*_dlg,_bpy=bdx*_dlg;
+              s+=`<line x1="${f(bx1-bdx*_ext+_bpx)}" y1="${f(by1-bdy*_ext+_bpy)}" x2="${f(bx2+bdx*_ext+_bpx)}" y2="${f(by2+bdy*_ext+_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+              s+=`<line x1="${f(bx1-bdx*_ext-_bpx)}" y1="${f(by1-bdy*_ext-_bpy)}" x2="${f(bx2+bdx*_ext-_bpx)}" y2="${f(by2+bdy*_ext-_bpy)}" stroke="${_dlc}" stroke-width="${_dlw}"/>`;
+            }
+          }
+        });
+      }
+    }
+    // b₀,out label
+    if(!freeFaces.includes('E')&&ocphw+cx<W-8){const _ox=cx+ocphw+5,_oy=cy-24;s+=`<rect x="${f(_ox-2)}" y="${f(_oy-9)}" width="48" height="13" fill="white" opacity="0.92" rx="2"/>`;s+=`<text x="${f(_ox)}" y="${f(_oy)}" font-size="9" font-weight="700" fill="#059669">b₀,out</text>`;}
+  }
+  s+=`</g>`;
+
+  // d/2 (or 2d) annotation — E face preferred, W fallback
+  if(!freeFaces.includes('E')&&cphw-chw>10){
+    const dmy=Math.min(cy+chh+12,drawH-18);
+    const dmx1=cx+chw,dmx2=cx+cphw,_mid=(dmx1+dmx2)/2;
+    s+=`<line x1="${f(dmx1)}" y1="${f(cy+chh+2)}" x2="${f(dmx1)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s+=`<line x1="${f(dmx2)}" y1="${f(cy+chh+2)}" x2="${f(dmx2)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s+=`<line x1="${f(dmx1)}" y1="${f(dmy)}" x2="${f(dmx2)}" y2="${f(dmy)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#fh-a2)" marker-end="url(#fh-a1)"/>`;
+    s+=`<rect x="${f(_mid-12)}" y="${f(dmy-14)}" width="24" height="11" fill="white" opacity="0.9" rx="2"/>`;
+    s+=`<text x="${f(_mid)}" y="${f(dmy-6)}" text-anchor="middle" font-size="9" fill="#64748b">${critAnn}</text>`;
+  } else if(!freeFaces.includes('W')&&cphw-chw>10){
+    const dmy=Math.min(cy+chh+12,drawH-18);
+    const dmx1=cx-cphw,dmx2=cx-chw,_mid=(dmx1+dmx2)/2;
+    s+=`<line x1="${f(dmx1)}" y1="${f(cy+chh+2)}" x2="${f(dmx1)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s+=`<line x1="${f(dmx2)}" y1="${f(cy+chh+2)}" x2="${f(dmx2)}" y2="${f(dmy+5)}" stroke="#94a3b8" stroke-width="0.8"/>`;
+    s+=`<line x1="${f(dmx1)}" y1="${f(dmy)}" x2="${f(dmx2)}" y2="${f(dmy)}" stroke="#94a3b8" stroke-width="1" marker-start="url(#fh-a2)" marker-end="url(#fh-a1)"/>`;
+    s+=`<rect x="${f(_mid-12)}" y="${f(dmy-14)}" width="24" height="11" fill="white" opacity="0.9" rx="2"/>`;
+    s+=`<text x="${f(_mid)}" y="${f(dmy-6)}" text-anchor="middle" font-size="9" fill="#64748b">${critAnn}</text>`;
+  }
+
+  // Zone (rail length) annotation — orange, same side as d/2
+  if(studPosPX.length>0){
+    const _zoneMM=studPosPX[studPosPX.length-1]/S;
+    const _zonePX=_zoneMM*S;
+    const _dimY2=Math.min(cy+chh+34,drawH-12);
+    const _rlLbl=`Zone: ${Math.round(_zoneMM)} mm`;
+    function _drawZone(rx1,rx2){
+      const _mid=(rx1+rx2)/2;
+      s+=`<line x1="${f(rx1)}" y1="${f(cy+chh+2)}" x2="${f(rx1)}" y2="${f(_dimY2+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s+=`<line x1="${f(rx2)}" y1="${f(cy+chh+2)}" x2="${f(rx2)}" y2="${f(_dimY2+5)}" stroke="#f97316" stroke-width="0.8" stroke-dasharray="2,2"/>`;
+      s+=`<line x1="${f(rx1)}" y1="${f(_dimY2)}" x2="${f(rx2)}" y2="${f(_dimY2)}" stroke="#f97316" stroke-width="1.2" marker-start="url(#fh-a2)" marker-end="url(#fh-a1)"/>`;
+      s+=`<rect x="${f(_mid-30)}" y="${f(_dimY2-14)}" width="60" height="11" fill="white" opacity="0.9" rx="2"/>`;
+      s+=`<text x="${f(_mid)}" y="${f(_dimY2-6)}" text-anchor="middle" font-size="9" font-weight="600" fill="#f97316">${_rlLbl}</text>`;
+    }
+    if(!freeFaces.includes('E'))_drawZone(cx+chw,cx+chw+_zonePX);
+    else if(!freeFaces.includes('W')&&cx-chw-_zonePX>2)_drawZone(cx-chw-_zonePX,cx-chw);
+  }
+
+  // b₀/u₁ label on inner CP
+  const _hasReinf=nr_disp>0&&n_sets_svg>0;
+  const _b0lbl=_hasReinf?(critLbl+',in'):critLbl;
+  const _b0w=_hasReinf?52:42;
+  if(!freeFaces.includes('N')&&cphh>14&&cphw>16){
+    const _y=cy-cphh-7;
+    s+=`<rect x="${f(cx-_b0w/2)}" y="${f(_y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s+=`<text x="${f(cx)}" y="${f(_y)}" text-anchor="middle" font-size="10" font-weight="700" fill="${cpClr}">${_b0lbl}</text>`;
+  } else if(!freeFaces.includes('S')&&cphh>14&&cphw>16){
+    const _y=cy+cphh+11;
+    s+=`<rect x="${f(cx-_b0w/2)}" y="${f(_y-10)}" width="${_b0w}" height="13" fill="white" opacity="0.92" rx="2"/>`;
+    s+=`<text x="${f(cx)}" y="${f(_y)}" text-anchor="middle" font-size="10" font-weight="700" fill="${cpClr}">${_b0lbl}</text>`;
+  }
+
+  // Compass N/S/E/W
+  const _rHW=_effHW*S,_rHH=_effHH*S;
+  const cNy=Math.max(cy-_rHH-18,12);
+  s+=`<rect x="${f(cx-9)}" y="${f(cNy-11)}" width="18" height="14" fill="white" opacity="0.88" rx="3"/>`;
+  s+=`<text x="${f(cx)}" y="${f(cNy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">N</text>`;
+  if(!freeFaces.includes('E')){const _ex=Math.min(cx+_rHW+16,W-6);s+=`<rect x="${f(_ex-2)}" y="${f(cy-7)}" width="15" height="15" fill="white" opacity="0.88" rx="3"/>`;s+=`<text x="${f(_ex)}" y="${f(cy+3)}" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">E</text>`;}
+  if(!freeFaces.includes('S')){const _sy=Math.min(cy+_rHH+18,drawH-4);s+=`<rect x="${f(cx-9)}" y="${f(_sy-11)}" width="18" height="14" fill="white" opacity="0.88" rx="3"/>`;s+=`<text x="${f(cx)}" y="${f(_sy)}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8">S</text>`;}
+  if(!freeFaces.includes('W')){const _wx=Math.max(cx-_rHW-16,7);s+=`<rect x="${f(_wx-13)}" y="${f(cy-7)}" width="15" height="15" fill="white" opacity="0.88" rx="3"/>`;s+=`<text x="${f(_wx)}" y="${f(cy+3)}" text-anchor="end" dominant-baseline="middle" font-size="11" font-weight="700" fill="#94a3b8">W</text>`;}
+
+  // Legend
+  const ly=H-legH+7;let lx=8;
+  if(isIso){s+=`<rect x="${lx}" y="${ly-1}" width="13" height="9" fill="url(#fh-fnd)" stroke="#64748b" stroke-width="1.5" rx="1"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#475569">Footing</text>`;lx+=62;}
+  s+=`<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="${cpClr}" stroke-dasharray="${cpDA}" stroke-width="2"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="${cpClr}">${_hasReinf?critLbl+',in':critLbl} (${critAnn})</text>`;lx+=_hasReinf?76:72;
+  if(_hasReinf){s+=`<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#059669" stroke-dasharray="3,2" stroke-width="1.5"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#059669">b₀,out</text>`;lx+=60;}
+  if(dropData&&!isCirc){s+=`<rect x="${lx}" y="${ly}" width="13" height="9" fill="rgba(140,140,140,0.12)" stroke="#888" stroke-width="1"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#888">Drop panel</text>`;lx+=82;}
+  if(_hasReinf){
+    const _isSt=reinfType!=='stirrup';
+    if(_isSt){s+=`<line x1="${lx}" y1="${ly+3}" x2="${lx+12}" y2="${ly+3}" stroke="#1f2937" stroke-width="1"/>`;s+=`<line x1="${lx}" y1="${ly+6}" x2="${lx+12}" y2="${ly+6}" stroke="#1f2937" stroke-width="1"/>`;s+=`<circle cx="${lx+6}" cy="${ly+4}" r="2.8" fill="white" stroke="#1f2937" stroke-width="1.3"/>`;s+=`<text x="${lx+15}" y="${ly+8}" font-size="8" fill="#374151">Stud rail</text>`;lx+=68;}
+    else{for(const _lx2 of[lx+3,lx+10]){s+=`<line x1="${f(_lx2-1)}" y1="${ly}" x2="${f(_lx2-1)}" y2="${ly+9}" stroke="#1f2937" stroke-width="1"/>`;s+=`<line x1="${f(_lx2+1)}" y1="${ly}" x2="${f(_lx2+1)}" y2="${ly+9}" stroke="#1f2937" stroke-width="1"/>`;}s+=`<line x1="${lx}" y1="${f(ly+3.5)}" x2="${lx+13}" y2="${f(ly+3.5)}" stroke="#1f2937" stroke-width="1"/>`;s+=`<line x1="${lx}" y1="${f(ly+5.5)}" x2="${lx+13}" y2="${f(ly+5.5)}" stroke="#1f2937" stroke-width="1"/>`;s+=`<text x="${lx+16}" y="${ly+8}" font-size="8" fill="#1f2937">Stirrup</text>`;lx+=64;}
+  }
+  if(freeFaces.length>0){s+=`<line x1="${lx}" y1="${ly+4}" x2="${lx+13}" y2="${ly+4}" stroke="#1e293b" stroke-width="2.5"/><text x="${lx+16}" y="${ly+8}" font-size="8" fill="#334155">Slab edge</text>`;}
+
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:0 auto;max-width:100%;height:auto" font-family="var(--sans)" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
 }
 
 /* ════════════════════════════════════════════════════════════
    ACI 318-25
    ════════════════════════════════════════════════════════════ */
 const ACI_U={
-  knm:{lenU:'mm',lenS:1,fcU:'MPa',fcS:1,fU:'kN',fS:1e3,mU:'kN·m',mS:1e6,tag:'kN-m',
-       dH:300,dCv:25,dDb:16,dC:500,dVu:800,dB:2500,dFc:28,dFyt:420,dRS:150,dRdb:12,dDrp:600,dDrpTd:150},
+  knm:{lenU:'m',lenS:1000,fcU:'MPa',fcS:1,fU:'kN',fS:1e3,mU:'kN·m',mS:1e6,tag:'kN-m',
+       dH:0.300,dCv:0.025,dDb:0.016,dC:0.500,dVu:800,dB:2.500,dFc:28,dFyt:420,dRS:0.150,dRdb:0.012,dDrp:0.600,dDrpTd:0.150},
   nmm:{lenU:'mm',lenS:1,fcU:'MPa',fcS:1,fU:'N',fS:1,mU:'N·mm',mS:1,tag:'N-mm',
        dH:300,dCv:25,dDb:16,dC:500,dVu:8e5,dB:2500,dFc:28,dFyt:420,dRS:150,dRdb:12,dDrp:600,dDrpTd:150},
   us:{lenU:'in',lenS:25.4,fcU:'psi',fcS:0.006895,fU:'kip',fS:4448.22,mU:'kip·ft',mS:1355818,tag:'US Customary',
@@ -1102,7 +1557,10 @@ function aciSetColType(t,btn){
 }
 function aciSetEdgeFace(f,btn){aciEdgeFace=f;['N','E','S','W'].forEach(x=>document.getElementById('aci-ef-'+x).classList.toggle('active',x===f));}
 function aciSetCornerPos(p,btn){aciCornerPos=p;['NE','NW','SW','SE'].forEach(x=>document.getElementById('aci-cp-'+x).classList.toggle('active',x===p));}
-function aciSetHasReinf(on){document.getElementById('aci-reinf-inputs').style.display=on?'':'none';}
+function aciSetHasReinf(on){
+  document.getElementById('aci-reinf-inputs').style.display=on?'':'none';
+  if(on){const chk=_aciPreCheck();if(chk&&chk.mode!=='needed')_showFndModal(chk,()=>{document.getElementById('aci-has-reinf').checked=false;aciSetHasReinf(false);});}
+}
 function aciSetReinfType(t,btn){
   aciReinfType=t;
   document.getElementById('aci-rt-stud').classList.toggle('active',t==='stud');
@@ -1199,9 +1657,9 @@ function calcACI(){
     const vs_in=Av_1*fyt_r/(bo*rs_mm);
     phiVn=phi*Math.min(vc_in+vs_in,vn_max);
     DCR=vu/Math.max(phiVn,1e-9);
-    if(vu/phi>vn_max)warns.push(`<b>Section too small:</b> v<sub>u</sub>/φ exceeds v<sub>n,max</sub>=${(vn_max*U.fcS>1?(vn_max*145.038).toFixed(0)+' psi':vn_max.toFixed(3)+' MPa')}. Increase thickness or column size.`);
-    if(rs_mm>0.75*d&&isStud)warns.push(`<b>Stud spacing too large:</b> s>${(0.75*d/U.lenS).toFixed(1)} ${U.lenU} (ACI §22.6.7.1).`);
-    if(rs_mm>0.5*d&&!isStud)warns.push(`<b>Stirrup spacing too large:</b> s>${(0.5*d/U.lenS).toFixed(1)} ${U.lenU} (ACI §22.6.7.2).`);
+    if(vu/phi>vn_max)warns.push(`<b>Section too small:</b> v<sub>u</sub>/φ exceeds v<sub>n,max</sub>=${U.lenU==='in'?(vn_max/U.fcS).toFixed(0)+' psi':vn_max.toFixed(3)+' MPa'}. Increase thickness or column size.`);
+    if(rs_mm>0.75*d&&isStud)warns.push(`<b>Stud spacing too large:</b> s > ${(0.75*d).toFixed(0)} mm = 0.75d (ACI §22.6.7.1).`);
+    if(rs_mm>0.5*d&&!isStud)warns.push(`<b>Stirrup spacing too large:</b> s > ${(0.5*d).toFixed(0)} mm = d/2 (ACI §22.6.7.2).`);
   } else {
     phiVn=phi*vc;DCR=vu/Math.max(phiVn,1e-9);
     if(DCR>1)warns.push(`<b>Punching capacity exceeded.</b> Add shear reinforcement or increase section.`);
@@ -1249,13 +1707,18 @@ function calcACI(){
     {d:'D/C = v<sub>u</sub>/φv<sub>n</sub>',v:DCR.toFixed(3),c:DCR<=1?'ok':'err',chk:DCR<=1?'ok':'err'},
   ];
 
-  const svg=_planSVG(c1,c2,Dc,d,shape,type,ef,cp,d/2,'aci',B_mm,L_mm);
+  const _cD=v=>U.lenS===1?v.toFixed(0):(v/U.lenS).toFixed(2);
+  const c1_disp=_cD(c1),c2_disp=_cD(c2),Dc_disp=_cD(Dc);
+  let _aciSvgDrop=null;
+  if(aciHasDrop&&!iso){const drpX=gv('aci-drpX')*U.lenS,drpY=gv('aci-drpY')*U.lenS;if(drpX>0&&drpY>0)_aciSvgDrop={extN_mm:drpY,extS_mm:drpY,extE_mm:drpX,extW_mm:drpX};}
+  const _aciSvgSets=hasReinf&&rs_mm>0?Math.max(1,Math.min(8,Math.ceil((0.5*d)/rs_mm))):0;
+  const svg=_fndPlanSVG({c1_mm:c1,c2_mm:c2,Dc_mm:Dc,d_mm:d,crit_r_mm:d/2,type,shape,edgeFace:ef,cornerPos:aciCornerPos,code:'aci',isIso:iso,B_mm,L_mm,c1_disp:shape==='circ'?Dc_disp:c1_disp,c2_disp,edgeDist_mm:e_set,cornerDistX_mm:cx_,cornerDistY_mm:cy_,dropData:_aciSvgDrop,nr_disp:hasReinf?nr_r:0,reinfType:isStud?'stud':'stirrup',rs_mm:hasReinf?rs_mm:0,n_sets_svg:_aciSvgSets});
   const inpRows=[
     ['Foundation type',iso?'Isolated footing':'Raft foundation'],
-    ['Thickness h',_fL(h)],[iso?'P<sub>u</sub>':'V<sub>u</sub>',_fF(Vu_inp)],
+    ['h',_fL(h)],[iso?'P<sub>u</sub>':'V<sub>u</sub>',_fF(Vu_inp)],
     ['f\'c',`${gv('aci-fc')} ${U.fcU}`],['d',_fL(d)],
     [shape==='rect'?'c₁×c₂':'Dc',shape==='rect'?`${_fL(c1)}×${_fL(c2)}`:_fL(Dc)],
-    ['Column type',type==='int'?'Interior':type==='edge'?`Edge (${ef})`:`Corner (${aciCornerPos})`],
+    ['Column',type==='int'?'Interior':type==='edge'?`Edge (${ef})`:`Corner (${aciCornerPos})`],
     ...(iso?[['B×L',`${_fL(B_mm)}×${_fL(L_mm)}`]]:[]),
   ];
   const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -1263,11 +1726,11 @@ function calcACI(){
     `<div class="print-only"><div><div class="ph-title">Foundation Punching — ACI 318-25</div><div class="ph-sub">civilstrcalc.com</div></div><div class="ph-date">${date}</div></div>`+
     warns.map(w=>`<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`).join('')+
     _inpHTML(inpRows)+
-    `<div class="rpt-sec"><div class="rpt-sec-title">Plan View</div><div style="text-align:center">${svg}</div></div>`+
+    _diagHTML(inpRows,svg)+
     _dcrBanner(DCR,bo.toFixed(0)+' mm',_fS(vu),_fS(phiVn),hasReinf?'φv<sub>n</sub>':'φv<sub>c</sub>','Punching Check'+(hasReinf?' — With Shear Reinforcement':''))+
     `<div class="rpt-sec steps-sec"><div class="rpt-sec-title">Calculation Steps</div>${_stepsHTML(steps)}</div>`+
-    `<div class="print-disclaimer">&#9888; Educational/preliminary design only. Verify with a licensed engineer.</div>`+
-    `<div class="print-footer"><span>CivilStrCalc.com</span><span>ACI 318-25 &copy; ${new Date().getFullYear()}</span></div>`;
+    `<div class="print-disclaimer">&#9888; Educational/preliminary design only. Verify with a licensed structural engineer.</div>`+
+    `<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong></span><span>&copy; ${new Date().getFullYear()} CivilStrCalc &middot; ACI 318-25</span></div>`;
   _showResult('aci-empty','aci-card',html);
 }
 
@@ -1324,7 +1787,10 @@ function ec2SetShape(s,btn){ec2Shape=s;document.getElementById('ec2-shape-rect')
 function ec2SetColType(t,btn){ec2ColType=t;['int','edge','corner'].forEach(x=>document.getElementById('ec2-type-'+x).classList.toggle('active',x===t));document.getElementById('ec2-edge-dims').style.display=t!=='int'?'':'none';document.getElementById('ec2-edge-dist-row').style.display=t==='edge'?'':'none';document.getElementById('ec2-corner-dist-row').style.display=t==='corner'?'':'none';}
 function ec2SetEdgeFace(f,btn){ec2EdgeFace=f;['N','E','S','W'].forEach(x=>document.getElementById('ec2-ef-'+x).classList.toggle('active',x===f));}
 function ec2SetCornerPos(p,btn){ec2CornerPos=p;['NE','NW','SW','SE'].forEach(x=>document.getElementById('ec2-cp-'+x).classList.toggle('active',x===p));}
-function ec2SetHasReinf(on){document.getElementById('ec2-reinf-inputs').style.display=on?'':'none';}
+function ec2SetHasReinf(on){
+  document.getElementById('ec2-reinf-inputs').style.display=on?'':'none';
+  if(on){const chk=_ec2PreCheck();if(chk&&chk.mode!=='needed')_showFndModal(chk,()=>{document.getElementById('ec2-has-reinf').checked=false;ec2SetHasReinf(false);});}
+}
 function ec2SetHasDrop(on){ec2HasDrop=on;document.getElementById('ec2-drop-inputs').style.display=on?'':'none';}
 function ec2UpdateAsw(){const n=parseInt(document.getElementById('ec2-nr')?.value)||8;const db=parseFloat(document.getElementById('ec2-rdb')?.value)||10;document.getElementById('ec2-asw-calc').textContent=(n*Math.PI/4*db*db).toFixed(0);}
 
@@ -1407,7 +1873,7 @@ function calcEC2(){
     const fywdEf=Math.min(250+0.25*d_mm,fywd);
     vRd=0.75*vRdc+1.5*(d_mm/sr_mm)*Asw*fywdEf/(u1*d_mm);
     DCR=vEd/Math.max(vRd,1e-9);
-    if(sr_mm>0.75*d_mm)warns.push(`<b>Spacing:</b> s<sub>r</sub> > 0.75d (EC2 §9.4.3).`);
+    if(sr_mm>0.75*d_mm)warns.push(`<b>Spacing too large:</b> s<sub>r</sub> > ${(0.75*d_mm).toFixed(0)} mm = 0.75d (EC2 §9.4.3).`);
   } else {
     vRd=vRdc;DCR=vEd/Math.max(vRd,1e-9);
     if(DCR>1)warns.push(`<b>Punching capacity exceeded.</b> Add shear reinforcement or increase section.`);
@@ -1457,10 +1923,15 @@ function calcEC2(){
     {d:'D/C = v<sub>Ed</sub>/v<sub>Rd</sub>',v:DCR.toFixed(3),c:DCR<=1?'ok':'err',chk:DCR<=1?'ok':'err'},
   ];
 
-  const svg=_planSVG(c1_mm,c2_mm,Dc_mm,d_mm,shape,type,ef,cp,2*d_mm,'ec2',B_mm,L_mm);
+  const _cDec=v=>(v/1000).toFixed(3).replace(/\.?0+$/,'');
+  const c1d=_cDec(c1_mm),c2d=_cDec(c2_mm),Dcd=_cDec(Dc_mm);
+  let _ec2SvgDrop=null;
+  if(ec2HasDrop&&!iso){const dX=gv('ec2-drpX')*U.lenS,dY=gv('ec2-drpY')*U.lenS;if(dX>0&&dY>0)_ec2SvgDrop={extN_mm:dY,extS_mm:dY,extE_mm:dX,extW_mm:dX};}
+  const _ec2SvgSets=hasReinf&&sr_mm>0?Math.max(1,Math.min(8,Math.ceil((0.75*d_mm)/sr_mm))):0;
+  const svg=_fndPlanSVG({c1_mm,c2_mm,Dc_mm:Dc_mm,d_mm,crit_r_mm:2*d_mm,type,shape,edgeFace:ef,cornerPos:cp,code:'ec2',isIso:iso,B_mm,L_mm,c1_disp:shape==='circ'?Dcd:c1d,c2_disp:c2d,edgeDist_mm:e_set,cornerDistX_mm:cx_,cornerDistY_mm:cy_,dropData:_ec2SvgDrop,nr_disp:hasReinf?nr_r:0,reinfType:'stud',rs_mm:hasReinf?sr_mm:0,n_sets_svg:_ec2SvgSets});
   const inpRows=[
     ['Foundation type',iso?'Isolated footing':'Raft foundation'],
-    ['Thickness h',_fLec(h_mm)],['d',_fLec(d_mm)],['f<sub>ck</sub>',`${fck} MPa`],
+    ['h',_fLec(h_mm)],['d',_fLec(d_mm)],['f<sub>ck</sub>',`${fck} MPa`],
     ['ρ<sub>lx</sub>/ρ<sub>ly</sub>',`${(rho_x*100).toFixed(2)}%/${(rho_y*100).toFixed(2)}%`],
     [shape==='rect'?'c₁×c₂':'Dc',shape==='rect'?`${_fLec(c1_mm)}×${_fLec(c2_mm)}`:_fLec(Dc_mm)],
     ['V<sub>Ed</sub>',_fF(VEd)],
@@ -1471,11 +1942,11 @@ function calcEC2(){
     `<div class="print-only"><div><div class="ph-title">Foundation Punching — EC2</div><div class="ph-sub">civilstrcalc.com</div></div><div class="ph-date">${date}</div></div>`+
     warns.map(w=>`<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`).join('')+
     _inpHTML(inpRows)+
-    `<div class="rpt-sec"><div class="rpt-sec-title">Plan View</div><div style="text-align:center">${svg}</div></div>`+
+    _diagHTML(inpRows,svg)+
     _dcrBanner(DCR,u1.toFixed(0)+' mm',_fv(vEd),_fv(vRd),hasReinf?'v<sub>Rd,cs</sub>':'v<sub>Rd,c</sub>','Punching Check'+(hasReinf?' — With Shear Reinforcement':''))+
     `<div class="rpt-sec steps-sec"><div class="rpt-sec-title">Calculation Steps</div>${_stepsHTML(steps)}</div>`+
-    `<div class="print-disclaimer">&#9888; Educational/preliminary design only.</div>`+
-    `<div class="print-footer"><span>CivilStrCalc.com</span><span>EN 1992-1-1 &copy; ${new Date().getFullYear()}</span></div>`;
+    `<div class="print-disclaimer">&#9888; Educational/preliminary design only. Verify with a licensed structural engineer.</div>`+
+    `<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong></span><span>&copy; ${new Date().getFullYear()} CivilStrCalc &middot; EN 1992-1-1</span></div>`;
   _showResult('ec2-empty','ec2-card',html);
 }
 
@@ -1506,7 +1977,10 @@ function is456SetShape(s,btn){is456Shape=s;document.getElementById('is456-shape-
 function is456SetColType(t,btn){is456ColType=t;['int','edge','corner'].forEach(x=>document.getElementById('is456-type-'+x).classList.toggle('active',x===t));document.getElementById('is456-edge-dims').style.display=t!=='int'?'':'none';document.getElementById('is456-edge-dist-row').style.display=t==='edge'?'':'none';document.getElementById('is456-corner-dist-row').style.display=t==='corner'?'':'none';}
 function is456SetEdgeFace(f,btn){is456EdgeFace=f;['N','E','S','W'].forEach(x=>document.getElementById('is456-ef-'+x).classList.toggle('active',x===f));}
 function is456SetCornerPos(p,btn){is456CornerPos=p;['NE','NW','SW','SE'].forEach(x=>document.getElementById('is456-cp-'+x).classList.toggle('active',x===p));}
-function is456SetHasReinf(on){document.getElementById('is456-reinf-inputs').style.display=on?'':'none';}
+function is456SetHasReinf(on){
+  document.getElementById('is456-reinf-inputs').style.display=on?'':'none';
+  if(on){const chk=_is456PreCheck();if(chk&&chk.mode!=='needed')_showFndModal(chk,()=>{document.getElementById('is456-has-reinf').checked=false;is456SetHasReinf(false);});}
+}
 function is456SetHasDrop(on){is456HasDrop=on;document.getElementById('is456-drop-inputs').style.display=on?'':'none';}
 function is456UpdateAv(){const nl=parseInt(document.getElementById('is456-nlegs')?.value)||2;const db=parseFloat(document.getElementById('is456-rdb')?.value)||12;const nF=is456ColType==='int'?4:is456ColType==='edge'?3:2;document.getElementById('is456-av-calc').textContent=(nF*nl*Math.PI/4*db*db).toFixed(0);}
 
@@ -1561,7 +2035,7 @@ function calcIS456(){
     if(tauV>tauMax)warns.push(`<b>Section inadequate:</b> τ<sub>v</sub>>${tauMax.toFixed(3)} N/mm². Increase thickness.`);
     const Vus=0.87*fy_r*Av_1*d/rs;
     capStress=tauPerm+Vus/Ac;DCR=tauV/Math.max(capStress,1e-9);
-    if(rs>0.75*d)warns.push(`<b>Spacing too large:</b> s>${(0.75*d).toFixed(0)} mm (IS 456 Cl 31.6.3).`);
+    if(rs>0.75*d)warns.push(`<b>Spacing too large:</b> s > ${(0.75*d).toFixed(0)} mm = 0.75d (IS 456 Cl 31.6.3).`);
   }
 
   const dropSteps=[];
@@ -1589,19 +2063,28 @@ function calcIS456(){
     {d:'D/C = τ<sub>v</sub>/permissible',v:DCR.toFixed(3),c:DCR<=1?'ok':'err',chk:DCR<=1?'ok':'err'},
   ];
 
-  const svg=_planSVG(c1,c2,Dc,d,shape,type,ef,cp,d/2,'is456',iso?B:0,iso?L:0);
-  const inpRows=[['Foundation type',iso?'Isolated footing':'Raft foundation'],['h',`${h} mm`],['d',`${d.toFixed(0)} mm`],['f<sub>ck</sub>',`${fck} N/mm²`],[shape==='rect'?'c₁×c₂':'Dc',shape==='rect'?`${c1}×${c2} mm`:`${Dc} mm`],[iso?'P<sub>u</sub>':'V<sub>u</sub>',_fF(Pu)],
-    ...(iso?[['B×L',`${B}×${L} mm`]]:[])];
+  let _is456SvgDrop=null;
+  if(is456HasDrop&&!iso){const dX=gv('is456-drpX'),dY=gv('is456-drpY');if(dX>0&&dY>0)_is456SvgDrop={extN_mm:dY,extS_mm:dY,extE_mm:dX,extW_mm:dX};}
+  const c1d456=c1.toFixed(0),c2d456=c2.toFixed(0),Dcd456=Dc.toFixed(0);
+  const _is456SvgSets=hasReinf&&rs>0?Math.max(1,Math.min(8,Math.ceil((0.5*d)/rs))):0;
+  const svg=_fndPlanSVG({c1_mm:c1,c2_mm:c2,Dc_mm:Dc,d_mm:d,crit_r_mm:d/2,type,shape,edgeFace:ef,cornerPos:cp,code:'is456',isIso:iso,B_mm:iso?B:0,L_mm:iso?L:0,c1_disp:shape==='circ'?Dcd456:c1d456,c2_disp:c2d456,edgeDist_mm:e_set,cornerDistX_mm:cx_,cornerDistY_mm:cy_,dropData:_is456SvgDrop,nr_disp:hasReinf?nFaces*2:0,reinfType:'stirrup',rs_mm:hasReinf?rs:0,n_sets_svg:_is456SvgSets});
+  const inpRows=[
+    ['Foundation type',iso?'Isolated footing':'Raft foundation'],
+    ['h',`${h} mm`],['d',`${d.toFixed(0)} mm`],['f<sub>ck</sub>',`${fck} N/mm²`],
+    [shape==='rect'?'c₁×c₂':'Dc',shape==='rect'?`${c1}×${c2} mm`:`${Dc} mm`],
+    [iso?'P<sub>u</sub>':'V<sub>u</sub>',_fF(Pu)],
+    ...(iso?[['B×L',`${B}×${L} mm`]]:[]),
+  ];
   const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   const html=
     `<div class="print-only"><div><div class="ph-title">Foundation Punching — IS 456:2000</div><div class="ph-sub">civilstrcalc.com</div></div><div class="ph-date">${date}</div></div>`+
     warns.map(w=>`<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`).join('')+
     _inpHTML(inpRows)+
-    `<div class="rpt-sec"><div class="rpt-sec-title">Plan View</div><div style="text-align:center">${svg}</div></div>`+
+    _diagHTML(inpRows,svg)+
     _dcrBanner(DCR,bo.toFixed(0)+' mm',_fS(tauV),_fS(capStress),hasReinf?'τ<sub>perm,eff</sub>':'k<sub>s</sub>τ<sub>c</sub>','Punching Check'+(hasReinf?' — With Shear Reinforcement':''))+
     `<div class="rpt-sec steps-sec"><div class="rpt-sec-title">Calculation Steps</div>${_stepsHTML(steps)}</div>`+
-    `<div class="print-disclaimer">&#9888; Educational/preliminary design only.</div>`+
-    `<div class="print-footer"><span>CivilStrCalc.com</span><span>IS 456:2000 &copy; ${new Date().getFullYear()}</span></div>`;
+    `<div class="print-disclaimer">&#9888; Educational/preliminary design only. Verify with a licensed structural engineer.</div>`+
+    `<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong></span><span>&copy; ${new Date().getFullYear()} CivilStrCalc &middot; IS 456:2000</span></div>`;
   _showResult('is456-empty','is456-card',html);
 }
 

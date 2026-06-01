@@ -29,7 +29,8 @@
     '@media(max-width:768px){:root{--sh-h:52px}}',
     /* offset body so content isn't hidden behind fixed header/sidebar */
     'body{padding-top:var(--sh-h)!important;padding-left:var(--sh-w)!important;',
-    '     overflow:auto!important;height:auto!important;min-height:100vh!important}',
+    '     padding-bottom:env(safe-area-inset-bottom,0px)!important;',
+    '     overflow:auto!important;height:auto!important;min-height:100vh!important;min-height:100dvh!important}',
     '@media(max-width:768px){body{padding-left:0!important}}',
     /* header */
     '.sh-hdr{position:fixed;top:0;left:0;right:0;height:var(--sh-h);background:#1a2332;',
