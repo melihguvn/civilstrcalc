@@ -3530,10 +3530,13 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
     y += 12;
 
     if (rb) {
-      var ap   = rwProvAs(rb.dia, rb.spc);
+      var ap   = rwProvAs(rb.dia, rb.spc) + (rb.dia2 && rb.spc2 ? rwProvAs(rb.dia2, rb.spc2) : 0);
       var ok   = ap >= flx.A;
       var util = (flx.A / ap * 100).toFixed(0);
-      pdfSym(doc, 'Provided: \xD8' + rb.dia + ' @ ' + rb.spc + ' mm  =>  A{_s,prov} = ' + ap.toFixed(0) + ' mm\xB2/m', 25, y); y += 6;
+      var provStr = 'Provided: \xD8' + rb.dia + ' @ ' + rb.spc + ' mm'
+        + (rb.dia2 && rb.spc2 ? '  +  \xD8' + rb.dia2 + ' @ ' + rb.spc2 + ' mm (ilave)' : '')
+        + '  =>  A{_s,prov} = ' + ap.toFixed(0) + ' mm\xB2/m';
+      pdfSym(doc, provStr, 25, y); y += 6;
       /* colored bordered box for provided reinf result */
       var bClr = ok ? PDF_GRN : PDF_RED;
       doc.setFillColor(ok ? 238 : 255, ok ? 248 : 235, ok ? 238 : 235);
@@ -4018,28 +4021,38 @@ function pdfSummary(doc, p, ep, st, ri, rebars) {
   y = pdfTbl(doc, ['Parameter', 'Value', 'Unit'], epBody, y);
 
   y = pdfSecHdr(doc, 'Reinforcement - Pass / Fail', y);
-  var stemAp = rwProvAs(rebars.stem.dia, rebars.stem.spc);
+  // Helper: primary + supplement (ilave) provided area
+  function _pdfAp(rb) {
+    if (!rb) return 0;
+    return rwProvAs(rb.dia, rb.spc) + (rb.dia2 && rb.spc2 ? rwProvAs(rb.dia2, rb.spc2) : 0);
+  }
+  function _pdfBarStr(rb) {
+    var s = 'Ø'+rb.dia+'@'+rb.spc+' mm';
+    if (rb.dia2 && rb.spc2) s += ' + Ø'+rb.dia2+'@'+rb.spc2+' (ilave)';
+    return s;
+  }
+  var stemAp = _pdfAp(rebars.stem);
   var rfBody = [
-    ['Stem (vertical, earth face)', 'Ø'+rebars.stem.dia+'@'+rebars.stem.spc+' mm',
+    ['Stem (vertical, earth face)', _pdfBarStr(rebars.stem),
      ri.stem.A.toFixed(0)+' / '+stemAp.toFixed(0)+' mm²/m',
      stemAp>=ri.stem.A ? 'PASS' : 'FAIL']
   ];
   if (ri.heel && rebars.heel) {
-    var heelAp = rwProvAs(rebars.heel.dia, rebars.heel.spc);
-    rfBody.push(['Heel ('+ri.heel.ten+' face)', 'Ø'+rebars.heel.dia+'@'+rebars.heel.spc+' mm',
+    var heelAp = _pdfAp(rebars.heel);
+    rfBody.push(['Heel ('+ri.heel.ten+' face)', _pdfBarStr(rebars.heel),
      ri.heel.A.toFixed(0)+' / '+heelAp.toFixed(0)+' mm²/m',
      heelAp>=ri.heel.A ? 'PASS' : 'FAIL']);
   }
   if (ri.toe && rebars.toe) {
-    var toeAp = rwProvAs(rebars.toe.dia, rebars.toe.spc);
-    rfBody.push(['Toe ('+ri.toe.ten+' face)', 'Ø'+rebars.toe.dia+'@'+rebars.toe.spc+' mm',
+    var toeAp = _pdfAp(rebars.toe);
+    rfBody.push(['Toe ('+ri.toe.ten+' face)', _pdfBarStr(rebars.toe),
       ri.toe.A.toFixed(0)+' / '+toeAp.toFixed(0)+' mm²/m',
       toeAp>=ri.toe.A ? 'PASS' : 'FAIL']);
   }
   if (ri.key && rebars.key) {
-    var keyAp = rwProvAs(rebars.key.dia, rebars.key.spc);
+    var keyAp = _pdfAp(rebars.key);
     var _skLCS = p.skLoc.charAt(0).toUpperCase() + p.skLoc.slice(1);
-    rfBody.push(['Shear key ('+_skLCS+', tension)', 'Ø'+rebars.key.dia+'@'+rebars.key.spc+' mm',
+    rfBody.push(['Shear key ('+_skLCS+', tension)', _pdfBarStr(rebars.key),
       ri.key.A.toFixed(0)+' / '+keyAp.toFixed(0)+' mm²/m',
       keyAp>=ri.key.A ? 'PASS' : 'FAIL']);
   }
