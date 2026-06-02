@@ -3830,57 +3830,69 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     'S3 - Front face vert.'
   ]);
 
-  /* F1 — when a heel key is present both F1 and K1 share the right-side label column;
-     shift F1/F1-add upward so K1 (placed near key bottom) doesn't overlap */
+  /* ── Footing label layout ──────────────────────────────────────────────────
+     Right column (lblX): S1, S1-add, S2, F1, F1-add, K1(heel)
+     Left  column (lftX): S3, F2, F2-add, K1(toe)   ← K1 toe ALWAYS left
+     The toe key anchor is on the left face; routing its leader to the right
+     creates a crossing line that collides with F1/F1-add labels.
+  ─────────────────────────────────────────────────────────────────────────── */
+
+  var _toeKey   = sk_dpdf > 0 && p.skLoc === 'toe';
+  var _heelKey  = sk_dpdf > 0 && p.skLoc === 'heel';
+
+  /* F1 — right side; when heel key shares the column, shift F1 up */
   if (f1y !== null && ri.heel && rebars.heel) {
-    var _f1HasKey = sk_dpdf > 0 && p.skLoc === 'heel';
-    var f1LblY    = _f1HasKey ? footMidY - 14 : footMidY - 5;
+    var f1LblY = _heelKey ? footMidY - 16 : footMidY - 6;
     callout(px(B) - cvs, f1y, lblX, f1LblY, [
       '\xD8' + rebars.heel.dia + ' @ ' + rebars.heel.spc + ' mm',
       'F1 - Heel, ' + ri.heel.ten + ' face'
     ]);
     if (rebars.heel.dia2) {
-      var f1AddLblY = _f1HasKey ? footMidY - 3 : footMidY + 4;
-      callout(px(B) - cvs, f1y + (ri.heel.ten === 'top' ? 1.0 : -1.0), lblX, f1AddLblY, [
+      var f1AddY = _heelKey ? footMidY - 5 : footMidY + 5;
+      callout(px(B) - cvs, f1y + (ri.heel.ten === 'top' ? 1.0 : -1.0), lblX, f1AddY, [
         '\xD8' + rebars.heel.dia2 + ' @ ' + rebars.heel.spc2 + ' mm  (ilave)',
         'F1-add - Supplementary heel bars'
       ]);
     }
   }
 
-  /* F2 */
+  /* F2 — left side; shift up when toe key is also on left so K1 gets room below */
   if (f2y !== null && rebars.toe) {
-    callout(px(0) + cvs, f2y, lftX, footMidY - 3, [
+    var f2LblY    = _toeKey ? footMidY - 10 : footMidY - 4;
+    var f2AddLblY = _toeKey ? footMidY +  1 : footMidY +  6;
+    callout(px(0) + cvs, f2y, lftX, f2LblY, [
       '\xD8' + rebars.toe.dia + '@' + rebars.toe.spc + ' mm',
       'F2 - Toe (' + ri.toe.ten + ')'
     ]);
     if (rebars.toe.dia2) {
-      callout(px(0) + cvs, f2y + (ri.toe.ten === 'top' ? 1.0 : -1.0), lftX, footMidY + 7, [
+      callout(px(0) + cvs, f2y + (ri.toe.ten === 'top' ? 1.0 : -1.0), lftX, f2AddLblY, [
         '\xD8' + rebars.toe.dia2 + '@' + rebars.toe.spc2 + ' mm  (ilave)',
         'F2-add (ilave)'
       ]);
     }
   }
 
-  /* F3 */
-  var f3cx = px(B / 2);
+  /* F3 — centered below footing/key; horizontal position shifted toward heel
+     when toe key is present so it doesn't crowd the left-column K1 label */
+  var f3cx = _toeKey ? px(B * 0.6) : px(B / 2);
   var f3ly = (sk_dpdf > 0 ? pyd(-sk_dpdf) : pyd(0)) + 6;
   doc.setDrawColor(0); doc.setLineWidth(0.18);
-  doc.line(f3cx, pyd(0) - cvs, f3cx, f3ly);
+  doc.line(px(B / 2), pyd(0) - cvs, f3cx, f3ly);
   doc.setFontSize(6.8); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
   doc.text('F3 - Footing transv. dist. bars: \xD8' + dstFoot.dia + ' @ ' + dstFoot.spc + ' mm  (top & bot. faces)', f3cx, f3ly + 4, { align: 'center' });
 
-  /* K1 callout — for heel key place label near key bottom (F1/F1-add shifted up above) */
+  /* K1 — toe key → LEFT side (anchor already at left; no crossing leader)
+           heel key → RIGHT side (shifted below F1-add) */
   if (k1y_top !== null && ri.key && rebars.key) {
     var _k1cAncX = (p.skLoc === 'toe') ? px(0) + cvs + 0.4 : px(B) - cvs - 0.4;
-    var _k1cMidY = (p.skLoc === 'heel' && f1y !== null)
-      ? pyd(-sk_dpdf) - 3          // near bottom of key — clear of F1-add above
-      : (pyd(0) + pyd(-sk_dpdf)) / 2; // mid-key (toe key has no right-side conflict)
+    var _k1cMidY = _heelKey && f1y !== null
+      ? pyd(-sk_dpdf) - 3                          // heel: below footing, clear of F1-add
+      : (pyd(0) + pyd(-sk_dpdf)) / 2;              // toe: mid-key
+    var _k1LblX  = _toeKey ? lftX : lblX;          // ← KEY FIX: toe → left, heel → right
     var _skLocC  = p.skLoc.charAt(0).toUpperCase() + p.skLoc.slice(1);
-    // Combine supplementary bar into first line to keep K1 to 2 lines max
-    var _k1bar1 = '\xD8' + rebars.key.dia + '@' + rebars.key.spc
-                  + (rebars.key.dia2 ? ' +\xD8' + rebars.key.dia2 + '@' + rebars.key.spc2 : '') + ' mm';
-    callout(_k1cAncX, _k1cMidY, lblX, _k1cMidY, [_k1bar1, 'K1 - Shear key (' + _skLocC + ')']);
+    var _k1bar1  = '\xD8' + rebars.key.dia + '@' + rebars.key.spc
+                   + (rebars.key.dia2 ? ' +\xD8' + rebars.key.dia2 + '@' + rebars.key.spc2 : '') + ' mm';
+    callout(_k1cAncX, _k1cMidY, _k1LblX, _k1cMidY, [_k1bar1, 'K1 - Shear key (' + _skLocC + ')']);
   }
 
   /* cover note */
