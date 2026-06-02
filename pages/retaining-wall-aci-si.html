@@ -2308,14 +2308,14 @@ function pdfLoadCombos(doc, p) {
 
   y = pdfSecHdr(doc, 'Key Design Formulas', y);
   y = pdfTbl(doc, ['Parameter', 'Formula', 'Code Ref.'], [
-    ['Min. flexural steel', 'As,min = max(0.25×sqrt(fc)/fy, 1.4/fy) × bd', 'ACI \xA79.6.1'],
-    ['Temp. & shrinkage',   'As,T&S = 0.0018 × b × h',                     'ACI \xA77.6.1'],
-    ['Nominal shear',       'phi×Vc = 0.75 × 0.17×{lambda_s}×sqrt(fc) × b × d',       'ACI \xA722.5.5.1'],
-    ['Rankine Ka (horiz.)', 'Ka = (1-sin phi) / (1+sin phi)',                       'Rankine 1857'],
-    ['Rankine Ka (slope)',  'Ka = cos{beta}(cos{beta}-sqrt(cos\xB2{beta}-cos\xB2{phi})) / (cos{beta}+...)', 'Rankine 1857'],
-    ['Rankine Kp',          'Kp = (1+sin phi) / (1-sin phi)',                'Rankine 1857'],
-    ['Seismic increment',   'DeltaPae = 0.5(1-kv)×gs×H²×(KAE-Ka)',        'M-O 1926']
-  ], y);
+    ['Min. flexural steel', 'A{_s,min} = max(0.25\xD7{sqrt}f\'c/f{_y}, 1.4/f{_y}) \xD7 bd', 'ACI \xA79.6.1'],
+    ['Temp. & shrinkage',   'A{_s,T&S} = 0.0018 \xD7 b \xD7 h',                              'ACI \xA77.6.1'],
+    ['Nominal shear',       '{phi}V{_c} = 0.75 \xD7 0.17 \xD7 {lambda}{_s} \xD7 {sqrt}f\'c \xD7 b \xD7 d', 'ACI \xA722.5.5.1'],
+    ['Rankine Ka (horiz.)', 'Ka = (1−sin{phi}) / (1+sin{phi})',                           'Rankine 1857'],
+    ['Rankine Ka (slope)',  'Ka = cos{beta}(cos{beta}−{sqrt}(cos\xB2{beta}−cos\xB2{phi})) / (cos{beta}+…)', 'Rankine 1857'],
+    ['Rankine Kp',          'Kp = (1+sin{phi}) / (1−sin{phi})',                           'Rankine 1857'],
+    ['Seismic increment',   '{Delta}Pae = 0.5(1−kv)\xD7{gamma}{_s}\xD7H\xB2\xD7(KAE−Ka)', 'M-O 1926']
+  ], y, { styles: { halign: 'left' }, headStyles: { halign: 'center' }, columnStyles: { 0: { halign: 'left', cellWidth: 38 }, 2: { halign: 'center', cellWidth: 28 } } });
 }
 
 /* ── Earth pressure distribution diagrams — side-by-side ──── */
@@ -2720,7 +2720,7 @@ function pdfTbl(doc, head, body, y, opts) {
         symStore[key] = PDF_SYM_CELLS[txt];
         data.cell.text = [''];
       /* any cell containing {placeholder} template tags */
-      } else if (/\{(_[^}]+|phi|gamma|rho|mu|delta|theta|Delta|Sigma)\}/.test(txt)) {
+      } else if (/\{(_[^}]+|phi|gamma|rho|mu|delta|theta|Delta|Sigma|sqrt|beta|lambda|alpha|kappa)\}/.test(txt)) {
         symStore[key] = txt;
         data.cell.text = [''];
       }
@@ -3977,20 +3977,20 @@ function pdfCodeRefs(doc) {
 
   y = pdfSecHdr(doc, 'ACI 318-25 - Building Code Requirements for Structural Concrete', y);
   y = pdfTbl(doc, ['Section', 'Topic'], [
-    ['§5.3.1',  'Load combinations - strength design (U = 1.2D + 1.6H)'],
-    ['§7.6',    'Minimum flexural reinforcement - one-way slabs and walls'],
-    ['§7.7',    'Shrinkage and temperature reinforcement (0.0018bh)'],
-    ['§9.6',    'Minimum flexural reinforcement - beams'],
-    ['§22.5.5.1', 'phi·Vc = 0.75 \xD7 0.17 \xD7 lambda_s \xD7 sqrt(f\'c) \xD7 b \xD7 d  (nominal one-way shear; lambda_s = sqrt(2/(1+d/250)) <= 1)'],
-    ['§21.2',   'Strength reduction factors: phi,flex = 0.90   phi,shear = 0.75']
-  ], y);
+    ['§5.3.1',    'Load combinations — strength design  (U = 1.2D + 1.6H)'],
+    ['§7.6',      'Minimum flexural reinforcement — one-way slabs and walls'],
+    ['§7.7',      'Shrinkage and temperature reinforcement  (A{_s,min} = 0.0018·b·h)'],
+    ['§9.6',      'Minimum flexural reinforcement — beams'],
+    ['§22.5.5.1', '{phi}V{_c} = 0.75 \xD7 0.17 \xD7 {lambda}{_s} \xD7 {sqrt}f\'c \xD7 b \xD7 d   ({lambda}{_s} = min({sqrt}(2/(1+d/250)), 1.0))'],
+    ['§21.2',     'Strength reduction factors:  {phi}{_flex} = 0.90   {phi}{_v} = 0.75']
+  ], y, { styles: { halign: 'left' }, headStyles: { halign: 'center' }, columnStyles: { 0: { halign: 'center', cellWidth: 22 } } });
 
   y = pdfSecHdr(doc, 'Earth Pressure Methods', y);
   y = pdfTbl(doc, ['Method', 'Applicability / Formula'], [
-    ['Rankine (1857)',         'Smooth wall, horizontal backfill. Ka = (1-sin phi)/(1+sin phi)'],
-    ['Coulomb (1776)',         'Rough wall, wall friction angle delta. Ka via full Coulomb formula.'],
-    ['Mononobe-Okabe (1926)', 'Seismic pseudo-static increment DeltaPae using KAE coefficient']
-  ], y);
+    ['Rankine (1857)',         'Ka = (1−sin{phi}) / (1+sin{phi})   (smooth wall, horizontal backfill)'],
+    ['Coulomb (1776)',         'Ka via full Coulomb formula with wall friction angle {delta}'],
+    ['Mononobe-Okabe (1926)', 'Seismic increment {Delta}Pae using KAE coefficient (M-O method)']
+  ], y, { styles: { halign: 'left' }, headStyles: { halign: 'center' }, columnStyles: { 0: { halign: 'center', cellWidth: 45 } } });
 
   y = pdfSecHdr(doc, 'Stability Criteria (General Practice)', y);
   pdfTbl(doc, ['Check', 'Formula', 'Typical Min. FS'], [
