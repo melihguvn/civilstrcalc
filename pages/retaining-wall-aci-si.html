@@ -216,7 +216,7 @@ input[type=number]{-moz-appearance:textfield;}
 <div class="sub-tabs" role="tablist">
   <button class="sub-tab active" aria-selected="true">ACI 318-25</button>
   <button class="sub-tab" disabled title="Coming soon">Eurocode 2</button>
-  <button class="sub-tab" disabled title="Coming soon">TS 500</button>
+  <button class="sub-tab" onclick="location.href='retaining-wall-tsc.html'">TSC 2019</button>
   <button class="sub-tab" disabled title="Coming soon">IS 456</button>
 </div>
 
@@ -257,7 +257,7 @@ input[type=number]{-moz-appearance:textfield;}
         <div class="conf-case-lbl">Stem profile</div>
         <label class="conf-case-opt">
           <input type="radio" name="rw-stType" value="prismatic" checked onchange="onStemTypeChange()">
-          Prismatic (uniform t<sub>s</sub>)
+          Prismatic — uniform thickness
         </label>
         <label class="conf-case-opt">
           <input type="radio" name="rw-stType" value="tapered" onchange="onStemTypeChange()">
@@ -1698,9 +1698,17 @@ function calcStability(p,ep){
   var V_eff=V+Pv-U, Mr_eff=Mr-U*(2*B/3);
   var FSot=Mr_eff/Mo, FSsl=(p.mu*V_eff+Fp)/Ph;
   var FSots=null, FSsls=null;
+  var qmax_seis=null, qmin_seis=null;
   if(p.seis){
     var Mos=Mo+ep.DPAE*0.6*ep.H;
     FSots=Mr_eff/Mos; FSsls=(p.mu*V_eff+Fp)/(Ph+ep.DPAE);
+    if(ep.DPAE>0){
+      var xr_s=(V_eff>0)?(Mr_eff-Mos)/V_eff:(B/2);
+      var e_s=B/2-xr_s;
+      if(xr_s<=0){qmax_seis=999999;qmin_seis=0;}
+      else if(Math.abs(e_s)<=em){qmax_seis=(V_eff/B)*(1+6*Math.abs(e_s)/B);qmin_seis=(V_eff/B)*(1-6*Math.abs(e_s)/B);}
+      else{qmax_seis=2*V_eff/(3*xr_s);qmin_seis=0;}
+    }
   }
   var xr=(V_eff>0)?(Mr_eff-Mo)/V_eff:(B/2);
   var e=B/2-xr, em=B/6, qmax, qmin;
@@ -1709,7 +1717,8 @@ function calcStability(p,ep){
   else{qmax=2*V_eff/(3*xr);qmin=0;}
   return {B:B,V:V,Pv:Pv,V_eff:V_eff,U:U,W1:W1,W2:W2,W3:W3,W4:W4,W5:W5,
     Mr:Mr,Mr_eff:Mr_eff,Mo:Mo,Fp:Fp,Fp_base:Fp_base,Fp_key:Fp_key,hp:hp,
-    FSot:FSot,FSsl:FSsl,FSots:FSots,FSsls:FSsls,xr:xr,e:e,em:em,qmax:qmax,qmin:qmin};
+    FSot:FSot,FSsl:FSsl,FSots:FSots,FSsls:FSsls,xr:xr,e:e,em:em,qmax:qmax,qmin:qmin,
+    qmax_seis:qmax_seis,qmin_seis:qmin_seis};
 }
 
 function calcReinf(p,st,ep){
@@ -1744,18 +1753,44 @@ function calcReinf(p,st,ep){
   var B=st.B, tf=p.tf*1000;
   var hf=null;
   if(p.Lh > 0){
-    var qhs=st.qmax-(st.qmax-st.qmin)*(p.Lt+p.ts)/B;
-    var whn=((qhs+st.qmin)/2)-(p.gs*He+(p.surch?p.q:0)+gc*p.tf);
-    hf=fxD(LFd*Math.abs(whn)*p.Lh*p.Lh/2, tf);
-    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten=whn<0?'bottom':'top';
+    // ACI 318 §5.3.1: soil weight = D-type (1.2D); surcharge = H-type (1.6H); upward bearing ignored (conservative)
+    var wu_heel = LFd*p.gs*He + LFh*(p.surch?p.q:0) + LFd*gc*p.tf;
+    hf=fxD(wu_heel*p.Lh*p.Lh/2, tf);
+    hf.Vu=wu_heel*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten='bottom';
   }
 
   var tf2=null;
   if(p.Lt>0){
-    var qts=st.qmax-(st.qmax-st.qmin)*p.Lt/B;
-    var wtn=((st.qmax+qts)/2)-(gc*p.tf+p.gs*Math.max(0,p.htoe-p.tf));
-    tf2=fxD(LFd*Math.abs(wtn)*p.Lt*p.Lt/2, tf);
-    tf2.Vu=LFd*Math.abs(wtn)*p.Lt; tf2.Vc=vc(tf2.d); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=wtn>0?'top':'bottom';
+    // Factored bearing: ACI combo 0.9D + 1.6H (no surcharge-vertical L; maximises eccentricity)
+    // All concrete = D-type (0.9D); all soil+surcharge vertical = H-type (excluded in this combo)
+    var x5_arm = p.Lt + p.ts + p.Lh/2;
+    var xPv_arm = p.Lt + p.ts;
+    var Mr_H_val = st.W5*x5_arm + (ep.Pa_v||0)*xPv_arm;
+    var Mr_D_val = st.Mr - Mr_H_val;
+    var V_D_val  = st.V - st.W5;          // W1+W2+W3+W4 (no surcharge vertical, no Pv)
+    var V_u_combo  = 0.9*V_D_val  - 0.9*(st.U||0);
+    var Mr_u_combo = 0.9*Mr_D_val - 0.9*(st.U||0)*(2*B/3);
+    var Mo_u_combo = 1.6*st.Mo;
+    var xr_u = (V_u_combo>0) ? (Mr_u_combo - Mo_u_combo)/V_u_combo : 0;
+    var e_u  = B/2 - xr_u;
+    var qmax_u=0, qts_u=0;
+    if(xr_u > 0){
+      if(Math.abs(e_u) <= B/6){
+        qmax_u = (V_u_combo/B)*(1 + 6*e_u/B);
+        var qmin_u_toe = (V_u_combo/B)*(1 - 6*e_u/B);
+        qts_u = qmax_u - (qmax_u - qmin_u_toe)*p.Lt/B;
+      } else if(e_u > 0){
+        qmax_u = 2*V_u_combo/(3*xr_u);
+        var tri0 = 3*xr_u;
+        qts_u = (p.Lt < tri0) ? qmax_u*(tri0 - p.Lt)/tri0 : 0;
+      }
+    }
+    var dead_u_toe = 0.9*(gc*p.tf + p.gs*Math.max(0,p.htoe-p.tf));
+    // Correct cantilever formula for trapezoidal load: M = L²·(2q₀+q₁)/6 − dead·L²/2
+    var Mu_toe = p.Lt*p.Lt*((2*qmax_u + qts_u)/6 - dead_u_toe/2);
+    var Vu_toe = ((qmax_u + qts_u)/2 - dead_u_toe)*p.Lt;
+    tf2=fxD(Math.abs(Mu_toe), tf);
+    tf2.Vu=Math.abs(Vu_toe); tf2.Vc=vc(tf2.d); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=Mu_toe>0?'top':'bottom';
   }
   var sk_ri = null;
   if(p.skEn && p.skd > 0 && p.skw > 0 && !(p.skLoc === 'heel' && p.Lh <= 0)) {
@@ -1800,8 +1835,20 @@ function renderRWResults(p,ep,st,ri){
     +'<div class="rw-check-grid-3">'+fsCard('Overturning',st.FSot,p.FSo)+fsCard('Sliding',st.FSsl,p.FSs)+bCard+'</div>';
 
   if(p.seis&&st.FSots!==null){
+    var seisCards=fsCard('OT (seismic)',st.FSots,p.FSos)+fsCard('Sliding (seis.)',st.FSsls,p.FSss);
+    var seisGridCls='rw-check-grid';
+    if(st.qmax_seis!==null){
+      var qa_seis=1.33*p.qa;
+      var bc_s=st.qmax_seis<=0.9*qa_seis?'pass':st.qmax_seis<=qa_seis?'warn':'fail';
+      var bpct_s=Math.min(100,st.qmax_seis<99999?st.qmax_seis/qa_seis*100:100).toFixed(0);
+      seisCards+='<div class="rw-ccard '+bc_s+'"><div class="rw-cc-ttl">Bearing (seis.)</div>'
+        +'<div class="rw-cc-val">'+(st.qmax_seis>=99999?'—':st.qmax_seis.toFixed(1)+' kPa')+'</div>'
+        +'<div class="rw-cc-req">1.33q<sub>a</sub> = '+qa_seis.toFixed(0)+' kPa</div>'
+        +'<div class="rw-util-bar"><div class="rw-util-fill '+bc_s+'" style="width:'+bpct_s+'%"></div></div></div>';
+      seisGridCls='rw-check-grid-3';
+    }
     html+='<div style="font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);padding:6px 0 3px">+ Seismic</div>'
-      +'<div class="rw-check-grid">'+fsCard('OT (seismic)',st.FSots,p.FSos)+fsCard('Sliding (seis.)',st.FSsls,p.FSss)+'</div>';
+      +'<div class="'+seisGridCls+'">'+seisCards+'</div>';
   }
 
   var ae=Math.abs(st.e);
@@ -1826,8 +1873,11 @@ function renderRWResults(p,ep,st,ri){
 
   html+='<div class="rw-res-hdr">Reinforcement Design — ACI 318-25</div>';
   html+='<div class="calc-note" style="margin-bottom:10px">Load combinations (ACI 318-25 §5.3.1): '
-    +'Stem U&nbsp;=&nbsp;1.2D&nbsp;+&nbsp;1.6H &nbsp;·&nbsp; Heel/Toe U&nbsp;=&nbsp;1.2D &nbsp;·&nbsp; '
-    +'Stability checks use unfactored (service) loads</div>';
+    +'Stem U&nbsp;=&nbsp;1.2D&nbsp;+&nbsp;1.6H &nbsp;·&nbsp; '
+    +'Heel U&nbsp;=&nbsp;1.2D&nbsp;+&nbsp;1.6H (bearing ignored) &nbsp;·&nbsp; '
+    +'Toe: factored bearing from 0.9D&nbsp;+&nbsp;1.6H &nbsp;·&nbsp; '
+    +'Seismic bearing: 1.33q<sub>a</sub> (ASCE 7 §12.13 / IBC §1806.1) &nbsp;·&nbsp; '
+    +'Stability: service loads</div>';
 
   function rcrd(key,ttl,flx){
     var sg=rwSuggest(flx.A);
@@ -2290,13 +2340,14 @@ function pdfLoadCombos(doc, p) {
   var y = 32;
   y = pdfSecHdr(doc, 'Load Combinations - ACI 318-25 \xA7 5.3.1', y);
   y = pdfTbl(doc, ['ID', 'Type', 'Combination', 'Application'], [
-    ['LC1', 'Stem (horizontal earth)', 'U = 1.6H', 'Stem flexure & shear design'],
-    ['LC2', 'Footing gravity',         'U = 1.2D', 'Heel & toe flexure / shear'],
-    ['LC3', 'Service stability',       '1.0D + 1.0H', 'Overturning, sliding, bearing'],
-    ['LC4', 'Seismic stability',       '0.9D + 1.0H + 1.0E', 'Seismic OT & sliding checks']
-  ], y);
+    ['LC1', 'Stem — horizontal earth',      'U = 1.6H',            'Stem flexure & shear'],
+    ['LC2', 'Heel — bearing ignored',       'U = 1.2D + 1.6H',     'Heel flexure & shear'],
+    ['LC3', 'Toe — factored bearing',       'U = 0.9D + 1.6H',     'Toe flexure & shear'],
+    ['LC4', 'Service stability',            '1.0D + 1.0H',         'Overturning, sliding, bearing'],
+    ['LC5', 'Seismic stability',            '0.9D + 1.0H + 1.0E',  'Seismic OT & sliding']
+  ], y, { columnStyles: { 1: { halign: 'left' }, 3: { halign: 'left' } } });
   doc.setFontSize(8); doc.setTextColor(100);
-  doc.text('D = Dead (self-weight, soil)   H = Horizontal earth pressure   E = Seismic load (Mononobe-Okabe)', 20, y + 2);
+  doc.text('D = Dead (concrete + soil weight)   H = Earth pressure   E = Seismic (Mononobe-Okabe)', 20, y + 2);
   doc.setTextColor(0); y += 14;
 
   y = pdfSecHdr(doc, 'Strength Reduction Factors - ACI 318-25 \xA7 21.2', y);
@@ -2720,7 +2771,7 @@ function pdfTbl(doc, head, body, y, opts) {
         symStore[key] = PDF_SYM_CELLS[txt];
         data.cell.text = [''];
       /* any cell containing {placeholder} template tags */
-      } else if (/\{(_[^}]+|phi|gamma|rho|mu|delta|theta|Delta|Sigma|sqrt|beta|lambda|alpha|kappa)\}/.test(txt)) {
+      } else if (/\{(_[^}]+|phi|gamma|rho|mu|delta|theta|Delta|Sigma|sqrt|beta|lambda|psi)\}/.test(txt)) {
         symStore[key] = txt;
         data.cell.text = [''];
       }
@@ -2734,7 +2785,13 @@ function pdfTbl(doc, head, body, y, opts) {
       data.doc.setFont(undefined, 'normal');
       data.doc.setTextColor(0);
       var textW = pdfSymWidth(data.doc, symStore[key]);
-      var x  = data.cell.x + Math.max(2, (data.cell.width - textW) / 2);
+      var _rp = data.cell.padding;
+      var pad = (_rp != null && typeof _rp === 'object' && _rp.left != null) ? _rp.left
+              : (typeof _rp === 'number') ? _rp : 3.5;
+      var halign = data.cell.styles.halign || 'center';
+      var x = (halign === 'left')
+        ? data.cell.x + pad
+        : data.cell.x + Math.max(pad, (data.cell.width - textW) / 2);
       var yt = data.cell.y + data.cell.height / 2 + 1.5;
       pdfSym(data.doc, symStore[key], x, yt);
       data.doc.setTextColor(0);
@@ -2773,7 +2830,7 @@ function pdfSym(doc, tmpl, x, y, bold) {
   /* Greek: {phi} {gamma} {rho} {mu} {delta} {theta} {Delta} {Sigma}
      Subscript: {_text}  — rendered smaller and shifted down
      bold: optional 5th arg — makes plain segments bold */
-  var SMAP = { phi:'f', gamma:'g', rho:'r', mu:'m', delta:'d', theta:'q', Delta:'D', Sigma:'S', sqrt:'\xD6', beta:'b', lambda:'l' };
+  var SMAP = { phi:'f', gamma:'g', rho:'r', mu:'m', delta:'d', theta:'q', Delta:'D', Sigma:'S', sqrt:'\xD6', beta:'b', lambda:'l', psi:'y' };
   var style = bold ? 'bold' : 'normal';
   var parts = tmpl.split(/\{([^}]+)\}/);
   var cur = x;
@@ -2808,7 +2865,7 @@ function pdfSym(doc, tmpl, x, y, bold) {
 }
 
 function pdfSymWidth(doc, tmpl, bold) {
-  var SMAP = { phi:'f', gamma:'g', rho:'r', mu:'m', delta:'d', theta:'q', Delta:'D', Sigma:'S', sqrt:'\xD6', beta:'b', lambda:'l' };
+  var SMAP = { phi:'f', gamma:'g', rho:'r', mu:'m', delta:'d', theta:'q', Delta:'D', Sigma:'S', sqrt:'\xD6', beta:'b', lambda:'l', psi:'y' };
   var style = bold ? 'bold' : 'normal';
   var parts = tmpl.split(/\{([^}]+)\}/);
   var fs = doc.getFontSize();
@@ -2950,16 +3007,16 @@ function pdfCover(doc) {
 /* Geometry table only — returns final y so caller can place diagram below */
 function pdfInputsGeom(doc, p) {
   var B = p.Lt + p.ts + p.Lh, y = 32;
-  var cpt = { styles: { fontSize: 9, cellPadding: 2 } };
+  var cpt = { styles: { fontSize: 9, cellPadding: 2 }, columnStyles: { 0: { halign: 'left' } } };
   y = pdfSecHdr(doc, 'Geometry', y);
   var stLabel = p.stType === 'tapered' ? 'Tapered' : p.stType === 'stepped' ? 'Stepped' : 'Prismatic';
   var ts_t_pdf = Math.min(p.ts_top||p.ts, p.ts);
   y = pdfTbl(doc, ['Parameter', 'Symbol', 'Value', 'Unit'], [
     ['Retained height',  'He',   p.H.toFixed(2),    'm'],
     ['Stem profile',     '-',    stLabel,            '-'],
-    [p.stType!=='prismatic'?'Stem base thickness':'Stem thickness', 'ts,bot', p.ts.toFixed(2), 'm']
+    [p.stType!=='prismatic'?'Stem base thickness':'Stem thickness', 't{_s,bot}', p.ts.toFixed(2), 'm']
   ].concat(p.stType !== 'prismatic' ? [
-    ['Stem top thickness', 'ts,top', ts_t_pdf.toFixed(2), 'm']
+    ['Stem top thickness', 't{_s,top}', ts_t_pdf.toFixed(2), 'm']
   ] : []).concat([
     ['Heel length',      'Lh',   p.Lh.toFixed(2),   'm'],
     ['Toe length',       'Lt',   p.Lt.toFixed(2),   'm'],
@@ -2977,7 +3034,7 @@ function pdfInputsGeom(doc, p) {
 /* Remaining 3 sections — starts fresh at y=32 on continuation page */
 function pdfInputsRest(doc, p) {
   var y = 32;
-  var cpt = { styles: { fontSize: 9, cellPadding: 2 } };
+  var cpt = { styles: { fontSize: 9, cellPadding: 2 }, columnStyles: { 0: { halign: 'left' } } };
 
   y = pdfSecHdr(doc, 'Soil Properties', y);
   var soilRows = [
@@ -3118,16 +3175,14 @@ function pdfDiagram(doc, p, startY) {
   if(p.Lh > 0){
     var glY_L=pyd(p.H+p.tf), glY_R=pyd(p.H+p.tf+slopeH);
     doc.line(px(p.Lt+p.ts), glY_L, px(B)+8, glY_R);
-    for(var gi=0;gi<4;gi++){
-      doc.line(px(B)+2+gi*4, glY_R, px(B)+gi*4-1, glY_R+5);
-    }
   } else {
     /* Lh=0 — grade line across the top of the soil strip */
     var glY_L=pyd(p.H+p.tf);
     doc.line(px(p.Lt+p.ts), glY_L, px(p.Lt+p.ts)+bfStripW_pdf+8, glY_L);
-    for(var gi=0;gi<3;gi++){
-      doc.line(px(p.Lt+p.ts)+bfStripW_pdf+2+gi*4, glY_L, px(p.Lt+p.ts)+bfStripW_pdf+gi*4-1, glY_L+5);
-    }
+  }
+  /* toe fill grade line */
+  if(p.Lt > 0.01 && p.htoe > 0.01){
+    doc.line(px(0)-4, pyd(p.tf+p.htoe), px(p.Lt), pyd(p.tf+p.htoe));
   }
   /* β: dashed horizontal reference + arc indicator + label — only when Lh > 0 */
   if(p.Lh > 0 && (p.beta||0)>0.5){
@@ -3154,9 +3209,6 @@ function pdfDiagram(doc, p, startY) {
   /* foundation line */
   doc.setDrawColor(110); doc.setLineWidth(0.25);
   doc.line(px(0) - 4, pyd(0), px(B) + 6, pyd(0));
-  for (var fi = 0; fi < 7; fi++) {
-    doc.line(px(0) - 4 + fi * 6.5, pyd(0), px(0) - 4 + fi * 6.5 - 4, pyd(0) + 4);
-  }
 
   /* FIX #2 & #3 — adaptive dimension arrows on 3 vertical levels */
   doc.setDrawColor(40); doc.setLineWidth(0.25); doc.setFontSize(7.5);
@@ -3353,7 +3405,7 @@ function pdfVerticalForcesTable(doc, p, st, y) {
   wRows.push(['TOTAL', '-', Vtot.toFixed(2), (st.Mr/Vtot).toFixed(3), st.Mr.toFixed(2)]);
   return pdfTbl(doc, ['Component', 'Calculation', 'Force (kN/m)', 'Arm (m)', 'Moment (kN\xB7m/m)'], wRows, y, {
     columnStyles: {
-      0: { cellWidth: 38 }, 1: { cellWidth: 50, fontSize: 9 },
+      0: { cellWidth: 38, halign: 'left' }, 1: { cellWidth: 50, fontSize: 9 },
       2: { cellWidth: 26 }, 3: { cellWidth: 22 }, 4: { cellWidth: 28 }
     },
     didParseCell: function(data) {
@@ -3386,7 +3438,7 @@ function pdfStability(doc, p, ep, st) {
   }
   y = pdfTbl(doc, ['Parameter', 'Formula', 'Value'], otRows, y, {
     styles: { cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
-    columnStyles: { 0: { cellWidth: 65, fontStyle: 'bold' }, 1: { cellWidth: 55, fontSize: 9 }, 2: { cellWidth: 50, fontStyle: 'bold' } },
+    columnStyles: { 0: { cellWidth: 65, fontStyle: 'bold', halign: 'left' }, 1: { cellWidth: 55, fontSize: 9 }, 2: { cellWidth: 50, fontStyle: 'bold' } },
     didParseCell: function(data) {
       if (data.column.index === 2 && data.section === 'body') {
         var v = String(data.cell.raw || '');
@@ -3432,7 +3484,7 @@ function pdfStability(doc, p, ep, st) {
   }
   y = pdfTbl(doc, ['Parameter', 'Formula', 'Value'], slRows, y, {
     styles: { cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
-    columnStyles: { 0: { cellWidth: 65, fontStyle: 'bold' }, 1: { cellWidth: 55, fontSize: 9 }, 2: { cellWidth: 50, fontStyle: 'bold' } },
+    columnStyles: { 0: { cellWidth: 65, fontStyle: 'bold', halign: 'left' }, 1: { cellWidth: 55, fontSize: 9 }, 2: { cellWidth: 50, fontStyle: 'bold' } },
     didParseCell: function(data) {
       if (data.column.index === 2 && data.section === 'body') {
         var v = String(data.cell.raw || '');
@@ -3464,7 +3516,20 @@ function pdfStability(doc, p, ep, st) {
   var bOK = st.qmax <= p.qa;
   doc.setTextColor.apply(doc, bOK ? PDF_GRN : PDF_RED);
   pdfSym(doc, 'q{_max} = ' + (st.qmax >= 99999 ? '>9999' : st.qmax.toFixed(1)) + ' kPa  <=  q{_a} = ' + p.qa.toFixed(0) + ' kPa  ' + (bOK ? 'OK' : 'NG'), 25, y, true);
-  doc.setTextColor(0);
+  doc.setTextColor(0); y += 8;
+
+  /* Seismic bearing — ASCE 7 §12.13 / IBC §1806.1: 1.33×qa allowable */
+  if (p.seis && st.qmax_seis !== null) {
+    if (y > 220) { doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)'); y = 32; }
+    y = pdfSecHdr(doc, 'Seismic Bearing Pressure — ASCE 7 \xA712.13 / IBC \xA71806.1', y);
+    var qa_seis_pdf = 1.33 * p.qa;
+    pdfSym(doc, 'q{_max,seis} (service loads + \xD7{Delta}P{_ae} overturning) = ' + (st.qmax_seis >= 99999 ? '>9999' : st.qmax_seis.toFixed(1)) + ' kPa', 25, y); y += 7;
+    pdfSym(doc, 'Allowable: 1.33\xD7q{_a} = 1.33\xD7' + p.qa.toFixed(0) + ' = ' + qa_seis_pdf.toFixed(0) + ' kPa', 25, y); y += 7;
+    var bsOK = st.qmax_seis <= qa_seis_pdf;
+    doc.setTextColor.apply(doc, bsOK ? PDF_GRN : PDF_RED);
+    pdfSym(doc, 'q{_max,seis} = ' + (st.qmax_seis >= 99999 ? '>9999' : st.qmax_seis.toFixed(1)) + ' kPa  <=  1.33q{_a} = ' + qa_seis_pdf.toFixed(0) + ' kPa  ' + (bsOK ? 'OK' : 'NG'), 25, y, true);
+    doc.setTextColor(0);
+  }
 }
 
 /* ── Reinforcement calcs ─────────────────────────── */
@@ -3474,10 +3539,11 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
 
   y = pdfSecHdr(doc, 'Load Factors - ACI 318-25 \xA75.3.1', y);
   y = pdfTbl(doc, ['Element', 'Governing Combination', 'Factor', 'Note'], [
-    ['Stem',     'Horizontal earth pressure', 'U = 1.6H',        'ACI \xA75.3.1(e)'],
-    ['Heel/Toe', 'Gravity (dead) loads',     'U = 1.2D',        'ACI \xA75.3.1(a)'],
-    ['Seismic',  'Earthquake increment',     '{gamma}{_E} = 1.0', 'Already factored in {Delta}P{_ae}']
-  ], y);
+    ['Stem',  'Horiz. earth pressure',          'U = 1.6H',          'ACI \xA75.3.1(e)'],
+    ['Heel',  'Gravity + surcharge (bearing ign.)', 'U = 1.2D + 1.6H', 'ACI \xA75.3.1(e)'],
+    ['Toe',   'Factored bearing from 0.9D+1.6H', 'U = 0.9D + 1.6H',  'ACI \xA75.3.1(b)'],
+    ['Seismic', 'Earthquake increment',          '{gamma}{_E} = 1.0', 'Already factored in {Delta}P{_ae}']
+  ], y, { columnStyles: { 0: { halign: 'left' }, 1: { halign: 'left' } } });
 
   var secIdx = 0;
   function reinfSec(key, title, flx, rb) {
@@ -3640,12 +3706,8 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
   /* grade + foundation lines */
   doc.setDrawColor(70); doc.setLineWidth(0.35);
   doc.line(px(p.Lt + p.ts), pyd(p.H + p.tf), px(B) + 5, pyd(p.H + p.tf));
-  for (var _gi = 0; _gi < 4; _gi++)
-    doc.line(px(B) + 1 + _gi * 4, pyd(p.H + p.tf), px(B) - 2 + _gi * 4, pyd(p.H + p.tf) + 4);
   var _foundY = sk_dpdf > 0 ? pyd(-sk_dpdf) : pyd(0);
   doc.line(px(0) - 4, _foundY, px(B) + 5, _foundY);
-  for (var _fi = 0; _fi < 9; _fi++)
-    doc.line(px(0) - 4 + _fi * 6, _foundY, px(0) - 4 + _fi * 6 - 3, _foundY + 3);
 
   /* ── distribution bar sizes ── */
   var dstStem = rwDistBar(p.ts * 1000, 0.0020); // horizontal dist., §11.6.1
