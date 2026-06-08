@@ -2440,8 +2440,8 @@ function pdfPageStabilityDiagram(doc, p, ep, st, pn) {
   doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS');
   var imgH = pdfStabilityDiagram(doc, p, ep);
   var tblY = 32 + imgH + 10;
-  pdfEPCoefficientsInline(doc, p, ep, st, tblY);
-  pdfFooter(doc, pn);
+  var ret = pdfEPCoefficientsInline(doc, p, ep, st, tblY, pn);
+  pdfFooter(doc, ret.pn);
 }
 function pdfPageLateralForces(doc, p, ep, st, pn) {
   doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)');
@@ -3678,7 +3678,7 @@ function pdfDiagram(doc, p, startY) {
 
 /* ── EP coefficients inline (used in Section 4.0 between diagram and lateral forces table) */
 
-function pdfEPCoefficientsInline(doc, p, ep, st, y) {
+function pdfEPCoefficientsInline(doc, p, ep, st, y, pn) {
   doc.setFontSize(9);
   var H = ep.H;
 
@@ -3723,13 +3723,18 @@ function pdfEPCoefficientsInline(doc, p, ep, st, y) {
     }
   }
 
-  /* Passive */
+  /* Passive — add page if insufficient space (secHdr≈10 + 3 lines≈30) */
+  if (y + 42 > 262) {
+    pdfFooter(doc, pn); pn++;
+    doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)');
+    y = 32;
+  }
   y = pdfSecHdr(doc, 'Passive Resistance', y);
   pdfSym(doc, 'Passive depth: D = ' + st.hp.toFixed(2) + ' m (from footing base)', 25, y); y += 8;
   pdfSym(doc, 'F{_p} = 0.5\xD7K{_p}\xD7{gamma}{_s}\xD7h{_p}\xB2 = 0.5\xD7' + ep.Kp.toFixed(3) + '\xD7' + p.gs.toFixed(1) + '\xD7' + st.hp.toFixed(2) + '\xB2', 25, y); y += 8;
   pdfSym(doc, 'F{_p} = ' + st.Fp.toFixed(2) + ' kN/m', 25, y, true); y += 14;
 
-  return y;
+  return { y: y, pn: pn };
 }
 
 /* ── Stability calcs ─────────────────────────────── */
