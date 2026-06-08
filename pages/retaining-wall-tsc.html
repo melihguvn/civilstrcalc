@@ -3678,40 +3678,40 @@ function pdfEPCoefficientsInline(doc, p, ep, st, y, pn) {
   var dr_pdf = (p.pMethod === 'coulomb') ? ((p.deltaOpt === 'auto') ? (2/3)*phi_pdf : p.delta_m*Math.PI/180) : 0;
   var deltaLabel = (p.pMethod === 'coulomb') ? ((p.deltaOpt === 'auto') ? (2/3*p.phi).toFixed(1) : p.delta_m.toFixed(1)) : '0';
   var methLabel = p.pMethod === 'coulomb' ? 'Coulomb  {delta} = ' + deltaLabel + '\xB0' + (p.deltaOpt==='auto'?' (2{phi}/3)':'') : 'Rankine  ({delta} = 0)';
-  pdfSym(doc, 'Method: ' + methLabel + (beta_deg > 0.5 ? '   {beta} = ' + beta_deg.toFixed(0) + '\xB0' : ''), 25, y); y += 7;
-  pdfSym(doc, 'Ka = cos\xB2({phi}-{theta}) / [cos{theta}\xB7cos({theta}+{delta})\xB7(1 + sq)\xB2]   (TSC Eq.16.24a, {theta}=0)', 25, y); y += 7;
+  pdfSym(doc, 'Method: ' + methLabel + (beta_deg > 0.5 ? '   {beta} = ' + beta_deg.toFixed(0) + '\xB0' : ''), 25, y); y += 6;
+  pdfSym(doc, 'Ka = cos\xB2({phi}-{theta}) / [cos{theta}\xB7cos({theta}+{delta})\xB7(1 + sq)\xB2]   (TSC Eq.16.24a, {theta}=0)', 25, y); y += 6;
   var sq_pdf = Math.sqrt(Math.max(0, Math.sin(phi_pdf+dr_pdf)*Math.sin(phi_pdf-beta_r_pdf)/(Math.cos(dr_pdf)*Math.cos(beta_r_pdf))));
-  pdfSym(doc, 'sq = {sqrt}(sin({phi}+{delta})\xB7sin({phi}-{beta}) / (cos{delta}\xB7cos{beta})) = ' + sq_pdf.toFixed(4), 30, y); y += 7;
+  pdfSym(doc, 'sq = {sqrt}(sin({phi}+{delta})\xB7sin({phi}-{beta}) / (cos{delta}\xB7cos{beta})) = ' + sq_pdf.toFixed(4), 30, y); y += 6;
   if (beta_deg < 0.5) {
     var sinPhi2 = Math.sin(phi_pdf);
-    pdfSym(doc, '{beta}=0 => Ka = (1-sin{phi}) / (1+sin{phi}) = (1-' + sinPhi2.toFixed(4)+') / (1+'+sinPhi2.toFixed(4)+')', 30, y); y += 7;
+    pdfSym(doc, '{beta}=0 => Ka = (1-sin{phi}) / (1+sin{phi}) = (1-' + sinPhi2.toFixed(4)+') / (1+'+sinPhi2.toFixed(4)+')', 30, y); y += 6;
   } else {
     var cosP2 = Math.cos(phi_pdf), cosB2 = Math.cos(beta_r_pdf);
-    pdfSym(doc, 'cos({phi}-{theta})=' + cosP2.toFixed(4) + '  cos({theta}+{delta})='+Math.cos(dr_pdf).toFixed(4)+'  sq='+sq_pdf.toFixed(4), 30, y); y += 7;
+    pdfSym(doc, 'cos({phi}-{theta})=' + cosP2.toFixed(4) + '  cos({theta}+{delta})='+Math.cos(dr_pdf).toFixed(4)+'  sq='+sq_pdf.toFixed(4), 30, y); y += 6;
   }
-  pdfSym(doc, 'K{_a} = ' + ep.Ka.toFixed(4), 25, y, true); y += 12;
+  pdfSym(doc, 'K{_a} = ' + ep.Ka.toFixed(4), 25, y, true); y += 10;
 
   /* Passive Kp */
   y = pdfSecHdr(doc, 'Passive Pressure Coefficient', y);
-  pdfSym(doc, 'Rankine: Kp = (1+sin {phi}) / (1-sin {phi})', 25, y); y += 8;
-  pdfSym(doc, 'K{_p} = ' + ep.Kp.toFixed(3), 25, y, true); y += 12;
+  pdfSym(doc, 'Rankine: Kp = (1+sin {phi}) / (1-sin {phi})', 25, y); y += 6;
+  pdfSym(doc, 'K{_p} = ' + ep.Kp.toFixed(3), 25, y, true); y += 10;
 
   /* Seismic increment */
   if (p.seis && ep.DPAE > 0) {
     y = pdfSecHdr(doc, 'Seismic Increment - TSC 2019 \xA716.12', y);
-    pdfSym(doc, 'k{_h} = ' + ep.kh.toFixed(3) + '   k{_v} = ' + ep.kv.toFixed(3) + (p.kvOpt === 'auto' ? ' (= 0.5\xD7k{_h}, \xA716.12.2.1)' : ''), 25, y); y += 8;
-    pdfSym(doc, '{psi} = atan(k{_h} / (1-k{_v})) = ' + (ep.psi || 0).toFixed(4) + ' rad   (\xA716.12.3.2)', 25, y); y += 8;
-    pdfSym(doc, 'K{_total} = ' + (ep.KaTot || 0).toFixed(3) + '   K{_static} = ' + ep.Ka.toFixed(3) + '   ' + '{Delta}K = ' + (ep.dKae || 0).toFixed(3) + '   (\xA716.12.2.4/.7)', 25, y); y += 8;
-    pdfSym(doc, '{Delta}P{_ae} = {Delta}K\xD7(\xBD{gamma}*H\'\xB2 + qH\')  (H\' = ' + (ep.H_ep||H).toFixed(2) + ' m)', 25, y); y += 8;
-    pdfSym(doc, '{Delta}P{_ae} = ' + ep.DPAE.toFixed(2) + ' kN/m   arm = H\'/2 = ' + (0.5*(ep.H_ep||H)).toFixed(2) + ' m   (\xA716.12.2.8)', 25, y, true); y += 14;
+    pdfSym(doc, 'k{_h} = ' + ep.kh.toFixed(3) + '   k{_v} = ' + ep.kv.toFixed(3) + (p.kvOpt === 'auto' ? ' (= 0.5\xD7k{_h}, \xA716.12.2.1)' : ''), 25, y); y += 6;
+    pdfSym(doc, '{psi} = atan(k{_h} / (1-k{_v})) = ' + (ep.psi || 0).toFixed(4) + ' rad   (\xA716.12.3.2)', 25, y); y += 6;
+    pdfSym(doc, 'K{_total} = ' + (ep.KaTot || 0).toFixed(3) + '   K{_static} = ' + ep.Ka.toFixed(3) + '   ' + '{Delta}K = ' + (ep.dKae || 0).toFixed(3) + '   (\xA716.12.2.4/.7)', 25, y); y += 6;
+    pdfSym(doc, '{Delta}P{_ae} = {Delta}K\xD7(\xBD{gamma}*H\'\xB2 + qH\')  (H\' = ' + (ep.H_ep||H).toFixed(2) + ' m)', 25, y); y += 6;
+    pdfSym(doc, '{Delta}P{_ae} = ' + ep.DPAE.toFixed(2) + ' kN/m   arm = H\'/2 = ' + (0.5*(ep.H_ep||H)).toFixed(2) + ' m   (\xA716.12.2.8)', 25, y, true); y += 10;
     if((p.beta||0)>0.5 && ep.DPAE_v>0){
-      pdfSym(doc, '{Delta}P{_ae,h} = {Delta}P{_ae}\xB7cos{beta} = ' + (ep.DPAE_h||ep.DPAE).toFixed(2) + ' kN/m', 25, y); y += 7;
-      pdfSym(doc, '{Delta}P{_ae,v} = {Delta}P{_ae}\xB7sin{beta} = ' + (ep.DPAE_v||0).toFixed(2) + ' kN/m  (downward at heel, resisting)', 25, y); y += 9;
+      pdfSym(doc, '{Delta}P{_ae,h} = {Delta}P{_ae}\xB7cos{beta} = ' + (ep.DPAE_h||ep.DPAE).toFixed(2) + ' kN/m', 25, y); y += 6;
+      pdfSym(doc, '{Delta}P{_ae,v} = {Delta}P{_ae}\xB7sin{beta} = ' + (ep.DPAE_v||0).toFixed(2) + ' kN/m  (downward at heel, resisting)', 25, y); y += 8;
     }
   }
 
-  /* Passive — add page if insufficient space (secHdr≈10 + 3 lines≈30) */
-  if (y + 42 > 262) {
+  /* Passive — add page if insufficient space (secHdr≈9 + 3 lines≈26) */
+  if (y + 38 > 272) {
     pdfFooter(doc, pn); pn++;
     doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)');
     y = 32;
