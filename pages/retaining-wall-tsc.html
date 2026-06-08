@@ -1839,7 +1839,7 @@ function calcStability(p,ep){
     R_th=V_eff*Math.tan(k1r)+B*k2v*(p.c2||0);            // k₁·φ'₂ + k₂·c'
   }
   var R_pt_part=0.3*Fp;
-  var FSsl=Ph>0?R_th/Ph:999;                               // static: no passive
+  var FSsl=Ph>0?(R_th+R_pt_part)/Ph:999;
 
   /* ── Seismic checks — TBDY Eq.16.21 / §16.8.4.1 ── */
   var FSots=null, FSsls=null;
@@ -1866,7 +1866,10 @@ function calcStability(p,ep){
       R_th_seis=p.cu*B/1.1;                               // undrained — γ_Rh=1.1 (TBDY Table 16.2)
     }
     Kp_seis_val=tbdyKpSeismic(p.phi*Math.PI/180, ep.psi||0);
-    var R_pk_seis=Kp_seis_val*(1-kv_s)*0.5*p.gs*p.htoe*p.htoe;
+    var hp_sk=(p.skEn&&p.skd>0&&p.skLoc==='toe')?p.htoe+p.skd:p.htoe;
+    var R_pk_seis=Kp_seis_val*(1-kv_s)*0.5*p.gs*hp_sk*hp_sk;
+    if(p.skEn&&p.skd>0&&p.skLoc==='heel')
+      R_pk_seis+=Kp_seis_val*(1-kv_s)*(p.gs*ep.He*p.skd+0.5*p.gs*p.skd*p.skd);
     R_pt_seis=R_pk_seis/1.4;                              // γ_Rp=1.4 (Table 16.2)
     FSsls=V_th_seis>0?(R_th_seis+0.3*R_pt_seis)/V_th_seis:999;
   }
@@ -3860,7 +3863,7 @@ function pdfStability(doc, p, ep, st) {
   slRows.push([fpLbl, '\xBD\xD7K{_p}\xD7{gamma}{_s}\xD7h{_p}\xB2', st.Fp.toFixed(2)+' kN/m']);
   slRows.push(['0.3\xD7F{_p}  (Eq. 16.9 — 30% passive)', '0.3\xD7F{_p}', st.R_pt_part.toFixed(2)+' kN/m']);
   slRows.push(['Driving force P{_a,h} (static)', 'P{_a}', Ph_pdf.toFixed(2)+' kN/m']);
-  slRows.push(['FS{_sl} (static)', 'R{_th} / P{_a,h}', st.FSsl.toFixed(3)+' (req >= '+p.FSs.toFixed(1)+')']);
+  slRows.push(['FS{_sl} (static)', '(R{_th}+0.3F{_p}) / P{_a,h}', st.FSsl.toFixed(3)+' (req >= '+p.FSs.toFixed(1)+')']);
 
   /* ── Seismic sliding resistance ── */
   if(seisSlid){
