@@ -2448,7 +2448,8 @@ function pdfPageLateralForces(doc, p, ep, st, pn) {
   var y = pdfSecHdr(doc, 'Lateral Forces', 32);
   y = pdfLateralForcesTable(doc, ep, p, y);
   y = pdfVerticalForcesTable(doc, p, st, y);
-  pdfFooter(doc, pn);
+  var ret = pdfStability(doc, p, ep, st, y, pn);
+  pdfFooter(doc, ret.pn);
 }
 function pdfLateralForcesTable(doc, ep, p, startY) {
   var H = ep.H, gw = 9.81;
@@ -2638,7 +2639,6 @@ function generateRWPDF() {
   pdfPageSummary(doc, p, ep, st, ri, rebars, pn++);
   pdfPageStabilityDiagram(doc, p, ep, st, pn++);
   pdfPageLateralForces(doc, p, ep, st, pn++);
-  pdfPageStability(doc, p, ep, st, pn++);
   pdfPageEPDiagram(doc, p, ep, pn++);
   pdfPageReinforcement(doc, p, ep, ri, rebars, pn++);
   pdfPageReinfDiagram(doc, p, ri, rebars, pn++);
@@ -3797,8 +3797,10 @@ function pdfVerticalForcesTable(doc, p, st, y) {
   });
 }
 
-function pdfStability(doc, p, ep, st) {
-  var y = 32; doc.setFontSize(9);
+function pdfStability(doc, p, ep, st, startY, pn) {
+  var y = (startY != null) ? startY : 32;
+  pn = pn || 1;
+  doc.setFontSize(9);
   var B = st.B;
 
   /* Overturning */
@@ -3901,8 +3903,8 @@ function pdfStability(doc, p, ep, st) {
     }
   });
 
-  /* Bearing pressure — safety overflow to next page if tables pushed y too far */
-  if (y > 210) { doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)'); y = 32; }
+  /* Bearing pressure — overflow to next page if tables pushed y too far */
+  if (y > 210) { pdfFooter(doc, pn); pn++; doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)'); y = 32; }
   y = pdfSecHdr(doc, 'Bearing Pressure Analysis', y);
   pdfSym(doc, 'Resultant from toe: x{_r} = (M{_r}-M{_o}) / V', 25, y); y += 8;
   pdfSym(doc, 'x{_r} = (' + st.Mr.toFixed(2) + '-' + st.Mo.toFixed(2) + ') / ' + st.V_eff.toFixed(2) + ' = ' + st.xr.toFixed(3) + ' m', 30, y); y += 8;
@@ -3925,7 +3927,7 @@ function pdfStability(doc, p, ep, st) {
 
   /* Seismic bearing capacity — TBDY §16.8.3 Eq.(16.8a) */
   if(p.seis && st.qk_seis != null){
-    if(y > 220){ doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)'); y = 32; }
+    if(y > 220){ pdfFooter(doc, pn); pn++; doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)'); y = 32; }
     y = pdfSecHdr(doc, 'Seismic Bearing Capacity — TSC \xA716.8.3 Eq.(16.8a)', y);
     var bcRows = [
       ['Method (rapid load = undrained)', 'C{_u}, {phi}=0\xB0', 'Eq. 16.8a'],
@@ -3950,6 +3952,7 @@ function pdfStability(doc, p, ep, st) {
     pdfSym(doc, 'q{_o} = '+st.qo_seis.toFixed(1)+' kPa  <=  q{_t} = '+st.qt_seis.toFixed(1)+' kPa  '+(bsOK?'OK — bearing capacity adequate':'FAIL'), 25, y, true);
     doc.setTextColor(0); y += 8;
   }
+  return { y: y, pn: pn };
 }
 
 /* ── Reinforcement calcs ─────────────────────────── */
