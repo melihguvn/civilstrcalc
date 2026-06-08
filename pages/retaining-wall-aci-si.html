@@ -2785,9 +2785,11 @@ function pdfTbl(doc, head, body, y, opts) {
       data.doc.setFont(undefined, 'normal');
       data.doc.setTextColor(0);
       var textW = pdfSymWidth(data.doc, symStore[key]);
-      var _rp = data.cell.padding;
-      var pad = (_rp != null && typeof _rp === 'object' && _rp.left != null) ? _rp.left
-              : (typeof _rp === 'number') ? _rp : 3.5;
+      var pad = (typeof data.cell.padding === 'function')
+        ? data.cell.padding('left')
+        : (function(){ var _rp = data.cell.padding;
+            return (_rp != null && typeof _rp === 'object' && _rp.left != null) ? _rp.left
+                 : (typeof _rp === 'number') ? _rp : 3.5; })();
       var halign = data.cell.styles.halign || 'center';
       var x = (halign === 'left')
         ? data.cell.x + pad
