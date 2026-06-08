@@ -4009,7 +4009,7 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
       var ok   = ap >= flx.A;
       var util = (flx.A / ap * 100).toFixed(0);
       var provStr = 'Provided: \xD8' + rb.dia + '/' + rb.spc + ' mm'
-        + (rb.dia2 && rb.spc2 ? '  +  \xD8' + rb.dia2 + '/' + rb.spc2 + ' mm (ek)' : '')
+        + (rb.dia2 && rb.spc2 ? '  +  \xD8' + rb.dia2 + '/' + rb.spc2 + ' mm (suppl.)' : '')
         + '  =>  A{_s,prov} = ' + ap.toFixed(0) + ' mm\xB2/m';
       pdfSym(doc, provStr, 25, y); y += 6;
       /* colored bordered box for provided reinf result */
@@ -4296,7 +4296,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     lines: ['\xD8' + rebars.stem.dia + '/' + rebars.stem.spc + ' mm', 'S1 - Stem, earth face (vert.)'] });
   if (rebars.stem.dia2)
     _rStm.push({ fx: s1x - 1, fy: stemMidY,
-      lines: ['\xD8' + rebars.stem.dia2 + '/' + rebars.stem.spc2 + ' mm  (ek)', 'S1-add - Supplementary stem bars'] });
+      lines: ['\xD8' + rebars.stem.dia2 + '/' + rebars.stem.spc2 + ' mm  (suppl.)', 'S1-add - Supplementary stem bars'] });
   _rStm.push({ fx: px(p.Lt + p.ts) - cvs, fy: stemMidY + (rebars.stem.dia2 ? 8 : 3),
     lines: ['\xD8' + dstStem.dia + '/' + dstStem.spc + ' mm  (ea. face)', 'S2 - Horiz. dist. bars (\xA711.6.1)'] });
 
@@ -4316,7 +4316,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
       lines: ['\xD8' + rebars.heel.dia + '/' + rebars.heel.spc + ' mm', 'F1 - Heel, ' + ri.heel.ten + ' face'] });
     if (rebars.heel.dia2)
       _rFt.push({ fx: px(B) - cvs, fy: f1y + (ri.heel.ten === 'top' ? 1.0 : -1.0),
-        lines: ['\xD8' + rebars.heel.dia2 + '/' + rebars.heel.spc2 + ' mm  (ek)', 'F1-add - Supplementary heel bars'] });
+        lines: ['\xD8' + rebars.heel.dia2 + '/' + rebars.heel.spc2 + ' mm  (suppl.)', 'F1-add - Supplementary heel bars'] });
   }
   if (_heelKey && k1y_top !== null && ri.key && rebars.key) {
     var _hkBar = '\xD8' + rebars.key.dia + '/' + rebars.key.spc
@@ -4344,7 +4344,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
       lines: ['\xD8' + rebars.toe.dia + '/' + rebars.toe.spc + ' mm', 'F2 - Toe (' + ri.toe.ten + ')'] });
     if (rebars.toe.dia2)
       _leftItems.push({ fx: px(0) + cvs, fy: f2y + (ri.toe.ten === 'top' ? 1.0 : -1.0),
-        lines: ['\xD8' + rebars.toe.dia2 + '/' + rebars.toe.spc2 + ' mm  (ek)', 'F2-add'] });
+        lines: ['\xD8' + rebars.toe.dia2 + '/' + rebars.toe.spc2 + ' mm  (suppl.)', 'F2-add'] });
     if (_toeKey && k1y_top !== null && ri.key && rebars.key) {
       var _tkBar = '\xD8' + rebars.key.dia + '/' + rebars.key.spc
                  + (rebars.key.dia2 ? ' +\xD8' + rebars.key.dia2 + '/' + rebars.key.spc2 : '') + ' mm';
@@ -4503,7 +4503,7 @@ function pdfSummary(doc, p, ep, st, ri, rebars) {
   if (p.seis && ep.DPAE > 0) epBody.push(['{Delta}P{_ae} seismic', ep.DPAE.toFixed(2), 'kN/m']);
 
   function _pdfAp(rb) { return !rb ? 0 : rwProvAs(rb.dia, rb.spc) + (rb.dia2 && rb.spc2 ? rwProvAs(rb.dia2, rb.spc2) : 0); }
-  function _pdfBarStr(rb) { var s='Ø'+rb.dia+'/'+rb.spc+' mm'; if(rb.dia2&&rb.spc2) s+=' + Ø'+rb.dia2+'/'+rb.spc2+' (ek)'; return s; }
+  function _pdfBarStr(rb) { var s='Ø'+rb.dia+'/'+rb.spc+' mm'; if(rb.dia2&&rb.spc2) s+=' + Ø'+rb.dia2+'/'+rb.spc2+' (suppl.)'; return s; }
   var stemAp = _pdfAp(rebars.stem);
   var rfBody = [['Stem (vertical, earth face)', _pdfBarStr(rebars.stem), ri.stem.A.toFixed(0)+' / '+stemAp.toFixed(0)+' mm²/m', stemAp>=ri.stem.A?'PASS':'FAIL']];
   if (ri.heel && rebars.heel) { var heelAp=_pdfAp(rebars.heel); rfBody.push(['Heel ('+ri.heel.ten+' face)', _pdfBarStr(rebars.heel), ri.heel.A.toFixed(0)+' / '+heelAp.toFixed(0)+' mm²/m', heelAp>=ri.heel.A?'PASS':'FAIL']); }
