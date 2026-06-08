@@ -2381,18 +2381,22 @@ function pdfStabilityDiagram(doc, p, ep) {
     pdfSym(doc, tmpl, lX, lY);
   }
 
-  function drawArm(x0, armFrac, armLbl, mW) {
+  function drawArm(x0, armFrac, armLbl, mW, shape) {
     var dotY = baseY - (baseY - oy) * armFrac;
 
-    /* long bold arrow toward wall — 12 mm, drawn over panel arrows */
-    var al = 12, ah = 2.0;
+    /* right boundary of shape at this height */
+    var wRight = (shape === 'tri') ? (1 - armFrac) * mW : mW;
+    var arrowRight = x0 + wRight + 2;
+
+    /* bold arrow: tip at spine (left), tail slightly past shape right boundary */
+    var ah = 2.0;
     doc.setLineWidth(0.7); doc.setDrawColor(0);
-    doc.line(x0 - al, dotY, x0, dotY);
+    doc.line(x0, dotY, arrowRight, dotY);
     doc.setFillColor(0);
-    doc.lines([[ah, -ah * 0.5], [0, ah]], x0 - al, dotY, [1, 1], 'F', true);
+    doc.lines([[ah, -ah * 0.5], [0, ah]], x0, dotY, [1, 1], 'F', true);
 
     /* dimension bracket OUTSIDE pressure shape (right of boundary) */
-    var dlX = x0 + mW + 2;
+    var dlX = x0 + mW + 4;
     doc.setLineWidth(0.35); doc.setDrawColor(0);
     doc.line(dlX, dotY,  dlX, baseY);
     doc.line(dlX - 1.5, dotY,  dlX + 1.5, dotY);
@@ -2406,27 +2410,27 @@ function pdfStabilityDiagram(doc, p, ep) {
 
   drawPanel(pX, 'tri',  shapeW);
   drawLabel(pX, 'tri',  shapeW, 'P{_a}');
-  drawArm(pX,  1/3, 'H/3', shapeW);
+  drawArm(pX,  1/3, 'H/3', shapeW, 'tri');
   pX += panelW;
 
   if (hasSurch) {
     drawPanel(pX, 'rect', shapeW);
     drawLabel(pX, 'rect', shapeW, 'P{_q}');
-    drawArm(pX,  1/2, 'H/2', shapeW);
+    drawArm(pX,  1/2, 'H/2', shapeW, 'rect');
     pX += panelW;
   }
 
   if (hasSeis) {
     drawPanel(pX, 'rect', shapeW);
     drawLabel(pX, 'rect', shapeW, '{Delta}P{_ae}');
-    drawArm(pX,  1/2, 'H/2', shapeW);
+    drawArm(pX,  1/2, 'H/2', shapeW, 'rect');
     pX += panelW;
   }
 
   if (hasWater) {
     drawPanel(pX, 'tri',  shapeW);
     drawLabel(pX, 'tri',  shapeW, 'P{_w}');
-    drawArm(pX,  1/3, 'H/3', shapeW);
+    drawArm(pX,  1/3, 'H/3', shapeW, 'tri');
     pX += panelW;
   }
 
