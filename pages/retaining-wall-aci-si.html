@@ -4077,9 +4077,7 @@ function pdfCodeRefs(doc) {
 /* ── Design summary ──────────────────────────────── */
 
 function pdfSummary(doc, p, ep, st, ri, rebars) {
-  var y = 32;
-
-  y = pdfSecHdr(doc, 'Stability - Pass / Fail', y);
+  /* ── build bodies first so we can count rows ── */
   var stabBody = [
     ['Overturning (static)',  st.FSot.toFixed(3), '>= '+p.FSo.toFixed(1), st.FSot>=p.FSo ? 'PASS' : 'FAIL'],
     ['Sliding (static)',      st.FSsl.toFixed(3), '>= '+p.FSs.toFixed(1), st.FSsl>=p.FSs ? 'PASS' : 'FAIL'],
@@ -4090,9 +4088,7 @@ function pdfSummary(doc, p, ep, st, ri, rebars) {
     stabBody.push(['Overturning (seismic)', st.FSots.toFixed(3), '>= '+p.FSos.toFixed(1), st.FSots>=p.FSos ? 'PASS' : 'FAIL']);
     stabBody.push(['Sliding (seismic)',     st.FSsls.toFixed(3), '>= '+p.FSss.toFixed(1), st.FSsls>=p.FSss ? 'PASS' : 'FAIL']);
   }
-  y = pdfTbl(doc, ['Check', 'Value', 'Requirement', 'Status'], stabBody, y, { didParseCell: pdfCheckColor });
 
-  y = pdfSecHdr(doc, 'Earth Pressure Summary', y);
   var epBody = [
     ['Active coeff K{_a}', ep.Ka.toFixed(4), '-'],
     ['Passive coeff K{_p}', ep.Kp.toFixed(3), '-'],
@@ -4101,48 +4097,37 @@ function pdfSummary(doc, p, ep, st, ri, rebars) {
     ['Moment arm', ep.arm.toFixed(3), 'm']
   ];
   if (p.seis && ep.DPAE > 0) epBody.push(['{Delta}P{_ae} seismic', ep.DPAE.toFixed(2), 'kN/m']);
-  y = pdfTbl(doc, ['Parameter', 'Value', 'Unit'], epBody, y);
+
+  function _pdfAp(rb) { return !rb ? 0 : rwProvAs(rb.dia, rb.spc) + (rb.dia2 && rb.spc2 ? rwProvAs(rb.dia2, rb.spc2) : 0); }
+  function _pdfBarStr(rb) { var s='Ø'+rb.dia+'@'+rb.spc+' mm'; if(rb.dia2&&rb.spc2) s+=' + Ø'+rb.dia2+'@'+rb.spc2+' (ilave)'; return s; }
+  var stemAp = _pdfAp(rebars.stem);
+  var rfBody = [['Stem (vertical, earth face)', _pdfBarStr(rebars.stem), ri.stem.A.toFixed(0)+' / '+stemAp.toFixed(0)+' mm²/m', stemAp>=ri.stem.A?'PASS':'FAIL']];
+  if (ri.heel && rebars.heel) { var heelAp=_pdfAp(rebars.heel); rfBody.push(['Heel ('+ri.heel.ten+' face)', _pdfBarStr(rebars.heel), ri.heel.A.toFixed(0)+' / '+heelAp.toFixed(0)+' mm²/m', heelAp>=ri.heel.A?'PASS':'FAIL']); }
+  if (ri.toe  && rebars.toe)  { var toeAp =_pdfAp(rebars.toe);  rfBody.push(['Toe ('+ ri.toe.ten +' face)', _pdfBarStr(rebars.toe),  ri.toe.A.toFixed(0) +' / '+toeAp.toFixed(0) +' mm²/m', toeAp >=ri.toe.A ?'PASS':'FAIL']); }
+  if (ri.key  && rebars.key)  { var keyAp =_pdfAp(rebars.key);  var _skLCS=p.skLoc.charAt(0).toUpperCase()+p.skLoc.slice(1); rfBody.push(['Shear key ('+_skLCS+', tension)', _pdfBarStr(rebars.key), ri.key.A.toFixed(0)+' / '+keyAp.toFixed(0)+' mm²/m', keyAp>=ri.key.A?'PASS':'FAIL']); }
+
+  /* ── adaptive sizing: fit everything on one page ──
+     Fixed overhead: y_start=32, 3×secHdr=27, 3×tblHdr=30, 3×gap=24, disclaimer=12 → ~125mm
+     Available for row content: (286-8) - 32 - 93 = ~153mm                              */
+  var totalRows = stabBody.length + epBody.length + rfBody.length;
+  var rowH = Math.min(10, 153 / totalRows);
+  var cp   = Math.max(1.5, (rowH - 3) / 2);
+  var fs   = rowH >= 9 ? 8.5 : (rowH >= 7.5 ? 8.0 : 7.5);
+  var sOpt = { styles: { fontSize: fs, cellPadding: cp } };
+
+  /* ── render ── */
+  var y = 32;
+  y = pdfSecHdr(doc, 'Stability - Pass / Fail', y);
+  y = pdfTbl(doc, ['Check', 'Value', 'Requirement', 'Status'], stabBody, y, sOpt);
+
+  y = pdfSecHdr(doc, 'Earth Pressure Summary', y);
+  y = pdfTbl(doc, ['Parameter', 'Value', 'Unit'], epBody, y, sOpt);
 
   y = pdfSecHdr(doc, 'Reinforcement - Pass / Fail', y);
-  // Helper: primary + supplement (ilave) provided area
-  function _pdfAp(rb) {
-    if (!rb) return 0;
-    return rwProvAs(rb.dia, rb.spc) + (rb.dia2 && rb.spc2 ? rwProvAs(rb.dia2, rb.spc2) : 0);
-  }
-  function _pdfBarStr(rb) {
-    var s = 'Ø'+rb.dia+'@'+rb.spc+' mm';
-    if (rb.dia2 && rb.spc2) s += ' + Ø'+rb.dia2+'@'+rb.spc2+' (ilave)';
-    return s;
-  }
-  var stemAp = _pdfAp(rebars.stem);
-  var rfBody = [
-    ['Stem (vertical, earth face)', _pdfBarStr(rebars.stem),
-     ri.stem.A.toFixed(0)+' / '+stemAp.toFixed(0)+' mm²/m',
-     stemAp>=ri.stem.A ? 'PASS' : 'FAIL']
-  ];
-  if (ri.heel && rebars.heel) {
-    var heelAp = _pdfAp(rebars.heel);
-    rfBody.push(['Heel ('+ri.heel.ten+' face)', _pdfBarStr(rebars.heel),
-     ri.heel.A.toFixed(0)+' / '+heelAp.toFixed(0)+' mm²/m',
-     heelAp>=ri.heel.A ? 'PASS' : 'FAIL']);
-  }
-  if (ri.toe && rebars.toe) {
-    var toeAp = _pdfAp(rebars.toe);
-    rfBody.push(['Toe ('+ri.toe.ten+' face)', _pdfBarStr(rebars.toe),
-      ri.toe.A.toFixed(0)+' / '+toeAp.toFixed(0)+' mm²/m',
-      toeAp>=ri.toe.A ? 'PASS' : 'FAIL']);
-  }
-  if (ri.key && rebars.key) {
-    var keyAp = _pdfAp(rebars.key);
-    var _skLCS = p.skLoc.charAt(0).toUpperCase() + p.skLoc.slice(1);
-    rfBody.push(['Shear key ('+_skLCS+', tension)', _pdfBarStr(rebars.key),
-      ri.key.A.toFixed(0)+' / '+keyAp.toFixed(0)+' mm²/m',
-      keyAp>=ri.key.A ? 'PASS' : 'FAIL']);
-  }
-  y = pdfTbl(doc, ['Element', 'Provided', 'Req / Prov', 'Status'], rfBody, y, { didParseCell: pdfCheckColor });
+  y = pdfTbl(doc, ['Element', 'Provided', 'Req / Prov', 'Status'], rfBody, y, sOpt);
 
   y += 4;
-  doc.setFontSize(8); doc.setTextColor(130);
+  doc.setFontSize(fs < 8 ? 7.5 : 8); doc.setTextColor(130);
   doc.text('This report is for preliminary design only. Verify all results with a licensed structural engineer before construction.', 105, y, { align: 'center', maxWidth: 165 });
   doc.setTextColor(0);
 }
