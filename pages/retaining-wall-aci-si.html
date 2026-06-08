@@ -2405,18 +2405,17 @@ function pdfEPDiagram(doc, p, ep) {
     var baseY = oy + drawH, groundY = baseY + ftH_mm, totalVisH = drawH + ftH_mm;
     var tblY  = 32 + _imgH + 6;
     /* render legend table only */
-    pdfEPTable(doc, ep, p, H, hasSurch, hasSeis, hasWater, tblY);
+    pdfEPTable(doc, ep, p, He, hasSurch, hasSeis, hasWater, tblY);
     return;
   }
 
-  /* Common vertical geometry */
+  /* Common vertical geometry — diagrams span stem height He only (oy → baseY) */
   var oy      = 36;
   var drawH   = 75;
   var scH     = drawH / (He || 1);
   var ftH_mm  = 8;
-  var baseY     = oy + drawH;
-  var groundY   = baseY + ftH_mm;
-  var totalVisH = drawH + ftH_mm;   /* visual mm representing H = He + tf */
+  var baseY   = oy + drawH;
+  var groundY = baseY + ftH_mm;
 
   function py(h) { return baseY - h * scH; }
 
@@ -2425,20 +2424,18 @@ function pdfEPDiagram(doc, p, ep) {
   var wallW  = 68;
   var pW     = (170 - wallW) / nPress;
 
-  /* WALL CROSS-SECTION PANEL — fixed proportional dims */
+  /* WALL CROSS-SECTION PANEL */
   var wStemW  = 8;
   var wFootW  = 60;
   var extTot  = (p.Lh || 0) + (p.Lt || 0);
   var wExt    = wFootW - wStemW;
   var wToe_   = extTot > 0 ? wExt * (p.Lt || 0) / extTot : 0;
-  var wHeel_  = wExt - wToe_;
   var wFootL  = 26;
   var wFootR  = wFootL + wFootW;
   var wStemL  = wFootL + wToe_;
   var wStemR  = wStemL + wStemW;
 
-  /* Tapered stem (wider at base, front face sloped) + footing */
-  var stemTaper = 7;   /* extra mm on front face at base */
+  var stemTaper = 7;
   doc.setFillColor(175, 175, 175); doc.setDrawColor(0); doc.setLineWidth(0.35);
   doc.lines(
     [ [wStemW, 0], [0, drawH], [-(wStemW + stemTaper), 0], [stemTaper, -drawH] ],
@@ -2446,7 +2443,7 @@ function pdfEPDiagram(doc, p, ep) {
   );
   doc.rect(wFootL, baseY, wFootW, ftH_mm, 'FD');
 
-  /* Backfill hatching — diagonal lines above stem right edge */
+  /* Backfill hatching */
   doc.setDrawColor(0); doc.setLineWidth(0.22);
   var hatchX0 = wStemR, hatchX1 = wStemR + 18, hatchY0 = oy, hatchY1 = oy + 7, hatchStep = 3;
   for (var hx = hatchX0; hx < hatchX1 + (hatchY1 - hatchY0); hx += hatchStep) {
@@ -2456,136 +2453,123 @@ function pdfEPDiagram(doc, p, ep) {
     if (lx1 < hatchX0) { ly1 -= hatchX0 - lx1; lx1 = hatchX0; }
     if (ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
   }
+  /* Ground surface line */
+  doc.setDrawColor(0); doc.setLineWidth(0.9);
+  doc.line(wStemR, hatchY0, hatchX1, hatchY0);
+  doc.setLineWidth(0.28);
 
-  /* H dimension label — left of wall section, full height (stem top → footing base) */
+  /* He dimension label — stem top → footing top */
   var hdx = wFootL - 6;
   doc.setDrawColor(0); doc.setLineWidth(0.25);
-  doc.line(hdx - 1.5, oy,      hdx + 1.5, oy);
-  doc.line(hdx - 1.5, groundY, hdx + 1.5, groundY);
-  doc.line(hdx, oy, hdx, groundY);
-  doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-  doc.text('H', hdx - 3, (oy + groundY) / 2 + 2, { angle: 90, align: 'center' });
+  doc.line(hdx - 1.5, oy,    hdx + 1.5, oy);
+  doc.line(hdx - 1.5, baseY, hdx + 1.5, baseY);
+  doc.line(hdx, oy, hdx, baseY);
+  doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(0);
+  doc.text('H', hdx - 3.5, (oy + baseY) / 2 + 2, { angle: 90, align: 'center' });
+  doc.setFontSize(6); doc.setFont(undefined, 'normal');
+  doc.text('e', hdx - 0.5, (oy + baseY) / 2 + 2, { angle: 90, align: 'center' });
+  doc.setFontSize(8);
 
-  /* PRESSURE PANEL HELPER */
+  /* PRESSURE PANEL HELPER — all panels end at baseY */
   function drawPanel(x0, shape, lbl, sub) {
-    var wfX     = x0;
-    var maxPW   = pW * 0.65;
-    var scPden  = shape.toGround ? shape.peakGround : shape.peak;
-    var scP     = (shape.fixedWidth > 0 && scPden > 0) ? shape.fixedWidth / scPden
-                  : (shape.peak > 0 ? maxPW / shape.peak : 1);
+    var wfX = x0;
+    var scP = (shape.fixedWidth > 0 && shape.peak > 0) ? shape.fixedWidth / shape.peak
+              : (shape.peak > 0 ? pW * 0.65 / shape.peak : 1);
 
     doc.setDrawColor(0); doc.setLineWidth(0.28);
-    doc.line(wfX, oy, wfX, groundY);
-    doc.setFillColor(0); doc.circle(wfX, oy,      0.9, 'F');
-    doc.circle(wfX, groundY, 0.9, 'F');
+    doc.line(wfX, oy, wfX, baseY);
+    doc.setFillColor(0);
+    doc.circle(wfX, oy,    0.9, 'F');
+    doc.circle(wfX, baseY, 0.9, 'F');
 
-    doc.setDrawColor(0); doc.setLineWidth(0.28);
     if (shape.type === 'tri_bot') {
-      var endY_  = shape.toGround ? groundY : baseY;
-      var endPW_ = shape.toGround ? shape.peakGround * scP : shape.peak * scP;
-      doc.line(wfX, oy, wfX + endPW_, endY_);
-      doc.line(wfX + endPW_, endY_, wfX, endY_);
+      doc.line(wfX, oy, wfX + shape.peak * scP, baseY);
+      doc.line(wfX + shape.peak * scP, baseY, wfX, baseY);
     } else if (shape.type === 'rect') {
-      var rectBot_ = shape.arrowsToGround ? groundY : baseY;
-      doc.rect(wfX, oy, shape.peak * scP, rectBot_ - oy);
+      doc.rect(wfX, oy, shape.peak * scP, baseY - oy);
     } else {
-      doc.line(wfX, oy, wfX + shape.p_top * scP, oy);
+      doc.line(wfX + shape.p_top * scP, oy, wfX, oy);
       doc.line(wfX + shape.p_top * scP, oy, wfX + shape.p_bot * scP, baseY);
       doc.line(wfX + shape.p_bot * scP, baseY, wfX, baseY);
     }
 
-    var arrTopY = oy;
-    var arrBotY = (shape.arrowsToGround || shape.toGround) ? groundY : baseY;
-
     var nArr = 8;
-    doc.setDrawColor(0); doc.setLineWidth(0.2);
+    doc.setLineWidth(0.2);
     for (var ai = 0; ai <= nArr; ai++) {
-      var ya  = arrTopY + (arrBotY - arrTopY) * ai / nArr;
-      var fA  = (arrBotY > arrTopY) ? (ya - arrTopY) / (arrBotY - arrTopY) : 0;
+      var ya = oy + (baseY - oy) * ai / nArr;
       var ph;
       if (shape.type === 'tri_bot') {
-        var peakA = shape.toGround ? shape.peakGround : shape.peak;
-        ph = peakA * fA;
+        ph = shape.peak * ai / nArr;
       } else if (shape.type === 'rect') {
         ph = shape.peak;
       } else {
-        var wfA = (baseY > arrTopY) ? (ya - arrTopY) / (baseY - arrTopY) : 0;
+        var wfA = (ya - oy) / (baseY - oy);
         ph = shape.p_top + (shape.p_bot - shape.p_top) * wfA;
       }
-      if (ph < 0.025 * (shape.peakGround || shape.peak)) continue;
+      if (ph < 0.025 * shape.peak) continue;
       var xTip = wfX + ph * scP;
       doc.line(wfX, ya, xTip, ya);
       doc.line(wfX, ya, wfX + 2.0, ya - 0.8);
       doc.line(wfX, ya, wfX + 2.0, ya + 0.8);
     }
 
-    var lFrac4, lPhAt4;
-    if (shape.type === 'tri_bot') {
-      lFrac4 = 0.55;
-      var peakL = shape.toGround ? shape.peakGround : shape.peak;
-      lPhAt4 = peakL * lFrac4;
-    } else if (shape.type === 'rect') {
-      lFrac4 = 0.50; lPhAt4 = shape.peak;
-    } else {
-      lFrac4 = 0.40;
-      lPhAt4 = shape.p_top + (shape.p_bot - shape.p_top) * lFrac4;
-    }
-    var lx     = wfX + lPhAt4 * scP + 3;
-    var labelY = oy + (arrBotY - oy) * lFrac4 + 1;
+    var lFrac = (shape.type === 'tri_bot') ? 0.30 : (shape.type === 'trap') ? 0.40 : 0.50;
+    var lPhAt = (shape.type === 'tri_bot') ? shape.peak * lFrac
+              : (shape.type === 'trap') ? shape.p_top + (shape.p_bot - shape.p_top) * lFrac
+              : shape.peak;
+    var lx    = wfX + lPhAt * scP + 3;
+    var lY    = oy + (baseY - oy) * lFrac + 1;
     doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-    pdfSym(doc, lbl + '{_' + sub + '}', lx, labelY);
+    pdfSym(doc, lbl + '{_' + sub + '}', lx, lY);
 
     doc.setFontSize(6.8); doc.setTextColor(60);
     if (shape.type === 'trap') {
       doc.text(shape.peak.toFixed(1) + ' kPa', wfX + shape.p_top * scP + 1.5, oy + 5);
     } else {
-      var kpaVal = shape.toGround ? shape.peakGround : shape.peak;
-      var kpaY   = (shape.toGround || shape.arrowsToGround) ? groundY + 4 : baseY - 2;
-      doc.text(kpaVal.toFixed(1) + ' kPa', wfX + kpaVal * scP + 1.5, kpaY);
+      doc.text(shape.peak.toFixed(1) + ' kPa', wfX + shape.peak * scP + 1.5, baseY - 2);
     }
     doc.setTextColor(0);
   }
 
-  /* ARM INDICATOR — dot at arm height + double-headed arrow to groundY */
+  /* ARM INDICATOR — dot at arm height + double-headed arrow to baseY, He-based label */
   function drawArm(wfX, armFrac, label) {
-    var dotY = groundY - armFrac * totalVisH;
-    var ax   = wfX;
+    var dotY = baseY - armFrac * drawH;
     doc.setDrawColor(0); doc.setLineWidth(0.28);
-    doc.line(ax, dotY, ax, groundY);
-    doc.line(ax, dotY,    ax - 1.2, dotY    + 2.2);
-    doc.line(ax, dotY,    ax + 1.2, dotY    + 2.2);
-    doc.line(ax, groundY, ax - 1.2, groundY - 2.2);
-    doc.line(ax, groundY, ax + 1.2, groundY - 2.2);
+    doc.line(wfX, dotY, wfX, baseY);
+    doc.line(wfX, dotY,  wfX - 1.2, dotY  + 2.2);
+    doc.line(wfX, dotY,  wfX + 1.2, dotY  + 2.2);
+    doc.line(wfX, baseY, wfX - 1.2, baseY - 2.2);
+    doc.line(wfX, baseY, wfX + 1.2, baseY - 2.2);
     doc.setFillColor(0); doc.circle(wfX, dotY, 0.9, 'F');
     doc.setFontSize(7.5); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-    doc.text(label, ax - 2, (dotY + groundY) / 2 + 1.5, { align: 'right' });
+    var lw = pdfSymWidth(doc, label);
+    pdfSym(doc, label, wfX - 3 - lw, (dotY + baseY) / 2 + 1.5);
   }
 
   /* DRAW PANELS */
   var panelX = 20 + wallW;
 
-  var pa_gnd = ep.Ka * p.gs * H;   /* = Ka·γs·H, H = He + tf */
-  drawPanel(panelX, { type: 'tri_bot', peak: pa_max, peakGround: pa_gnd, toGround: true, fixedWidth: 20, arrowsToGround: true }, 'P', 'as');
-  drawArm(panelX, 1 / 3, 'H/3');
+  drawPanel(panelX, { type: 'tri_bot', peak: pa_max, fixedWidth: 20 }, 'P', 'as');
+  drawArm(panelX, 1 / 3, 'H{_e}/3');
   panelX += pW;
 
   if (hasSurch) {
-    drawPanel(panelX, { type: 'rect', peak: qs_val, fixedWidth: 20, arrowsToGround: true }, 'Q', 'as');
-    drawArm(panelX, 1 / 2, 'H/2');
+    drawPanel(panelX, { type: 'rect', peak: qs_val, fixedWidth: 20 }, 'Q', 'as');
+    drawArm(panelX, 1 / 2, 'H{_e}/2');
     panelX += pW;
   }
 
   if (hasSeis) {
-    var dp_top = 1.6 * ep.DPAE / H;
-    var dp_bot = 0.4 * ep.DPAE / H;
+    var dp_top = He > 0 ? 1.6 * ep.DPAE / He : 0;
+    var dp_bot = He > 0 ? 0.4 * ep.DPAE / He : 0;
     drawPanel(panelX, { type: 'trap', p_top: dp_top, p_bot: dp_bot, peak: dp_top, fixedWidth: 20 }, '{Delta}P', 'ae');
-    drawArm(panelX, 0.6, '0.6H');
+    drawArm(panelX, 0.6, '0.6H{_e}');
     panelX += pW;
   }
 
   /* LEGEND TABLE */
-  var tblY = groundY + 22;
-  pdfEPTable(doc, ep, p, H, hasSurch, hasSeis, hasWater, tblY);
+  var tblY = baseY + 22;
+  pdfEPTable(doc, ep, p, He, hasSurch, hasSeis, hasWater, tblY);
 }
 
 /* ── Utilities ───────────────────────────────────── */
