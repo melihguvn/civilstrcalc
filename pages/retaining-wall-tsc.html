@@ -1893,18 +1893,23 @@ function calcStability(p,ep){
 }
 
 function calcReinf(p,st,ep){
-  var fc=p.fc, fy=p.fy, pf=0.9, pv=0.75;
+  var fc=p.fc, fy=p.fy;
+  var fcd=fc/1.5, fyd=fy/1.15;        // TS 500: design strengths (γc=1.5, γs=1.15)
   function effD(h){return h-p.cover-8;}
   function fxD(Mu,h){
-    var d=effD(h), MN=Math.abs(Mu)*1e6, Ru=MN/(pf*1000*d*d);
-    var rho=(0.85*fc/fy)*(1-Math.sqrt(Math.max(0,1-2*Ru/(0.85*fc))));
+    var d=effD(h), MN=Math.abs(Mu)*1e6;
+    var rho=(0.85*fcd/fyd)*(1-Math.sqrt(Math.max(0,1-2*MN/(0.85*fcd*1000*d*d))));
     if(rho<0||isNaN(rho)) rho=0;
     var Ar=rho*1000*d;
-    var Am=Math.max(0.25*Math.sqrt(fc)/fy*1000*d, 1.4/fy*1000*d);
-    var At=0.0018*1000*h;
-    return {Mu:Mu,d:d,Ar:Ar,Am:Am,At:At,A:Math.max(Ar,Am,At)};
+    var Am=Math.max(0.25*Math.sqrt(fc)/fyd*1000*d, 1.4/fyd*1000*d);  // TS 500 §7.1.4
+    var At=0.002*1000*h;                                              // TS 500 §9.3
+    return {Mu:Mu,d:d,Ar:Ar,Am:Am,At:At,A:Math.max(Ar,Am,At),fcd:fcd,fyd:fyd};
   }
-  function vc(d){var ls=Math.min(1.0,Math.sqrt(2/(1+d/250)));return pv*0.17*ls*Math.sqrt(fc)*d;} // kN/m, ACI 318-25 §22.5.5.1 λs size-effect
+  // TS 500 §8.1.4: Vcr = 0.65·(0.2+20ρl)·√fck·bw·d  (kN/m, b=1000mm)
+  function vc(d,As_req){
+    var rhoL=Math.min(Math.max((As_req||0)/(1000*d),0),0.02);
+    return 0.65*(0.2+20*rhoL)*Math.sqrt(fc)*d;
+  }
 
   var He=ep.He, Ka=ep.Ka, gs=p.gs;
   var gw=9.81, gs_eff=p.water?(gs-gw):gs;
@@ -1924,7 +1929,7 @@ function calcReinf(p,st,ep){
   if(p.water) Vus+=LFw*gw*He*He/2;
   if(p.seis)  Vus+=dPstem;
   var ts=p.ts*1000, sf=fxD(Mus,ts);
-  sf.Vu=Vus; sf.Vc=vc(sf.d); sf.sok=sf.Vc>=Vus;
+  sf.Vu=Vus; sf.Vc=vc(sf.d,sf.A); sf.sok=sf.Vc>=Vus;
 
   var B=st.B, tf=p.tf*1000;
   var hf=null;
@@ -1932,7 +1937,7 @@ function calcReinf(p,st,ep){
     var qhs=st.qmax-(st.qmax-st.qmin)*(p.Lt+p.ts)/B;
     var whn=((qhs+st.qmin)/2)-(p.gs*He+(p.surch?p.q:0)+(p.gc||25)*p.tf);
     hf=fxD(LFd*Math.abs(whn)*p.Lh*p.Lh/2, tf);
-    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten=whn<0?'bottom':'top';
+    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d,hf.A); hf.sok=hf.Vc>=hf.Vu; hf.ten=whn<0?'bottom':'top';
   }
 
   var tf2=null;
@@ -1940,7 +1945,7 @@ function calcReinf(p,st,ep){
     var qts=st.qmax-(st.qmax-st.qmin)*p.Lt/B;
     var wtn=((st.qmax+qts)/2)-((p.gc||25)*p.tf+p.gs*Math.max(0,p.htoe-p.tf));
     tf2=fxD(LFd*Math.abs(wtn)*p.Lt*p.Lt/2, tf);
-    tf2.Vu=LFd*Math.abs(wtn)*p.Lt; tf2.Vc=vc(tf2.d); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=wtn>0?'top':'bottom';
+    tf2.Vu=LFd*Math.abs(wtn)*p.Lt; tf2.Vc=vc(tf2.d,tf2.A); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=wtn>0?'top':'bottom';
   }
   var sk_ri = null;
   if(p.skEn && p.skd > 0 && p.skw > 0 && !(p.skLoc === 'heel' && p.Lh <= 0)) {
@@ -1955,7 +1960,7 @@ function calcReinf(p,st,ep){
     }
     sk_ri = fxD(LFh * Msk_uf, p.skw * 1000);
     sk_ri.Vu = LFh * Fp_sk_uf;
-    sk_ri.Vc = vc(sk_ri.d);
+    sk_ri.Vc = vc(sk_ri.d, sk_ri.A);
     sk_ri.sok = sk_ri.Vc >= sk_ri.Vu;
   }
   return {stem:sf, heel:hf, toe:tf2, key:sk_ri};
@@ -2073,7 +2078,7 @@ function renderRWResults(p,ep,st,ri){
       +'</div>'
       +'<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:.74rem;padding-top:6px;border-top:1px solid var(--border)">'
       +'<span style="color:var(--text-dim)">V<sub>u</sub>='+flx.Vu.toFixed(2)+' kN/m</span>'
-      +'<span class="'+sc+'">&phi;V<sub>c</sub>='+flx.Vc.toFixed(2)+' kN/m '+(flx.sok?'&#10003;':'&#10007;')+'</span>'
+      +'<span class="'+sc+'">V<sub>cr</sub>='+flx.Vc.toFixed(2)+' kN/m '+(flx.sok?'&#10003;':'&#10007;')+'</span>'
       +'</div></div>';
   }
   html+=rcrd('stem','Stem — vertical bars (earth face)',ri.stem);
@@ -2670,23 +2675,23 @@ function pdfLoadCombos(doc, p) {
   doc.text('D = Dead (concrete + soil weight)   H = Earth pressure   E = Seismic (TSC 2019 \xA716.12)', 20, y + 2);
   doc.setTextColor(0); y += 14;
 
-  y = pdfSecHdr(doc, 'Strength Reduction Factors - TSC 2019', y);
-  y = pdfTbl(doc, ['Condition', 'Factor', 'Value'], [
-    ['Flexure (tension-controlled)', '{phi}{_f}', '0.90'],
-    ['One-way shear',               '{phi}{_v}', '0.75'],
-    ['Compression-controlled',      '{phi}{_c}', '0.65']
-  ], y, { margin: { left: 20, right: 100 }, columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } } });
+  y = pdfSecHdr(doc, 'Material Safety Factors - TS 500', y);
+  y = pdfTbl(doc, ['Material', 'Factor', 'Value', 'Design Strength'], [
+    ['Concrete', '{gamma}{_c}', '1.50', 'f{_cd} = f{_ck} / {gamma}{_c}'],
+    ['Reinforcement steel', '{gamma}{_s}', '1.15', 'f{_yd} = f{_yk} / {gamma}{_s}']
+  ], y, { margin: { left: 20, right: 20 }, columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } } });
 
   y = pdfSecHdr(doc, 'Key Design Formulas', y);
   y = pdfTbl(doc, ['Parameter', 'Formula', 'Code Ref.'], [
-    ['Min. flexural steel', 'A{_s,min} = max(0.25\xD7{sqrt}f\'c/f{_y}, 1.4/f{_y}) \xD7 bd', 'TSC \xA77.4'],
-    ['Temp. & shrinkage',   'A{_s,T&S} = 0.0018 \xD7 b \xD7 h',                              'TS 500 \xA76.1'],
-    ['Nominal shear',       '{phi}V{_c} = 0.75 \xD7 0.17 \xD7 {lambda}{_s} \xD7 {sqrt}f\'c \xD7 b \xD7 d', 'TSC \xA77.3'],
-    ['Rankine Ka (horiz.)', 'Ka = (1−sin{phi}) / (1+sin{phi})',                           'Rankine 1857'],
-    ['Rankine Ka (slope)',  'Ka = cos{beta}(cos{beta}−{sqrt}(cos\xB2{beta}−cos\xB2{phi})) / (cos{beta}+…)', 'Rankine 1857'],
-    ['Rankine Kp',          'Kp = (1+sin{phi}) / (1−sin{phi})',                           'Rankine 1857'],
-    ['Seismic increment',   '{Delta}Pae = [K{_tot}(1−kv)−K{_st}]\xD7(\xBD{gamma}*H\xB2+qH)  @ H/2', 'TSC \xA716.12']
-  ], y, { styles: { halign: 'left' }, headStyles: { halign: 'center' }, columnStyles: { 0: { halign: 'left', cellWidth: 38 }, 2: { halign: 'center', cellWidth: 28 } } });
+    ['Flexural steel (TS 500)', '{rho} = (0.85f{_cd}/f{_yd})\xB7[1−{sqrt}(1−2{mu}/0.85)]', 'TS 500 \xA77.3'],
+    ['Normalized moment',      '{mu} = M{_u}/(f{_cd}\xB7b\xB7d\xB2)',                              'TS 500 \xA77.3'],
+    ['Min. flexural steel',    'A{_s,min} = max(0.25{sqrt}f{_ck}/f{_yd}, 1.4/f{_yd})\xD7bd',      'TS 500 \xA77.1.4'],
+    ['Temp. & shrinkage',      'A{_s,T&S} = 0.002 \xD7 b \xD7 h',                                 'TS 500 \xA79.3'],
+    ['Shear capacity',         'V{_cr} = 0.65\xB7(0.2+20{rho}{_l})\xB7{sqrt}f{_ck}\xB7b\xB7d',   'TS 500 \xA78.1.4'],
+    ['Rankine Ka (horiz.)',    'Ka = (1−sin{phi}) / (1+sin{phi})',                             'Rankine 1857'],
+    ['Rankine Kp',             'Kp = (1+sin{phi}) / (1−sin{phi})',                             'Rankine 1857'],
+    ['Seismic increment',      '{Delta}Pae = [K{_tot}(1−kv)−K{_st}]\xD7(\xBDH\xB2\xB7{gamma}*+qH)  @ H/2', 'TSC \xA716.12']
+  ], y, { styles: { halign: 'left' }, headStyles: { halign: 'center' }, columnStyles: { 0: { halign: 'left', cellWidth: 40 }, 2: { halign: 'center', cellWidth: 26 } } });
 }
 
 /* ── Earth pressure distribution diagrams — side-by-side ──── */
@@ -3971,23 +3976,26 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
     pdfSym(doc, 'd = ' + (key==='stem'?'t{_s}':key==='key'?'w{_k}':'t{_f}') + ' - cover - d{_b}/2  approx. ' + hVal.toFixed(0) + ' - ' + p.cover.toFixed(0) + ' - 8', 30, y); y += 6;
     pdfSym(doc, 'd = ' + flx.d.toFixed(0) + ' mm', 30, y, true); y += 10;
 
-    /* Ru and rho only if flexure governs (Ar > 0) */
+    /* Design parameter — TS 500 method (fcd/fyd, no φ) */
     if (flx.Ar > 0) {
-      var Ru = (Math.abs(flx.Mu) * 1e6) / (0.9 * 1000 * flx.d * flx.d);
-      var rho = (0.85 * p.fc / p.fy) * (1 - Math.sqrt(Math.max(0, 1 - 2 * Ru / (0.85 * p.fc))));
+      var fcd_v = p.fc / 1.5, fyd_v = p.fy / 1.15;
+      var MN_v  = Math.abs(flx.Mu) * 1e6;
+      var mu_v  = MN_v / (fcd_v * 1000 * flx.d * flx.d);
+      var rho_v = (0.85 * fcd_v / fyd_v) * (1 - Math.sqrt(Math.max(0, 1 - 2 * mu_v / 0.85)));
       doc.text('Design parameter:', 25, y); y += 7;
-      pdfSym(doc, 'R{_u} = M{_u} / ({phi}\xB7b\xB7d\xB2) = ' + (Math.abs(flx.Mu)*1e6).toFixed(0) + ' / (0.9\xD71000\xD7' + flx.d.toFixed(0) + '\xB2)', 30, y); y += 6;
-      pdfSym(doc, 'R{_u} = ' + Ru.toFixed(3) + ' MPa', 30, y, true); y += 10;
-      pdfSym(doc, '{rho} = (0.85f\'c/fy)[1 - {sqrt}(1 - 2R{_u}/(0.85f\'c))]', 25, y); y += 6;
+      pdfSym(doc, 'f{_cd} = f{_ck}/{gamma}{_c} = ' + p.fc.toFixed(0) + '/1.5 = ' + fcd_v.toFixed(2) + ' MPa    f{_yd} = f{_yk}/{gamma}{_s} = ' + p.fy.toFixed(0) + '/1.15 = ' + fyd_v.toFixed(1) + ' MPa', 30, y); y += 7;
+      pdfSym(doc, '{mu} = M{_u} / (f{_cd}\xB7b\xB7d\xB2) = ' + MN_v.toFixed(0) + ' / (' + fcd_v.toFixed(2) + '\xD71000\xD7' + flx.d.toFixed(0) + '\xB2)', 30, y); y += 6;
+      pdfSym(doc, '{mu} = ' + mu_v.toFixed(4), 30, y, true); y += 10;
+      pdfSym(doc, '{rho} = (0.85\xB7f{_cd}/f{_yd})\xB7[1 − {sqrt}(1 − 2{mu}/0.85)]', 25, y); y += 6;
       var rhoCur = pdfSym(doc, '{rho} = ', 25, y, true);
-      doc.setFont('helvetica','bold'); doc.text(rho.toFixed(6), rhoCur, y); doc.setFont('helvetica','normal'); y += 10;
-      pdfSym(doc, 'A{_s,flex} = {rho} \xD7 b \xD7 d = ' + rho.toFixed(6) + ' \xD7 1000 \xD7 ' + flx.d.toFixed(0), 25, y); y += 6;
+      doc.setFont('helvetica','bold'); doc.text(rho_v.toFixed(6), rhoCur, y); doc.setFont('helvetica','normal'); y += 10;
+      pdfSym(doc, 'A{_s,flex} = {rho} \xD7 b \xD7 d = ' + rho_v.toFixed(6) + ' \xD7 1000 \xD7 ' + flx.d.toFixed(0), 25, y); y += 6;
       pdfSym(doc, 'A{_s,flex} = ' + flx.Ar.toFixed(0) + ' mm\xB2/m', 25, y, true); y += 10;
     }
 
     doc.text('Minimums:', 25, y); y += 7;
-    pdfSym(doc, 'A{_s,min} (flexure) = max(0.25\xB7{sqrt}(f\'c)/fy,  1.4/fy) \xD7 bd = ' + flx.Am.toFixed(0) + ' mm\xB2/m', 30, y); y += 6;
-    pdfSym(doc, 'A{_s,min} (T&S) = 0.0018 \xD7 b \xD7 h = ' + flx.At.toFixed(0) + ' mm\xB2/m', 30, y); y += 10;
+    pdfSym(doc, 'A{_s,min} (flexure) = max(0.25\xB7{sqrt}(f{_ck})/f{_yd},  1.4/f{_yd}) \xD7 bd = ' + flx.Am.toFixed(0) + ' mm\xB2/m', 30, y); y += 6;
+    pdfSym(doc, 'A{_s,min} (T&S) = 0.002 \xD7 b \xD7 h = ' + flx.At.toFixed(0) + ' mm\xB2/m', 30, y); y += 10;
 
     /* yellow highlight box for As,required */
     doc.setFillColor(255, 253, 225); doc.setDrawColor(200, 160, 0); doc.setLineWidth(0.4);
@@ -4001,7 +4009,7 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
       var ok   = ap >= flx.A;
       var util = (flx.A / ap * 100).toFixed(0);
       var provStr = 'Provided: \xD8' + rb.dia + ' @ ' + rb.spc + ' mm'
-        + (rb.dia2 && rb.spc2 ? '  +  \xD8' + rb.dia2 + ' @ ' + rb.spc2 + ' mm (ilave)' : '')
+        + (rb.dia2 && rb.spc2 ? '  +  \xD8' + rb.dia2 + ' @ ' + rb.spc2 + ' mm (ek)' : '')
         + '  =>  A{_s,prov} = ' + ap.toFixed(0) + ' mm\xB2/m';
       pdfSym(doc, provStr, 25, y); y += 6;
       /* colored bordered box for provided reinf result */
@@ -4015,9 +4023,9 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
       y += 12;
     }
 
-    pdfSym(doc, '{phi}\xD7V{_c} = 0.75 \xD7 0.17 \xB7 {lambda}{_s} \xB7 {sqrt}(f\'c) \xD7 b \xD7 d = ' + flx.Vc.toFixed(2) + ' kN/m', 25, y); y += 6;
+    pdfSym(doc, 'V{_cr} = 0.65\xB7(0.2+20{rho}{_l})\xB7{sqrt}(f{_ck})\xB7b\xB7d = ' + flx.Vc.toFixed(2) + ' kN/m', 25, y); y += 6;
     doc.setTextColor.apply(doc, flx.sok ? PDF_GRN : PDF_RED);
-    pdfSym(doc, (flx.sok ? '>=' : '<') + ' V{_u} = ' + flx.Vu.toFixed(2) + ' kN/m  -  ' + (flx.sok ? 'OK - No shear rebar needed' : 'NG - Shear rebar required'), 25, y, true);
+    pdfSym(doc, (flx.sok ? '>=' : '<') + ' V{_u} = ' + flx.Vu.toFixed(2) + ' kN/m  -  ' + (flx.sok ? 'OK - Kesme donatisi gerekmez' : 'NG - Kesme donatisi gerekli'), 25, y, true);
     doc.setTextColor(0); y += 13;
   }
 
@@ -4267,7 +4275,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
   /* S1 supplement */
   if (rebars.stem.dia2) {
     callout(s1x - 1.0, stemMidY + 2, lblX, stemMidY + 4, [
-      '\xD8' + rebars.stem.dia2 + ' @ ' + rebars.stem.spc2 + ' mm  (ilave)',
+      '\xD8' + rebars.stem.dia2 + ' @ ' + rebars.stem.spc2 + ' mm  (ek)',
       'S1-add - Supplementary stem bars'
     ]);
   }
@@ -4313,7 +4321,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     if (rebars.heel.dia2) {
       var f1AddY = _heelKey ? footMidY - 5 : footMidY + 5;
       callout(px(B) - cvs, f1y + (ri.heel.ten === 'top' ? 1.0 : -1.0), lblX, f1AddY, [
-        '\xD8' + rebars.heel.dia2 + ' @ ' + rebars.heel.spc2 + ' mm  (ilave)',
+        '\xD8' + rebars.heel.dia2 + ' @ ' + rebars.heel.spc2 + ' mm  (ek)',
         'F1-add - Supplementary heel bars'
       ]);
     }
@@ -4329,8 +4337,8 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     ]);
     if (rebars.toe.dia2) {
       callout(px(0) + cvs, f2y + (ri.toe.ten === 'top' ? 1.0 : -1.0), lftX, f2AddLblY, [
-        '\xD8' + rebars.toe.dia2 + '@' + rebars.toe.spc2 + ' mm  (ilave)',
-        'F2-add (ilave)'
+        '\xD8' + rebars.toe.dia2 + '@' + rebars.toe.spc2 + ' mm  (ek)',
+        'F2-add (ek)'
       ]);
     }
   }
