@@ -2068,13 +2068,13 @@ function getRebars(p) {
 
 /* ── Distribution bar per ACI 318-25 §11.6 ── */
 function rwDistBar(h_mm, rhoMin) {
-  // Find smallest standard bar >= Ø10 at 150 mm spacing satisfying rhoMin × b × h / 2 per face
-  var req = (rhoMin || 0.0020) * 1000 * h_mm / 2;
-  var bars = [10, 12, 14, 16];
+  // rhoMin applied per each face: A_s,req = rhoMin × b × h per face; spacing fixed at 150 mm
+  var req = (rhoMin || 0.0020) * 1000 * h_mm;
+  var bars = [10, 12, 14, 16, 20];
   for (var i = 0; i < bars.length; i++) {
     if (rwProvAs(bars[i], 150) >= req) return { dia: bars[i], spc: 150 };
   }
-  return { dia: 16, spc: 150 };
+  return { dia: 20, spc: 150 };
 }
 
 /* ── PDF page builders ── */
@@ -3978,8 +3978,8 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
 
   var schRows = [
     ['S1', 'Stem - main vert. (earth face)',       stemBar,                                           sAp.toFixed(0),  ri.stem.A.toFixed(0), sAp >= ri.stem.A ? 'OK' : 'NG'],
-    ['S2', 'Stem - horiz. dist., ea. face §11.6.1','\xD8' + dstStem.dia + '@' + dstStem.spc,         dSAp.toFixed(0), (1000 * p.ts).toFixed(0), 'OK'],
-    ['S3', 'Stem - front face vert. §11.6.2',      '\xD8' + frtVert.dia + '@' + frtVert.spc,         fVAp.toFixed(0), (600  * p.ts).toFixed(0), 'OK'],
+    ['S2', 'Stem - horiz. dist., ea. face §11.6.1','\xD8' + dstStem.dia + '@' + dstStem.spc,         dSAp.toFixed(0), (2000 * p.ts).toFixed(0), 'OK'],
+    ['S3', 'Stem - front face vert. §11.6.2',      '\xD8' + frtVert.dia + '@' + frtVert.spc,         fVAp.toFixed(0), (1200 * p.ts).toFixed(0), 'OK'],
   ];
   if (ri.heel && rebars.heel) {
     var heelBar = '\xD8' + rebars.heel.dia + '@' + rebars.heel.spc + (rebars.heel.dia2 ? ' +\xD8' + rebars.heel.dia2 + '@' + rebars.heel.spc2 : '');
@@ -3999,7 +3999,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     schRows.push(['K1', 'Shear key (' + _skLC + ') - tension face (vert.)', kBar, kAp.toFixed(0), ri.key.A.toFixed(0), kAp >= ri.key.A ? 'OK' : 'NG']);
   }
 
-  schRows.push(['F3', 'Footing - transv. dist., ea. face §25.3.2', '\xD8' + dstFoot.dia + '@' + dstFoot.spc, dFAp.toFixed(0), (1000 * p.tf).toFixed(0), 'OK']);
+  schRows.push(['F3', 'Footing - transv. dist., ea. face §25.3.2', '\xD8' + dstFoot.dia + '@' + dstFoot.spc, dFAp.toFixed(0), (2000 * p.tf).toFixed(0), 'OK']);
 
   var afterTbl = pdfTbl(doc,
     ['Mark', 'Location & Description', 'Bars (mm)', 'As,prov (mm\xB2/m)', 'As,req (mm\xB2/m)', 'Check'],

@@ -1905,10 +1905,9 @@ function calcReinf(p,st,ep){
     var At=0.002*1000*h;                                              // TS 500 §9.3
     return {Mu:Mu,d:d,Ar:Ar,Am:Am,At:At,A:Math.max(Ar,Am,At),fcd:fcd,fyd:fyd};
   }
-  // TS 500 §8.1.4: Vcr = 0.65·(0.2+20ρl)·√fck·bw·d  (kN/m, b=1000mm)
-  function vc(d,As_req){
-    var rhoL=Math.min(Math.max((As_req||0)/(1000*d),0),0.02);
-    return 0.65*(0.2+20*rhoL)*Math.sqrt(fc)*d;
+  // TS 500 §8.1.4: Vcr = 0.65·0.2·√fck·bw·d  (ρl not considered; kN/m, b=1000mm)
+  function vc(d){
+    return 0.65*0.2*Math.sqrt(fc)*d;
   }
 
   var He=ep.He, Ka=ep.Ka, gs=p.gs;
@@ -1929,7 +1928,7 @@ function calcReinf(p,st,ep){
   if(p.water) Vus+=LFw*gw*He*He/2;
   if(p.seis)  Vus+=dPstem;
   var ts=p.ts*1000, sf=fxD(Mus,ts);
-  sf.Vu=Vus; sf.Vc=vc(sf.d,sf.A); sf.sok=sf.Vc>=Vus;
+  sf.Vu=Vus; sf.Vc=vc(sf.d); sf.sok=sf.Vc>=Vus;
 
   var B=st.B, tf=p.tf*1000;
   var hf=null;
@@ -1937,7 +1936,7 @@ function calcReinf(p,st,ep){
     var qhs=st.qmax-(st.qmax-st.qmin)*(p.Lt+p.ts)/B;
     var whn=((qhs+st.qmin)/2)-(p.gs*He+(p.surch?p.q:0)+(p.gc||25)*p.tf);
     hf=fxD(LFd*Math.abs(whn)*p.Lh*p.Lh/2, tf);
-    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d,hf.A); hf.sok=hf.Vc>=hf.Vu; hf.ten=whn<0?'top':'bottom';
+    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten='top';
   }
 
   var tf2=null;
@@ -1945,7 +1944,7 @@ function calcReinf(p,st,ep){
     var qts=st.qmax-(st.qmax-st.qmin)*p.Lt/B;
     var wtn=((st.qmax+qts)/2)-((p.gc||25)*p.tf+p.gs*Math.max(0,p.htoe-p.tf));
     tf2=fxD(LFd*Math.abs(wtn)*p.Lt*p.Lt/2, tf);
-    tf2.Vu=LFd*Math.abs(wtn)*p.Lt; tf2.Vc=vc(tf2.d,tf2.A); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=wtn>0?'bottom':'top';
+    tf2.Vu=LFd*Math.abs(wtn)*p.Lt; tf2.Vc=vc(tf2.d); tf2.sok=tf2.Vc>=tf2.Vu; tf2.ten=wtn>0?'bottom':'top';
   }
   var sk_ri = null;
   if(p.skEn && p.skd > 0 && p.skw > 0 && !(p.skLoc === 'heel' && p.Lh <= 0)) {
@@ -1960,7 +1959,7 @@ function calcReinf(p,st,ep){
     }
     sk_ri = fxD(LFh * Msk_uf, p.skw * 1000);
     sk_ri.Vu = LFh * Fp_sk_uf;
-    sk_ri.Vc = vc(sk_ri.d, sk_ri.A);
+    sk_ri.Vc = vc(sk_ri.d);
     sk_ri.sok = sk_ri.Vc >= sk_ri.Vu;
   }
   return {stem:sf, heel:hf, toe:tf2, key:sk_ri};
@@ -2243,13 +2242,13 @@ function getRebars(p) {
 
 /* ── Distribution steel — §7.4 ── */
 function rwDistBar(h_mm, rhoMin) {
-  // Find smallest standard bar >= Ø10 at 150 mm spacing satisfying rhoMin × b × h / 2 per face
-  var req = (rhoMin || 0.0020) * 1000 * h_mm / 2;
-  var bars = [10, 12, 14, 16];
+  // rhoMin applied per each face: A_s,req = rhoMin × b × h per face; spacing fixed at 150 mm
+  var req = (rhoMin || 0.0020) * 1000 * h_mm;
+  var bars = [10, 12, 14, 16, 20];
   for (var i = 0; i < bars.length; i++) {
     if (rwProvAs(bars[i], 150) >= req) return { dia: bars[i], spc: 150 };
   }
-  return { dia: 16, spc: 150 };
+  return { dia: 20, spc: 150 };
 }
 
 /* ── PDF page builders ── */
@@ -2328,8 +2327,13 @@ function pdfStabilityDiagram(doc, p, ep) {
     if (lx0 < lx1 && ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
   }
 
+  /* Ground surface line */
+  doc.setDrawColor(0); doc.setLineWidth(0.55);
+  doc.line(hX0, hY0, hX1, hY0);
+  doc.setLineWidth(0.28);
+
   /* H dimension on left */
-  var hdx = wallL - 5;
+  var hdx = wallL - 2;
   doc.setDrawColor(0); doc.setLineWidth(0.3);
   doc.line(hdx - 1.5, oy,    hdx + 1.5, oy);
   doc.line(hdx - 1.5, baseY, hdx + 1.5, baseY);
@@ -2374,11 +2378,9 @@ function pdfStabilityDiagram(doc, p, ep) {
   function drawLabel(x0, shape, mW, tmpl) {
     var lX, lY;
     if (shape === 'tri') {
-      /* just right of boundary at 67 % height */
       lX = x0 + 0.67 * mW + 1.5;
-      lY = oy + (baseY - oy) * 0.67;
+      lY = oy + (baseY - oy) * 0.57;
     } else {
-      /* right of shape, upper third — above bracket */
       lX = x0 + mW + 1.5;
       lY = oy + (baseY - oy) * 0.33;
     }
@@ -2687,7 +2689,7 @@ function pdfLoadCombos(doc, p) {
     ['Normalized moment',      '{mu} = M{_u}/(f{_cd}\xB7b\xB7d\xB2)',                              'TS 500 \xA77.3'],
     ['Min. flexural steel',    'A{_s,min} = max(0.25{sqrt}f{_ck}/f{_yd}, 1.4/f{_yd})\xD7bd',      'TS 500 \xA77.1.4'],
     ['Temp. & shrinkage',      'A{_s,T&S} = 0.002 \xD7 b \xD7 h',                                 'TS 500 \xA79.3'],
-    ['Shear capacity',         'V{_cr} = 0.65\xB7(0.2+20{rho}{_l})\xB7{sqrt}f{_ck}\xB7b\xB7d',   'TS 500 \xA78.1.4'],
+    ['Shear capacity',         'V{_cr} = 0.65\xB70.2\xB7{sqrt}f{_ck}\xB7b\xB7d',                  'TS 500 \xA78.1.4'],
     ['Rankine Ka (horiz.)',    'Ka = (1-sin{phi}) / (1+sin{phi})',                             'Rankine 1857'],
     ['Rankine Kp',             'Kp = (1+sin{phi}) / (1-sin{phi})',                             'Rankine 1857'],
     ['Seismic increment',      '{Delta}Pae = [K{_tot}(1-kv)-K{_st}]\xD7(\xBDH\xB2\xB7{gamma}*+qH)  @ H/2', 'TSC \xA716.12']
@@ -2709,30 +2711,7 @@ function pdfEPDiagram(doc, p, ep) {
   doc.text('Figure 2 — Earth Pressure Diagrams (per unit length)', 105, 29, { align: 'center' });
   doc.setFont(undefined, 'normal'); doc.setTextColor(0);
 
-  /* ── PNG shortcut: use pre-loaded Wall*.PNG if available ── */
   var hasWater = p.water && ep.Pw > 0;
-  var _pngIdx = (!hasSurch && !hasSeis && !hasWater) ? 0
-              : ( hasSurch && !hasSeis && !hasWater) ? 1
-              : (!hasSurch &&  hasSeis && !hasWater) ? 2
-              : (!hasSurch && !hasSeis &&  hasWater) ? 3
-              : ( hasSurch &&  hasSeis && !hasWater) ? 4
-              : ( hasSurch && !hasSeis &&  hasWater) ? 5
-              : (!hasSurch &&  hasSeis &&  hasWater) ? 6
-              : 7;
-  if (_wallDiagPng[_pngIdx] && _wallDiagPng[_pngIdx].data) {
-    var _pg    = _wallDiagPng[_pngIdx];
-    var _imgH  = 68;
-    var _imgW  = _imgH * (_pg.w / _pg.h);
-    if (_imgW > 170) { _imgW = 170; _imgH = _imgW * (_pg.h / _pg.w); }
-    doc.addImage(_pg.data, 'PNG', 20, 32, _imgW, _imgH);  /* left-aligned at x=20 */
-    /* jump geometry vars so legend table renders correctly */
-    var oy = 32, drawH = _imgH - 8, ftH_mm = 8;
-    var baseY = oy + drawH, groundY = baseY + ftH_mm, totalVisH = drawH + ftH_mm;
-    var tblY  = 32 + _imgH + 6;
-    /* render legend table only */
-    pdfEPTable(doc, ep, p, He, hasSurch, hasSeis, hasWater, tblY);
-    return;
-  }
 
   /* Common vertical geometry */
   var oy      = 36;
@@ -2781,13 +2760,13 @@ function pdfEPDiagram(doc, p, ep) {
     if (lx1 < hatchX0) { ly1 -= hatchX0 - lx1; lx1 = hatchX0; }
     if (ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
   }
-  /* Ground surface line — thick horizontal line at top of hatching */
-  doc.setDrawColor(0); doc.setLineWidth(0.9);
+  /* Ground surface line — ends where hatching ends */
+  doc.setDrawColor(0); doc.setLineWidth(0.55);
   doc.line(wStemR, hatchY0, hatchX1, hatchY0);
   doc.setLineWidth(0.28);
 
   /* He dimension label — stem height only (stem top → footing top) */
-  var hdx = wFootL - 6;
+  var hdx = wFootL - 3;
   doc.setDrawColor(0); doc.setLineWidth(0.25);
   doc.line(hdx - 1.5, oy,    hdx + 1.5, oy);
   doc.line(hdx - 1.5, baseY, hdx + 1.5, baseY);
@@ -2795,102 +2774,104 @@ function pdfEPDiagram(doc, p, ep) {
   doc.setFontSize(8); doc.setFont(undefined, 'bold'); doc.setTextColor(0);
   doc.text('H', hdx - 3.5, (oy + baseY) / 2 + 2, { angle: 90, align: 'center' });
   doc.setFontSize(6); doc.setFont(undefined, 'normal');
-  doc.text('e', hdx - 0.5, (oy + baseY) / 2 + 2, { angle: 90, align: 'center' });
+  doc.text('e', hdx - 2.0, (oy + baseY) / 2 + 2, { angle: 90, align: 'center' });
   doc.setFontSize(8);
 
-  /* PRESSURE PANEL HELPER — diagrams span stem height only (oy → baseY) */
-  function drawPanel(x0, shape, lbl, sub) {
-    var wfX  = x0;
-    var scP  = (shape.fixedWidth > 0 && shape.peak > 0) ? shape.fixedWidth / shape.peak
-               : (shape.peak > 0 ? pW * 0.65 / shape.peak : 1);
+  /* ── Pressure panel helpers — stability-analysis style ── */
+  var shapeW = Math.min(pW * 0.50, 28);
 
-    /* spine + end dots */
-    doc.setDrawColor(0); doc.setLineWidth(0.28);
-    doc.line(wfX, oy, wfX, baseY);
+  function arrowTip(ax, ay) {
+    var ah = 1.3;
     doc.setFillColor(0);
-    doc.circle(wfX, oy,    0.9, 'F');
-    doc.circle(wfX, baseY, 0.9, 'F');
-
-    /* outline */
-    if (shape.type === 'tri_bot') {
-      doc.line(wfX, oy, wfX + shape.peak * scP, baseY);
-      doc.line(wfX + shape.peak * scP, baseY, wfX, baseY);
-    } else {
-      doc.rect(wfX, oy, shape.peak * scP, baseY - oy);
-    }
-
-    /* distributed arrows (9 evenly spaced, tip at spine) */
-    var nArr = 8;
-    doc.setLineWidth(0.2);
-    for (var ai = 0; ai <= nArr; ai++) {
-      var ya = oy + (baseY - oy) * ai / nArr;
-      var ph = (shape.type === 'tri_bot') ? shape.peak * ai / nArr : shape.peak;
-      if (ph < 0.025 * shape.peak) continue;
-      var xTip = wfX + ph * scP;
-      doc.line(wfX, ya, xTip, ya);
-      doc.line(wfX, ya, wfX + 2.0, ya - 0.8);
-      doc.line(wfX, ya, wfX + 2.0, ya + 0.8);
-    }
-
-    /* label inside shape */
-    var lFrac = (shape.type === 'tri_bot') ? 0.30 : 0.50;
-    var lPhAt = (shape.type === 'tri_bot') ? shape.peak * lFrac : shape.peak;
-    var lx    = wfX + lPhAt * scP + 3;
-    var lY    = oy + (baseY - oy) * lFrac + 1;
-    doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-    pdfSym(doc, lbl + '{_' + sub + '}', lx, lY);
-
-    /* kPa value below shape */
-    doc.setFontSize(6.8); doc.setTextColor(60);
-    doc.text(shape.peak.toFixed(1) + ' kPa', wfX + shape.peak * scP + 1.5, baseY - 2);
-    doc.setTextColor(0);
+    doc.lines([[ah, -ah * 0.5], [0, ah]], ax, ay, [1, 1], 'F', true);
   }
 
-  /* ARM INDICATOR — dot at arm height + double-headed arrow to baseY, He-based label */
-  function drawArm(wfX, armFrac, label) {
-    var dotY = baseY - armFrac * drawH;
+  function drawPanel(x0, shape, mW) {
+    doc.setDrawColor(0); doc.setLineWidth(0.35);
+    doc.line(x0, oy, x0, baseY);
     doc.setDrawColor(0); doc.setLineWidth(0.28);
-    doc.line(wfX, dotY, wfX, baseY);
-    doc.line(wfX, dotY,    wfX - 1.2, dotY    + 2.2);
-    doc.line(wfX, dotY,    wfX + 1.2, dotY    + 2.2);
-    doc.line(wfX, baseY,   wfX - 1.2, baseY   - 2.2);
-    doc.line(wfX, baseY,   wfX + 1.2, baseY   - 2.2);
-    doc.setFillColor(0); doc.circle(wfX, dotY, 0.9, 'F');
-    doc.setFontSize(7.5); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-    var lw = pdfSymWidth(doc, label);
-    pdfSym(doc, label, wfX - 3 - lw, (dotY + baseY) / 2 + 1.5);
+    if (shape === 'tri') {
+      doc.line(x0, oy, x0 + mW, baseY);
+      doc.line(x0 + mW, baseY, x0, baseY);
+    } else {
+      doc.line(x0,      oy,    x0 + mW, oy);
+      doc.line(x0 + mW, oy,    x0 + mW, baseY);
+      doc.line(x0 + mW, baseY, x0,      baseY);
+    }
+    doc.setDrawColor(0); doc.setLineWidth(0.2);
+    for (var ai = 0; ai <= 7; ai++) {
+      var f  = ai / 7;
+      var ya = oy + (baseY - oy) * f;
+      var wA = (shape === 'tri') ? f * mW : mW;
+      if (wA < 0.4) continue;
+      doc.line(x0, ya, x0 + wA, ya);
+      arrowTip(x0, ya);
+    }
+  }
+
+  function drawLabel(x0, shape, mW, tmpl) {
+    var lX, lY;
+    if (shape === 'tri') {
+      lX = x0 + 0.67 * mW + 1.5;
+      lY = oy + (baseY - oy) * 0.57;
+    } else {
+      lX = x0 + mW + 1.5;
+      lY = oy + (baseY - oy) * 0.33;
+    }
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+    pdfSym(doc, tmpl, lX, lY);
+  }
+
+  function drawArm(x0, armFrac, armLbl, mW, shape) {
+    var dotY = baseY - (baseY - oy) * armFrac;
+    var wRight = (shape === 'tri') ? (1 - armFrac) * mW : mW;
+    var arrowRight = x0 + wRight + 2;
+    var ah = 2.0;
+    doc.setLineWidth(0.7); doc.setDrawColor(0);
+    doc.line(x0, dotY, arrowRight, dotY);
+    doc.setFillColor(0);
+    doc.lines([[ah, -ah * 0.5], [0, ah]], x0, dotY, [1, 1], 'F', true);
+    var dlX = x0 + mW + 4;
+    doc.setLineWidth(0.35); doc.setDrawColor(0);
+    doc.line(dlX, dotY,  dlX, baseY);
+    doc.line(dlX - 1.5, dotY,  dlX + 1.5, dotY);
+    doc.line(dlX - 1.5, baseY, dlX + 1.5, baseY);
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+    pdfSym(doc, armLbl, dlX + 2, (dotY + baseY) / 2 + 1.5);
   }
 
   /* DRAW PANELS */
   var panelX = 20 + wallW;
 
-  drawPanel(panelX, { type: 'tri_bot', peak: pa_max, fixedWidth: 20 }, 'P', 'a');
-  drawArm(panelX, 1 / 3, 'H{_e}/3');
+  drawPanel(panelX, 'tri', shapeW);
+  drawLabel(panelX, 'tri', shapeW, 'P{_a}');
+  drawArm(panelX, 1 / 3, 'H{_e}/3', shapeW, 'tri');
   panelX += pW;
 
   if (hasSurch) {
-    drawPanel(panelX, { type: 'rect', peak: qs_val, fixedWidth: 20 }, 'Q', 'a');
-    drawArm(panelX, 1 / 2, 'H{_e}/2');
+    drawPanel(panelX, 'rect', shapeW);
+    drawLabel(panelX, 'rect', shapeW, 'Q{_a}');
+    drawArm(panelX, 1 / 2, 'H{_e}/2', shapeW, 'rect');
     panelX += pW;
   }
 
   if (hasSeis) {
-    /* §16.12.2.8: dynamic increment resultant at mid-height → uniform over He */
-    var dp_u = He > 0 ? ep.DPAE / He : 0;
-    drawPanel(panelX, { type: 'rect', peak: dp_u, fixedWidth: 20 }, '{Delta}P', 'ae');
-    drawArm(panelX, 0.5, 'H{_e}/2');
+    drawPanel(panelX, 'rect', shapeW);
+    drawLabel(panelX, 'rect', shapeW, '{Delta}P{_ae}');
+    drawArm(panelX, 0.5, 'H{_e}/2', shapeW, 'rect');
     panelX += pW;
   }
 
   if (hasWater) {
     var pw_max = 9.81 * He;
-    drawPanel(panelX, { type: 'tri_bot', peak: pw_max, fixedWidth: 20 }, 'P', 'w');
-    drawArm(panelX, 1 / 3, 'H{_e}/3');
+    drawPanel(panelX, 'tri', shapeW);
+    drawLabel(panelX, 'tri', shapeW, 'P{_w}');
+    drawArm(panelX, 1 / 3, 'H{_e}/3', shapeW, 'tri');
     panelX += pW;
   }
 
   /* LEGEND TABLE */
-  var tblY = baseY + 22;
+  var tblY = baseY + ftH_mm + 12;
   pdfEPTable(doc, ep, p, He, hasSurch, hasSeis, hasWater, tblY);
 }
 
@@ -3157,7 +3138,7 @@ function pdfSym(doc, tmpl, x, y, bold) {
         if (ch) {
           doc.setFont('symbol', 'normal'); doc.setFontSize(fs);
           doc.text(ch, cur, y);
-          cur += doc.getTextWidth(ch);
+          cur += Math.max(doc.getTextWidth(ch), fs * 0.176);
           doc.setFont('helvetica', style); doc.setFontSize(fs);
         }
       }
@@ -3189,7 +3170,7 @@ function pdfSymWidth(doc, tmpl, bold) {
         var ch = SMAP[tag];
         if (ch) {
           doc.setFont('symbol', 'normal'); doc.setFontSize(fs);
-          totalW += doc.getTextWidth(ch);
+          totalW += Math.max(doc.getTextWidth(ch), fs * 0.176);
           doc.setFont('helvetica', style); doc.setFontSize(fs);
         }
       }
@@ -3710,8 +3691,8 @@ function pdfEPCoefficientsInline(doc, p, ep, st, y, pn) {
     }
   }
 
-  /* Passive — add page if insufficient space (secHdr≈9 + 3 lines≈26) */
-  if (y + 38 > 272) {
+  /* Passive — add page only if section (39mm) would overflow past footer (y=286) */
+  if (y + 42 > 285) {
     pdfFooter(doc, pn); pn++;
     doc.addPage(); pdfHeader(doc, '4.0  STABILITY ANALYSIS (cont.)');
     y = 32;
@@ -4027,7 +4008,7 @@ function pdfReinforcement(doc, p, ep, ri, rebars) {
       y += 12;
     }
 
-    pdfSym(doc, 'V{_cr} = 0.65\xB7(0.2+20{rho}{_l})\xB7{sqrt}(f{_ck})\xB7b\xB7d = ' + flx.Vc.toFixed(2) + ' kN/m', 25, y); y += 6;
+    pdfSym(doc, 'V{_cr} = 0.65\xB70.2\xB7{sqrt}(f{_ck})\xB7b\xB7d = ' + flx.Vc.toFixed(2) + ' kN/m', 25, y); y += 6;
     doc.setTextColor.apply(doc, flx.sok ? PDF_GRN : PDF_RED);
     pdfSym(doc, (flx.sok ? '>=' : '<') + ' V{_u} = ' + flx.Vu.toFixed(2) + ' kN/m  -  ' + (flx.sok ? 'OK - No shear rebar needed' : 'NG - Shear rebar required'), 25, y, true);
     doc.setTextColor(0); y += 13;
@@ -4392,8 +4373,8 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
 
   var schRows = [
     ['S1', 'Stem - main vert. (earth face)',       stemBar,                                           sAp.toFixed(0),  ri.stem.A.toFixed(0), sAp >= ri.stem.A ? 'OK' : 'NG'],
-    ['S2', 'Stem - horiz. dist., ea. face §11.6.1','\xD8' + dstStem.dia + '/' + dstStem.spc,         dSAp.toFixed(0), (1000 * p.ts).toFixed(0), 'OK'],
-    ['S3', 'Stem - front face vert. §11.6.2',      '\xD8' + frtVert.dia + '/' + frtVert.spc,         fVAp.toFixed(0), (600  * p.ts).toFixed(0), 'OK'],
+    ['S2', 'Stem - horiz. dist., ea. face §11.6.1','\xD8' + dstStem.dia + '/' + dstStem.spc,         dSAp.toFixed(0), (2000 * p.ts).toFixed(0), 'OK'],
+    ['S3', 'Stem - front face vert. §11.6.2',      '\xD8' + frtVert.dia + '/' + frtVert.spc,         fVAp.toFixed(0), (1200 * p.ts).toFixed(0), 'OK'],
   ];
   if (ri.heel && rebars.heel) {
     var heelBar = '\xD8' + rebars.heel.dia + '/' + rebars.heel.spc + (rebars.heel.dia2 ? ' +\xD8' + rebars.heel.dia2 + '/' + rebars.heel.spc2 : '');
@@ -4413,7 +4394,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     schRows.push(['K1', 'Shear key (' + _skLC + ') - tension face (vert.)', kBar, kAp.toFixed(0), ri.key.A.toFixed(0), kAp >= ri.key.A ? 'OK' : 'NG']);
   }
 
-  schRows.push(['F3', 'Footing - transv. dist., ea. face §25.3.2', '\xD8' + dstFoot.dia + '/' + dstFoot.spc, dFAp.toFixed(0), (1000 * p.tf).toFixed(0), 'OK']);
+  schRows.push(['F3', 'Footing - transv. dist., ea. face §25.3.2', '\xD8' + dstFoot.dia + '/' + dstFoot.spc, dFAp.toFixed(0), (2000 * p.tf).toFixed(0), 'OK']);
 
   var afterTbl = pdfTbl(doc,
     ['Mark', 'Location & Description', 'Bars (mm)', 'As,prov (mm\xB2/m)', 'As,req (mm\xB2/m)', 'Check'],
