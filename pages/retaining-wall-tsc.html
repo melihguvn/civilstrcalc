@@ -322,18 +322,6 @@ input[type=number]{-moz-appearance:textfield;}
           </div>
         </div>
       </div>
-      <div class="form-row-2" style="margin-top:6px;align-items:end">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="lbl-tip" data-tip="Fill height above footing h_fill: height of soil fill on top of the footing slab.&#10;Enter 0 if the front face is flush or the soil surface is at footing top level.&#10;Weight: W4 = γ·Lt·h_fill&#10;Range: 0.0 – 2.0 m">
-            Fill above footing h<sub>fill</sub> <span class="lbl-tip-icon">?</span>
-          </label>
-          <div class="iw">
-            <input type="number" id="rw-htoefill" value="0" min="0" max="2.0" step="0.1" onchange="calcRW()">
-            <span class="us">m</span>
-          </div>
-        </div>
-      </div>
-
       <!-- ═══ SHEAR KEY ═══ -->
       <div class="rw-check-row" style="margin-top:10px;margin-bottom:0">
         <label class="rw-check-lbl">
@@ -1625,7 +1613,7 @@ function readRWInputs(){
   function gv(id){return parseFloat(document.getElementById(id).value)||0;}
   function gr(nm){var es=document.querySelectorAll('input[name="'+nm+'"]');for(var i=0;i<es.length;i++)if(es[i].checked)return es[i].value;return '';}
   return {
-    H:gv('rw-H'),ts:gv('rw-ts'),Lh:gv('rw-Lh'),Lt:gv('rw-Lt'),tf:gv('rw-tf'),htoe:gv('rw-htoe'),htoefill:gv('rw-htoefill')||0,
+    H:gv('rw-H'),ts:gv('rw-ts'),Lh:gv('rw-Lh'),Lt:gv('rw-Lt'),tf:gv('rw-tf'),htoe:gv('rw-htoe'),htoefill:Math.max(0,gv('rw-htoe')-gv('rw-tf')),
     gs:gv('rw-gamma'),phi:gv('rw-phi'),c:gv('rw-c'),beta:gv('rw-beta'),qa:gv('rw-qa'),
     gc:gv('rw-gc')||25,
     phi2:gv('rw-phi2')||30, c2:gv('rw-c2')||0, cu:gv('rw-cu')||50,
@@ -3347,7 +3335,6 @@ function pdfInputsGeom(doc, p) {
     ['Toe length',       'Lt',   p.Lt.toFixed(2),   'm'],
     ['Footing thickness','tf',   p.tf.toFixed(2),   'm'],
     ['Passive depth D',        'D',     p.htoe.toFixed(2),            'm'],
-    ['Fill above toe (W4)',    'h{_f}', (p.htoefill||0).toFixed(2),  'm'],
     ['Total base width',       'B',     B.toFixed(2),                'm']
   ]).concat(p.skEn && p.skd > 0 ? [
     ['Shear key location', '', p.skLoc === 'toe' ? 'Toe (passive side)' : 'Heel (retained side)', '-'],
@@ -3773,7 +3760,7 @@ function pdfVerticalForcesTable(doc, p, st, y) {
       wRows.push(['W3 – Heel backfill', p.gs+'\xD7'+p.Lh.toFixed(2)+'\xD7'+p.H.toFixed(2), st.W3.toFixed(2), _x3r.toFixed(3), (st.W3*_x3r).toFixed(2)]);
     }
   }
-  if (st.W4 > 0) wRows.push(['W4 - Toe fill', p.gs+'\xD7'+p.Lt.toFixed(2)+'\xD7'+(p.htoefill||0).toFixed(2), st.W4.toFixed(2), x4.toFixed(3), (st.W4*x4).toFixed(2)]);
+  if (st.W4 > 0) wRows.push(['W4 - Toe fill (D−tf)', p.gs+'\xD7'+p.Lt.toFixed(2)+'\xD7'+(p.htoefill||0).toFixed(2), st.W4.toFixed(2), x4.toFixed(3), (st.W4*x4).toFixed(2)]);
   if (st.W5 > 0) wRows.push(['W5 - Surcharge', p.q+'\xD7'+p.Lh.toFixed(2), st.W5.toFixed(2), x5.toFixed(3), (st.W5*x5).toFixed(2)]);
   if ((p.beta||0) > 0.5 && (st.Pv||0) > 0) {
     var xPv_pdf = st.B;
