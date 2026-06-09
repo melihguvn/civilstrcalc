@@ -2202,26 +2202,30 @@ function pdfStabilityDiagram(doc, p, ep) {
     doc.setDrawColor(0); doc.setLineWidth(0.28);
     if (shape === 'tri') {
       doc.line(x0, oy, x0 + mW, baseY); doc.line(x0 + mW, baseY, x0, baseY);
+    } else if (shape === 'itri') {
+      doc.line(x0, oy, x0 + mW, oy); doc.line(x0 + mW, oy, x0, baseY);
     } else {
       doc.line(x0, oy, x0 + mW, oy); doc.line(x0 + mW, oy, x0 + mW, baseY); doc.line(x0 + mW, baseY, x0, baseY);
     }
     doc.setDrawColor(0); doc.setLineWidth(0.2);
     for (var ai = 0; ai <= 7; ai++) {
       var f = ai / 7, ya = oy + (baseY - oy) * f;
-      var wA = (shape === 'tri') ? f * mW : mW;
+      var wA = (shape === 'tri') ? f * mW : (shape === 'itri') ? (1 - f) * mW : mW;
       if (wA < 0.4) continue;
       doc.line(x0, ya, x0 + wA, ya); arrowTip(x0, ya);
     }
   }
   function drawLabel(x0, shape, mW, tmpl) {
-    var lX = (shape === 'tri') ? x0 + 0.67 * mW + 1.5 : x0 + mW + 1.5;
-    var lY = (shape === 'tri') ? oy + (baseY - oy) * 0.57 : oy + (baseY - oy) * 0.33;
+    var lX = (shape === 'itri' || shape === 'tri') ? x0 + 0.67 * mW + 1.5 : x0 + mW + 1.5;
+    var lY = (shape === 'tri') ? oy + (baseY - oy) * 0.57
+           : (shape === 'itri') ? oy + (baseY - oy) * 0.33
+           : oy + (baseY - oy) * 0.33;
     doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
     pdfSym(doc, tmpl, lX, lY);
   }
   function drawArm(x0, armFrac, armLbl, mW, shape) {
     var dotY = baseY - (baseY - oy) * armFrac;
-    var wRight = (shape === 'tri') ? (1 - armFrac) * mW : mW;
+    var wRight = (shape === 'tri') ? (1 - armFrac) * mW : (shape === 'itri') ? armFrac * mW : mW;
     var arrowRight = x0 + wRight + 2, ah = 2.0;
     doc.setLineWidth(0.7); doc.setDrawColor(0);
     doc.line(x0, dotY, arrowRight, dotY);
@@ -2239,7 +2243,7 @@ function pdfStabilityDiagram(doc, p, ep) {
   var pX = pressX0;
   drawPanel(pX, 'tri',  shapeW); drawLabel(pX, 'tri',  shapeW, 'P{_a}'); drawArm(pX, 1/3, 'H/3', shapeW, 'tri'); pX += panelW;
   if (hasSurch)  { drawPanel(pX, 'rect', shapeW); drawLabel(pX, 'rect', shapeW, 'P{_q}');        drawArm(pX, 1/2, 'H/2', shapeW, 'rect'); pX += panelW; }
-  if (hasSeis)   { drawPanel(pX, 'rect', shapeW); drawLabel(pX, 'rect', shapeW, '{Delta}P{_ae}'); drawArm(pX, 0.6, '0.6H', shapeW, 'rect'); pX += panelW; }
+  if (hasSeis)   { drawPanel(pX, 'itri', shapeW); drawLabel(pX, 'itri', shapeW, '{Delta}P{_ae}'); drawArm(pX, 0.6, '0.6H', shapeW, 'itri'); pX += panelW; }
   if (hasWater)  { drawPanel(pX, 'tri',  shapeW); drawLabel(pX, 'tri',  shapeW, 'P{_w}');        drawArm(pX, 1/3, 'H/3', shapeW, 'tri');  pX += panelW; }
 
   return diagH + 2;
