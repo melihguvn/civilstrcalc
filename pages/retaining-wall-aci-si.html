@@ -2635,40 +2635,38 @@ function pdfEPDiagram(doc, p, ep) {
     doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
     pdfSym(doc, lbl + '{_' + sub + '}', lx, lY);
 
-    doc.setFontSize(6.8); doc.setTextColor(60);
-    if (shape.type === 'trap') {
-      doc.text(shape.peak.toFixed(1) + ' kPa', wfX + shape.p_top * scP + 1.5, oy + 5);
-    } else {
-      doc.text(shape.peak.toFixed(1) + ' kPa', wfX + shape.peak * scP + 1.5, baseY - 2);
-    }
-    doc.setTextColor(0);
   }
 
-  /* ARM INDICATOR — dot at arm height + double-headed arrow to baseY, He-based label */
-  function drawArm(wfX, armFrac, label) {
+  /* ARM INDICATOR — horizontal line + solid arrowhead + right-side bracket + label */
+  function drawArm(wfX, armFrac, label, shapeType) {
     var dotY = baseY - armFrac * drawH;
-    doc.setDrawColor(0); doc.setLineWidth(0.28);
-    doc.line(wfX, dotY, wfX, baseY);
-    doc.line(wfX, dotY,  wfX - 1.2, dotY  + 2.2);
-    doc.line(wfX, dotY,  wfX + 1.2, dotY  + 2.2);
-    doc.line(wfX, baseY, wfX - 1.2, baseY - 2.2);
-    doc.line(wfX, baseY, wfX + 1.2, baseY - 2.2);
-    doc.setFillColor(0); doc.circle(wfX, dotY, 0.9, 'F');
+    var fixW = 20, ah = 2.0;
+    var wRight = (shapeType === 'tri_bot') ? (1 - armFrac) * fixW
+               : (shapeType === 'trap')    ? armFrac * fixW
+               : fixW;
+    doc.setLineWidth(0.7); doc.setDrawColor(0);
+    doc.line(wfX, dotY, wfX + wRight + 2, dotY);
+    doc.setFillColor(0);
+    doc.lines([[ah, -ah * 0.5], [0, ah]], wfX, dotY, [1, 1], 'F', true);
+    var dlX = wfX + fixW + 4;
+    doc.setLineWidth(0.35); doc.setDrawColor(0);
+    doc.line(dlX, dotY, dlX, baseY);
+    doc.line(dlX - 1.5, dotY,  dlX + 1.5, dotY);
+    doc.line(dlX - 1.5, baseY, dlX + 1.5, baseY);
     doc.setFontSize(7.5); doc.setFont(undefined, 'normal'); doc.setTextColor(0);
-    var lw = pdfSymWidth(doc, label);
-    pdfSym(doc, label, wfX - 3 - lw, (dotY + baseY) / 2 + 1.5);
+    pdfSym(doc, label, dlX + 2, (dotY + baseY) / 2 + 1.5);
   }
 
   /* DRAW PANELS */
   var panelX = 20 + wallW;
 
   drawPanel(panelX, { type: 'tri_bot', peak: pa_max, fixedWidth: 20 }, 'P', 'as');
-  drawArm(panelX, 1 / 3, 'H{_e}/3');
+  drawArm(panelX, 1 / 3, 'H{_e}/3', 'tri_bot');
   panelX += pW;
 
   if (hasSurch) {
     drawPanel(panelX, { type: 'rect', peak: qs_val, fixedWidth: 20 }, 'Q', 'as');
-    drawArm(panelX, 1 / 2, 'H{_e}/2');
+    drawArm(panelX, 1 / 2, 'H{_e}/2', 'rect');
     panelX += pW;
   }
 
@@ -2676,14 +2674,14 @@ function pdfEPDiagram(doc, p, ep) {
     var dp_top = He > 0 ? 1.6 * ep.DPAE / He : 0;
     var dp_bot = He > 0 ? 0.4 * ep.DPAE / He : 0;
     drawPanel(panelX, { type: 'trap', p_top: dp_top, p_bot: dp_bot, peak: dp_top, fixedWidth: 20 }, '{Delta}P', 'ae');
-    drawArm(panelX, 0.6, '0.6H{_e}');
+    drawArm(panelX, 0.6, '0.6H{_e}', 'trap');
     panelX += pW;
   }
 
   if (hasWater) {
     var pw_peak = He > 0 ? ep.Pw * 2 / He : 0;
     drawPanel(panelX, { type: 'tri_bot', peak: pw_peak, fixedWidth: 20 }, 'P', 'w');
-    drawArm(panelX, 1 / 3, 'H{_e}/3');
+    drawArm(panelX, 1 / 3, 'H{_e}/3', 'tri_bot');
     panelX += pW;
   }
 
