@@ -804,12 +804,13 @@ input[type=number]{-moz-appearance:textfield;}
         Resultant P<sub>a</sub> acts <em>parallel to backfill slope</em> at H<sub>e</sub>/3 from base<br>
         Horizontal component: P<sub>a,h</sub> = P<sub>a</sub> · cos β &nbsp;·&nbsp; Vertical: P<sub>a,v</sub> = P<sub>a</sub> · sin β
       </div>
-      <h4><span class="rtag">Coulomb (1776)</span> Wall Friction</h4>
-      <p>Coulomb's method accounts for wall-soil friction angle δ (typically δ = 0.5φ to 0.67φ). The active thrust acts at angle δ from the wall normal.</p>
+      <h4><span class="rtag">TBDY 2018 §16.12.2.4</span> Earth Pressure Coefficient (Eq. 16.24)</h4>
+      <p>The calculator uses the generalized formula from TBDY 2018 §16.12.2.4 for both static (θ = 0) and seismic cases. With δ = 0 it reduces to Rankine; with δ &gt; 0 it yields the Coulomb coefficient.</p>
       <div class="fml-blk">
-        <div class="ft">Coulomb K<sub>a</sub> (vertical back face, sloped fill)</div>
-        K<sub>a</sub> = sin²(α+φ) / [sin²α · sin(α-δ) · (1 + √((sin(φ+δ)·sin(φ-β))/(sin(α-δ)·sin(α+β))))²]<br>
-        <span style="font-family:var(--sans);font-size:.71rem">α = wall-back inclination (90° for vertical), β = backfill slope, δ = wall friction</span>
+        <div class="ft">TBDY Eq.(16.24) — K<sub>a</sub> (vertical back face, α = 90°)</div>
+        K<sub>a</sub> = cos²(φ−θ) / [cos(θ+δ) · (1 + √(sin(φ+δ)·sin(φ−θ−β) / (cos(θ+δ)·cosβ)))²]<br>
+        <span style="font-family:var(--sans);font-size:.71rem">θ = 0 (static); δ = wall friction angle (0 for Rankine smooth-wall); β = backfill slope</span>
+        <div class="fn">For static Rankine (δ = 0, θ = 0): K<sub>a</sub> = cos β · (cos β − √(cos²β − cos²φ)) / (cos β + √(cos²β − cos²φ)).</div>
       </div>
       <h4><span class="rtag">Submerged / Hydrostatic</span> Water Table</h4>
       <div class="fml-blk">
@@ -2317,20 +2318,47 @@ function pdfStabilityDiagram(doc, p, ep) {
   /* Footing */
   doc.rect(wallL, stemBot, wallR - wallL, baseY - stemBot, 'FD');
 
-  /* Backfill hatching above heel */
+  /* Backfill hatching + ground line — heel side (only when heel exists) */
   var hX0 = stemR, hX1 = wallR, hY0 = oy, hY1 = oy + 9, hH = hY1 - hY0;
-  doc.setDrawColor(100); doc.setLineWidth(0.2);
-  for (var hxi = hX0 - hH; hxi < hX1; hxi += 3) {
-    var lx0 = hxi, ly0 = hY0, lx1 = hxi + hH, ly1 = hY1;
-    if (lx0 < hX0) { ly0 += hX0 - lx0; lx0 = hX0; }
-    if (lx1 > hX1) { ly1 -= lx1 - hX1; lx1 = hX1; }
-    if (lx0 < lx1 && ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
+  if (p.Lh > 0.01) {
+    doc.setDrawColor(100); doc.setLineWidth(0.2);
+    for (var hxi = hX0 - hH; hxi < hX1; hxi += 3) {
+      var lx0 = hxi, ly0 = hY0, lx1 = hxi + hH, ly1 = hY1;
+      if (lx0 < hX0) { ly0 += hX0 - lx0; lx0 = hX0; }
+      if (lx1 > hX1) { ly1 -= lx1 - hX1; lx1 = hX1; }
+      if (lx0 < lx1 && ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
+    }
+    doc.setDrawColor(0); doc.setLineWidth(0.55);
+    doc.line(hX0, hY0, hX1, hY0);
+    doc.setLineWidth(0.28);
+  } else {
+    /* No heel — show retained-soil strip against stem back face */
+    var bfW = 10;
+    doc.setFillColor(245, 242, 228);
+    doc.rect(stemR, oy, bfW, diagH, 'F');
+    doc.setDrawColor(150, 120, 80); doc.setLineWidth(0.18);
+    for (var bfi = -diagH; bfi < bfW; bfi += 3) {
+      var blx0 = stemR + bfi + diagH, bly0 = oy, blx1 = stemR + bfi, bly1 = oy + diagH;
+      if (blx0 > stemR + bfW) { bly0 += blx0 - (stemR + bfW); blx0 = stemR + bfW; }
+      if (blx1 < stemR)       { bly1 -= stemR - blx1;          blx1 = stemR; }
+      if (blx1 < blx0) doc.line(blx0, bly0, blx1, bly1);
+    }
+    doc.setDrawColor(0); doc.setLineWidth(0.55);
+    doc.line(stemR, oy, stemR + bfW, oy);
+    doc.setLineWidth(0.28);
   }
 
-  /* Ground surface line */
-  doc.setDrawColor(0); doc.setLineWidth(0.55);
-  doc.line(hX0, hY0, hX1, hY0);
-  doc.setLineWidth(0.28);
+  /* Toe fill — left side of stem when fill rises above footing top */
+  var _htoefill = p.htoefill || 0;
+  if (_htoefill > 0.001 && p.Lt > 0.001) {
+    var tfH = Math.min(1.0, _htoefill / p.H) * diagH;
+    var tfY0 = baseY - tfH, tfX0 = wallL, tfX1 = stemL;
+    doc.setFillColor(238, 228, 200);
+    doc.rect(tfX0, tfY0, tfX1 - tfX0, tfH, 'F');
+    doc.setDrawColor(0); doc.setLineWidth(0.55);
+    doc.line(tfX0 - 4, tfY0, tfX1, tfY0);
+    doc.setLineWidth(0.28);
+  }
 
   /* H dimension on left */
   var hdx = wallL - 2;
@@ -3446,10 +3474,10 @@ function pdfDiagram(doc, p, startY) {
     }
   }
 
-  /* toe fill — solid base + diagonal hatch */
-  if (p.Lt > 0.01 && p.htoe > 0.01) {
-    var toeFX = px(0), toeFY = pyd(p.tf + p.htoe);
-    var toeFW = p.Lt * sc, toeFH = p.htoe * sc;
+  /* toe fill — solid base + diagonal hatch (only when fill rises above footing top) */
+  if (p.Lt > 0.01 && p.htoe > p.tf) {
+    var toeFX = px(0), toeFY = pyd(p.htoe);
+    var toeFW = p.Lt * sc, toeFH = (p.htoe - p.tf) * sc;
     doc.setFillColor(245, 240, 220);
     doc.rect(toeFX, toeFY, toeFW, toeFH, 'F');
     doc.setDrawColor(200, 178, 140); doc.setLineWidth(0.22);
@@ -3502,8 +3530,8 @@ function pdfDiagram(doc, p, startY) {
     doc.line(px(p.Lt+p.ts), glY_L, px(p.Lt+p.ts)+bfStripW_pdf+8, glY_L);
   }
   /* toe fill grade line */
-  if(p.Lt > 0.01 && p.htoe > 0.01){
-    doc.line(px(0)-4, pyd(p.tf+p.htoe), px(p.Lt), pyd(p.tf+p.htoe));
+  if(p.Lt > 0.01 && p.htoe > p.tf){
+    doc.line(px(0)-4, pyd(p.htoe), px(p.Lt), pyd(p.htoe));
   }
   /* β: dashed horizontal reference + arc indicator + label — only when Lh > 0 */
   if(p.Lh > 0 && (p.beta||0)>0.5){
@@ -4069,9 +4097,9 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
       if (_lx1 < _lx2) doc.line(_lx1, _ly1, _lx2, _ly2);
     }
   }
-  if (p.Lt > 0.01 && p.htoe > 0.01) {
+  if (p.Lt > 0.01 && p.htoe > p.tf) {
     doc.setFillColor(238, 228, 200);
-    doc.rect(px(0), pyd(p.tf + p.htoe), p.Lt * sc, p.htoe * sc, 'F');
+    doc.rect(px(0), pyd(p.htoe), p.Lt * sc, (p.htoe - p.tf) * sc, 'F');
   }
   /* concrete */
   doc.setFillColor(218, 218, 218); doc.setDrawColor(50); doc.setLineWidth(0.65);
@@ -4100,6 +4128,9 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
   /* grade + foundation lines */
   doc.setDrawColor(70); doc.setLineWidth(0.35);
   doc.line(px(p.Lt + p.ts), pyd(p.H + p.tf), px(B) + 5, pyd(p.H + p.tf));
+  if (p.Lt > 0.01 && p.htoe > p.tf) {
+    doc.line(px(0) - 4, pyd(p.htoe), px(p.Lt), pyd(p.htoe));
+  }
   var _foundY = sk_dpdf > 0 ? pyd(-sk_dpdf) : pyd(0);
   doc.line(px(0) - 4, _foundY, px(B) + 5, _foundY);
 
