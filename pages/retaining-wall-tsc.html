@@ -2332,12 +2332,14 @@ function pdfStabilityDiagram(doc, p, ep) {
   /* Backfill hatching + ground line — heel side (only when heel exists) */
   var hX0 = stemR, hX1 = wallR, hY0 = oy, hY1 = oy + 9, hH = hY1 - hY0;
   if (p.Lh > 0.01) {
-    doc.setDrawColor(100); doc.setLineWidth(0.2);
-    for (var hxi = hX0 - hH; hxi < hX1; hxi += 3) {
-      var lx0 = hxi, ly0 = hY0, lx1 = hxi + hH, ly1 = hY1;
-      if (lx0 < hX0) { ly0 += hX0 - lx0; lx0 = hX0; }
-      if (lx1 > hX1) { ly1 -= lx1 - hX1; lx1 = hX1; }
-      if (lx0 < lx1 && ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
+    if ((hX1 - hX0) >= 4) {
+      doc.setDrawColor(100); doc.setLineWidth(0.2);
+      for (var hxi = hX0 - hH; hxi < hX1; hxi += 3) {
+        var lx0 = hxi, ly0 = hY0, lx1 = hxi + hH, ly1 = hY1;
+        if (lx0 < hX0) { ly0 += hX0 - lx0; lx0 = hX0; }
+        if (lx1 > hX1) { ly1 -= lx1 - hX1; lx1 = hX1; }
+        if (lx0 < lx1 && ly0 < ly1) doc.line(lx0, ly0, lx1, ly1);
+      }
     }
     doc.setDrawColor(0); doc.setLineWidth(0.55);
     doc.line(hX0, hY0, hX1, hY0);
@@ -2780,13 +2782,22 @@ function pdfEPDiagram(doc, p, ep) {
   var wStemL  = wFootL + wToe_;
   var wStemR  = wStemL + wStemW;
 
-  /* Tapered stem (wider at base, front face sloped) + footing */
-  var stemTaper = 7;   /* extra mm on front face at base */
+  /* Stem cross-section — respects p.stType */
+  var ts_t_ep   = Math.min(p.ts_top || p.ts, p.ts);
+  var wStemTopW = Math.max(2, Math.round(wStemW * ts_t_ep / p.ts));
   doc.setFillColor(175, 175, 175); doc.setDrawColor(0); doc.setLineWidth(0.35);
-  doc.lines(
-    [ [wStemW, 0], [0, drawH], [-(wStemW + stemTaper), 0], [stemTaper, -drawH] ],
-    wStemL, oy, [1, 1], 'FD', true
-  );
+  if (!p.stType || p.stType === 'prismatic') {
+    doc.rect(wStemL, oy, wStemW, drawH, 'FD');
+  } else if (p.stType === 'tapered') {
+    doc.lines(
+      [[wStemW, 0], [0, -drawH], [-wStemTopW, 0]],
+      wStemL, baseY, [1, 1], 'FD', true);
+  } else { // stepped
+    doc.lines(
+      [[wStemW, 0], [0, -drawH], [-wStemTopW, 0],
+       [0, drawH / 2], [-(wStemW - wStemTopW), 0]],
+      wStemL, baseY, [1, 1], 'FD', true);
+  }
   doc.rect(wFootL, baseY, wFootW, ftH_mm, 'FD');
 
   /* Backfill hatching — diagonal lines above stem right edge */
