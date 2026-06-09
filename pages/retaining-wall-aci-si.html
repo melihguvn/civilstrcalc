@@ -2126,11 +2126,22 @@ function pdfStabilityDiagram(doc, p, ep) {
   var panelW  = (190 - pressX0) / nPress;
   var shapeW  = Math.min(panelW * 0.50, 28);
 
+  var ts_t_sd = Math.min(p.ts_top || p.ts, p.ts);
+  var stemTopW = Math.max(3, Math.round(stemThk * ts_t_sd / p.ts));
   doc.setFillColor(215, 215, 215);
   doc.setDrawColor(0); doc.setLineWidth(0.5);
-  doc.lines(
-    [[stemR - stemL, 0], [0, -(stemBot - oy)], [-(stemR - stemLtop), 0]],
-    stemL, stemBot, [1, 1], 'FD', true);
+  if (!p.stType || p.stType === 'prismatic') {
+    doc.rect(stemL, oy, stemThk, stemBot - oy, 'FD');
+  } else if (p.stType === 'tapered') {
+    doc.lines(
+      [[stemThk, 0], [0, -(stemBot - oy)], [-stemTopW, 0]],
+      stemL, stemBot, [1, 1], 'FD', true);
+  } else { // stepped
+    doc.lines(
+      [[stemThk, 0], [0, -(stemBot - oy)], [-stemTopW, 0],
+       [0, (stemBot - oy) / 2], [-(stemThk - stemTopW), 0]],
+      stemL, stemBot, [1, 1], 'FD', true);
+  }
   doc.rect(wallL, stemBot, wallR - wallL, baseY - stemBot, 'FD');
 
   var hX0 = stemR, hX1 = wallR, hY0 = oy, hY1 = oy + 9, hH = hY1 - hY0;

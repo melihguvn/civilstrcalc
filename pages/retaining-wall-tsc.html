@@ -2307,14 +2307,22 @@ function pdfStabilityDiagram(doc, p, ep) {
   var shapeW  = Math.min(panelW * 0.50, 28);
 
   /* ── Wall section ── */
+  var ts_t_sd = Math.min(p.ts_top || p.ts, p.ts);
+  var stemTopW = Math.max(3, Math.round(stemThk * ts_t_sd / p.ts));
   doc.setFillColor(215, 215, 215);
   doc.setDrawColor(0); doc.setLineWidth(0.5);
-  /* Stem: front face tapered, back face vertical; drawn from bottom-left */
-  doc.lines(
-    [[stemR - stemL,        0],
-     [0, -(stemBot - stemTop)],
-     [-(stemR - stemLtop),  0]],
-    stemL, stemBot, [1, 1], 'FD', true);
+  if (!p.stType || p.stType === 'prismatic') {
+    doc.rect(stemL, stemTop, stemThk, stemBot - stemTop, 'FD');
+  } else if (p.stType === 'tapered') {
+    doc.lines(
+      [[stemThk, 0], [0, -(stemBot - stemTop)], [-stemTopW, 0]],
+      stemL, stemBot, [1, 1], 'FD', true);
+  } else { // stepped
+    doc.lines(
+      [[stemThk, 0], [0, -(stemBot - stemTop)], [-stemTopW, 0],
+       [0, (stemBot - stemTop) / 2], [-(stemThk - stemTopW), 0]],
+      stemL, stemBot, [1, 1], 'FD', true);
+  }
   /* Footing */
   doc.rect(wallL, stemBot, wallR - wallL, baseY - stemBot, 'FD');
 
