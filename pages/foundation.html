@@ -1684,11 +1684,17 @@ function calcACI(){
     const drpX=gv('aci-drpX')*U.lenS,drpY=gv('aci-drpY')*U.lenS,drpTd=gv('aci-drpTd')*U.lenS;
     if(drpX>0&&drpY>0&&drpTd>0){
       const d_drop=d+drpTd;
-      const bo2=2*(c1+2*drpX)+2*(c2+2*drpY);
-      const vc2_d=Math.min(0.17*(1+2/beta)*lambda*Math.sqrt(fc),0.083*(alphaS*d/bo2+2)*lambda*Math.sqrt(fc),vc3v);
-      const vu2=Vu_net/(bo2*d),DCR2=vu2/(phi*vc2_d);
-      if(DCR2>DCR){DCR=DCR2;}
-      dropSteps.push({d:`Drop Check (drop edge): b<sub>o</sub>=${bo2.toFixed(0)} mm`,f:'Rectangular perimeter at drop boundary',v:`DCR=${DCR2.toFixed(3)}`,c:DCR2<=1?'ok':'err',chk:DCR2<=1?'ok':'err'});
+      // Check A: at d_drop/2 from column face using enhanced depth (ACI §22.6.2.1(a))
+      const bo_A=2*(c1+d_drop)+2*(c2+d_drop);
+      const vc_A=Math.min(0.17*(1+2/beta)*lambda*Math.sqrt(fc),0.083*(alphaS*d_drop/bo_A+2)*lambda*Math.sqrt(fc),vc3v);
+      const vu_A=Vu_net/(bo_A*d_drop),DCR_A=vu_A/(phi*vc_A);
+      // Check B: at d/2 from drop panel edge using slab depth (ACI §22.6.2.1(b))
+      const bo_B=2*(c1+2*drpX+d)+2*(c2+2*drpY+d);
+      const vc_B=Math.min(0.17*(1+2/beta)*lambda*Math.sqrt(fc),0.083*(alphaS*d/bo_B+2)*lambda*Math.sqrt(fc),vc3v);
+      const vu_B=Vu_net/(bo_B*d),DCR_B=vu_B/(phi*vc_B);
+      DCR=Math.max(DCR_A,DCR_B);
+      dropSteps.push({d:`Drop Check A (b<sub>o</sub>=${bo_A.toFixed(0)} mm, d<sub>drop</sub>=${d_drop.toFixed(0)} mm)`,f:'ACI §22.6.2.1(a)',v:`DCR=${DCR_A.toFixed(3)}`,c:DCR_A<=1?'ok':'err',chk:DCR_A<=1?'ok':'err'});
+      dropSteps.push({d:`Drop Check B (b<sub>o</sub>=${bo_B.toFixed(0)} mm, slab d)`,f:'ACI §22.6.2.1(b)',v:`DCR=${DCR_B.toFixed(3)}`,c:DCR_B<=1?'ok':'err',chk:DCR_B<=1?'ok':'err'});
     }
   }
 
@@ -1900,13 +1906,15 @@ function calcEC2(){
     if(drpX>0&&drpY>0&&drpTd>0){
       const d_drop=d_mm+drpTd,k_d=Math.min(1+Math.sqrt(200/d_drop),2.0);
       const vRdc_d=Math.max(CRdc*k_d*Math.pow(100*rho_l*fck,1/3),0.035*Math.pow(k_d,1.5)*Math.sqrt(fck));
+      // Check 1: control perimeter at 2*d_drop from column (EC2 §6.4.2(8))
       const u1_d=2*(c1_mm+c2_mm)+2*Math.PI*2*d_drop;
       const vEd1=beta*VEd_red/(u1_d*d_drop),DCR1=vEd1/vRdc_d;
-      const u_edge=2*(c1_mm+2*drpX)+2*(c2_mm+2*drpY);
-      const vEd2=beta*VEd_red/(u_edge*d_mm),DCR2=vEd2/vRdc;
-      if(DCR1>DCR||DCR2>DCR)DCR=Math.max(DCR1,DCR2);
-      dropSteps.push({d:`Drop Check 1 (u<sub>1,drop</sub>=${u1_d.toFixed(0)} mm)`,v:`DCR=${DCR1.toFixed(3)}`,c:DCR1<=1?'ok':'err',chk:DCR1<=1?'ok':'err'});
-      dropSteps.push({d:`Drop Check 2 (u<sub>edge</sub>=${u_edge.toFixed(0)} mm)`,v:`DCR=${DCR2.toFixed(3)}`,c:DCR2<=1?'ok':'err',chk:DCR2<=1?'ok':'err'});
+      // Check 2: control perimeter at 2*d from drop panel edge (EC2 §6.4.2(8))
+      const u_B=2*(c1_mm+2*drpX+2*d_mm)+2*(c2_mm+2*drpY+2*d_mm);
+      const vEd2=beta*VEd_red/(u_B*d_mm),DCR2=vEd2/vRdc;
+      DCR=Math.max(DCR1,DCR2);
+      dropSteps.push({d:`Drop Check 1 (u<sub>1,drop</sub>=${u1_d.toFixed(0)} mm, d<sub>drop</sub>=${d_drop.toFixed(0)} mm)`,f:'EC2 §6.4.2(8)',v:`DCR=${DCR1.toFixed(3)}`,c:DCR1<=1?'ok':'err',chk:DCR1<=1?'ok':'err'});
+      dropSteps.push({d:`Drop Check 2 (u<sub>B</sub>=${u_B.toFixed(0)} mm, slab d)`,f:'EC2 §6.4.2(8)',v:`DCR=${DCR2.toFixed(3)}`,c:DCR2<=1?'ok':'err',chk:DCR2<=1?'ok':'err'});
     }
   }
 
@@ -2054,7 +2062,18 @@ function calcIS456(){
   const dropSteps=[];
   if(!iso&&is456HasDrop){
     const drpX=gv('is456-drpX'),drpY=gv('is456-drpY'),drpTd=gv('is456-drpTd');
-    if(drpX>0&&drpY>0&&drpTd>0){const bo2=2*(c1+2*drpX)+2*(c2+2*drpY);const tau2=V_net/(bo2*d),DCR2=tau2/tauPerm;if(DCR2>DCR)DCR=DCR2;dropSteps.push({d:`Drop Check (b<sub>o,edge</sub>=${bo2.toFixed(0)} mm)`,v:`DCR=${DCR2.toFixed(3)}`,c:DCR2<=1?'ok':'err',chk:DCR2<=1?'ok':'err'});}
+    if(drpX>0&&drpY>0&&drpTd>0){
+      const d_drop=d+drpTd;
+      // Check 1: at d_drop/2 from column face using enhanced depth
+      const bo_col=2*(c1+d_drop)+2*(c2+d_drop);
+      const tau_col=V_net/(bo_col*d_drop),DCR_col=tau_col/Math.max(tauPerm,1e-9);
+      // Check 2: at d/2 from drop panel edge (IS 456 §31.6.2)
+      const bo_dp=2*(c1+2*drpX+d)+2*(c2+2*drpY+d);
+      const tau_dp=V_net/(bo_dp*d),DCR_dp=tau_dp/Math.max(tauPerm,1e-9);
+      DCR=Math.max(DCR_col,DCR_dp);
+      dropSteps.push({d:`Drop Check 1 (b<sub>o</sub>=${bo_col.toFixed(0)} mm, d<sub>drop</sub>=${d_drop.toFixed(0)} mm)`,v:`DCR=${DCR_col.toFixed(3)}`,c:DCR_col<=1?'ok':'err',chk:DCR_col<=1?'ok':'err'});
+      dropSteps.push({d:`Drop Check 2 (b<sub>o,edge</sub>=${bo_dp.toFixed(0)} mm, slab d)`,f:'IS 456 §31.6.2',v:`DCR=${DCR_dp.toFixed(3)}`,c:DCR_dp<=1?'ok':'err',chk:DCR_dp<=1?'ok':'err'});
+    }
   }
 
   const _fS=v=>`${v.toFixed(3)} N/mm²`;
