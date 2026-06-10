@@ -1707,8 +1707,8 @@ function calcEP(p){
      Earth pressure magnitude uses H_ep; resultant acts parallel to slope. */
   var H_ep = H + (p.Lh > 0 && beta_r > 1e-6 ? p.Lh * Math.tan(beta_r) : 0);
 
-  var Heq=p.surch?(p.q/gs_eff):0;
-  var Pt=0.5*Ka*gs_eff*H_ep*H_ep, Ps=Ka*gs_eff*Heq*H_ep;
+  var Heq=gs_eff>0&&p.surch?(p.q/gs_eff):0;
+  var Pt=0.5*Ka*gs_eff*H_ep*H_ep, Ps=p.surch?Ka*p.q*H_ep:0;
   var Pw=p.water?0.5*gw*H_ep*H_ep:0;
   var Pa=Pt+Ps+Pw;
   var arm=(Pa>0)?(Pt*(H_ep/3)+Ps*(H_ep/2)+Pw*(H_ep/3))/Pa:(H_ep/3);
@@ -1951,15 +1951,15 @@ function calcReinf(p,st,ep){
 
   var B=st.B, tf=p.tf*1000;
   var hf=null;
-  if(p.Lh > 0){
+  if(p.Lh > 0 && st.qmax < 99999){
     var qhs=st.qmax-(st.qmax-st.qmin)*(p.Lt+p.ts)/B;
     var whn=((qhs+st.qmin)/2)-(p.gs*He+(p.surch?p.q:0)+(p.gc||25)*p.tf);
     hf=fxD(LFd*Math.abs(whn)*p.Lh*p.Lh/2, tf);
-    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten='top';
+    hf.Vu=LFd*Math.abs(whn)*p.Lh; hf.Vc=vc(hf.d); hf.sok=hf.Vc>=hf.Vu; hf.ten=whn>=0?'top':'bottom';
   }
 
   var tf2=null;
-  if(p.Lt>0){
+  if(p.Lt>0 && st.qmax < 99999){
     var qts=st.qmax-(st.qmax-st.qmin)*p.Lt/B;
     var wtn=((st.qmax+qts)/2)-((p.gc||25)*p.tf+p.gs*Math.max(0,p.htoe-p.tf));
     tf2=fxD(LFd*Math.abs(wtn)*p.Lt*p.Lt/2, tf);
@@ -4385,10 +4385,11 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
   /* distribute footing-right labels evenly in footing zone */
   var _nf = _rFt.length;
   if (_nf > 0) {
-    var _ftPad = 5;
+    var _zfH   = _ftBot - _stmBot;
+    var _ftPad = _nf <= 1 ? 0 : Math.max(1.5, Math.min(5, (_zfH - (_nf - 1) * 5) / 2));
     for (var _fi = 0; _fi < _nf; _fi++) {
       var _flY = _nf === 1 ? (_stmBot + _ftBot) / 2
-               : _stmBot + _ftPad + _fi * (_ftBot - _stmBot - 2 * _ftPad) / (_nf - 1);
+               : _stmBot + _ftPad + _fi * (_zfH - 2 * _ftPad) / (_nf - 1);
       callout(_rFt[_fi].fx, _rFt[_fi].fy, lblX, _flY, _rFt[_fi].lines);
     }
   }
@@ -4408,11 +4409,12 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
       _leftItems.push({ fx: px(0) + cvs + 0.4, fy: (pyd(0) + pyd(-sk_dpdf)) / 2,
         lines: [_tkBar, 'K1 - Shear key (Toe)'] });
     }
-    var _nL = _leftItems.length;
-    var _lPad = 5;
+    var _nL   = _leftItems.length;
+    var _zlH  = _ftBot - _stmBot;
+    var _lPad = _nL <= 1 ? 0 : Math.max(1.5, Math.min(5, (_zlH - (_nL - 1) * 5) / 2));
     for (var _li = 0; _li < _nL; _li++) {
       var _llY = _nL === 1 ? (_stmBot + _ftBot) / 2
-               : _stmBot + _lPad + _li * (_ftBot - _stmBot - 2 * _lPad) / (_nL - 1);
+               : _stmBot + _lPad + _li * (_zlH - 2 * _lPad) / (_nL - 1);
       callout(_leftItems[_li].fx, _leftItems[_li].fy, lftX, _llY, _leftItems[_li].lines);
     }
   } else if (_toeKey && k1y_top !== null && ri.key && rebars.key) {
@@ -4474,7 +4476,7 @@ function pdfReinfDiagram(doc, p, ri, rebars) {
     {
       styles:     { fontSize: 7 },
       headStyles: { fontSize: 7 },
-      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 63 }, 2: { cellWidth: 28 },
+      columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 58 }, 2: { cellWidth: 28 },
                       3: { cellWidth: 25 }, 4: { cellWidth: 25 }, 5: { cellWidth: 19 } },
       didParseCell: function(d) {
         if (d.column.index === 5 && d.cell.section === 'body') {
