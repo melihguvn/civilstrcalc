@@ -1850,8 +1850,7 @@ function calcEC2(){
     if(shape==='circ'){const r=Dc_mm/2+d2;A_enc=type==='int'?Math.PI*r*r:Math.PI*r*r/2;}
     else{if(type==='int')A_enc=c1_mm*c2_mm+4*d_mm*(c1_mm+c2_mm)+4*Math.PI*d_mm*d_mm;else A_enc=c1_mm*c2_mm/2+4*d_mm*(c1_mm+c2_mm)/2+Math.PI*d_mm*d_mm;}
     VEd_red=Math.max(VEd-q_Ed*A_enc,0.01*VEd);
-    // Stocky footing
-    if(B_mm>c1_mm&&L_mm>c2_mm){a_min=Math.min((B_mm-c1_mm)/2,(L_mm-c2_mm)/2);if(a_min<d2)enh=d2/a_min;}
+    if(B_mm>c1_mm&&L_mm>c2_mm)a_min=Math.min((B_mm-c1_mm)/2,(L_mm-c2_mm)/2);
   } else VEd_red=VEd;
 
   // Material
@@ -1860,6 +1859,21 @@ function calcEC2(){
   const CRdc=0.18/gammac;
   const v_min=0.035*Math.pow(k,1.5)*Math.sqrt(fck);
   const vRdc_base=Math.max(CRdc*k*Math.pow(100*rho_l*fck,1/3),v_min);
+  // Stocky footing — iterative critical perimeter per EC2 §6.4.4(2)
+  // When a_min < 2d the footing edge cuts off the standard 2d perimeter; sweep to find a_crit.
+  let a_crit_mm=d2;
+  if(iso&&type==='int'&&shape==='rect'&&a_min<d2&&a_min>0&&q_Ed>0){
+    let maxR=-1;
+    for(let i=1;i<=400;i++){
+      const a=a_min*i/400;
+      const u_a=2*(c1_mm+c2_mm)+2*Math.PI*a;
+      const Ae=c1_mm*c2_mm+2*a*(c1_mm+c2_mm)+Math.PI*a*a;
+      const Ve=Math.max(VEd-q_Ed*Ae,0.01*VEd);
+      const r=Ve/(u_a*d_mm*vRdc_base*(d2/a));
+      if(r>maxR){maxR=r;a_crit_mm=a;u1=u_a;A_enc=Ae;VEd_red=Math.max(VEd-q_Ed*Ae,0.01*VEd);}
+    }
+    enh=d2/a_crit_mm;
+  }
   const vRdc=vRdc_base*enh;
   const nu=0.6*(1-fck/250),fcd=fck/gammac,vRdmax=0.5*nu*fcd;
 
@@ -1929,13 +1943,13 @@ function calcEC2(){
 
   const steps=[
     {d:'Foundation type',v:iso?'Isolated footing':'Raft foundation'},
-    {d:'u₁ at 2d (rounded corners)',f:'EC2 §6.4.2',v:_fLec(u1)},
+    {d:enh>1?`u at a<sub>crit</sub>=${a_crit_mm.toFixed(0)} mm (stocky footing)`:'u₁ at 2d (rounded corners)',f:'EC2 §6.4.2',v:_fLec(u1)},
     ...(type!=='int'?[{d:'u₀ (column face)',f:'EC2 §6.4.3(2)',v:_fLec(u0)+` → v<sub>Ed,0</sub>=${vEd0.toFixed(3)} MPa`}]:[]),
     ...(iso?[
       {d:'q<sub>Ed</sub> = V<sub>Ed</sub>/(B×L)',v:`${q_Ed.toFixed(5)} N/mm²`},
-      {d:'A<sub>enc</sub> (area within u₁)',f:shape==='rect'&&type==='int'?'c₁c₂+4d(c₁+c₂)+4πd²':'Geometry',v:`${A_enc.toFixed(0)} mm²`},
+      {d:enh>1?`A<sub>enc</sub> at a<sub>crit</sub>=${a_crit_mm.toFixed(0)} mm`:'A<sub>enc</sub> (area within u₁)',f:enh>1?'c₁c₂+2·a·(c₁+c₂)+πa²':shape==='rect'&&type==='int'?'c₁c₂+4d(c₁+c₂)+4πd²':'Geometry',v:`${A_enc.toFixed(0)} mm²`},
       {d:'V<sub>Ed,red</sub> = V<sub>Ed</sub> − q<sub>Ed</sub>·A<sub>enc</sub>',f:'EC2 §6.4.4(3)',v:`${_fF(VEd_red)} (${(100*(1-VEd_red/VEd)).toFixed(1)}% red.)`,c:'hl'},
-      ...(enh>1?[{d:'Stocky footing: v<sub>Rd,c</sub> × (2d/a)',f:`a=${a_min.toFixed(0)} mm < 2d=${d2.toFixed(0)} mm`,v:`× ${enh.toFixed(3)}`,c:'hl'}]:[]),
+      ...(enh>1?[{d:'Stocky footing — iterative critical perimeter',f:`EC2 §6.4.4(2): a<sub>crit</sub>=${a_crit_mm.toFixed(0)} mm, 2d=${d2.toFixed(0)} mm`,v:`v<sub>Rd,c</sub> × ${enh.toFixed(2)} (=2d/a<sub>crit</sub>)`,c:'hl'}]:[]),
     ]:[{d:'V<sub>Ed</sub> (direct input)',v:_fF(VEd_red),c:'hl'}]),
     {d:'β',f:'EC2 §6.4.3 / §6.4.4(6)',v:beta.toFixed(3)},
     {d:'v<sub>Ed</sub> = β·V<sub>Ed,red</sub>/(u₁·d)',f:'EC2 §6.4.3',v:_fv(vEd),c:'hl'},
