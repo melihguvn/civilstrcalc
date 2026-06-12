@@ -55,7 +55,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .chk-err{background:var(--red-bg);color:var(--red);}
 
 /* report card */
-.report-card{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.report-card{width:100%;box-sizing:border-box;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
 .report-hdr{background:#1a2332;color:white;padding:12px 18px;display:flex;align-items:center;gap:10px;}
 .report-hdr h4{font-family:var(--mono);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;}
 .rh-code{font-family:var(--mono);font-size:.61rem;background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;margin-left:auto;}
@@ -63,7 +63,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rpt-sec-title{font-size:.61rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin:14px 0 8px;}
 
 /* DCR banner */
-.dcr-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:7px;border:1.5px solid;margin-bottom:12px;}
+.dcr-banner{width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:7px;border:1.5px solid;margin-bottom:12px;}
 .dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0;}
 .dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a;}
 .dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8;}
@@ -98,6 +98,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .ref-list li:last-child{border-bottom:none;}
 .ref-num{font-family:var(--mono);font-size:.68rem;background:#1a2332;color:white;border-radius:3px;padding:1px 6px;flex-shrink:0;margin-top:2px;}
 
+/* Force all result column divs to fill their 1fr grid track */
+#cw-ec2-res, #cw-is-res, #cw-aci-res, #cw-ts-res {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+/* Ensure calc-layout always fills its container */
+.calc-layout { width: 100%; }
+
 @media print{
   .bg-section,.sub-tabs{display:none!important;}
   .sub-pane{display:block!important;}
@@ -121,16 +130,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 
 <div class="sub-tabs" role="tablist">
-  <button class="sub-tab active" onclick="stab(this,'cw','ec2')">EC2 §7.3.4</button>
+  <button class="sub-tab active" onclick="stab(this,'cw','aci')">ACI 224R</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','ec2')">EC2 §7.3.4</button>
   <button class="sub-tab"        onclick="stab(this,'cw','is456')">IS 456:2000</button>
-  <button class="sub-tab"        onclick="stab(this,'cw','aci')">ACI 224R</button>
   <button class="sub-tab"        onclick="stab(this,'cw','ts500')">TS 500:2000</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
      EC2 §7.3.4
 ══════════════════════════════════════════════════════════ -->
-<div class="sub-pane active" id="cw-ec2">
+<div class="sub-pane" id="cw-ec2">
 <div class="calc-layout">
 
   <div class="card no-print">
@@ -413,12 +422,20 @@ f<sub>s</sub> = m·M<sub>s</sub>·(d−x) / I<sub>cr</sub></div>
 <!-- ══════════════════════════════════════════════════════════
      ACI 224R — Frosch Formula
 ══════════════════════════════════════════════════════════ -->
-<div class="sub-pane" id="cw-aci">
+<div class="sub-pane active" id="cw-aci">
 <div class="calc-layout">
 
   <div class="card no-print">
-    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">mm · MPa · kN·m</span></div>
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="aci-ctag">mm · MPa · kN·m</span></div>
     <div class="card-body">
+
+      <div class="form-group">
+        <label>Unit System</label>
+        <div style="display:flex;gap:6px;">
+          <button id="aci-btn-si" class="bg-tab active" style="flex:1" onclick="setAciUnit('si')">SI (mm · MPa · kN·m)</button>
+          <button id="aci-btn-us" class="bg-tab" style="flex:1" onclick="setAciUnit('us')">US (in · psi · kip·ft)</button>
+        </div>
+      </div>
 
       <div class="form-group">
         <label>Member Type</label>
@@ -432,60 +449,82 @@ f<sub>s</sub> = m·M<sub>s</sub>·(d−x) / I<sub>cr</sub></div>
       <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Width b [mm]</label>
-          <div class="iw"><input type="number" id="aci-b" value="1000" min="50"><span class="us">mm</span></div>
+          <label>Width b [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-b" value="1000" min="0.1"><span class="us aci-u-len">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Total Depth h [mm]</label>
-          <div class="iw"><input type="number" id="aci-h" value="200" min="50"><span class="us">mm</span></div>
+          <label>Total Depth h [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-h" value="200" min="0.1"><span class="us aci-u-len">mm</span></div>
         </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Cover to Bar Center d<sub>c</sub> [mm]</label>
-          <div class="iw"><input type="number" id="aci-dc" value="38" min="10"><span class="us">mm</span></div>
+          <label>Cover to Bar Center d<sub>c</sub> [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-dc" value="38" min="0.1"><span class="us aci-u-len">mm</span></div>
           <div style="font-size:.67rem;color:var(--text-dim);margin-top:3px;">d<sub>c</sub> = clear cover + φ/2</div>
         </div>
         <div class="form-group">
-          <label>Eff. Depth d [mm] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
-          <div class="iw"><input type="number" id="aci-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
+          <label>Eff. Depth d [<span class="aci-u-len">mm</span>] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
+          <div class="iw"><input type="number" id="aci-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us aci-u-len">mm</span></div>
         </div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+      <div class="form-div"><div class="form-div-lbl">Tension Reinforcement</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Bar Diameter φ [mm]</label>
-          <div class="iw"><input type="number" id="aci-phi" value="16" min="6" max="50"><span class="us">mm</span></div>
+          <label>Bar Diameter φ [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-phi" value="16" min="0.1"><span class="us aci-u-len">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Bar Spacing s [mm]</label>
-          <div class="iw"><input type="number" id="aci-s" value="150" min="50" max="400"><span class="us">mm</span></div>
+          <label>Bar Spacing s [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-s" value="150" min="0.1"><span class="us aci-u-len">mm</span></div>
         </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Compression Steel <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.69rem;opacity:.7">(n<sub>c</sub> = 0 if none)</span></div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>No. of Bars n<sub>c</sub></label>
+          <div class="iw"><input type="number" id="aci-nc" value="0" min="0" max="30" step="1"><span class="us">bars</span></div>
+        </div>
+        <div class="form-group">
+          <label>Bar Diameter φ' [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-phic" value="12" min="0.1"><span class="us aci-u-len">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Cover to Center d' [<span class="aci-u-len">mm</span>]</label>
+          <div class="iw"><input type="number" id="aci-dcp" value="50" min="0.1"><span class="us aci-u-len">mm</span></div>
+        </div>
+        <div class="form-group"></div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Materials (ACI 318)</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>f'<sub>c</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="aci-fc" value="28" min="17" max="100"><span class="us">MPa</span></div>
+          <label>f'<sub>c</sub> [<span class="aci-u-str">MPa</span>]</label>
+          <div class="iw"><input type="number" id="aci-fc" value="28" min="1"><span class="us aci-u-str">MPa</span></div>
         </div>
         <div class="form-group">
-          <label>f<sub>y</sub> [MPa]</label>
-          <div class="iw"><input type="number" id="aci-fy" value="420" min="280" max="700"><span class="us">MPa</span></div>
+          <label>f<sub>y</sub> [<span class="aci-u-str">MPa</span>]</label>
+          <div class="iw"><input type="number" id="aci-fy" value="420" min="1"><span class="us aci-u-str">MPa</span></div>
         </div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Loading &amp; Exposure</div></div>
       <div class="form-group">
-        <label>Service Moment M<sub>s</sub> [kN·m]</label>
-        <div class="iw"><input type="number" id="aci-ms" value="20" min="0"><span class="us">kN·m</span></div>
+        <label>Service Moment M<sub>s</sub> [<span class="aci-u-mom">kN·m</span>]</label>
+        <div class="iw"><input type="number" id="aci-ms" value="20" min="0"><span class="us aci-u-mom">kN·m</span></div>
       </div>
       <div class="form-group">
         <label>Exposure — ACI 224R-01 Limit</label>
         <select id="aci-exp">
-          <option value="0.41" selected>Interior (dry) — w<sub>lim</sub> = 0.41 mm</option>
-          <option value="0.33">Exterior (weather exposed) — w<sub>lim</sub> = 0.33 mm</option>
+          <option value="0.41">Dry air or protective membrane — 0.41 mm</option>
+          <option value="0.30" selected>Humidity, moist air, soil — 0.30 mm</option>
+          <option value="0.18">Deicing chemicals — 0.18 mm</option>
+          <option value="0.15">Seawater / spray, wetting &amp; drying — 0.15 mm</option>
+          <option value="0.10">Water-retaining structures (ACI 350M-06) — 0.10 mm</option>
         </select>
       </div>
 
@@ -532,14 +571,21 @@ s ≤ 300·(280/f<sub>s</sub>)  [mm, MPa]
       <p>This calculator shows both the Frosch explicit crack width AND the ACI 318-25 indirect spacing check. The indirect check applies to the primary tension reinforcement layer.</p>
     </section>
     <section id="aci-bg-limits" hidden>
-      <h3>ACI 224R-01 Recommended Limits</h3>
+      <h3>ACI 224R-01 Table 4.1 — Recommended Limits</h3>
       <table class="code-tbl">
-        <tr><th>Exposure Condition</th><th>w<sub>lim</sub></th></tr>
-        <tr><td>Interior exposure (dry environments)</td><td>0.41 mm (0.016 in)</td></tr>
-        <tr><td>Exterior exposure (weather, deicing salts)</td><td>0.33 mm (0.013 in)</td></tr>
-        <tr><td>Submerged, corrosive, marine</td><td>0.25 mm (0.010 in) — use engineering judgment</td></tr>
+        <tr><th>Exposure Condition</th><th>w<sub>lim</sub> (mm)</th><th>w<sub>lim</sub> (in)</th></tr>
+        <tr><td>Dry air or protective membrane</td><td>0.41</td><td>0.016</td></tr>
+        <tr><td>Humidity, moist air, soil</td><td>0.30</td><td>0.012</td></tr>
+        <tr><td>Deicing chemicals</td><td>0.18</td><td>0.007</td></tr>
+        <tr><td>Seawater / seawater spray, wetting &amp; drying</td><td>0.15</td><td>0.006</td></tr>
+        <tr><td>Water-retaining structures (ACI 350M-06)</td><td>0.10</td><td>0.004</td></tr>
       </table>
-      <p>Note: The ACI 318 code itself does not prescribe explicit crack width limits; the limits above are from ACI 224R-01 (Report on Control of Cracking in Concrete Structures). ACI 318-25 relies on the indirect spacing method of §24.3, which implicitly targets ≈ 0.40 mm.</p>
+      <p>The ACI 318 code does not prescribe explicit crack width limits; the values above are from ACI 224R-01 and ACI 350M-06. ACI 318-25 uses the indirect bar spacing method of §24.3, which implicitly targets ≈ 0.40 mm.</p>
+      <h3>Doubly Reinforced Section — Cracked NA</h3>
+      <p>When compression steel is present, the cracked elastic neutral axis is found from:</p>
+      <div class="formula-box">(b/2)·x² + [(n−1)A'<sub>s</sub> + nA<sub>s</sub>]·x − [(n−1)A'<sub>s</sub>·d' + nA<sub>s</sub>·d] = 0
+I<sub>cr</sub> = bx³/3 + nA<sub>s</sub>(d−x)² + (n−1)A'<sub>s</sub>(x−d')²</div>
+      <p>(n−1) is used for compression steel because concrete at that level is already included in the bx²/2 term.</p>
     </section>
   </div>
 </div>
@@ -559,47 +605,47 @@ s ≤ 300·(280/f<sub>s</sub>)  [mm, MPa]
       <div class="form-group">
         <label>Member Type</label>
         <select id="ts-mem">
-          <option value="0.5">Kiriş — eğilme (k₂ = 0.5)</option>
-          <option value="0.5" selected>Döşeme / Temel — eğilme (k₂ = 0.5)</option>
-          <option value="1.0">Perde — eksenel çekime yakın (k₂ = 1.0)</option>
+          <option value="0.5">Beam — bending (k₂ = 0.5)</option>
+          <option value="0.5" selected>Slab / Foundation — bending (k₂ = 0.5)</option>
+          <option value="1.0">Wall — predominantly tension (k₂ = 1.0)</option>
         </select>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl">Kesit Geometrisi</div></div>
+      <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Genişlik b [mm]</label>
+          <label>Width b [mm]</label>
           <div class="iw"><input type="number" id="ts-b" value="1000" min="50"><span class="us">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Toplam Yükseklik h [mm]</label>
+          <label>Total Depth h [mm]</label>
           <div class="iw"><input type="number" id="ts-h" value="200" min="50"><span class="us">mm</span></div>
         </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Paspayı c [mm]</label>
+          <label>Cover c [mm]</label>
           <div class="iw"><input type="number" id="ts-c" value="30" min="10"><span class="us">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Faydalı Yükseklik d [mm] <span style="font-size:.65rem;opacity:.7">(otomatik)</span></label>
+          <label>Eff. Depth d [mm] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
           <div class="iw"><input type="number" id="ts-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
         </div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl">Donatı</div></div>
+      <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Çap φ [mm]</label>
+          <label>Bar Diameter φ [mm]</label>
           <div class="iw"><input type="number" id="ts-phi" value="16" min="6" max="40"><span class="us">mm</span></div>
         </div>
         <div class="form-group">
-          <label>Aralık s [mm]</label>
+          <label>Bar Spacing s [mm]</label>
           <div class="iw"><input type="number" id="ts-s" value="150" min="50" max="400"><span class="us">mm</span></div>
         </div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl">Malzeme</div></div>
+      <div class="form-div"><div class="form-div-lbl">Materials (TS 500)</div></div>
       <div class="form-row-2">
         <div class="form-group">
           <label>f<sub>ck</sub> [MPa]</label>
@@ -611,24 +657,24 @@ s ≤ 300·(280/f<sub>s</sub>)  [mm, MPa]
         </div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl">Yükleme ve Ortam Koşulları</div></div>
+      <div class="form-div"><div class="form-div-lbl">Loading &amp; Conditions</div></div>
       <div class="form-group">
-        <label>Servis Momenti M<sub>s</sub> [kN·m]</label>
+        <label>Service Moment M<sub>s</sub> [kN·m]</label>
         <div class="iw"><input type="number" id="ts-ms" value="20" min="0"><span class="us">kN·m</span></div>
       </div>
       <div class="form-group">
-        <label>Yükleme Türü — β<sub>2</sub></label>
+        <label>Loading Type — β<sub>2</sub></label>
         <select id="ts-load">
-          <option value="0.5" selected>Sürekli / tekrarlı yükleme (β<sub>2</sub> = 0.5)</option>
-          <option value="1.0">Kısa süreli yükleme (β<sub>2</sub> = 1.0)</option>
+          <option value="0.5" selected>Sustained / repeated loading (β<sub>2</sub> = 0.5)</option>
+          <option value="1.0">Short-term / instantaneous (β<sub>2</sub> = 1.0)</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Ortam Sınıfı — w<sub>lim</sub> (TS 500 Tablo 11.2)</label>
+        <label>Exposure Class — w<sub>lim</sub> (TS 500 Table 11.2)</label>
         <select id="ts-exp">
-          <option value="0.4">Kuru iç ortam — w<sub>lim</sub> = 0.40 mm</option>
-          <option value="0.3" selected>Normal iç/dış ortam — w<sub>lim</sub> = 0.30 mm</option>
-          <option value="0.2">Nemli / agresif ortam — w<sub>lim</sub> = 0.20 mm</option>
+          <option value="0.4">Dry interior — w<sub>lim</sub> = 0.40 mm</option>
+          <option value="0.3" selected>Normal interior/exterior — w<sub>lim</sub> = 0.30 mm</option>
+          <option value="0.2">Humid / aggressive — w<sub>lim</sub> = 0.20 mm</option>
         </select>
       </div>
 
@@ -636,41 +682,41 @@ s ≤ 300·(280/f<sub>s</sub>)  [mm, MPa]
   </div>
 
   <div id="cw-ts-res">
-    <div class="res-empty"><div class="ri">📋</div>Değerleri girin — sonuçlar otomatik güncellenir.</div>
+    <div class="res-empty"><div class="ri">📋</div>Enter values — results update automatically.</div>
   </div>
 
 </div><!-- /calc-layout -->
 
 <div class="bg-section">
-  <h2>Tasarım Arka Planı — TS 500:2000 §11.5</h2>
+  <h2>Design Background — TS 500:2000 §11.5</h2>
   <div class="bg-tabs">
-    <button class="bg-tab active" onclick="bgTab(this,'ts-bg-theory')">Teori</button>
-    <button class="bg-tab" onclick="bgTab(this,'ts-bg-limits')">Sınır Değerler</button>
+    <button class="bg-tab active" onclick="bgTab(this,'ts-bg-theory')">Theory</button>
+    <button class="bg-tab" onclick="bgTab(this,'ts-bg-limits')">Limits</button>
   </div>
   <div class="design-background">
     <section id="ts-bg-theory">
-      <h3>TS 500:2000 §11.5 — Çatlak Genişliği</h3>
-      <p>TS 500:2000 çatlak genişliği formülü, CEB-FIP 1990 Model Kodu'na dayanmaktadır:</p>
+      <h3>TS 500:2000 §11.5 — Crack Width</h3>
+      <p>The TS 500:2000 crack width formula is based on the CEB-FIP 1990 Model Code:</p>
       <div class="formula-box"><b>w<sub>k</sub> = β · s<sub>m</sub> · ε<sub>sm</sub></b></div>
-      <p>β = 1.7 (eğilme hâkim olan elemanlar için), ortalama çatlak aralığı ve ortalama çelik gerinimi çarpımı olarak tanımlanır.</p>
-      <h3>Ortalama Çatlak Aralığı</h3>
+      <p>β = 1.7 for members dominated by bending. The formula is the product of the mean crack spacing and the mean steel strain.</p>
+      <h3>Mean Crack Spacing</h3>
       <div class="formula-box">s<sub>m</sub> = 50 + 0.25·k<sub>1</sub>·k<sub>2</sub>·φ / ρ<sub>r,eff</sub>  [mm]
-k<sub>1</sub> = 0.8 (nervürlü çubuk),  k<sub>2</sub> = 0.5 (eğilme) / 1.0 (çekime yakın)</div>
-      <h3>Ortalama Çelik Gerinimi</h3>
+k<sub>1</sub> = 0.8 (deformed bars),  k<sub>2</sub> = 0.5 (bending) / 1.0 (predominantly tension)</div>
+      <h3>Mean Steel Strain</h3>
       <div class="formula-box">ε<sub>sm</sub> = (σ<sub>s</sub>/E<sub>s</sub>)·[1 − β<sub>1</sub>·β<sub>2</sub>·(σ<sub>sr</sub>/σ<sub>s</sub>)²]
 ≥ 0.4·σ<sub>s</sub>/E<sub>s</sub>
-β<sub>1</sub> = 1.0 (nervürlü),  β<sub>2</sub> = 0.5 (sürekli) / 1.0 (kısa süreli)</div>
-      <p>σ<sub>sr</sub> = f<sub>ctm</sub>·(1 + α<sub>e</sub>·ρ<sub>eff</sub>) / ρ<sub>eff</sub>  —  çatlama anındaki çelik gerilmesi.</p>
+β<sub>1</sub> = 1.0 (deformed bars),  β<sub>2</sub> = 0.5 (sustained) / 1.0 (short-term)</div>
+      <p>σ<sub>sr</sub> = f<sub>ctm</sub>·(1 + α<sub>e</sub>·ρ<sub>eff</sub>) / ρ<sub>eff</sub> — steel stress at cracking.</p>
     </section>
     <section id="ts-bg-limits" hidden>
-      <h3>TS 500:2000 — Çatlak Genişliği Sınır Değerleri</h3>
+      <h3>TS 500:2000 — Crack Width Limits</h3>
       <table class="code-tbl">
-        <tr><th>Ortam Sınıfı</th><th>w<sub>lim</sub></th></tr>
-        <tr><td>Kuru iç ortam</td><td>0.40 mm</td></tr>
-        <tr><td>Normal iç/dış ortam</td><td>0.30 mm</td></tr>
-        <tr><td>Nemli / agresif ortam veya su ile temas</td><td>0.20 mm</td></tr>
+        <tr><th>Exposure Class</th><th>w<sub>lim</sub></th></tr>
+        <tr><td>Dry interior</td><td>0.40 mm</td></tr>
+        <tr><td>Normal interior/exterior</td><td>0.30 mm</td></tr>
+        <tr><td>Humid / aggressive or water contact</td><td>0.20 mm</td></tr>
       </table>
-      <p>Eğilmeli elemanlar için β = 1.7 kullanılır. Çatlama anındaki gerilme σ<sub>sr</sub>, brüt kesitin çatlak yükünden hesaplanır.</p>
+      <p>β = 1.7 is used for flexural members. The cracking stress σ<sub>sr</sub> is derived from the gross cross-section at the crack load.</p>
     </section>
   </div>
 </div>
@@ -882,67 +928,175 @@ function calcIS() {
 /* ══════════════════════════════════════════════════════════
    ACI 224R — Frosch (1999)
 ══════════════════════════════════════════════════════════ */
+var aciUnit = 'si';
+
+function setAciUnit(u) {
+  aciUnit = u;
+  var isUS = (u === 'us');
+  /* toggle button styles */
+  document.getElementById('aci-btn-si').classList.toggle('active', !isUS);
+  document.getElementById('aci-btn-us').classList.toggle('active', isUS);
+  /* update card tag */
+  document.getElementById('aci-ctag').textContent = isUS ? 'in · psi · kip·ft' : 'mm · MPa · kN·m';
+  /* update unit label spans */
+  var lenU = isUS ? 'in'     : 'mm';
+  var strU = isUS ? 'psi'    : 'MPa';
+  var momU = isUS ? 'kip·ft' : 'kN·m';
+  document.querySelectorAll('.aci-u-len').forEach(function(el){ el.textContent = lenU; });
+  document.querySelectorAll('.aci-u-str').forEach(function(el){ el.textContent = strU; });
+  document.querySelectorAll('.aci-u-mom').forEach(function(el){ el.textContent = momU; });
+  /* swap defaults */
+  if (isUS) {
+    document.getElementById('aci-b').value    = 12;
+    document.getElementById('aci-h').value    = 8;
+    document.getElementById('aci-dc').value   = 1.5;
+    document.getElementById('aci-phi').value  = 0.625;
+    document.getElementById('aci-s').value    = 6;
+    document.getElementById('aci-fc').value   = 4000;
+    document.getElementById('aci-fy').value   = 60000;
+    document.getElementById('aci-ms').value   = 10;
+    document.getElementById('aci-phic').value = 0.5;
+    document.getElementById('aci-dcp').value  = 2.0;
+  } else {
+    document.getElementById('aci-b').value    = 1000;
+    document.getElementById('aci-h').value    = 200;
+    document.getElementById('aci-dc').value   = 38;
+    document.getElementById('aci-phi').value  = 16;
+    document.getElementById('aci-s').value    = 150;
+    document.getElementById('aci-fc').value   = 28;
+    document.getElementById('aci-fy').value   = 420;
+    document.getElementById('aci-ms').value   = 20;
+    document.getElementById('aci-phic').value = 12;
+    document.getElementById('aci-dcp').value  = 50;
+  }
+  calcACI();
+}
+
 function calcACI() {
-  var b    = v('aci-b'),  h  = v('aci-h');
-  var dc   = v('aci-dc');
-  var phi  = v('aci-phi'), s = v('aci-s');
-  var fc   = v('aci-fc');
-  var Ms   = v('aci-ms') * 1e6;
-  var wlim = parseFloat(document.getElementById('aci-exp').value);
+  var isUS = (aciUnit === 'us');
+  /* read raw input values */
+  var bRaw    = v('aci-b'),  hRaw  = v('aci-h');
+  var dcRaw   = v('aci-dc');
+  var phiRaw  = v('aci-phi'), sRaw  = v('aci-s');
+  var fcRaw   = v('aci-fc');
+  var msRaw   = v('aci-ms');
+  var nc      = Math.round(v('aci-nc'));
+  var phicRaw = v('aci-phic');
+  var dcpRaw  = v('aci-dcp');
+  var wlim    = parseFloat(document.getElementById('aci-exp').value); /* always mm */
 
-  if (!b||!h||!dc||!phi||!s||!fc||!Ms) return;
+  if (!bRaw||!hRaw||!dcRaw||!phiRaw||!sRaw||!fcRaw||!msRaw) return;
 
-  var d  = h - dc;
-  document.getElementById('aci-d').value = fmt(d, 1);
-  var As = Math.PI * phi * phi / 4 * (b / s);
-  var Es = 200000;
-  var Ec = 4700 * Math.sqrt(fc);
-  var n  = Es / Ec;
+  /* convert to SI (mm, MPa, N·mm) */
+  var IN = 25.4, PSI = 1/145.038, KIPFT = 1355820;
+  var b    = isUS ? bRaw    * IN    : bRaw;
+  var h    = isUS ? hRaw    * IN    : hRaw;
+  var dc   = isUS ? dcRaw   * IN    : dcRaw;
+  var phi  = isUS ? phiRaw  * IN    : phiRaw;
+  var s    = isUS ? sRaw    * IN    : sRaw;
+  var fc   = isUS ? fcRaw   * PSI   : fcRaw;
+  var Ms   = isUS ? msRaw   * KIPFT : msRaw * 1e6;
+  var phic = isUS ? phicRaw * IN    : phicRaw;
+  var dcp  = isUS ? dcpRaw  * IN    : dcpRaw;
 
-  var x   = crackedNA(b, d, As, n);
-  var Icr = Icr_fn(b, x, d, As, n);
-  var fs  = n * Ms * (d - x) / Icr;
+  var d = h - dc;
+  document.getElementById('aci-d').value = isUS ? fmt(d/IN, 3) : fmt(d, 1);
 
+  var As  = Math.PI * phi  * phi  / 4 * (b / s);
+  var Asc = (nc > 0) ? Math.PI * phic * phic / 4 * nc : 0;
+  var Es  = 200000;
+  var Ec  = 4700 * Math.sqrt(fc);
+  var n   = Es / Ec;
+
+  /* ── Cracked neutral axis ── */
+  var x, Icr;
+  if (nc > 0 && Asc > 0 && dcp < d) {
+    /* doubly reinforced: b/2·x² + [(n-1)As' + nAs]·x - [(n-1)As'·d' + nAs·d] = 0 */
+    var Aq = b / 2;
+    var Bq = (n - 1) * Asc + n * As;
+    var Cq = -((n - 1) * Asc * dcp + n * As * d);
+    x   = (-Bq + Math.sqrt(Bq * Bq - 4 * Aq * Cq)) / (2 * Aq);
+    var comp_arm = Math.max(x - dcp, 0);
+    Icr = b * x * x * x / 3 + n * As * (d - x) * (d - x) + (n - 1) * Asc * comp_arm * comp_arm;
+  } else {
+    x   = crackedNA(b, d, As, n);
+    Icr = Icr_fn(b, x, d, As, n);
+  }
+
+  var fs     = n * Ms * (d - x) / Icr;
   var beta_s = (h - x) / (d - x);
   var dist   = Math.sqrt(dc * dc + (s / 2) * (s / 2));
-  var wk     = 2 * (fs / Es) * beta_s * dist;
+  var wk_mm  = 2 * (fs / Es) * beta_s * dist;  /* always mm */
+  var wk     = isUS ? wk_mm / IN : wk_mm;
+  var wlim_d = isUS ? wlim / IN  : wlim;
 
-  /* ACI 318-25 §24.3 indirect check */
-  var cc     = dc - phi / 2;
-  var s_max1 = 380 * (280 / fs) - 2.5 * cc;
-  var s_max2 = 300 * (280 / fs);
-  var s_max  = Math.min(s_max1, s_max2);
+  /* ── ACI 318-25 §24.3 spacing check (SI) ── */
+  var cc      = dc - phi / 2;
+  var s_max1  = 380 * (280 / fs) - 2.5 * cc;
+  var s_max2  = 300 * (280 / fs);
+  var s_max   = Math.min(s_max1, s_max2);
   var pass318 = s <= s_max;
+  var lenSuf  = isUS ? ' in' : ' mm';
+  var dp      = isUS ? 3 : 1;
 
-  var html = dcrBanner(wk, wlim, 'ACI 224R Frosch');
+  /* ── Bar diameter limit check (Frosch-derived) ── */
+  /* max allowable Frosch distance for w_lim: dist_allow = w_lim·Es/(2·fs·βs) */
+  var dist_allow = (fs > 0 && beta_s > 0) ? wlim * Es / (2 * fs * beta_s) : Infinity;
+  /* max allowable dc: dc_allow = √(dist_allow² - (s/2)²) */
+  var dc_allow = Math.sqrt(Math.max(dist_allow * dist_allow - (s / 2) * (s / 2), 0));
+  /* max bar diameter for same clear cover: cc_clear = dc - φ/2 */
+  var cc_clear  = dc - phi / 2;
+  var phi_max   = 2 * (dc_allow - cc_clear);
+  var passDia   = phi <= phi_max + 0.01; /* +0.01 for float tolerance */
 
+  /* ── DCR banner ── */
+  var dcr  = wk / wlim_d;
+  var cls  = wk <= wlim_d ? 'ok' : 'err';
+  var icon = wk <= wlim_d ? '✅' : '❌';
+  var wUnit = isUS ? 'in' : 'mm';
+  var msg  = wk <= wlim_d
+    ? 'w = '+fmt(wk,4)+' '+wUnit+' &le; w<sub>lim</sub> = '+fmt(wlim_d,4)+' '+wUnit+' &mdash; OK (ACI 224R Frosch)'
+    : 'w = '+fmt(wk,4)+' '+wUnit+' &gt; w<sub>lim</sub> = '+fmt(wlim_d,4)+' '+wUnit+' &mdash; NOT OK (ACI 224R Frosch)';
+  var html = '<div class="dcr-banner '+cls+'"><div class="dcr-icon">'+icon+'</div>'
+    +'<div class="dcr-text"><strong>'+msg+'</strong>'
+    +'<span>DCR = '+fmt(dcr,3)+'</span></div></div>';
+
+  /* ── Report ── */
   html += '<div class="report-card">'
     +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">ACI 224R / Frosch (1999)</span></div>'
     +'<div class="report-body">'
-    +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
+    +'<div class="rpt-sec-title">Geometry &amp; Steel Areas</div>'
     +'<table class="steps-table">'
-    +stepRow(1,'Effective depth d','h − d<sub>c</sub>', fmt(d,1)+' mm')
-    +stepRow(2,'Steel area A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +stepRow(1,'Effective depth d','h − d<sub>c</sub>', isUS?fmt(d/IN,3)+' in':fmt(d,1)+' mm')
+    +stepRow(2,'Tension A<sub>s</sub>','π·φ²/4 × (b/s)', isUS?fmt(As/645.16,3)+' in²':fmt(As,1)+' mm²')
+    +(nc>0?stepRow(3,'Comp. A\'<sub>s</sub>','π·φ\'²/4 × n<sub>c</sub>', isUS?fmt(Asc/645.16,3)+' in²':fmt(Asc,1)+' mm²'):'')
     +'</table>'
-    +'<div class="rpt-sec-title">Cracked Section (ACI 318 §19.2.2)</div>'
+    +'<div class="rpt-sec-title">Cracked Section'+(nc>0?' (Doubly Reinforced)':' (ACI 318 §19.2.2)')+'</div>'
     +'<table class="steps-table">'
-    +stepRow(3,'E<sub>c</sub>','4700√f\'<sub>c</sub>', fmt(Ec,0)+' MPa')
-    +stepRow(4,'n = E<sub>s</sub>/E<sub>c</sub>','', fmt(n,2))
-    +stepRow(5,'Neutral axis x','cracked elastic', fmt(x,1)+' mm')
-    +stepRow(6,'Steel stress f<sub>s</sub>','n·M<sub>s</sub>(d−x)/I<sub>cr</sub>', fmt(fs,1)+' MPa')
+    +stepRow(nc>0?4:3,'E<sub>c</sub>','4700√f\'<sub>c</sub>', fmt(Ec,0)+' MPa')
+    +stepRow(nc>0?5:4,'n = E<sub>s</sub>/E<sub>c</sub>','', fmt(n,2))
+    +stepRow(nc>0?6:5,'Neutral axis x','cracked elastic', isUS?fmt(x/IN,3)+' in':fmt(x,1)+' mm')
+    +stepRow(nc>0?7:6,'Steel stress f<sub>s</sub>','n·M<sub>s</sub>(d−x)/I<sub>cr</sub>', fmt(fs,1)+' MPa')
     +'</table>'
     +'<div class="rpt-sec-title">Frosch (1999) Crack Width</div>'
     +'<table class="steps-table">'
-    +stepRow(7,'β<sub>s</sub>','(h−x)/(d−x)', fmt(beta_s,3))
-    +stepRow(8,'√[d<sub>c</sub>² + (s/2)²]','Frosch distance', fmt(dist,1)+' mm')
-    +stepRow(9,'<strong>w</strong>','2(f<sub>s</sub>/E<sub>s</sub>)·β<sub>s</sub>·√[d<sub>c</sub>² + (s/2)²]','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
-    +stepRow(10,'w<sub>lim</sub>','ACI 224R-01', fmt(wlim,2)+' mm')
+    +stepRow(nc>0?8:7,'β<sub>s</sub>','(h−x)/(d−x)', fmt(beta_s,3))
+    +stepRow(nc>0?9:8,'√[d<sub>c</sub>² + (s/2)²]','Frosch distance', isUS?fmt(dist/IN,3)+' in':fmt(dist,1)+' mm')
+    +stepRow(nc>0?10:9,'<strong>w</strong>','2(f<sub>s</sub>/E<sub>s</sub>)·β<sub>s</sub>·√[d<sub>c</sub>² + (s/2)²]','<strong>'+fmt(wk,4)+' '+wUnit+'</strong>', wk<=wlim_d?'ok':'err')
+    +stepRow(nc>0?11:10,'w<sub>lim</sub>','ACI 224R-01 Table 4.1', fmt(wlim_d,4)+' '+wUnit)
     +'</table>'
-    +'<div class="rpt-sec-title">ACI 318-25 §24.3 Indirect Check</div>'
+    +'<div class="rpt-sec-title">ACI 318-25 §24.3 — Bar Spacing Check</div>'
     +'<table class="steps-table">'
-    +stepRow(11,'Clear cover c<sub>c</sub>','d<sub>c</sub> − φ/2', fmt(cc,1)+' mm')
-    +stepRow(12,'s<sub>max</sub>','min(380(280/f<sub>s</sub>)−2.5c<sub>c</sub>, 300(280/f<sub>s</sub>))', fmt(s_max,1)+' mm')
-    +stepRow(13,'s = '+fmt(s,0)+' mm',pass318?'s ≤ s<sub>max</sub>':'s &gt; s<sub>max</sub>', pass318?'PASS ✅':'FAIL ❌', pass318?'ok':'err')
+    +stepRow(nc>0?12:11,'Clear cover c<sub>c</sub>','d<sub>c</sub> − φ/2', fmt(isUS?cc/IN:cc,dp)+lenSuf)
+    +stepRow(nc>0?13:12,'s<sub>max</sub>','min(380(280/f<sub>s</sub>)−2.5c<sub>c</sub>, 300(280/f<sub>s</sub>))', fmt(isUS?s_max/IN:s_max,dp)+lenSuf)
+    +stepRow(nc>0?14:13,'s = '+fmt(isUS?s/IN:s,dp)+lenSuf,pass318?'s ≤ s<sub>max</sub>':'s &gt; s<sub>max</sub>', pass318?'PASS ✅':'FAIL ❌', pass318?'ok':'err')
+    +'</table>'
+    +'<div class="rpt-sec-title">Bar Diameter Check (Frosch-derived)</div>'
+    +'<table class="steps-table">'
+    +stepRow(nc>0?15:14,'Frosch dist<sub>allow</sub>','w<sub>lim</sub>·E<sub>s</sub> / (2·f<sub>s</sub>·β<sub>s</sub>)', isUS?fmt(dist_allow/IN,3)+' in':fmt(dist_allow,1)+' mm')
+    +stepRow(nc>0?16:15,'d<sub>c,allow</sub>','√[dist<sub>allow</sub>² − (s/2)²]', isUS?fmt(dc_allow/IN,3)+' in':fmt(dc_allow,1)+' mm')
+    +stepRow(nc>0?17:16,'φ<sub>max</sub>','2·(d<sub>c,allow</sub> − c<sub>c,clear</sub>)', isUS?fmt(phi_max/IN,3)+' in':fmt(phi_max,1)+' mm')
+    +stepRow(nc>0?18:17,'φ = '+fmt(isUS?phi/IN:phi,dp)+lenSuf, passDia?'φ ≤ φ<sub>max</sub>':'φ &gt; φ<sub>max</sub>', passDia?'PASS ✅':'FAIL ❌', passDia?'ok':'err')
     +'</table>'
     +'</div></div>';
 
@@ -996,33 +1150,33 @@ function calcTS() {
   var html = dcrBanner(wk, wlim, 'TS 500:2000 §11.5');
 
   html += '<div class="report-card">'
-    +'<div class="report-hdr"><h4>Hesap Adımları</h4><span class="rh-code">TS 500:2000 §11.5</span></div>'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">TS 500:2000 §11.5</span></div>'
     +'<div class="report-body">'
-    +'<div class="rpt-sec-title">Kesit Geometrisi ve Donatı</div>'
+    +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
     +'<table class="steps-table">'
-    +stepRow(1,'Faydalı yükseklik d','h − c − φ/2', fmt(d,1)+' mm')
-    +stepRow(2,'Donatı alanı A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +stepRow(1,'Effective depth d','h − c − φ/2', fmt(d,1)+' mm')
+    +stepRow(2,'Steel area A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
     +'</table>'
-    +'<div class="rpt-sec-title">Çatlamış Kesit Analizi</div>'
+    +'<div class="rpt-sec-title">Cracked Section (Elastic)</div>'
     +'<table class="steps-table">'
     +stepRow(3,'E<sub>cm</sub>','22000·(f<sub>cm</sub>/10)<sup>0.3</sup>', fmt(Ecm,0)+' MPa')
     +stepRow(4,'n = E<sub>s</sub>/E<sub>cm</sub>','', fmt(n,2))
-    +stepRow(5,'Tarafsız eksen x','', fmt(x,1)+' mm')
+    +stepRow(5,'Neutral axis x','', fmt(x,1)+' mm')
     +stepRow(6,'σ<sub>s</sub>','n·M<sub>s</sub>·(d−x)/I<sub>cr</sub>', fmt(sigma_s,1)+' MPa')
     +'</table>'
-    +'<div class="rpt-sec-title">Efektif Bölge ve Çatlama Gerilmesi</div>'
+    +'<div class="rpt-sec-title">Effective Zone &amp; Cracking Stress</div>'
     +'<table class="steps-table">'
     +stepRow(7,'f<sub>ctm</sub>','0.30·f<sub>ck</sub><sup>2/3</sup>', fmt(fctm,2)+' MPa')
     +stepRow(8,'h<sub>c,ef</sub>','min(2.5(h−d),(h−x)/3,h/2)', fmt(hcef,1)+' mm')
     +stepRow(9,'ρ<sub>r,eff</sub>','A<sub>s</sub>/A<sub>c,eff</sub>', fmt(rho_eff*100,3)+'%')
     +stepRow(10,'σ<sub>sr</sub>','f<sub>ctm</sub>(1+nρ)/ρ', fmt(sigma_sr,1)+' MPa')
     +'</table>'
-    +'<div class="rpt-sec-title">Çatlak Genişliği (TS 500 §11.5)</div>'
+    +'<div class="rpt-sec-title">Crack Width (TS 500 §11.5)</div>'
     +'<table class="steps-table">'
     +stepRow(11,'s<sub>m</sub>','50 + 0.25·k₁·k₂·φ/ρ', fmt(sm,1)+' mm')
     +stepRow(12,'ε<sub>sm</sub>','(σ<sub>s</sub>/E<sub>s</sub>)[1−β₁β₂(σ<sub>sr</sub>/σ<sub>s</sub>)²] ≥ 0.4σ<sub>s</sub>/E<sub>s</sub>', fmtE(eps_sm),'hl')
     +stepRow(13,'<strong>w<sub>k</sub></strong>','β·s<sub>m</sub>·ε<sub>sm</sub> (β = '+beta_coef+')','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
-    +stepRow(14,'w<sub>lim</sub>','TS 500 Tablo 11.2', fmt(wlim,2)+' mm')
+    +stepRow(14,'w<sub>lim</sub>','TS 500 Table 11.2', fmt(wlim,2)+' mm')
     +'</table>'
     +'</div></div>';
 
