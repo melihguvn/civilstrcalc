@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>Crack Width Control Calculator | EC2, IS 456, ACI 224R, TS 500 | CivilStrCalc</title>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Crack Width Control Calculator - CivilStrCalc","description":"Calculate characteristic crack width for RC beams, slabs, walls and foundations per EC2 §7.3.4, IS 456:2000 Annex F, ACI 224R (Frosch), and TS 500:2000 §11.5.","applicationCategory":"UtilityApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":"EC2, IS 456:2000, ACI 224R, TS 500:2000"}</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<meta name="description" content="Free crack width calculator for reinforced concrete. EC2 §7.3.4, IS 456:2000 Annex F, ACI 224R Frosch formula, TS 500:2000. Beams, slabs, walls and foundations. Step-by-step results.">
+<link rel="canonical" href="https://civilstrcalc.com/pages/crack-width.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/crack-width.html">
+<meta property="og:title" content="Crack Width Control Calculator | EC2, IS 456, ACI 224R, TS 500 | CivilStrCalc">
+<meta property="og:description" content="Calculate characteristic crack width per EC2 §7.3.4, IS 456:2000 Annex F, ACI 224R, and TS 500:2000. Beams, slabs, walls and foundations.">
+<meta property="og:image" content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name" content="CivilStrCalc">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Crack Width Control Calculator | CivilStrCalc">
+<meta name="twitter:description" content="Crack width per EC2, IS 456, ACI 224R, TS 500.">
+<meta name="twitter:image" content="https://civilstrcalc.com/images/og-image.png">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+/* result primary banner */
+.cw-result{display:flex;align-items:stretch;background:var(--res-bg);border:1.5px solid var(--res-border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+.cw-res-half{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:3px;}
+.cw-res-half+.cw-res-half{border-left:1px solid var(--res-border);}
+.cw-res-tag{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);opacity:.8;}
+.cw-res-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--accent);}
+.cw-res-note{font-size:.7rem;color:var(--text-dim);}
+
+/* step table */
+.steps-table{width:100%;border-collapse:collapse;}
+.steps-table tr{border-bottom:1px solid var(--border);}
+.steps-table tr:last-child{border-bottom:none;}
+.steps-table tr:hover{background:var(--bg);}
+.steps-table td{padding:7px 5px;font-size:.79rem;vertical-align:middle;}
+.step-num{width:21px;height:21px;background:#1a2332;color:white;border-radius:50%;font-family:var(--mono);font-size:.6rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:600;}
+.step-desc{font-size:.79rem;color:var(--text-mid);}
+.step-formula{font-family:var(--mono);font-size:.69rem;color:var(--text-dim);margin-top:2px;}
+.step-val{font-family:var(--mono);font-weight:600;font-size:.8rem;text-align:right;white-space:nowrap;color:var(--text);}
+.step-val.hl{color:var(--accent);}
+.step-val.ok{color:var(--green);}
+.step-val.warn{color:var(--orange);}
+.step-val.err{color:var(--red);}
+.step-check{font-size:.7rem;padding:2px 6px;border-radius:3px;font-family:var(--sans);font-weight:500;margin-left:4px;white-space:nowrap;}
+.chk-ok{background:var(--green-bg);color:var(--green);}
+.chk-err{background:var(--red-bg);color:var(--red);}
+
+/* report card */
+.report-card{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.report-hdr{background:#1a2332;color:white;padding:12px 18px;display:flex;align-items:center;gap:10px;}
+.report-hdr h4{font-family:var(--mono);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;}
+.rh-code{font-family:var(--mono);font-size:.61rem;background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;margin-left:auto;}
+.report-body{padding:18px;}
+.rpt-sec-title{font-size:.61rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin:14px 0 8px;}
+
+/* DCR banner */
+.dcr-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:7px;border:1.5px solid;margin-bottom:12px;}
+.dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0;}
+.dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a;}
+.dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8;}
+.dcr-icon{font-size:1.35rem;}
+.dcr-text strong{font-size:.84rem;display:block;margin-bottom:2px;}
+.dcr-text span{font-size:.72rem;color:var(--text-mid);font-family:var(--mono);}
+.dcr-banner.ok  .dcr-text strong{color:var(--green);}
+.dcr-banner.warn .dcr-text strong{color:var(--orange);}
+.dcr-banner.err  .dcr-text strong{color:var(--red);}
+
+/* background */
+.bg-section{margin-top:30px;border-top:2px solid var(--border);padding-top:22px;}
+.bg-section h2{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text);margin:0 0 12px;letter-spacing:.03em;}
+.bg-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.bg-tab{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:5px 13px;font-size:.74rem;font-weight:500;cursor:pointer;color:var(--text-dim);transition:all .14s;}
+.bg-tab:hover{border-color:var(--accent);color:var(--accent);}
+.bg-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.design-background>section{font-size:.83rem;line-height:1.75;color:var(--text-mid);padding:18px 0;}
+.design-background>section h3{font-family:var(--mono);font-weight:700;font-size:.84rem;color:var(--text);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.04em;border-left:3px solid var(--accent);padding-left:8px;}
+.design-background>section h3:first-child{margin-top:0;}
+.design-background>section p{margin:0 0 10px;}
+.design-background>section ul{margin:0 0 10px;padding-left:22px;}
+.design-background>section li{margin-bottom:4px;}
+.formula-box{font-family:var(--mono);font-size:.78rem;background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:11px 14px;margin:8px 0;line-height:2.1;overflow-x:auto;}
+.formula-box b{color:var(--accent);}
+.code-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:8px 0 14px;}
+.code-tbl th{background:var(--bg2);padding:6px 10px;text-align:left;font-weight:600;border:1px solid var(--border);color:var(--text);}
+.code-tbl td{padding:5px 10px;border:1px solid var(--border);color:var(--text-mid);}
+.code-tbl tr:nth-child(even) td{background:var(--bg);}
+.ref-list{list-style:none;padding:0;margin-top:6px;}
+.ref-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;color:var(--text-mid);display:flex;gap:10px;line-height:1.6;}
+.ref-list li:last-child{border-bottom:none;}
+.ref-num{font-family:var(--mono);font-size:.68rem;background:#1a2332;color:white;border-radius:3px;padding:1px 6px;flex-shrink:0;margin-top:2px;}
+
+@media print{
+  .bg-section,.sub-tabs{display:none!important;}
+  .sub-pane{display:block!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<script src="../js/nav.js" defer></script>
+<script src="../shell.js" defer></script>
+</head>
+<body>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title">
+  <h1>Crack Width Control</h1>
+  <p>Characteristic crack width — EC2 §7.3.4 · IS 456:2000 Annex F · ACI 224R / Frosch · TS 500:2000 §11.5</p>
+</div>
+
+<div class="sub-tabs" role="tablist">
+  <button class="sub-tab active" onclick="stab(this,'cw','ec2')">EC2 §7.3.4</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','is456')">IS 456:2000</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','aci')">ACI 224R</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','ts500')">TS 500:2000</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     EC2 §7.3.4
+══════════════════════════════════════════════════════════ -->
+<div class="sub-pane active" id="cw-ec2">
+<div class="calc-layout">
+
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">mm · MPa · kN·m</span></div>
+    <div class="card-body">
+
+      <div class="form-group">
+        <label>Member Type</label>
+        <select id="ec2-mem">
+          <option value="0.5">Beam — bending (k₂ = 0.5)</option>
+          <option value="0.5" selected>Slab — bending (k₂ = 0.5)</option>
+          <option value="0.5">Foundation — bending (k₂ = 0.5)</option>
+          <option value="1.0">Wall — predominantly tension (k₂ = 1.0)</option>
+        </select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b [mm]</label>
+          <div class="iw"><input type="number" id="ec2-b" value="1000" min="50"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total Depth h [mm]</label>
+          <div class="iw"><input type="number" id="ec2-h" value="200" min="50"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Nominal Cover c<sub>nom</sub> [mm]</label>
+          <div class="iw"><input type="number" id="ec2-c" value="30" min="10"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Eff. Depth d [mm] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
+          <div class="iw"><input type="number" id="ec2-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Bar Diameter φ [mm]</label>
+          <div class="iw"><input type="number" id="ec2-phi" value="16" min="6" max="40"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Bar Spacing s [mm]</label>
+          <div class="iw"><input type="number" id="ec2-s" value="150" min="50" max="400"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="ec2-fck" value="30" min="12" max="90"><span class="us">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>yk</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="ec2-fyk" value="500" min="400" max="600"><span class="us">MPa</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Loading &amp; Conditions</div></div>
+      <div class="form-group">
+        <label>Service Moment M<sub>s</sub> [kN·m]</label>
+        <div class="iw"><input type="number" id="ec2-ms" value="25" min="0"><span class="us">kN·m</span></div>
+        <div style="font-size:.68rem;color:var(--text-dim);margin-top:3px;">Quasi-permanent (unfactored) moment for the strip width b.</div>
+      </div>
+      <div class="form-group">
+        <label>Loading Duration — k<sub>t</sub></label>
+        <select id="ec2-kt">
+          <option value="0.4" selected>Long-term / sustained (k<sub>t</sub> = 0.4)</option>
+          <option value="0.6">Short-term / instantaneous (k<sub>t</sub> = 0.6)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Exposure Class — w<sub>lim</sub> (EC2 Table 7.1N)</label>
+        <select id="ec2-exp">
+          <option value="0.3" selected>XC1–XC4 (dry / humid) — w<sub>lim</sub> = 0.30 mm</option>
+          <option value="0.3">XD1 / XD2 / XS1 / XS2 — w<sub>lim</sub> = 0.30 mm</option>
+          <option value="0.2">XD3 / XS3 (severe chloride) — w<sub>lim</sub> = 0.20 mm</option>
+        </select>
+      </div>
+
+    </div>
+  </div><!-- /card -->
+
+  <div id="cw-ec2-res">
+    <div class="res-empty"><div class="ri">📋</div>Enter values — results update automatically.</div>
+  </div>
+
+</div><!-- /calc-layout -->
+
+<!-- Design Background -->
+<div class="bg-section">
+  <h2>Design Background — EC2 §7.3.4</h2>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'ec2-bg-theory')">Theory</button>
+    <button class="bg-tab" onclick="bgTab(this,'ec2-bg-params')">Parameters</button>
+    <button class="bg-tab" onclick="bgTab(this,'ec2-bg-limits')">Limits</button>
+  </div>
+  <div class="design-background">
+    <section id="ec2-bg-theory">
+      <h3>Characteristic Crack Width</h3>
+      <p>EN 1992-1-1:2004 §7.3.4 defines the characteristic crack width as the product of the maximum crack spacing and the effective strain difference between steel and concrete:</p>
+      <div class="formula-box"><b>w<sub>k</sub> = s<sub>r,max</sub> × (ε<sub>sm</sub> − ε<sub>cm</sub>)</b></div>
+      <h3>Effective Strain</h3>
+      <p>The mean strain difference accounts for tension stiffening (concrete between cracks still carries some tension):</p>
+      <div class="formula-box">ε<sub>sm</sub> − ε<sub>cm</sub> = [σ<sub>s</sub> − k<sub>t</sub>·(f<sub>ct,eff</sub>/ρ<sub>p,eff</sub>)·(1 + α<sub>e</sub>·ρ<sub>p,eff</sub>)] / E<sub>s</sub>
+≥ 0.6·σ<sub>s</sub> / E<sub>s</sub></div>
+      <p>where k<sub>t</sub> = 0.4 (long-term loading) or 0.6 (short-term), α<sub>e</sub> = E<sub>s</sub>/E<sub>cm</sub> is the modular ratio, and ρ<sub>p,eff</sub> = A<sub>s</sub>/A<sub>c,eff</sub>.</p>
+      <h3>Maximum Crack Spacing (Eq. 7.11)</h3>
+      <div class="formula-box">s<sub>r,max</sub> = 3.4c + 0.425·k<sub>1</sub>·k<sub>2</sub>·φ / ρ<sub>p,eff</sub></div>
+      <p>k<sub>1</sub> = 0.8 for high-bond (deformed) bars. k<sub>2</sub> = 0.5 for bending, 1.0 for pure tension. c = nominal cover.</p>
+      <h3>Effective Concrete Area in Tension</h3>
+      <div class="formula-box">h<sub>c,ef</sub> = min(2.5(h − d),  (h − x)/3,  h/2)
+A<sub>c,eff</sub> = b × h<sub>c,ef</sub></div>
+    </section>
+    <section id="ec2-bg-params" hidden>
+      <h3>Material Properties</h3>
+      <table class="code-tbl">
+        <tr><th>Property</th><th>Formula</th><th>Note</th></tr>
+        <tr><td>f<sub>cm</sub></td><td>f<sub>ck</sub> + 8 MPa</td><td>Mean compressive strength</td></tr>
+        <tr><td>E<sub>cm</sub></td><td>22 000 (f<sub>cm</sub>/10)<sup>0.3</sup> MPa</td><td>EC2 Table 3.1</td></tr>
+        <tr><td>f<sub>ctm</sub> (f<sub>ck</sub> ≤ 50)</td><td>0.30·f<sub>ck</sub><sup>2/3</sup> MPa</td><td>EC2 Table 3.1</td></tr>
+        <tr><td>f<sub>ctm</sub> (f<sub>ck</sub> &gt; 50)</td><td>2.12·ln(1 + f<sub>cm</sub>/10) MPa</td><td>EC2 Table 3.1</td></tr>
+        <tr><td>α<sub>e</sub></td><td>E<sub>s</sub> / E<sub>cm</sub></td><td>Modular ratio (≈ 6–7)</td></tr>
+      </table>
+      <h3>Cracked Neutral Axis (Elastic)</h3>
+      <div class="formula-box">x = d·[−ρ·α<sub>e</sub> + √(ρ²·α<sub>e</sub>² + 2ρ·α<sub>e</sub>)]  where ρ = A<sub>s</sub>/(b·d)
+I<sub>cr</sub> = b·x³/3 + α<sub>e</sub>·A<sub>s</sub>·(d−x)²
+σ<sub>s</sub> = α<sub>e</sub>·M<sub>s</sub>·(d−x) / I<sub>cr</sub></div>
+    </section>
+    <section id="ec2-bg-limits" hidden>
+      <h3>Crack Width Limits — EC2 Table 7.1N (Reinforced Concrete)</h3>
+      <table class="code-tbl">
+        <tr><th>Exposure Class</th><th>Environment</th><th>w<sub>max</sub> (quasi-permanent)</th></tr>
+        <tr><td>XC1</td><td>Dry or permanently submerged concrete</td><td>0.3 mm</td></tr>
+        <tr><td>XC2, XC3, XC4</td><td>Wet, cyclic wet/dry, moderate humidity</td><td>0.3 mm</td></tr>
+        <tr><td>XD1, XD2</td><td>Moderate / wet chloride exposure</td><td>0.3 mm</td></tr>
+        <tr><td>XD3, XS1, XS2, XS3</td><td>Cyclic / marine chloride (severe)</td><td>0.2 mm</td></tr>
+      </table>
+      <p>National Annexes may adjust these values. Some countries allow 0.4 mm for XC1 under frequent load combination. The table above represents the EN 1992-1-1 recommended values.</p>
+      <h3>Minimum Reinforcement (§7.3.2)</h3>
+      <div class="formula-box">A<sub>s,min</sub> = k<sub>c</sub>·k·f<sub>ct,eff</sub>·A<sub>ct</sub> / σ<sub>s</sub></div>
+      <p>k<sub>c</sub> = 0.4 for pure bending, 1.0 for pure tension. A<sub>ct</sub> = tension zone area before cracking (≈ b·h/2 for bending). σ<sub>s</sub> = f<sub>yk</sub> for crack control without further limitation.</p>
+    </section>
+  </div>
+</div>
+</div><!-- /cw-ec2 -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     IS 456:2000 Annex F
+══════════════════════════════════════════════════════════ -->
+<div class="sub-pane" id="cw-is456">
+<div class="calc-layout">
+
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">mm · MPa · kN·m</span></div>
+    <div class="card-body">
+
+      <div class="form-group">
+        <label>Member Type</label>
+        <select id="is-mem">
+          <option value="beam">Beam</option>
+          <option value="slab" selected>Slab / Foundation</option>
+          <option value="wall">Wall</option>
+        </select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b [mm]</label>
+          <div class="iw"><input type="number" id="is-b" value="1000" min="50"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total Depth h [mm]</label>
+          <div class="iw"><input type="number" id="is-h" value="200" min="50"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Clear Cover c [mm]</label>
+          <div class="iw"><input type="number" id="is-c" value="30" min="10"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Eff. Depth d [mm] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
+          <div class="iw"><input type="number" id="is-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Bar Diameter φ [mm]</label>
+          <div class="iw"><input type="number" id="is-phi" value="16" min="6" max="40"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Bar Spacing s [mm]</label>
+          <div class="iw"><input type="number" id="is-s" value="150" min="50" max="400"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Materials (IS 456:2000)</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="is-fck" value="25" min="15" max="55"><span class="us">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>y</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="is-fy" value="415" min="250" max="600"><span class="us">MPa</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Loading &amp; Conditions</div></div>
+      <div class="form-group">
+        <label>Service Moment M<sub>s</sub> [kN·m]</label>
+        <div class="iw"><input type="number" id="is-ms" value="20" min="0"><span class="us">kN·m</span></div>
+      </div>
+      <div class="form-group">
+        <label>Exposure Condition</label>
+        <select id="is-exp">
+          <option value="0.3" selected>Mild / Moderate — w<sub>lim</sub> = 0.30 mm</option>
+          <option value="0.2">Severe / Very Severe / Extreme — w<sub>lim</sub> = 0.20 mm</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="cw-is-res">
+    <div class="res-empty"><div class="ri">📋</div>Enter values — results update automatically.</div>
+  </div>
+
+</div><!-- /calc-layout -->
+
+<div class="bg-section">
+  <h2>Design Background — IS 456:2000 Annex F</h2>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'is-bg-theory')">Theory</button>
+    <button class="bg-tab" onclick="bgTab(this,'is-bg-limits')">Limits</button>
+  </div>
+  <div class="design-background">
+    <section id="is-bg-theory">
+      <h3>IS 456:2000 Annex F — Crack Width Formula</h3>
+      <p>The design surface crack width at any point is given by:</p>
+      <div class="formula-box"><b>w<sub>cr</sub> = 3·a<sub>cr</sub>·ε<sub>m</sub> / [1 + 2·(a<sub>cr</sub> − c<sub>min</sub>)/(h − x)]</b></div>
+      <p>where a<sub>cr</sub> is the distance from the point considered to the surface of the nearest longitudinal bar (mm), and c<sub>min</sub> is the minimum cover to tension reinforcement.</p>
+      <h3>Mean Strain ε<sub>m</sub></h3>
+      <div class="formula-box">ε<sub>m</sub> = ε<sub>1</sub> − b·(h−x)³ / [3·E<sub>s</sub>·A<sub>s</sub>·(d−x)]
+ε<sub>1</sub> = f<sub>s</sub>·(h−x) / [E<sub>s</sub>·(d−x)]</div>
+      <p>ε<sub>m</sub> ≥ 0. The stiffening term accounts for concrete in tension between cracks. f<sub>s</sub> = steel stress at the cracked section.</p>
+      <h3>Distance a<sub>cr</sub></h3>
+      <div class="formula-box">a<sub>cr</sub> = √[c<sub>min</sub>² + (s/2)²]</div>
+      <p>This is the distance from the midpoint on the tension face (between adjacent bars) to the nearest bar surface. For a point directly below a bar, a<sub>cr</sub> = c<sub>min</sub>; the midpoint between bars gives the maximum crack width.</p>
+      <h3>Cracked Section and Steel Stress</h3>
+      <div class="formula-box">Modular ratio: m = E<sub>s</sub>/E<sub>c</sub>,  E<sub>c</sub> = 5000√f<sub>ck</sub> (IS 456 Cl 6.2.3.1)
+Neutral axis: x = d·[−mρ + √(m²ρ² + 2mρ)]
+I<sub>cr</sub> = bx³/3 + m·A<sub>s</sub>·(d−x)²
+f<sub>s</sub> = m·M<sub>s</sub>·(d−x) / I<sub>cr</sub></div>
+    </section>
+    <section id="is-bg-limits" hidden>
+      <h3>Crack Width Limits — IS 456:2000</h3>
+      <p>IS 456 Annex F targets a design crack width ≤ 0.3 mm under service loads for ordinary conditions. In more aggressive environments the limit reduces to 0.2 mm. These align with the general serviceability philosophy of the code.</p>
+      <table class="code-tbl">
+        <tr><th>Exposure Condition</th><th>w<sub>lim</sub></th></tr>
+        <tr><td>Mild / Moderate</td><td>0.30 mm</td></tr>
+        <tr><td>Severe, Very Severe, Extreme</td><td>0.20 mm</td></tr>
+      </table>
+      <p>Note: IS 456 does not provide a comprehensive crack width limit table in the main body of the code; the 0.3 mm value is the accepted engineering practice consistent with Annex F and the code's durability intent.</p>
+    </section>
+  </div>
+</div>
+</div><!-- /cw-is456 -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ACI 224R — Frosch Formula
+══════════════════════════════════════════════════════════ -->
+<div class="sub-pane" id="cw-aci">
+<div class="calc-layout">
+
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">mm · MPa · kN·m</span></div>
+    <div class="card-body">
+
+      <div class="form-group">
+        <label>Member Type</label>
+        <select id="aci-mem">
+          <option value="beam">Beam</option>
+          <option value="slab" selected>Slab / Foundation</option>
+          <option value="wall">Wall</option>
+        </select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width b [mm]</label>
+          <div class="iw"><input type="number" id="aci-b" value="1000" min="50"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Total Depth h [mm]</label>
+          <div class="iw"><input type="number" id="aci-h" value="200" min="50"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Cover to Bar Center d<sub>c</sub> [mm]</label>
+          <div class="iw"><input type="number" id="aci-dc" value="38" min="10"><span class="us">mm</span></div>
+          <div style="font-size:.67rem;color:var(--text-dim);margin-top:3px;">d<sub>c</sub> = clear cover + φ/2</div>
+        </div>
+        <div class="form-group">
+          <label>Eff. Depth d [mm] <span style="font-size:.65rem;opacity:.7">(auto)</span></label>
+          <div class="iw"><input type="number" id="aci-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Bar Diameter φ [mm]</label>
+          <div class="iw"><input type="number" id="aci-phi" value="16" min="6" max="50"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Bar Spacing s [mm]</label>
+          <div class="iw"><input type="number" id="aci-s" value="150" min="50" max="400"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Materials (ACI 318)</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f'<sub>c</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="aci-fc" value="28" min="17" max="100"><span class="us">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>y</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="aci-fy" value="420" min="280" max="700"><span class="us">MPa</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Loading &amp; Exposure</div></div>
+      <div class="form-group">
+        <label>Service Moment M<sub>s</sub> [kN·m]</label>
+        <div class="iw"><input type="number" id="aci-ms" value="20" min="0"><span class="us">kN·m</span></div>
+      </div>
+      <div class="form-group">
+        <label>Exposure — ACI 224R-01 Limit</label>
+        <select id="aci-exp">
+          <option value="0.41" selected>Interior (dry) — w<sub>lim</sub> = 0.41 mm</option>
+          <option value="0.33">Exterior (weather exposed) — w<sub>lim</sub> = 0.33 mm</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="cw-aci-res">
+    <div class="res-empty"><div class="ri">📋</div>Enter values — results update automatically.</div>
+  </div>
+
+</div><!-- /calc-layout -->
+
+<div class="bg-section">
+  <h2>Design Background — ACI 224R / Frosch (1999)</h2>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'aci-bg-frosch')">Frosch Formula</button>
+    <button class="bg-tab" onclick="bgTab(this,'aci-bg-indirect')">ACI 318-25 §24.3</button>
+    <button class="bg-tab" onclick="bgTab(this,'aci-bg-limits')">Limits</button>
+  </div>
+  <div class="design-background">
+    <section id="aci-bg-frosch">
+      <h3>Frosch (1999) Crack Width Model</h3>
+      <p>ACI 224R-01 recommends the Frosch (1999) physical model to estimate maximum crack widths in flexural members. The crack width at the extreme tension fiber is:</p>
+      <div class="formula-box"><b>w = 2·(f<sub>s</sub>/E<sub>s</sub>)·β<sub>s</sub>·√[d<sub>c</sub>² + (s/2)²]</b></div>
+      <p>where:</p>
+      <ul>
+        <li>f<sub>s</sub> = steel stress at service load [MPa]</li>
+        <li>E<sub>s</sub> = 200 000 MPa (steel modulus)</li>
+        <li>β<sub>s</sub> = (h − x̄) / (d − x̄) — strain gradient factor (always ≥ 1)</li>
+        <li>d<sub>c</sub> = distance from extreme tension fiber to centroid of nearest bar [mm]</li>
+        <li>s = bar spacing [mm]</li>
+        <li>x̄ = cracked neutral axis depth (elastic cracked section analysis)</li>
+      </ul>
+      <h3>Physical Interpretation</h3>
+      <p>The term √[d<sub>c</sub>² + (s/2)²] is the direct distance from the extreme tension face (midway between bars) to the nearest bar centroid. Multiplying by the strain at that level and a factor of 2 (for symmetry) gives the crack opening at the surface.</p>
+    </section>
+    <section id="aci-bg-indirect" hidden>
+      <h3>ACI 318-25 §24.3 — Indirect Crack Control</h3>
+      <p>ACI 318-25 does not compute crack widths directly. Instead, §24.3.2 limits the maximum bar spacing in the tension zone:</p>
+      <div class="formula-box">s ≤ 380·(280/f<sub>s</sub>) − 2.5·c<sub>c</sub>  [mm, MPa]
+s ≤ 300·(280/f<sub>s</sub>)  [mm, MPa]
+(Lesser of the two values governs)</div>
+      <p>c<sub>c</sub> = clear cover to the longitudinal tension reinforcement. f<sub>s</sub> may be taken as 2f<sub>y</sub>/3 if not calculated explicitly. The formula is calibrated to a crack width of approximately 0.40 mm.</p>
+      <p>This calculator shows both the Frosch explicit crack width AND the ACI 318-25 indirect spacing check. The indirect check applies to the primary tension reinforcement layer.</p>
+    </section>
+    <section id="aci-bg-limits" hidden>
+      <h3>ACI 224R-01 Recommended Limits</h3>
+      <table class="code-tbl">
+        <tr><th>Exposure Condition</th><th>w<sub>lim</sub></th></tr>
+        <tr><td>Interior exposure (dry environments)</td><td>0.41 mm (0.016 in)</td></tr>
+        <tr><td>Exterior exposure (weather, deicing salts)</td><td>0.33 mm (0.013 in)</td></tr>
+        <tr><td>Submerged, corrosive, marine</td><td>0.25 mm (0.010 in) — use engineering judgment</td></tr>
+      </table>
+      <p>Note: The ACI 318 code itself does not prescribe explicit crack width limits; the limits above are from ACI 224R-01 (Report on Control of Cracking in Concrete Structures). ACI 318-25 relies on the indirect spacing method of §24.3, which implicitly targets ≈ 0.40 mm.</p>
+    </section>
+  </div>
+</div>
+</div><!-- /cw-aci -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TS 500:2000 §11.5
+══════════════════════════════════════════════════════════ -->
+<div class="sub-pane" id="cw-ts500">
+<div class="calc-layout">
+
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">mm · MPa · kN·m</span></div>
+    <div class="card-body">
+
+      <div class="form-group">
+        <label>Member Type</label>
+        <select id="ts-mem">
+          <option value="0.5">Kiriş — eğilme (k₂ = 0.5)</option>
+          <option value="0.5" selected>Döşeme / Temel — eğilme (k₂ = 0.5)</option>
+          <option value="1.0">Perde — eksenel çekime yakın (k₂ = 1.0)</option>
+        </select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Kesit Geometrisi</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Genişlik b [mm]</label>
+          <div class="iw"><input type="number" id="ts-b" value="1000" min="50"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Toplam Yükseklik h [mm]</label>
+          <div class="iw"><input type="number" id="ts-h" value="200" min="50"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Paspayı c [mm]</label>
+          <div class="iw"><input type="number" id="ts-c" value="30" min="10"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Faydalı Yükseklik d [mm] <span style="font-size:.65rem;opacity:.7">(otomatik)</span></label>
+          <div class="iw"><input type="number" id="ts-d" value="162" readonly style="background:var(--bg2);color:var(--text-dim);"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Donatı</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Çap φ [mm]</label>
+          <div class="iw"><input type="number" id="ts-phi" value="16" min="6" max="40"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>Aralık s [mm]</label>
+          <div class="iw"><input type="number" id="ts-s" value="150" min="50" max="400"><span class="us">mm</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Malzeme</div></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>f<sub>ck</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="ts-fck" value="25" min="14" max="60"><span class="us">MPa</span></div>
+        </div>
+        <div class="form-group">
+          <label>f<sub>yk</sub> [MPa]</label>
+          <div class="iw"><input type="number" id="ts-fyk" value="420" min="220" max="500"><span class="us">MPa</span></div>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Yükleme ve Ortam Koşulları</div></div>
+      <div class="form-group">
+        <label>Servis Momenti M<sub>s</sub> [kN·m]</label>
+        <div class="iw"><input type="number" id="ts-ms" value="20" min="0"><span class="us">kN·m</span></div>
+      </div>
+      <div class="form-group">
+        <label>Yükleme Türü — β<sub>2</sub></label>
+        <select id="ts-load">
+          <option value="0.5" selected>Sürekli / tekrarlı yükleme (β<sub>2</sub> = 0.5)</option>
+          <option value="1.0">Kısa süreli yükleme (β<sub>2</sub> = 1.0)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ortam Sınıfı — w<sub>lim</sub> (TS 500 Tablo 11.2)</label>
+        <select id="ts-exp">
+          <option value="0.4">Kuru iç ortam — w<sub>lim</sub> = 0.40 mm</option>
+          <option value="0.3" selected>Normal iç/dış ortam — w<sub>lim</sub> = 0.30 mm</option>
+          <option value="0.2">Nemli / agresif ortam — w<sub>lim</sub> = 0.20 mm</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="cw-ts-res">
+    <div class="res-empty"><div class="ri">📋</div>Değerleri girin — sonuçlar otomatik güncellenir.</div>
+  </div>
+
+</div><!-- /calc-layout -->
+
+<div class="bg-section">
+  <h2>Tasarım Arka Planı — TS 500:2000 §11.5</h2>
+  <div class="bg-tabs">
+    <button class="bg-tab active" onclick="bgTab(this,'ts-bg-theory')">Teori</button>
+    <button class="bg-tab" onclick="bgTab(this,'ts-bg-limits')">Sınır Değerler</button>
+  </div>
+  <div class="design-background">
+    <section id="ts-bg-theory">
+      <h3>TS 500:2000 §11.5 — Çatlak Genişliği</h3>
+      <p>TS 500:2000 çatlak genişliği formülü, CEB-FIP 1990 Model Kodu'na dayanmaktadır:</p>
+      <div class="formula-box"><b>w<sub>k</sub> = β · s<sub>m</sub> · ε<sub>sm</sub></b></div>
+      <p>β = 1.7 (eğilme hâkim olan elemanlar için), ortalama çatlak aralığı ve ortalama çelik gerinimi çarpımı olarak tanımlanır.</p>
+      <h3>Ortalama Çatlak Aralığı</h3>
+      <div class="formula-box">s<sub>m</sub> = 50 + 0.25·k<sub>1</sub>·k<sub>2</sub>·φ / ρ<sub>r,eff</sub>  [mm]
+k<sub>1</sub> = 0.8 (nervürlü çubuk),  k<sub>2</sub> = 0.5 (eğilme) / 1.0 (çekime yakın)</div>
+      <h3>Ortalama Çelik Gerinimi</h3>
+      <div class="formula-box">ε<sub>sm</sub> = (σ<sub>s</sub>/E<sub>s</sub>)·[1 − β<sub>1</sub>·β<sub>2</sub>·(σ<sub>sr</sub>/σ<sub>s</sub>)²]
+≥ 0.4·σ<sub>s</sub>/E<sub>s</sub>
+β<sub>1</sub> = 1.0 (nervürlü),  β<sub>2</sub> = 0.5 (sürekli) / 1.0 (kısa süreli)</div>
+      <p>σ<sub>sr</sub> = f<sub>ctm</sub>·(1 + α<sub>e</sub>·ρ<sub>eff</sub>) / ρ<sub>eff</sub>  —  çatlama anındaki çelik gerilmesi.</p>
+    </section>
+    <section id="ts-bg-limits" hidden>
+      <h3>TS 500:2000 — Çatlak Genişliği Sınır Değerleri</h3>
+      <table class="code-tbl">
+        <tr><th>Ortam Sınıfı</th><th>w<sub>lim</sub></th></tr>
+        <tr><td>Kuru iç ortam</td><td>0.40 mm</td></tr>
+        <tr><td>Normal iç/dış ortam</td><td>0.30 mm</td></tr>
+        <tr><td>Nemli / agresif ortam veya su ile temas</td><td>0.20 mm</td></tr>
+      </table>
+      <p>Eğilmeli elemanlar için β = 1.7 kullanılır. Çatlama anındaki gerilme σ<sub>sr</sub>, brüt kesitin çatlak yükünden hesaplanır.</p>
+    </section>
+  </div>
+</div>
+</div><!-- /cw-ts500 -->
+
+</main>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CRACK WIDTH CALCULATOR
+   All computations in: mm, MPa, N, N·mm
+   User inputs moments in kN·m → convert ×1e6 → N·mm
+   ════════════════════════════════════════════════════════════ */
+
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+
+/* ── Background tab switcher ── */
+function bgTab(btn, id) {
+  var bg = btn.closest('.bg-section');
+  bg.querySelectorAll('section[id]').forEach(function(s){ s.hidden = true; });
+  document.getElementById(id).hidden = false;
+  bg.querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+/* ── Shared structural utilities ── */
+function crackedNA(b, d, As, n) {
+  var rho = As / (b * d);
+  var k   = -rho * n + Math.sqrt(rho * rho * n * n + 2 * rho * n);
+  return k * d;
+}
+function Icr_fn(b, x, d, As, n) {
+  return b * x * x * x / 3 + n * As * (d - x) * (d - x);
+}
+function fctm_fn(fck) {
+  var fcm = fck + 8;
+  return fck <= 50 ? 0.30 * Math.pow(fck, 2/3) : 2.12 * Math.log(1 + fcm / 10);
+}
+function Ecm_fn(fck) {
+  return 22000 * Math.pow((fck + 8) / 10, 0.3);
+}
+
+function fmt(x, dp) { return x.toFixed(dp !== undefined ? dp : 2); }
+function fmtE(x)    { return x.toExponential(3); }
+
+/* ── Step row builder ── */
+function stepRow(num, desc, formula, val, cls) {
+  return '<tr><td style="width:26px"><div class="step-num">'+num+'</div></td>'
+    +'<td><div class="step-desc">'+desc+'</div>'+(formula?'<div class="step-formula">'+formula+'</div>':'')+'</td>'
+    +'<td class="step-val'+(cls?' '+cls:'')+'">'+val+'</td></tr>';
+}
+
+/* ── DCR banner ── */
+function dcrBanner(wk, wlim, code) {
+  var dcr  = wk / wlim;
+  var cls  = wk <= wlim ? 'ok' : 'err';
+  var icon = wk <= wlim ? '✅' : '❌';
+  var msg  = wk <= wlim
+    ? 'w<sub>k</sub> = '+fmt(wk,3)+' mm &le; w<sub>lim</sub> = '+fmt(wlim,2)+' mm &mdash; OK ('+code+')'
+    : 'w<sub>k</sub> = '+fmt(wk,3)+' mm &gt; w<sub>lim</sub> = '+fmt(wlim,2)+' mm &mdash; NOT OK ('+code+')';
+  return '<div class="dcr-banner '+cls+'"><div class="dcr-icon">'+icon+'</div>'
+    +'<div class="dcr-text"><strong>'+msg+'</strong>'
+    +'<span>DCR = '+fmt(dcr,3)+'</span></div></div>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   EC2 §7.3.4
+══════════════════════════════════════════════════════════ */
+function calcEC2() {
+  var b    = v('ec2-b'),  h   = v('ec2-h'),  cnom = v('ec2-c');
+  var phi  = v('ec2-phi'), s  = v('ec2-s');
+  var fck  = v('ec2-fck');
+  var Ms   = v('ec2-ms') * 1e6;
+  var kt   = parseFloat(document.getElementById('ec2-kt').value);
+  var wlim = parseFloat(document.getElementById('ec2-exp').value);
+  var k2   = parseFloat(document.getElementById('ec2-mem').value);
+
+  if (!b||!h||!cnom||!phi||!s||!fck||!Ms) return;
+
+  var d  = h - cnom - phi / 2;
+  document.getElementById('ec2-d').value = fmt(d, 1);
+  var As = Math.PI * phi * phi / 4 * (b / s);
+  var Es = 200000;
+  var Ecm  = Ecm_fn(fck);
+  var n    = Es / Ecm;
+  var fctm = fctm_fn(fck);
+
+  var x   = crackedNA(b, d, As, n);
+  var Icr = Icr_fn(b, x, d, As, n);
+  var sigma_s = n * Ms * (d - x) / Icr;
+
+  var hcef    = Math.min(2.5 * (h - d), (h - x) / 3, h / 2);
+  var Aceff   = b * hcef;
+  var rho_eff = As / Aceff;
+
+  var eps_num = (sigma_s - kt * (fctm / rho_eff) * (1 + n * rho_eff)) / Es;
+  var eps_min = 0.6 * sigma_s / Es;
+  var eps     = Math.max(eps_num, eps_min);
+
+  var k1     = 0.8;
+  var sr_max = 3.4 * cnom + 0.425 * k1 * k2 * phi / rho_eff;
+  var wk     = sr_max * eps;
+
+  var html = dcrBanner(wk, wlim, 'EC2 §7.3.4');
+
+  html += '<div class="report-card">'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">EC2 §7.3.4</span></div>'
+    +'<div class="report-body">'
+    +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
+    +'<table class="steps-table">'
+    +stepRow(1, 'Effective depth d', 'h − c<sub>nom</sub> − φ/2', fmt(d,1)+' mm')
+    +stepRow(2, 'Steel area A<sub>s</sub>', 'π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +'</table>'
+    +'<div class="rpt-sec-title">Cracked Section (Elastic)</div>'
+    +'<table class="steps-table">'
+    +stepRow(3, 'E<sub>cm</sub>', '22000·(f<sub>cm</sub>/10)<sup>0.3</sup>', fmt(Ecm,0)+' MPa')
+    +stepRow(4, 'Modular ratio α<sub>e</sub>', 'E<sub>s</sub>/E<sub>cm</sub>', fmt(n,2))
+    +stepRow(5, 'Neutral axis depth x', 'cracked elastic NA', fmt(x,1)+' mm')
+    +stepRow(6, 'I<sub>cr</sub>', 'bx³/3 + α<sub>e</sub>A<sub>s</sub>(d−x)²', fmtE(Icr)+' mm⁴')
+    +stepRow(7, 'Steel stress σ<sub>s</sub>', 'α<sub>e</sub>·M<sub>s</sub>·(d−x)/I<sub>cr</sub>', fmt(sigma_s,1)+' MPa', sigma_s>fck*4?'warn':'')
+    +'</table>'
+    +'<div class="rpt-sec-title">Effective Tension Zone</div>'
+    +'<table class="steps-table">'
+    +stepRow(8, 'f<sub>ctm</sub>', fck<=50?'0.30·f<sub>ck</sub><sup>2/3</sup>':'2.12·ln(1+f<sub>cm</sub>/10)', fmt(fctm,2)+' MPa')
+    +stepRow(9, 'h<sub>c,ef</sub>', 'min(2.5(h−d), (h−x)/3, h/2)', fmt(hcef,1)+' mm')
+    +stepRow(10,'A<sub>c,eff</sub>', 'b·h<sub>c,ef</sub>', fmt(Aceff,0)+' mm²')
+    +stepRow(11,'ρ<sub>p,eff</sub>', 'A<sub>s</sub>/A<sub>c,eff</sub>', fmt(rho_eff*100,3)+'%')
+    +'</table>'
+    +'<div class="rpt-sec-title">Crack Width (EC2 Eq. 7.8 &amp; 7.11)</div>'
+    +'<table class="steps-table">'
+    +stepRow(12,'ε<sub>sm</sub>−ε<sub>cm</sub>','[σ<sub>s</sub> − k<sub>t</sub>(f<sub>ctm</sub>/ρ<sub>eff</sub>)(1+α<sub>e</sub>ρ<sub>eff</sub>)]/E<sub>s</sub> ≥ 0.6σ<sub>s</sub>/E<sub>s</sub>',fmtE(eps),'hl')
+    +stepRow(13,'s<sub>r,max</sub>','3.4c + 0.425·k₁·k₂·φ/ρ<sub>eff</sub>', fmt(sr_max,1)+' mm')
+    +stepRow(14,'<strong>w<sub>k</sub></strong>','s<sub>r,max</sub> × (ε<sub>sm</sub>−ε<sub>cm</sub>)','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
+    +stepRow(15,'w<sub>lim</sub>','EC2 Table 7.1N', fmt(wlim,2)+' mm')
+    +'</table>'
+    +'</div></div>';
+
+  document.getElementById('cw-ec2-res').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════
+   IS 456:2000 Annex F
+══════════════════════════════════════════════════════════ */
+function calcIS() {
+  var b    = v('is-b'),  h   = v('is-h'),  cnom = v('is-c');
+  var phi  = v('is-phi'), s  = v('is-s');
+  var fck  = v('is-fck');
+  var Ms   = v('is-ms') * 1e6;
+  var wlim = parseFloat(document.getElementById('is-exp').value);
+
+  if (!b||!h||!cnom||!phi||!s||!fck||!Ms) return;
+
+  var d  = h - cnom - phi / 2;
+  document.getElementById('is-d').value = fmt(d, 1);
+  var As = Math.PI * phi * phi / 4 * (b / s);
+  var Es = 200000;
+  var Ec = 5000 * Math.sqrt(fck);
+  var m  = Es / Ec;
+
+  var x   = crackedNA(b, d, As, m);
+  var Icr = Icr_fn(b, x, d, As, m);
+  var fs  = m * Ms * (d - x) / Icr;
+
+  var eps1 = fs * (h - x) / (Es * (d - x));
+  var eps2 = b * Math.pow(h - x, 3) / (3 * Es * As * (d - x));
+  var eps_m = Math.max(eps1 - eps2, 0);
+
+  var acr  = Math.sqrt(cnom * cnom + (s / 2) * (s / 2));
+  var cmin = cnom;
+  var den  = 1 + 2 * (acr - cmin) / (h - x);
+  var wk   = 3 * acr * eps_m / den;
+
+  var html = dcrBanner(wk, wlim, 'IS 456 Annex F');
+
+  html += '<div class="report-card">'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">IS 456:2000 Annex F</span></div>'
+    +'<div class="report-body">'
+    +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
+    +'<table class="steps-table">'
+    +stepRow(1,'Effective depth d','h − c − φ/2', fmt(d,1)+' mm')
+    +stepRow(2,'Steel area A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +'</table>'
+    +'<div class="rpt-sec-title">Cracked Section (IS 456 Cl 6.2.3.1)</div>'
+    +'<table class="steps-table">'
+    +stepRow(3,'E<sub>c</sub>','5000√f<sub>ck</sub>', fmt(Ec,0)+' MPa')
+    +stepRow(4,'Modular ratio m','E<sub>s</sub>/E<sub>c</sub>', fmt(m,2))
+    +stepRow(5,'Neutral axis x','cracked elastic', fmt(x,1)+' mm')
+    +stepRow(6,'I<sub>cr</sub>','bx³/3 + mA<sub>s</sub>(d−x)²', fmtE(Icr)+' mm⁴')
+    +stepRow(7,'Steel stress f<sub>s</sub>','m·M<sub>s</sub>·(d−x)/I<sub>cr</sub>', fmt(fs,1)+' MPa')
+    +'</table>'
+    +'<div class="rpt-sec-title">Mean Strain (Annex F)</div>'
+    +'<table class="steps-table">'
+    +stepRow(8,'ε<sub>1</sub>','f<sub>s</sub>(h−x)/[E<sub>s</sub>(d−x)]', fmtE(eps1))
+    +stepRow(9,'Stiffening term ε<sub>2</sub>','b(h−x)³/[3E<sub>s</sub>A<sub>s</sub>(d−x)]', fmtE(eps2))
+    +stepRow(10,'ε<sub>m</sub> = max(ε<sub>1</sub>−ε<sub>2</sub>, 0)','',''+fmtE(eps_m),'hl')
+    +'</table>'
+    +'<div class="rpt-sec-title">Crack Width (Annex F)</div>'
+    +'<table class="steps-table">'
+    +stepRow(11,'a<sub>cr</sub>','√[c² + (s/2)²]', fmt(acr,1)+' mm')
+    +stepRow(12,'Denominator','1 + 2(a<sub>cr</sub>−c<sub>min</sub>)/(h−x)', fmt(den,3))
+    +stepRow(13,'<strong>w<sub>cr</sub></strong>','3·a<sub>cr</sub>·ε<sub>m</sub> / denom','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
+    +stepRow(14,'w<sub>lim</sub>','Exposure condition', fmt(wlim,2)+' mm')
+    +'</table>'
+    +'</div></div>';
+
+  document.getElementById('cw-is-res').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACI 224R — Frosch (1999)
+══════════════════════════════════════════════════════════ */
+function calcACI() {
+  var b    = v('aci-b'),  h  = v('aci-h');
+  var dc   = v('aci-dc');
+  var phi  = v('aci-phi'), s = v('aci-s');
+  var fc   = v('aci-fc');
+  var Ms   = v('aci-ms') * 1e6;
+  var wlim = parseFloat(document.getElementById('aci-exp').value);
+
+  if (!b||!h||!dc||!phi||!s||!fc||!Ms) return;
+
+  var d  = h - dc;
+  document.getElementById('aci-d').value = fmt(d, 1);
+  var As = Math.PI * phi * phi / 4 * (b / s);
+  var Es = 200000;
+  var Ec = 4700 * Math.sqrt(fc);
+  var n  = Es / Ec;
+
+  var x   = crackedNA(b, d, As, n);
+  var Icr = Icr_fn(b, x, d, As, n);
+  var fs  = n * Ms * (d - x) / Icr;
+
+  var beta_s = (h - x) / (d - x);
+  var dist   = Math.sqrt(dc * dc + (s / 2) * (s / 2));
+  var wk     = 2 * (fs / Es) * beta_s * dist;
+
+  /* ACI 318-25 §24.3 indirect check */
+  var cc     = dc - phi / 2;
+  var s_max1 = 380 * (280 / fs) - 2.5 * cc;
+  var s_max2 = 300 * (280 / fs);
+  var s_max  = Math.min(s_max1, s_max2);
+  var pass318 = s <= s_max;
+
+  var html = dcrBanner(wk, wlim, 'ACI 224R Frosch');
+
+  html += '<div class="report-card">'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">ACI 224R / Frosch (1999)</span></div>'
+    +'<div class="report-body">'
+    +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
+    +'<table class="steps-table">'
+    +stepRow(1,'Effective depth d','h − d<sub>c</sub>', fmt(d,1)+' mm')
+    +stepRow(2,'Steel area A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +'</table>'
+    +'<div class="rpt-sec-title">Cracked Section (ACI 318 §19.2.2)</div>'
+    +'<table class="steps-table">'
+    +stepRow(3,'E<sub>c</sub>','4700√f\'<sub>c</sub>', fmt(Ec,0)+' MPa')
+    +stepRow(4,'n = E<sub>s</sub>/E<sub>c</sub>','', fmt(n,2))
+    +stepRow(5,'Neutral axis x','cracked elastic', fmt(x,1)+' mm')
+    +stepRow(6,'Steel stress f<sub>s</sub>','n·M<sub>s</sub>(d−x)/I<sub>cr</sub>', fmt(fs,1)+' MPa')
+    +'</table>'
+    +'<div class="rpt-sec-title">Frosch (1999) Crack Width</div>'
+    +'<table class="steps-table">'
+    +stepRow(7,'β<sub>s</sub>','(h−x)/(d−x)', fmt(beta_s,3))
+    +stepRow(8,'√[d<sub>c</sub>² + (s/2)²]','Frosch distance', fmt(dist,1)+' mm')
+    +stepRow(9,'<strong>w</strong>','2(f<sub>s</sub>/E<sub>s</sub>)·β<sub>s</sub>·√[d<sub>c</sub>² + (s/2)²]','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
+    +stepRow(10,'w<sub>lim</sub>','ACI 224R-01', fmt(wlim,2)+' mm')
+    +'</table>'
+    +'<div class="rpt-sec-title">ACI 318-25 §24.3 Indirect Check</div>'
+    +'<table class="steps-table">'
+    +stepRow(11,'Clear cover c<sub>c</sub>','d<sub>c</sub> − φ/2', fmt(cc,1)+' mm')
+    +stepRow(12,'s<sub>max</sub>','min(380(280/f<sub>s</sub>)−2.5c<sub>c</sub>, 300(280/f<sub>s</sub>))', fmt(s_max,1)+' mm')
+    +stepRow(13,'s = '+fmt(s,0)+' mm',pass318?'s ≤ s<sub>max</sub>':'s &gt; s<sub>max</sub>', pass318?'PASS ✅':'FAIL ❌', pass318?'ok':'err')
+    +'</table>'
+    +'</div></div>';
+
+  document.getElementById('cw-aci-res').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TS 500:2000 §11.5 (CEB-FIP 1990 based)
+══════════════════════════════════════════════════════════ */
+function calcTS() {
+  var b    = v('ts-b'),  h   = v('ts-h'),  cnom = v('ts-c');
+  var phi  = v('ts-phi'), s  = v('ts-s');
+  var fck  = v('ts-fck');
+  var Ms   = v('ts-ms') * 1e6;
+  var wlim = parseFloat(document.getElementById('ts-exp').value);
+  var beta2= parseFloat(document.getElementById('ts-load').value);
+  var k2   = parseFloat(document.getElementById('ts-mem').value);
+
+  if (!b||!h||!cnom||!phi||!s||!fck||!Ms) return;
+
+  var d  = h - cnom - phi / 2;
+  document.getElementById('ts-d').value = fmt(d, 1);
+  var As = Math.PI * phi * phi / 4 * (b / s);
+  var Es = 200000;
+  var Ecm  = Ecm_fn(fck);
+  var n    = Es / Ecm;
+  var fctm = fctm_fn(fck);
+
+  var x    = crackedNA(b, d, As, n);
+  var Icr  = Icr_fn(b, x, d, As, n);
+  var sigma_s = n * Ms * (d - x) / Icr;
+
+  var hcef    = Math.min(2.5 * (h - d), (h - x) / 3, h / 2);
+  var Aceff   = b * hcef;
+  var rho_eff = As / Aceff;
+
+  var sigma_sr = fctm * (1 + n * rho_eff) / rho_eff;
+  var beta1    = 1.0;
+
+  var k1 = 0.8;
+  var sm = 50 + 0.25 * k1 * k2 * phi / rho_eff;
+
+  var ratio_sq = (sigma_s > 0) ? Math.pow(sigma_sr / sigma_s, 2) : 0;
+  var eps_raw  = (sigma_s / Es) * (1 - beta1 * beta2 * ratio_sq);
+  var eps_min  = 0.4 * sigma_s / Es;
+  var eps_sm   = Math.max(eps_raw, eps_min);
+
+  var beta_coef = 1.7;
+  var wk = beta_coef * sm * eps_sm;
+
+  var html = dcrBanner(wk, wlim, 'TS 500:2000 §11.5');
+
+  html += '<div class="report-card">'
+    +'<div class="report-hdr"><h4>Hesap Adımları</h4><span class="rh-code">TS 500:2000 §11.5</span></div>'
+    +'<div class="report-body">'
+    +'<div class="rpt-sec-title">Kesit Geometrisi ve Donatı</div>'
+    +'<table class="steps-table">'
+    +stepRow(1,'Faydalı yükseklik d','h − c − φ/2', fmt(d,1)+' mm')
+    +stepRow(2,'Donatı alanı A<sub>s</sub>','π·φ²/4 × (b/s)', fmt(As,1)+' mm²')
+    +'</table>'
+    +'<div class="rpt-sec-title">Çatlamış Kesit Analizi</div>'
+    +'<table class="steps-table">'
+    +stepRow(3,'E<sub>cm</sub>','22000·(f<sub>cm</sub>/10)<sup>0.3</sup>', fmt(Ecm,0)+' MPa')
+    +stepRow(4,'n = E<sub>s</sub>/E<sub>cm</sub>','', fmt(n,2))
+    +stepRow(5,'Tarafsız eksen x','', fmt(x,1)+' mm')
+    +stepRow(6,'σ<sub>s</sub>','n·M<sub>s</sub>·(d−x)/I<sub>cr</sub>', fmt(sigma_s,1)+' MPa')
+    +'</table>'
+    +'<div class="rpt-sec-title">Efektif Bölge ve Çatlama Gerilmesi</div>'
+    +'<table class="steps-table">'
+    +stepRow(7,'f<sub>ctm</sub>','0.30·f<sub>ck</sub><sup>2/3</sup>', fmt(fctm,2)+' MPa')
+    +stepRow(8,'h<sub>c,ef</sub>','min(2.5(h−d),(h−x)/3,h/2)', fmt(hcef,1)+' mm')
+    +stepRow(9,'ρ<sub>r,eff</sub>','A<sub>s</sub>/A<sub>c,eff</sub>', fmt(rho_eff*100,3)+'%')
+    +stepRow(10,'σ<sub>sr</sub>','f<sub>ctm</sub>(1+nρ)/ρ', fmt(sigma_sr,1)+' MPa')
+    +'</table>'
+    +'<div class="rpt-sec-title">Çatlak Genişliği (TS 500 §11.5)</div>'
+    +'<table class="steps-table">'
+    +stepRow(11,'s<sub>m</sub>','50 + 0.25·k₁·k₂·φ/ρ', fmt(sm,1)+' mm')
+    +stepRow(12,'ε<sub>sm</sub>','(σ<sub>s</sub>/E<sub>s</sub>)[1−β₁β₂(σ<sub>sr</sub>/σ<sub>s</sub>)²] ≥ 0.4σ<sub>s</sub>/E<sub>s</sub>', fmtE(eps_sm),'hl')
+    +stepRow(13,'<strong>w<sub>k</sub></strong>','β·s<sub>m</sub>·ε<sub>sm</sub> (β = '+beta_coef+')','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
+    +stepRow(14,'w<sub>lim</sub>','TS 500 Tablo 11.2', fmt(wlim,2)+' mm')
+    +'</table>'
+    +'</div></div>';
+
+  document.getElementById('cw-ts-res').innerHTML = html;
+}
+
+/* ── Auto-update effective depth on geometry change ── */
+function updateD(prefix, dcId) {
+  var h    = v(prefix+'-h');
+  var cnom = v(prefix+'-c');
+  var phi  = v(prefix+'-phi');
+  if (h && cnom && phi)
+    document.getElementById(dcId).value = fmt(h - cnom - phi/2, 1);
+}
+
+/* ── Bind all input events ── */
+document.addEventListener('DOMContentLoaded', function() {
+  /* EC2 */
+  var ec2Pane = document.getElementById('cw-ec2');
+  ec2Pane.addEventListener('input',  calcEC2);
+  ec2Pane.addEventListener('change', calcEC2);
+
+  /* IS456 */
+  var isPane = document.getElementById('cw-is456');
+  isPane.addEventListener('input',  calcIS);
+  isPane.addEventListener('change', calcIS);
+
+  /* ACI */
+  var aciPane = document.getElementById('cw-aci');
+  aciPane.addEventListener('input',  calcACI);
+  aciPane.addEventListener('change', calcACI);
+
+  /* TS500 */
+  var tsPane = document.getElementById('cw-ts500');
+  tsPane.addEventListener('input',  calcTS);
+  tsPane.addEventListener('change', calcTS);
+
+  /* Initial calculations */
+  calcEC2(); calcIS(); calcACI(); calcTS();
+});
+</script>
+</body>
+</html>
