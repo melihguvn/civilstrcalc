@@ -192,6 +192,8 @@ input[type=number]{-moz-appearance:textfield;}
 .bg-tab:hover{color:var(--text);}
 .bg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .bg-pane{display:block;height:0;overflow:hidden;padding:0;}.bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.design-background { margin-top: 8px; }
+.design-background > section { display: block; padding: 22px; }
 .tb{max-width:820px;}
 .tb h4{font-family:var(--cond);font-weight:700;font-size:.98rem;color:var(--text);margin:18px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .tb h4:first-child{margin-top:0;}
@@ -770,6 +772,7 @@ input[type=number]{-moz-appearance:textfield;}
 
 <!-- ═══════════════ DESIGN BACKGROUND ═══════════════ -->
 <div class="bg-section">
+<section class="design-background">
   <div class="bg-hdr"><h3>&#128218; Design Background &amp; Code References</h3></div>
   <div class="bg-tabs">
     <button class="bg-tab active" onclick="bgTab(this,'rw-bg-theory')">Theory</button>
@@ -781,7 +784,7 @@ input[type=number]{-moz-appearance:textfield;}
   </div>
 
   <!-- Theory -->
-  <div class="bg-pane active" id="rw-bg-theory">
+  <section id="rw-bg-theory">
     <div class="tb">
       <h4>Cantilever Retaining Wall — Structural System</h4>
       <p>A cantilever retaining wall consists of a vertical stem, a base footing (with toe and heel), and optionally a shear key beneath the footing. The stem acts as a vertical cantilever fixed at the top of the footing. The footing is a T-shaped horizontal cantilever: the heel projects toward the retained soil and carries the weight of the backfill above it; the toe projects toward the front and is loaded by bearing pressure from below.</p>
@@ -801,10 +804,10 @@ input[type=number]{-moz-appearance:textfield;}
         <li>4. Select reinforcement (d, A<sub>s,req</sub>) and verify shear (φV<sub>c</sub> ≥ V<sub>u</sub>)</li>
       </ul>
     </div>
-  </div>
+  </section>
 
   <!-- Earth Pressure -->
-  <div class="bg-pane" id="rw-bg-ep">
+  <section id="rw-bg-ep" hidden>
     <div class="tb">
       <h4><span class="rtag">Rankine (1857)</span> Active &amp; Passive Coefficients</h4>
       <p>Rankine's theory assumes a smooth (frictionless) wall-soil interface. The active coefficient K<sub>a</sub> gives the ratio of horizontal-to-vertical effective stress in a soil mass on the verge of active failure.</p>
@@ -843,10 +846,10 @@ input[type=number]{-moz-appearance:textfield;}
         <div class="fn">Shear key passive resistance adds to the total sliding resistance. Key depth d<sub>k</sub> measured from footing base.</div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Stability -->
-  <div class="bg-pane" id="rw-bg-stability">
+  <section id="rw-bg-stability" hidden>
     <div class="tb">
       <h4>Overturning Stability</h4>
       <p>All moments are taken about the <strong>toe</strong> of the footing. The resisting moment M<sub>r</sub> includes the weight of the wall, footing, backfill above heel, and the vertical component of active thrust (if any). The overturning moment M<sub>o</sub> is due to horizontal earth pressure and surcharge.</p>
@@ -883,10 +886,10 @@ input[type=number]{-moz-appearance:textfield;}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 
   <!-- Reinforcement -->
-  <div class="bg-pane" id="rw-bg-reinf">
+  <section id="rw-bg-reinf" hidden>
     <div class="tb">
       <h4><span class="rtag">TS 498 / TSC 2019</span> Load Combinations</h4>
       <div class="fml-blk">
@@ -933,10 +936,10 @@ input[type=number]{-moz-appearance:textfield;}
         <b>Heel key:</b> &nbsp; M<sub>d</sub> = 1.6 · K<sub>p</sub> γ<sub>s</sub> (H<sub>e</sub> d<sub>k</sub>²/2 + d<sub>k</sub>³/6)
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Seismic -->
-  <div class="bg-pane" id="rw-bg-seismic">
+  <section id="rw-bg-seismic" hidden>
     <div class="tb">
       <h4><span class="rtag">TSC 2019 §16.12.2.1</span> Seismic Coefficients (Eq. 16.22)</h4>
       <p>TSC 2019 §16.12 governs the design of earth-retaining structures under earthquake action. The horizontal and vertical static-equivalent seismic coefficients are derived directly from the short-period design spectral acceleration S<sub>DS</sub> and a displacement-dependent reduction factor <em>r</em>.</p>
@@ -1001,10 +1004,10 @@ input[type=number]{-moz-appearance:textfield;}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 
   <!-- References -->
-  <div class="bg-pane" id="rw-bg-refs">
+  <section id="rw-bg-refs" hidden>
     <div class="tb">
       <h4>Design Codes &amp; Standards</h4>
       <table class="lim-tbl">
@@ -1027,8 +1030,9 @@ input[type=number]{-moz-appearance:textfield;}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 
+</section>
 </div><!-- /bg-section -->
 
 </main>
@@ -4596,10 +4600,11 @@ function pdfSummary(doc, p, ep, st, ri, rebars) {
 }
 
 function bgTab(btn, id) {
-  btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
+  var bg = btn.closest('.design-background');
+  bg.querySelectorAll('section[id]').forEach(function(s){ s.hidden = true; });
+  document.getElementById(id).hidden = false;
+  bg.querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
-  btn.closest('.bg-section').querySelectorAll('.bg-pane').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
 }
 </script>
 </body>

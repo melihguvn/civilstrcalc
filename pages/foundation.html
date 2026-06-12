@@ -119,6 +119,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .bg-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 14px;font-family:var(--sans);font-size:.78rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
 .bg-tab:hover{color:var(--text);}.bg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .bg-pane{display:block;height:0;overflow:hidden;padding:0;}.bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.design-background { margin-top: 8px; }
+.design-background > section { display: block; padding: 22px; }
 .tb{max-width:800px;}
 .tb h4{font-family:var(--cond);font-weight:700;font-size:.98rem;color:var(--text);margin:18px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .tb h4:first-child{margin-top:0;}
@@ -878,6 +880,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
      DESIGN BACKGROUND
      ═══════════════════════════════════════════════════════════ -->
 <div class="bg-section">
+<section class="design-background">
   <div class="bg-hdr"><h3>&#128218; Design Background &amp; Code References</h3></div>
   <div class="bg-tabs">
     <button class="bg-tab active" onclick="bgTab(this,'fnd-bg-theory')">Theory</button>
@@ -886,7 +889,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <button class="bg-tab" onclick="bgTab(this,'fnd-bg-is456')">IS 456:2000</button>
     <button class="bg-tab" onclick="bgTab(this,'fnd-bg-refs')">References</button>
   </div>
-  <div class="bg-pane active" id="fnd-bg-theory">
+  <section id="fnd-bg-theory">
     <div class="tb">
       <h4>Punching Shear in Foundations</h4>
       <p>A column punching through its foundation creates a truncated cone failure surface. The critical check is whether the shear stress on the control perimeter exceeds the concrete capacity.</p>
@@ -905,8 +908,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <h4>Raft Foundation</h4>
       <p>For mat/raft slabs, the punching check is equivalent to a flat slab. V<sub>u</sub>/V<sub>Ed</sub> is the column reaction from structural analysis. Drop panels may reduce the demand-to-capacity ratio by locally increasing depth.</p>
     </div>
-  </div>
-  <div class="bg-pane" id="fnd-bg-aci">
+  </section>
+  <section id="fnd-bg-aci" hidden>
     <div class="tb">
       <h4><span class="rtag">ACI 318-25 §13.4.4</span> Footing Two-Way Shear</h4>
       <div class="fml-blk">
@@ -920,8 +923,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         α<sub>s</sub>: 40 interior, 30 edge, 20 corner
       </div>
     </div>
-  </div>
-  <div class="bg-pane" id="fnd-bg-ec2">
+  </section>
+  <section id="fnd-bg-ec2" hidden>
     <div class="tb">
       <h4><span class="rtag">EC2 §6.4.4</span> Column Bases</h4>
       <div class="fml-blk">
@@ -939,8 +942,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         k = 1+√(200/d) ≤ 2.0 &nbsp;·&nbsp; C<sub>Rd,c</sub> = 0.18/γ<sub>c</sub>
       </div>
     </div>
-  </div>
-  <div class="bg-pane" id="fnd-bg-is456">
+  </section>
+  <section id="fnd-bg-is456" hidden>
     <div class="tb">
       <h4><span class="rtag">IS 456 Cl 34.2.4</span> Two-Way Shear in Footings</h4>
       <div class="fml-blk">
@@ -954,8 +957,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         Check: τ<sub>v</sub> ≤ k<sub>s</sub>·τ<sub>c</sub>
       </div>
     </div>
-  </div>
-  <div class="bg-pane" id="fnd-bg-refs">
+  </section>
+  <section id="fnd-bg-refs" hidden>
     <div class="tb">
       <ul class="ref-list">
         <li><span class="ref-num">[1]</span><div><strong>ACI 318-25</strong> — §13.4.4 (Footing two-way shear), §22.6 (Two-way shear strength). ACI, 2025.</div></li>
@@ -967,7 +970,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <strong>Disclaimer:</strong> For educational and preliminary design only. Verify with a licensed structural engineer.
       </div>
     </div>
-  </div>
+  </section>
+</section>
 </div>
 
 <!-- Reinf modal -->
@@ -990,11 +994,12 @@ function fndSetCode(code,btn){
   btn.classList.add('active');
   ['aci','ec2','is456'].forEach(c=>{const p=document.getElementById('fnd-pane-'+c);if(p)p.classList.toggle('active',c===code);});
 }
-function bgTab(btn,id){
-  btn.closest('.bg-section').querySelectorAll('.bg-tab').forEach(b=>b.classList.remove('active'));
+function bgTab(btn, id) {
+  var bg = btn.closest('.design-background');
+  bg.querySelectorAll('section[id]').forEach(function(s){ s.hidden = true; });
+  document.getElementById(id).hidden = false;
+  bg.querySelectorAll('.bg-tab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
-  btn.closest('.bg-section').querySelectorAll('.bg-pane').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
 }
 
 /* ── Report helpers ── */
