@@ -130,10 +130,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 
 <div class="sub-tabs" role="tablist">
-  <button class="sub-tab active" onclick="stab(this,'cw','aci')">ACI 224R</button>
-  <button class="sub-tab"        onclick="stab(this,'cw','ec2')">EC2 §7.3.4</button>
-  <button class="sub-tab"        onclick="stab(this,'cw','is456')">IS 456:2000</button>
-  <button class="sub-tab"        onclick="stab(this,'cw','ts500')">TS 500:2000</button>
+  <button class="sub-tab active" onclick="stab(this,'cw','aci'); calcACI();">ACI 224R</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','ec2'); calcEC2();">EC2 §7.3.4</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','is456'); calcIS();">IS 456:2000</button>
+  <button class="sub-tab"        onclick="stab(this,'cw','ts500'); calcTS();">TS 500:2000</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -147,13 +147,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="card-body">
 
       <div class="form-group">
-        <label>Member Type</label>
+        <label>Member Type &amp; Strain Distribution — k₂</label>
         <select id="ec2-mem">
-          <option value="0.5">Beam — bending (k₂ = 0.5)</option>
-          <option value="0.5" selected>Slab — bending (k₂ = 0.5)</option>
-          <option value="0.5">Foundation — bending (k₂ = 0.5)</option>
-          <option value="1.0">Wall — predominantly tension (k₂ = 1.0)</option>
+          <option value="0.5" selected>Beam / Slab / Foundation — bending (k₂ = 0.5)</option>
+          <option value="0.5">Wall — bending + compression (k₂ = 0.5)</option>
+          <option value="0.75">Wall — bending + slight tension (k₂ = 0.75)</option>
+          <option value="1.0">Wall — pure / eccentric tension (k₂ = 1.0)</option>
         </select>
+        <div style="font-size:.67rem;color:var(--text-dim);margin-top:3px;">k₂ = 0.5 bending-only · 1.0 pure tension · intermediate for combined M+N</div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
@@ -253,7 +254,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>where k<sub>t</sub> = 0.4 (long-term loading) or 0.6 (short-term), α<sub>e</sub> = E<sub>s</sub>/E<sub>cm</sub> is the modular ratio, and ρ<sub>p,eff</sub> = A<sub>s</sub>/A<sub>c,eff</sub>.</p>
       <h3>Maximum Crack Spacing (Eq. 7.11)</h3>
       <div class="formula-box">s<sub>r,max</sub> = 3.4c + 0.425·k<sub>1</sub>·k<sub>2</sub>·φ / ρ<sub>p,eff</sub></div>
-      <p>k<sub>1</sub> = 0.8 for high-bond (deformed) bars. k<sub>2</sub> = 0.5 for bending, 1.0 for pure tension. c = nominal cover.</p>
+      <p>k<sub>1</sub> = 0.8 for high-bond (deformed) bars. k<sub>2</sub> = 0.5 for bending, 1.0 for pure tension, intermediate for combined M+N (e.g. k<sub>2</sub> = 0.75 for walls with moderate axial tension). Walls with compression (gravity) use k<sub>2</sub> = 0.5. c = nominal cover.</p>
       <h3>Effective Concrete Area in Tension</h3>
       <div class="formula-box">h<sub>c,ef</sub> = min(2.5(h − d),  (h − x)/3,  h/2)
 A<sub>c,eff</sub> = b × h<sub>c,ef</sub></div>
@@ -307,7 +308,7 @@ I<sub>cr</sub> = b·x³/3 + α<sub>e</sub>·A<sub>s</sub>·(d−x)²
         <select id="is-mem">
           <option value="beam">Beam</option>
           <option value="slab" selected>Slab / Foundation</option>
-          <option value="wall">Wall</option>
+          <option value="wall">Wall (bending-dominant)</option>
         </select>
       </div>
 
@@ -442,7 +443,7 @@ f<sub>s</sub> = m·M<sub>s</sub>·(d−x) / I<sub>cr</sub></div>
         <select id="aci-mem">
           <option value="beam">Beam</option>
           <option value="slab" selected>Slab / Foundation</option>
-          <option value="wall">Wall</option>
+          <option value="wall">Wall (bending-dominant)</option>
         </select>
       </div>
 
@@ -603,12 +604,14 @@ I<sub>cr</sub> = bx³/3 + nA<sub>s</sub>(d−x)² + (n−1)A'<sub>s</sub>(x−d'
     <div class="card-body">
 
       <div class="form-group">
-        <label>Member Type</label>
+        <label>Member Type &amp; Strain Distribution — k₂</label>
         <select id="ts-mem">
-          <option value="0.5">Beam — bending (k₂ = 0.5)</option>
-          <option value="0.5" selected>Slab / Foundation — bending (k₂ = 0.5)</option>
-          <option value="1.0">Wall — predominantly tension (k₂ = 1.0)</option>
+          <option value="0.5" selected>Beam / Slab / Foundation — bending (k₂ = 0.5)</option>
+          <option value="0.5">Wall — bending + compression (k₂ = 0.5)</option>
+          <option value="0.75">Wall — bending + slight tension (k₂ = 0.75)</option>
+          <option value="1.0">Wall — pure / eccentric tension (k₂ = 1.0)</option>
         </select>
+        <div style="font-size:.67rem;color:var(--text-dim);margin-top:3px;">k₂ = 0.5 bending-only · 1.0 pure tension · intermediate for combined M+N</div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
