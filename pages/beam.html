@@ -1745,7 +1745,49 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
       <div class="tb">
         <h4>Flexural Behaviour of Reinforced Concrete Beams</h4>
         <p>A reinforced concrete beam resists bending through an internal force couple: compression carried by concrete in the compression zone, and tension carried by the steel reinforcement. At the ultimate limit state (ULS), the concrete is assumed to have reached its limiting compressive strain while the tension steel has yielded.</p>
-        <p>Both ACI 318 and Eurocode 2 are based on the <strong>Bernoulli-Euler hypothesis</strong> — plane sections remain plane after bending — with full strain compatibility between concrete and steel.</p>
+        <p>Both ACI 318 and Eurocode 2 are based on the <strong>Bernoulli-Euler hypothesis</strong> — plane sections remain plane after bending — with full strain compatibility between concrete and steel at every load level.</p>
+
+        <h4>Three Stages of Beam Behaviour</h4>
+        <p>A reinforced concrete beam passes through three behavioural stages as the applied moment increases from zero to failure:</p>
+        <ol>
+          <li><strong>Uncracked elastic stage:</strong> The full concrete section — above and below the neutral axis — resists tension and compression. Both materials behave elastically. This stage ends when the extreme tension fibre stress reaches the modulus of rupture f<sub>r</sub> ≈ 0.62√f'c (ACI, MPa units). The corresponding moment is the cracking moment M<sub>cr</sub>.</li>
+          <li><strong>Cracked elastic stage:</strong> Flexural cracks form at the tension face. Below the neutral axis, only the transformed steel area resists tension. Above the neutral axis, concrete carries compression elastically. This regime governs serviceability limit states — deflection and crack width checks.</li>
+          <li><strong>Ultimate limit state (ULS):</strong> The extreme compression fibre concrete reaches its crushing strain ε<sub>cu</sub>. In a properly designed under-reinforced section, the tension steel has already yielded (ε<sub>s</sub> ≫ ε<sub>y</sub>), providing large deflections and visible cracking as warning before failure. This is the regime that controls strength design.</li>
+        </ol>
+
+        <h4>Whitney Equivalent Rectangular Stress Block</h4>
+        <p>The actual parabolic-rectangular concrete stress distribution in the compression zone is replaced by an idealised rectangular stress block for calculation convenience. The block is calibrated so that its resultant force C<sub>c</sub> equals that of the real distribution, and acts at the same centroid location.</p>
+        <div class="fml-blk">
+          <div class="ft">ACI 318-25 Rectangular Block — §22.2.2</div>
+          Block depth: &nbsp; a = β₁ · c<br>
+          Block stress: &nbsp; 0.85 f'c<br>
+          Compression resultant: &nbsp; C<sub>c</sub> = 0.85 f'c · a · b<br>
+          Tension resultant: &nbsp; T = A<sub>s</sub> · f<sub>y</sub> (at yield)<br>
+          Moment capacity: &nbsp; φM<sub>n</sub> = φ · A<sub>s</sub> · f<sub>y</sub> · (d − a/2)
+          <div class="fn">β₁ accounts for the shape of the actual distribution; it equals 0.85 for f'c ≤ 28 MPa and decreases linearly to a minimum of 0.65 for higher-strength concrete. EC2 uses λ = 0.8 and η = 1.0 for f<sub>ck</sub> ≤ 50 MPa with analogous meaning.</div>
+        </div>
+
+        <h4>Balanced Reinforcement Ratio ρ<sub>bal</sub></h4>
+        <p>The balanced failure condition occurs when the extreme concrete fibre reaches ε<sub>cu</sub> at the same instant that the outermost tension steel reaches its yield strain ε<sub>y</sub> = f<sub>y</sub>/E<sub>s</sub>. At balanced failure, both concrete crushing and steel yielding occur simultaneously — a brittle failure with no ductile warning. All codes prohibit design at or above the balanced steel ratio.</p>
+        <div class="fml-blk">
+          <div class="ft">Balanced Steel Ratio — ACI (SI)</div>
+          ρ<sub>bal</sub> = (0.85 β₁ f'c / f<sub>y</sub>) · [ε<sub>cu</sub> / (ε<sub>cu</sub> + ε<sub>y</sub>)]<br>
+          ε<sub>cu</sub> = 0.003 · &nbsp; ε<sub>y</sub> = f<sub>y</sub> / 200 000 (f<sub>y</sub> in MPa)<br>
+          Example (f'c = 28 MPa, f<sub>y</sub> = 420 MPa): ρ<sub>bal</sub> ≈ 0.0285
+          <div class="fn">EC2 expresses the equivalent limit as x/d ≤ 0.45; IS 456 tabulates x<sub>u,max</sub>/d by steel grade. All three restrict the section to the under-reinforced side of balanced failure.</div>
+        </div>
+
+        <h4>Ductility and the Tension-Controlled Requirement</h4>
+        <p>Codes mandate ductile, under-reinforced failure to ensure large deflections and wide cracks occur before collapse — giving occupants warning and allowing load redistribution in indeterminate structures.</p>
+        <table class="lim-tbl">
+          <thead><tr><th>Code</th><th>Ductility Requirement</th><th>Implication</th></tr></thead>
+          <tbody>
+            <tr><td>ACI 318-25</td><td>Net tensile strain ε<sub>t</sub> ≥ 0.004 at ULS (φ = 0.90 when ε<sub>t</sub> ≥ 0.005)</td><td>ρ ≤ ≈ 0.75 ρ<sub>bal</sub></td></tr>
+            <tr><td>Eurocode 2</td><td>Neutral axis x/d ≤ 0.45 (for δ ≥ 0.7 redistribution)</td><td>K ≤ K' = 0.167</td></tr>
+            <tr><td>IS 456:2000</td><td>x<sub>u</sub>/d ≤ x<sub>u,max</sub>/d (by grade: Fe 415 → 0.48)</td><td>M<sub>u</sub> ≤ M<sub>u,lim</sub></td></tr>
+          </tbody>
+        </table>
+
         <h4>Key Assumptions at ULS</h4>
         <ul>
           <li>Tensile strength of concrete is <strong>neglected</strong> — only steel resists tension.</li>
@@ -1802,26 +1844,76 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
           </tbody>
         </table>
         <p style="font-size:.75rem;color:var(--text-dim);">* Higher f'c permitted with special provisions per §19.2.1.3</p>
+        <h4><span class="rtag">ACI 318-25 §25.2</span> Minimum Bar Spacing</h4>
+        <div class="fml-blk">
+          <div class="ft">Clear Spacing Between Bars — §25.2.1</div>
+          s<sub>clear</sub> ≥ max(d<sub>b</sub>, 25 mm, 4/3 · aggregate size)<br>
+          For bars in multiple layers: vertical clear spacing ≥ 25 mm
+          <div class="fn">Adequate clear spacing allows concrete to flow around bars during placement and consolidation. Insufficient spacing leads to honeycombing and reduced bond strength.</div>
+        </div>
+        <h4><span class="rtag">ACI 318-25 §24.3</span> Crack Control — Maximum Bar Spacing</h4>
+        <p>Even when flexural strength is adequate, bar spacing in the tension zone is limited to control crack widths under service loads. Wider crack widths accelerate corrosion and are visually alarming to occupants.</p>
+        <div class="fml-blk">
+          <div class="ft">Maximum Spacing in Tension Zone — §24.3.2</div>
+          s ≤ 380 · (280/f<sub>s</sub>) − 2.5·c<sub>c</sub> &nbsp; [mm]<br>
+          s ≤ 300 · (280/f<sub>s</sub>) &nbsp; (interior exposure limit)<br>
+          f<sub>s</sub> = 2/3 · f<sub>y</sub> &nbsp; (approximate service bar stress, MPa)<br>
+          c<sub>c</sub> = clear cover to flexural tension reinforcement
+          <div class="fn">For f<sub>y</sub> = 420 MPa with c<sub>c</sub> = 40 mm: s<sub>max</sub> ≈ 213 mm. This is often the governing spacing limit in slabs and wide beams.</div>
+        </div>
+        <h4><span class="rtag">ACI 318-25 §22.2</span> Design Summary</h4>
+        <p>The complete ACI flexural design procedure for a singly reinforced rectangular section:</p>
+        <ol style="font-size:.82rem;line-height:1.8;color:var(--text-mid);">
+          <li>Compute R<sub>n</sub> = M<sub>u</sub> / (φ · b · d²)</li>
+          <li>Solve ρ = (0.85f'c / f<sub>y</sub>) · [1 − √(1 − 2R<sub>n</sub> / 0.85f'c)]</li>
+          <li>Check ρ<sub>min</sub> ≤ ρ ≤ ρ<sub>max</sub> (= 0.75 ρ<sub>bal</sub>)</li>
+          <li>A<sub>s</sub> = ρ · b · d</li>
+          <li>Check ε<sub>t</sub> ≥ 0.004; confirm φ = 0.90</li>
+          <li>Verify bar spacing ≥ s<sub>clear,min</sub> and ≤ s<sub>crack,max</sub></li>
+        </ol>
       </div>
     </section>
 
     <section id="bg-ec2" hidden>
       <div class="tb">
         <h4><span class="rtag">EN 1992-1-1</span> Partial Factor Method</h4>
+        <p>Eurocode 2 uses a partial factor method rather than a single capacity reduction factor φ. Safety is achieved by factoring the material strengths directly, rather than the resulting capacity. This produces design strengths f<sub>cd</sub> and f<sub>yd</sub> that are used throughout all capacity calculations.</p>
         <div class="fml-blk">
           <div class="ft">Design Material Strengths</div>
           f<sub>cd</sub> = α<sub>cc</sub>·f<sub>ck</sub>/γ<sub>c</sub> &nbsp;&nbsp; [α<sub>cc</sub>=1.0 recommended; γ<sub>c</sub>=1.5]<br>
           f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [γ<sub>s</sub>=1.15]
-          <div class="fn">γ<sub>c</sub> and γ<sub>s</sub> are Nationally Defined Parameters (NDPs) and may vary by country.</div>
+          <div class="fn">γ<sub>c</sub> and γ<sub>s</sub> are Nationally Defined Parameters (NDPs) and may be modified by National Annexes. The recommended values are γ<sub>c</sub> = 1.5 (persistent/transient) and γ<sub>s</sub> = 1.15. For accidental design situations both reduce to 1.0.</div>
         </div>
         <h4><span class="rtag">EN 1992-1-1 §6.1</span> Flexural Design</h4>
         <div class="fml-blk">
-          <div class="ft">Design Procedure</div>
+          <div class="ft">Design Procedure — Lever Arm Method</div>
           K = M<sub>Ed</sub>/(b·d²·f<sub>cd</sub>)<br>
-          K' = 0.167 &nbsp; [limiting K, δ=1.0, no redistribution]<br>
-          z = d·[0.5+√(<b>0.25−K/1.134</b>)] ≤ 0.95d<br>
-          A<sub>s</sub> = M<sub>Ed</sub>/(f<sub>yd</sub>·z)
+          K' = 0.167 &nbsp; [limiting K for δ=1.0, no redistribution]<br>
+          z = d·[0.5+√(<b>0.25−K/1.134</b>)] ≤ 0.95d &nbsp; (lever arm)<br>
+          A<sub>s</sub> = M<sub>Ed</sub>/(f<sub>yd</sub>·z)<br><br>
+          If K > K': compression steel required or section must be enlarged
+          <div class="fn">The factor 1.134 = 2·0.567 where 0.567 = λ·η/(2) = 0.8·1.0/2·(1/0.8) — derived from the rectangular stress block parameters for f<sub>ck</sub> ≤ 50 MPa. The lever arm formula is equivalent to solving the force equilibrium and moment equations directly.</div>
         </div>
+        <h4><span class="rtag">EN 1992-1-1 §9.2.1.1</span> Minimum Reinforcement</h4>
+        <div class="fml-blk">
+          <div class="ft">Minimum As (§9.2.1.1)</div>
+          A<sub>s,min</sub> = max(0.26·f<sub>ctm</sub>/f<sub>yk</sub>, 0.0013) · b·d<br>
+          f<sub>ctm</sub> = 0.30·f<sub>ck</sub><sup>2/3</sup> &nbsp; (f<sub>ck</sub> ≤ 50 MPa)<br>
+          Example (C25/30, f<sub>yk</sub>=500): f<sub>ctm</sub>=2.56 MPa → ρ<sub>min</sub>=0.0013
+          <div class="fn">Minimum reinforcement ensures the section does not fail immediately upon cracking. The formula links the minimum steel to the tensile capacity of the concrete, ensuring the steel can carry the tension released at cracking without yielding immediately. At minimum steel, the cracking moment M<sub>cr</sub> ≈ M<sub>n</sub>.</div>
+        </div>
+        <h4><span class="rtag">EN 1992-1-1 Table 7.4N</span> Span-to-Depth Ratios (Deflection)</h4>
+        <p>EC2 allows deflection to be checked implicitly by limiting the span-to-effective-depth ratio l/d rather than computing deflections explicitly. The limiting ratios are:</p>
+        <table class="lim-tbl">
+          <thead><tr><th>System</th><th>Lightly loaded (ρ = 0.5%)</th><th>Normally loaded (ρ = 1.5%)</th></tr></thead>
+          <tbody>
+            <tr><td>Simply supported beam/slab</td><td>20</td><td>14</td></tr>
+            <tr><td>End span of continuous</td><td>26</td><td>18</td></tr>
+            <tr><td>Interior span of continuous</td><td>30</td><td>20</td></tr>
+            <tr><td>Cantilever</td><td>8</td><td>6</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.75rem;color:var(--text-dim);">Values from EC2 Table 7.4N for simply supported beams with f<sub>yk</sub> = 500 MPa. Multiply by 0.8 for flanged beams (b<sub>eff</sub>/b<sub>w</sub> > 3) and by 1.5 for flat slabs.</p>
         <h4><span class="rtag">EN 1992-1-1</span> Material Limits</h4>
         <table class="lim-tbl">
           <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th><th>Reference</th></tr></thead>

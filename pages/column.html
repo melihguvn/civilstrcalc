@@ -1254,12 +1254,45 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <li>ACI: φ varies continuously with net tensile strain ε<sub>t</sub> (0.65→0.90)</li>
         <li>EC2 / IS 456: design values f<sub>cd</sub>, f<sub>yd</sub> applied directly; no additional φ</li>
       </ul>
+
+      <h4>Key Points on the Interaction Diagram</h4>
+      <p>The interaction diagram has several characteristic points that define the full range of section behaviour:</p>
+      <table class="lim-tbl">
+        <thead><tr><th>Point</th><th>Description</th><th>Governing Strain State</th></tr></thead>
+        <tbody>
+          <tr><td>Pure compression P<sub>0</sub></td><td>Maximum axial capacity, M = 0</td><td>ε = ε<sub>cu</sub> uniform across section</td></tr>
+          <tr><td>Maximum P<sub>n,max</sub></td><td>ACI: 0.80·P<sub>0</sub> (tied); IS 456: Cl 39.3</td><td>Accounts for accidental eccentricity</td></tr>
+          <tr><td>Balanced point P<sub>b</sub>, M<sub>b</sub></td><td>ε<sub>cu</sub> and ε<sub>y</sub> reached simultaneously</td><td>c = ε<sub>cu</sub>/(ε<sub>cu</sub>+ε<sub>y</sub>) · d</td></tr>
+          <tr><td>Pure bending P = 0</td><td>Beam-type flexure only</td><td>ε<sub>s</sub> ≫ ε<sub>y</sub></td></tr>
+          <tr><td>Pure tension P<sub>t0</sub></td><td>Maximum tension capacity, M = 0</td><td>ε = ε<sub>y</sub> uniform, concrete ignored</td></tr>
+        </tbody>
+      </table>
+      <p>The transition from compression-controlled to tension-controlled behaviour occurs at the balanced point. Sections below and to the right of the balanced point are tension-controlled (steel yields first); sections above and to the left are compression-controlled (concrete crushes first).</p>
+
+      <h4>Slenderness Effects and Second-Order Moments</h4>
+      <p>This calculator generates the short-column interaction diagram based on section geometry only. For slender columns, the lateral deflection under eccentric load amplifies the applied moments — the so-called <strong>P-δ effect</strong>. If the column is part of a laterally unbraced frame, additional global P-Δ effects must also be considered.</p>
+      <div class="fml-blk">
+        <div class="ft">Slenderness Check — ACI 318-25 §6.2.5</div>
+        Short column condition: &nbsp; kl<sub>u</sub>/r ≤ 22 (braced frame, M1/M2 ≥ 0)<br>
+        Short column condition: &nbsp; kl<sub>u</sub>/r ≤ 34 + 12(M<sub>1</sub>/M<sub>2</sub>) ≤ 40 (braced, non-zero ratio)<br>
+        r = radius of gyration = 0.30h (rectangular) or 0.25D (circular)<br>
+        k = effective length factor (1.0 braced, ≥ 1.0 unbraced)
+        <div class="fn">When kl<sub>u</sub>/r exceeds these limits, the design moment M<sub>c</sub> must be amplified by the moment magnifier δ<sub>s</sub> or δ<sub>ns</sub> per §6.6.4. Slenderness effects are ignored in this calculator — verify slenderness separately before applying results.</div>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Minimum Eccentricity — ACI §6.6.4.5.4</div>
+        e<sub>min</sub> = 0.6 + 0.03·h &nbsp; [mm] &nbsp; (ACI minimum eccentricity for braced frame columns)<br>
+        IS 456 Cl 25.4: &nbsp; e<sub>min</sub> = max(l/500 + D/30, 20 mm) &nbsp; (l = unsupported length, D = depth)
+        <div class="fn">Minimum eccentricity accounts for unintended construction tolerances and load eccentricities not explicitly modelled. A column designed for pure axial load P<sub>u</sub> must be checked for P<sub>u</sub> combined with M<sub>min</sub> = P<sub>u</sub>·e<sub>min</sub>.</div>
+      </div>
+
       <h4>Axis Convention</h4>
       <p>The section has width <b>b</b> (horizontal) and depth <b>h</b> (vertical). Moments are defined as follows:</p>
       <ul>
         <li><b>M<sub>x</sub></b> — bending about the horizontal x-axis: neutral axis is parallel to b, compression/tension varies along h</li>
         <li><b>M<sub>y</sub></b> — bending about the vertical y-axis: neutral axis is parallel to h, compression/tension varies along b</li>
       </ul>
+      <p>For uniaxial bending, only one moment acts — enter the other as zero. The calculator draws the full 3D surface by combining the uniaxial diagrams for both axes; the biaxial demand point (P<sub>u</sub>, M<sub>x</sub>, M<sub>y</sub>) is checked against this surface using the Bresler reciprocal method.</p>
     </div>
   </section>
   <section id="bg-aci" hidden>
@@ -1285,6 +1318,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         0.01 ≤ ρ<sub>g</sub> = A<sub>st</sub>/A<sub>g</sub> ≤ 0.08
         <div class="fn">Minimum ensures ductility; maximum prevents congestion. §10.6.1.1</div>
       </div>
+      <h4><span class="rtag">ACI 318-25 §6.6.4</span> Moment Magnification (Braced Frames)</h4>
+      <p>For slender columns in braced (non-sway) frames where kl<sub>u</sub>/r exceeds the short-column limit, the design moment must be amplified to account for P-δ effects:</p>
+      <div class="fml-blk">
+        <div class="ft">Nonsway Magnification — §6.6.4.5</div>
+        M<sub>c</sub> = δ<sub>ns</sub> · M<sub>2</sub><br>
+        δ<sub>ns</sub> = C<sub>m</sub> / (1 − P<sub>u</sub>/0.75·P<sub>c</sub>) ≥ 1.0<br>
+        P<sub>c</sub> = π²·EI<sub>eff</sub> / (k·l<sub>u</sub>)² &nbsp; (Euler critical load)<br>
+        C<sub>m</sub> = 0.6 − 0.4·M<sub>1</sub>/M<sub>2</sub> &nbsp; (single curvature: C<sub>m</sub> → 1.0)
+        <div class="fn">EI<sub>eff</sub> = 0.4·E<sub>c</sub>·I<sub>g</sub> (simplified per §6.6.4.4.4). The interaction diagram generated by this calculator applies to M<sub>c</sub>, not the first-order M<sub>2</sub>. For short columns (kl<sub>u</sub>/r below the limit), δ<sub>ns</sub> = 1.0 and M<sub>c</sub> = M<sub>2</sub>.</div>
+      </div>
+      <h4><span class="rtag">ACI 318-25 §10.7.6.2</span> Transverse Reinforcement Spacing</h4>
+      <div class="fml-blk">
+        <div class="ft">Maximum Tie Spacing (Tied Columns)</div>
+        s ≤ min(16·d<sub>bl</sub>, 48·d<sub>tie</sub>, least dimension of column)<br>
+        d<sub>bl</sub> = longitudinal bar diameter · d<sub>tie</sub> = tie bar diameter
+        <div class="fn">Tie spacing governs longitudinal bar buckling after concrete cover spalls. ACI §18.7.5 imposes tighter confinement requirements for special moment frame columns in seismic regions.</div>
+      </div>
     </div>
   </section>
   <section id="bg-ec2" hidden>
@@ -1308,6 +1358,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="ft">Steel Ratio Limits</div>
         A<sub>s,min</sub> = 0.10·N<sub>Ed</sub>/f<sub>yd</sub> ≥ 0.002·A<sub>c</sub><br>
         A<sub>s,max</sub> = 0.04·A<sub>c</sub> (ρ<sub>g,max</sub> = 4%)
+      </div>
+      <h4><span class="rtag">EN 1992-1-1 §5.8</span> Slenderness and Second-Order Effects</h4>
+      <p>EC2 §5.8.3 defines the slenderness ratio λ = l<sub>0</sub>/i where l<sub>0</sub> is the effective length and i is the radius of gyration of the uncracked section (i = h/√12 for a rectangular section). Second-order effects may be ignored if:</p>
+      <div class="fml-blk">
+        <div class="ft">Short Column Limit — §5.8.3.1</div>
+        λ ≤ λ<sub>lim</sub> = 20·A·B·C / √n<br>
+        A = 1/(1+0.2φ<sub>ef</sub>) &nbsp; (≈ 0.7 simplified)<br>
+        B = √(1+2ω) &nbsp; (≈ 1.1 simplified, ω = A<sub>s</sub>f<sub>yd</sub>/(A<sub>c</sub>f<sub>cd</sub>))<br>
+        C = 1.7 − M<sub>01</sub>/M<sub>02</sub> &nbsp; (≈ 0.7 simplified for unknown ratio)<br>
+        n = N<sub>Ed</sub>/(A<sub>c</sub>·f<sub>cd</sub>) &nbsp; (relative normal force)
+        <div class="fn">Simplified conservative estimate: λ<sub>lim</sub> ≈ 20·0.7·1.1·0.7/√n = 10.78/√n. For n = 0.5 (typical), λ<sub>lim</sub> ≈ 15. This is the condition to check before applying this interaction diagram directly to slender columns.</div>
+      </div>
+      <h4><span class="rtag">EN 1992-1-1 §9.5.3</span> Transverse Reinforcement</h4>
+      <div class="fml-blk">
+        <div class="ft">Link Diameter and Spacing</div>
+        d<sub>link,min</sub> ≥ max(6 mm, d<sub>bl</sub>/4)<br>
+        s<sub>cl,max</sub> = min(20·d<sub>bl</sub>, b or h of section, 400 mm) &nbsp; (general)<br>
+        Reduce to 0.60·s<sub>cl,max</sub> above/below beam-column junctions (distance = max(h<sub>col</sub>, l<sub>b</sub>/6))
       </div>
     </div>
   </section>
@@ -1353,6 +1421,22 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         α<sub>n</sub> = 2.0 when P<sub>u</sub>/P<sub>uz</sub> = 0.8<br>
         Linear interpolation between 0.2 and 0.8
         <div class="fn">This calculator uses α = 1 + P/P<sub>0</sub>, a conservative approximation consistent with the IS 456 spirit. For precise α<sub>n</sub> per Cl 39.6, the P<sub>uz</sub> reference value should be checked explicitly.</div>
+      </div>
+      <h4><span class="rtag">IS 456:2000 Cl 25.1.2 &amp; 25.1.3</span> Slenderness and Effective Length</h4>
+      <p>IS 456 Cl 25.1.2 defines columns as <strong>short</strong> when both the ratios l<sub>ex</sub>/D and l<sub>ey</sub>/b are less than 12, where l<sub>ex</sub> and l<sub>ey</sub> are the effective lengths in the respective planes and D, b are the corresponding depths. Columns with either ratio ≥ 12 are classified as <strong>slender</strong> and require additional moment consideration per Cl 39.7.</p>
+      <div class="fml-blk">
+        <div class="ft">Additional Moments in Slender Columns — Cl 39.7.1</div>
+        M<sub>ax</sub> = P<sub>u</sub> · D/(2000) · (l<sub>ex</sub>/D)²<br>
+        M<sub>ay</sub> = P<sub>u</sub> · b/(2000) · (l<sub>ey</sub>/b)²<br>
+        Design moments: M<sub>ux,total</sub> = M<sub>ux</sub> + M<sub>ax</sub> · k<br>
+        <div class="fn">k = (P<sub>uz</sub> − P<sub>u</sub>)/(P<sub>uz</sub> − P<sub>bal</sub>) ≤ 1.0 is a reduction factor accounting for the beneficial effect of axial force on the additional moment. These additional moments are added to the primary moments before applying the biaxial bending check.</div>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Effective Length — Table 28 (Cl 25.2)</div>
+        Fixed-fixed (both ends restrained): l<sub>eff</sub> = 0.50 · l<br>
+        Fixed-pinned (one end restrained): l<sub>eff</sub> = 0.70 · l<br>
+        Fixed-free (cantilever): l<sub>eff</sub> = 2.00 · l<br>
+        Pinned-pinned (both ends unrestrained): l<sub>eff</sub> = 1.00 · l
       </div>
     </div>
   </section>
