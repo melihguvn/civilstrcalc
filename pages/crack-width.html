@@ -115,9 +115,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 #main-content { flex: 1; min-width: 0; }
 
 @media print{
-  .bg-section,.sub-tabs{display:none!important;}
-  .sub-pane{display:block!important;}
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:7pt!important;padding:0!important;line-height:1.3!important;}
+  body>div{padding:0!important;}
+  .no-print{display:none!important;}
+  .print-only{display:flex!important;}
+  .bg-section,.sub-tabs,.page-title{display:none!important;}
+  .sub-pane:not(.active){display:none!important;}
+  .sub-pane.active{display:block!important;}
+  .calc-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important;border-radius:0!important;}
+  .report-hdr h4{font-size:7pt!important;}
+  .rh-code{font-size:5pt!important;}
+  .print-btn{display:none!important;}
+  .report-body{padding:4px 10px!important;}
+  .steps-table td{padding:2px 3px!important;}
+  .step-desc{font-size:6.5pt!important;}
+  .step-formula{display:none!important;}
+  .step-val{font-size:6.5pt!important;}
+  .step-num{width:14px!important;height:14px!important;font-size:.5rem!important;}
+  .step-check{font-size:5pt!important;padding:1px 2px!important;}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important;border-radius:4px!important;}
+  .dcr-text strong{font-size:6.5pt!important;}
+  .dcr-text span{font-size:5.5pt!important;}
+  .rpt-sec-title{padding:1.5px 6px!important;font-size:.52rem!important;margin-bottom:3px!important;}
+  .cw-result{margin-bottom:5px!important;}
+  .cw-res-val{font-size:1rem!important;}
+  .print-footer{display:flex!important;margin-top:3px!important;font-size:5pt!important;}
+  .print-disclaimer{display:block!important;font-size:4.5pt!important;margin-top:3px!important;}
+  .sh-side,.sh-hdr{display:none!important;}
+  #main-content{padding:0!important;}
+  footer{display:none!important;}
+  .cw-diagram{padding:4px!important;margin-bottom:4px!important;border:none!important;background:white!important;}
+  .cw-diagram svg{max-width:260px!important;}
 }
+.print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
+.ph-title{font-family:var(--mono);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;}
+.ph-sub{font-size:.75rem;color:#666;}
+.ph-date{margin-left:auto;font-size:.72rem;color:#888;font-family:var(--mono);}
+.print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
+.print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
+.print-btn{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;font-family:var(--sans);font-size:.74rem;font-weight:500;padding:5px 12px;border-radius:4px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:5px;}
+.print-btn:hover{background:rgba(255,255,255,.28);}
+.cw-diagram{background:#f5f8fc;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;}
 </style>
 <link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
 <link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
@@ -792,6 +834,127 @@ function dcrBanner(wk, wlim, code) {
     +'<span>DCR = '+fmt(dcr,3)+'</span></div></div>';
 }
 
+/* ── Section diagram helpers ── */
+var _cwN = 0;
+
+function sectionSVG(p) {
+  /* p = {b,h,cnom,d,x,phi,s,wk,wlim[,nc,phiC]} — all mm; wk/wlim always mm */
+  var id = 'cw' + (++_cwN);
+  var W=310, H=200, sl=74, st=24, sw=132, sh=128;
+  var sr=sl+sw, sb=st+sh;          /* sr=206, sb=152 */
+  var scY = sh / p.h;
+  var naY = st + p.x   * scY;
+  var dY  = st + p.d   * scY;
+  var cbY = sb - p.cnom * scY;
+  var phR = Math.min(Math.max(p.phi * scY / 2, 2.5), 7);
+  var nBar = Math.max(2, Math.min(Math.round(p.b / p.s), 8));
+  var bSpc = sw / (nBar + 1);
+  var ok   = p.wk <= p.wlim;
+  var crkC = ok ? '#16a34a' : '#dc2626';
+
+  /* ── micro helpers ── */
+  function aH(x1,x2,y) {   /* horizontal double-headed arrow */
+    return '<line x1="'+x1.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#4a5568" stroke-width="0.9"/>'
+      +'<polygon points="'+x1.toFixed(1)+','+y.toFixed(1)+' '+(x1+5.5).toFixed(1)+','+(y-2.5).toFixed(1)+' '+(x1+5.5).toFixed(1)+','+(y+2.5).toFixed(1)+'" fill="#4a5568"/>'
+      +'<polygon points="'+x2.toFixed(1)+','+y.toFixed(1)+' '+(x2-5.5).toFixed(1)+','+(y-2.5).toFixed(1)+' '+(x2-5.5).toFixed(1)+','+(y+2.5).toFixed(1)+'" fill="#4a5568"/>';
+  }
+  function aV(x,y1,y2) {   /* vertical double-headed arrow */
+    return '<line x1="'+x.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#4a5568" stroke-width="0.9"/>'
+      +'<polygon points="'+x.toFixed(1)+','+y1.toFixed(1)+' '+(x-2.5).toFixed(1)+','+(y1+5.5).toFixed(1)+' '+(x+2.5).toFixed(1)+','+(y1+5.5).toFixed(1)+'" fill="#4a5568"/>'
+      +'<polygon points="'+x.toFixed(1)+','+y2.toFixed(1)+' '+(x-2.5).toFixed(1)+','+(y2-5.5).toFixed(1)+' '+(x+2.5).toFixed(1)+','+(y2-5.5).toFixed(1)+'" fill="#4a5568"/>';
+  }
+  function tlbl(x,y,t,anchor,col) {  /* text + white background pill */
+    var tw = t.length * 4.8;
+    var bx = anchor==='middle' ? x-tw/2-1 : anchor==='end' ? x-tw-1 : x-1;
+    return '<rect x="'+bx.toFixed(1)+'" y="'+(y-5.5).toFixed(1)+'" width="'+(tw+2).toFixed(1)+'" height="11" fill="white" fill-opacity="0.88" rx="1.5"/>'
+      +'<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" dominant-baseline="middle" text-anchor="'+(anchor||'middle')+'" font-size="8.5" fill="'+(col||'#1a202c')+'" font-family="system-ui,Arial,sans-serif">'+t+'</text>';
+  }
+
+  var g = [];
+
+  /* clipPath for compression zone hatch */
+  g.push('<defs><clipPath id="'+id+'"><rect x="'+sl+'" y="'+st+'" width="'+sw+'" height="'+(naY-st).toFixed(1)+'"/></clipPath></defs>');
+
+  /* concrete background — warm cream */
+  g.push('<rect x="'+sl+'" y="'+st+'" width="'+sw+'" height="'+sh+'" fill="#f3ede5"/>');
+
+  /* compression zone: light blue fill */
+  g.push('<rect x="'+sl+'" y="'+st+'" width="'+sw+'" height="'+(naY-st).toFixed(1)+'" fill="#d8eaf8"/>');
+  /* diagonal hatch, clipped to compression zone */
+  g.push('<g clip-path="url(#'+id+')" stroke="#90b8d8" stroke-width="0.65">');
+  for (var off = -sh; off < sw + sh; off += 7)
+    g.push('<line x1="'+(sl+off).toFixed(1)+'" y1="'+st+'" x2="'+(sl+off+sh).toFixed(1)+'" y2="'+(st+sh)+'"/>');
+  g.push('</g>');
+
+  /* section border */
+  g.push('<rect x="'+sl+'" y="'+st+'" width="'+sw+'" height="'+sh+'" fill="none" stroke="#1a2332" stroke-width="2.2"/>');
+
+  /* bottom cover dashed line */
+  g.push('<line x1="'+(sl+1)+'" y1="'+cbY.toFixed(1)+'" x2="'+(sr-1)+'" y2="'+cbY.toFixed(1)+'" stroke="#a0aec0" stroke-width="0.7" stroke-dasharray="3.5,3"/>');
+
+  /* cracks on tension face */
+  var nCrk = Math.min(nBar + 1, 7);
+  for (var i = 1; i <= nCrk; i++) {
+    var cx = sl + sw * i / (nCrk + 1);
+    var jog = (i % 2 === 0) ? -2.5 : 2.5;
+    var isMid = (i === Math.ceil(nCrk / 2));
+    var crkY = naY + (sb - naY) * (isMid ? 0.60 : 0.50);
+    g.push('<line x1="'+cx.toFixed(1)+'" y1="'+sb+'" x2="'+(cx+jog).toFixed(1)+'" y2="'+crkY.toFixed(1)+'" stroke="'+crkC+'" stroke-width="'+(isMid?1.8:1.0)+'" stroke-linecap="round"/>');
+  }
+
+  /* neutral axis */
+  g.push('<line x1="'+(sl+1)+'" y1="'+naY.toFixed(1)+'" x2="'+(sr-1)+'" y2="'+naY.toFixed(1)+'" stroke="#1d4ed8" stroke-width="1.3" stroke-dasharray="7,3.5"/>');
+
+  /* compression bars (ACI doubly reinforced) */
+  if (p.nc && p.nc > 0) {
+    var phRc = Math.min(Math.max((p.phiC||p.phi)*scY/2, 2.5), 6);
+    var ctY  = st + (p.cnom + (p.phiC||p.phi)/2) * scY;
+    var nBarC = Math.min(nBar, p.nc), bSpcC = sw / (nBarC + 1);
+    for (var i = 0; i < nBarC; i++)
+      g.push('<circle cx="'+(sl+bSpcC*(i+1)).toFixed(1)+'" cy="'+ctY.toFixed(1)+'" r="'+phRc.toFixed(1)+'" fill="#1a2332" stroke="#d8eaf8" stroke-width="1.2"/>');
+  }
+
+  /* tension bars */
+  for (var i = 0; i < nBar; i++)
+    g.push('<circle cx="'+(sl+bSpc*(i+1)).toFixed(1)+'" cy="'+dY.toFixed(1)+'" r="'+phR.toFixed(1)+'" fill="#1a2332" stroke="#f3ede5" stroke-width="1.2"/>');
+
+  /* neutral axis label (inside section) */
+  var naLblX = sl + 5, naLblY = naY - 6.5;
+  g.push('<rect x="'+naLblX+'" y="'+(naLblY-5)+'" width="57" height="10" fill="white" fill-opacity="0.78" rx="1.5"/>');
+  g.push('<text x="'+(naLblX+2)+'" y="'+naLblY+'" dominant-baseline="middle" font-size="7.5" fill="#1d4ed8" font-family="monospace">x = '+p.x.toFixed(0)+' mm</text>');
+
+  /* ── dimension: b (top) ── */
+  g.push(aH(sl, sr, st-14));
+  g.push(tlbl(sl+sw/2, st-14, 'b = '+p.b+' mm', 'middle'));
+
+  /* ── dimension: h (left) ── */
+  var hcx = sl-12, hcy = st+sh/2;
+  g.push(aV(hcx, st, sb));
+  g.push(tlbl(hcx-5, hcy, 'h = '+p.h+' mm', 'end'));
+
+  /* ── dimension: c (right — bottom cover) ── */
+  var rx1 = sr + 14;
+  if (sb - cbY > 6) {
+    g.push(aV(rx1, cbY, sb));
+    g.push(tlbl(rx1+5, (cbY+sb)/2, 'c = '+p.cnom+' mm', 'start'));
+  }
+
+  /* ── dimension: d (right — effective depth) ── */
+  var rx2 = sr + 40;
+  g.push(aV(rx2, st, dY));
+  g.push(tlbl(rx2+5, (st+dY)/2, 'd = '+Math.round(p.d)+' mm', 'start'));
+
+  /* ── s + φ label (bottom) ── */
+  g.push(tlbl(sl+sw/2, sb+20, 's = '+p.s+' mm    φ = '+p.phi+' mm', 'middle'));
+
+  /* ── wk result line ── */
+  var wkTxt = 'w = '+p.wk.toFixed(3)+' mm    (wlim = '+p.wlim.toFixed(2)+' mm)';
+  g.push(tlbl(sl+sw/2, sb+36, wkTxt, 'middle', crkC));
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:'+W+'px;height:auto;display:block;margin:0 auto;">'
+    + g.join('') + '</svg>';
+}
+
 /* ══════════════════════════════════════════════════════════
    EC2 §7.3.4
 ══════════════════════════════════════════════════════════ */
@@ -830,11 +993,14 @@ function calcEC2() {
   var sr_max = 3.4 * cnom + 0.425 * k1 * k2 * phi / rho_eff;
   var wk     = sr_max * eps;
 
-  var html = dcrBanner(wk, wlim, 'EC2 §7.3.4');
-
+  var _date = new Date().toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'});
+  var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — EC2 §7.3.4</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
-    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">EC2 §7.3.4</span></div>'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">EC2 §7.3.4</span>'
+    +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
+    +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
+    +dcrBanner(wk,wlim,'EC2 §7.3.4')
     +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
     +'<table class="steps-table">'
     +stepRow(1, 'Effective depth d', 'h − c<sub>nom</sub> − φ/2', fmt(d,1)+' mm')
@@ -862,6 +1028,8 @@ function calcEC2() {
     +stepRow(14,'<strong>w<sub>k</sub></strong>','s<sub>r,max</sub> × (ε<sub>sm</sub>−ε<sub>cm</sub>)','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
     +stepRow(15,'w<sub>lim</sub>','EC2 Table 7.1N', fmt(wlim,2)+' mm')
     +'</table>'
+    +'<div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Results must be verified by a licensed structural engineer before use in any real project.</div>'
+    +'<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — civilstrcalc.com</span><span>© '+new Date().getFullYear()+' CivilStrCalc.com · EN 1992-1-1</span></div>'
     +'</div></div>';
 
   document.getElementById('cw-ec2-res').innerHTML = html;
@@ -891,7 +1059,7 @@ function calcIS() {
   var fs  = m * Ms * (d - x) / Icr;
 
   var eps1 = fs * (h - x) / (Es * (d - x));
-  var eps2 = b * Math.pow(h - x, 3) / (3 * Es * As * (d - x));
+  var eps2 = b * Math.pow(h - x, 2) / (3 * Es * As * (d - x));
   var eps_m = Math.max(eps1 - eps2, 0);
 
   var acr  = Math.sqrt(cnom * cnom + (s / 2) * (s / 2));
@@ -899,11 +1067,14 @@ function calcIS() {
   var den  = 1 + 2 * (acr - cmin) / (h - x);
   var wk   = 3 * acr * eps_m / den;
 
-  var html = dcrBanner(wk, wlim, 'IS 456 Annex F');
-
+  var _date = new Date().toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'});
+  var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — IS 456:2000</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
-    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">IS 456:2000 Annex F</span></div>'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">IS 456:2000 Annex F</span>'
+    +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
+    +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
+    +dcrBanner(wk,wlim,'IS 456 Annex F')
     +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
     +'<table class="steps-table">'
     +stepRow(1,'Effective depth d','h − c − φ/2', fmt(d,1)+' mm')
@@ -920,7 +1091,7 @@ function calcIS() {
     +'<div class="rpt-sec-title">Mean Strain (Annex F)</div>'
     +'<table class="steps-table">'
     +stepRow(8,'ε<sub>1</sub>','f<sub>s</sub>(h−x)/[E<sub>s</sub>(d−x)]', fmtE(eps1))
-    +stepRow(9,'Stiffening term ε<sub>2</sub>','b(h−x)³/[3E<sub>s</sub>A<sub>s</sub>(d−x)]', fmtE(eps2))
+    +stepRow(9,'Stiffening term ε<sub>2</sub>','b(h−x)²/[3E<sub>s</sub>A<sub>s</sub>(d−x)]', fmtE(eps2))
     +stepRow(10,'ε<sub>m</sub> = max(ε<sub>1</sub>−ε<sub>2</sub>, 0)','',''+fmtE(eps_m),'hl')
     +'</table>'
     +'<div class="rpt-sec-title">Crack Width (Annex F)</div>'
@@ -930,6 +1101,8 @@ function calcIS() {
     +stepRow(13,'<strong>w<sub>cr</sub></strong>','3·a<sub>cr</sub>·ε<sub>m</sub> / denom','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
     +stepRow(14,'w<sub>lim</sub>','Exposure condition', fmt(wlim,2)+' mm')
     +'</table>'
+    +'<div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Results must be verified by a licensed structural engineer before use in any real project.</div>'
+    +'<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — civilstrcalc.com</span><span>© '+new Date().getFullYear()+' CivilStrCalc.com · IS 456:2000</span></div>'
     +'</div></div>';
 
   document.getElementById('cw-is-res').innerHTML = html;
@@ -1067,14 +1240,16 @@ function calcACI() {
   var msg  = wk <= wlim_d
     ? 'w = '+fmt(wk,4)+' '+wUnit+' &le; w<sub>lim</sub> = '+fmt(wlim_d,4)+' '+wUnit+' &mdash; OK (ACI 224R Frosch)'
     : 'w = '+fmt(wk,4)+' '+wUnit+' &gt; w<sub>lim</sub> = '+fmt(wlim_d,4)+' '+wUnit+' &mdash; NOT OK (ACI 224R Frosch)';
-  var html = '<div class="dcr-banner '+cls+'"><div class="dcr-icon">'+icon+'</div>'
-    +'<div class="dcr-text"><strong>'+msg+'</strong>'
-    +'<span>DCR = '+fmt(dcr,3)+'</span></div></div>';
-
+  var _date  = new Date().toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'});
+  var _units = isUS ? 'US Customary' : 'mm · MPa';
+  var html   = '<div class="print-only"><div><div class="ph-title">Crack Width — ACI 224R</div><div class="ph-sub">civilstrcalc.com · '+_units+'</div></div><div class="ph-date">'+_date+'</div></div>';
   /* ── Report ── */
   html += '<div class="report-card">'
-    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">ACI 224R / Frosch (1999)</span></div>'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">ACI 224R / Frosch (1999)</span>'
+    +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
+    +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:Math.max(dc-phi/2,1),d:d,x:x,phi:phi,s:s,wk:wk_mm,wlim:wlim,nc:nc,phiC:phic})+'</div>'
+    +'<div class="dcr-banner '+cls+'"><div class="dcr-icon">'+icon+'</div><div class="dcr-text"><strong>'+msg+'</strong><span>DCR = '+fmt(dcr,3)+'</span></div></div>'
     +'<div class="rpt-sec-title">Geometry &amp; Steel Areas</div>'
     +'<table class="steps-table">'
     +stepRow(1,'Effective depth d','h − d<sub>c</sub>', isUS?fmt(d/IN,3)+' in':fmt(d,1)+' mm')
@@ -1108,6 +1283,8 @@ function calcACI() {
     +stepRow(nc>0?17:16,'φ<sub>max</sub>','2·(d<sub>c,allow</sub> − c<sub>c,clear</sub>)', isUS?fmt(phi_max/IN,3)+' in':fmt(phi_max,1)+' mm')
     +stepRow(nc>0?18:17,'φ = '+fmt(isUS?phi/IN:phi,dp)+lenSuf, passDia?'φ ≤ φ<sub>max</sub>':'φ &gt; φ<sub>max</sub>', passDia?'PASS ✅':'FAIL ❌', passDia?'ok':'err')
     +'</table>'
+    +'<div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Results must be verified by a licensed structural engineer before use in any real project.</div>'
+    +'<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — civilstrcalc.com</span><span>© '+new Date().getFullYear()+' CivilStrCalc.com · ACI 224R</span></div>'
     +'</div></div>';
 
   document.getElementById('cw-aci-res').innerHTML = html;
@@ -1131,9 +1308,9 @@ function calcTS() {
   document.getElementById('ts-d').value = fmt(d, 1);
   var As = Math.PI * phi * phi / 4 * (b / s);
   var Es = 200000;
-  var Ecm  = Ecm_fn(fck);
+  var Ecm  = 3250 * Math.sqrt(fck) + 14000;   /* TS 500:2000 Table 2.2 */
   var n    = Es / Ecm;
-  var fctm = fctm_fn(fck);
+  var fctm = 0.35 * Math.sqrt(fck);            /* TS 500:2000 Table 2.2 */
 
   var x    = crackedNA(b, d, As, n);
   var Icr  = Icr_fn(b, x, d, As, n);
@@ -1157,11 +1334,14 @@ function calcTS() {
   var beta_coef = 1.7;
   var wk = beta_coef * sm * eps_sm;
 
-  var html = dcrBanner(wk, wlim, 'TS 500:2000 §11.5');
-
+  var _date = new Date().toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'});
+  var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — TS 500:2000</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
-    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">TS 500:2000 §11.5</span></div>'
+    +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">TS 500:2000 §11.5</span>'
+    +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
+    +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
+    +dcrBanner(wk,wlim,'TS 500:2000 §11.5')
     +'<div class="rpt-sec-title">Geometry &amp; Steel Area</div>'
     +'<table class="steps-table">'
     +stepRow(1,'Effective depth d','h − c − φ/2', fmt(d,1)+' mm')
@@ -1169,14 +1349,14 @@ function calcTS() {
     +'</table>'
     +'<div class="rpt-sec-title">Cracked Section (Elastic)</div>'
     +'<table class="steps-table">'
-    +stepRow(3,'E<sub>cm</sub>','22000·(f<sub>cm</sub>/10)<sup>0.3</sup>', fmt(Ecm,0)+' MPa')
-    +stepRow(4,'n = E<sub>s</sub>/E<sub>cm</sub>','', fmt(n,2))
+    +stepRow(3,'E<sub>c</sub>','3250·√f<sub>ck</sub> + 14 000', fmt(Ecm,0)+' MPa')
+    +stepRow(4,'n = E<sub>s</sub>/E<sub>c</sub>','', fmt(n,2))
     +stepRow(5,'Neutral axis x','', fmt(x,1)+' mm')
     +stepRow(6,'σ<sub>s</sub>','n·M<sub>s</sub>·(d−x)/I<sub>cr</sub>', fmt(sigma_s,1)+' MPa')
     +'</table>'
     +'<div class="rpt-sec-title">Effective Zone &amp; Cracking Stress</div>'
     +'<table class="steps-table">'
-    +stepRow(7,'f<sub>ctm</sub>','0.30·f<sub>ck</sub><sup>2/3</sup>', fmt(fctm,2)+' MPa')
+    +stepRow(7,'f<sub>ctm</sub>','0.35·√f<sub>ck</sub>', fmt(fctm,2)+' MPa')
     +stepRow(8,'h<sub>c,ef</sub>','min(2.5(h−d),(h−x)/3,h/2)', fmt(hcef,1)+' mm')
     +stepRow(9,'ρ<sub>r,eff</sub>','A<sub>s</sub>/A<sub>c,eff</sub>', fmt(rho_eff*100,3)+'%')
     +stepRow(10,'σ<sub>sr</sub>','f<sub>ctm</sub>(1+nρ)/ρ', fmt(sigma_sr,1)+' MPa')
@@ -1188,6 +1368,8 @@ function calcTS() {
     +stepRow(13,'<strong>w<sub>k</sub></strong>','β·s<sub>m</sub>·ε<sub>sm</sub> (β = '+beta_coef+')','<strong>'+fmt(wk,3)+' mm</strong>', wk<=wlim?'ok':'err')
     +stepRow(14,'w<sub>lim</sub>','TS 500 Table 11.2', fmt(wlim,2)+' mm')
     +'</table>'
+    +'<div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Results must be verified by a licensed structural engineer before use in any real project.</div>'
+    +'<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — civilstrcalc.com</span><span>© '+new Date().getFullYear()+' CivilStrCalc.com · TS 500:2000</span></div>'
     +'</div></div>';
 
   document.getElementById('cw-ts-res').innerHTML = html;
