@@ -337,8 +337,17 @@ const ROUTES = {
   'retaining-wall-tsc':    { page:'pages/retaining-wall-tsc.html',    nav:'nav-retwall',     title:'Retaining Wall Design', desc:'Cantilever retaining wall stability and reinforcement design per TSC 2019 and TS 500:2000.' },
   'foundation':       { page:'pages/foundation.html',                nav:'nav-foundation',       title:'Foundation Punching Shear',     desc:'Foundation punching shear calculator for isolated footings and raft foundations. ACI 318-25, EC2, IS 456.' },
   'steel':            { page:'pages/steel.html',                     nav:'nav-steel',            title:'Steel Sections',                desc:'Steel section properties reference — AISC, EN 10365, IS 808.' },
+  'steel/euro':       { page:'pages/steel.html',                     nav:'nav-steel',            title:'Steel Sections',                desc:'European steel section properties (EN 10365) — IPE, HEA, HEB, UPN, SHS, RHS, CHS.', tab:'euro',  tabFn:'setStd' },
+  'steel/amer':       { page:'pages/steel.html',                     nav:'nav-steel',            title:'Steel Sections',                desc:'American steel section properties (AISC) — W, S, HP, C, MC, L, HSS shapes.', tab:'amer',  tabFn:'setStd' },
+  'steel/india':      { page:'pages/steel.html',                     nav:'nav-steel',            title:'Steel Sections',                desc:'Indian steel section properties (IS 808) — ISMB, ISLB, ISWB, ISHB, ISMC sections.', tab:'india', tabFn:'setStd' },
   'rebar':            { page:'pages/rebar.html',                     nav:'nav-rebar',            title:'Rebar Properties',              desc:'Rebar properties reference table. Metric and imperial bar sizes.' },
+  'rebar/iso':        { page:'pages/rebar.html',                     nav:'nav-rebar',            title:'Rebar Properties',              desc:'ISO metric rebar properties — EN 10080 bar sizes, areas, and weights.', tab:'iso',   tabFn:'switchTab' },
+  'rebar/astm':       { page:'pages/rebar.html',                     nav:'nav-rebar',            title:'Rebar Properties',              desc:'ASTM A615 rebar properties — US imperial bar sizes, areas, and weights.', tab:'astm',  tabFn:'switchTab' },
+  'rebar/india':      { page:'pages/rebar.html',                     nav:'nav-rebar',            title:'Rebar Properties',              desc:'IS 1786 rebar properties — Indian standard bar sizes, areas, and weights.', tab:'india', tabFn:'switchTab' },
   'concrete':         { page:'pages/concrete.html',                  nav:'nav-concrete',         title:'Concrete Classes',              desc:'Concrete class properties reference — ACI, Eurocode 2, IS 456:2000.' },
+  'concrete/ec2':     { page:'pages/concrete.html',                  nav:'nav-concrete',         title:'Concrete Classes',              desc:'Eurocode 2 concrete class properties — EN 1992-1-1 Table 3.1 strength and stiffness values.', tab:'ec2',   tabFn:'switchTab' },
+  'concrete/aci':     { page:'pages/concrete.html',                  nav:'nav-concrete',         title:'Concrete Classes',              desc:'ACI 318-25 concrete class properties — compressive strength, modulus, and design values.', tab:'aci',   tabFn:'switchTab' },
+  'concrete/is456':   { page:'pages/concrete.html',                  nav:'nav-concrete',         title:'Concrete Classes',              desc:'IS 456:2000 concrete class properties — M-grade strength and design values per Indian standard.', tab:'is456', tabFn:'switchTab' },
 };
 
 const BASE_TITLE = 'CivilStrCalc';
@@ -382,6 +391,33 @@ function _updateMeta(route) {
   }
 }
 
+/* ── Apply sub-tab inside an iframe contentWindow ─────────────── */
+function _applyTab(iw, r) {
+  if (!r || !r.tab) return false;
+  try {
+    const t = r.tab;
+    const fn = r.tabFn || '';
+    // switchTab — concrete.html / rebar.html
+    if (fn === 'switchTab' && iw.switchTab) {
+      const btn = iw.document.querySelector(`.sub-tab[onclick*="'${t}'"]`);
+      if (btn) { iw.switchTab(t, btn); return true; }
+    }
+    // setStd — steel.html
+    if (fn === 'setStd' && iw.setStd) {
+      const btn = iw.document.querySelector(`.std-btn[onclick*="'${t}'"]`);
+      if (btn) { iw.setStd(t, btn); return true; }
+    }
+    // modTab — slab-style
+    const mBtn = iw.document.getElementById('mtab-' + t);
+    if (mBtn && iw.modTab) { iw.modTab(mBtn, 'mod-' + t); return true; }
+    // stab — beam-style
+    const sBtn = iw.document.getElementById(t + '-tab') ||
+                 iw.document.querySelector('[data-tab="' + t + '"]');
+    if (sBtn && iw.stab) { iw.stab(sBtn, t.split('-')[0], t); return true; }
+  } catch(e) {}
+  return false;
+}
+
 /* ── Load page into iframe ─────────────────────────────────────── */
 function _loadPage(route) {
   const frame = FRAME();
@@ -401,16 +437,7 @@ function _loadPage(route) {
 
   if (r.tab && sameBase) {
     // Same page already loaded — switch tab directly via iframe JS
-    try {
-      const iw = frame.contentWindow;
-      // Try modTab (slab-style)
-      const mBtn = iw.document.getElementById('mtab-' + r.tab);
-      if (mBtn && iw.modTab) { iw.modTab(mBtn, 'mod-' + r.tab); return; }
-      // Try stab (beam-style sub-tabs)
-      const sBtn = iw.document.getElementById(r.tab + '-tab') ||
-                   iw.document.querySelector('[data-tab="' + r.tab + '"]');
-      if (sBtn && iw.stab) { iw.stab(sBtn, r.tab.split('-')[0], r.tab); return; }
-    } catch(e) {}
+    if (_applyTab(frame.contentWindow, r)) return;
   }
 
   // Load the page (with tab hash so it can auto-activate on load if supported)
@@ -418,15 +445,11 @@ function _loadPage(route) {
   frame.src = src;
   _currentPage = targetPage;
 
-  // After load: try switching tab (handles pages that don't read hash on load)
+  // After load: switch to the requested tab
   if (r.tab) {
     frame.addEventListener('load', function _onLoad() {
       frame.removeEventListener('load', _onLoad);
-      try {
-        const iw = frame.contentWindow;
-        const mBtn = iw.document.getElementById('mtab-' + r.tab);
-        if (mBtn && iw.modTab) { iw.modTab(mBtn, 'mod-' + r.tab); return; }
-      } catch(e) {}
+      _applyTab(frame.contentWindow, r);
     });
   }
 }
