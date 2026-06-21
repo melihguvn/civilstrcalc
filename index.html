@@ -188,6 +188,10 @@
   .guide-acc-inner em { color: #64748b; font-style: italic; }
   .guide-acc-inner a { color: #1a6db5; text-decoration: none; }
   .guide-acc-inner a:hover { text-decoration: underline; }
+  .guide-acc-inner strong { color: #334155; }
+  .guide-acc-inner h4 { font-size: .81rem; font-weight: 600; color: #334155; margin: 14px 0 6px; }
+  .guide-acc-inner ul { margin: 5px 0 5px 18px; padding: 0; }
+  .guide-acc-inner ul li { font-size: .82rem; color: #475569; line-height: 1.65; margin-bottom: 3px; }
 
   .guide-tbl { width: 100%; border-collapse: collapse; font-size: .79rem; margin: 10px 0 6px; }
   .guide-tbl th { background: #f1f5f9; color: #334155; font-weight: 600; text-align: left; padding: 7px 10px; border: 1px solid #dde2e8; white-space: nowrap; }
@@ -470,19 +474,61 @@
                     <tr><td>D, E, F</td><td>Special Moment Frame (SMF) required</td><td>§18.6–18.10</td></tr>
                   </tbody>
                 </table>
-                <h3>2.3 Response Modification Factor (R)</h3>
-                <p>ASCE 7-22 Table 12.2-1 (selected values):</p>
+                <h3>2.3 Response Modification Factor (R) — System Limitations</h3>
+                <p>ASCE 7-22 Table 12.2-1 — R factor is tied to specific system limitations (height, SDC permissibility, and force-sharing rules). Selecting R without checking these triggers a code violation.</p>
+
+                <h4>2.3.1 Moment Frame Systems (selected values)</h4>
                 <table class="guide-tbl">
-                  <thead><tr><th>System</th><th>R</th></tr></thead>
+                  <thead><tr><th>System</th><th>R</th><th>SDC B</th><th>SDC C</th><th>SDC D</th><th>SDC E</th><th>SDC F</th></tr></thead>
                   <tbody>
-                    <tr><td>Ordinary RC Moment Frame</td><td>3</td></tr>
-                    <tr><td>Intermediate RC Moment Frame</td><td>5</td></tr>
-                    <tr><td>Special RC Moment Frame</td><td>8</td></tr>
-                    <tr><td>Special RC Shear Wall (bearing wall)</td><td>5</td></tr>
-                    <tr><td>Special RC Shear Wall (building frame)</td><td>6</td></tr>
+                    <tr><td>Ordinary RC Moment Frame</td><td>3</td><td>NL</td><td>NP</td><td>NP</td><td>NP</td><td>NP</td></tr>
+                    <tr><td>Intermediate RC Moment Frame</td><td>5</td><td>NL</td><td>NL</td><td>NP</td><td>NP</td><td>NP</td></tr>
+                    <tr><td>Special RC Moment Frame</td><td>8</td><td>NL</td><td>NL</td><td>NL</td><td>NL</td><td>NL</td></tr>
                   </tbody>
                 </table>
-                <p>R factor is used in the Equivalent Lateral Force base shear calculation (Section 5).</p>
+                <p>NL = Not Limited (height) · NP = Not Permitted</p>
+                <p><em>Note: ACI 318-25 §18.2.1.3 — Ordinary moment frame is permitted in lieu of intermediate for SDC B/C only.</em></p>
+
+                <h4>2.3.2 Shear Wall Systems — Bearing Wall (no frame backup)</h4>
+                <table class="guide-tbl">
+                  <thead><tr><th>System</th><th>R</th><th>SDC B</th><th>SDC C</th><th>SDC D</th><th>SDC E</th><th>SDC F</th></tr></thead>
+                  <tbody>
+                    <tr><td>Ordinary RC Shear Wall</td><td>4</td><td>NL</td><td>NL</td><td>NP</td><td>NP</td><td>NP</td></tr>
+                    <tr><td>Special RC Shear Wall</td><td>5</td><td>NL</td><td>NL</td><td>160 ft (48.8 m)</td><td>160 ft (48.8 m)</td><td>100 ft (30.5 m)</td></tr>
+                  </tbody>
+                </table>
+                <p><em>Bearing wall = shear walls support both gravity AND lateral load, no separate moment frame for redundancy.</em></p>
+
+                <h4>2.3.3 Shear Wall Systems — Building Frame (gravity frame separate)</h4>
+                <table class="guide-tbl">
+                  <thead><tr><th>System</th><th>R</th><th>SDC D/E</th><th>SDC F</th></tr></thead>
+                  <tbody>
+                    <tr><td>Ordinary RC Shear Wall</td><td>5</td><td>NP</td><td>NP</td></tr>
+                    <tr><td>Special RC Shear Wall</td><td>6</td><td>160 ft</td><td>100 ft</td></tr>
+                  </tbody>
+                </table>
+                <p><em>Building frame system = gravity frame is separate; shear walls resist 100% of lateral load (gravity frame is not designed to share lateral resistance).</em></p>
+
+                <h4>2.3.4 Dual Systems — Moment Frame + Shear Wall</h4>
+                <p>ASCE 7-22 §12.2.5.1 — In a dual system, the moment frame must be capable of resisting <strong>at least 25%</strong> of the design seismic forces, independent of the shear wall contribution. The total lateral resistance is distributed between the moment frame and shear walls in proportion to their relative rigidities.</p>
+                <table class="guide-tbl">
+                  <thead><tr><th>System</th><th>R (SMF + Special Wall)</th><th>Frame min. share</th></tr></thead>
+                  <tbody>
+                    <tr><td>Dual System — Special Moment Frame + Special RC Shear Wall</td><td>7–8 (varies by SDC)</td><td>≥ 25% of base shear</td></tr>
+                  </tbody>
+                </table>
+                <p><em>If the moment frame does not achieve this 25% minimum, the system cannot be classified as "dual" — it must be redesigned as a bearing wall or building frame system with the corresponding (lower) R value.</em></p>
+
+                <h4>2.3.5 Shear Wall–Frame Interactive System (Ordinary, SDC A/B only)</h4>
+                <p>ASCE 7-22 §12.2.5.8 — A distinct combination available only in SDC A and B:</p>
+                <ul>
+                  <li>Shear walls must resist <strong>at least 75%</strong> of the design story shear at any level</li>
+                  <li>Moment frames must independently resist <strong>at least 25%</strong> of the design story shear</li>
+                </ul>
+                <p>R = 4.5 (typical, verify against current Table 12.2-1 edition)</p>
+
+                <h4>2.3.6 Practical Note</h4>
+                <p>R selection is not a standalone choice — it locks in: (1) height limit applicability, (2) SDC permissibility, (3) minimum force-sharing ratios for combined systems, and (4) the detailing chapter required (Section 8). Always verify against the current edition of ASCE 7-22 Table 12.2-1 and §12.2.5, as values are subject to periodic revision.</p>
                 <h3>2.4 Practical Implication</h3>
                 <p>Once SDC is determined, the required frame type is established. This governs which subsection of Section 8 (Reinforcement Detailing) applies.</p>
               </div>
