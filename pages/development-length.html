@@ -1412,5 +1412,58 @@ document.addEventListener('DOMContentLoaded', function() {
   calcAci(); calcEc2(); calcIs(); calcTs();
 });
 </script>
+<div class="adblock-notice" id="adblockNotice">
+  <div class="adblock-notice-content">
+    <span class="adblock-notice-icon">&#8505;&#65039;</span>
+    <span class="adblock-notice-text">We noticed you're using an ad blocker. This site is free and ad-supported — please consider disabling it to support us.</span>
+  </div>
+  <button class="adblock-notice-close" onclick="dismissAdBlockNotice()">&#10005; Dismiss</button>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      let adsBlocked = false;
+      if (typeof window.adsbygoogle === 'undefined') {
+        adsBlocked = true;
+      } else {
+        try {
+          if (!window.adsbygoogle || window.adsbygoogle.length === 0) {}
+        } catch(e) { adsBlocked = true; }
+      }
+      if (!adsBlocked) {
+        const testAd = document.createElement('div');
+        testAd.className = 'adsbygoogle';
+        testAd.style.cssText = 'width:1px;height:1px;position:absolute;top:-9999px;left:-9999px;';
+        testAd.setAttribute('data-ad-client', 'ca-pub-0000000000000000');
+        document.body.appendChild(testAd);
+        setTimeout(function() {
+          const rect = testAd.getBoundingClientRect();
+          if (testAd.offsetHeight === 0 || testAd.offsetWidth === 0 ||
+              rect.height === 0 || rect.width === 0 ||
+              window.getComputedStyle(testAd).display === 'none' ||
+              window.getComputedStyle(testAd).visibility === 'hidden') {
+            adsBlocked = true;
+          }
+          testAd.remove();
+          if (adsBlocked) {
+            const n = document.getElementById('adblockNotice');
+            if(n) n.classList.add('show');
+          }
+        }, 200);
+      } else {
+        const n = document.getElementById('adblockNotice');
+        if(n) n.classList.add('show');
+      }
+    }, 1500);
+  });
+})();
+function dismissAdBlockNotice(){
+  const n = document.getElementById('adblockNotice');
+  if(n) n.classList.remove('show');
+  localStorage.setItem('adblockNoticeDismissed','true');
+}
+</script>
 </body>
 </html>
