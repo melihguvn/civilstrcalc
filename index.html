@@ -177,6 +177,8 @@
   .btt-panel a:hover { background: #1a2332; color: #fff; border-color: #1a2332; }
   .guide-acc-section:last-child { border-bottom: none; }
   .guide-acc-inner { padding: 8px 20px 24px; }
+  .spa-btt { position: fixed; bottom: 22px; right: 22px; width: 42px; height: 42px; background: #1a2332; color: #fff; border: none; border-radius: 50%; font-size: 20px; line-height: 42px; text-align: center; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .22s, transform .22s; z-index: 9999; display: none; }
+  .spa-btt.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
   .guide-acc-inner h3 { font-size: .84rem; font-weight: 600; color: #1a2332; margin: 18px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #e8ecf0; }
   .guide-acc-inner h3:first-child { margin-top: 8px; }
@@ -1721,6 +1723,7 @@ function handleRoute(route) {
   document.querySelectorAll('.guide-panel').forEach(p => {
     p.style.display = p.id === panelId ? 'block' : 'none';
   });
+  if (typeof _showGuideBtt === 'function') _showGuideBtt(!!panelId);
   if (!panelId) _loadPage(route);
 }
 
@@ -1799,6 +1802,28 @@ document.querySelectorAll('.sb-item[href], .sb-sub[href]').forEach(link => {
 
 /* ── Guide accordion toggle ────────────────────────────────────── */
 
+/* ── Guide panel back-to-top button ───────────────────────────── */
+(function() {
+  const btn = document.getElementById('guide-btt');
+  document.querySelectorAll('.guide-panel').forEach(function(panel) {
+    panel.addEventListener('scroll', function() {
+      if (panel.style.display === 'block') {
+        btn.classList.toggle('visible', panel.scrollTop > 100);
+      }
+    });
+  });
+  btn.addEventListener('click', function() {
+    const active = document.querySelector('.guide-panel[style*="display: block"]');
+    if (active) active.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  // Show/hide the button when switching routes
+  const _origHandleRoute = handleRoute;
+  window._showGuideBtt = function(show) {
+    btn.style.display = show ? 'block' : 'none';
+    if (!show) btn.classList.remove('visible');
+  };
+})();
+
 /* ── Boot: read hash on page load ─────────────────────────────── */
 window.addEventListener('hashchange', handleHashChange);
 window.addEventListener('DOMContentLoaded', function() {
@@ -1857,5 +1882,6 @@ function dismissAdBlockNotice(){
   localStorage.setItem('adblockNoticeDismissed','true');
 }
 </script>
+<button id="guide-btt" class="spa-btt" title="Back to top">&#8679;</button>
 </body>
 </html>
