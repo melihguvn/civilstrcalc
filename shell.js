@@ -12,6 +12,7 @@
     if (/\/slab\.html/.test(P))     return 'slab';
     if (/\/column\.html/.test(P))   return 'column';
     if (/\/rebar\.html/.test(P))    return 'rebar';
+    if (/\/steel-flexural\.html/.test(P)) return 'steelfd';
     if (/\/steel\.html/.test(P))    return 'steel';
     if (/\/concrete\.html/.test(P)) return 'concrete';
     if (/\/development-length\.html/.test(P)) return 'devlen';
@@ -140,8 +141,12 @@
     item('/pages/retaining-wall-aci-si.html',    ic.rw,    'Retaining Wall',       'retwall') +
     item('/pages/foundation.html',               ic.fnd,   'Foundation Design',    'foundation') +
     '<div class="sh-div"></div>' +
+    '<div class="sh-sec">Steel Design</div>' +
+    grp(ic.st, 'Steel Design', ['steelfd'],
+      sub('/pages/steel-flexural.html', 'Flexural Design', 'steelfd')) +
+    '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
-    item('/pages/steel.html',    ic.st, 'Steel Sections',   'steel') +
+    item('/pages/steel.html',    ic.st, 'Steel Sections',    'steel') +
     item('/pages/rebar.html',    ic.rb, 'Rebar Properties', 'rebar') +
     item('/pages/concrete.html', ic.cn, 'Concrete Classes', 'concrete') +
     '<div class="sh-foot">ACI 318 · Eurocode 2 · IS 456<br>AISC · EN 10365 · IS 808' +
