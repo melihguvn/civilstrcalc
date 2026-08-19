@@ -266,7 +266,7 @@ function buildGrid() {
       + u.label
       + '<button class="uc-copy" onclick="copyVal('+i+')" title="Copy value">copy</button>'
       + '</div>'
-      + '<input class="uc-inp" id="uc-'+i+'" type="number" placeholder="—" '
+      + '<input class="uc-inp" id="uc-'+i+'" type="text" inputmode="decimal" placeholder="—" '
       + 'oninput="convert('+i+')" '
       + 'onkeydown="if(event.key===\'Escape\')resetAll()">'
       + '<div class="uc-unit">'+u.sym+'</div>'
@@ -285,13 +285,14 @@ function fmt(v) {
   if (!isFinite(v)) return '';
   var abs = Math.abs(v);
   if (abs === 0) return '0';
-  // Use toPrecision(7) then strip trailing zeros
-  var s;
-  if (abs >= 1e-3 && abs < 1e10) {
-    s = parseFloat(v.toPrecision(7)).toString();
-  } else {
-    s = v.toExponential(5);
+  if (abs >= 1e-4 && abs < 1e4) {
+    // Normal range: 6 significant figures, strip trailing zeros
+    return parseFloat(v.toPrecision(6)).toString();
   }
+  // Scientific notation for |v| >= 10,000 or very small values
+  var s = v.toExponential(5);
+  // Strip trailing zeros in mantissa: "1.23000e+6" → "1.23e+6"
+  s = s.replace(/(\.\d*?)0+(e)/, '$1$2').replace(/\.(e)/, '$1');
   return s;
 }
 
