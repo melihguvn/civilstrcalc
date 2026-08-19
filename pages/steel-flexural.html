@@ -246,6 +246,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         &#128696; Self-weight <span id="fd-sw-val">—</span> auto-added to D
       </div>
 
+      <div class="form-div"><div class="form-div-lbl">Beam Orientation</div></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.84rem;margin-bottom:6px;">
+        <input type="checkbox" id="fd-inclined" onchange="fdToggleIncline();fdAutoCalc()" style="width:15px;height:15px;cursor:pointer;">
+        <span>Inclined beam &mdash; biaxial bending from gravity loads</span>
+      </label>
+      <div id="fd-incline-row" style="display:none" class="form-group">
+        <label>Roof slope &theta; <span class="unit-lbl">[&deg; from horizontal]</span></label>
+        <div class="iw"><input type="number" id="fd-theta" value="15" step="0.5" min="0.1" max="60" oninput="fdAutoCalc()"><span class="us">&deg;</span></div>
+      </div>
+
       <button class="btn-calc" onclick="fdCalc()">&#9654; Calculate</button>
     </div>
   </div>
@@ -435,26 +445,26 @@ HSS_R:{std:'amer',desc:'Round hollow structural sections. AISC / ASTM A500.',sha
 
 // ── COLUMN INDEX MAP ───────────────────────────────────────────────────────────
 var SEC_COLS = {
-  W:        {wt:6, I:7, Sx:8, Z:9,  hasZ:true,  depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  S:        {wt:6, I:7, Sx:8, Z:-1, hasZ:false, depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  HP:       {wt:6, I:7, Sx:8, Z:-1, hasZ:false, depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  M:        {wt:6, I:7, Sx:8, Z:-1, hasZ:false, depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  C:        {wt:6, I:7, Sx:8, Z:-1, hasZ:false, depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  MC:       {wt:6, I:7, Sx:8, Z:-1, hasZ:false, depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  HSS_SQ:   {wt:4, I:5, Sx:-1,Z:7,  hasZ:true,  depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  HSS_RECT: {wt:5, I:6, Sx:-1,Z:8,  hasZ:true,  depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  HSS_R:    {wt:4, I:5, Sx:-1,Z:7,  hasZ:true,  depth:1, dUnit:'in',  wUnit:'lb/ft'},
-  IPE:      {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  IPN:      {wt:6, I:7, Wply:9,  depth:1, dUnit:'mm', wUnit:'kg/m'},
-  HEA:      {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  HEB:      {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  HEM:      {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  HD:       {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  SHS:      {wt:4, I:6, Wply:8,  depth:1, dUnit:'mm', wUnit:'kg/m'},
-  RHS:      {wt:5, I:6, Wply:8,  depth:1, dUnit:'mm', wUnit:'kg/m'},
-  CHS:      {wt:4, I:6, Wply:8,  depth:1, dUnit:'mm', wUnit:'kg/m'},
-  UPN:      {wt:7, I:8, Wply:10, depth:1, dUnit:'mm', wUnit:'kg/m'},
-  UPE:      {wt:6, I:7, Wply:9,  depth:1, dUnit:'mm', wUnit:'kg/m'},
+  W:        {wt:6, I:7, Sx:8,  Z:9,  hasZ:true,  Zy:13,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  S:        {wt:6, I:7, Sx:8,  Z:-1, hasZ:false, Sy:11,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  HP:       {wt:6, I:7, Sx:8,  Z:-1, hasZ:false, Sy:11,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  M:        {wt:6, I:7, Sx:8,  Z:-1, hasZ:false, Sy:11,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  C:        {wt:6, I:7, Sx:8,  Z:-1, hasZ:false, Sy:11,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  MC:       {wt:6, I:7, Sx:8,  Z:-1, hasZ:false, Sy:11,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  HSS_SQ:   {wt:4, I:5, Sx:-1, Z:7,  hasZ:true,                      depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  HSS_RECT: {wt:5, I:6, Sx:-1, Z:8,  hasZ:true,  Zy:12,              depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  HSS_R:    {wt:4, I:5, Sx:-1, Z:7,  hasZ:true,                      depth:1, dUnit:'in',  wUnit:'lb/ft'},
+  IPE:      {wt:7, I:8, Wply:10, Wplz:14,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  IPN:      {wt:6, I:7, Wply:9,  Welz:12,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  HEA:      {wt:7, I:8, Wply:10, Wplz:14,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  HEB:      {wt:7, I:8, Wply:10, Wplz:14,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  HEM:      {wt:7, I:8, Wply:10, Wplz:14,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  HD:       {wt:7, I:8, Wply:10, Wplz:14,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  SHS:      {wt:4, I:6, Wply:8,                                       depth:1, dUnit:'mm', wUnit:'kg/m'},
+  RHS:      {wt:5, I:6, Wply:8,  Wplz:12,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  CHS:      {wt:4, I:6, Wply:8,                                       depth:1, dUnit:'mm', wUnit:'kg/m'},
+  UPN:      {wt:7, I:8, Wply:10, Welz:13,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  UPE:      {wt:6, I:7, Wply:9,  Welz:12,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
 };
 
 var fdUnit     = 'us';
@@ -553,6 +563,25 @@ function fdUpdateLabels() {
 }
 
 var _fdTimer;
+function fdToggleIncline() {
+  document.getElementById('fd-incline-row').style.display =
+    document.getElementById('fd-inclined').checked ? '' : 'none';
+}
+
+function fdGetWplz(row) {
+  var cm = SEC_COLS[fdSecType];
+  // Symmetric sections: Wplz = Wply (or Zx=Zy for US)
+  if (fdSecType==='SHS'||fdSecType==='CHS') return +row[cm.Wply];
+  if (fdSecType==='HSS_SQ'||fdSecType==='HSS_R') return +row[cm.Z];
+  // Explicit weak-axis plastic modulus in data
+  if (cm.Wplz!==undefined) return +row[cm.Wplz];
+  if (cm.Zy!==undefined)   return +row[cm.Zy];
+  // Approximate: 1.5 × elastic modulus (conservative for open sections)
+  if (cm.Welz!==undefined) return 1.5*(+row[cm.Welz]);
+  if (cm.Sy!==undefined)   return 1.5*(+row[cm.Sy]);
+  return null;
+}
+
 function fdAutoCalc() {
   clearTimeout(_fdTimer);
   _fdTimer = setTimeout(function() {
@@ -740,45 +769,66 @@ function fdCalc() {
   var zObj = fdGetZ(row);
   if (!zObj) { alert('Section data incomplete.'); return; }
 
+  var isInclined = document.getElementById('fd-inclined').checked;
+  var theta  = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var cosT   = Math.cos(theta * Math.PI / 180);
+  var sinT   = Math.sin(theta * Math.PI / 180);
+
   var r;
   if (fdUnit === 'us') {
     var Ix  = +row[cm.I];
     var Zx  = zObj.val, Zest = zObj.est;
-    var Mu  = wu * L * L * Cm;
-    var phiMn = 0.9 * Fy * Zx / 12;
-    var DCR = Mu / phiMn;
+    var Mu_y  = wu * (isInclined ? cosT : 1) * L * L * Cm;
+    var Mu_z  = isInclined ? wu * sinT * L * L * Cm : 0;
+    var phiMny = 0.9 * Fy * Zx / 12;
+    var DCR   = Mu_y / phiMny;
+    var Zy = isInclined ? fdGetWplz(row) : null;
+    var approxWeak = isInclined && cm.Sy !== undefined;
+    var phiMnz = (isInclined && Zy) ? 0.9 * Fy * Zy / 12 : null;
+    var biaxDCR = (isInclined && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
     var ws_live  = wL;
     var ws_total = D + wL + wLr + wS;
-    var dL_svc   = Cd * 1728 * ws_live  * Math.pow(L, 4) / (29000 * Ix);
-    var dT_svc   = Cd * 1728 * ws_total * Math.pow(L, 4) / (29000 * Ix);
+    var dCoef    = isInclined ? cosT : 1;
+    var dL_svc   = Cd * 1728 * ws_live  * dCoef * Math.pow(L, 4) / (29000 * Ix);
+    var dT_svc   = Cd * 1728 * ws_total * dCoef * Math.pow(L, 4) / (29000 * Ix);
     var limL = bc==='cant' ? L*12/180 : L*12/360;
     var limT = bc==='cant' ? L*12/120 : L*12/240;
-    var MuNeg = CmNeg ? wu * L * L * CmNeg : null;
+    var MuNeg = CmNeg ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
     r = {name:name,gn:gn,Fy:Fy,bc:bc,bcLbl:bcLbl,L:L,
          wD:wD,sw:sw,D:D,wL:wL,wS:wS,wLr:wLr,wW:wW,
          wu:wu,gov:gov.n,govF:gov.f,combos:combos,Cm:Cm,Cd:Cd,
-         Mu:Mu,MuNeg:MuNeg,phiMn:phiMn,DCR:DCR,Ix:Ix,Zx:Zx,Zest:Zest,
+         Mu:Mu_y,MuNeg:MuNeg,phiMn:phiMny,DCR:DCR,Ix:Ix,Zx:Zx,Zest:Zest,
          dL:dL_svc,dT:dT_svc,limL:limL,limT:limT,
-         uM:'kip·ft',uW:'kip/ft',uL:'ft',uD:'in',uFy:'ksi'};
+         uM:'kip·ft',uW:'kip/ft',uL:'ft',uD:'in',uFy:'ksi',
+         isInclined:isInclined,theta:theta,cosT:cosT,sinT:sinT,
+         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Zy:Zy,biaxDCR:biaxDCR,approxWeak:approxWeak};
   } else {
     var Iy   = +row[cm.I];
     var Wply = zObj.val;
-    var Mu   = wu * L * L * Cm;
-    var phiMn = 0.9 * Fy * Wply / 1000;
-    var DCR  = Mu / phiMn;
+    var Mu_y  = wu * (isInclined ? cosT : 1) * L * L * Cm;
+    var Mu_z  = isInclined ? wu * sinT * L * L * Cm : 0;
+    var phiMny = 0.9 * Fy * Wply / 1000;
+    var DCR   = Mu_y / phiMny;
+    var Wplz = isInclined ? fdGetWplz(row) : null;
+    var approxWeak = isInclined && cm.Welz !== undefined;
+    var phiMnz = (isInclined && Wplz) ? 0.9 * Fy * Wplz / 1000 : null;
+    var biaxDCR = (isInclined && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
     var ws_live  = wL;
     var ws_total = D + wL + wLr + wS;
-    var dL_svc   = Cd * 500 * ws_live  * Math.pow(L, 4) / Iy;
-    var dT_svc   = Cd * 500 * ws_total * Math.pow(L, 4) / Iy;
+    var dCoef    = isInclined ? cosT : 1;
+    var dL_svc   = Cd * 500 * ws_live  * dCoef * Math.pow(L, 4) / Iy;
+    var dT_svc   = Cd * 500 * ws_total * dCoef * Math.pow(L, 4) / Iy;
     var limL = bc==='cant' ? L*1000/180 : L*1000/360;
     var limT = bc==='cant' ? L*1000/120 : L*1000/240;
-    var MuNeg = CmNeg ? wu * L * L * CmNeg : null;
+    var MuNeg = CmNeg ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
     r = {name:name,gn:gn,Fy:Fy,bc:bc,bcLbl:bcLbl,L:L,
          wD:wD,sw:sw,D:D,wL:wL,wS:wS,wLr:wLr,wW:wW,
          wu:wu,gov:gov.n,govF:gov.f,combos:combos,Cm:Cm,Cd:Cd,
-         Mu:Mu,MuNeg:MuNeg,phiMn:phiMn,DCR:DCR,Iy:Iy,Wply:Wply,
+         Mu:Mu_y,MuNeg:MuNeg,phiMn:phiMny,DCR:DCR,Iy:Iy,Wply:Wply,
          dL:dL_svc,dT:dT_svc,limL:limL,limT:limT,
-         uM:'kN·m',uW:'kN/m',uL:'m',uD:'mm',uFy:'MPa'};
+         uM:'kN·m',uW:'kN/m',uL:'m',uD:'mm',uFy:'MPa',
+         isInclined:isInclined,theta:theta,cosT:cosT,sinT:sinT,
+         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Wplz:Wplz,biaxDCR:biaxDCR,approxWeak:approxWeak};
   }
   fdRender(r);
 }
@@ -786,10 +836,11 @@ function fdCalc() {
 function fmt(v, d) { return typeof v==='number' ? v.toFixed(d===undefined?3:d) : String(v); }
 
 function fdRender(r) {
-  var cls  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
-  var lbl  = r.DCR < 0.85 ? 'Section Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed');
+  var checkDCR = (r.isInclined && r.biaxDCR != null) ? r.biaxDCR : r.DCR;
+  var cls  = checkDCR < 0.85 ? 'ok' : (checkDCR <= 1.0 ? 'warn' : 'err');
+  var lbl  = checkDCR < 0.85 ? 'Section Adequate' : (checkDCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed');
   var dLok = r.dL <= r.limL, dTok = r.dT <= r.limT;
-  var allOk = r.DCR <= 1.0 && dLok && dTok;
+  var allOk = checkDCR <= 1.0 && dLok && dTok;
   var propLine = fdUnit==='us'
     ? 'Ix = '+r.Ix+' in⁴ &nbsp;|&nbsp; Zx = '+r.Zx+' in³'+(r.Zest?' <em style="color:var(--text-dim);font-style:italic">(estimated from Sx)</em>':'')
     : 'Iy = '+r.Iy+' cm⁴ &nbsp;|&nbsp; Wpl = '+r.Wply+' cm³';
@@ -838,11 +889,32 @@ function fdRender(r) {
      + '</div></div>';
 
   // ── Primary result ─────────────────────────────────────────────────────────
-  h += '<div class="fl-rb">'
-     + '<div class="fl-col"><div class="fl-lbl">M<sub>u</sub> ('+momLoc+')</div><div class="fl-val '+cls+'">'+fmt(r.Mu,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-     + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n</sub> (AISC §F2)</div><div class="fl-val">'+fmt(r.phiMn,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-     + '<div class="fl-col"><div class="fl-lbl">D/C Ratio</div><div class="fl-val '+cls+'">'+fmt(r.DCR,3)+'</div><div class="fl-unit">'+(r.DCR<=1.0?'&#10003; OK':'&#10007; NG')+'</div></div>'
-     + '</div>';
+  if (r.isInclined && r.biaxDCR != null) {
+    var clsy = r.Mu_y/r.phiMny < 0.85 ? 'ok' : (r.Mu_y/r.phiMny <= 1.0 ? 'warn' : 'err');
+    var clsz = r.Mu_z/r.phiMnz < 0.85 ? 'ok' : (r.Mu_z/r.phiMnz <= 1.0 ? 'warn' : 'err');
+    h += '<div class="fl-rb">'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,y</sub> strong axis</div><div class="fl-val '+clsy+'">'+fmt(r.Mu_y,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n,y</sub></div><div class="fl-val">'+fmt(r.phiMny,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,y</sub> / &phi;M<sub>n,y</sub></div><div class="fl-val '+clsy+'">'+fmt(r.Mu_y/r.phiMny,3)+'</div><div class="fl-unit"></div></div>'
+       + '</div>';
+    h += '<div class="fl-rb">'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,z</sub> weak axis</div><div class="fl-val '+clsz+'">'+fmt(r.Mu_z,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n,z</sub></div><div class="fl-val">'+fmt(r.phiMnz,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,z</sub> / &phi;M<sub>n,z</sub></div><div class="fl-val '+clsz+'">'+fmt(r.Mu_z/r.phiMnz,3)+'</div><div class="fl-unit"></div></div>'
+       + '</div>';
+    h += '<div class="fl-rb" style="background:var(--bg3)">'
+       + '<div class="fl-col" style="flex:2"><div class="fl-lbl">Biaxial Interaction (AISC H2-1) &mdash; M<sub>u,y</sub>/&phi;M<sub>n,y</sub> + M<sub>u,z</sub>/&phi;M<sub>n,z</sub></div>'
+       + '<div class="fl-val '+cls+'">'+fmt(r.biaxDCR,3)+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">Check</div><div class="fl-val '+cls+'">'+(r.biaxDCR<=1.0?'&#10003; OK':'&#10007; NG')+'</div></div>'
+       + '</div>';
+    if (r.approxWeak) h += '<div class="report-warn" style="margin-bottom:8px"><span>&#9432;</span><div>&phi;M<sub>n,z</sub> approximated using 1.5 &times; S<sub>z</sub> &mdash; W<sub>pl,z</sub> / Z<sub>y</sub> not in section database. Conservative estimate; verify with section tables.</div></div>';
+  } else {
+    h += '<div class="fl-rb">'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u</sub> ('+momLoc+')</div><div class="fl-val '+cls+'">'+fmt(r.Mu,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n</sub> (AISC §F2)</div><div class="fl-val">'+fmt(r.phiMn,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">D/C Ratio</div><div class="fl-val '+cls+'">'+fmt(r.DCR,3)+'</div><div class="fl-unit">'+(r.DCR<=1.0?'&#10003; OK':'&#10007; NG')+'</div></div>'
+       + '</div>';
+  }
   if (bcCmNote) {
     h += '<div class="report-warn" style="margin-bottom:8px"><span>&#9432;</span><div>'+bcCmNote+'</div></div>';
   }
@@ -879,6 +951,7 @@ function fdRender(r) {
      + (r.wS>0 ? '<tr><td>Snow S</td><td>'+fmt(r.wS,3)+' '+r.uW+'</td></tr>' : '')
      + (r.wLr>0 ? '<tr><td>Roof Live L<sub>r</sub></td><td>'+fmt(r.wLr,3)+' '+r.uW+'</td></tr>' : '')
      + (r.wW>0 ? '<tr><td>Wind W</td><td>'+fmt(r.wW,3)+' '+r.uW+'</td></tr>' : '')
+     + (r.isInclined ? '<tr><td>Beam Orientation</td><td>Inclined &mdash; &theta; = '+r.theta+'&deg; from horizontal</td></tr>' : '')
      + '<tr><td>Section Properties</td><td>'+propLine+'</td></tr>'
      + '</table></div>';
 
@@ -904,15 +977,42 @@ function fdRender(r) {
   h += step(2, 'Governing factored load w<sub>u</sub> &mdash; Combo '+r.gov,
     r.govF,
     'w<sub>u</sub> = '+fmt(r.wu,3)+' '+r.uW);
-  h += step(3, 'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
-    'w<sub>u</sub> &times; L&sup2; &times; '+bcCm+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
-    'M<sub>u</sub> = '+fmt(r.Mu,2)+' '+r.uM);
-  h += step(4, 'Nominal flexural capacity &phi;M<sub>n</sub> (compact, full LB)',
-    capFml,
-    '&phi;M<sub>n</sub> = '+fmt(r.phiMn,2)+' '+r.uM);
-  h += step(5, 'Demand / Capacity check',
-    'M<sub>u</sub> / &phi;M<sub>n</sub> = '+fmt(r.Mu,2)+' / '+fmt(r.phiMn,2),
-    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+  if (r.isInclined) {
+    h += step(3, 'Load decomposition &mdash; inclined beam &theta; = '+r.theta+'&deg;',
+      'w<sub>u</sub> = '+fmt(r.wu,3)+' '+r.uW+' &nbsp;|&nbsp; cos&theta; = '+fmt(r.cosT,4)+' &nbsp;|&nbsp; sin&theta; = '+fmt(r.sinT,4),
+      'w<sub>y</sub> = '+fmt(r.wu*r.cosT,3)+' '+r.uW+' (strong) &nbsp;/&nbsp; w<sub>z</sub> = '+fmt(r.wu*r.sinT,3)+' '+r.uW+' (weak)');
+    h += step(4, 'Strong-axis moment M<sub>u,y</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
+      'w<sub>u</sub>&middot;cos&theta;&middot;L&sup2;&middot;'+bcCm+' = '+fmt(r.wu*r.cosT,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
+      'M<sub>u,y</sub> = '+fmt(r.Mu_y,2)+' '+r.uM);
+    h += step('4b', 'Weak-axis moment M<sub>u,z</sub> &mdash; '+r.bcLbl,
+      'w<sub>u</sub>&middot;sin&theta;&middot;L&sup2;&middot;'+bcCm+' = '+fmt(r.wu*r.sinT,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
+      'M<sub>u,z</sub> = '+fmt(r.Mu_z,2)+' '+r.uM);
+    h += step(5, 'Strong-axis capacity &phi;M<sub>n,y</sub> (compact, full LB)',
+      capFml,
+      '&phi;M<sub>n,y</sub> = '+fmt(r.phiMny,2)+' '+r.uM);
+    if (r.phiMnz != null) {
+      var wplzKey = r.Zy !== undefined ? 'Z<sub>y</sub> = '+fmt(r.Zy,1) : 'W<sub>pl,z</sub> = '+fmt(r.Wplz,1);
+      var wplzDiv = fdUnit==='us' ? '/ 12' : '/ 1000';
+      var wplzFml = r.approxWeak ? '&phi;M<sub>n,z</sub> &approx; 0.9 &times; Fy &times; 1.5S<sub>z</sub> '+wplzDiv+' (Z<sub>y</sub> not in DB)' : '&phi;M<sub>n,z</sub> = 0.9 &times; Fy &times; '+wplzKey+' '+wplzDiv;
+      h += step('5b', 'Weak-axis capacity &phi;M<sub>n,z</sub> (no LTB for weak axis)',
+        wplzFml,
+        '&phi;M<sub>n,z</sub> = '+fmt(r.phiMnz,2)+' '+r.uM, !r.approxWeak);
+      var biaxOk = r.biaxDCR <= 1.0;
+      h += step(6, 'Biaxial interaction check (AISC §H2-1)',
+        'M<sub>u,y</sub>/&phi;M<sub>n,y</sub> + M<sub>u,z</sub>/&phi;M<sub>n,z</sub> = '+fmt(r.Mu_y/r.phiMny,3)+' + '+fmt(r.Mu_z/r.phiMnz,3),
+        'D/C = '+fmt(r.biaxDCR,3), biaxOk);
+    }
+  } else {
+    h += step(3, 'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
+      'w<sub>u</sub> &times; L&sup2; &times; '+bcCm+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
+      'M<sub>u</sub> = '+fmt(r.Mu,2)+' '+r.uM);
+    h += step(4, 'Nominal flexural capacity &phi;M<sub>n</sub> (compact, full LB)',
+      capFml,
+      '&phi;M<sub>n</sub> = '+fmt(r.phiMn,2)+' '+r.uM);
+    h += step(5, 'Demand / Capacity check',
+      'M<sub>u</sub> / &phi;M<sub>n</sub> = '+fmt(r.Mu,2)+' / '+fmt(r.phiMn,2),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+  }
   h += '</table></div>';
 
   // ── Deflection steps ───────────────────────────────────────────────────────
