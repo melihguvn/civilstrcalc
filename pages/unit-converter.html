@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Structural Engineering Unit Converter — Force, Stress, Moment, Load | CivilStrCalc</title>
+<meta name="description" content="Free online unit converter for structural engineers. Convert force, stress, moment, distributed load, length, area, volume, and unit weight between SI and US customary units.">
+<link rel="canonical" href="https://civilstrcalc.com/pages/unit-converter.html">
+<meta property="og:title" content="Structural Engineering Unit Converter | CivilStrCalc">
+<meta property="og:description" content="Convert between SI and US units: force (N, kN, kip), stress (MPa, ksi), moment (kN·m, kip·ft), load (kN/m, kip/ft) and more.">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Structural Engineering Unit Converter",
+  "description": "Convert between SI and US customary units for structural engineering: force, stress, moment, distributed load, length, area, volume, unit weight, and temperature.",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<style>
+.uc-wrap { max-width: 960px; margin: 0 auto; }
+.uc-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.uc-tab { padding: 7px 14px; border: 1.5px solid var(--border2); border-radius: 20px; font-size: .78rem; font-weight: 600; color: var(--text-mid); background: var(--bg2); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.uc-tab:hover { border-color: var(--accent); color: var(--accent); }
+.uc-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.uc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.uc-cell { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 14px; transition: border-color .15s; }
+.uc-cell:focus-within { border-color: var(--accent); background: var(--bg3); }
+.uc-lbl { font-size: .7rem; font-weight: 600; color: var(--text-dim); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+.uc-inp { width: 100%; background: transparent; border: none; outline: none; font-size: .97rem; font-family: var(--mono); font-weight: 600; color: var(--text); padding: 0; }
+.uc-inp::placeholder { color: var(--text-dim); font-weight: 400; }
+.uc-unit { font-size: .68rem; color: var(--text-dim); margin-top: 3px; font-family: var(--sans); }
+.uc-sep { border: none; border-top: 1.5px solid var(--border); margin: 20px 0; }
+.uc-note { font-size: .75rem; color: var(--text-dim); line-height: 1.6; margin-top: 14px; }
+.uc-note strong { color: var(--text-mid); }
+.uc-copy { float: right; font-size: .6rem; color: var(--text-dim); cursor: pointer; padding: 2px 5px; border-radius: 3px; background: transparent; border: 1px solid transparent; transition: all .13s; }
+.uc-copy:hover { border-color: var(--border2); color: var(--accent); }
+.uc-reset { padding: 6px 16px; border: 1.5px solid var(--border2); border-radius: 6px; font-size: .77rem; font-weight: 600; color: var(--text-mid); background: var(--bg2); cursor: pointer; transition: all .15s; }
+.uc-reset:hover { border-color: var(--red); color: var(--red); }
+.uc-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+/* temperature special */
+.uc-cell.temp-special { border-style: dashed; }
+</style>
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title">
+  <h1>Structural Engineering Unit Converter</h1>
+  <p>Convert between SI and US customary units — force, stress, moment, load, length, area, volume, unit weight, and temperature. Type in any field to instantly convert all others.</p>
+</div>
+
+<div class="card uc-wrap">
+  <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between">
+    <h3 id="cat-title">Force</h3>
+    <button class="uc-reset" onclick="resetAll()">Clear all</button>
+  </div>
+  <div class="card-body">
+
+    <div class="uc-tabs" id="tabs"></div>
+
+    <div class="uc-grid" id="grid"></div>
+
+    <p class="uc-note" id="cat-note"></p>
+
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── Conversion data ────────────────────────────────────────────────────────
+// Each category: { label, note, units: [{label, symbol, toBase, fromBase}] }
+// toBase / fromBase convert to/from SI base unit
+// For linear conversions: toBase is factor (val * factor = base), fromBase = 1/factor
+// Temperature handled separately (non-linear)
+
+var CATS = [
+  {
+    id:'force', label:'Force', note:'Base unit: Newton (N). 1 kip = 1000 lbf. 1 tf = metric ton-force = 1000 kgf.',
+    units:[
+      {label:'Newton',          sym:'N',      f:1},
+      {label:'Kilonewton',      sym:'kN',     f:1e3},
+      {label:'Meganewton',      sym:'MN',     f:1e6},
+      {label:'Kilogram-force',  sym:'kgf',    f:9.80665},
+      {label:'Metric ton-force',sym:'tf',     f:9806.65},
+      {label:'Pound-force',     sym:'lbf',    f:4.44822},
+      {label:'Kip (1000 lbf)',  sym:'kip',    f:4448.22},
+    ]
+  },
+  {
+    id:'stress', label:'Stress / Pressure', note:'Base unit: Pascal (Pa = N/m²). 1 MPa = 1 N/mm². 1 ksi = 1000 psi.',
+    units:[
+      {label:'Pascal',          sym:'Pa',       f:1},
+      {label:'Kilopascal',      sym:'kPa',      f:1e3},
+      {label:'Megapascal',      sym:'MPa',      f:1e6},
+      {label:'Gigapascal',      sym:'GPa',      f:1e9},
+      {label:'kgf/cm²',         sym:'kgf/cm²',  f:98066.5},
+      {label:'tf/m²',           sym:'tf/m²',    f:9806.65},
+      {label:'Bar',             sym:'bar',      f:1e5},
+      {label:'psi (lbf/in²)',   sym:'psi',      f:6894.757},
+      {label:'ksi (kip/in²)',   sym:'ksi',      f:6894757.0},
+    ]
+  },
+  {
+    id:'length', label:'Length', note:'Base unit: millimetre (mm).',
+    units:[
+      {label:'Millimetre',  sym:'mm',  f:1},
+      {label:'Centimetre',  sym:'cm',  f:10},
+      {label:'Metre',       sym:'m',   f:1000},
+      {label:'Kilometre',   sym:'km',  f:1e6},
+      {label:'Inch',        sym:'in',  f:25.4},
+      {label:'Foot',        sym:'ft',  f:304.8},
+      {label:'Yard',        sym:'yd',  f:914.4},
+      {label:'Mile',        sym:'mi',  f:1609344},
+    ]
+  },
+  {
+    id:'area', label:'Area', note:'Base unit: mm². 1 m² = 10,000 cm² = 1,000,000 mm².',
+    units:[
+      {label:'mm²',   sym:'mm²',  f:1},
+      {label:'cm²',   sym:'cm²',  f:100},
+      {label:'m²',    sym:'m²',   f:1e6},
+      {label:'in²',   sym:'in²',  f:645.16},
+      {label:'ft²',   sym:'ft²',  f:92903.04},
+      {label:'yd²',   sym:'yd²',  f:836127.36},
+    ]
+  },
+  {
+    id:'volume', label:'Volume', note:'Base unit: mm³. 1 litre = 1000 cm³ = 1,000,000 mm³.',
+    units:[
+      {label:'mm³',    sym:'mm³',  f:1},
+      {label:'cm³',    sym:'cm³',  f:1e3},
+      {label:'Litre',  sym:'L',    f:1e6},
+      {label:'m³',     sym:'m³',   f:1e9},
+      {label:'in³',    sym:'in³',  f:16387.064},
+      {label:'ft³',    sym:'ft³',  f:28316846.6},
+      {label:'yd³',    sym:'yd³',  f:764554857.0},
+      {label:'US gallon',sym:'gal', f:3785411.8},
+    ]
+  },
+  {
+    id:'moment', label:'Bending Moment', note:'Base unit: N·mm. 1 kN·m = 10⁶ N·mm. 1 kip·ft = 1,355,818 N·mm.',
+    units:[
+      {label:'N·mm',    sym:'N·mm',    f:1},
+      {label:'N·m',     sym:'N·m',     f:1e3},
+      {label:'kN·m',    sym:'kN·m',    f:1e6},
+      {label:'MN·m',    sym:'MN·m',    f:1e9},
+      {label:'kgf·m',   sym:'kgf·m',   f:9806.65},
+      {label:'tf·m',    sym:'tf·m',    f:9806650},
+      {label:'lbf·ft',  sym:'lbf·ft',  f:1355.818},
+      {label:'lbf·in',  sym:'lbf·in',  f:112.9848},
+      {label:'kip·ft',  sym:'kip·ft',  f:1355818.0},
+      {label:'kip·in',  sym:'kip·in',  f:112984.8},
+    ]
+  },
+  {
+    id:'linload', label:'Linear Load', note:'Base unit: N/m. 1 kip/ft = 14.594 kN/m.',
+    units:[
+      {label:'N/m',     sym:'N/m',     f:1},
+      {label:'kN/m',    sym:'kN/m',    f:1e3},
+      {label:'MN/m',    sym:'MN/m',    f:1e6},
+      {label:'kgf/m',   sym:'kgf/m',   f:9.80665},
+      {label:'tf/m',    sym:'tf/m',    f:9806.65},
+      {label:'lbf/ft',  sym:'lbf/ft',  f:14.5939},
+      {label:'kip/ft',  sym:'kip/ft',  f:14593.9},
+      {label:'lbf/in',  sym:'lbf/in',  f:175.127},
+    ]
+  },
+  {
+    id:'areaload', label:'Area Load', note:'Base unit: N/m² = Pa. 1 kPa = 0.0209 kip/ft². 1 kip/ft² = 47.88 kPa.',
+    units:[
+      {label:'N/m² (Pa)',    sym:'Pa',      f:1},
+      {label:'kN/m² (kPa)', sym:'kN/m²',   f:1e3},
+      {label:'MN/m² (MPa)', sym:'MN/m²',   f:1e6},
+      {label:'kgf/m²',      sym:'kgf/m²',  f:9.80665},
+      {label:'tf/m²',       sym:'tf/m²',   f:9806.65},
+      {label:'psf (lbf/ft²)',sym:'psf',     f:47.8803},
+      {label:'ksf (kip/ft²)',sym:'ksf',     f:47880.3},
+      {label:'psi (lbf/in²)',sym:'psi',     f:6894.757},
+    ]
+  },
+  {
+    id:'unitwt', label:'Unit Weight / Density', note:'Base unit: kN/m³. Concrete ≈ 25 kN/m³ = 156 pcf. Water = 9.81 kN/m³ = 62.4 pcf.',
+    units:[
+      {label:'kN/m³',        sym:'kN/m³',   f:1},
+      {label:'N/m³',         sym:'N/m³',    f:0.001},
+      {label:'kN/cm³',       sym:'kN/cm³',  f:1e6},
+      {label:'kgf/m³',       sym:'kgf/m³',  f:0.00980665},
+      {label:'tf/m³',        sym:'tf/m³',   f:9.80665},
+      {label:'kg/m³',        sym:'kg/m³',   f:0.00980665},
+      {label:'g/cm³',        sym:'g/cm³',   f:9.80665},
+      {label:'pcf (lbf/ft³)',sym:'pcf',      f:0.157087},
+      {label:'kcf (kip/ft³)',sym:'kcf',      f:157.087},
+    ]
+  },
+  {
+    id:'mass', label:'Mass', note:'Base unit: kilogram (kg). 1 metric ton = 1000 kg. 1 kip-mass ≈ 453.6 kg.',
+    units:[
+      {label:'Gram',          sym:'g',    f:0.001},
+      {label:'Kilogram',      sym:'kg',   f:1},
+      {label:'Metric ton',    sym:'t',    f:1000},
+      {label:'Pound (mass)',  sym:'lb',   f:0.453592},
+      {label:'Kip-mass',      sym:'klb',  f:453.592},
+      {label:'Short ton (US)',sym:'ton',  f:907.185},
+      {label:'Long ton (UK)', sym:'LT',   f:1016.05},
+    ]
+  },
+  {
+    id:'temp', label:'Temperature', note:'Temperature conversion is non-linear. °C ↔ °F: F = C × 9⁄5 + 32. Absolute zero = −273.15 °C = 0 K.',
+    special: 'temp',
+    units:[
+      {label:'Celsius',    sym:'°C'},
+      {label:'Fahrenheit', sym:'°F'},
+      {label:'Kelvin',     sym:'K'},
+    ]
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+var activeCat = 'force';
+
+// ── Render ────────────────────────────────────────────────────────────────
+function buildTabs() {
+  var el = document.getElementById('tabs');
+  el.innerHTML = CATS.map(function(c){
+    return '<button class="uc-tab'+(c.id===activeCat?' active':'')+'" onclick="selectCat(\''+c.id+'\')">'
+      + c.label + '</button>';
+  }).join('');
+}
+
+function buildGrid() {
+  var cat = CATS.find(function(c){ return c.id===activeCat; });
+  document.getElementById('cat-title').textContent = cat.label;
+  document.getElementById('cat-note').textContent = cat.note;
+
+  var el = document.getElementById('grid');
+  el.innerHTML = cat.units.map(function(u, i){
+    return '<div class="uc-cell'+(cat.special==='temp'?' temp-special':'')+'">'
+      + '<div class="uc-lbl">'
+      + u.label
+      + '<button class="uc-copy" onclick="copyVal('+i+')" title="Copy value">copy</button>'
+      + '</div>'
+      + '<input class="uc-inp" id="uc-'+i+'" type="number" placeholder="—" '
+      + 'oninput="convert('+i+')" '
+      + 'onkeydown="if(event.key===\'Escape\')resetAll()">'
+      + '<div class="uc-unit">'+u.sym+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function selectCat(id) {
+  activeCat = id;
+  buildTabs();
+  buildGrid();
+}
+
+// ── Conversion logic ─────────────────────────────────────────────────────
+function fmt(v) {
+  if (!isFinite(v)) return '';
+  var abs = Math.abs(v);
+  if (abs === 0) return '0';
+  // Use toPrecision(7) then strip trailing zeros
+  var s;
+  if (abs >= 1e-3 && abs < 1e10) {
+    s = parseFloat(v.toPrecision(7)).toString();
+  } else {
+    s = v.toExponential(5);
+  }
+  return s;
+}
+
+function convert(srcIdx) {
+  var cat = CATS.find(function(c){ return c.id===activeCat; });
+  var inp = document.getElementById('uc-'+srcIdx);
+  var raw = parseFloat(inp.value);
+
+  // clear others if input is empty
+  if (inp.value === '' || isNaN(raw)) {
+    cat.units.forEach(function(u, i){ if(i!==srcIdx) document.getElementById('uc-'+i).value=''; });
+    return;
+  }
+
+  if (cat.special === 'temp') {
+    convertTemp(srcIdx, raw);
+    return;
+  }
+
+  // Linear: convert src → base → each target
+  var base = raw * cat.units[srcIdx].f;
+  cat.units.forEach(function(u, i){
+    if (i === srcIdx) return;
+    var el = document.getElementById('uc-'+i);
+    el.value = fmt(base / u.f);
+  });
+}
+
+function convertTemp(srcIdx, val) {
+  var toC; // first convert to Celsius
+  if (srcIdx === 0) toC = val;
+  else if (srcIdx === 1) toC = (val - 32) * 5/9;
+  else toC = val - 273.15;
+
+  var results = [toC, toC * 9/5 + 32, toC + 273.15];
+  results.forEach(function(v, i){
+    if (i === srcIdx) return;
+    document.getElementById('uc-'+i).value = fmt(v);
+  });
+}
+
+function resetAll() {
+  var cat = CATS.find(function(c){ return c.id===activeCat; });
+  cat.units.forEach(function(u, i){ document.getElementById('uc-'+i).value=''; });
+  document.getElementById('uc-0').focus();
+}
+
+function copyVal(idx) {
+  var el = document.getElementById('uc-'+idx);
+  if (!el.value) return;
+  navigator.clipboard.writeText(el.value).catch(function(){
+    el.select(); document.execCommand('copy');
+  });
+  var btn = el.closest('.uc-cell').querySelector('.uc-copy');
+  var orig = btn.textContent;
+  btn.textContent = 'copied!';
+  setTimeout(function(){ btn.textContent = orig; }, 1200);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+buildTabs();
+buildGrid();
+</script>
+
+<div class="adblock-notice" id="adblockNotice">
+  <div class="adblock-notice-content">
+    <span class="adblock-notice-icon">&#8505;&#65039;</span>
+    <span class="adblock-notice-text">We noticed you're using an ad blocker. This site is free and ad-supported — please consider disabling it to support us.</span>
+  </div>
+  <button class="adblock-notice-close" onclick="dismissAdBlockNotice()">&#10005; Dismiss</button>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('adblockNoticeDismissed')==='true') return;
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      let adsBlocked = false;
+      if (typeof window.adsbygoogle === 'undefined') { adsBlocked = true; }
+      if (!adsBlocked) {
+        const testAd = document.createElement('div');
+        testAd.className = 'adsbygoogle';
+        testAd.style.cssText = 'width:1px;height:1px;position:absolute;top:-9999px;left:-9999px;';
+        testAd.setAttribute('data-ad-client', 'ca-pub-0000000000000000');
+        document.body.appendChild(testAd);
+        setTimeout(function() {
+          if (testAd.offsetHeight === 0 || testAd.offsetWidth === 0) adsBlocked = true;
+          testAd.remove();
+          if (adsBlocked) { const n=document.getElementById('adblockNotice'); if(n) n.classList.add('show'); }
+        }, 200);
+      } else { const n=document.getElementById('adblockNotice'); if(n) n.classList.add('show'); }
+    }, 1500);
+  });
+})();
+function dismissAdBlockNotice(){
+  const n=document.getElementById('adblockNotice'); if(n) n.classList.remove('show');
+  localStorage.setItem('adblockNoticeDismissed','true');
+}
+</script>
+</body>
+</html>
