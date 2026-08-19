@@ -888,22 +888,17 @@ function fdRender(r) {
 
   // ── Primary result ─────────────────────────────────────────────────────────
   if (r.isInclined && r.biaxDCR != null) {
-    var clsy = r.Mu_y/r.phiMny < 0.85 ? 'ok' : (r.Mu_y/r.phiMny <= 1.0 ? 'warn' : 'err');
-    var clsz = r.Mu_z/r.phiMnz < 0.85 ? 'ok' : (r.Mu_z/r.phiMnz <= 1.0 ? 'warn' : 'err');
-    h += '<div class="fl-rb">'
-       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,y</sub> strong axis</div><div class="fl-val '+clsy+'">'+fmt(r.Mu_y,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-       + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n,y</sub></div><div class="fl-val">'+fmt(r.phiMny,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,y</sub> / &phi;M<sub>n,y</sub></div><div class="fl-val '+clsy+'">'+fmt(r.Mu_y/r.phiMny,3)+'</div><div class="fl-unit"></div></div>'
-       + '</div>';
-    h += '<div class="fl-rb">'
-       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,z</sub> weak axis</div><div class="fl-val '+clsz+'">'+fmt(r.Mu_z,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-       + '<div class="fl-col"><div class="fl-lbl">&phi;M<sub>n,z</sub></div><div class="fl-val">'+fmt(r.phiMnz,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
-       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,z</sub> / &phi;M<sub>n,z</sub></div><div class="fl-val '+clsz+'">'+fmt(r.Mu_z/r.phiMnz,3)+'</div><div class="fl-unit"></div></div>'
-       + '</div>';
-    h += '<div class="fl-rb" style="background:var(--bg3)">'
-       + '<div class="fl-col" style="flex:2"><div class="fl-lbl">Biaxial Interaction (AISC H2-1) &mdash; M<sub>u,y</sub>/&phi;M<sub>n,y</sub> + M<sub>u,z</sub>/&phi;M<sub>n,z</sub></div>'
-       + '<div class="fl-val '+cls+'">'+fmt(r.biaxDCR,3)+'</div></div>'
-       + '<div class="fl-col"><div class="fl-lbl">Check</div><div class="fl-val '+cls+'">'+(r.biaxDCR<=1.0?'&#10003; OK':'&#10007; NG')+'</div></div>'
+    var raty = fmt(r.Mu_y/r.phiMny,3), ratz = fmt(r.Mu_z/r.phiMnz,3);
+    h += '<div class="fl-rb" style="flex-wrap:wrap;gap:0">'
+       + '<div style="display:flex;width:100%;border-bottom:1px solid var(--border)">'
+       + '<div class="fl-col" style="border-right:1px solid var(--border)"><div class="fl-lbl">M<sub>u,y</sub> / &phi;M<sub>n,y</sub> &nbsp;<span style="font-weight:400;font-size:.75rem">(strong)</span></div><div class="fl-val" style="font-size:1.1rem">'+fmt(r.Mu_y,2)+' / '+fmt(r.phiMny,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">M<sub>u,z</sub> / &phi;M<sub>n,z</sub> &nbsp;<span style="font-weight:400;font-size:.75rem">(weak)</span></div><div class="fl-val" style="font-size:1.1rem">'+fmt(r.Mu_z,2)+' / '+fmt(r.phiMnz,2)+'</div><div class="fl-unit">'+r.uM+'</div></div>'
+       + '</div>'
+       + '<div style="display:flex;width:100%;align-items:center;padding:8px 16px;gap:12px;background:var(--bg3);border-radius:0 0 6px 6px">'
+       + '<span style="font-size:.78rem;color:var(--text-dim);flex:1">AISC H2-1 &nbsp; '+raty+' + '+ratz+' =</span>'
+       + '<span class="fl-val '+cls+'" style="font-size:1.5rem;margin:0">'+fmt(r.biaxDCR,3)+'</span>'
+       + '<span class="fl-val '+cls+'" style="font-size:1rem;margin:0">'+(r.biaxDCR<=1.0?'&#10003; OK':'&#10007; NG')+'</span>'
+       + '</div>'
        + '</div>';
     if (r.approxWeak) h += '<div class="report-warn" style="margin-bottom:8px"><span>&#9432;</span><div>&phi;M<sub>n,z</sub> approximated using 1.5 &times; S<sub>z</sub> &mdash; W<sub>pl,z</sub> / Z<sub>y</sub> not in section database. Conservative estimate; verify with section tables.</div></div>';
   } else {
