@@ -38,18 +38,18 @@
 .uc-cell { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 14px; transition: border-color .15s; }
 .uc-cell:focus-within { border-color: var(--accent); background: var(--bg3); }
 .uc-lbl { font-size: .7rem; font-weight: 600; color: var(--text-dim); letter-spacing: .03em; margin-bottom: 6px; }
-.uc-inp { width: 100%; background: transparent; border: none; outline: none; font-size: .97rem; font-family: var(--mono); font-weight: 600; color: var(--text); padding: 0; }
-.uc-inp::placeholder { color: var(--text-dim); font-weight: 400; }
+.uc-disp { font-size: .97rem; font-family: var(--mono); font-weight: 600; color: var(--text); min-height: 1.3em; cursor: text; line-height: 1.3; }
+.uc-disp.empty { color: var(--text-dim); font-weight: 400; }
+.uc-inp { display: none; width: 100%; background: transparent; border: none; outline: none; font-size: .97rem; font-family: var(--mono); font-weight: 600; color: var(--text); padding: 0; }
+.uc-cell.editing .uc-disp { display: none; }
+.uc-cell.editing .uc-inp { display: block; }
 .uc-unit { font-size: .68rem; color: var(--text-dim); margin-top: 3px; font-family: var(--sans); }
-.uc-sep { border: none; border-top: 1.5px solid var(--border); margin: 20px 0; }
 .uc-note { font-size: .75rem; color: var(--text-dim); line-height: 1.6; margin-top: 14px; }
 .uc-note strong { color: var(--text-mid); }
 .uc-copy { float: right; font-size: .6rem; color: var(--text-dim); cursor: pointer; padding: 2px 5px; border-radius: 3px; background: transparent; border: 1px solid transparent; transition: all .13s; }
 .uc-copy:hover { border-color: var(--border2); color: var(--accent); }
 .uc-reset { padding: 6px 16px; border: 1.5px solid var(--border2); border-radius: 6px; font-size: .77rem; font-weight: 600; color: var(--text-mid); background: var(--bg2); cursor: pointer; transition: all .15s; }
 .uc-reset:hover { border-color: var(--red); color: var(--red); }
-.uc-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-/* temperature special */
 .uc-cell.temp-special { border-style: dashed; }
 </style>
 <script src="../shell.js" defer></script>
@@ -261,14 +261,16 @@ function buildGrid() {
 
   var el = document.getElementById('grid');
   el.innerHTML = cat.units.map(function(u, i){
-    return '<div class="uc-cell'+(cat.special==='temp'?' temp-special':'')+'">'
+    return '<div class="uc-cell'+(cat.special==='temp'?' temp-special':'')+'" onclick="focusCell('+i+')">'
       + '<div class="uc-lbl">'
       + u.label
-      + '<button class="uc-copy" onclick="copyVal('+i+')" title="Copy value">copy</button>'
+      + '<button class="uc-copy" onclick="event.stopPropagation();copyVal('+i+')" title="Copy value">copy</button>'
       + '</div>'
-      + '<input class="uc-inp" id="uc-'+i+'" type="text" inputmode="decimal" placeholder="—" '
+      + '<div class="uc-disp empty" id="disp-'+i+'">—</div>'
+      + '<input class="uc-inp" id="uc-'+i+'" type="text" inputmode="decimal" '
       + 'oninput="convert('+i+')" '
-      + 'onkeydown="if(event.key===\'Escape\')resetAll()">'
+      + 'onblur="blurCell('+i+')" '
+      + 'onkeydown="if(event.key===\'Enter\'||event.key===\'Tab\')this.blur();if(event.key===\'Escape\')resetAll();">'
       + '<div class="uc-unit">'+u.sym+'</div>'
       + '</div>';
   }).join('');
@@ -280,20 +282,43 @@ function selectCat(id) {
   buildGrid();
 }
 
-// ── Conversion logic ─────────────────────────────────────────────────────
+// ── Format helpers ────────────────────────────────────────────────────────
+
+// Raw number for input field (plain text, no HTML)
 function fmt(v) {
   if (!isFinite(v)) return '';
   var abs = Math.abs(v);
   if (abs === 0) return '0';
-  if (abs >= 1e-4 && abs < 1e4) {
-    // Normal range: 6 significant figures, strip trailing zeros
-    return parseFloat(v.toPrecision(6)).toString();
+  return parseFloat(v.toPrecision(7)).toString();
+}
+
+// HTML display with ×10<sup>n</sup> for large/small values (matches steel.html)
+function fmtHTML(v) {
+  if (!isFinite(v)) return '—';
+  var abs = Math.abs(v);
+  if (abs === 0) return '0';
+  if (abs >= 1e4 || (abs > 0 && abs < 1e-3)) {
+    var exp = Math.floor(Math.log10(abs));
+    var mant = v / Math.pow(10, exp);
+    var mantStr = parseFloat(mant.toFixed(3)).toString();
+    return mantStr + ' ×10<sup>' + exp + '</sup>';
   }
-  // Scientific notation for |v| >= 10,000 or very small values
-  var s = v.toExponential(5);
-  // Strip trailing zeros in mantissa: "1.23000e+6" → "1.23e+6"
-  s = s.replace(/(\.\d*?)0+(e)/, '$1$2').replace(/\.(e)/, '$1');
-  return s;
+  return parseFloat(v.toPrecision(5)).toString();
+}
+
+// ── Conversion logic ─────────────────────────────────────────────────────
+function setResult(i, v) {
+  document.getElementById('uc-'+i).value = fmt(v);
+  var d = document.getElementById('disp-'+i);
+  d.innerHTML = fmtHTML(v);
+  d.classList.remove('empty');
+}
+
+function clearResult(i) {
+  document.getElementById('uc-'+i).value = '';
+  var d = document.getElementById('disp-'+i);
+  d.innerHTML = '—';
+  d.classList.add('empty');
 }
 
 function convert(srcIdx) {
@@ -301,52 +326,57 @@ function convert(srcIdx) {
   var inp = document.getElementById('uc-'+srcIdx);
   var raw = parseFloat(inp.value);
 
-  // clear others if input is empty
   if (inp.value === '' || isNaN(raw)) {
-    cat.units.forEach(function(u, i){ if(i!==srcIdx) document.getElementById('uc-'+i).value=''; });
+    cat.units.forEach(function(u, i){ if(i!==srcIdx) clearResult(i); });
     return;
   }
 
-  if (cat.special === 'temp') {
-    convertTemp(srcIdx, raw);
-    return;
-  }
+  if (cat.special === 'temp') { convertTemp(srcIdx, raw); return; }
 
-  // Linear: convert src → base → each target
   var base = raw * cat.units[srcIdx].f;
   cat.units.forEach(function(u, i){
     if (i === srcIdx) return;
-    var el = document.getElementById('uc-'+i);
-    el.value = fmt(base / u.f);
+    setResult(i, base / u.f);
   });
 }
 
 function convertTemp(srcIdx, val) {
-  var toC; // first convert to Celsius
-  if (srcIdx === 0) toC = val;
-  else if (srcIdx === 1) toC = (val - 32) * 5/9;
-  else toC = val - 273.15;
+  var toC = srcIdx===0 ? val : srcIdx===1 ? (val-32)*5/9 : val-273.15;
+  var results = [toC, toC*9/5+32, toC+273.15];
+  results.forEach(function(v, i){ if(i!==srcIdx) setResult(i, v); });
+}
 
-  var results = [toC, toC * 9/5 + 32, toC + 273.15];
-  results.forEach(function(v, i){
-    if (i === srcIdx) return;
-    document.getElementById('uc-'+i).value = fmt(v);
-  });
+// ── Focus / blur ──────────────────────────────────────────────────────────
+function focusCell(i) {
+  var inp = document.getElementById('uc-'+i);
+  inp.closest('.uc-cell').classList.add('editing');
+  inp.focus();
+  inp.select();
+}
+
+function blurCell(i) {
+  var inp = document.getElementById('uc-'+i);
+  inp.closest('.uc-cell').classList.remove('editing');
+  // update display with formatted value
+  var raw = parseFloat(inp.value);
+  if (!isNaN(raw)) {
+    var d = document.getElementById('disp-'+i);
+    d.innerHTML = fmtHTML(raw);
+    d.classList.remove('empty');
+  }
 }
 
 function resetAll() {
   var cat = CATS.find(function(c){ return c.id===activeCat; });
-  cat.units.forEach(function(u, i){ document.getElementById('uc-'+i).value=''; });
-  document.getElementById('uc-0').focus();
+  cat.units.forEach(function(u, i){ clearResult(i); });
+  focusCell(0);
 }
 
 function copyVal(idx) {
-  var el = document.getElementById('uc-'+idx);
-  if (!el.value) return;
-  navigator.clipboard.writeText(el.value).catch(function(){
-    el.select(); document.execCommand('copy');
-  });
-  var btn = el.closest('.uc-cell').querySelector('.uc-copy');
+  var raw = document.getElementById('uc-'+idx).value;
+  if (!raw) return;
+  navigator.clipboard.writeText(raw).catch(function(){});
+  var btn = document.getElementById('disp-'+idx).closest('.uc-cell').querySelector('.uc-copy');
   var orig = btn.textContent;
   btn.textContent = 'copied!';
   setTimeout(function(){ btn.textContent = orig; }, 1200);
