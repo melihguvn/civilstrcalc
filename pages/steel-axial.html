@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>Steel Column Axial Design - AISC LRFD | CivilStrCalc</title>
+<meta name="description" content="AISC 360 LRFD steel column axial design. W, HP, HSS, HEA, HEB, IPE, SHS sections. ASCE 7-22 load combinations. Buckling check per Chapter E.">
+<meta name="robots" content="index, follow">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+.combo-tbl{width:100%;border-collapse:collapse;font-size:.76rem;}
+.combo-tbl th{padding:5px 8px;text-align:left;font-family:var(--sans);font-weight:600;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.combo-tbl tr:last-child td{border-bottom:none;}
+.combo-tbl tr.gov-row td{background:var(--green-bg);font-weight:700;color:var(--green);}
+.combo-lbl{font-family:var(--sans);color:var(--text-mid);}
+.combo-ref-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:10px 0;}
+.combo-ref-tbl th{padding:6px 10px;text-align:left;font-weight:600;font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-ref-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.74rem;}
+.combo-ref-tbl td:first-child{font-family:var(--sans);color:var(--text-mid);font-weight:500;}
+.inp-tbl td:last-child{font-family:var(--mono);}
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans);}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5;}
+@media print{
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;padding:0!important;}
+  .no-print,.bg-section,.page-title,.unit-switcher,footer{display:none!important;}
+  .print-only{display:flex!important;}
+  .print-footer{display:flex!important;}
+  .print-disclaimer{display:block!important;}
+  .calc-layout{display:block!important;}
+  .card{display:none!important;}
+  .report-card{box-shadow:none!important;border:none!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Steel Column Axial Design</h1>
+  <p id="ac-subtitle">AISC 360 LRFD axial compression design &mdash; buckling check per Chapter E. ASCE 7-22 load combinations &mdash; P<sub>D</sub>, P<sub>L</sub>, P<sub>S</sub>, P<sub>W</sub>. Self-weight automatically applied.</p>
+</div>
+
+<div class="calc-layout">
+  <!-- ── LEFT CARD ── -->
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="ac-unit-tag">kip &middot; ft &middot; in</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher">
+        <label>Design Code:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ac-btn-aisc">AISC LRFD</button>
+          <button class="unit-btn" disabled style="opacity:.4">EN 1993-1-1</button>
+          <button class="unit-btn" disabled style="opacity:.4">IS 800:2000</button>
+          <button class="unit-btn" disabled style="opacity:.4">TSDS 2016</button>
+        </div>
+      </div>
+
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ac-btn-us" onclick="acSetUnit('us',this)">US (kip &middot; ft)</button>
+          <button class="unit-btn" id="ac-btn-si" onclick="acSetUnit('si',this)">SI (kN &middot; m)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Steel Grade</label>
+        <select id="ac-grade" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Selection</div></div>
+
+      <div class="form-group">
+        <label>Section Type</label>
+        <select id="ac-sec-type" onchange="acPopSections()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Section</label>
+        <select id="ac-section" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+
+      <div class="form-div"></div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Column Height L <span id="ac-L-lbl" class="unit-lbl">[ft]</span></label>
+          <div class="iw"><input type="number" id="ac-L" min="0" step="0.5" placeholder="e.g. 14"><span class="us" id="ac-L-us">ft</span></div>
+        </div>
+        <div class="form-group">
+          <label>End Conditions</label>
+          <select id="ac-bc" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;">
+            <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+            <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+            <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl" id="ac-loads-lbl">Loads &mdash; ASCE 7-22</div></div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Dead P<sub>D</sub> (excl. SW) <span id="ac-PD-lbl" class="unit-lbl">[kip]</span></label>
+          <div class="iw"><input type="number" id="ac-PD" min="0" step="1" value="0"><span class="us" id="ac-PD-us">kip</span></div>
+        </div>
+        <div class="form-group">
+          <label>Live P<sub>L</sub> <span id="ac-PL-lbl" class="unit-lbl">[kip]</span></label>
+          <div class="iw"><input type="number" id="ac-PL" min="0" step="1" value="0"><span class="us" id="ac-PL-us">kip</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Roof Live P<sub>Lr</sub> <span id="ac-PLr-lbl" class="unit-lbl">[kip]</span></label>
+          <div class="iw"><input type="number" id="ac-PLr" min="0" step="1" value="0"><span class="us" id="ac-PLr-us">kip</span></div>
+        </div>
+        <div class="form-group">
+          <label>Snow P<sub>S</sub> <span id="ac-PS-lbl" class="unit-lbl">[kip]</span></label>
+          <div class="iw"><input type="number" id="ac-PS" min="0" step="1" value="0"><span class="us" id="ac-PS-us">kip</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Wind P<sub>W</sub> <span id="ac-PW-lbl" class="unit-lbl">[kip]</span></label>
+        <div class="iw"><input type="number" id="ac-PW" min="0" step="1" value="0"><span class="us" id="ac-PW-us">kip</span></div>
+      </div>
+
+      <button class="btn-calc" onclick="acCalc()">&#9654; Calculate</button>
+    </div>
+  </div>
+
+  <!-- ── RIGHT ── -->
+  <div>
+    <div class="res-empty" id="ac-empty"><div class="ri">&#9881;</div>Select a section, enter loads and column height, then click Calculate.</div>
+    <div class="report-card" id="ac-card" style="display:none">
+      <div class="report-hdr">
+        <h4>Calculation Report</h4>
+        <span class="rh-code" id="ac-rh-code">AISC 360 &middot; kip &middot; ft &middot; in</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128438; Print / PDF</button>
+      </div>
+      <div class="report-body" id="ac-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DESIGN BACKGROUND ── -->
+<div class="bg-section no-print">
+  <div class="bg-hdr"><h3>&#128218; AISC 360 Chapter E &mdash; Column Axial Design Theory</h3></div>
+  <nav class="bg-toc">
+    <a href="#bg-ch-e" onclick="acBgTab('bg-ch-e',this);return false;" class="active">AISC Ch. E</a>
+    <a href="#bg-combos" onclick="acBgTab('bg-combos',this);return false;">ASCE 7-22 Combos</a>
+    <a href="#bg-kfact" onclick="acBgTab('bg-kfact',this);return false;">K Factors</a>
+  </nav>
+
+  <div class="bg-pane active" id="bg-ch-e">
+    <div class="bg-panel-hdr"><span>AISC 360 Chapter E &mdash; Members Subject to Axial Compression</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Flexural Buckling Stress &mdash; AISC 360 &sect;E3</h4>
+      <p>The nominal compressive strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>. Design strength &phi;<sub>c</sub>P<sub>n</sub> with &phi;<sub>c</sub> = 0.90.</p>
+      <div class="fml-blk"><span class="ft">Inelastic buckling &mdash; KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft">Elastic buckling &mdash; KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
+      <div class="fml-blk"><span class="ft">Euler elastic buckling stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2;</div>
+      <p>Use the <strong>maximum</strong> of KL/r<sub>x</sub> and KL/r<sub>y</sub>. Recommended limit: KL/r &le; 200.</p>
+      <h4>Design Check</h4>
+      <div class="fml-blk"><span class="ft">LRFD</span>P<sub>u</sub> &le; &phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A<sub>g</sub></div>
+      <table class="combo-ref-tbl" style="max-width:440px">
+        <tr><th>F<sub>y</sub></th><th>4.71&radic;(E/F<sub>y</sub>)</th></tr>
+        <tr><td>36 ksi / 250 MPa</td><td>133.7</td></tr>
+        <tr><td>50 ksi / 345 MPa</td><td>113.4</td></tr>
+        <tr><td>355 MPa</td><td>107.0</td></tr>
+      </table>
+      <p>The same Fcr formulas apply in both US (ksi, in) and SI (MPa, mm) units — the ratio KL/r is dimensionless and E/Fy is dimensionless.</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-combos">
+    <div class="bg-panel-hdr"><span>ASCE 7-22 &sect;2.3.1 &mdash; LRFD Load Combinations</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <table class="combo-ref-tbl" style="max-width:500px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.4D</td></tr>
+        <tr><td>2</td><td>1.2D + 1.6L + 0.5S</td></tr>
+        <tr><td>3</td><td>1.2D + 1.6S + L</td></tr>
+        <tr><td>4</td><td>1.2D + 1.0W + L + 0.5S</td></tr>
+        <tr><td>5</td><td>0.9D + 1.0W</td></tr>
+      </table>
+      <p>D = Dead (incl. self-weight) &nbsp;|&nbsp; L = Live + Roof Live &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind (compressive contribution)</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-kfact">
+    <div class="bg-panel-hdr"><span>Effective Length Factor K &mdash; AISC Commentary Table C-A-7.1</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <table class="combo-ref-tbl" style="max-width:580px">
+        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (AISC recommended)</th></tr>
+        <tr><td>Both ends pinned</td><td>1.0</td><td>1.00</td></tr>
+        <tr><td>One pinned, one fixed (no sway)</td><td>0.7</td><td>0.80</td></tr>
+        <tr><td>Both ends fixed (no sway)</td><td>0.5</td><td>0.65</td></tr>
+      </table>
+      <p>AISC recommended values account for practical imperfections in end fixity. Cantilever (K = 2.1) is not included.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── COMPACT DATABASE ──────────────────────────────────────────────────────────
+// US sections: [name, Ag(in²), wt(lb/ft), rx(in), ry(in)]
+// SI sections: [name, A(cm²), G(kg/m), iy(cm), iz(cm)]
+// All sections: index 1=A, 2=wt, 3=rx, 4=ry (or iy/iz)
+
+const DB = {
+W:{std:'us',data:[
+['W4×13',3.83,13,1.72,1.00],['W5×16',4.71,16,2.13,1.27],['W5×19',5.54,19,2.18,1.28],
+['W6×9',2.68,9,2.47,0.905],['W6×12',3.55,12,2.49,0.918],['W6×15',4.43,15,2.56,1.45],['W6×16',4.74,16,2.60,0.967],['W6×20',5.87,20,2.66,1.50],['W6×25',7.34,25,2.70,1.52],
+['W8×10',2.96,10,3.22,0.841],['W8×13',3.84,13,3.21,0.843],['W8×18',5.26,18,3.43,1.23],['W8×21',6.16,21,3.49,1.26],['W8×24',7.08,24,3.42,1.61],['W8×28',8.24,28,3.45,1.62],['W8×31',9.13,31,3.47,2.02],['W8×35',10.3,35,3.51,2.03],['W8×40',11.7,40,3.53,2.04],['W8×48',14.1,48,3.61,2.08],['W8×58',17.1,58,3.65,2.10],['W8×67',19.7,67,3.72,2.12],
+['W10×12',3.54,12,3.90,0.785],['W10×15',4.41,15,3.95,0.810],['W10×17',4.99,17,4.05,0.844],['W10×19',5.62,19,4.14,0.874],['W10×22',6.49,22,4.27,1.33],['W10×26',7.61,26,4.35,1.36],['W10×30',8.84,30,4.38,1.37],['W10×33',9.71,33,4.19,1.94],['W10×39',11.5,39,4.27,1.98],['W10×45',13.3,45,4.32,2.01],['W10×49',14.4,49,4.35,2.54],['W10×54',15.8,54,4.37,2.56],['W10×60',17.6,60,4.41,2.57],
+['W12×14',4.16,14,4.62,0.753],['W12×16',4.71,16,4.67,0.773],['W12×19',5.57,19,4.82,0.822],['W12×22',6.48,22,4.91,0.848],['W12×26',7.65,26,5.17,1.51],['W12×30',8.79,30,5.21,1.52],['W12×35',10.3,35,5.25,1.54],['W12×40',11.7,40,5.13,1.94],['W12×45',13.2,45,5.15,1.95],['W12×50',14.7,50,5.18,1.96],['W12×53',15.6,53,5.23,2.48],['W12×58',17.0,58,5.28,2.51],['W12×65',19.1,65,5.28,3.02],['W12×72',21.1,72,5.31,3.04],['W12×79',23.2,79,5.34,3.05],['W12×87',25.6,87,5.38,3.07],['W12×96',28.2,96,5.44,3.09],
+['W14×22',6.49,22,5.54,1.04],['W14×26',7.69,26,5.65,1.08],['W14×30',8.85,30,5.73,1.49],['W14×34',10.0,34,5.83,1.53],['W14×38',11.2,38,5.87,1.55],['W14×43',12.6,43,5.82,1.89],['W14×48',14.1,48,5.85,1.91],['W14×53',15.6,53,5.89,1.92],['W14×61',17.9,61,5.98,2.45],['W14×68',20.0,68,6.01,2.46],['W14×74',21.8,74,6.04,2.48],['W14×82',24.0,82,6.05,2.48],['W14×90',26.5,90,6.14,3.70],['W14×99',29.1,99,6.17,3.71],['W14×109',32.0,109,6.22,3.73],['W14×120',35.3,120,6.24,3.74],['W14×132',38.8,132,6.28,3.76],['W14×145',42.7,145,6.33,3.98],
+['W16×26',7.68,26,6.26,1.12],['W16×31',9.12,31,6.41,1.17],['W16×36',10.6,36,6.51,1.52],['W16×40',11.8,40,6.63,1.57],['W16×45',13.3,45,6.65,1.57],['W16×50',14.7,50,6.68,1.59],['W16×57',16.8,57,6.72,1.60],['W16×67',19.7,67,6.96,2.46],['W16×77',22.6,77,7.00,2.47],['W16×89',26.2,89,7.05,2.49],['W16×100',29.5,100,7.10,2.51],
+['W18×35',10.3,35,7.04,1.22],['W18×40',11.8,40,7.21,1.27],['W18×46',13.5,46,7.25,1.29],['W18×50',14.7,50,7.38,1.65],['W18×55',16.2,55,7.41,1.67],['W18×60',17.6,60,7.47,1.69],['W18×65',19.1,65,7.49,1.69],['W18×71',20.8,71,7.50,1.70],['W18×76',22.3,76,7.73,2.61],['W18×86',25.3,86,7.77,2.63],['W18×97',28.5,97,7.82,2.65],['W18×106',31.1,106,7.84,2.66],['W18×119',35.1,119,7.90,2.69],
+['W21×44',13.0,44,8.06,1.26],['W21×50',14.7,50,8.18,1.30],['W21×57',16.7,57,8.36,1.35],['W21×62',18.3,62,8.54,1.77],['W21×68',20.0,68,8.60,1.80],['W21×73',21.5,73,8.64,1.81],['W21×83',24.3,83,8.67,1.83],['W21×93',27.3,93,8.70,1.84],
+['W24×55',16.2,55,9.11,1.34],['W24×62',18.2,62,9.23,1.38],['W24×68',20.1,68,9.55,1.87],['W24×76',22.4,76,9.69,1.92],['W24×84',24.7,84,9.79,1.95],['W24×94',27.7,94,9.87,1.98],['W24×104',30.6,104,10.1,2.91],['W24×117',34.4,117,10.1,2.94],['W24×131',38.5,131,10.2,2.97],
+['W27×84',24.7,84,10.7,2.07],['W27×94',27.7,94,10.9,2.12],['W27×102',30.0,102,11.0,2.15],['W27×114',33.6,114,11.0,2.18],['W27×129',37.8,129,11.2,2.21],['W27×161',47.3,161,11.5,3.24],
+['W30×90',26.3,90,11.7,2.09],['W30×99',29.0,99,11.7,2.10],['W30×116',34.2,116,12.0,2.19],['W30×132',38.9,132,12.2,2.25],['W30×148',43.6,148,12.4,2.28],
+['W33×130',38.3,130,13.2,2.38],['W33×141',41.6,141,13.4,2.43],
+['W36×150',44.3,150,14.3,2.47],['W36×256',75.4,256,14.9,2.65]]},
+HP:{std:'us',data:[
+['HP8×36',10.6,36,3.36,1.95],['HP10×42',12.4,42,4.13,2.41],['HP10×57',16.7,57,4.18,2.45],
+['HP12×53',15.5,53,5.03,2.86],['HP12×63',18.4,63,5.06,2.88],['HP12×74',21.8,74,5.11,2.92],['HP12×89',25.9,89,5.17,2.94],
+['HP14×73',21.4,73,5.84,3.49],['HP14×89',26.1,89,5.88,3.53],['HP14×102',30.1,102,5.92,3.56],['HP14×117',34.4,117,5.96,3.59],
+['HP16×88',25.8,88,6.56,3.68],['HP16×101',29.9,101,6.59,3.71],['HP16×121',35.8,121,6.66,3.75],['HP16×141',41.7,141,6.70,3.79],['HP16×162',47.7,162,6.78,3.82],['HP16×183',54.1,183,6.81,3.89],
+['HP18×135',39.9,135,7.43,4.21],['HP18×157',46.2,157,7.46,4.25],['HP18×181',53.2,181,7.53,4.28],['HP18×204',60.2,204,7.60,4.31]]},
+HSS_SQ:{std:'us',data:[
+['HSS3×3×1/4',2.70,9.2,0.882,0.882],['HSS4×4×1/4',3.65,12.4,1.17,1.17],
+['HSS5×5×3/8',6.56,22.4,1.49,1.49],['HSS6×6×1/4',5.44,18.5,1.82,1.82],['HSS6×6×3/8',7.96,27.1,1.79,1.79],
+['HSS8×8×3/8',10.7,36.4,2.50,2.50],['HSS10×10×3/8',13.3,45.4,3.28,3.28],
+['HSS12×12×1/2',21.1,72.0,3.91,3.91],['HSS16×16×1/2',28.3,96.7,5.23,5.23]]},
+HSS_RECT:{std:'us',data:[
+['HSS4×3×5/16',3.92,13.3,1.27,0.949],['HSS6×4×3/8',7.38,25.2,1.80,1.26],
+['HSS8×6×3/8',9.82,33.5,2.37,1.87],['HSS10×6×3/8',11.8,40.3,2.86,1.93],
+['HSS12×8×1/2',18.1,61.7,3.52,2.57],['HSS14×10×1/2',21.5,73.1,4.30,3.23],
+['HSS16×8×5/8',26.7,91.0,4.46,2.49],['HSS20×12×1/2',27.6,94.0,6.43,4.03]]},
+HSS_R:{std:'us',data:[
+['HSS3.000×0.300',2.42,8.24,0.723,0.723],['HSS4.000×0.375',4.13,14.1,1.02,1.02],
+['HSS5.000×0.375',5.19,17.7,1.29,1.29],['HSS6.625×0.375',7.15,24.3,1.91,1.91],
+['HSS8.625×0.375',9.24,31.4,2.50,2.50],['HSS8.625×0.500',12.2,41.4,2.46,2.46],
+['HSS10.750×0.500',15.2,51.8,3.07,3.07],['HSS12.750×0.500',18.0,61.5,3.66,3.66],['HSS16.000×0.500',22.6,76.9,4.61,4.61]]},
+// SI sections: [name, A(cm²), G(kg/m), iy(cm), iz(cm)]
+HEA:{std:'si',data:[
+['HEA 100',21.2,16.7,4.06,2.51],['HEA 120',25.3,19.9,4.89,3.02],['HEA 140',31.4,24.7,5.73,3.52],['HEA 160',38.8,30.4,6.57,3.98],['HEA 180',45.3,35.5,7.45,4.52],['HEA 200',53.8,42.3,8.28,4.98],['HEA 220',64.3,50.5,9.17,5.51],['HEA 240',76.8,60.3,10.1,6.00],['HEA 260',86.8,68.2,11.0,6.50],['HEA 280',97.3,76.4,11.9,6.99],['HEA 300',112,88.3,12.8,7.49],['HEA 320',124,98.0,13.6,7.52],['HEA 340',133,105,14.4,7.46],['HEA 360',143,112,15.2,7.43],['HEA 400',159,125,16.8,7.34],['HEA 450',178,140,18.9,7.29],['HEA 500',198,155,21.0,7.24],['HEA 550',212,166,23.0,7.15],['HEA 600',226,178,25.0,7.07]]},
+HEB:{std:'si',data:[
+['HEB 100',26.0,20.4,4.16,2.53],['HEB 120',34.0,26.7,5.04,3.06],['HEB 140',43.0,33.7,5.93,3.58],['HEB 160',54.3,42.6,6.78,4.05],['HEB 180',65.3,51.2,7.66,4.57],['HEB 200',78.1,61.3,8.54,5.07],['HEB 220',91.0,71.5,9.43,5.59],['HEB 240',106,83.2,10.3,6.08],['HEB 260',118,93.0,11.2,6.58],['HEB 280',131,103,12.1,7.09],['HEB 300',149,117,13.0,7.58],['HEB 320',161,127,13.8,7.57],['HEB 340',171,134,14.6,7.53],['HEB 360',181,142,15.5,7.49],['HEB 400',198,155,17.1,7.40],['HEB 450',218,171,19.1,7.33],['HEB 500',239,188,21.2,7.27],['HEB 550',254,199,23.2,7.17],['HEB 600',270,212,25.2,7.08],['HEB 700',306,240,29.0,6.87],['HEB 800',334,262,32.8,6.68],['HEB 900',371,291,36.5,6.53],['HEB 1000',400,314,40.2,6.38]]},
+IPE:{std:'si',data:[
+['IPE 80',7.64,6.0,3.24,1.05],['IPE 100',10.3,8.1,4.07,1.24],['IPE 120',13.2,10.4,4.90,1.45],['IPE 140',16.4,12.9,5.74,1.65],['IPE 160',20.1,15.8,6.58,1.84],['IPE 180',23.9,18.8,7.42,2.05],['IPE 200',28.5,22.4,8.26,2.24],['IPE 220',33.4,26.2,9.11,2.48],['IPE 240',39.1,30.7,9.97,2.69],['IPE 270',45.9,36.1,11.2,3.02],['IPE 300',53.8,42.2,12.5,3.35],['IPE 330',62.6,49.1,13.7,3.55],['IPE 360',72.7,57.1,15.0,3.79],['IPE 400',84.5,66.3,16.5,3.95],['IPE 450',98.8,77.6,18.5,4.12],['IPE 500',116,91.0,20.4,4.31],['IPE 550',134,106,22.3,4.45],['IPE 600',156,122,24.3,4.66]]},
+SHS:{std:'si',data:[
+['SHS 40×2.6',3.89,3.05,1.53,1.53],['SHS 40×4',5.76,4.52,1.48,1.48],['SHS 50×3.2',5.99,4.70,1.92,1.92],['SHS 50×5',9.00,7.06,1.85,1.85],
+['SHS 60×3.2',7.27,5.71,2.32,2.32],['SHS 60×5',11.0,8.64,2.25,2.25],['SHS 60×6.3',13.5,10.6,2.21,2.21],
+['SHS 70×4',10.6,8.29,2.70,2.70],['SHS 70×5',13.0,10.2,2.66,2.66],['SHS 70×6.3',16.1,12.6,2.61,2.61],
+['SHS 80×4',12.2,9.55,3.11,3.11],['SHS 80×5',15.0,11.8,3.07,3.07],['SHS 80×6.3',18.6,14.6,3.02,3.02],['SHS 80×8',23.0,18.1,2.96,2.96],
+['SHS 90×5',17.0,13.3,3.48,3.48],['SHS 90×6.3',21.1,16.6,3.43,3.43],['SHS 90×8',26.2,20.6,3.36,3.36],
+['SHS 100×5',19.0,14.9,3.88,3.88],['SHS 100×6.3',23.6,18.5,3.83,3.83],['SHS 100×8',29.4,23.1,3.77,3.77],['SHS 100×10',36.0,28.3,3.70,3.70],
+['SHS 120×5',23.0,18.1,4.70,4.70],['SHS 120×6.3',28.7,22.5,4.65,4.65],['SHS 120×8',35.8,28.1,4.58,4.58],['SHS 120×10',44.0,34.5,4.51,4.51],
+['SHS 140×6.3',33.7,26.5,5.46,5.46],['SHS 140×8',42.2,33.2,5.40,5.40],['SHS 140×10',52.0,40.8,5.32,5.32],['SHS 140×12.5',63.8,50.0,5.23,5.23],
+['SHS 150×6.3',36.2,28.4,5.87,5.87],['SHS 150×8',45.4,35.7,5.81,5.81],['SHS 150×10',56.0,44.0,5.73,5.73],['SHS 150×12.5',68.8,54.0,5.64,5.64],
+['SHS 160×6.3',38.7,30.4,6.28,6.28],['SHS 160×8',48.6,38.2,6.21,6.21],['SHS 160×10',60.0,47.1,6.14,6.14],['SHS 160×12.5',73.8,57.9,6.04,6.04],
+['SHS 180×6.3',43.8,34.4,7.10,7.10],['SHS 180×8',55.0,43.2,7.03,7.03],['SHS 180×10',68.0,53.4,6.95,6.95],['SHS 180×12.5',83.8,65.7,6.86,6.86],
+['SHS 200×6.3',48.8,38.3,7.91,7.91],['SHS 200×8',61.4,48.2,7.85,7.85],['SHS 200×10',76.0,59.7,7.77,7.77],['SHS 200×12.5',93.8,73.6,7.67,7.67],['SHS 200×16',117.8,92.4,7.54,7.54],
+['SHS 220×8',67.8,53.3,8.66,8.66],['SHS 220×10',84.0,65.9,8.59,8.59],['SHS 220×12.5',103,81.0,8.49,8.49],
+['SHS 250×8',77.8,61.1,9.87,9.87],['SHS 250×10',96.0,75.4,9.80,9.80],['SHS 250×12.5',119,93.3,9.68,9.68],['SHS 250×16',150,117,9.52,9.52],
+['SHS 300×10',116,91.0,11.8,11.8],['SHS 300×12.5',144,113,11.7,11.7],['SHS 300×16',182,143,11.5,11.5]]}
+};
+
+var TYPES_US = [
+  {key:'W',        label:'W — Wide Flange'},
+  {key:'HP',       label:'HP — Bearing Pile'},
+  {key:'HSS_SQ',   label:'HSS Square'},
+  {key:'HSS_RECT', label:'HSS Rectangular'},
+  {key:'HSS_R',    label:'HSS Round'}
+];
+var TYPES_SI = [
+  {key:'HEA', label:'HEA — Wide Flange H, Light (EN 10365)'},
+  {key:'HEB', label:'HEB — Wide Flange H, Medium (EN 10365)'},
+  {key:'IPE', label:'IPE — Parallel Flange I-Beam (EN 10365)'},
+  {key:'SHS', label:'SHS — Square Hollow Section (EN 10210)'}
+];
+var GRADES_US = [
+  {n:'A992 Gr 50 (W shapes)', Fy:50},
+  {n:'A572 Gr 50',            Fy:50},
+  {n:'A572 Gr 60',            Fy:60},
+  {n:'A500 Gr C (HSS)',       Fy:46},
+  {n:'A36',                   Fy:36}
+];
+var GRADES_SI = [
+  {n:'S355', Fy:355},
+  {n:'S275', Fy:275},
+  {n:'S235', Fy:235},
+  {n:'S420', Fy:420},
+  {n:'S460', Fy:460}
+];
+
+var acUnit = 'us';
+var acSecType = 'W';
+
+function fmt(v,d){ return (+v).toFixed(d); }
+
+function acSetUnit(unit, btn) {
+  acUnit = unit;
+  document.getElementById('ac-btn-us').classList.toggle('active', unit==='us');
+  document.getElementById('ac-btn-si').classList.toggle('active', unit==='si');
+  acPopGrades();
+  acPopTypes();
+  acUpdateLabels();
+  document.getElementById('ac-empty').style.display = '';
+  document.getElementById('ac-card').style.display  = 'none';
+}
+
+function acUpdateLabels() {
+  var isUS = acUnit === 'us';
+  var fU = isUS ? 'kip' : 'kN';
+  var lU = isUS ? 'ft'  : 'm';
+  document.getElementById('ac-unit-tag').textContent = isUS ? 'kip · ft · in' : 'kN · m · mm';
+  document.getElementById('ac-rh-code').textContent  = isUS ? 'AISC 360 · kip · ft · in' : 'AISC 360 · kN · m · mm';
+  document.getElementById('ac-L-lbl').textContent = '[' + lU + ']';
+  document.getElementById('ac-L-us').textContent  = lU;
+  ['PD','PL','PLr','PS','PW'].forEach(function(k){
+    var el = document.getElementById('ac-'+k+'-lbl');
+    var us = document.getElementById('ac-'+k+'-us');
+    if(el) el.textContent = '[' + fU + ']';
+    if(us) us.textContent = fU;
+  });
+}
+
+function acPopGrades() {
+  var grades = acUnit==='us' ? GRADES_US : GRADES_SI;
+  var fy = (acUnit==='us') ? 50 : 355;
+  var sel = document.getElementById('ac-grade');
+  sel.innerHTML = grades.map(function(g){
+    return '<option value="'+g.Fy+'"'+(g.Fy===fy?' selected':'')+'>'+g.n+' &mdash; Fy = '+g.Fy+(acUnit==='us'?' ksi':' MPa')+'</option>';
+  }).join('');
+}
+
+function acPopTypes() {
+  var types = acUnit==='us' ? TYPES_US : TYPES_SI;
+  acSecType = types[0].key;
+  var sel = document.getElementById('ac-sec-type');
+  sel.innerHTML = types.map(function(t){
+    return '<option value="'+t.key+'">'+t.label+'</option>';
+  }).join('');
+  acPopSections();
+}
+
+function acPopSections() {
+  acSecType = document.getElementById('ac-sec-type').value;
+  var sel = document.getElementById('ac-section');
+  sel.innerHTML = (DB[acSecType]&&DB[acSecType].data||[]).map(function(r){
+    return '<option value="'+r[0]+'">'+r[0]+'</option>';
+  }).join('');
+}
+
+function acBgTab(id,el) {
+  document.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bg-toc a').forEach(function(a){a.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── CALCULATION ────────────────────────────────────────────────────────────────
+function acCalc() {
+  var name = document.getElementById('ac-section').value;
+  if (!name) { alert('Please select a section.'); return; }
+  var row = (DB[acSecType]&&DB[acSecType].data||[]).find(function(r){ return r[0]===name; });
+  if (!row) return;
+
+  var isUS = DB[acSecType].std === 'us';
+  var Fy   = +document.getElementById('ac-grade').value;
+  var Lval = +document.getElementById('ac-L').value || 0;
+  var bc   = document.getElementById('ac-bc').value;
+  if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
+
+  var K    = {pp:1.00, pf:0.80, ff:0.65}[bc];
+  var bcLbl = {pp:'Pin – Pin (K = 1.00)', pf:'Pin – Fixed (K = 0.80)', ff:'Fixed – Fixed (K = 0.65)'}[bc];
+
+  // Raw section properties
+  var Ag_r = +row[1]; // in² (US) or cm² (SI)
+  var wt_r = +row[2]; // lb/ft (US) or kg/m (SI)
+  var rx_r = +row[3]; // in (US) or cm (SI)
+  var ry_r = +row[4]; // in (US) or cm (SI)
+
+  var E, Ag, rx, ry, sw, uF, uL, uSt;
+  if (isUS) {
+    E   = 29000;                    // ksi
+    Ag  = Ag_r;                     // in²
+    rx  = rx_r;                     // in
+    ry  = ry_r;                     // in
+    sw  = wt_r * Lval / 1000;       // lb/ft × ft / 1000 = kips
+    uF  = 'kip'; uL = 'ft'; uSt = 'ksi';
+  } else {
+    E   = 200000;                   // MPa
+    Ag  = Ag_r * 100;               // cm² → mm²
+    rx  = rx_r * 10;                // cm → mm
+    ry  = ry_r * 10;                // cm → mm
+    sw  = wt_r * Lval * 9.81 / 1000; // kg/m × m × 9.81/1000 = kN
+    uF  = 'kN'; uL = 'm'; uSt = 'MPa';
+  }
+
+  // Applied loads in kip or kN
+  var PD  = +document.getElementById('ac-PD').value  || 0;
+  var PL  = +document.getElementById('ac-PL').value  || 0;
+  var PLr = +document.getElementById('ac-PLr').value || 0;
+  var PS  = +document.getElementById('ac-PS').value  || 0;
+  var PW  = +document.getElementById('ac-PW').value  || 0;
+
+  var D = PD + sw;
+  var L = PL + PLr;
+  var S = PS;
+  var W = PW;
+
+  var combos = [
+    {n:'1', f:'1.4D',                    P: 1.4*D},
+    {n:'2', f:'1.2D + 1.6L + 0.5S',     P: 1.2*D + 1.6*L + 0.5*S},
+    {n:'3', f:'1.2D + 1.6S + L',        P: 1.2*D + 1.6*S + L},
+    {n:'4', f:'1.2D + 1.0W + L + 0.5S', P: 1.2*D + W + L + 0.5*S},
+    {n:'5', f:'0.9D + 1.0W',            P: 0.9*D + W}
+  ];
+  var gov = combos.reduce(function(a,b){ return a.P >= b.P ? a : b; });
+  var Pu = gov.P;
+
+  // Effective length (in for US, mm for SI)
+  var KL = isUS ? (K * Lval * 12) : (K * Lval * 1000);
+  var lx = KL / rx, ly = KL / ry;
+  var lMax = Math.max(lx, ly);
+  var govAx = (lx >= ly) ? 'x' : 'y';
+
+  var lLim = 4.71 * Math.sqrt(E / Fy);
+  var Fe   = Math.PI * Math.PI * E / (lMax * lMax);
+
+  var Fcr, bMode;
+  if (lMax <= lLim) {
+    Fcr   = Math.pow(0.658, Fy / Fe) * Fy;
+    bMode = 'Inelastic';
+  } else {
+    Fcr   = 0.877 * Fe;
+    bMode = 'Elastic';
+  }
+
+  var phiC  = 0.90;
+  var Pn    = isUS ? (Fcr * Ag) : (Fcr * Ag / 1000); // kip or kN
+  var phiPn = phiC * Pn;
+  var DCR   = Pu / phiPn;
+  var slOk  = lMax <= 200;
+
+  var gn   = document.getElementById('ac-grade').options[document.getElementById('ac-grade').selectedIndex].text;
+  var date = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+
+  acRender({
+    name:name, gn:gn, Fy:Fy, phiC:phiC, E:E,
+    Lval:Lval, bc:bc, bcLbl:bcLbl, K:K,
+    Ag:Ag_r, Ag_calc:Ag, rx:rx_r, ry:ry_r, wt:wt_r, sw:sw,
+    PD:PD, PL:PL, PLr:PLr, D:D, L:L, S:S, W:W,
+    combos:combos, gov:gov.n, govF:gov.f, Pu:Pu,
+    KL:KL, lx:lx, ly:ly, lMax:lMax, govAx:govAx, lLim:lLim,
+    slOk:slOk, Fe:Fe, Fcr:Fcr, bMode:bMode,
+    Pn:Pn, phiPn:phiPn, DCR:DCR,
+    uF:uF, uL:uL, uSt:uSt, isUS:isUS, date:date
+  });
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function acRender(r) {
+  var dc   = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
+  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var slCls = r.slOk ? 'ok' : 'warn';
+  var uF = r.uF, uSt = r.uSt, uL = r.uL;
+  var agLbl = r.isUS ? 'in&sup2;' : 'cm&sup2;';
+  var rLbl  = r.isUS ? 'in' : 'cm';
+  var wtLbl = r.isUS ? 'lb/ft' : 'kg/m';
+  var lenLbl = r.isUS ? 'in' : 'mm';
+
+  function step(n,desc,fml,val,ok){
+    var chk = ok===undefined ? '' : '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc  = ok===true ? 'ok' : (ok===false ? 'err' : '');
+    return '<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
+  }
+
+  var h = '';
+
+  h += '<div class="print-only"><div>'
+     + '<div class="ph-title">Steel Column Axial Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; AISC 360 LRFD &nbsp;&middot;&nbsp; '+(r.isUS?'kip · ft · in':'kN · m · mm')+'</div></div>'
+     + '<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+r.date+'</div></div>';
+
+  h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
+     + '<strong>'+dcLbl+'</strong>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; F<sub>y</sub> = '+r.Fy+' '+uSt+' &nbsp;&middot;&nbsp; '+r.bcLbl+' &nbsp;&middot;&nbsp; L = '+r.Lval+' '+uL+'</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub></div>'
+     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>'
+     + '<div class="ri-unit">'+uF+' &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+     + '<div class="result-item '+slCls+'">'
+     + '<div class="ri-label">KL/r (axis-'+r.govAx+')</div>'
+     + '<div class="ri-value">'+fmt(r.lMax,1)+'</div>'
+     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + '<div class="fl-col" style="min-width:100px;text-align:center">'
+     + '<div class="fl-lbl">D/C Ratio</div>'
+     + '<div class="fl-val '+dc+'" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
+     + '</div></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td>'+r.name+'</td></tr>'
+     + '<tr><td>Steel Grade</td><td>'+r.gn+'</td></tr>'
+     + '<tr><td>E / &phi;<sub>c</sub></td><td>'+r.E+' '+uSt+' &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
+     + '<tr><td>End Conditions</td><td>'+r.bcLbl+'</td></tr>'
+     + '<tr><td>Column Height L</td><td>'+r.Lval+' '+uL+'</td></tr>'
+     + '<tr><td>A<sub>g</sub> &nbsp;|&nbsp; r<sub>x</sub> &nbsp;|&nbsp; r<sub>y</sub></td><td>'+fmt(r.Ag,2)+' '+agLbl+' &nbsp;|&nbsp; '+fmt(r.rx,3)+' '+rLbl+' &nbsp;|&nbsp; '+fmt(r.ry,3)+' '+rLbl+'</td></tr>'
+     + '<tr><td>Dead P<sub>D</sub> (applied)</td><td>'+fmt(r.PD,2)+' '+uF+'</td></tr>'
+     + '<tr><td>Self-Weight (auto)</td><td>'+fmt(r.sw,3)+' '+uF+' &nbsp;('+fmt(r.wt,1)+' '+wtLbl+' &times; '+r.Lval+' '+uL+')</td></tr>'
+     + '<tr><td>Total Dead D</td><td>'+fmt(r.D,2)+' '+uF+'</td></tr>'
+     + '<tr><td>Live P<sub>L</sub> + Roof P<sub>Lr</sub></td><td>'+fmt(r.PL,2)+' + '+fmt(r.PLr,2)+' = '+fmt(r.L,2)+' '+uF+'</td></tr>'
+     + (r.S>0 ? '<tr><td>Snow P<sub>S</sub></td><td>'+fmt(r.S,2)+' '+uF+'</td></tr>' : '')
+     + (r.W>0 ? '<tr><td>Wind P<sub>W</sub></td><td>'+fmt(r.W,2)+' '+uF+'</td></tr>' : '')
+     + '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
+     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">P<sub>u</sub> ('+uF+')</th></tr>';
+  r.combos.forEach(function(c){
+    var g = c.n === r.gov;
+    h += '<tr'+(g?' class="gov-row"':'')+'>'
+       + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
+       + '<td class="combo-lbl">'+c.f+'</td>'
+       + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,2)+(g?' &larr; governs':'')+'</td></tr>';
+  });
+  h += '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design &mdash; AISC 360 Chapter E</div>'
+     + '<table class="steps-table">';
+
+  h += step(1, 'Total dead D = P<sub>D</sub> + self-weight',
+    fmt(r.PD,2)+' + '+fmt(r.sw,3)+' '+uF, 'D = '+fmt(r.D,2)+' '+uF);
+
+  h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
+    r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+
+  h += step(3, 'Effective length KL',
+    'K = '+r.K.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':'&times; 1000'),
+    'KL = '+fmt(r.KL,1)+' '+lenLbl);
+
+  h += step(4, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
+    'KL/r<sub>x</sub> = '+fmt(r.lx,1)+' &nbsp; KL/r<sub>y</sub> = '+fmt(r.ly,1),
+    '&lambda;<sub>max</sub> = '+fmt(r.lMax,1), r.slOk);
+
+  h += step(5, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
+    '4.71 &times; &radic;('+r.E+'/'+r.Fy+')',
+    '&lambda;<sub>lim</sub> = '+fmt(r.lLim,1));
+
+  h += step(6, 'Elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
+    '&pi;&sup2; &times; '+r.E+' / '+fmt(r.lMax,1)+'&sup2;',
+    'F<sub>e</sub> = '+fmt(r.Fe,2)+' '+uSt);
+
+  if (r.bMode === 'Inelastic') {
+    h += step(7, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
+      '0.658<sup>'+fmt(r.Fy/r.Fe,3)+'</sup> &times; '+r.Fy,
+      'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
+  } else {
+    h += step(7, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
+      '0.877 &times; '+fmt(r.Fe,2),
+      'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
+  }
+
+  h += step(8, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
+    r.isUS
+      ? fmt(r.Fcr,2)+' '+uSt+' &times; '+fmt(r.Ag,2)+' in&sup2;'
+      : fmt(r.Fcr,2)+' MPa &times; '+fmt(r.Ag_calc,0)+' mm&sup2; / 1000',
+    'P<sub>n</sub> = '+fmt(r.Pn,1)+' '+uF);
+
+  h += step(9, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
+    '0.90 &times; '+fmt(r.Pn,1)+' '+uF,
+    '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' '+uF);
+
+  h += step(10, 'Demand / Capacity check',
+    'P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,2)+' / '+fmt(r.phiPn,1),
+    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+  h += '</table>';
+
+  if (!r.slOk)
+    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds AISC recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
+
+  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional buckling and local buckling are not checked — verify per AISC Table B4.1a and §E4 for singly-symmetric and hollow sections.</div></div>';
+
+  h += '</div>';
+  h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; AISC 360 LRFD</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
+
+  document.getElementById('ac-empty').style.display = 'none';
+  document.getElementById('ac-card').style.display  = '';
+  document.getElementById('ac-body').innerHTML = h;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function(){ acPopGrades(); acPopTypes(); acUpdateLabels(); })();
+</script>
+</body>
+</html>
