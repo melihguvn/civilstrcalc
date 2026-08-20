@@ -132,8 +132,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="unit-switcher">
         <label>Design Code:</label>
         <div class="unit-btns">
-          <button class="unit-btn active" id="fd-btn-aisc" onclick="fdSetCode('aisc',this)">AISC LRFD</button>
-          <button class="unit-btn"        id="fd-btn-ec3"  onclick="fdSetCode('ec3',this)">EN 1993-1-1</button>
+          <button class="unit-btn active" id="fd-btn-aisc"  onclick="fdSetCode('aisc',this)">AISC LRFD</button>
+          <button class="unit-btn"        id="fd-btn-ec3"   onclick="fdSetCode('ec3',this)">EN 1993-1-1</button>
+          <button class="unit-btn"        id="fd-btn-is800" onclick="fdSetCode('is800',this)">IS 800:2000</button>
         </div>
       </div>
       <div class="unit-switcher">
@@ -149,7 +150,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <select id="fd-grade" onchange="fdAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
       </div>
       <div class="form-group" id="fd-gm0-row" style="display:none">
-        <label>&gamma;<sub>M0</sub> &mdash; partial factor (EN 1993-1-1 &sect;6.1)</label>
+        <label>&gamma;<sub>M0</sub> &mdash; partial factor (EC3 &sect;6.1 / IS 800 &sect;5)</label>
         <div class="iw"><input type="number" id="fd-gm0" value="1.00" step="0.01" min="1.00" max="1.10" oninput="fdAutoCalc()"><span class="us">&mdash;</span></div>
       </div>
 
@@ -290,6 +291,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-theory">AISC LRFD</a>
     <a href="#bg-combos">ASCE 7-22 Combos</a>
     <a href="#bg-ec3">EN 1993-1-1 (EC3)</a>
+    <a href="#bg-is800">IS 800:2000</a>
     <a href="#bg-limits">Limitations</a>
   </nav>
   <div class="bg-pane" id="bg-theory">
@@ -413,6 +415,63 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         Variable load &delta;<sub>Q</sub> &le; L/180 &nbsp;|&nbsp; Total &delta;<sub>max</sub> &le; L/90
       </div>
       <p>E = 210 000 N/mm&sup2; (EN 1993-1-1 &sect;3.2.6)</p>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-is800">
+    <div class="bg-panel-hdr"><span>IS 800:2000 (BIS) &mdash; Design Method</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Section Classification &mdash; IS 800:2000 Table 2</h4>
+      <p>Classification uses &epsilon; = &radic;(250/f<sub>y</sub>):</p>
+      <table class="combo-ref-tbl" style="width:100%;max-width:680px">
+        <tr><th>Section type</th><th>Ratio</th><th>Class 1 &mdash; Plastic</th><th>Class 2 &mdash; Compact</th><th>Class 3 &mdash; Semi-compact</th></tr>
+        <tr><td>I/H flange outstand &nbsp;b = (B&minus;t<sub>w</sub>)/2</td><td>b/t<sub>f</sub></td><td>&le; 9.4&epsilon;</td><td>&le; 10.5&epsilon;</td><td>&le; 15.7&epsilon;</td></tr>
+        <tr><td>I/H web (pure bending)</td><td>d/t<sub>w</sub></td><td>&le; 84&epsilon;</td><td>&le; 105&epsilon;</td><td>&le; 126&epsilon;</td></tr>
+        <tr><td>Channel flange outstand &nbsp;b = B&minus;t<sub>w</sub></td><td>b/t<sub>f</sub></td><td>&le; 9.4&epsilon;</td><td>&le; 10.5&epsilon;</td><td>&le; 15.7&epsilon;</td></tr>
+      </table>
+      <p>d = h &minus; 2t<sub>f</sub> (clear web, fillet excluded for simplicity) &nbsp;|&nbsp; Class 4 (Slender) not covered here.</p>
+
+      <h4>Flexural Design Strength &mdash; IS 800:2000 Cl. 8.2.1</h4>
+      <div class="fml-blk"><span class="ft">Class 1 &amp; 2 (Plastic / Compact)</span>
+        M<sub>d</sub> = &beta;<sub>b</sub> &times; Z<sub>px</sub> &times; f<sub>yd</sub> &nbsp;<b>[kN&middot;m]</b> &nbsp;(&beta;<sub>b</sub> = 1.0)<br>
+        Cap (simply supported): M<sub>d</sub> &le; 1.2 &times; Z<sub>ex</sub> &times; f<sub>yd</sub><br>
+        Cap (cantilever): M<sub>d</sub> &le; 1.5 &times; Z<sub>ex</sub> &times; f<sub>yd</sub>
+      </div>
+      <div class="fml-blk"><span class="ft">Class 3 (Semi-compact)</span>
+        M<sub>d</sub> = Z<sub>ex</sub> &times; f<sub>yd</sub> &nbsp;<b>[kN&middot;m]</b>
+      </div>
+      <p>f<sub>yd</sub> = f<sub>y</sub> / &gamma;<sub>m0</sub> &nbsp;|&nbsp; &gamma;<sub>m0</sub> = 1.10 (IS 800:2000 Table 5) &nbsp;|&nbsp; Z<sub>px</sub>, Z<sub>ex</sub> from IS 808:1989</p>
+
+      <h4>IS 800:2000 Table 4 &mdash; ULS Load Combinations (IS 875)</h4>
+      <table class="combo-ref-tbl" style="width:100%;max-width:560px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.5DL + 1.5IL</td></tr>
+        <tr><td>2</td><td>1.5DL + 1.5SL</td></tr>
+        <tr><td>3</td><td>1.5DL + 1.5WL</td></tr>
+        <tr><td>4</td><td>1.2DL + 1.2IL + 1.2WL</td></tr>
+        <tr><td>5</td><td>1.2DL + 1.2SL + 1.2WL</td></tr>
+        <tr><td>6</td><td>0.9DL + 1.5WL &nbsp;(uplift)</td></tr>
+      </table>
+      <p>DL = dead + self-weight &nbsp;|&nbsp; IL = imposed (live + roof live) &nbsp;|&nbsp; SL = snow &nbsp;|&nbsp; WL = wind</p>
+
+      <h4>Inclined Beam &mdash; Biaxial Bending (IS 800:2000 Cl. 9.3.1)</h4>
+      <p>Gravity load is resolved into strong- and weak-axis components. IS 800 uses a linear interaction for pure bending:</p>
+      <div class="fml-blk"><span class="ft">Biaxial check</span>
+        M<sub>u,y</sub> / M<sub>d,y</sub> + M<sub>u,z</sub> / M<sub>d,z</sub> &le; 1.0
+      </div>
+
+      <h4>Indian Steel Grades &mdash; IS 2062</h4>
+      <div class="fml-blk"><span class="ft">IS 2062 grades</span>
+        E250A: f<sub>y</sub> = 250 MPa &nbsp;|&nbsp; E300: f<sub>y</sub> = 300 MPa &nbsp;|&nbsp; E350: f<sub>y</sub> = 350 MPa &nbsp;|&nbsp; E410: f<sub>y</sub> = 410 MPa
+      </div>
+
+      <h4>Serviceability Deflection Limits &mdash; IS 800:2000 Table 6</h4>
+      <div class="fml-blk"><span class="ft">Simply supported / propped</span>
+        Imposed load &delta;<sub>IL</sub> &le; L/300 &nbsp;|&nbsp; Total &delta;<sub>max</sub> &le; L/250
+      </div>
+      <div class="fml-blk"><span class="ft">Cantilever</span>
+        Imposed load &delta;<sub>IL</sub> &le; L/150 &nbsp;|&nbsp; Total &delta;<sub>max</sub> &le; L/125
+      </div>
+      <p>E = 200 000 N/mm&sup2; (IS 800:2000 &sect;2.2.4.1)</p>
     </div>
   </div>
   <div class="bg-pane" id="bg-limits">
@@ -539,7 +598,84 @@ HSS_RECT:{std:'amer',desc:'Rectangular hollow structural sections. AISC / ASTM A
   data:[['HSS20×12×1/2',20.0,12.0,0.465,27.6,94.0,1140,114,132,6.43,449,74.9,87.2,4.03,1040,134],['HSS16×8×5/8',16.0,8.0,0.581,26.7,91.0,530,66.3,79.4,4.46,166,41.5,49.7,2.49,394,71.2],['HSS14×10×1/2',14.0,10.0,0.465,21.5,73.1,396,56.5,66.3,4.30,224,44.8,52.5,3.23,449,77.8],['HSS12×8×1/2',12.0,8.0,0.465,18.1,61.7,224,37.3,44.3,3.52,120,30.0,35.7,2.57,261,52.3],['HSS10×6×3/8',10.0,6.0,0.349,11.8,40.3,96.1,19.2,23.3,2.86,44.1,14.7,18.0,1.93,95.5,27.0],['HSS8×6×3/8',8.0,6.0,0.349,9.82,33.5,55.2,13.8,16.9,2.37,34.3,11.4,13.9,1.87,73.2,22.0],['HSS6×4×3/8',6.0,4.0,0.349,7.38,25.2,24.0,8.01,10.1,1.80,11.8,5.90,7.37,1.26,26.7,11.0],['HSS4×3×5/16',4.0,3.0,0.291,3.92,13.3,6.36,3.18,4.12,1.27,3.53,2.35,3.03,0.949,9.01,5.70]]},
 HSS_R:{std:'amer',desc:'Round hollow structural sections. AISC / ASTM A500.',shape:'CHS',
   cols:['Section','OD (in)','t (in)','A (in²)','W (lb/ft)','Ix=Iy (in⁴)','Sx=Sy (in³)','Zx=Zy (in³)','rx=ry (in)','J (in⁴)','C (in³)'],
-  data:[['HSS16.000×0.500',16.0,0.465,22.6,76.9,479,59.9,80.3,4.61,959,120],['HSS12.750×0.500',12.75,0.465,18.0,61.5,241,37.8,50.7,3.66,482,75.5],['HSS10.750×0.500',10.75,0.465,15.2,51.8,143,26.6,35.8,3.07,286,53.2],['HSS8.625×0.500',8.625,0.465,12.2,41.4,74.3,17.2,23.3,2.46,149,34.5],['HSS8.625×0.375',8.625,0.349,9.24,31.4,57.5,13.3,17.9,2.50,115,26.6],['HSS6.625×0.375',6.625,0.349,7.15,24.3,26.0,7.85,10.7,1.91,52.1,15.7],['HSS5.000×0.375',5.0,0.349,5.19,17.7,8.62,3.45,4.80,1.29,17.2,6.89],['HSS4.000×0.375',4.0,0.349,4.13,14.1,4.33,2.17,3.06,1.02,8.66,4.33],['HSS3.000×0.300',3.0,0.279,2.42,8.24,1.27,0.848,1.23,0.723,2.54,1.70]]}
+  data:[['HSS16.000×0.500',16.0,0.465,22.6,76.9,479,59.9,80.3,4.61,959,120],['HSS12.750×0.500',12.75,0.465,18.0,61.5,241,37.8,50.7,3.66,482,75.5],['HSS10.750×0.500',10.75,0.465,15.2,51.8,143,26.6,35.8,3.07,286,53.2],['HSS8.625×0.500',8.625,0.465,12.2,41.4,74.3,17.2,23.3,2.46,149,34.5],['HSS8.625×0.375',8.625,0.349,9.24,31.4,57.5,13.3,17.9,2.50,115,26.6],['HSS6.625×0.375',6.625,0.349,7.15,24.3,26.0,7.85,10.7,1.91,52.1,15.7],['HSS5.000×0.375',5.0,0.349,5.19,17.7,8.62,3.45,4.80,1.29,17.2,6.89],['HSS4.000×0.375',4.0,0.349,4.13,14.1,4.33,2.17,3.06,1.02,8.66,4.33],['HSS3.000×0.300',3.0,0.279,2.42,8.24,1.27,0.848,1.23,0.723,2.54,1.70]]},
+ISMB:{std:'india',desc:'Medium weight I-beam. IS 808:1989.',shape:'I',
+  data:[
+    ['ISMB 100', 100, 75, 4.0,  7.2,  9.0,  14.60, 11.5,  259,   51.9,  60.6,  4.22,  49.5,  13.2, 20.5, 1.84],
+    ['ISMB 125', 125, 75, 4.4,  7.6,  9.0,  16.59, 13.0,  449,   71.8,  83.8,  5.20,  52.9,  14.1, 21.9, 1.79],
+    ['ISMB 150', 150, 80, 4.8,  7.6,  9.5,  19.00, 14.9,  726,   96.9, 113.2,  6.18,  52.2,  16.8, 26.1, 1.66],
+    ['ISMB 175', 175, 90, 5.5,  8.6, 10.0,  24.62, 19.3, 1272,  145,   170,    7.19,  99.7,  22.2, 34.2, 2.01],
+    ['ISMB 200', 200,100, 5.7, 10.8, 11.0,  32.33, 25.4, 2235,  224,   261,    8.32, 150,    30.1, 46.6, 2.15],
+    ['ISMB 225', 225,110, 6.5, 11.8, 12.0,  39.72, 31.2, 3441,  306,   357,    9.30, 218,    39.6, 61.4, 2.34],
+    ['ISMB 250', 250,125, 6.9, 12.5, 13.0,  47.55, 37.3, 5132,  411,   480,   10.39, 334,    53.4, 82.7, 2.65],
+    ['ISMB 300', 300,140, 7.5, 13.1, 14.0,  58.64, 46.1, 8690,  579,   678,   12.18, 477,    68.2,105,   2.85],
+    ['ISMB 350', 350,140, 8.1, 14.2, 14.0,  66.71, 52.4,13630,  779,   915,   14.29, 538,    76.8,119,   2.84],
+    ['ISMB 400', 400,140, 8.9, 16.0, 14.0,  78.46, 61.6,20458, 1022,  1202,   16.14, 622,    88.8,138,   2.82],
+    ['ISMB 450', 450,150, 9.4, 17.4, 15.0,  92.27, 72.4,30390, 1350,  1590,   18.15, 834,   111,  173,   3.01],
+    ['ISMB 500', 500,180,10.2, 17.2, 17.0, 110.74, 86.9,45218, 1809,  2115,   20.21,1370,   152,  235,   3.52],
+    ['ISMB 550', 550,190,11.2, 19.3, 17.0, 132.11,103.7,64893, 2360,  2759,   22.17,1833,   193,  299,   3.73],
+    ['ISMB 600', 600,210,12.0, 20.8, 17.0, 156.21,122.6,91813, 3061,  3573,   24.25,2651,   252,  390,   4.12]
+  ]},
+ISLB:{std:'india',desc:'Light weight I-beam. IS 808:1989.',shape:'I',
+  data:[
+    ['ISLB 75',   75,  50, 3.7,  5.0,  5.0,   7.26,  5.70,  52.1,  13.9,  16.4, 2.68,  9.71, 3.88, 6.11, 1.16],
+    ['ISLB 100', 100,  50, 4.0,  6.4,  7.0,  10.26,  8.06, 168,    33.6,  39.6, 4.04,  15.4,  6.16, 9.67, 1.22],
+    ['ISLB 125', 125,  75, 4.4,  6.5,  8.0,  14.93, 11.72, 406,    64.9,  75.7, 5.21,  49.9,  13.3, 20.8, 1.83],
+    ['ISLB 150', 150,  80, 4.8,  6.8,  9.0,  17.01, 13.36, 688,    91.7, 107,   6.36,  55.2,  13.8, 21.5, 1.80],
+    ['ISLB 175', 175,  90, 5.1,  7.8,  9.5,  22.09, 17.34,1205,   137,   161,   7.38,  89.9,  20.0, 31.1, 2.02],
+    ['ISLB 200', 200, 100, 5.4,  8.6, 10.0,  26.22, 20.58,1696,   170,   198,   8.04, 115,    23.0, 35.8, 2.10],
+    ['ISLB 225', 225, 100, 5.8,  9.9, 10.5,  30.28, 23.77,2690,   239,   280,   9.42, 131,    26.3, 40.9, 2.08],
+    ['ISLB 250', 250, 125, 6.1, 10.0, 11.0,  36.62, 28.74,4354,   348,   407,  10.90, 231,    37.0, 57.5, 2.51],
+    ['ISLB 300', 300, 150, 6.7, 10.6, 13.0,  48.08, 37.74,7332,   489,   572,  12.35, 376,    50.1, 78.0, 2.80],
+    ['ISLB 350', 350, 165, 7.4, 11.4, 14.0,  60.52, 47.51,13158,  751,   879,  14.74, 631,    76.5, 119,  3.23],
+    ['ISLB 400', 400, 165, 8.0, 12.5, 14.0,  71.52, 56.14,19306,  965,  1135,  16.42, 716,    86.8, 135,  3.16],
+    ['ISLB 450', 450, 170, 8.6, 13.4, 15.0,  83.11, 65.24,27536, 1224,  1443,  18.20, 836,    98.4, 153,  3.17],
+    ['ISLB 500', 500, 180, 9.2, 14.1, 16.0,  95.50, 75.0, 38548, 1542,  1818,  20.10,1063,   118,  184,   3.34],
+    ['ISLB 550', 550, 190, 9.9, 15.0, 17.0, 109.67, 86.09,53161, 1933,  2281,  22.01,1350,   142,  222,   3.51],
+    ['ISLB 600', 600, 210,10.5, 15.5, 18.0, 127.53,100.11,72868, 2429,  2865,  23.90,1945,   185,  289,   3.91]
+  ]},
+ISWB:{std:'india',desc:'Wide flange I-beam. IS 808:1989.',shape:'I',
+  data:[
+    ['ISWB 150', 150, 100, 5.4,  7.0,  9.5,  19.30, 15.16, 742,    99.0, 116,   6.20, 71.6,  14.3, 22.2, 1.93],
+    ['ISWB 175', 175, 125, 5.8,  7.4, 10.5,  25.06, 19.67,1508,   172,   202,   7.76, 175,    28.0, 43.4, 2.64],
+    ['ISWB 200', 200, 140, 6.1,  9.0, 11.5,  35.52, 27.88,2681,   268,   316,   8.68, 304,    43.4, 67.2, 2.93],
+    ['ISWB 225', 225, 150, 6.4,  9.9, 12.5,  43.23, 33.94,4345,   386,   454,  10.02, 440,    58.6, 91.0, 3.19],
+    ['ISWB 250', 250, 200, 6.7, 10.7, 13.0,  60.80, 47.73,7709,   617,   721,  11.26,1149,   115,  178,   4.35],
+    ['ISWB 300', 300, 200, 7.1, 10.0, 14.0,  61.33, 48.14,9821,   655,   773,  12.65, 988,    98.8, 153,  4.01],
+    ['ISWB 350', 350, 200, 8.0, 12.5, 14.0,  79.93, 62.77,19153, 1094,  1283,  15.49,1178,   118,  183,   3.84],
+    ['ISWB 400', 400, 200, 8.0, 13.0, 14.0,  85.00, 66.72,25064, 1253,  1473,  17.17,1209,   121,  187,   3.77],
+    ['ISWB 450', 450, 200, 9.0, 15.4, 15.0, 101.15, 79.40,35058, 1558,  1834,  18.62,1310,   131,  203,   3.60],
+    ['ISWB 500', 500, 250,10.0, 14.7, 17.0, 128.00,100.50,52291, 2092,  2464,  20.20,2945,   236,  363,   4.80],
+    ['ISWB 550', 550, 250,10.5, 17.6, 17.0, 149.35,117.25,72875, 2650,  3121,  22.09,3464,   277,  428,   4.82],
+    ['ISWB 600', 600, 250,11.2, 17.8, 17.0, 145.73,114.40,98818, 3294,  3876,  26.02,3471,   278,  430,   4.88]
+  ]},
+ISHB:{std:'india',desc:'H-section column. IS 808:1989.',shape:'I',
+  data:[
+    ['ISHB 150',  150, 150, 5.4,  7.0,  9.5,  28.74, 22.57, 893,  119,  140,  5.58, 364,   48.5,  75.4, 3.56],
+    ['ISHB 200',  200, 200, 6.1,  9.0, 11.5,  52.59, 41.28,3609,  361,  421,  8.28,1328,  133,   204,   5.03],
+    ['ISHB 200A', 200, 200, 7.0,  9.0, 11.5,  55.98, 43.94,3860,  386,  451,  8.30,1340,  134,   206,   4.89],
+    ['ISHB 225',  225, 225, 6.5,  9.1, 13.0,  64.65, 50.75,6186,  550,  641,  9.78,2358,  209,   322,   6.04],
+    ['ISHB 250',  250, 250, 6.9,  9.7, 13.0,  78.47, 61.60,10381, 830,  967, 11.50,3815,  305,   471,   6.97],
+    ['ISHB 300',  300, 250, 7.6, 10.6, 14.0,  86.67, 68.03,12546, 836,  985, 12.03,3310,  265,   408,   6.18],
+    ['ISHB 350',  350, 250, 8.1, 11.6, 14.0,  99.67, 78.23,19450,1111, 1310, 13.97,3496,  280,   433,   5.92],
+    ['ISHB 400',  400, 250, 8.8, 12.7, 14.0, 114.00, 89.49,29035,1452, 1711, 15.96,3604,  288,   447,   5.62],
+    ['ISHB 450',  450, 250, 9.8, 13.7, 15.0, 131.67,103.36,41588,1848, 2176, 17.78,3740,  299,   463,   5.33],
+    ['ISHB 500',  500, 250,10.2, 14.7, 17.0, 149.35,117.24,56492,2260, 2665, 19.45,3868,  309,   479,   5.09]
+  ]},
+ISMC:{std:'india',desc:'Channel section. IS 808:1989.',shape:'C',
+  data:[
+    ['ISMC 75',   75,  40, 4.4, 7.3, 8.0,  8.67,  6.80,  67.9,  18.1,  22.8, 2.80,  9.08,  3.10, 1.02],
+    ['ISMC 100', 100,  50, 5.0, 7.5, 9.0, 11.70,  9.19, 186,    37.3,  46.6, 3.99, 19.4,   5.42, 1.29],
+    ['ISMC 125', 125,  65, 5.0, 8.1,10.0, 16.19, 12.71, 416,    66.5,  81.5, 5.07, 43.7,   9.30, 1.64],
+    ['ISMC 150', 150,  75, 5.4, 9.0,10.0, 20.88, 16.40, 779,   104,   127,   6.11, 82.1,   15.0, 1.98],
+    ['ISMC 175', 175,  75, 5.7, 9.5,10.5, 23.63, 18.55,1267,   145,   177,   7.32, 95.1,   17.0, 2.01],
+    ['ISMC 200', 200,  75, 6.1,10.8,11.0, 28.21, 22.14,1819,   182,   224,   8.03,103,    18.6, 1.91],
+    ['ISMC 225', 225,  80, 6.4,11.6,11.5, 32.35, 25.39,2694,   239,   295,   9.13,130,    22.1, 2.00],
+    ['ISMC 250', 250,  82, 6.9,12.5,12.0, 38.68, 30.36,3724,   298,   370,   9.81,142,    23.2, 1.92],
+    ['ISMC 300', 300,  90, 7.8,13.6,13.0, 49.62, 38.95,6362,   424,   530,  11.33,218,    32.5, 2.10],
+    ['ISMC 350', 350, 100, 8.1,13.5,13.0, 57.28, 44.96,10008,  572,   716,  13.23,305,    41.2, 2.31],
+    ['ISMC 400', 400, 100, 8.6,16.0,14.0, 68.43, 53.72,15082,  754,   952,  14.85,314,    42.6, 2.14]
+  ]}
 };
 
 // ── COLUMN INDEX MAP ───────────────────────────────────────────────────────────
@@ -564,6 +700,11 @@ var SEC_COLS = {
   CHS:      {wt:4, I:6, Wply:8,                                       depth:1, dUnit:'mm', wUnit:'kg/m'},
   UPN:      {wt:7, I:8, Wply:10, Welz:13,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
   UPE:      {wt:6, I:7, Wply:9,  Welz:12,                            depth:1, dUnit:'mm', wUnit:'kg/m'},
+  ISMB: {wt:7, I:8, Wely:9, Wply:10, Welz:13, Wplz:14, depth:1, dUnit:'mm', wUnit:'kg/m'},
+  ISLB: {wt:7, I:8, Wely:9, Wply:10, Welz:13, Wplz:14, depth:1, dUnit:'mm', wUnit:'kg/m'},
+  ISWB: {wt:7, I:8, Wely:9, Wply:10, Welz:13, Wplz:14, depth:1, dUnit:'mm', wUnit:'kg/m'},
+  ISHB: {wt:7, I:8, Wely:9, Wply:10, Welz:13, Wplz:14, depth:1, dUnit:'mm', wUnit:'kg/m'},
+  ISMC: {wt:7, I:8, Wely:9, Wply:10, Welz:13,           depth:1, dUnit:'mm', wUnit:'kg/m'},
 };
 
 var fdCode     = 'aisc';
@@ -608,6 +749,19 @@ var TYPES_SI = [
   {key:'UPN', label:'UPN — Taper Flange Channel'},
   {key:'UPE', label:'UPE — Parallel Flange Channel'}
 ];
+var GRADES_IN = [
+  {n:'E250A (IS 2062)', Fy:250},
+  {n:'E300 (IS 2062)',  Fy:300},
+  {n:'E350 (IS 2062)',  Fy:350},
+  {n:'E410 (IS 2062)',  Fy:410}
+];
+var TYPES_IN = [
+  {key:'ISMB', label:'ISMB — Medium Weight I-Beam'},
+  {key:'ISLB', label:'ISLB — Light Weight I-Beam'},
+  {key:'ISWB', label:'ISWB — Wide Flange I-Beam'},
+  {key:'ISHB', label:'ISHB — H-Section (Column)'},
+  {key:'ISMC', label:'ISMC — Channel Section'}
+];
 
 function fdSetUnit(unit, btn) {
   fdUnit = unit;
@@ -624,11 +778,13 @@ function fdSetCode(code, btn) {
   fdCode = code;
   document.getElementById('fd-btn-aisc').classList.remove('active');
   document.getElementById('fd-btn-ec3').classList.remove('active');
+  document.getElementById('fd-btn-is800').classList.remove('active');
   btn.classList.add('active');
 
   var gm0Row    = document.getElementById('fd-gm0-row');
   var loadsTitle = document.getElementById('fd-loads-title');
   var usBtnEl   = document.getElementById('fd-btn-us');
+  var gm0Input  = document.getElementById('fd-gm0');
 
   if (code === 'ec3') {
     // Force SI and lock
@@ -636,8 +792,20 @@ function fdSetCode(code, btn) {
     usBtnEl.disabled = true;
     usBtnEl.style.opacity = '0.4';
     if (gm0Row)    gm0Row.style.display = '';
+    if (gm0Input)  gm0Input.value = '1.00';
     if (loadsTitle) loadsTitle.textContent = 'Loads — EN 1990';
     document.getElementById('fd-rh-code').textContent = 'EN 1993-1-1 · kN · m · mm';
+  } else if (code === 'is800') {
+    // Force SI and lock
+    if (fdUnit !== 'si') fdSetUnit('si', document.getElementById('fd-btn-si'));
+    usBtnEl.disabled = true;
+    usBtnEl.style.opacity = '0.4';
+    if (gm0Row)    gm0Row.style.display = '';
+    if (gm0Input)  gm0Input.value = '1.10';
+    if (loadsTitle) loadsTitle.textContent = 'Loads — IS 875';
+    document.getElementById('fd-rh-code').textContent = 'IS 800:2000 · kN · m · mm';
+    fdPopGrades();
+    fdPopTypes();
   } else {
     usBtnEl.disabled = false;
     usBtnEl.style.opacity = '';
@@ -645,6 +813,8 @@ function fdSetCode(code, btn) {
     if (loadsTitle) loadsTitle.textContent = 'Loads — ASCE 7-22';
     var tag = fdUnit === 'us' ? 'kip · ft · in' : 'kN · m · mm';
     document.getElementById('fd-rh-code').textContent = 'AISC LRFD · ' + tag;
+    fdPopGrades();
+    fdPopTypes();
   }
   fdHide();
 }
@@ -655,7 +825,7 @@ function fdUpdateLabels() {
   var lU  = fdUnit==='us' ? 'ft'     : 'm';
   var tag = fdUnit==='us' ? 'kip · ft · in' : 'kN · m · mm';
   document.getElementById('fd-unit-tag').textContent = tag;
-  if (fdCode !== 'ec3') document.getElementById('fd-rh-code').textContent = 'AISC LRFD · ' + tag;
+  if (fdCode !== 'ec3' && fdCode !== 'is800') document.getElementById('fd-rh-code').textContent = 'AISC LRFD · ' + tag;
   ['L','wD','wL','wS','wLr','wW'].forEach(function(k){
     var lbl = document.getElementById('fd-'+k+'-lbl');
     var us  = document.getElementById('fd-'+k+'-us');
@@ -754,12 +924,13 @@ function fdUpdateAreaResult() {
 }
 
 function fdPopGrades() {
-  document.getElementById('fd-grade').innerHTML = (fdUnit==='us' ? GRADES_US : GRADES_SI)
+  var grades = fdUnit==='us' ? GRADES_US : (fdCode==='is800' ? GRADES_IN : GRADES_SI);
+  document.getElementById('fd-grade').innerHTML = grades
     .map(function(g){ return '<option value="'+g.Fy+'">'+g.n+'</option>'; }).join('');
 }
 
 function fdPopTypes() {
-  var types = fdUnit==='us' ? TYPES_US : TYPES_SI;
+  var types = fdUnit==='us' ? TYPES_US : (fdCode==='is800' ? TYPES_IN : TYPES_SI);
   fdSecType = types[0].key;
   document.getElementById('fd-sectype').innerHTML = types
     .map(function(t){ return '<option value="'+t.key+'">'+t.label+'</option>'; }).join('');
@@ -840,7 +1011,8 @@ function fdHide() {
 }
 
 function fdCalc() {
-  if (fdCode === 'ec3') { fdCalcEC3(); return; }
+  if (fdCode === 'ec3')   { fdCalcEC3();   return; }
+  if (fdCode === 'is800') { fdCalcIS800(); return; }
   var name = document.getElementById('fd-section').value;
   if (!name) { alert('Please select a profile first.'); return; }
   var row = ((DB[fdSecType]&&DB[fdSecType].data)||[]).find(function(r){ return r[0]===name; });
@@ -1284,6 +1456,32 @@ function fdClassifySection(row, fy, secType) {
   return null;
 }
 
+// ── IS 800:2000 section classification (IS 800:2000 Table 2) ─────────────────
+function fdClassifySectionIS800(row, fy, secType) {
+  var eps = Math.sqrt(250 / fy);
+  if (secType==='ISMB'||secType==='ISLB'||secType==='ISWB'||secType==='ISHB') {
+    var h=+row[1], b=+row[2], tw=+row[3], tf=+row[4];
+    var bf = (b - tw) / 2, bf_tf = bf / tf;
+    var d  = h - 2*tf,     d_tw  = d  / tw;
+    var fc = bf_tf<=9.4*eps?1:bf_tf<=10.5*eps?2:bf_tf<=15.7*eps?3:4;
+    var wc = d_tw <=84*eps ?1:d_tw <=105*eps ?2:d_tw <=126*eps ?3:4;
+    return { eps:eps, bf:bf, bf_tf:bf_tf, d:d, d_tw:d_tw,
+      flangeClass:fc, webClass:wc, secClass:Math.max(fc,wc), type:'I',
+      cfLims:[9.4*eps,10.5*eps,15.7*eps], webLims:[84*eps,105*eps,126*eps] };
+  }
+  if (secType==='ISMC') {
+    var h=+row[1], b=+row[2], tw=+row[3], tf=+row[4];
+    var bf = b - tw, bf_tf = bf / tf;
+    var d  = h - 2*tf, d_tw = d / tw;
+    var fc = bf_tf<=9.4*eps?1:bf_tf<=10.5*eps?2:bf_tf<=15.7*eps?3:4;
+    var wc = d_tw <=84*eps ?1:d_tw <=105*eps ?2:d_tw <=126*eps ?3:4;
+    return { eps:eps, bf:bf, bf_tf:bf_tf, d:d, d_tw:d_tw,
+      flangeClass:fc, webClass:wc, secClass:Math.max(fc,wc), type:'channel',
+      cfLims:[9.4*eps,10.5*eps,15.7*eps], webLims:[84*eps,105*eps,126*eps] };
+  }
+  return null;
+}
+
 // ── EC3 main calculation ───────────────────────────────────────────────────────
 function fdCalcEC3() {
   var name = document.getElementById('fd-section').value;
@@ -1655,6 +1853,336 @@ function fdRenderEC3(r) {
   h += '<div class="print-footer">'
      + '<span>Generated by <strong>CivilStrCalc.com</strong> &mdash; Free Structural Engineering Tools</span>'
      + '<span>&copy; '+new Date().getFullYear()+' CivilStrCalc.com &nbsp;&middot;&nbsp; EN 1993-1-1 / EN 1990</span>'
+     + '</div>';
+
+  document.getElementById('fd-empty').style.display = 'none';
+  document.getElementById('fd-card').style.display  = '';
+  document.getElementById('fd-body').innerHTML = h;
+}
+
+// ── IS 800:2000 main calculation ───────────────────────────────────────────────
+function fdCalcIS800() {
+  var name = document.getElementById('fd-section').value;
+  if (!name) { alert('Please select a profile first.'); return; }
+  var row = ((DB[fdSecType] && DB[fdSecType].data) || []).find(function(r){ return r[0]===name; });
+  if (!row) return;
+  var cm = SEC_COLS[fdSecType];
+
+  var Fy  = +document.getElementById('fd-grade').value;
+  var gm0 = +document.getElementById('fd-gm0').value || 1.10;
+  var L   = +document.getElementById('fd-span').value || 0;
+  var bc  = document.getElementById('fd-bc').value;
+  var gn  = document.getElementById('fd-grade').options[document.getElementById('fd-grade').selectedIndex].text;
+
+  var wD, wL, wS, wLr, wW;
+  if (fdLoadMode === 'area') {
+    var _s = +document.getElementById('fd-tw').value || 0;
+    wD  = (+document.getElementById('fd-aD').value  || 0) * _s;
+    wL  = (+document.getElementById('fd-aL').value  || 0) * _s;
+    wS  = (+document.getElementById('fd-aS').value  || 0) * _s;
+    wLr = (+document.getElementById('fd-aLr').value || 0) * _s;
+    wW  = (+document.getElementById('fd-aW').value  || 0) * _s;
+  } else {
+    wD  = +document.getElementById('fd-dL').value  || 0;
+    wL  = +document.getElementById('fd-lL').value  || 0;
+    wS  = +document.getElementById('fd-sL').value  || 0;
+    wLr = +document.getElementById('fd-rL').value  || 0;
+    wW  = +document.getElementById('fd-wW').value  || 0;
+  }
+  if (L <= 0) { alert('Span must be > 0.'); return; }
+
+  var sw = fdGetSelfWeight(row);   // kN/m
+  var DL = wD + sw;                // total dead load [kN/m]
+  var IL = wL + wLr;               // imposed load    [kN/m]
+  var SL = wS;                     // snow            [kN/m]
+  var WL = wW;                     // wind            [kN/m]
+
+  // IS 800:2000 Table 4 / IS 875 — ULS load combinations
+  var combos = [
+    {n:'1', f:'1.5DL + 1.5IL',          w: 1.5*DL + 1.5*IL},
+    {n:'2', f:'1.5DL + 1.5SL',          w: 1.5*DL + 1.5*SL},
+    {n:'3', f:'1.5DL + 1.5WL',          w: 1.5*DL + 1.5*WL},
+    {n:'4', f:'1.2DL + 1.2IL + 1.2WL',  w: 1.2*DL + 1.2*IL + 1.2*WL},
+    {n:'5', f:'1.2DL + 1.2SL + 1.2WL',  w: 1.2*DL + 1.2*SL + 1.2*WL},
+    {n:'6', f:'0.9DL + 1.5WL (uplift)', w: 0.9*DL + 1.5*WL}
+  ];
+  var gov = combos.reduce(function(a,b){ return a.w >= b.w ? a : b; });
+  var wu  = gov.w;
+
+  var Cm    = bc==='ff'?1/12:(bc==='fp'?9/128:(bc==='cant'?1/2:1/8));
+  var Cd    = bc==='ff'?1/384:(bc==='fp'?1/185.14:(bc==='cant'?1/8:5/384));
+  var bcLbl = {pp:'Pin – Pin',fp:'Pin – Fixed',ff:'Fixed – Fixed',cant:'Cantilever'}[bc];
+  var bcCmStr = {pp:'1/8',fp:'9/128',ff:'1/12',cant:'1/2'}[bc];
+
+  var isInclined = document.getElementById('fd-inclined').checked;
+  var theta = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var cosT  = Math.cos(theta * Math.PI / 180);
+  var sinT  = Math.sin(theta * Math.PI / 180);
+
+  var Mu_y = wu * (isInclined ? cosT : 1) * L * L * Cm;
+  var Mu_z = isInclined ? wu * sinT * L * L * Cm : 0;
+
+  var cls  = fdClassifySectionIS800(row, Fy, fdSecType);
+  var sc   = cls ? cls.secClass : 1;
+
+  var Wply = +row[cm.Wply];
+  var Wely = cm.Wely !== undefined ? +row[cm.Wely] : null;
+  var fyd  = Fy / gm0;
+  var useWply = sc === 1 || sc === 2;
+
+  var Md_y;
+  if (useWply) {
+    var Md_pl  = Wply * fyd / 1000;
+    var capFac = bc === 'cant' ? 1.5 : 1.2;
+    var Md_cap = Wely ? capFac * Wely * fyd / 1000 : Infinity;
+    Md_y = Math.min(Md_pl, Md_cap);
+  } else {
+    Md_y = Wely ? Wely * fyd / 1000 : Wply * fyd / 1000;
+  }
+
+  var DCR = Mu_y / Md_y;
+
+  var Md_z = null, biaxDCR = null, approxWeak = false;
+  if (isInclined) {
+    var Wplz = (cm.Wplz !== undefined) ? +row[cm.Wplz] : null;
+    var Welz = (cm.Welz !== undefined) ? +row[cm.Welz] : null;
+    var Weff_z;
+    if (Wplz && useWply)   { Weff_z = Wplz; }
+    else if (Welz)         { Weff_z = Welz; if (useWply && !Wplz) approxWeak = true; }
+    else                   { Weff_z = null; }
+    if (Weff_z) {
+      Md_z = Weff_z * fyd / 1000;
+      biaxDCR = Mu_y / Md_y + Mu_z / Md_z;
+    }
+  }
+
+  var Iy_cm4  = +row[cm.I];
+  var I_mm4   = Iy_cm4 * 1e4;
+  var Lmm     = L * 1000;
+  var wIL_svc = isInclined ? IL * cosT : IL;
+  var wSvc    = (DL + IL + SL) * (isInclined ? cosT : 1);
+  var dL_mm   = Cd * wIL_svc * Math.pow(Lmm, 4) / (200000 * I_mm4);
+  var dT_mm   = Cd * wSvc    * Math.pow(Lmm, 4) / (200000 * I_mm4);
+  var limL    = Lmm * (bc === 'cant' ? 1/150 : 1/300);
+  var limT    = Lmm * (bc === 'cant' ? 1/125 : 1/250);
+  var dLok    = dL_mm <= limL;
+  var dTok    = dT_mm <= limT;
+
+  var date = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
+  fdRenderIS800({
+    name:name, gn:gn, Fy:Fy, fyd:fyd, gm0:gm0,
+    L:L, bc:bc, bcLbl:bcLbl, bcCmStr:bcCmStr,
+    wD:wD, sw:sw, DL:DL, IL:IL, SL:SL, WL:WL,
+    combos:combos, gov:gov.n, govF:gov.f, wu:wu,
+    isInclined:isInclined, theta:theta, cosT:cosT, sinT:sinT,
+    Mu_y:Mu_y, Mu_z:Mu_z,
+    cls:cls, sc:sc, Wply:Wply, Wely:Wely, useWply:useWply,
+    Md_y:Md_y, Md_z:Md_z, biaxDCR:biaxDCR, approxWeak:approxWeak,
+    DCR:DCR, Iy:Iy_cm4,
+    dL:dL_mm, dT:dT_mm, limL:limL, limT:limT,
+    limLstr:bc==='cant'?'L/150':'L/300', limTstr:bc==='cant'?'L/125':'L/250',
+    dLok:dLok, dTok:dTok,
+    defCoef:{pp:'5/384',fp:'≈1/185',ff:'1/384',cant:'1/8'}[bc],
+    date:date
+  });
+}
+
+// ── IS 800:2000 report renderer ────────────────────────────────────────────────
+function fdRenderIS800(r) {
+  var checkDCR = (r.isInclined && r.biaxDCR !== null) ? r.biaxDCR : r.DCR;
+  var dcCls  = checkDCR < 0.85 ? 'ok' : (checkDCR <= 1.0 ? 'warn' : 'err');
+  var dcLbl  = checkDCR < 0.85 ? 'Section Adequate' : (checkDCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed');
+  var sc     = r.sc;
+  var scCls  = sc <= 2 ? 'ok' : (sc === 3 ? 'warn' : 'err');
+  var scDesc = ['','Plastic','Compact','Semi-compact — elastic M only','Slender — not covered'][Math.min(sc, 4)];
+  var modName = r.useWply ? 'Z<sub>px</sub>' : 'Z<sub>ex</sub>';
+  var modVal  = r.useWply ? r.Wply : r.Wely;
+
+  function step(n, desc, fml, val, ok) {
+    var chk = ok === undefined ? '' : '<span class="step-check ' + (ok ? 'chk-ok' : 'chk-err') + '">' + (ok ? 'PASS' : 'FAIL') + '</span>';
+    var vc  = ok === true ? 'ok' : (ok === false ? 'err' : '');
+    return '<tr>'
+      + '<td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">' + n + '</div></td>'
+      + '<td><div class="step-desc">' + desc + '</div><div class="step-formula">' + fml + '</div></td>'
+      + '<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val ' + vc + '">' + val + '</span> ' + chk + '</td>'
+      + '</tr>';
+  }
+
+  var h = '';
+  var momLoc = r.bc === 'cant' ? 'at fixed support' : 'midspan';
+
+  h += '<div class="print-only">'
+     + '<div><div class="ph-title">Steel Beam Flexural Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; IS 800:2000 &nbsp;&middot;&nbsp; kN &middot; m &middot; mm</div></div>'
+     + '<div class="ph-date">' + r.date + '</div></div>';
+
+  h += '<div class="dcr-banner ' + dcCls + '">'
+     + '<div class="dcr-text">'
+     + '<strong>' + dcLbl + '</strong>'
+     + '<span>' + r.name + ' &nbsp;&middot;&nbsp; ' + r.gn + ' (f<sub>y</sub> = ' + r.Fy + ' N/mm&sup2;) &nbsp;&middot;&nbsp; ' + r.bcLbl + ' &nbsp;&middot;&nbsp; L = ' + r.L + ' m</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item ' + scCls + '">'
+     + '<div class="ri-label">Section Class (IS 800:2000 Table 2)</div>'
+     + '<div class="ri-value">Class ' + sc + '</div>'
+     + '<div class="ri-unit">' + scDesc + '</div></div>';
+
+  if (r.isInclined && r.biaxDCR !== null) {
+    var ry = fmt(r.Mu_y / r.Md_y, 3), rz = fmt(r.Mu_z / r.Md_z, 3);
+    h += '<div class="fl-col"><div class="fl-lbl">Strong axis M<sub>y</sub></div>'
+       + '<div style="font-family:var(--mono);font-size:.78rem;color:var(--text-mid);line-height:1.6">M<sub>u,y</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m<br>M<sub>d,y</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m</div>'
+       + '<div class="fl-val" style="font-size:1.3rem;margin-top:6px">' + ry + '</div></div>'
+       + '<div class="fl-col"><div class="fl-lbl">Weak axis M<sub>z</sub></div>'
+       + '<div style="font-family:var(--mono);font-size:.78rem;color:var(--text-mid);line-height:1.6">M<sub>u,z</sub> = ' + fmt(r.Mu_z, 2) + ' kN&middot;m<br>M<sub>d,z</sub> = ' + fmt(r.Md_z, 2) + ' kN&middot;m</div>'
+       + '<div class="fl-val" style="font-size:1.3rem;margin-top:6px">' + rz + '</div></div>'
+       + '<div class="fl-col" style="min-width:120px;text-align:center">'
+       + '<div class="fl-lbl">Biaxial D/C &mdash; Cl. 9.3.1 (linear)</div>'
+       + '<div class="fl-val ' + dcCls + '" style="font-size:1.5rem;margin-top:6px">' + fmt(r.biaxDCR, 3) + '</div>'
+       + '<div style="font-size:.72rem;color:var(--text-dim);margin-top:4px">' + ry + ' + ' + rz + ' = ' + fmt(r.biaxDCR, 3) + '</div>'
+       + '<div class="fl-val ' + dcCls + '" style="font-size:.9rem;margin-top:2px">' + (r.biaxDCR <= 1.0 ? '&#10003; OK' : '&#10007; NG') + '</div>'
+       + '</div>';
+    if (r.approxWeak) h += '<div class="report-warn" style="margin-top:4px"><span>&#9432;</span><div>M<sub>d,z</sub> computed using Z<sub>ez</sub> (elastic) &mdash; Z<sub>pz</sub> not in DB for this section type. Conservative.</div></div>';
+  } else {
+    h += '<div class="result-item ' + dcCls + '">'
+       + '<div class="ri-label">M<sub>u</sub> / M<sub>d</sub></div>'
+       + '<div class="ri-value">' + fmt(r.Mu_y, 2) + ' / ' + fmt(r.Md_y, 2) + '</div>'
+       + '<div class="ri-unit">kN&middot;m &ensp;' + (r.DCR <= 1.0 ? '&#10003; OK' : '&#10007; NG') + '</div></div>'
+       + '<div class="fl-col" style="min-width:100px;text-align:center">'
+       + '<div class="fl-lbl">D/C Ratio</div>'
+       + '<div class="fl-val ' + dcCls + '" style="font-size:1.5rem">' + fmt(r.DCR, 3) + '</div>'
+       + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="result-box">'
+     + '<div class="result-item ' + (r.dLok ? 'ok' : 'err') + '">'
+     + '<div class="ri-label">&delta;<sub>IL</sub> imposed / limit (' + r.limLstr + ')</div>'
+     + '<div class="ri-value">' + fmt(r.dL, 1) + ' / ' + fmt(r.limL, 1) + '</div>'
+     + '<div class="ri-unit">mm &ensp;' + (r.dLok ? '&#10003; OK' : '&#10007; EXCEEDS') + '</div></div>'
+     + '<div class="result-item ' + (r.dTok ? 'ok' : 'err') + '">'
+     + '<div class="ri-label">&delta;<sub>max</sub> total / limit (' + r.limTstr + ')</div>'
+     + '<div class="ri-value">' + fmt(r.dT, 1) + ' / ' + fmt(r.limT, 1) + '</div>'
+     + '<div class="ri-unit">mm &ensp;' + (r.dTok ? '&#10003; OK' : '&#10007; EXCEEDS') + '</div></div>'
+     + '</div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td>' + r.name + '</td></tr>'
+     + '<tr><td>Steel Grade</td><td>' + r.gn + ' &mdash; f<sub>y</sub> = ' + r.Fy + ' N/mm&sup2;</td></tr>'
+     + '<tr><td>&gamma;<sub>m0</sub></td><td>' + r.gm0.toFixed(2) + '</td></tr>'
+     + '<tr><td>End Conditions</td><td>' + r.bcLbl + '</td></tr>'
+     + '<tr><td>Span L</td><td>' + r.L + ' m</td></tr>'
+     + '<tr><td>Dead load DL (cover)</td><td>' + fmt(r.wD, 3) + ' kN/m</td></tr>'
+     + '<tr><td>Self-Weight (auto)</td><td>' + fmt(r.sw, 3) + ' kN/m</td></tr>'
+     + '<tr><td>Total DL</td><td>' + fmt(r.DL, 3) + ' kN/m</td></tr>'
+     + '<tr><td>Imposed IL (live + L<sub>r</sub>)</td><td>' + fmt(r.IL, 3) + ' kN/m</td></tr>'
+     + (r.SL > 0 ? '<tr><td>Snow SL</td><td>' + fmt(r.SL, 3) + ' kN/m</td></tr>' : '')
+     + (r.WL > 0 ? '<tr><td>Wind WL</td><td>' + fmt(r.WL, 3) + ' kN/m</td></tr>' : '')
+     + '<tr><td>Section Properties</td><td>I<sub>y</sub> = ' + r.Iy + ' cm&sup4; &nbsp;|&nbsp; Z<sub>px</sub> = ' + fmt(r.Wply, 1) + ' cm&sup3;' + (r.Wely ? ' &nbsp;|&nbsp; Z<sub>ex</sub> = ' + fmt(r.Wely, 1) + ' cm&sup3;' : '') + '</td></tr>'
+     + '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">IS 800:2000 Table 4 &mdash; ULS Load Combinations</div>'
+     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (kN/m)</th></tr>';
+  r.combos.forEach(function(c) {
+    var g = c.n === r.gov;
+    h += '<tr' + (g ? ' class="gov-row"' : '') + '>'
+       + '<td class="combo-lbl">' + (g ? '&#9654;&nbsp;' : '') + c.n + '</td>'
+       + '<td class="combo-lbl">' + c.f + '</td>'
+       + '<td style="text-align:right;font-family:var(--mono)">' + fmt(c.w, 3) + (g ? '&nbsp;&larr; governs' : '') + '</td></tr>';
+  });
+  h += '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; IS 800:2000 Cl. 8.2.1' + (r.isInclined ? ' / Cl. 9.3.1 Biaxial' : '') + '</div>'
+     + '<table class="steps-table">';
+  h += step(1, 'Total dead load DL = cover + self-weight',
+    fmt(r.wD, 3) + ' + ' + fmt(r.sw, 3) + ' kN/m', 'DL = ' + fmt(r.DL, 3) + ' kN/m');
+  h += step(2, 'Design load w<sub>u</sub> &mdash; IS 875 Combo ' + r.gov,
+    r.govF, 'w<sub>u</sub> = ' + fmt(r.wu, 3) + ' kN/m');
+  if (r.isInclined) {
+    h += step(3, 'Load decomposition &mdash; inclined beam &theta; = ' + r.theta + '&deg;',
+      'cos&theta; = ' + fmt(r.cosT, 4) + ' &nbsp;|&nbsp; sin&theta; = ' + fmt(r.sinT, 4),
+      'w<sub>y</sub> = ' + fmt(r.wu * r.cosT, 3) + ' kN/m &nbsp;/&nbsp; w<sub>z</sub> = ' + fmt(r.wu * r.sinT, 3) + ' kN/m');
+    h += step(4, 'Strong-axis moment M<sub>u,y</sub> &mdash; ' + r.bcLbl + ' (' + momLoc + ')',
+      'w<sub>y</sub> &times; L&sup2; &times; ' + r.bcCmStr,
+      'M<sub>u,y</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m');
+    h += step('4b', 'Weak-axis moment M<sub>u,z</sub>',
+      'w<sub>z</sub> &times; L&sup2; &times; ' + r.bcCmStr,
+      'M<sub>u,z</sub> = ' + fmt(r.Mu_z, 2) + ' kN&middot;m');
+    h += step(5, 'Section class &amp; strong-axis design strength M<sub>d,y</sub>',
+      '&epsilon; = ' + fmt(r.cls ? r.cls.eps : 1, 4) + ' &nbsp;|&nbsp; Class ' + sc + ' &rarr; ' + modName + ' = ' + fmt(modVal, 1) + ' cm&sup3; &nbsp;|&nbsp; f<sub>yd</sub> = ' + r.Fy + '/' + r.gm0.toFixed(2),
+      'M<sub>d,y</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m');
+    if (r.Md_z !== null) {
+      var wzNote = r.approxWeak ? 'Z<sub>ez</sub> (Z<sub>pz</sub> not in DB)' : (r.useWply ? 'Z<sub>pz</sub>' : 'Z<sub>ez</sub>');
+      h += step('5b', 'Weak-axis design strength M<sub>d,z</sub>',
+        wzNote + ' &times; f<sub>yd</sub>',
+        'M<sub>d,z</sub> = ' + fmt(r.Md_z, 2) + ' kN&middot;m');
+      var biaxOk = r.biaxDCR <= 1.0;
+      var ry6 = fmt(r.Mu_y / r.Md_y, 3), rz6 = fmt(r.Mu_z / r.Md_z, 3);
+      h += step(6, 'Biaxial interaction &mdash; IS 800:2000 Cl. 9.3.1 (linear)',
+        'M<sub>u,y</sub>/M<sub>d,y</sub> + M<sub>u,z</sub>/M<sub>d,z</sub> = ' + ry6 + ' + ' + rz6,
+        'D/C = ' + fmt(r.biaxDCR, 3), biaxOk);
+    }
+  } else {
+    h += step(3, 'Design moment M<sub>u</sub> &mdash; ' + r.bcLbl + ' (' + momLoc + ')',
+      'w<sub>u</sub> &times; L&sup2; &times; ' + r.bcCmStr + ' = ' + fmt(r.wu, 3) + ' &times; ' + r.L + '&sup2; &times; ' + r.bcCmStr,
+      'M<sub>u</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m');
+    h += step(4, 'Section classification &mdash; IS 800:2000 Table 2',
+      '&epsilon; = &radic;(250/' + r.Fy + ') = ' + fmt(r.cls ? r.cls.eps : 1, 4),
+      'Class ' + sc + ' &rarr; use ' + modName);
+    h += step(5, 'Design strength M<sub>d</sub> = ' + modName + ' &times; f<sub>yd</sub> / 1000',
+      fmt(modVal, 1) + ' cm&sup3; &times; (' + r.Fy + ' / ' + r.gm0.toFixed(2) + ') / 1000',
+      'M<sub>d</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m');
+    h += step(6, 'Demand / Capacity &mdash; Cl. 8.2.1',
+      'M<sub>u</sub> / M<sub>d</sub> = ' + fmt(r.Mu_y, 2) + ' / ' + fmt(r.Md_y, 2),
+      'D/C = ' + fmt(r.DCR, 3), r.DCR <= 1.0);
+  }
+  h += '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Section Classification &mdash; IS 800:2000 Table 2</div>';
+  if (r.cls) {
+    var cl = r.cls;
+    h += '<table class="inp-tbl">';
+    h += '<tr><td>&epsilon; = &radic;(250 / f<sub>y</sub>)</td><td>&epsilon; = ' + fmt(cl.eps, 4) + '</td></tr>';
+    if (cl.type === 'I') {
+      h += '<tr><td>Flange outstand b = (B &minus; t<sub>w</sub>) / 2</td>'
+         + '<td>' + fmt(cl.bf, 1) + ' mm &nbsp;&rarr;&nbsp; b/t<sub>f</sub> = ' + fmt(cl.bf_tf, 2)
+         + ' &nbsp;|&nbsp; Class ' + cl.flangeClass + ' (lim: ' + fmt(cl.cfLims[0], 2) + ' / ' + fmt(cl.cfLims[1], 2) + ' / ' + fmt(cl.cfLims[2], 2) + ')</td></tr>';
+      h += '<tr><td>Web d = h &minus; 2t<sub>f</sub></td>'
+         + '<td>' + fmt(cl.d, 1) + ' mm &nbsp;&rarr;&nbsp; d/t<sub>w</sub> = ' + fmt(cl.d_tw, 2)
+         + ' &nbsp;|&nbsp; Class ' + cl.webClass + ' (lim: ' + fmt(cl.webLims[0], 2) + ' / ' + fmt(cl.webLims[1], 2) + ' / ' + fmt(cl.webLims[2], 2) + ')</td></tr>';
+    } else if (cl.type === 'channel') {
+      h += '<tr><td>Flange outstand b = B &minus; t<sub>w</sub></td>'
+         + '<td>' + fmt(cl.bf, 1) + ' mm &nbsp;&rarr;&nbsp; b/t<sub>f</sub> = ' + fmt(cl.bf_tf, 2)
+         + ' &nbsp;|&nbsp; Class ' + cl.flangeClass + ' (lim: ' + fmt(cl.cfLims[0], 2) + ' / ' + fmt(cl.cfLims[1], 2) + ' / ' + fmt(cl.cfLims[2], 2) + ')</td></tr>';
+      h += '<tr><td>Web d = h &minus; 2t<sub>f</sub></td>'
+         + '<td>' + fmt(cl.d, 1) + ' mm &nbsp;&rarr;&nbsp; d/t<sub>w</sub> = ' + fmt(cl.d_tw, 2)
+         + ' &nbsp;|&nbsp; Class ' + cl.webClass + ' (lim: ' + fmt(cl.webLims[0], 2) + ' / ' + fmt(cl.webLims[1], 2) + ' / ' + fmt(cl.webLims[2], 2) + ')</td></tr>';
+    }
+    h += '<tr><td><strong>Section Class</strong></td><td><strong>Class ' + cl.secClass + '</strong> &mdash; ' + scDesc + '</td></tr>';
+    h += '</table>';
+    if (sc === 4) h += '<div class="report-warn"><span>&#9888;</span><div>Class 4 (Slender) &mdash; effective section properties required per IS 800:2000 &sect;3.7.2. Z<sub>ex</sub> used as conservative approximation. Independent verification required.</div></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Serviceability &mdash; Deflection (IS 800:2000 Table 6)</div>'
+     + '<table class="steps-table">';
+  var defILlbl = r.isInclined ? 'IL&middot;cos&theta;' : 'IL';
+  h += step('a', 'Imposed load deflection &delta;<sub>IL</sub> vs ' + r.limLstr,
+    r.defCoef + ' &times; ' + defILlbl + ' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&sup4;',
+    fmt(r.dL, 1) + ' / ' + fmt(r.limL, 1) + ' mm', r.dLok);
+  h += step('b', 'Total deflection &delta;<sub>max</sub> (DL+IL+SL) vs ' + r.limTstr,
+    'w<sub>svc</sub> = ' + fmt(r.DL + r.IL + r.SL, 3) + ' kN/m' + (r.isInclined ? ' &times; cos' + r.theta + '&deg;' : ''),
+    fmt(r.dT, 1) + ' / ' + fmt(r.limT, 1) + ' mm', r.dTok);
+  h += '</table>'
+     + '<div class="report-warn"><span>&#9432;</span><div>Assumes <b>full lateral bracing</b>. Lateral-torsional buckling (IS 800:2000 Cl. 8.2.2) not checked. Deflection limits per IS 800:2000 Table 6. Wind excluded from deflection check.</div></div>'
+     + '</div>';
+
+  h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. All results must be independently verified by a licensed structural engineer before use in any real project.</div>';
+  h += '<div class="print-footer">'
+     + '<span>Generated by <strong>CivilStrCalc.com</strong> &mdash; Free Structural Engineering Tools</span>'
+     + '<span>&copy; ' + new Date().getFullYear() + ' CivilStrCalc.com &nbsp;&middot;&nbsp; IS 800:2000 / IS 875</span>'
      + '</div>';
 
   document.getElementById('fd-empty').style.display = 'none';
