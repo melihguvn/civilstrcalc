@@ -120,7 +120,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>Steel Beam Flexural Design</h1>
-  <p>AISC LRFD flexural design for compact sections with full lateral bracing. Full ASCE 7-22 load combinations &mdash; D, L, S, L<sub>r</sub>, W. Self-weight automatically applied.</p>
+  <p id="fd-page-subtitle">AISC LRFD flexural design for compact sections with full lateral bracing. Full ASCE 7-22 load combinations &mdash; D, L, S, L<sub>r</sub>, W. Self-weight automatically applied.</p>
 </div>
 
 <div class="calc-layout">
@@ -847,9 +847,9 @@ function fdSetCode(code, btn) {
   var loadsTitle = document.getElementById('fd-loads-title');
   var usBtnEl   = document.getElementById('fd-btn-us');
   var gm0Input  = document.getElementById('fd-gm0');
+  var subtitle  = document.getElementById('fd-page-subtitle');
 
   if (code === 'ec3') {
-    // Force SI and lock
     if (fdUnit !== 'si') fdSetUnit('si', document.getElementById('fd-btn-si'));
     usBtnEl.disabled = true;
     usBtnEl.style.opacity = '0.4';
@@ -857,6 +857,7 @@ function fdSetCode(code, btn) {
     if (gm0Input)  gm0Input.value = '1.00';
     if (loadsTitle) loadsTitle.textContent = 'Loads — EN 1990';
     document.getElementById('fd-rh-code').textContent = 'EN 1993-1-1 · kN · m · mm';
+    if (subtitle) subtitle.innerHTML = 'EN 1993-1-1 flexural design. EN 1990 Eq. 6.10 load combinations — G, Q, S, W. Self-weight automatically applied.';
   } else if (code === 'is800') {
     if (fdUnit !== 'si') fdSetUnit('si', document.getElementById('fd-btn-si'));
     else { fdPopGrades(); fdPopTypes(); }
@@ -866,14 +867,16 @@ function fdSetCode(code, btn) {
     if (gm0Input)  gm0Input.value = '1.10';
     if (loadsTitle) loadsTitle.textContent = 'Loads — IS 875';
     document.getElementById('fd-rh-code').textContent = 'IS 800:2000 · kN · m · mm';
+    if (subtitle) subtitle.innerHTML = 'IS 800:2000 flexural design. IS 875 load combinations — DL, IL, SL, WL. Self-weight automatically applied.';
   } else if (code === 'cythye') {
     if (fdUnit !== 'si') fdSetUnit('si', document.getElementById('fd-btn-si'));
     else { fdPopGrades(); fdPopTypes(); }
     usBtnEl.disabled = true;
     usBtnEl.style.opacity = '0.4';
-    if (gm0Row)    gm0Row.style.display = 'none';   // φ=0.90 fixed per AISC 360
+    if (gm0Row)    gm0Row.style.display = 'none';
     if (loadsTitle) loadsTitle.textContent = 'Loads — TSDS 2016 LRFD';
     document.getElementById('fd-rh-code').textContent = 'TSDS 2016 · kN · m · mm';
+    if (subtitle) subtitle.innerHTML = 'TSDS 2016 LRFD flexural design (AISC 360-based). Load combinations — G, Q, S, W. Self-weight automatically applied.';
   } else {
     usBtnEl.disabled = false;
     usBtnEl.style.opacity = '';
@@ -881,6 +884,7 @@ function fdSetCode(code, btn) {
     if (loadsTitle) loadsTitle.textContent = 'Loads — ASCE 7-22';
     var tag = fdUnit === 'us' ? 'kip · ft · in' : 'kN · m · mm';
     document.getElementById('fd-rh-code').textContent = 'AISC LRFD · ' + tag;
+    if (subtitle) subtitle.innerHTML = 'AISC LRFD flexural design for compact sections with full lateral bracing. Full ASCE 7-22 load combinations — D, L, S, L<sub>r</sub>, W. Self-weight automatically applied.';
     fdPopGrades();
     fdPopTypes();
   }
