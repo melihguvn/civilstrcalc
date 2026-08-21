@@ -99,23 +99,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
       <div class="form-group">
         <label>Section</label>
-        <select id="ac-section" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+        <select id="ac-section" onchange="acUpdateSchema()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
       </div>
 
       <div class="form-div"></div>
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>Column Height L <span id="ac-L-lbl" class="unit-lbl">[ft]</span></label>
-          <div class="iw"><input type="number" id="ac-L" min="0" step="0.5" placeholder="e.g. 14"><span class="us" id="ac-L-us">ft</span></div>
-        </div>
-        <div class="form-group">
-          <label>End Conditions</label>
-          <select id="ac-bc" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;">
-            <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
-            <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
-            <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label>Column Height L <span id="ac-L-lbl" class="unit-lbl">[ft]</span></label>
+        <div class="iw"><input type="number" id="ac-L" min="0" step="0.5" placeholder="e.g. 14"><span class="us" id="ac-L-us">ft</span></div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl" id="ac-loads-lbl">Loads &mdash; ASCE 7-22</div></div>
@@ -145,6 +135,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="iw"><input type="number" id="ac-PW" min="0" step="1" value="0"><span class="us" id="ac-PW-us">kip</span></div>
       </div>
 
+      <div id="ac-schema" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px 12px 10px;margin:10px 0 8px">
+        <svg id="ac-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto"></svg>
+        <div style="font-size:.68rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:4px 0 10px">Select end conditions per buckling axis</div>
+        <div class="form-row-2">
+          <div class="form-group" style="margin-bottom:0">
+            <label>x&#x2011;x Axis &mdash; K<sub>x</sub></label>
+            <select id="ac-bc-x" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
+              <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+              <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+              <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>y&#x2011;y Axis &mdash; K<sub>y</sub></label>
+            <select id="ac-bc-y" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
+              <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+              <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+              <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <button class="btn-calc" onclick="acCalc()">&#9654; Calculate</button>
     </div>
   </div>
@@ -180,7 +192,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="fml-blk"><span class="ft">Inelastic buckling &mdash; KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
       <div class="fml-blk"><span class="ft">Elastic buckling &mdash; KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
       <div class="fml-blk"><span class="ft">Euler elastic buckling stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2;</div>
-      <p>Use the <strong>maximum</strong> of KL/r<sub>x</sub> and KL/r<sub>y</sub>. Recommended limit: KL/r &le; 200.</p>
+      <p>K<sub>x</sub> and K<sub>y</sub> can be set independently for each axis. KL<sub>x</sub>/r<sub>x</sub> governs for the x&#x2011;x (strong) axis; KL<sub>y</sub>/r<sub>y</sub> governs for the y&#x2011;y (weak) axis. The <strong>maximum</strong> of the two controls. Recommended limit: KL/r &le; 200.</p>
+      <h4>Euler Critical Load P<sub>e</sub></h4>
+      <div class="fml-blk"><span class="ft">Per axis</span>P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2; &nbsp;=&nbsp; F<sub>e</sub> &times; A<sub>g</sub></div>
+      <p>P<sub>e</sub> is the elastic Euler buckling load. F<sub>cr</sub> reduces P<sub>e</sub> by the inelastic knock-down factor when KL/r &le; &lambda;<sub>lim</sub>.</p>
       <h4>Design Check</h4>
       <div class="fml-blk"><span class="ft">LRFD</span>P<sub>u</sub> &le; &phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A<sub>g</sub></div>
       <table class="combo-ref-tbl" style="max-width:440px">
@@ -376,6 +391,51 @@ function acPopSections() {
   sel.innerHTML = (DB[acSecType]&&DB[acSecType].data||[]).map(function(r){
     return '<option value="'+r[0]+'">'+r[0]+'</option>';
   }).join('');
+  acUpdateSchema();
+}
+
+function acUpdateSchema() {
+  var name = document.getElementById('ac-section').value;
+  var schDiv = document.getElementById('ac-schema');
+  if (!name) { schDiv.style.display = 'none'; return; }
+  schDiv.style.display = '';
+
+  var cx = 100, cy = 84, axR = 72;
+  var col = '#5b8fc4', axCol = '#888';
+  var s = '';
+
+  var st = acSecType;
+  if (st==='W'||st==='HP'||st==='HEA'||st==='HEB'||st==='IPE') {
+    var fw=58,fh=9,ww=7,wh=46;
+    s += '<rect x="'+(cx-fw/2)+'" y="'+(cy-wh/2-fh)+'" width="'+fw+'" height="'+fh+'" rx="1" fill="'+col+'"/>';
+    s += '<rect x="'+(cx-ww/2)+'" y="'+(cy-wh/2)+'" width="'+ww+'" height="'+wh+'" fill="'+col+'"/>';
+    s += '<rect x="'+(cx-fw/2)+'" y="'+(cy+wh/2)+'" width="'+fw+'" height="'+fh+'" rx="1" fill="'+col+'"/>';
+  } else if (st==='HSS_SQ'||st==='SHS') {
+    var sz=52, t=7;
+    s += '<rect x="'+(cx-sz/2)+'" y="'+(cy-sz/2)+'" width="'+sz+'" height="'+sz+'" rx="2" fill="'+col+'"/>';
+    s += '<rect x="'+(cx-sz/2+t)+'" y="'+(cy-sz/2+t)+'" width="'+(sz-2*t)+'" height="'+(sz-2*t)+'" fill="var(--bg2)"/>';
+  } else if (st==='HSS_RECT') {
+    var bw=62, bh=42, t=7;
+    s += '<rect x="'+(cx-bw/2)+'" y="'+(cy-bh/2)+'" width="'+bw+'" height="'+bh+'" rx="2" fill="'+col+'"/>';
+    s += '<rect x="'+(cx-bw/2+t)+'" y="'+(cy-bh/2+t)+'" width="'+(bw-2*t)+'" height="'+(bh-2*t)+'" fill="var(--bg2)"/>';
+  } else {
+    var cr=29, t=6;
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cr+'" fill="'+col+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cr-t)+'" fill="var(--bg2)"/>';
+  }
+
+  // x-x axis (horizontal dashed)
+  s += '<line x1="'+(cx-axR)+'" y1="'+cy+'" x2="'+(cx+axR)+'" y2="'+cy+'" stroke="'+axCol+'" stroke-width="1.2" stroke-dasharray="5,3"/>';
+  // y-y axis (vertical dashed)
+  s += '<line x1="'+cx+'" y1="'+(cy-axR)+'" x2="'+cx+'" y2="'+(cy+axR)+'" stroke="'+axCol+'" stroke-width="1.2" stroke-dasharray="5,3"/>';
+
+  var fsz = 10, fw2 = 'bold';
+  s += '<text x="'+(cx-axR-3)+'" y="'+(cy+4)+'" text-anchor="end" font-size="'+fsz+'" font-family="sans-serif" fill="'+axCol+'" font-weight="'+fw2+'">x</text>';
+  s += '<text x="'+(cx+axR+3)+'" y="'+(cy+4)+'" text-anchor="start" font-size="'+fsz+'" font-family="sans-serif" fill="'+axCol+'" font-weight="'+fw2+'">x</text>';
+  s += '<text x="'+cx+'" y="'+(cy-axR-5)+'" text-anchor="middle" font-size="'+fsz+'" font-family="sans-serif" fill="'+axCol+'" font-weight="'+fw2+'">y</text>';
+  s += '<text x="'+cx+'" y="'+(cy+axR+13)+'" text-anchor="middle" font-size="'+fsz+'" font-family="sans-serif" fill="'+axCol+'" font-weight="'+fw2+'">y</text>';
+
+  document.getElementById('ac-svg').innerHTML = s;
 }
 
 function acBgTab(id,el) {
@@ -395,11 +455,14 @@ function acCalc() {
   var isUS = DB[acSecType].std === 'us';
   var Fy   = +document.getElementById('ac-grade').value;
   var Lval = +document.getElementById('ac-L').value || 0;
-  var bc   = document.getElementById('ac-bc').value;
+  var bcX  = document.getElementById('ac-bc-x').value;
+  var bcY  = document.getElementById('ac-bc-y').value;
   if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
 
-  var K    = {pp:1.00, pf:0.80, ff:0.65}[bc];
-  var bcLbl = {pp:'Pin – Pin (K = 1.00)', pf:'Pin – Fixed (K = 0.80)', ff:'Fixed – Fixed (K = 0.65)'}[bc];
+  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
+  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
+  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
+  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
 
   // Raw section properties
   var Ag_r = +row[1]; // in² (US) or cm² (SI)
@@ -446,14 +509,21 @@ function acCalc() {
   var gov = combos.reduce(function(a,b){ return a.P >= b.P ? a : b; });
   var Pu = gov.P;
 
-  // Effective length (in for US, mm for SI)
-  var KL = isUS ? (K * Lval * 12) : (K * Lval * 1000);
-  var lx = KL / rx, ly = KL / ry;
+  // Effective lengths per axis (in for US, mm for SI)
+  var KLx = isUS ? (Kx * Lval * 12) : (Kx * Lval * 1000);
+  var KLy = isUS ? (Ky * Lval * 12) : (Ky * Lval * 1000);
+  var lx = KLx / rx, ly = KLy / ry;
   var lMax = Math.max(lx, ly);
   var govAx = (lx >= ly) ? 'x' : 'y';
 
   var lLim = 4.71 * Math.sqrt(E / Fy);
-  var Fe   = Math.PI * Math.PI * E / (lMax * lMax);
+  var Fe_x = Math.PI * Math.PI * E / (lx * lx);
+  var Fe_y = Math.PI * Math.PI * E / (ly * ly);
+  var Fe   = Math.min(Fe_x, Fe_y); // governing = max slenderness axis
+
+  // Euler critical loads (kip or kN)
+  var Pe_x = isUS ? (Fe_x * Ag) : (Fe_x * Ag / 1000);
+  var Pe_y = isUS ? (Fe_y * Ag) : (Fe_y * Ag / 1000);
 
   var Fcr, bMode;
   if (lMax <= lLim) {
@@ -475,12 +545,12 @@ function acCalc() {
 
   acRender({
     name:name, gn:gn, Fy:Fy, phiC:phiC, E:E,
-    Lval:Lval, bc:bc, bcLbl:bcLbl, K:K,
+    Lval:Lval, bcX:bcX, bcY:bcY, bcLblX:bcLblX, bcLblY:bcLblY, Kx:Kx, Ky:Ky,
     Ag:Ag_r, Ag_calc:Ag, rx:rx_r, ry:ry_r, wt:wt_r, sw:sw,
     PD:PD, PL:PL, PLr:PLr, D:D, L:L, S:S, W:W,
     combos:combos, gov:gov.n, govF:gov.f, Pu:Pu,
-    KL:KL, lx:lx, ly:ly, lMax:lMax, govAx:govAx, lLim:lLim,
-    slOk:slOk, Fe:Fe, Fcr:Fcr, bMode:bMode,
+    KLx:KLx, KLy:KLy, lx:lx, ly:ly, lMax:lMax, govAx:govAx, lLim:lLim,
+    slOk:slOk, Fe_x:Fe_x, Fe_y:Fe_y, Fe:Fe, Pe_x:Pe_x, Pe_y:Pe_y, Fcr:Fcr, bMode:bMode,
     Pn:Pn, phiPn:phiPn, DCR:DCR,
     uF:uF, uL:uL, uSt:uSt, isUS:isUS, date:date
   });
@@ -517,7 +587,7 @@ function acRender(r) {
 
   h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
      + '<strong>'+dcLbl+'</strong>'
-     + '<span>'+r.name+' &nbsp;&middot;&nbsp; F<sub>y</sub> = '+r.Fy+' '+uSt+' &nbsp;&middot;&nbsp; '+r.bcLbl+' &nbsp;&middot;&nbsp; L = '+r.Lval+' '+uL+'</span>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; F<sub>y</sub> = '+r.Fy+' '+uSt+' &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' '+uL+'</span>'
      + '</div></div>';
 
   h += '<div class="result-box" style="margin-bottom:8px">'
@@ -539,7 +609,8 @@ function acRender(r) {
      + '<tr><td>Section</td><td>'+r.name+'</td></tr>'
      + '<tr><td>Steel Grade</td><td>'+r.gn+'</td></tr>'
      + '<tr><td>E / &phi;<sub>c</sub></td><td>'+r.E+' '+uSt+' &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
-     + '<tr><td>End Conditions</td><td>'+r.bcLbl+'</td></tr>'
+     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
+     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
      + '<tr><td>Column Height L</td><td class="inp-num">'+r.Lval+' '+uL+'</td></tr>'
      + '<tr><td>A<sub>g</sub></td><td class="inp-num">'+agDisp+' '+agLbl+'</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+rxDisp+' '+rLbl+'</td></tr>'
@@ -572,43 +643,48 @@ function acRender(r) {
   h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
     r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
 
-  h += step(3, 'Effective length KL',
-    'K = '+r.K.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':'&times; 1000'),
-    'KL = '+fmt(r.KL,1)+' '+lenLbl);
+  h += step(3, 'Effective lengths per axis',
+    'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
+    +' &nbsp;|&nbsp; y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
+    'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+' &nbsp;|&nbsp; KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
 
   h += step(4, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
-    'KL/r<sub>x</sub> = '+fmt(r.lx,1)+' &nbsp; KL/r<sub>y</sub> = '+fmt(r.ly,1),
+    'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
     '&lambda;<sub>max</sub> = '+fmt(r.lMax,1), r.slOk);
 
-  h += step(5, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
+  h += step(5, 'Euler elastic buckling load P<sub>e</sub> &mdash; AISC E3-4',
+    'P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2;',
+    'P<sub>e,x</sub> = '+fmt(r.Pe_x,1)+' '+uF+' &nbsp;|&nbsp; P<sub>e,y</sub> = '+fmt(r.Pe_y,1)+' '+uF);
+
+  h += step(6, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
     '4.71 &times; &radic;('+r.E+'/'+r.Fy+')',
     '&lambda;<sub>lim</sub> = '+fmt(r.lLim,1));
 
-  h += step(6, 'Elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
+  h += step(7, 'Governing elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
     '&pi;&sup2; &times; '+r.E+' / '+fmt(r.lMax,1)+'&sup2;',
     'F<sub>e</sub> = '+fmt(r.Fe,2)+' '+uSt);
 
   if (r.bMode === 'Inelastic') {
-    h += step(7, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
+    h += step(8, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
       '0.658<sup>'+fmt(r.Fy/r.Fe,3)+'</sup> &times; '+r.Fy,
       'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
   } else {
-    h += step(7, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
+    h += step(8, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
       '0.877 &times; '+fmt(r.Fe,2),
       'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
   }
 
-  h += step(8, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
+  h += step(9, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
     r.isUS
       ? fmt(r.Fcr,2)+' '+uSt+' &times; '+fmt(r.Ag,2)+' in&sup2;'
       : fmt(r.Fcr,2)+' MPa &times; '+fmt(r.Ag_calc,0)+' mm&sup2; / 1000',
     'P<sub>n</sub> = '+fmt(r.Pn,1)+' '+uF);
 
-  h += step(9, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
+  h += step(10, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
     '0.90 &times; '+fmt(r.Pn,1)+' '+uF,
     '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' '+uF);
 
-  h += step(10, 'Demand / Capacity check',
+  h += step(11, 'Demand / Capacity check',
     'P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,2)+' / '+fmt(r.phiPn,1),
     'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
 
