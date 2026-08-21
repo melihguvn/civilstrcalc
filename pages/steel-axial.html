@@ -492,9 +492,12 @@ function acRender(r) {
   var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
   var slCls = r.slOk ? 'ok' : 'warn';
   var uF = r.uF, uSt = r.uSt, uL = r.uL;
-  var agLbl = r.isUS ? 'in&sup2;' : 'cm&sup2;';
-  var rLbl  = r.isUS ? 'in' : 'cm';
+  var agLbl = r.isUS ? 'in&sup2;' : 'mm&sup2;';
+  var rLbl  = r.isUS ? 'in' : 'mm';
   var wtLbl = r.isUS ? 'lb/ft' : 'kg/m';
+  var agDisp = r.isUS ? fmt(r.Ag,2) : fmt(r.Ag*100,0);
+  var rxDisp = r.isUS ? fmt(r.rx,3) : fmt(r.rx*10,1);
+  var ryDisp = r.isUS ? fmt(r.ry,3) : fmt(r.ry*10,1);
   var lenLbl = r.isUS ? 'in' : 'mm';
 
   function step(n,desc,fml,val,ok){
@@ -538,7 +541,9 @@ function acRender(r) {
      + '<tr><td>E / &phi;<sub>c</sub></td><td>'+r.E+' '+uSt+' &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
      + '<tr><td>End Conditions</td><td>'+r.bcLbl+'</td></tr>'
      + '<tr><td>Column Height L</td><td>'+r.Lval+' '+uL+'</td></tr>'
-     + '<tr><td>A<sub>g</sub> &nbsp;|&nbsp; r<sub>x</sub> &nbsp;|&nbsp; r<sub>y</sub></td><td>'+fmt(r.Ag,2)+' '+agLbl+' &nbsp;|&nbsp; '+fmt(r.rx,3)+' '+rLbl+' &nbsp;|&nbsp; '+fmt(r.ry,3)+' '+rLbl+'</td></tr>'
+     + '<tr><td>A<sub>g</sub></td><td>'+agDisp+' '+agLbl+'</td></tr>'
+     + '<tr><td>r<sub>x</sub></td><td>'+rxDisp+' '+rLbl+'</td></tr>'
+     + '<tr><td>r<sub>y</sub></td><td>'+ryDisp+' '+rLbl+'</td></tr>'
      + '<tr><td>Dead P<sub>D</sub> (applied)</td><td>'+fmt(r.PD,2)+' '+uF+'</td></tr>'
      + '<tr><td>Self-Weight (auto)</td><td>'+fmt(r.sw,3)+' '+uF+' &nbsp;('+fmt(r.wt,1)+' '+wtLbl+' &times; '+r.Lval+' '+uL+')</td></tr>'
      + '<tr><td>Total Dead D</td><td>'+fmt(r.D,2)+' '+uF+'</td></tr>'

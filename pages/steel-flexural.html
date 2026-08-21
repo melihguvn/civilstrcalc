@@ -1224,9 +1224,11 @@ function fdRender(r) {
   var lbl  = checkDCR < 0.85 ? 'Section Adequate' : (checkDCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed');
   var dLok = r.dL <= r.limL, dTok = r.dT <= r.limT;
   var allOk = checkDCR <= 1.0 && dLok && dTok;
-  var propLine = fdUnit==='us'
-    ? 'Ix = '+r.Ix+' in⁴ &nbsp;|&nbsp; Zx = '+r.Zx+' in³'+(r.Zest?' <em style="color:var(--text-dim);font-style:italic">(estimated from Sx)</em>':'')
-    : 'Iy = '+r.Iy+' cm⁴ &nbsp;|&nbsp; Wpl = '+r.Wply+' cm³';
+  var propRows = fdUnit==='us'
+    ? '<tr><td>I<sub>x</sub></td><td>'+r.Ix+' in&sup4;</td></tr>'
+      +'<tr><td>Z<sub>x</sub></td><td>'+r.Zx+' in&sup3;'+(r.Zest?' <em style="color:var(--text-dim);font-style:italic;font-size:.75em">(est. from Sx)</em>':'')+'</td></tr>'
+    : '<tr><td>I<sub>y</sub></td><td>'+r.Iy+' cm&sup4;</td></tr>'
+      +'<tr><td>W<sub>pl,y</sub></td><td>'+fmt(r.Wply,1)+' cm&sup3;</td></tr>';
 
   var bcCm = {pp:'1/8', fp:'9/128', ff:'1/12', cant:'1/2'}[r.bc];
   var momLoc = r.bc==='cant' ? 'at fixed support' : 'midspan';
@@ -1334,7 +1336,7 @@ function fdRender(r) {
      + (r.wLr>0 ? '<tr><td>Roof Live L<sub>r</sub></td><td>'+fmt(r.wLr,3)+' '+r.uW+'</td></tr>' : '')
      + (r.wW>0 ? '<tr><td>Wind W</td><td>'+fmt(r.wW,3)+' '+r.uW+'</td></tr>' : '')
      + (r.isInclined ? '<tr><td>Beam Orientation</td><td>Inclined &mdash; &theta; = '+r.theta+'&deg; from horizontal</td></tr>' : '')
-     + '<tr><td>Section Properties</td><td>'+propLine+'</td></tr>'
+     + propRows
      + '</table></div>';
 
   // ── Load combinations ──────────────────────────────────────────────────────
@@ -1800,7 +1802,8 @@ function fdRenderEC3(r) {
      + '<tr><td>Variable Q<sub>L</sub> (live + L<sub>r</sub>)</td><td>'+fmt(r.QL,3)+' kN/m</td></tr>'
      + (r.QS>0?'<tr><td>Snow Q<sub>S</sub></td><td>'+fmt(r.QS,3)+' kN/m</td></tr>':'')
      + (r.QW>0?'<tr><td>Wind Q<sub>W</sub></td><td>'+fmt(r.QW,3)+' kN/m</td></tr>':'')
-     + '<tr><td>Section Properties</td><td>I<sub>y</sub> = '+r.Iy+' cm&sup4; &nbsp;|&nbsp; W<sub>pl,y</sub> = '+fmt(r.Wply,1)+' cm&sup3; &nbsp;|&nbsp; W<sub>el,y</sub> = '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td>'+r.Iy+' cm&sup4;</td></tr>'
+     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td>'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
      + '</table></div>';
 
   // Section classification detail
@@ -2144,7 +2147,8 @@ function fdRenderCYTHYE(r) {
      + '<tr><td>Live Load Q (LL + roof)</td><td>'+fmt(r.Q,3)+' kN/m</td></tr>'
      + (r.S>0?'<tr><td>Snow S</td><td>'+fmt(r.S,3)+' kN/m</td></tr>':'')
      + (r.W>0?'<tr><td>Wind W</td><td>'+fmt(r.W,3)+' kN/m</td></tr>':'')
-     + '<tr><td>Section Properties</td><td>I<sub>y</sub> = '+r.Iy+' cm&sup4; &nbsp;|&nbsp; W<sub>pl,y</sub> = '+fmt(r.Wply,1)+' cm&sup3; &nbsp;|&nbsp; W<sub>el,y</sub> = '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td>'+r.Iy+' cm&sup4;</td></tr>'
+     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td>'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
      + '</table></div>';
 
   h += '<div class="rpt-sec"><div class="rpt-sec-title">TSDS 2016 LRFD &mdash; ULS Load Combinations</div>'
@@ -2487,7 +2491,8 @@ function fdRenderIS800(r) {
      + '<tr><td>Imposed IL (live + L<sub>r</sub>)</td><td>' + fmt(r.IL, 3) + ' kN/m</td></tr>'
      + (r.SL > 0 ? '<tr><td>Snow SL</td><td>' + fmt(r.SL, 3) + ' kN/m</td></tr>' : '')
      + (r.WL > 0 ? '<tr><td>Wind WL</td><td>' + fmt(r.WL, 3) + ' kN/m</td></tr>' : '')
-     + '<tr><td>Section Properties</td><td>I<sub>y</sub> = ' + r.Iy + ' cm&sup4; &nbsp;|&nbsp; Z<sub>px</sub> = ' + fmt(r.Wply, 1) + ' cm&sup3;' + (r.Wely ? ' &nbsp;|&nbsp; Z<sub>ex</sub> = ' + fmt(r.Wely, 1) + ' cm&sup3;' : '') + '</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td>' + r.Iy + ' cm&sup4;</td></tr>'
+     + '<tr><td>Z<sub>px</sub>' + (r.Wely ? ' | Z<sub>ex</sub>' : '') + '</td><td>' + fmt(r.Wply, 1) + (r.Wely ? ' | ' + fmt(r.Wely, 1) : '') + ' cm&sup3;</td></tr>'
      + '</table></div>';
 
   h += '<div class="rpt-sec"><div class="rpt-sec-title">IS 800:2000 Table 4 &mdash; ULS Load Combinations</div>'
