@@ -139,21 +139,29 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <svg id="ac-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto"></svg>
         <div style="font-size:.68rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:4px 0 10px">Select end conditions per buckling axis</div>
         <div class="form-row-2">
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group" style="margin-bottom:6px">
             <label>x&#x2011;x Axis &mdash; K<sub>x</sub></label>
             <select id="ac-bc-x" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
               <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
               <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
               <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
             </select>
+            <div style="margin-top:5px">
+              <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced length L<sub>b,x</sub> / L</label>
+              <div class="iw"><input type="number" id="ac-lb-x" value="1.00" min="0.05" max="1" step="0.05" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
+            </div>
           </div>
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group" style="margin-bottom:6px">
             <label>y&#x2011;y Axis &mdash; K<sub>y</sub></label>
             <select id="ac-bc-y" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
               <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
               <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
               <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
             </select>
+            <div style="margin-top:5px">
+              <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced length L<sub>b,y</sub> / L</label>
+              <div class="iw"><input type="number" id="ac-lb-y" value="1.00" min="0.05" max="1" step="0.05" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -509,9 +517,15 @@ function acCalc() {
   var gov = combos.reduce(function(a,b){ return a.P >= b.P ? a : b; });
   var Pu = gov.P;
 
+  // Unbraced length ratios (clamped 0.05–1.0)
+  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
+  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
+  var Lbx = lbRx * Lval;  // unbraced length in uL units
+  var Lby = lbRy * Lval;
+
   // Effective lengths per axis (in for US, mm for SI)
-  var KLx = isUS ? (Kx * Lval * 12) : (Kx * Lval * 1000);
-  var KLy = isUS ? (Ky * Lval * 12) : (Ky * Lval * 1000);
+  var KLx = isUS ? (Kx * Lbx * 12) : (Kx * Lbx * 1000);
+  var KLy = isUS ? (Ky * Lby * 12) : (Ky * Lby * 1000);
   var lx = KLx / rx, ly = KLy / ry;
   var lMax = Math.max(lx, ly);
   var govAx = (lx >= ly) ? 'x' : 'y';
@@ -545,7 +559,7 @@ function acCalc() {
 
   acRender({
     name:name, gn:gn, Fy:Fy, phiC:phiC, E:E,
-    Lval:Lval, bcX:bcX, bcY:bcY, bcLblX:bcLblX, bcLblY:bcLblY, Kx:Kx, Ky:Ky,
+    Lval:Lval, bcX:bcX, bcY:bcY, bcLblX:bcLblX, bcLblY:bcLblY, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, Lbx:Lbx, Lby:Lby,
     Ag:Ag_r, Ag_calc:Ag, rx:rx_r, ry:ry_r, wt:wt_r, sw:sw,
     PD:PD, PL:PL, PLr:PLr, D:D, L:L, S:S, W:W,
     combos:combos, gov:gov.n, govF:gov.f, Pu:Pu,
@@ -611,7 +625,9 @@ function acRender(r) {
      + '<tr><td>Steel Grade</td><td>'+r.gn+'</td></tr>'
      + '<tr><td>E / &phi;<sub>c</sub></td><td>'+r.E+' '+uSt+' &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
      + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+r.lbRx.toFixed(2)+' &times; '+r.Lval+' '+uL+' = '+fmt(r.Lbx,2)+' '+uL+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
      + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+r.lbRy.toFixed(2)+' &times; '+r.Lval+' '+uL+' = '+fmt(r.Lby,2)+' '+uL+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
      + '<tr><td>Column Height L</td><td class="inp-num">'+r.Lval+' '+uL+'</td></tr>'
      + '<tr><td>A<sub>g</sub></td><td class="inp-num">'+agDisp+' '+agLbl+'</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+rxDisp+' '+rLbl+'</td></tr>'
@@ -644,10 +660,10 @@ function acRender(r) {
   h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
     r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
 
-  h += step(3, 'Effective lengths per axis',
-    'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
-    +' &nbsp;|&nbsp; y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; '+r.Lval+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
-    'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+' &nbsp;|&nbsp; KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
+  h += step(3, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
+    'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; L<sub>b,x</sub> = '+r.Kx.toFixed(2)+' &times; '+fmt(r.Lbx,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
+    +'<br>y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; L<sub>b,y</sub> = '+r.Ky.toFixed(2)+' &times; '+fmt(r.Lby,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
+    'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+'<br>KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
 
   h += step(4, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
     'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
