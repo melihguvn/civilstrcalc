@@ -408,7 +408,7 @@ input[type=number]{-moz-appearance:textfield;}
             φ (friction) <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
-            <input type="number" id="rw-phi" value="35" min="28" max="40" step="1" onchange="calcRW()">
+            <input type="number" id="rw-phi" value="35" min="28" max="40" step="1" onchange="updateEpDeltaNote();calcRW()">
             <span class="us">°</span>
           </div>
         </div>
@@ -675,11 +675,11 @@ input[type=number]{-moz-appearance:textfield;}
           </div>
         </div>
         <div class="form-group">
-          <label class="lbl-tip" data-tip="Required FS against sliding — static loads.&#10;Typical minimum: 1.5.&#10;Range: 1.2 – 2.5">
+          <label class="lbl-tip" data-tip="Required ratio (R_th/γRh + 0.3Fp/γRp) / V_th for sliding — TBDY Tablo 16.2.&#10;γRh=1.10 and γRp=1.40 are embedded in the calculation.&#10;TSC 2019 minimum: 1.0.&#10;Range: 1.0 – 1.5">
             FS<sub>sl</sub> (sliding) <span class="lbl-tip-icon">?</span>
           </label>
           <div class="iw">
-            <input type="number" id="rw-FSs" value="1.5" min="1.2" max="2.5" step="0.1" onchange="calcRW()">
+            <input type="number" id="rw-FSs" value="1.0" min="1.0" max="1.5" step="0.1" onchange="calcRW()">
           </div>
         </div>
       </div>
@@ -698,18 +698,54 @@ input[type=number]{-moz-appearance:textfield;}
             </div>
           </div>
           <div class="form-group">
-            <label class="lbl-tip" data-tip="Required FS against sliding — seismic loads.&#10;Typical minimum: 1.2.&#10;Range: 1.0 – 1.8">
+            <label class="lbl-tip" data-tip="Required ratio for seismic sliding — TBDY §16.8.4.1.&#10;γRh=1.10 and γRp=1.40 are embedded (Tablo 16.2).&#10;TSC 2019 minimum: 1.0.&#10;Range: 1.0 – 1.5">
               FS<sub>sl,seis</sub> <span class="lbl-tip-icon">?</span>
             </label>
             <div class="iw">
-              <input type="number" id="rw-FSs-seis" value="1.0" min="1.0" max="1.8" step="0.1" onchange="calcRW()">
+              <input type="number" id="rw-FSs-seis" value="1.0" min="1.0" max="1.5" step="0.1" onchange="calcRW()">
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Earth pressure method fixed to Rankine per TSC 2019 practice -->
-      <input type="hidden" name="rw-pMethod" value="rankine">
+      <!-- ═══ ACTIVE PRESSURE METHOD ═══ -->
+      <div class="rw-sec-hdr">Active Earth Pressure</div>
+      <div class="conf-case-row" style="margin:0 0 4px">
+        <div class="conf-case-lbl">Method</div>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-pMethod" value="rankine" checked onchange="onPMethodChange()">
+          Rankine (δ = 0 — smooth wall, conservative)
+        </label>
+        <label class="conf-case-opt">
+          <input type="radio" name="rw-pMethod" value="coulomb" onchange="onPMethodChange()">
+          Coulomb / M-O (wall friction δ)
+        </label>
+      </div>
+      <div id="rw-delta-panel" style="display:none">
+        <div class="conf-case-row" style="margin:0 0 6px">
+          <div class="conf-case-lbl">Wall friction angle δ</div>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-deltaOpt" value="auto" checked onchange="onDeltaOptChange()">
+            δ = 2φ/3 &nbsp;(cast-in-place concrete — auto)
+          </label>
+          <label class="conf-case-opt">
+            <input type="radio" name="rw-deltaOpt" value="manual" onchange="onDeltaOptChange()">
+            Manual value
+          </label>
+        </div>
+        <div id="rw-delta-manual-row" style="display:none">
+          <div class="form-group" style="max-width:180px">
+            <label class="lbl-tip" data-tip="Wall friction angle δ.&#10;Typical range: φ/3 to 2φ/3.&#10;Cast-in-place concrete: δ ≈ 2φ/3.&#10;Range: 0° – 30°">
+              δ (manual) <span class="lbl-tip-icon">?</span>
+            </label>
+            <div class="iw">
+              <input type="number" id="rw-delta-m" value="10" min="0" max="30" step="1" onchange="calcRW()">
+              <span class="us">°</span>
+            </div>
+          </div>
+        </div>
+        <div id="rw-ep-delta-note" class="calc-note" style="margin-top:4px"></div>
+      </div>
 
     </div><!-- /card-body -->
   </div><!-- /card -->
@@ -1222,6 +1258,30 @@ function onSlideModeChange() {
   calcRW();
 }
 
+function onPMethodChange() {
+  var m = document.querySelector('input[name="rw-pMethod"]:checked');
+  var isCoulomb = m && m.value === 'coulomb';
+  document.getElementById('rw-delta-panel').style.display = isCoulomb ? '' : 'none';
+  updateEpDeltaNote();
+  calcRW();
+}
+
+function onDeltaOptChange() {
+  var opt = document.querySelector('input[name="rw-deltaOpt"]:checked');
+  document.getElementById('rw-delta-manual-row').style.display = (opt && opt.value === 'manual') ? '' : 'none';
+  updateEpDeltaNote();
+  calcRW();
+}
+
+function updateEpDeltaNote() {
+  var phi = parseFloat((document.getElementById('rw-phi')||{value:'30'}).value)||30;
+  var opt = document.querySelector('input[name="rw-deltaOpt"]:checked');
+  var dMan = parseFloat((document.getElementById('rw-delta-m')||{value:'10'}).value)||10;
+  var delta = (opt && opt.value==='manual') ? dMan : (2/3)*phi;
+  var el = document.getElementById('rw-ep-delta-note');
+  if (el) el.textContent = 'δ = ' + delta.toFixed(1) + '°  →  tan(δ) = ' + Math.tan(delta*Math.PI/180).toFixed(3);
+}
+
 function updateDeltaNote() {
   var phi2 = parseFloat((document.getElementById('rw-phi2')||{value:'30'}).value)||30;
   var k1 = parseFloat((document.getElementById('rw-k1sl')||{value:'0.45'}).value)||0.45;
@@ -1697,7 +1757,7 @@ function readRWInputs(){
     water:document.getElementById('rw-inclWater').checked,
     fc:gv('rw-fc'),fy:gv('rw-fy'),cover:gv('rw-cover'),
     FSo:gv('rw-FSo'),FSs:gv('rw-FSs'),FSos:gv('rw-FSo-seis'),FSss:gv('rw-FSs-seis'),
-    pMethod:'rankine',deltaOpt:'auto',delta_m:0,
+    pMethod:gr('rw-pMethod')||'rankine', deltaOpt:gr('rw-deltaOpt')||'auto', delta_m:gv('rw-delta-m'),
     skEn:document.getElementById('rw-sk-en').checked,
     skLoc:gr('rw-sk-loc')||'toe',
     skd:gv('rw-sk-d'),
@@ -1887,24 +1947,26 @@ function calcStability(p,ep){
   var y5_y=p.H+p.tf;
   var sumWiYi=W1*y1+W2*y2+W3_rect*y3r+W3_tri*y3t+W4*y4_y+W5*y5_y;
 
-  /* ── Static sliding resistance ── */
+  /* ── Static sliding resistance — TBDY §16.8.4.1, Tablo 16.2 ── */
   var delta_sl=0, R_th=0;
   var k1r=(p.k1sl!==undefined?p.k1sl:0.45)*(p.phi2||30)*Math.PI/180;
   var k2v=(p.k2sl!==undefined?p.k2sl:0.45);
   if(p.slideMode==='undrained'){
-    R_th=(p.cu||50)*B;                                    // Eq.16.11
+    R_th=(p.cu||50)*B;                                    // Eq.16.11 — characteristic
     delta_sl=0;
   } else {
     delta_sl=k1r;
-    R_th=V_eff*Math.tan(k1r)+B*k2v*(p.c2||0);            // k₁·φ'₂ + k₂·c'
+    R_th=V_eff*Math.tan(k1r)+B*k2v*(p.c2||0);            // k₁·φ'₂ + k₂·c' — characteristic
   }
-  var R_pt_part=0.3*Fp;
-  var FSsl=Ph>0?(R_th+R_pt_part)/Ph:999;
+  var R_th_d=R_th/1.10;                                   // design friction resistance (γRh=1.10, Tablo 16.2)
+  var R_pt_char=0.3*Fp;                                   // characteristic 30% passive
+  var R_pt_part=R_pt_char/1.40;                           // design 30% passive (γRp=1.40, Tablo 16.2)
+  var FSsl=Ph>0?(R_th_d+R_pt_part)/Ph:999;                // check ≥ 1.0 (γ factors embedded)
 
   /* ── Seismic checks — TBDY Eq.16.21 / §16.8.4.1 ── */
   var FSots=null, FSsls=null;
   var Rdev=null, Edev=null, sumWiYi_out=sumWiYi;
-  var Kp_seis_val=ep.Kp, R_pt_seis=0, V_th_seis=0, R_th_seis=R_th;
+  var Kp_seis_val=ep.Kp, R_pt_seis=0, V_th_seis=0, R_th_seis=R_th_d;
   if(p.seis){
     var kh_s=ep.kh||0, kv_s=ep.kv||0;
     var DPAE_h_s=ep.DPAE_h||ep.DPAE||0;
@@ -1919,12 +1981,13 @@ function calcStability(p,ep){
 
     /* Seismic sliding — TBDY §16.8.4.1 Eq.16.9:
        V_th = Pa_h + ΔPae_h + ΣWi·kh  (Pa,v is external, not a body-inertia force)
-       R_th_seis = Cu·B/γ_Rh (undrained) when Cu>0 — rapid seismic loading of clay
-       R_pt_seis = Kp_seis(Eq.16.25)·(1-kv)·½·γ·D² / γ_Rp(1.4) */
+       R_th_seis = R_th/γRh for drained; Cu·B/γRh for undrained (Tablo 16.2: γRh=1.10)
+       R_pt_seis = Kp_seis(Eq.16.25)·(1-kv)·½·γ·D² / γ_Rp(1.40) */
     V_th_seis=Ph+DPAE_h_s+V*kh_s;
     if((p.cu||0)>0){
-      R_th_seis=p.cu*B/1.1;                               // undrained — γ_Rh=1.1 (TBDY Table 16.2)
+      R_th_seis=p.cu*B/1.10;                              // undrained — γRh=1.10 (Tablo 16.2)
     }
+    // drained: R_th_seis already initialised to R_th_d = R_th/1.10
     Kp_seis_val=tbdyKpSeismic(p.phi*Math.PI/180, ep.psi||0);
     var hp_sk=(p.skEn&&p.skd>0&&p.skLoc==='toe')?p.htoe+p.skd:p.htoe;
     var R_pk_seis=Kp_seis_val*(1-kv_s)*0.5*p.gs*hp_sk*hp_sk;
@@ -1957,7 +2020,7 @@ function calcStability(p,ep){
 
   return {B:B,V:V,Pv:Pv,V_eff:V_eff,U:U,W1:W1,W2:W2,W3:W3,W3_rect:W3_rect,W3_tri:W3_tri,W4:W4,W5:W5,
     Mr:Mr,Mr_eff:Mr_eff,Mo:Mo,Fp:Fp,Fp_base:Fp_base,Fp_key:Fp_key,hp:hp,
-    R_th:R_th,R_th_seis:R_th_seis,R_pt_part:R_pt_part,R_pt_seis:R_pt_seis,
+    R_th:R_th,R_th_d:R_th_d,R_th_seis:R_th_seis,R_pt_char:R_pt_char,R_pt_part:R_pt_part,R_pt_seis:R_pt_seis,
     delta_sl:delta_sl,sumWiYi:sumWiYi_out,Rdev:Rdev,Edev:Edev,
     Kp_seis:Kp_seis_val,V_th_seis:V_th_seis,
     qo_seis:qo_seis,qk_seis:qk_seis,qt_seis:qt_seis,Nc_s:Nc_s,dc_s:dc_s,
@@ -2002,6 +2065,30 @@ function calcReinf(p,st,ep){
   var ts=p.ts*1000, sf=fxD(Mus,ts);
   sf.Vu=Vus; sf.Vc=vc(sf.d); sf.sok=sf.Vc>=Vus;
 
+  /* Mid-stem check at He/2 (moment acts on upper half of stem) */
+  var sm=null;
+  if(He>1.0){
+    var Hm=He/2;
+    var Mus_m=LFh*(Ka_h*gs_eff*Hm*Hm*Hm/6+(p.surch?Ka_h*p.q*Hm*Hm/2:0));
+    if(p.water) Mus_m+=LFw*gw*Hm*Hm*Hm/6;
+    if(p.seis){
+      var dPm=(ep.dKae||0)*(0.5*gs_eff*Hm*Hm+(p.surch?p.q*Hm:0));
+      Mus_m+=dPm*(Hm/2);
+    }
+    var Vus_m=LFh*(Ka_h*gs_eff*Hm*Hm/2+(p.surch?Ka_h*p.q*Hm:0));
+    if(p.water) Vus_m+=LFw*gw*Hm*Hm/2;
+    if(p.seis)  Vus_m+=(ep.dKae||0)*(0.5*gs_eff*Hm*Hm+(p.surch?p.q*Hm:0));
+    /* Stem thickness at He/2 */
+    var ts_m;
+    var ts_t2=Math.min(p.ts_top||p.ts, p.ts);
+    if(!p.stType||p.stType==='prismatic') ts_m=ts;
+    else if(p.stType==='tapered')         ts_m=(p.ts+ts_t2)/2*1000;
+    else                                   ts_m=ts; // stepped: lower half = ts
+    sm=fxD(Mus_m,ts_m);
+    sm.Vu=Vus_m; sm.Vc=vc(sm.d); sm.sok=sm.Vc>=Vus_m;
+    sm.z=Hm;
+  }
+
   var B=st.B, tf=p.tf*1000;
   var hf=null;
   if(p.Lh > 0 && st.qmax < 99999){
@@ -2034,7 +2121,7 @@ function calcReinf(p,st,ep){
     sk_ri.Vc = vc(sk_ri.d);
     sk_ri.sok = sk_ri.Vc >= sk_ri.Vu;
   }
-  return {stem:sf, heel:hf, toe:tf2, key:sk_ri};
+  return {stem:sf, stem_mid:sm, heel:hf, toe:tf2, key:sk_ri};
 }
 
 function renderRWResults(p,ep,st,ri){
@@ -2091,7 +2178,7 @@ function renderRWResults(p,ep,st,ri){
   if(p.skEn && st.Fp_key>0.001)
     html+=dr('&nbsp;&nbsp;'+p.skLoc+' key (d<sub>k</sub>='+p.skd.toFixed(2)+'m)',
              '+'+st.Fp_key.toFixed(2)+' kN/m','');
-  html+='<div class="rw-res-hdr">Sliding — TSC §16.8.4</div>';
+  html+='<div class="rw-res-hdr">Sliding — TSC §16.8.4 / Tablo 16.2</div>';
   if(p.slideMode==='undrained'){
     html+=dr('R<sub>th</sub> = A<sub>k</sub>·C<sub>u</sub> (Eq.16.11)',st.R_th.toFixed(2)+' kN/m','');
   } else {
@@ -2100,7 +2187,9 @@ function renderRWResults(p,ep,st,ri){
     html+=dr('δ = k<sub>1</sub>·φ\'<sub>2</sub> = '+k1lbl+'×'+(p.phi2||30)+'° = '+deg_sl+'°  →  tan(δ) = '+Math.tan(st.delta_sl).toFixed(3),'','');
     html+=dr('R<sub>th</sub> = V<sub>eff</sub>·tan(δ) + k<sub>2</sub>·B·c\'',st.R_th.toFixed(2)+' kN/m','');
   }
-  html+=dr('0.3·F<sub>p</sub> (Eq.16.9)',st.R_pt_part.toFixed(2)+' kN/m','');
+  html+=dr('R<sub>th,d</sub> = R<sub>th</sub> / γ<sub>Rh</sub> &nbsp;(γ<sub>Rh</sub> = 1.10)',st.R_th_d.toFixed(2)+' kN/m','');
+  html+=dr('0.3·F<sub>p</sub> (Eq.16.9 — characteristic)',st.R_pt_char.toFixed(2)+' kN/m','');
+  html+=dr('0.3·F<sub>p</sub> / γ<sub>Rp</sub> &nbsp;(γ<sub>Rp</sub> = 1.40)',st.R_pt_part.toFixed(2)+' kN/m','');
   html+=dr('Resist. moment M<sub>r</sub>',(p.water?st.Mr_eff:st.Mr).toFixed(2)+' kN&#xb7;m/m','');
   html+=dr('Overturning M<sub>o</sub>',st.Mo.toFixed(2)+' kN&#xb7;m/m','');
   html+=dr('Eccentricity e',ae.toFixed(3)+' m',ae<=st.em?'ok':'fail');
@@ -2152,7 +2241,8 @@ function renderRWResults(p,ep,st,ri){
       +'<span class="'+sc+'">V<sub>cr</sub>='+flx.Vc.toFixed(2)+' kN/m '+(flx.sok?'&#10003;':'&#10007;')+'</span>'
       +'</div></div>';
   }
-  html+=rcrd('stem','Stem — vertical bars (earth face)',ri.stem);
+  html+=rcrd('stem','Stem — base (earth face)',ri.stem);
+  if(ri.stem_mid) html+=rcrd('stem-mid','Stem — mid-height (z = '+ri.stem_mid.z.toFixed(2)+' m)',ri.stem_mid);
   if(ri.heel) html+=rcrd('heel','Heel slab — '+ri.heel.ten+' face',ri.heel);
   if(ri.toe) html+=rcrd('toe','Toe slab — '+ri.toe.ten+' face',ri.toe);
   if(ri.key) html+=rcrd('key','Shear key — lateral face bars (wk='+p.skw.toFixed(2)+'m, dk='+p.skd.toFixed(2)+'m)',ri.key);
@@ -3956,19 +4046,21 @@ function pdfStability(doc, p, ep, st, startY, pn) {
   }
   var fpLbl = (p.skEn && st.Fp_key > 0.001) ? 'F{_p} (base + key)' : 'F{_p} — passive';
   slRows.push([fpLbl, '\xBD\xD7K{_p}\xD7{gamma}{_s}\xD7h{_p}\xB2', st.Fp.toFixed(2)+' kN/m']);
-  slRows.push(['0.3\xD7F{_p}  (Eq. 16.9 — 30% passive)', '0.3\xD7F{_p}', st.R_pt_part.toFixed(2)+' kN/m']);
-  slRows.push(['Driving force P{_a,h} (static)', 'P{_a}', Ph_pdf.toFixed(2)+' kN/m']);
-  slRows.push(['FS{_sl} (static)', '(R{_th}+0.3F{_p}) / P{_a,h}', st.FSsl.toFixed(3)+' (req >= '+p.FSs.toFixed(1)+')']);
+  slRows.push(['R{_th,d} = R{_th} / {gamma}{_Rh}', '{gamma}{_Rh} = 1.10  (Tablo 16.2)', st.R_th_d.toFixed(2)+' kN/m']);
+  slRows.push(['0.3\xD7F{_p}  (Eq. 16.9 — characteristic)', '0.3\xD7F{_p}', st.R_pt_char.toFixed(2)+' kN/m']);
+  slRows.push(['0.3\xD7F{_p} / {gamma}{_Rp}  (design passive)', '{gamma}{_Rp} = 1.40  (Tablo 16.2)', st.R_pt_part.toFixed(2)+' kN/m']);
+  slRows.push(['Driving force V{_th} (static)', 'P{_a,h}', Ph_pdf.toFixed(2)+' kN/m']);
+  slRows.push(['FS{_sl} (static)', '(R{_th,d} + 0.3F{_p}/{gamma}{_Rp}) / V{_th}', st.FSsl.toFixed(3)+' (req >= '+p.FSs.toFixed(1)+')']);
 
   /* ── Seismic sliding resistance ── */
   if(seisSlid){
     var kh_s = ep.kh||0, kv_s = ep.kv||0;
     var DPAE_h_pdf = ep.DPAE_h || ep.DPAE;
-    /* R_th_seis: undrained when Cu>0, else same as static drained */
+    /* R_th_seis: R_th/γRh for both drained and undrained (Tablo 16.2: γRh=1.10) */
     if((p.cu||0)>0){
-      slRows.push(['R{_th,seis} = A{_k}\xD7C{_u}/{gamma}{_Rh}', 'Eq. 16.11 ({gamma}{_Rh}=1.1)', st.R_th_seis.toFixed(2)+' kN/m']);
+      slRows.push(['R{_th,seis} = C{_u}\xD7B / {gamma}{_Rh}', 'Eq. 16.11  ({gamma}{_Rh} = 1.10)', st.R_th_seis.toFixed(2)+' kN/m']);
     } else {
-      slRows.push(['R{_th,seis}', '(same as static)', st.R_th_seis.toFixed(2)+' kN/m']);
+      slRows.push(['R{_th,seis} = R{_th} / {gamma}{_Rh}', '{gamma}{_Rh} = 1.10  (Tablo 16.2)', st.R_th_seis.toFixed(2)+' kN/m']);
     }
     /* Seismic passive */
     slRows.push(['K{_p,seis}  (Eq. 16.25)', '{psi}='+( (ep.psi||0)*180/Math.PI).toFixed(1)+'\xB0', (st.Kp_seis||ep.Kp||0).toFixed(3)]);
