@@ -199,6 +199,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="sub-tabs" style="margin-bottom:12px;">
         <button class="sub-tab active" id="fd-mode-udl" onclick="fdSetLoadMode('udl')">UDL</button>
         <button class="sub-tab" id="fd-mode-area" onclick="fdSetLoadMode('area')">Area Loads</button>
+        <button class="sub-tab" id="fd-mode-direct" onclick="fdSetLoadMode('direct')">Design Loads</button>
       </div>
 
       <!-- ── UDL panel ── -->
@@ -260,6 +261,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div class="iw"><input type="number" id="fd-aW" value="0" step="0.5" min="0" oninput="fdUpdateAreaResult();fdAutoCalc()"><span class="us" id="fd-aW-us">kN/m²</span></div>
         </div>
         <div id="fd-area-note" style="display:none"></div>
+      </div>
+
+      <!-- ── Design Loads (direct moment input) panel ── -->
+      <div id="fd-panel-direct" style="display:none">
+        <div style="font-size:.73rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;margin-bottom:10px;font-family:var(--sans);line-height:1.5">
+          Enter pre-calculated moments. Load combinations and self-weight are excluded from the report.
+        </div>
+        <div class="form-group">
+          <label>Service moment M<sub>svc</sub> <span id="fd-dm-s-lbl" class="unit-lbl">[kip·ft]</span></label>
+          <div class="iw"><input type="number" id="fd-dm-s" value="50" step="5" min="0" oninput="fdAutoCalc()"><span class="us" id="fd-dm-s-us">kip·ft</span></div>
+        </div>
+        <div class="form-group">
+          <label>Factored moment M<sub>u</sub> <span id="fd-dm-u-lbl" class="unit-lbl">[kip·ft]</span></label>
+          <div class="iw"><input type="number" id="fd-dm-u" value="100" step="5" min="0" oninput="fdAutoCalc()"><span class="us" id="fd-dm-u-us">kip·ft</span></div>
+        </div>
       </div>
 
       <div id="fd-sw-note" style="font-size:.72rem;color:var(--text-dim);margin-top:-8px;margin-bottom:10px;padding:5px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);display:none;">
@@ -938,6 +954,20 @@ function fdUpdateLabels() {
   document.getElementById('fd-aS').value  = 0;
   document.getElementById('fd-aLr').value = 0;
   document.getElementById('fd-aW').value  = 0;
+  // direct-mode labels and defaults
+  var mU = fdUnit==='us' ? 'kip·ft' : 'kN·m';
+  var dmSLbl = document.getElementById('fd-dm-s-lbl');
+  var dmSUs  = document.getElementById('fd-dm-s-us');
+  var dmULbl = document.getElementById('fd-dm-u-lbl');
+  var dmUUs  = document.getElementById('fd-dm-u-us');
+  if (dmSLbl) dmSLbl.textContent = '[' + mU + ']';
+  if (dmSUs)  dmSUs.textContent  = mU;
+  if (dmULbl) dmULbl.textContent = '[' + mU + ']';
+  if (dmUUs)  dmUUs.textContent  = mU;
+  var dmSEl = document.getElementById('fd-dm-s');
+  var dmUEl = document.getElementById('fd-dm-u');
+  if (dmSEl) dmSEl.value = fdUnit==='us' ? 50  : 70;
+  if (dmUEl) dmUEl.value = fdUnit==='us' ? 100 : 140;
   fdUpdateAreaResult();
 }
 
@@ -970,10 +1000,12 @@ function fdAutoCalc() {
 
 function fdSetLoadMode(mode) {
   fdLoadMode = mode;
-  document.getElementById('fd-panel-udl').style.display  = mode==='udl'  ? '' : 'none';
-  document.getElementById('fd-panel-area').style.display = mode==='area' ? '' : 'none';
-  document.getElementById('fd-mode-udl').classList.toggle('active',  mode==='udl');
-  document.getElementById('fd-mode-area').classList.toggle('active', mode==='area');
+  document.getElementById('fd-panel-udl').style.display    = mode==='udl'    ? '' : 'none';
+  document.getElementById('fd-panel-area').style.display   = mode==='area'   ? '' : 'none';
+  document.getElementById('fd-panel-direct').style.display = mode==='direct' ? '' : 'none';
+  document.getElementById('fd-mode-udl').classList.toggle('active',    mode==='udl');
+  document.getElementById('fd-mode-area').classList.toggle('active',   mode==='area');
+  document.getElementById('fd-mode-direct').classList.toggle('active', mode==='direct');
   fdUpdateAreaResult();
 }
 
@@ -1110,6 +1142,8 @@ function fdCalc() {
     wS  = (+document.getElementById('fd-aS').value  || 0) * _f;
     wLr = (+document.getElementById('fd-aLr').value || 0) * _f;
     wW  = (+document.getElementById('fd-aW').value  || 0) * _f;
+  } else if (fdLoadMode === 'direct') {
+    wD = 0; wL = 0; wS = 0; wLr = 0; wW = 0;
   } else {
     wD  = +document.getElementById('fd-dL').value  || 0;
     wL  = +document.getElementById('fd-lL').value  || 0;
@@ -1122,20 +1156,27 @@ function fdCalc() {
 
   if (L <= 0) { alert('Span must be > 0.'); return; }
 
-  var sw  = fdGetSelfWeight(row);
-  var D   = wD + sw;
-
-  // ASCE 7-22 §2.3.1 LRFD combos
-  var maxRoof = Math.max(wLr, wS);
-  var combos = [
-    {n:'1', f:'1.4D',                           w: 1.4*D},
-    {n:'2', f:'1.2D+1.6L+0.5max(Lr,S)',         w: 1.2*D + 1.6*wL + 0.5*maxRoof},
-    {n:'3', f:'1.2D+1.6max(Lr,S)+max(L,0.5W)',  w: 1.2*D + 1.6*maxRoof + Math.max(wL, 0.5*wW)},
-    {n:'4', f:'1.2D+W+L+0.5max(Lr,S)',          w: 1.2*D + wW + wL + 0.5*maxRoof},
-    {n:'5', f:'0.9D+W',                          w: 0.9*D + wW}
-  ];
-  var gov = combos.reduce(function(a,b){ return a.w >= b.w ? a : b; });
-  var wu  = gov.w;
+  var isDirect = fdLoadMode === 'direct';
+  var Mu_direct = isDirect ? (+document.getElementById('fd-dm-u').value || 0) : 0;
+  var Ms_direct = isDirect ? (+document.getElementById('fd-dm-s').value || 0) : 0;
+  var sw, D, combos, gov, wu;
+  if (isDirect) {
+    sw = 0; D = 0; combos = []; gov = {n:'—', f:'User-defined'}; wu = 0;
+  } else {
+    sw = fdGetSelfWeight(row);
+    D  = wD + sw;
+    // ASCE 7-22 §2.3.1 LRFD combos
+    var maxRoof = Math.max(wLr, wS);
+    combos = [
+      {n:'1', f:'1.4D',                           w: 1.4*D},
+      {n:'2', f:'1.2D+1.6L+0.5max(Lr,S)',         w: 1.2*D + 1.6*wL + 0.5*maxRoof},
+      {n:'3', f:'1.2D+1.6max(Lr,S)+max(L,0.5W)',  w: 1.2*D + 1.6*maxRoof + Math.max(wL, 0.5*wW)},
+      {n:'4', f:'1.2D+W+L+0.5max(Lr,S)',          w: 1.2*D + wW + wL + 0.5*maxRoof},
+      {n:'5', f:'0.9D+W',                          w: 0.9*D + wW}
+    ];
+    gov = combos.reduce(function(a,b){ return a.w >= b.w ? a : b; });
+    wu  = gov.w;
+  }
 
   // Moment coefficient and deflection coefficient
   // pp:   wL²/8      midspan
@@ -1159,22 +1200,24 @@ function fdCalc() {
   if (fdUnit === 'us') {
     var Ix  = +row[cm.I];
     var Zx  = zObj.val, Zest = zObj.est;
-    var Mu_y  = wu * (isInclined ? cosT : 1) * L * L * Cm;
-    var Mu_z  = isInclined ? wu * sinT * L * L * Cm : 0;
+    var Mu_y  = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
+    var Mu_z  = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
     var phiMny = 0.9 * Fy * Zx / 12;
     var DCR   = Mu_y / phiMny;
-    var Zy = isInclined ? fdGetWplz(row) : null;
-    var approxWeak = isInclined && cm.Sy !== undefined;
-    var phiMnz = (isInclined && Zy) ? 0.9 * Fy * Zy / 12 : null;
-    var biaxDCR = (isInclined && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
-    var ws_live  = wL;
-    var ws_total = D + wL + wLr + wS;
-    var dCoef    = isInclined ? cosT : 1;
+    var _biaxOk = isInclined && !isDirect;
+    var Zy = _biaxOk ? fdGetWplz(row) : null;
+    var approxWeak = _biaxOk && cm.Sy !== undefined;
+    var phiMnz = (_biaxOk && Zy) ? 0.9 * Fy * Zy / 12 : null;
+    var biaxDCR = (_biaxOk && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
+    var ws_svc_equiv = isDirect ? Ms_direct / (Cm * L * L) : 0;
+    var ws_live  = isDirect ? ws_svc_equiv : wL;
+    var ws_total = isDirect ? ws_svc_equiv : (D + wL + wLr + wS);
+    var dCoef    = (isInclined && !isDirect) ? cosT : 1;
     var dL_svc   = Cd * 1728 * ws_live  * dCoef * Math.pow(L, 4) / (29000 * Ix);
     var dT_svc   = Cd * 1728 * ws_total * dCoef * Math.pow(L, 4) / (29000 * Ix);
     var limL = bc==='cant' ? L*12/180 : L*12/360;
     var limT = bc==='cant' ? L*12/120 : L*12/240;
-    var MuNeg = CmNeg ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
+    var MuNeg = (CmNeg && !isDirect) ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
     r = {name:name,gn:gn,Fy:Fy,bc:bc,bcLbl:bcLbl,L:L,
          wD:wD,sw:sw,D:D,wL:wL,wS:wS,wLr:wLr,wW:wW,
          wu:wu,gov:gov.n,govF:gov.f,combos:combos,Cm:Cm,Cd:Cd,
@@ -1182,26 +1225,29 @@ function fdCalc() {
          dL:dL_svc,dT:dT_svc,limL:limL,limT:limT,
          uM:'kip·ft',uW:'kip/ft',uL:'ft',uD:'in',uFy:'ksi',
          isInclined:isInclined,theta:theta,cosT:cosT,sinT:sinT,
-         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Zy:Zy,biaxDCR:biaxDCR,approxWeak:approxWeak};
+         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Zy:Zy,biaxDCR:biaxDCR,approxWeak:approxWeak,
+         isDirect:isDirect,Mu_direct:Mu_direct,Ms_direct:Ms_direct};
   } else {
     var Iy   = +row[cm.I];
     var Wply = zObj.val;
-    var Mu_y  = wu * (isInclined ? cosT : 1) * L * L * Cm;
-    var Mu_z  = isInclined ? wu * sinT * L * L * Cm : 0;
+    var Mu_y  = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
+    var Mu_z  = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
     var phiMny = 0.9 * Fy * Wply / 1000;
     var DCR   = Mu_y / phiMny;
-    var Wplz = isInclined ? fdGetWplz(row) : null;
-    var approxWeak = isInclined && cm.Welz !== undefined;
-    var phiMnz = (isInclined && Wplz) ? 0.9 * Fy * Wplz / 1000 : null;
-    var biaxDCR = (isInclined && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
-    var ws_live  = wL;
-    var ws_total = D + wL + wLr + wS;
-    var dCoef    = isInclined ? cosT : 1;
+    var _biaxOk = isInclined && !isDirect;
+    var Wplz = _biaxOk ? fdGetWplz(row) : null;
+    var approxWeak = _biaxOk && cm.Welz !== undefined;
+    var phiMnz = (_biaxOk && Wplz) ? 0.9 * Fy * Wplz / 1000 : null;
+    var biaxDCR = (_biaxOk && phiMnz) ? (Mu_y/phiMny)+(Mu_z/phiMnz) : null;
+    var ws_svc_equiv = isDirect ? Ms_direct / (Cm * L * L) : 0;
+    var ws_live  = isDirect ? ws_svc_equiv : wL;
+    var ws_total = isDirect ? ws_svc_equiv : (D + wL + wLr + wS);
+    var dCoef    = (isInclined && !isDirect) ? cosT : 1;
     var dL_svc   = Cd * 500 * ws_live  * dCoef * Math.pow(L, 4) / Iy;
     var dT_svc   = Cd * 500 * ws_total * dCoef * Math.pow(L, 4) / Iy;
     var limL = bc==='cant' ? L*1000/180 : L*1000/360;
     var limT = bc==='cant' ? L*1000/120 : L*1000/240;
-    var MuNeg = CmNeg ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
+    var MuNeg = (CmNeg && !isDirect) ? wu*(isInclined?cosT:1)*L*L*CmNeg : null;
     r = {name:name,gn:gn,Fy:Fy,bc:bc,bcLbl:bcLbl,L:L,
          wD:wD,sw:sw,D:D,wL:wL,wS:wS,wLr:wLr,wW:wW,
          wu:wu,gov:gov.n,govF:gov.f,combos:combos,Cm:Cm,Cd:Cd,
@@ -1209,7 +1255,8 @@ function fdCalc() {
          dL:dL_svc,dT:dT_svc,limL:limL,limT:limT,
          uM:'kN·m',uW:'kN/m',uL:'m',uD:'mm',uFy:'MPa',
          isInclined:isInclined,theta:theta,cosT:cosT,sinT:sinT,
-         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Wplz:Wplz,biaxDCR:biaxDCR,approxWeak:approxWeak};
+         Mu_y:Mu_y,Mu_z:Mu_z,phiMny:phiMny,phiMnz:phiMnz,Wplz:Wplz,biaxDCR:biaxDCR,approxWeak:approxWeak,
+         isDirect:isDirect,Mu_direct:Mu_direct,Ms_direct:Ms_direct};
   }
   fdRender(r);
 }
@@ -1240,7 +1287,7 @@ function fdRender(r) {
   var EI = fdUnit==='us'
     ? 'E = 29,000 ksi, Ix = '+r.Ix+' in⁴'
     : 'E = 200 GPa, I = '+r.Iy+' cm⁴';
-  var ws_total = r.D + r.wL + r.wLr + r.wS;
+  var ws_total = r.isDirect ? 0 : (r.D + r.wL + r.wLr + r.wS);
 
   var date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 
@@ -1324,7 +1371,7 @@ function fdRender(r) {
     ? '<tr><td>Load Input Mode</td><td>Area Loads (s = '
       + document.getElementById('fd-tw').value + ' '
       + (fdUnit==='us'?'ft':'m') + ' tributary width)</td></tr>'
-    : '';
+    : (fdLoadMode==='direct' ? '<tr><td>Load Input Mode</td><td>Design Loads (user-defined moments)</td></tr>' : '');
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
      + '<table class="inp-tbl">'
      + '<tr><td>Section</td><td>'+r.name+'</td></tr>'
@@ -1332,40 +1379,51 @@ function fdRender(r) {
      + '<tr><td>End Conditions</td><td>'+r.bcLbl+'</td></tr>'
      + '<tr><td>Span L</td><td class="inp-num">'+r.L+' '+r.uL+'</td></tr>'
      + loadModeRow
-     + '<tr><td>Dead Load D (cover)</td><td class="inp-num">'+fmt(r.wD,2)+' '+r.uW+_ap('fd-aD')+'</td></tr>'
-     + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' '+r.uW+'</td></tr>'
-     + '<tr><td>Total Dead D</td><td class="inp-num">'+fmt(r.D,2)+' '+r.uW+'</td></tr>'
-     + '<tr><td>Live L</td><td class="inp-num">'+fmt(r.wL,2)+' '+r.uW+_ap('fd-aL')+'</td></tr>'
-     + (r.wS>0 ? '<tr><td>Snow S</td><td class="inp-num">'+fmt(r.wS,2)+' '+r.uW+_ap('fd-aS')+'</td></tr>' : '')
-     + (r.wLr>0 ? '<tr><td>Roof Live L<sub>r</sub></td><td class="inp-num">'+fmt(r.wLr,2)+' '+r.uW+_ap('fd-aLr')+'</td></tr>' : '')
-     + (r.wW>0 ? '<tr><td>Wind W</td><td class="inp-num">'+fmt(r.wW,2)+' '+r.uW+_ap('fd-aW')+'</td></tr>' : '')
-     + (r.isInclined ? '<tr><td>Beam Orientation</td><td>Inclined &mdash; &theta; = '+r.theta+'&deg; from horizontal</td></tr>' : '')
+     + (r.isDirect
+        ? '<tr><td>Service Moment M<sub>svc</sub></td><td class="inp-num">'+fmt(r.Ms_direct,2)+' '+r.uM+'</td></tr>'
+        + '<tr><td>Design Moment M<sub>u</sub></td><td class="inp-num">'+fmt(r.Mu_direct,2)+' '+r.uM+'</td></tr>'
+        : '<tr><td>Dead Load D (cover)</td><td class="inp-num">'+fmt(r.wD,2)+' '+r.uW+_ap('fd-aD')+'</td></tr>'
+        + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' '+r.uW+'</td></tr>'
+        + '<tr><td>Total Dead D</td><td class="inp-num">'+fmt(r.D,2)+' '+r.uW+'</td></tr>'
+        + '<tr><td>Live L</td><td class="inp-num">'+fmt(r.wL,2)+' '+r.uW+_ap('fd-aL')+'</td></tr>'
+        + (r.wS>0 ? '<tr><td>Snow S</td><td class="inp-num">'+fmt(r.wS,2)+' '+r.uW+_ap('fd-aS')+'</td></tr>' : '')
+        + (r.wLr>0 ? '<tr><td>Roof Live L<sub>r</sub></td><td class="inp-num">'+fmt(r.wLr,2)+' '+r.uW+_ap('fd-aLr')+'</td></tr>' : '')
+        + (r.wW>0 ? '<tr><td>Wind W</td><td class="inp-num">'+fmt(r.wW,2)+' '+r.uW+_ap('fd-aW')+'</td></tr>' : ''))
+     + (r.isInclined && !r.isDirect ? '<tr><td>Beam Orientation</td><td>Inclined &mdash; &theta; = '+r.theta+'&deg; from horizontal</td></tr>' : '')
      + propRows
      + '</table></div>';
 
   // ── Load combinations ──────────────────────────────────────────────────────
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">ASCE 7-22 §2.3.1 &mdash; Load Combinations</div>'
-     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> ('+r.uW+')</th></tr>';
-  r.combos.forEach(function(c){
-    var g = c.n === r.gov;
-    h += '<tr'+(g?' class="gov-row"':'')+'>'
-       + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
-       + '<td class="combo-lbl">'+c.f+'</td>'
-       + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td>'
-       + '</tr>';
-  });
-  h += '</table></div>';
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">ASCE 7-22 §2.3.1 &mdash; Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> ('+r.uW+')</th></tr>';
+    r.combos.forEach(function(c){
+      var g = c.n === r.gov;
+      h += '<tr'+(g?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
+         + '<td class="combo-lbl">'+c.f+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td>'
+         + '</tr>';
+    });
+    h += '</table></div>';
+  }
 
   // ── Calculation steps ──────────────────────────────────────────────────────
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; AISC LRFD §F2</div>'
      + '<table class="steps-table">';
-  h += step(1, 'Total dead load D = cover + self-weight',
-    fmt(r.wD,3)+' + '+fmt(r.sw,3)+' '+r.uW,
-    'D = '+fmt(r.D,3)+' '+r.uW);
-  h += step(2, 'Governing factored load w<sub>u</sub> &mdash; Combo '+r.gov,
-    r.govF,
-    'w<sub>u</sub> = '+fmt(r.wu,3)+' '+r.uW);
-  if (r.isInclined) {
+  if (r.isDirect) {
+    h += step(1, 'Design moment M<sub>u</sub> &mdash; user-defined (factored)',
+      'Load combinations already applied by user',
+      'M<sub>u</sub> = '+fmt(r.Mu,2)+' '+r.uM);
+  } else {
+    h += step(1, 'Total dead load D = cover + self-weight',
+      fmt(r.wD,3)+' + '+fmt(r.sw,3)+' '+r.uW,
+      'D = '+fmt(r.D,3)+' '+r.uW);
+    h += step(2, 'Governing factored load w<sub>u</sub> &mdash; Combo '+r.gov,
+      r.govF,
+      'w<sub>u</sub> = '+fmt(r.wu,3)+' '+r.uW);
+  }
+  if (r.isInclined && !r.isDirect) {
     h += step(3, 'Load decomposition &mdash; inclined beam &theta; = '+r.theta+'&deg;',
       'w<sub>u</sub> = '+fmt(r.wu,3)+' '+r.uW+' &nbsp;|&nbsp; cos&theta; = '+fmt(r.cosT,4)+' &nbsp;|&nbsp; sin&theta; = '+fmt(r.sinT,4),
       'w<sub>y</sub> = '+fmt(r.wu*r.cosT,3)+' '+r.uW+' (strong) &nbsp;/&nbsp; w<sub>z</sub> = '+fmt(r.wu*r.sinT,3)+' '+r.uW+' (weak)');
@@ -1391,13 +1449,15 @@ function fdRender(r) {
         'D/C = '+fmt(r.biaxDCR,3), biaxOk);
     }
   } else {
-    h += step(3, 'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
-      'w<sub>u</sub> &times; L&sup2; &times; '+bcCm+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
-      'M<sub>u</sub> = '+fmt(r.Mu,2)+' '+r.uM);
-    h += step(4, 'Nominal flexural capacity &phi;M<sub>n</sub> (compact, full LB)',
+    if (!r.isDirect) {
+      h += step(3, 'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
+        'w<sub>u</sub> &times; L&sup2; &times; '+bcCm+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+bcCm,
+        'M<sub>u</sub> = '+fmt(r.Mu,2)+' '+r.uM);
+    }
+    h += step(r.isDirect?2:4, 'Nominal flexural capacity &phi;M<sub>n</sub> (compact, full LB)',
       capFml,
       '&phi;M<sub>n</sub> = '+fmt(r.phiMn,2)+' '+r.uM);
-    h += step(5, 'Demand / Capacity check',
+    h += step(r.isDirect?3:5, 'Demand / Capacity check',
       'M<sub>u</sub> / &phi;M<sub>n</sub> = '+fmt(r.Mu,2)+' / '+fmt(r.phiMn,2),
       'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
   }
@@ -1406,11 +1466,13 @@ function fdRender(r) {
   // ── Deflection steps ───────────────────────────────────────────────────────
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Serviceability &mdash; Deflection Check</div>'
      + '<table class="steps-table">';
-  h += step('a', 'Live-load deflection vs '+defLimL,
-    defCoef+' &times; w<sub>L</sub> &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; '+EI,
+  h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs '+defLimL : 'Live-load deflection vs '+defLimL,
+    r.isDirect
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; '+EI
+      : defCoef+' &times; w<sub>L</sub> &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; '+EI,
     fmt(r.dL,2)+' / '+fmt(r.limL,2)+' '+r.uD, dLok);
-  h += step('b', 'Total deflection (D+L+S+L<sub>r</sub>) vs '+defLimT,
-    'w<sub>total</sub> = '+fmt(ws_total,3)+' '+r.uW,
+  h += step('b', r.isDirect ? 'Total deflection (equiv. from M<sub>svc</sub>) vs '+defLimT : 'Total deflection (D+L+S+L<sub>r</sub>) vs '+defLimT,
+    r.isDirect ? 'w<sub>equiv</sub> same as above (service moment covers all loads)' : 'w<sub>total</sub> = '+fmt(ws_total,3)+' '+r.uW,
     fmt(r.dT,2)+' / '+fmt(r.limT,2)+' '+r.uD, dTok);
   h += '</table>'
      + '<div class="report-warn"><span>&#9432;</span><div>Assumes <b>compact section</b> with <b>full lateral bracing</b>. Lateral-torsional buckling (LTB) not checked. Wind excluded from service deflection.'
@@ -1591,6 +1653,8 @@ function fdCalcEC3() {
     wS  = (+document.getElementById('fd-aS').value  || 0) * _s;
     wLr = (+document.getElementById('fd-aLr').value || 0) * _s;
     wW  = (+document.getElementById('fd-aW').value  || 0) * _s;
+  } else if (fdLoadMode === 'direct') {
+    wD = 0; wL = 0; wS = 0; wLr = 0; wW = 0;
   } else {
     wD  = +document.getElementById('fd-dL').value  || 0;
     wL  = +document.getElementById('fd-lL').value  || 0;
@@ -1600,23 +1664,31 @@ function fdCalcEC3() {
   }
   if (L <= 0) { alert('Span must be > 0.'); return; }
 
-  var sw = fdGetSelfWeight(row); // kN/m (self-weight auto from section)
-  var G  = wD + sw;              // total permanent  [kN/m]
-  var QL = wL + wLr;             // live + roof live [kN/m]
-  var QS = wS;                   // snow             [kN/m]
-  var QW = wW;                   // wind             [kN/m]
-
-  // EN 1990 Eq. 6.10 ULS combinations (ψ₀: QL=0.7, QS=0.5, QW=0.6)
-  var combos = [
-    {n:'1', f:'1.35G + 1.5Q<sub>L</sub>',                              w: 1.35*G + 1.5*QL},
-    {n:'2', f:'1.35G + 1.5Q<sub>L</sub> + 0.75Q<sub>S</sub>',         w: 1.35*G + 1.5*QL + 1.5*0.5*QS},
-    {n:'3', f:'1.35G + 1.5Q<sub>L</sub> + 0.9Q<sub>W</sub>',          w: 1.35*G + 1.5*QL + 1.5*0.6*QW},
-    {n:'4', f:'1.35G + 1.05Q<sub>L</sub> + 1.5Q<sub>S</sub>',         w: 1.35*G + 1.5*0.7*QL + 1.5*QS},
-    {n:'5', f:'1.35G + 1.05Q<sub>L</sub> + 1.5Q<sub>W</sub>',         w: 1.35*G + 1.5*0.7*QL + 1.5*QW},
-    {n:'6', f:'0.9G + 1.5Q<sub>W</sub> (uplift)',                      w: 0.9*G  + 1.5*QW}
-  ];
-  var gov = combos.reduce(function(a,b){ return a.w>=b.w?a:b; });
-  var wu  = gov.w;
+  var isDirect = fdLoadMode === 'direct';
+  var Mu_direct = isDirect ? (+document.getElementById('fd-dm-u').value || 0) : 0;
+  var Ms_direct = isDirect ? (+document.getElementById('fd-dm-s').value || 0) : 0;
+  var sw, G, QL, QS, QW, combos, gov, wu;
+  if (isDirect) {
+    sw = 0; G = 0; QL = 0; QS = 0; QW = 0;
+    combos = []; gov = {n:'—', f:'User-defined'}; wu = 0;
+  } else {
+    sw = fdGetSelfWeight(row); // kN/m (self-weight auto from section)
+    G  = wD + sw;              // total permanent  [kN/m]
+    QL = wL + wLr;             // live + roof live [kN/m]
+    QS = wS;                   // snow             [kN/m]
+    QW = wW;                   // wind             [kN/m]
+    // EN 1990 Eq. 6.10 ULS combinations (ψ₀: QL=0.7, QS=0.5, QW=0.6)
+    combos = [
+      {n:'1', f:'1.35G + 1.5Q<sub>L</sub>',                              w: 1.35*G + 1.5*QL},
+      {n:'2', f:'1.35G + 1.5Q<sub>L</sub> + 0.75Q<sub>S</sub>',         w: 1.35*G + 1.5*QL + 1.5*0.5*QS},
+      {n:'3', f:'1.35G + 1.5Q<sub>L</sub> + 0.9Q<sub>W</sub>',          w: 1.35*G + 1.5*QL + 1.5*0.6*QW},
+      {n:'4', f:'1.35G + 1.05Q<sub>L</sub> + 1.5Q<sub>S</sub>',         w: 1.35*G + 1.5*0.7*QL + 1.5*QS},
+      {n:'5', f:'1.35G + 1.05Q<sub>L</sub> + 1.5Q<sub>W</sub>',         w: 1.35*G + 1.5*0.7*QL + 1.5*QW},
+      {n:'6', f:'0.9G + 1.5Q<sub>W</sub> (uplift)',                      w: 0.9*G  + 1.5*QW}
+    ];
+    gov = combos.reduce(function(a,b){ return a.w>=b.w?a:b; });
+    wu  = gov.w;
+  }
 
   var Cm    = bc==='ff'?1/12:(bc==='fp'?9/128:(bc==='cant'?1/2:1/8));
   var Cd    = bc==='ff'?1/384:(bc==='fp'?1/185.14:(bc==='cant'?1/8:5/384));
@@ -1629,8 +1701,8 @@ function fdCalcEC3() {
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
-  var MEd_y = wu * (isInclined ? cosT : 1) * L * L * Cm; // strong axis [kN·m]
-  var MEd_z = isInclined ? wu * sinT * L * L * Cm : 0;   // weak axis   [kN·m]
+  var MEd_y = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
+  var MEd_z = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
 
   // Section classification (governs both axes — conservative)
   var cls   = fdClassifySection(row, Fy, fdSecType);
@@ -1645,7 +1717,7 @@ function fdCalcEC3() {
 
   // Weak axis capacity (when inclined)
   var McRd_z = null, biaxDCR = null, approxWeak = false;
-  if (isInclined) {
+  if (isInclined && !isDirect) {
     var Wplz = fdGetWplz(row);
     var Welz = fdGetWelz(row, fdSecType);
     var Weff_z;
@@ -1676,9 +1748,10 @@ function fdCalcEC3() {
   var Iy_cm4 = +row[cm.I];
   var I_mm4  = Iy_cm4 * 1e4;
   var Lmm    = L * 1000;
-  var wQL_svc = isInclined ? QL * cosT : QL; // component for deflection (gravity governs)
+  var ws_svc_equiv = isDirect ? Ms_direct / (Cm * L * L) : 0;
+  var wQL_svc = isDirect ? ws_svc_equiv : (isInclined ? QL * cosT : QL);
   var dL_mm  = Cd * wQL_svc * Math.pow(Lmm,4) / (210000 * I_mm4);
-  var wSvc   = (G + QL + QS) * (isInclined ? cosT : 1);
+  var wSvc   = isDirect ? ws_svc_equiv : ((G + QL + QS) * (isInclined ? cosT : 1));
   var dT_mm  = Cd * wSvc    * Math.pow(Lmm,4) / (210000 * I_mm4);
   var limLF  = bc==='cant' ? 1/150 : 1/300;
   var limTF  = bc==='cant' ? 1/125 : 1/250;
@@ -1704,6 +1777,8 @@ function fdCalcEC3() {
     limLstr:bc==='cant'?'L/150':'L/300', limTstr:bc==='cant'?'L/125':'L/250',
     dLok:dLok, dTok:dTok,
     defCoef:{pp:'5/384',fp:'≈1/185',ff:'1/384',cant:'1/8'}[bc],
+    isDirect:isDirect, Mu_direct:Mu_direct, Ms_direct:Ms_direct,
+    wSvc:wSvc,
     date:date
   });
 }
@@ -1804,6 +1879,9 @@ function fdRenderEC3(r) {
     var v = (+document.getElementById(id1).value || 0) + (+document.getElementById(id2).value || 0);
     return ' <span style="color:var(--text-dim);font-size:.78em">(' + fmt(v,2) + ' ' + _aUnit + ')</span>';
   };
+  var _loadModeRow = fdLoadMode==='area'
+    ? '<tr><td>Load Input Mode</td><td>Area Loads (s = '+document.getElementById('fd-tw').value+' m tributary width)</td></tr>'
+    : (fdLoadMode==='direct' ? '<tr><td>Load Input Mode</td><td>Design Loads (user-defined moments)</td></tr>' : '');
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
      + '<table class="inp-tbl">'
      + '<tr><td>Section</td><td>'+r.name+'</td></tr>'
@@ -1811,12 +1889,16 @@ function fdRenderEC3(r) {
      + '<tr><td>&gamma;<sub>M0</sub></td><td class="inp-num">'+r.gmM0.toFixed(2)+'</td></tr>'
      + '<tr><td>End Conditions</td><td>'+r.bcLbl+'</td></tr>'
      + '<tr><td>Span L</td><td class="inp-num">'+r.L+' m</td></tr>'
-     + '<tr><td>Permanent G (cover)</td><td class="inp-num">'+fmt(r.wD,2)+' kN/m'+_ap('fd-aD')+'</td></tr>'
-     + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN/m</td></tr>'
-     + '<tr><td>Total permanent G</td><td class="inp-num">'+fmt(r.G,2)+' kN/m</td></tr>'
-     + '<tr><td>Variable Q<sub>L</sub> (live + L<sub>r</sub>)</td><td class="inp-num">'+fmt(r.QL,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
-     + (r.QS>0?'<tr><td>Snow Q<sub>S</sub></td><td class="inp-num">'+fmt(r.QS,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
-     + (r.QW>0?'<tr><td>Wind Q<sub>W</sub></td><td class="inp-num">'+fmt(r.QW,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':'')
+     + _loadModeRow
+     + (r.isDirect
+        ? '<tr><td>Service Moment M<sub>svc</sub></td><td class="inp-num">'+fmt(r.Ms_direct,2)+' kN·m</td></tr>'
+        + '<tr><td>Design Moment M<sub>Ed</sub></td><td class="inp-num">'+fmt(r.Mu_direct,2)+' kN·m</td></tr>'
+        : '<tr><td>Permanent G (cover)</td><td class="inp-num">'+fmt(r.wD,2)+' kN/m'+_ap('fd-aD')+'</td></tr>'
+        + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN/m</td></tr>'
+        + '<tr><td>Total permanent G</td><td class="inp-num">'+fmt(r.G,2)+' kN/m</td></tr>'
+        + '<tr><td>Variable Q<sub>L</sub> (live + L<sub>r</sub>)</td><td class="inp-num">'+fmt(r.QL,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
+        + (r.QS>0?'<tr><td>Snow Q<sub>S</sub></td><td class="inp-num">'+fmt(r.QS,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
+        + (r.QW>0?'<tr><td>Wind Q<sub>W</sub></td><td class="inp-num">'+fmt(r.QW,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':''))
      + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+r.Iy+' cm&#x2074;</td></tr>'
      + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
      + '</table></div>';
@@ -1866,25 +1948,33 @@ function fdRenderEC3(r) {
   h += '</div>';
 
   // EN 1990 combos
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">EN 1990 Eq. 6.10 &mdash; ULS Load Combinations (&psi;<sub>0</sub>: Q<sub>L</sub>=0.7, Q<sub>S</sub>=0.5, Q<sub>W</sub>=0.6)</div>'
-     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>Ed</sub> (kN/m)</th></tr>';
-  r.combos.forEach(function(c){
-    var g = c.n===r.gov;
-    h += '<tr'+(g?' class="gov-row"':'')+'>'
-       + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
-       + '<td class="combo-lbl">'+c.f+'</td>'
-       + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td></tr>';
-  });
-  h += '</table></div>';
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">EN 1990 Eq. 6.10 &mdash; ULS Load Combinations (&psi;<sub>0</sub>: Q<sub>L</sub>=0.7, Q<sub>S</sub>=0.5, Q<sub>W</sub>=0.6)</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>Ed</sub> (kN/m)</th></tr>';
+    r.combos.forEach(function(c){
+      var g = c.n===r.gov;
+      h += '<tr'+(g?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
+         + '<td class="combo-lbl">'+c.f+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
 
   // Calculation steps
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; EN 1993-1-1 &sect;6.2.5'+(r.isInclined?' / &sect;6.2.9 Biaxial':'')+'</div>'
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; EN 1993-1-1 &sect;6.2.5'+(r.isInclined && !r.isDirect?' / &sect;6.2.9 Biaxial':'')+'</div>'
      + '<table class="steps-table">';
-  h += step(1,'Total permanent G = cover + self-weight',
-    fmt(r.wD,3)+' + '+fmt(r.sw,3)+' kN/m', 'G = '+fmt(r.G,3)+' kN/m');
-  h += step(2,'Design load w<sub>Ed</sub> &mdash; EN 1990 Combo '+r.gov,
-    r.govF, 'w<sub>Ed</sub> = '+fmt(r.wu,3)+' kN/m');
-  if (r.isInclined) {
+  if (r.isDirect) {
+    h += step(1,'Design moment M<sub>Ed</sub> &mdash; user-defined (factored)',
+      'Load combinations already applied by user',
+      'M<sub>Ed</sub> = '+fmt(r.MEd_y,2)+' kN&middot;m');
+  } else {
+    h += step(1,'Total permanent G = cover + self-weight',
+      fmt(r.wD,3)+' + '+fmt(r.sw,3)+' kN/m', 'G = '+fmt(r.G,3)+' kN/m');
+    h += step(2,'Design load w<sub>Ed</sub> &mdash; EN 1990 Combo '+r.gov,
+      r.govF, 'w<sub>Ed</sub> = '+fmt(r.wu,3)+' kN/m');
+  }
+  if (r.isInclined && !r.isDirect) {
     h += step(3,'Load decomposition &mdash; inclined beam &theta; = '+r.theta+'&deg;',
       'cos&theta; = '+fmt(r.cosT,4)+' &nbsp;|&nbsp; sin&theta; = '+fmt(r.sinT,4),
       'w<sub>y</sub> = '+fmt(r.wu*r.cosT,3)+' kN/m (strong) &nbsp;/&nbsp; w<sub>z</sub> = '+fmt(r.wu*r.sinT,3)+' kN/m (weak)');
@@ -1919,16 +2009,18 @@ function fdRenderEC3(r) {
         fmlBx, 'D/C = '+fmt(r.biaxDCR,3), biaxOk);
     }
   } else {
-    h += step(3,'Design moment M<sub>Ed</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
-      'w<sub>Ed</sub> &times; L&sup2; &times; '+r.bcCmStr+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+r.bcCmStr,
-      'M<sub>Ed</sub> = '+fmt(r.MEd_y,2)+' kN&middot;m');
-    h += step(4,'Section classification &mdash; Table 5.2',
+    if (!r.isDirect) {
+      h += step(3,'Design moment M<sub>Ed</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
+        'w<sub>Ed</sub> &times; L&sup2; &times; '+r.bcCmStr+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+r.bcCmStr,
+        'M<sub>Ed</sub> = '+fmt(r.MEd_y,2)+' kN&middot;m');
+    }
+    h += step(r.isDirect?2:4,'Section classification &mdash; Table 5.2',
       '&epsilon; = &radic;(235/'+r.Fy+') = '+fmt(r.cls?r.cls.eps:1,4),
       'Class '+sc+' &rarr; use '+modName);
-    h += step(5,'Resistance M<sub>c,Rd</sub> = '+modName+' &times; f<sub>y</sub> / &gamma;<sub>M0</sub>',
+    h += step(r.isDirect?3:5,'Resistance M<sub>c,Rd</sub> = '+modName+' &times; f<sub>y</sub> / &gamma;<sub>M0</sub>',
       fmt(modVal,1)+' cm&sup3; &times; '+r.Fy+' N/mm&sup2; / ('+r.gmM0.toFixed(2)+' &times; 1000)',
       'M<sub>c,Rd</sub> = '+fmt(r.McRd_y,2)+' kN&middot;m');
-    h += step(6,'Demand / Capacity &mdash; &sect;6.2.5(1)',
+    h += step(r.isDirect?4:6,'Demand / Capacity &mdash; &sect;6.2.5(1)',
       'M<sub>Ed</sub> / M<sub>c,Rd</sub> = '+fmt(r.MEd_y,2)+' / '+fmt(r.McRd_y,2),
       'D/C = '+fmt(r.DCR,3), r.DCR<=1.0);
   }
@@ -1937,12 +2029,16 @@ function fdRenderEC3(r) {
   // Deflection
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Serviceability &mdash; Deflection (EN 1990 Annex A1.4)</div>'
      + '<table class="steps-table">';
-  var defQLlbl = r.isInclined ? 'Q<sub>L</sub>&middot;cos&theta;' : 'Q<sub>L</sub>';
-  h += step('a','Variable load deflection &delta;<sub>Q</sub> vs '+r.limLstr,
-    r.defCoef+' &times; '+defQLlbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
+  var defQLlbl = (r.isInclined && !r.isDirect) ? 'Q<sub>L</sub>&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'Q<sub>L</sub>');
+  h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs '+r.limLstr : 'Variable load deflection &delta;<sub>Q</sub> vs '+r.limLstr,
+    r.isDirect
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;'
+      : r.defCoef+' &times; '+defQLlbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
     fmt(r.dL,1)+' / '+fmt(r.limL,1)+' mm', r.dLok);
-  h += step('b','Total deflection &delta;<sub>max</sub> (G+Q<sub>L</sub>+Q<sub>S</sub>) vs '+r.limTstr,
-    'w<sub>svc</sub> = '+fmt(r.G+r.QL+r.QS,3)+' kN/m'+(r.isInclined?' &times; cos'+r.theta+'&deg;':''),
+  h += step('b', r.isDirect ? 'Total deflection (equiv. from M<sub>svc</sub>) vs '+r.limTstr : 'Total deflection &delta;<sub>max</sub> (G+Q<sub>L</sub>+Q<sub>S</sub>) vs '+r.limTstr,
+    r.isDirect
+      ? 'w<sub>equiv</sub> same as above (service moment covers all loads)'
+      : 'w<sub>svc</sub> = '+fmt(r.wSvc,3)+' kN/m'+(r.isInclined?' &times; cos'+r.theta+'&deg;':''),
     fmt(r.dT,1)+' / '+fmt(r.limT,1)+' mm', r.dTok);
   h += '</table>'
      + '<div class="report-warn"><span>&#9432;</span><div>Assumes <b>full lateral bracing</b>. Lateral-torsional buckling (EN 1993-1-1 §6.3.2) not checked. Deflection limits are EN 1990 Annex A1.4 recommended values (national annexes may differ). Wind excluded from deflection check.</div></div>'
@@ -1981,6 +2077,8 @@ function fdCalcCYTHYE() {
     wS  = (+document.getElementById('fd-aS').value  || 0) * _s;
     wLr = (+document.getElementById('fd-aLr').value || 0) * _s;
     wW  = (+document.getElementById('fd-aW').value  || 0) * _s;
+  } else if (fdLoadMode === 'direct') {
+    wD = 0; wL = 0; wS = 0; wLr = 0; wW = 0;
   } else {
     wD  = +document.getElementById('fd-dL').value  || 0;
     wL  = +document.getElementById('fd-lL').value  || 0;
@@ -1990,23 +2088,31 @@ function fdCalcCYTHYE() {
   }
   if (L <= 0) { alert('Span must be > 0.'); return; }
 
-  var sw = fdGetSelfWeight(row);
-  var G  = wD + sw;
-  var Q  = wL + wLr;
-  var S  = wS;
-  var W  = wW;
-
-  // TSDS 2016 LRFD — AISC 360 LRFD pattern (SI units)
-  var combos = [
-    {n:'1', f:'1.4G',                              w: 1.4*G},
-    {n:'2', f:'1.2G + 1.6Q + 0.5S',               w: 1.2*G + 1.6*Q + 0.5*S},
-    {n:'3', f:'1.2G + 1.6S + Q',                   w: 1.2*G + 1.6*S + Q},
-    {n:'4', f:'1.2G + 1.6S + 0.5W',                w: 1.2*G + 1.6*S + 0.5*W},
-    {n:'5', f:'1.2G + 1.0W + Q + 0.5S',            w: 1.2*G + W + Q + 0.5*S},
-    {n:'6', f:'0.9G + 1.0W (uplift)',               w: 0.9*G + W}
-  ];
-  var gov = combos.reduce(function(a,b){ return a.w>=b.w?a:b; });
-  var wu  = gov.w;
+  var isDirect = fdLoadMode === 'direct';
+  var Mu_direct = isDirect ? (+document.getElementById('fd-dm-u').value || 0) : 0;
+  var Ms_direct = isDirect ? (+document.getElementById('fd-dm-s').value || 0) : 0;
+  var sw, G, Q, S, W, combos, gov, wu;
+  if (isDirect) {
+    sw = 0; G = 0; Q = 0; S = 0; W = 0;
+    combos = []; gov = {n:'—', f:'User-defined'}; wu = 0;
+  } else {
+    sw = fdGetSelfWeight(row);
+    G  = wD + sw;
+    Q  = wL + wLr;
+    S  = wS;
+    W  = wW;
+    // TSDS 2016 LRFD — AISC 360 LRFD pattern (SI units)
+    combos = [
+      {n:'1', f:'1.4G',                              w: 1.4*G},
+      {n:'2', f:'1.2G + 1.6Q + 0.5S',               w: 1.2*G + 1.6*Q + 0.5*S},
+      {n:'3', f:'1.2G + 1.6S + Q',                   w: 1.2*G + 1.6*S + Q},
+      {n:'4', f:'1.2G + 1.6S + 0.5W',                w: 1.2*G + 1.6*S + 0.5*W},
+      {n:'5', f:'1.2G + 1.0W + Q + 0.5S',            w: 1.2*G + W + Q + 0.5*S},
+      {n:'6', f:'0.9G + 1.0W (uplift)',               w: 0.9*G + W}
+    ];
+    gov = combos.reduce(function(a,b){ return a.w>=b.w?a:b; });
+    wu  = gov.w;
+  }
 
   var Cm    = bc==='ff'?1/12:(bc==='fp'?9/128:(bc==='cant'?1/2:1/8));
   var Cd    = bc==='ff'?1/384:(bc==='fp'?1/185.14:(bc==='cant'?1/8:5/384));
@@ -2018,8 +2124,8 @@ function fdCalcCYTHYE() {
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
-  var Mu_y = wu * (isInclined ? cosT : 1) * L * L * Cm;
-  var Mu_z = isInclined ? wu * sinT * L * L * Cm : 0;
+  var Mu_y = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
+  var Mu_z = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
 
   var cls     = fdClassifySection(row, Fy, fdSecType);
   var Wply    = +row[cm.Wply];
@@ -2030,7 +2136,7 @@ function fdCalcCYTHYE() {
   var phiMn_y = phi * Weff_y * Fy / 1000;   // kN·m
 
   var phiMn_z = null, biaxDCR = null, approxWeak = false;
-  if (isInclined) {
+  if (isInclined && !isDirect) {
     var Wplz = fdGetWplz(row);
     var Welz = fdGetWelz(row, fdSecType);
     var Weff_z;
@@ -2049,8 +2155,9 @@ function fdCalcCYTHYE() {
   var Iy_cm4 = +row[cm.I];
   var I_mm4  = Iy_cm4 * 1e4;
   var Lmm    = L * 1000;
+  var ws_svc_equiv = isDirect ? Ms_direct / (Cm * L * L) : 0;
   // TSDS §15.1: total deflection under G+Q service load, E = 200 GPa
-  var wSvc   = (G + Q) * (isInclined ? cosT : 1);
+  var wSvc   = isDirect ? ws_svc_equiv : ((G + Q) * (isInclined ? cosT : 1));
   var dSvc   = Cd * wSvc * Math.pow(Lmm, 4) / (200000 * I_mm4);
   var limD   = Lmm / (bc === 'cant' ? 150 : 300);
   var dOk    = dSvc <= limD;
@@ -2070,6 +2177,7 @@ function fdCalcCYTHYE() {
     DCR:DCR, Iy:Iy_cm4,
     dSvc:dSvc, wSvc:wSvc, limD:limD, limDstr:limDstr, dOk:dOk,
     defCoef:{pp:'5/384',fp:'≈1/185',ff:'1/384',cant:'1/8'}[bc],
+    isDirect:isDirect, Mu_direct:Mu_direct, Ms_direct:Ms_direct,
     date:date
   });
 }
@@ -2160,6 +2268,9 @@ function fdRenderCYTHYE(r) {
     var v = (+document.getElementById(id1).value || 0) + (+document.getElementById(id2).value || 0);
     return ' <span style="color:var(--text-dim);font-size:.78em">(' + fmt(v,2) + ' ' + _aUnit + ')</span>';
   };
+  var _tsLoadModeRow = fdLoadMode==='area'
+    ? '<tr><td>Load Input Mode</td><td>Area Loads (s = '+document.getElementById('fd-tw').value+' m tributary width)</td></tr>'
+    : (fdLoadMode==='direct' ? '<tr><td>Load Input Mode</td><td>Design Loads (user-defined moments)</td></tr>' : '');
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
      + '<table class="inp-tbl">'
      + '<tr><td>Profile</td><td>'+r.name+'</td></tr>'
@@ -2167,34 +2278,46 @@ function fdRenderCYTHYE(r) {
      + '<tr><td>&phi; (resistance factor)</td><td class="inp-num">'+r.phi.toFixed(2)+'</td></tr>'
      + '<tr><td>Boundary Conditions</td><td>'+r.bcLbl+'</td></tr>'
      + '<tr><td>Span L</td><td class="inp-num">'+r.L+' m</td></tr>'
-     + '<tr><td>Permanent G (excl. self-weight)</td><td class="inp-num">'+fmt(r.wD,2)+' kN/m'+_ap('fd-aD')+'</td></tr>'
-     + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN/m</td></tr>'
-     + '<tr><td>Total Permanent G</td><td class="inp-num">'+fmt(r.G,2)+' kN/m</td></tr>'
-     + '<tr><td>Live Load Q (LL + roof)</td><td class="inp-num">'+fmt(r.Q,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
-     + (r.S>0?'<tr><td>Snow S</td><td class="inp-num">'+fmt(r.S,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
-     + (r.W>0?'<tr><td>Wind W</td><td class="inp-num">'+fmt(r.W,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':'')
+     + _tsLoadModeRow
+     + (r.isDirect
+        ? '<tr><td>Service Moment M<sub>svc</sub></td><td class="inp-num">'+fmt(r.Ms_direct,2)+' kN·m</td></tr>'
+        + '<tr><td>Design Moment M<sub>u</sub></td><td class="inp-num">'+fmt(r.Mu_direct,2)+' kN·m</td></tr>'
+        : '<tr><td>Permanent G (excl. self-weight)</td><td class="inp-num">'+fmt(r.wD,2)+' kN/m'+_ap('fd-aD')+'</td></tr>'
+        + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN/m</td></tr>'
+        + '<tr><td>Total Permanent G</td><td class="inp-num">'+fmt(r.G,2)+' kN/m</td></tr>'
+        + '<tr><td>Live Load Q (LL + roof)</td><td class="inp-num">'+fmt(r.Q,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
+        + (r.S>0?'<tr><td>Snow S</td><td class="inp-num">'+fmt(r.S,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
+        + (r.W>0?'<tr><td>Wind W</td><td class="inp-num">'+fmt(r.W,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':''))
      + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+r.Iy+' cm&#x2074;</td></tr>'
      + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
      + '</table></div>';
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">TSDS 2016 LRFD &mdash; ULS Load Combinations</div>'
-     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (kN/m)</th></tr>';
-  r.combos.forEach(function(c){
-    var g = c.n===r.gov;
-    h += '<tr'+(g?' class="gov-row"':'')+'>'
-       + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
-       + '<td class="combo-lbl">'+c.f+'</td>'
-       + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td></tr>';
-  });
-  h += '</table></div>';
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">TSDS 2016 LRFD &mdash; ULS Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (kN/m)</th></tr>';
+    r.combos.forEach(function(c){
+      var g = c.n===r.gov;
+      h += '<tr'+(g?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
+         + '<td class="combo-lbl">'+c.f+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.w,3)+(g?'&nbsp;&larr; governs':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; TSDS 2016'+(r.isInclined?' / Biaxial AISC H1-1':'')+'</div>'
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; TSDS 2016'+(r.isInclined && !r.isDirect?' / Biaxial AISC H1-1':'')+'</div>'
      + '<table class="steps-table">';
-  h += step(1,'Total permanent action G = dead load + self-weight',
-    fmt(r.wD,3)+' + '+fmt(r.sw,3)+' kN/m', 'G = '+fmt(r.G,3)+' kN/m');
-  h += step(2,'Design load w<sub>u</sub> &mdash; LRFD Combo '+r.gov,
-    r.govF, 'w<sub>u</sub> = '+fmt(r.wu,3)+' kN/m');
-  if (r.isInclined) {
+  if (r.isDirect) {
+    h += step(1,'Design moment M<sub>u</sub> &mdash; user-defined (factored)',
+      'Load combinations already applied by user',
+      'M<sub>u</sub> = '+fmt(r.Mu_y,2)+' kN&middot;m');
+  } else {
+    h += step(1,'Total permanent action G = dead load + self-weight',
+      fmt(r.wD,3)+' + '+fmt(r.sw,3)+' kN/m', 'G = '+fmt(r.G,3)+' kN/m');
+    h += step(2,'Design load w<sub>u</sub> &mdash; LRFD Combo '+r.gov,
+      r.govF, 'w<sub>u</sub> = '+fmt(r.wu,3)+' kN/m');
+  }
+  if (r.isInclined && !r.isDirect) {
     h += step(3,'Load decomposition &mdash; inclined beam &theta; = '+r.theta+'&deg;',
       'cos&theta; = '+fmt(r.cosT,4)+' &nbsp;|&nbsp; sin&theta; = '+fmt(r.sinT,4),
       'w<sub>y</sub> = '+fmt(r.wu*r.cosT,3)+' kN/m (strong) / w<sub>z</sub> = '+fmt(r.wu*r.sinT,3)+' kN/m (weak)');
@@ -2218,16 +2341,18 @@ function fdRenderCYTHYE(r) {
         'D/C = '+fmt(r.biaxDCR,3), biaxOk);
     }
   } else {
-    h += step(3,'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
-      'w<sub>u</sub> &times; L&sup2; &times; '+r.bcCmStr+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+r.bcCmStr,
-      'M<sub>u</sub> = '+fmt(r.Mu_y,2)+' kN&middot;m');
-    h += step(4,'Section classification &mdash; TSDS 2016 Table 5.1B',
+    if (!r.isDirect) {
+      h += step(3,'Design moment M<sub>u</sub> &mdash; '+r.bcLbl+' ('+momLoc+')',
+        'w<sub>u</sub> &times; L&sup2; &times; '+r.bcCmStr+' = '+fmt(r.wu,3)+' &times; '+r.L+'&sup2; &times; '+r.bcCmStr,
+        'M<sub>u</sub> = '+fmt(r.Mu_y,2)+' kN&middot;m');
+    }
+    h += step(r.isDirect?2:4,'Section classification &mdash; TSDS 2016 Table 5.1B',
       '&epsilon; = &radic;(235/'+r.Fy+') = '+fmt(r.cls?r.cls.eps:1,4),
       'Class '+sc+' &rarr; use '+modName);
-    h += step(5,'Capacity &phi;M<sub>n</sub> = &phi; &times; '+modName+' &times; f<sub>y</sub>',
+    h += step(r.isDirect?3:5,'Capacity &phi;M<sub>n</sub> = &phi; &times; '+modName+' &times; f<sub>y</sub>',
       r.phi.toFixed(2)+' &times; '+fmt(modVal,1)+' cm&sup3; &times; '+r.Fy+' N/mm&sup2; / 1000',
       '&phi;M<sub>n</sub> = '+fmt(r.phiMn_y,2)+' kN&middot;m');
-    h += step(6,'Demand / Capacity',
+    h += step(r.isDirect?4:6,'Demand / Capacity',
       'M<sub>u</sub> / &phi;M<sub>n</sub> = '+fmt(r.Mu_y,2)+' / '+fmt(r.phiMn_y,2),
       'D/C = '+fmt(r.DCR,3), r.DCR<=1.0);
   }
@@ -2278,9 +2403,11 @@ function fdRenderCYTHYE(r) {
 
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Serviceability &mdash; Total Deflection under G+Q (TSDS §15.1)</div>'
      + '<table class="steps-table">';
-  var svcLbl = r.isInclined ? '(G+Q)&middot;cos&theta;' : 'G+Q';
-  h += step('a','Total service deflection &delta; vs '+r.limDstr+' &mdash; '+r.bcLbl,
-    r.defCoef+' &times; '+svcLbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
+  var svcLbl = (r.isInclined && !r.isDirect) ? '(G+Q)&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'G+Q');
+  h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs '+r.limDstr : 'Total service deflection &delta; vs '+r.limDstr+' &mdash; '+r.bcLbl,
+    r.isDirect
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;'
+      : r.defCoef+' &times; '+svcLbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
     fmt(r.dSvc,1)+' / '+fmt(r.limD,1)+' mm', r.dOk);
   h += '</table>'
      + '<div class="report-warn"><span>&#9432;</span><div>Full lateral bracing assumed. LTB not checked. Deflection under G+Q service combination per TSDS §15.1; E = 200 GPa.</div></div>'
@@ -2319,6 +2446,8 @@ function fdCalcIS800() {
     wS  = (+document.getElementById('fd-aS').value  || 0) * _s;
     wLr = (+document.getElementById('fd-aLr').value || 0) * _s;
     wW  = (+document.getElementById('fd-aW').value  || 0) * _s;
+  } else if (fdLoadMode === 'direct') {
+    wD = 0; wL = 0; wS = 0; wLr = 0; wW = 0;
   } else {
     wD  = +document.getElementById('fd-dL').value  || 0;
     wL  = +document.getElementById('fd-lL').value  || 0;
@@ -2328,23 +2457,31 @@ function fdCalcIS800() {
   }
   if (L <= 0) { alert('Span must be > 0.'); return; }
 
-  var sw = fdGetSelfWeight(row);   // kN/m
-  var DL = wD + sw;                // total dead load [kN/m]
-  var IL = wL + wLr;               // imposed load    [kN/m]
-  var SL = wS;                     // snow            [kN/m]
-  var WL = wW;                     // wind            [kN/m]
-
-  // IS 800:2000 Table 4 / IS 875 — ULS load combinations
-  var combos = [
-    {n:'1', f:'1.5DL + 1.5IL',          w: 1.5*DL + 1.5*IL},
-    {n:'2', f:'1.5DL + 1.5SL',          w: 1.5*DL + 1.5*SL},
-    {n:'3', f:'1.5DL + 1.5WL',          w: 1.5*DL + 1.5*WL},
-    {n:'4', f:'1.2DL + 1.2IL + 1.2WL',  w: 1.2*DL + 1.2*IL + 1.2*WL},
-    {n:'5', f:'1.2DL + 1.2SL + 1.2WL',  w: 1.2*DL + 1.2*SL + 1.2*WL},
-    {n:'6', f:'0.9DL + 1.5WL (uplift)', w: 0.9*DL + 1.5*WL}
-  ];
-  var gov = combos.reduce(function(a,b){ return a.w >= b.w ? a : b; });
-  var wu  = gov.w;
+  var isDirect = fdLoadMode === 'direct';
+  var Mu_direct = isDirect ? (+document.getElementById('fd-dm-u').value || 0) : 0;
+  var Ms_direct = isDirect ? (+document.getElementById('fd-dm-s').value || 0) : 0;
+  var sw, DL, IL, SL, WL, combos, gov, wu;
+  if (isDirect) {
+    sw = 0; DL = 0; IL = 0; SL = 0; WL = 0;
+    combos = []; gov = {n:'—', f:'User-defined'}; wu = 0;
+  } else {
+    sw = fdGetSelfWeight(row);   // kN/m
+    DL = wD + sw;                // total dead load [kN/m]
+    IL = wL + wLr;               // imposed load    [kN/m]
+    SL = wS;                     // snow            [kN/m]
+    WL = wW;                     // wind            [kN/m]
+    // IS 800:2000 Table 4 / IS 875 — ULS load combinations
+    combos = [
+      {n:'1', f:'1.5DL + 1.5IL',          w: 1.5*DL + 1.5*IL},
+      {n:'2', f:'1.5DL + 1.5SL',          w: 1.5*DL + 1.5*SL},
+      {n:'3', f:'1.5DL + 1.5WL',          w: 1.5*DL + 1.5*WL},
+      {n:'4', f:'1.2DL + 1.2IL + 1.2WL',  w: 1.2*DL + 1.2*IL + 1.2*WL},
+      {n:'5', f:'1.2DL + 1.2SL + 1.2WL',  w: 1.2*DL + 1.2*SL + 1.2*WL},
+      {n:'6', f:'0.9DL + 1.5WL (uplift)', w: 0.9*DL + 1.5*WL}
+    ];
+    gov = combos.reduce(function(a,b){ return a.w >= b.w ? a : b; });
+    wu  = gov.w;
+  }
 
   var Cm    = bc==='ff'?1/12:(bc==='fp'?9/128:(bc==='cant'?1/2:1/8));
   var Cd    = bc==='ff'?1/384:(bc==='fp'?1/185.14:(bc==='cant'?1/8:5/384));
@@ -2356,8 +2493,8 @@ function fdCalcIS800() {
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
-  var Mu_y = wu * (isInclined ? cosT : 1) * L * L * Cm;
-  var Mu_z = isInclined ? wu * sinT * L * L * Cm : 0;
+  var Mu_y = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
+  var Mu_z = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
 
   var cls  = fdClassifySectionIS800(row, Fy, fdSecType);
   var sc   = cls ? cls.secClass : 1;
@@ -2380,7 +2517,7 @@ function fdCalcIS800() {
   var DCR = Mu_y / Md_y;
 
   var Md_z = null, biaxDCR = null, approxWeak = false;
-  if (isInclined) {
+  if (isInclined && !isDirect) {
     var Wplz = (cm.Wplz !== undefined) ? +row[cm.Wplz] : null;
     var Welz = (cm.Welz !== undefined) ? +row[cm.Welz] : null;
     var Weff_z;
@@ -2396,8 +2533,9 @@ function fdCalcIS800() {
   var Iy_cm4  = +row[cm.I];
   var I_mm4   = Iy_cm4 * 1e4;
   var Lmm     = L * 1000;
-  var wIL_svc = isInclined ? IL * cosT : IL;
-  var wSvc    = (DL + IL + SL) * (isInclined ? cosT : 1);
+  var ws_svc_equiv = isDirect ? Ms_direct / (Cm * L * L) : 0;
+  var wIL_svc = isDirect ? ws_svc_equiv : (isInclined ? IL * cosT : IL);
+  var wSvc    = isDirect ? ws_svc_equiv : ((DL + IL + SL) * (isInclined ? cosT : 1));
   var dL_mm   = Cd * wIL_svc * Math.pow(Lmm, 4) / (200000 * I_mm4);
   var dT_mm   = Cd * wSvc    * Math.pow(Lmm, 4) / (200000 * I_mm4);
   var limL    = Lmm * (bc === 'cant' ? 1/150 : 1/300);
@@ -2421,6 +2559,8 @@ function fdCalcIS800() {
     limLstr:bc==='cant'?'L/150':'L/300', limTstr:bc==='cant'?'L/125':'L/250',
     dLok:dLok, dTok:dTok,
     defCoef:{pp:'5/384',fp:'≈1/185',ff:'1/384',cant:'1/8'}[bc],
+    isDirect:isDirect, Mu_direct:Mu_direct, Ms_direct:Ms_direct,
+    wSvc:wSvc,
     date:date
   });
 }
@@ -2515,6 +2655,9 @@ function fdRenderIS800(r) {
     var v = (+document.getElementById(id1).value || 0) + (+document.getElementById(id2).value || 0);
     return ' <span style="color:var(--text-dim);font-size:.78em">(' + fmt(v,2) + ' ' + _aUnit + ')</span>';
   };
+  var _isLoadModeRow = fdLoadMode==='area'
+    ? '<tr><td>Load Input Mode</td><td>Area Loads (s = '+document.getElementById('fd-tw').value+' m tributary width)</td></tr>'
+    : (fdLoadMode==='direct' ? '<tr><td>Load Input Mode</td><td>Design Loads (user-defined moments)</td></tr>' : '');
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
      + '<table class="inp-tbl">'
      + '<tr><td>Section</td><td>' + r.name + '</td></tr>'
@@ -2522,34 +2665,46 @@ function fdRenderIS800(r) {
      + '<tr><td>&gamma;<sub>m0</sub></td><td class="inp-num">' + r.gm0.toFixed(2) + '</td></tr>'
      + '<tr><td>End Conditions</td><td>' + r.bcLbl + '</td></tr>'
      + '<tr><td>Span L</td><td class="inp-num">' + r.L + ' m</td></tr>'
-     + '<tr><td>Dead load DL (cover)</td><td class="inp-num">' + fmt(r.wD, 2) + ' kN/m' + _ap('fd-aD') + '</td></tr>'
-     + '<tr><td>Self-Weight (auto)</td><td class="inp-num">' + fmt(r.sw, 2) + ' kN/m</td></tr>'
-     + '<tr><td>Total DL</td><td class="inp-num">' + fmt(r.DL, 2) + ' kN/m</td></tr>'
-     + '<tr><td>Imposed IL (live + L<sub>r</sub>)</td><td class="inp-num">' + fmt(r.IL, 2) + ' kN/m' + _apSum('fd-aL','fd-aLr') + '</td></tr>'
-     + (r.SL > 0 ? '<tr><td>Snow SL</td><td class="inp-num">' + fmt(r.SL, 2) + ' kN/m' + _ap('fd-aS') + '</td></tr>' : '')
-     + (r.WL > 0 ? '<tr><td>Wind WL</td><td class="inp-num">' + fmt(r.WL, 2) + ' kN/m' + _ap('fd-aW') + '</td></tr>' : '')
+     + _isLoadModeRow
+     + (r.isDirect
+        ? '<tr><td>Service Moment M<sub>svc</sub></td><td class="inp-num">'+fmt(r.Ms_direct,2)+' kN·m</td></tr>'
+        + '<tr><td>Design Moment M<sub>u</sub></td><td class="inp-num">'+fmt(r.Mu_direct,2)+' kN·m</td></tr>'
+        : '<tr><td>Dead load DL (cover)</td><td class="inp-num">' + fmt(r.wD, 2) + ' kN/m' + _ap('fd-aD') + '</td></tr>'
+        + '<tr><td>Self-Weight (auto)</td><td class="inp-num">' + fmt(r.sw, 2) + ' kN/m</td></tr>'
+        + '<tr><td>Total DL</td><td class="inp-num">' + fmt(r.DL, 2) + ' kN/m</td></tr>'
+        + '<tr><td>Imposed IL (live + L<sub>r</sub>)</td><td class="inp-num">' + fmt(r.IL, 2) + ' kN/m' + _apSum('fd-aL','fd-aLr') + '</td></tr>'
+        + (r.SL > 0 ? '<tr><td>Snow SL</td><td class="inp-num">' + fmt(r.SL, 2) + ' kN/m' + _ap('fd-aS') + '</td></tr>' : '')
+        + (r.WL > 0 ? '<tr><td>Wind WL</td><td class="inp-num">' + fmt(r.WL, 2) + ' kN/m' + _ap('fd-aW') + '</td></tr>' : ''))
      + '<tr><td>I<sub>y</sub></td><td class="inp-num">' + r.Iy + ' cm&#x2074;</td></tr>'
      + '<tr><td>Z<sub>px</sub>' + (r.Wely ? ' | Z<sub>ex</sub>' : '') + '</td><td class="inp-num">' + fmt(r.Wply, 1) + (r.Wely ? ' | ' + fmt(r.Wely, 1) : '') + ' cm&sup3;</td></tr>'
      + '</table></div>';
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">IS 800:2000 Table 4 &mdash; ULS Load Combinations</div>'
-     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (kN/m)</th></tr>';
-  r.combos.forEach(function(c) {
-    var g = c.n === r.gov;
-    h += '<tr' + (g ? ' class="gov-row"' : '') + '>'
-       + '<td class="combo-lbl">' + (g ? '&#9654;&nbsp;' : '') + c.n + '</td>'
-       + '<td class="combo-lbl">' + c.f + '</td>'
-       + '<td style="text-align:right;font-family:var(--mono)">' + fmt(c.w, 3) + (g ? '&nbsp;&larr; governs' : '') + '</td></tr>';
-  });
-  h += '</table></div>';
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">IS 800:2000 Table 4 &mdash; ULS Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (kN/m)</th></tr>';
+    r.combos.forEach(function(c) {
+      var g = c.n === r.gov;
+      h += '<tr' + (g ? ' class="gov-row"' : '') + '>'
+         + '<td class="combo-lbl">' + (g ? '&#9654;&nbsp;' : '') + c.n + '</td>'
+         + '<td class="combo-lbl">' + c.f + '</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">' + fmt(c.w, 3) + (g ? '&nbsp;&larr; governs' : '') + '</td></tr>';
+    });
+    h += '</table></div>';
+  }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; IS 800:2000 Cl. 8.2.1' + (r.isInclined ? ' / Cl. 9.3.1 Biaxial' : '') + '</div>'
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Flexural Design &mdash; IS 800:2000 Cl. 8.2.1' + (r.isInclined && !r.isDirect ? ' / Cl. 9.3.1 Biaxial' : '') + '</div>'
      + '<table class="steps-table">';
-  h += step(1, 'Total dead load DL = cover + self-weight',
-    fmt(r.wD, 3) + ' + ' + fmt(r.sw, 3) + ' kN/m', 'DL = ' + fmt(r.DL, 3) + ' kN/m');
-  h += step(2, 'Design load w<sub>u</sub> &mdash; IS 875 Combo ' + r.gov,
-    r.govF, 'w<sub>u</sub> = ' + fmt(r.wu, 3) + ' kN/m');
-  if (r.isInclined) {
+  if (r.isDirect) {
+    h += step(1, 'Design moment M<sub>u</sub> &mdash; user-defined (factored)',
+      'Load combinations already applied by user',
+      'M<sub>u</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m');
+  } else {
+    h += step(1, 'Total dead load DL = cover + self-weight',
+      fmt(r.wD, 3) + ' + ' + fmt(r.sw, 3) + ' kN/m', 'DL = ' + fmt(r.DL, 3) + ' kN/m');
+    h += step(2, 'Design load w<sub>u</sub> &mdash; IS 875 Combo ' + r.gov,
+      r.govF, 'w<sub>u</sub> = ' + fmt(r.wu, 3) + ' kN/m');
+  }
+  if (r.isInclined && !r.isDirect) {
     h += step(3, 'Load decomposition &mdash; inclined beam &theta; = ' + r.theta + '&deg;',
       'cos&theta; = ' + fmt(r.cosT, 4) + ' &nbsp;|&nbsp; sin&theta; = ' + fmt(r.sinT, 4),
       'w<sub>y</sub> = ' + fmt(r.wu * r.cosT, 3) + ' kN/m &nbsp;/&nbsp; w<sub>z</sub> = ' + fmt(r.wu * r.sinT, 3) + ' kN/m');
@@ -2574,16 +2729,18 @@ function fdRenderIS800(r) {
         'D/C = ' + fmt(r.biaxDCR, 3), biaxOk);
     }
   } else {
-    h += step(3, 'Design moment M<sub>u</sub> &mdash; ' + r.bcLbl + ' (' + momLoc + ')',
-      'w<sub>u</sub> &times; L&sup2; &times; ' + r.bcCmStr + ' = ' + fmt(r.wu, 3) + ' &times; ' + r.L + '&sup2; &times; ' + r.bcCmStr,
-      'M<sub>u</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m');
-    h += step(4, 'Section classification &mdash; IS 800:2000 Table 2',
+    if (!r.isDirect) {
+      h += step(3, 'Design moment M<sub>u</sub> &mdash; ' + r.bcLbl + ' (' + momLoc + ')',
+        'w<sub>u</sub> &times; L&sup2; &times; ' + r.bcCmStr + ' = ' + fmt(r.wu, 3) + ' &times; ' + r.L + '&sup2; &times; ' + r.bcCmStr,
+        'M<sub>u</sub> = ' + fmt(r.Mu_y, 2) + ' kN&middot;m');
+    }
+    h += step(r.isDirect?2:4, 'Section classification &mdash; IS 800:2000 Table 2',
       '&epsilon; = &radic;(250/' + r.Fy + ') = ' + fmt(r.cls ? r.cls.eps : 1, 4),
       'Class ' + sc + ' &rarr; use ' + modName);
-    h += step(5, 'Design strength M<sub>d</sub> = ' + modName + ' &times; f<sub>yd</sub> / 1000',
+    h += step(r.isDirect?3:5, 'Design strength M<sub>d</sub> = ' + modName + ' &times; f<sub>yd</sub> / 1000',
       fmt(modVal, 1) + ' cm&sup3; &times; (' + r.Fy + ' / ' + r.gm0.toFixed(2) + ') / 1000',
       'M<sub>d</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m');
-    h += step(6, 'Demand / Capacity &mdash; Cl. 8.2.1',
+    h += step(r.isDirect?4:6, 'Demand / Capacity &mdash; Cl. 8.2.1',
       'M<sub>u</sub> / M<sub>d</sub> = ' + fmt(r.Mu_y, 2) + ' / ' + fmt(r.Md_y, 2),
       'D/C = ' + fmt(r.DCR, 3), r.DCR <= 1.0);
   }
@@ -2617,12 +2774,16 @@ function fdRenderIS800(r) {
 
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Serviceability &mdash; Deflection (IS 800:2000 Table 6)</div>'
      + '<table class="steps-table">';
-  var defILlbl = r.isInclined ? 'IL&middot;cos&theta;' : 'IL';
-  h += step('a', 'Imposed load deflection &delta;<sub>IL</sub> vs ' + r.limLstr,
-    r.defCoef + ' &times; ' + defILlbl + ' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&#x2074;',
+  var defILlbl = (r.isInclined && !r.isDirect) ? 'IL&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'IL');
+  h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs ' + r.limLstr : 'Imposed load deflection &delta;<sub>IL</sub> vs ' + r.limLstr,
+    r.isDirect
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&#x2074;'
+      : r.defCoef + ' &times; ' + defILlbl + ' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&#x2074;',
     fmt(r.dL, 1) + ' / ' + fmt(r.limL, 1) + ' mm', r.dLok);
-  h += step('b', 'Total deflection &delta;<sub>max</sub> (DL+IL+SL) vs ' + r.limTstr,
-    'w<sub>svc</sub> = ' + fmt(r.DL + r.IL + r.SL, 3) + ' kN/m' + (r.isInclined ? ' &times; cos' + r.theta + '&deg;' : ''),
+  h += step('b', r.isDirect ? 'Total deflection (equiv. from M<sub>svc</sub>) vs ' + r.limTstr : 'Total deflection &delta;<sub>max</sub> (DL+IL+SL) vs ' + r.limTstr,
+    r.isDirect
+      ? 'w<sub>equiv</sub> same as above (service moment covers all loads)'
+      : 'w<sub>svc</sub> = ' + fmt(r.wSvc, 3) + ' kN/m' + (r.isInclined ? ' &times; cos' + r.theta + '&deg;' : ''),
     fmt(r.dT, 1) + ' / ' + fmt(r.limT, 1) + ' mm', r.dTok);
   h += '</table>'
      + '<div class="report-warn"><span>&#9432;</span><div>Assumes <b>full lateral bracing</b>. Lateral-torsional buckling (IS 800:2000 Cl. 8.2.2) not checked. Deflection limits per IS 800:2000 Table 6. Wind excluded from deflection check.</div></div>'
