@@ -1272,8 +1272,8 @@ function fdRender(r) {
   var propRows = fdUnit==='us'
     ? '<tr><td>I<sub>x</sub></td><td>'+r.Ix+' in&#x2074;</td></tr>'
       +'<tr><td>Z<sub>x</sub></td><td>'+r.Zx+' in&sup3;'+(r.Zest?' <em style="color:var(--text-dim);font-style:italic;font-size:.75em">(est. from Sx)</em>':'')+'</td></tr>'
-    : '<tr><td>I<sub>y</sub></td><td>'+r.Iy+' cm&#x2074;</td></tr>'
-      +'<tr><td>W<sub>pl,y</sub></td><td>'+fmt(r.Wply,1)+' cm&sup3;</td></tr>';
+    : '<tr><td>I<sub>y</sub></td><td>'+Math.round(r.Iy*1e4)+' mm&#x2074;</td></tr>'
+      +'<tr><td>W<sub>pl,y</sub></td><td>'+Math.round(r.Wply*1e3)+' mm&sup3;</td></tr>';
 
   var bcCm = {pp:'1/8', fp:'9/128', ff:'1/12', cant:'1/2'}[r.bc];
   var momLoc = r.bc==='cant' ? 'at fixed support' : 'midspan';
@@ -1286,7 +1286,7 @@ function fdRender(r) {
   var defLimT = r.bc==='cant' ? 'L/120' : 'L/240';
   var EI = fdUnit==='us'
     ? 'E = 29,000 ksi, Ix = '+r.Ix+' in⁴'
-    : 'E = 200 GPa, I = '+r.Iy+' cm⁴';
+    : 'E = 200 GPa, I = '+Math.round(r.Iy*1e4)+' mm⁴';
   var ws_total = r.isDirect ? 0 : (r.D + r.wL + r.wLr + r.wS);
 
   var date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -1899,8 +1899,8 @@ function fdRenderEC3(r) {
         + '<tr><td>Variable Q<sub>L</sub> (live + L<sub>r</sub>)</td><td class="inp-num">'+fmt(r.QL,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
         + (r.QS>0?'<tr><td>Snow Q<sub>S</sub></td><td class="inp-num">'+fmt(r.QS,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
         + (r.QW>0?'<tr><td>Wind Q<sub>W</sub></td><td class="inp-num">'+fmt(r.QW,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':''))
-     + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+r.Iy+' cm&#x2074;</td></tr>'
-     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+Math.round(r.Iy*1e4)+' mm&#x2074;</td></tr>'
+     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+Math.round(r.Wply*1e3)+' | '+(r.Wely?Math.round(r.Wely*1e3):'—')+' mm&sup3;</td></tr>'
      + '</table></div>';
 
   // Section classification detail
@@ -1985,7 +1985,7 @@ function fdRenderEC3(r) {
       'w<sub>z</sub> &times; L&sup2; &times; '+r.bcCmStr,
       'M<sub>z,Ed</sub> = '+fmt(r.MEd_z,2)+' kN&middot;m');
     h += step(5,'Section classification &amp; strong-axis resistance',
-      '&epsilon; = '+fmt(r.cls?r.cls.eps:1,4)+' &nbsp;|&nbsp; Class '+sc+' &rarr; '+modName+' = '+fmt(modVal,1)+' cm&sup3;',
+      '&epsilon; = '+fmt(r.cls?r.cls.eps:1,4)+' &nbsp;|&nbsp; Class '+sc+' &rarr; '+modName+' = '+Math.round(modVal*1e3)+' mm&sup3;',
       'M<sub>cy,Rd</sub> = '+fmt(r.McRd_y,2)+' kN&middot;m');
     if (r.McRd_z !== null) {
       var wzNote = r.approxWeak ? 'W<sub>el,z</sub> (W<sub>pl,z</sub> not in DB)' : (r.useWply?'W<sub>pl,z</sub>':'W<sub>el,z</sub>');
@@ -2018,7 +2018,7 @@ function fdRenderEC3(r) {
       '&epsilon; = &radic;(235/'+r.Fy+') = '+fmt(r.cls?r.cls.eps:1,4),
       'Class '+sc+' &rarr; use '+modName);
     h += step(r.isDirect?3:5,'Resistance M<sub>c,Rd</sub> = '+modName+' &times; f<sub>y</sub> / &gamma;<sub>M0</sub>',
-      fmt(modVal,1)+' cm&sup3; &times; '+r.Fy+' N/mm&sup2; / ('+r.gmM0.toFixed(2)+' &times; 1000)',
+      Math.round(modVal*1e3)+' mm&sup3; &times; '+r.Fy+' N/mm&sup2; / ('+r.gmM0.toFixed(2)+' &times; 1,000,000)',
       'M<sub>c,Rd</sub> = '+fmt(r.McRd_y,2)+' kN&middot;m');
     h += step(r.isDirect?4:6,'Demand / Capacity &mdash; &sect;6.2.5(1)',
       'M<sub>Ed</sub> / M<sub>c,Rd</sub> = '+fmt(r.MEd_y,2)+' / '+fmt(r.McRd_y,2),
@@ -2032,8 +2032,8 @@ function fdRenderEC3(r) {
   var defQLlbl = (r.isInclined && !r.isDirect) ? 'Q<sub>L</sub>&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'Q<sub>L</sub>');
   h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs '+r.limLstr : 'Variable load deflection &delta;<sub>Q</sub> vs '+r.limLstr,
     r.isDirect
-      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;'
-      : r.defCoef+' &times; '+defQLlbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+Math.round(r.Iy*1e4)+' mm&#x2074;'
+      : r.defCoef+' &times; '+defQLlbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 210 GPa, I<sub>y</sub> = '+Math.round(r.Iy*1e4)+' mm&#x2074;',
     fmt(r.dL,1)+' / '+fmt(r.limL,1)+' mm', r.dLok);
   h += step('b', r.isDirect ? 'Total deflection (equiv. from M<sub>svc</sub>) vs '+r.limTstr : 'Total deflection &delta;<sub>max</sub> (G+Q<sub>L</sub>+Q<sub>S</sub>) vs '+r.limTstr,
     r.isDirect
@@ -2288,8 +2288,8 @@ function fdRenderCYTHYE(r) {
         + '<tr><td>Live Load Q (LL + roof)</td><td class="inp-num">'+fmt(r.Q,2)+' kN/m'+_apSum('fd-aL','fd-aLr')+'</td></tr>'
         + (r.S>0?'<tr><td>Snow S</td><td class="inp-num">'+fmt(r.S,2)+' kN/m'+_ap('fd-aS')+'</td></tr>':'')
         + (r.W>0?'<tr><td>Wind W</td><td class="inp-num">'+fmt(r.W,2)+' kN/m'+_ap('fd-aW')+'</td></tr>':''))
-     + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+r.Iy+' cm&#x2074;</td></tr>'
-     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+fmt(r.Wply,1)+' | '+(r.Wely?fmt(r.Wely,1):'—')+' cm&sup3;</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td class="inp-num">'+Math.round(r.Iy*1e4)+' mm&#x2074;</td></tr>'
+     + '<tr><td>W<sub>pl,y</sub> | W<sub>el,y</sub></td><td class="inp-num">'+Math.round(r.Wply*1e3)+' | '+(r.Wely?Math.round(r.Wely*1e3):'—')+' mm&sup3;</td></tr>'
      + '</table></div>';
 
   if (!r.isDirect) {
@@ -2328,7 +2328,7 @@ function fdRenderCYTHYE(r) {
       'w<sub>z</sub> &times; L&sup2; &times; '+r.bcCmStr,
       'M<sub>u,z</sub> = '+fmt(r.Mu_z,2)+' kN&middot;m');
     h += step(5,'Section class &amp; strong-axis capacity &phi;M<sub>n,y</sub>',
-      '&epsilon; = '+fmt(r.cls?r.cls.eps:1,4)+' &nbsp;|&nbsp; Class '+sc+' &rarr; '+modName+' = '+fmt(modVal,1)+' cm&sup3;',
+      '&epsilon; = '+fmt(r.cls?r.cls.eps:1,4)+' &nbsp;|&nbsp; Class '+sc+' &rarr; '+modName+' = '+Math.round(modVal*1e3)+' mm&sup3;',
       '&phi;M<sub>n,y</sub> = '+fmt(r.phiMn_y,2)+' kN&middot;m');
     if (r.phiMn_z !== null) {
       var wzNote = r.approxWeak ? 'W<sub>el,z</sub> (W<sub>pl,z</sub> not available)' : (r.useWply?'W<sub>pl,z</sub>':'W<sub>el,z</sub>');
@@ -2350,7 +2350,7 @@ function fdRenderCYTHYE(r) {
       '&epsilon; = &radic;(235/'+r.Fy+') = '+fmt(r.cls?r.cls.eps:1,4),
       'Class '+sc+' &rarr; use '+modName);
     h += step(r.isDirect?3:5,'Capacity &phi;M<sub>n</sub> = &phi; &times; '+modName+' &times; f<sub>y</sub>',
-      r.phi.toFixed(2)+' &times; '+fmt(modVal,1)+' cm&sup3; &times; '+r.Fy+' N/mm&sup2; / 1000',
+      r.phi.toFixed(2)+' &times; '+Math.round(modVal*1e3)+' mm&sup3; &times; '+r.Fy+' N/mm&sup2; / 1,000,000',
       '&phi;M<sub>n</sub> = '+fmt(r.phiMn_y,2)+' kN&middot;m');
     h += step(r.isDirect?4:6,'Demand / Capacity',
       'M<sub>u</sub> / &phi;M<sub>n</sub> = '+fmt(r.Mu_y,2)+' / '+fmt(r.phiMn_y,2),
@@ -2406,8 +2406,8 @@ function fdRenderCYTHYE(r) {
   var svcLbl = (r.isInclined && !r.isDirect) ? '(G+Q)&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'G+Q');
   h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs '+r.limDstr : 'Total service deflection &delta; vs '+r.limDstr+' &mdash; '+r.bcLbl,
     r.isDirect
-      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;'
-      : r.defCoef+' &times; '+svcLbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+r.Iy+' cm&#x2074;',
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+Math.round(r.Iy*1e4)+' mm&#x2074;'
+      : r.defCoef+' &times; '+svcLbl+' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = '+Math.round(r.Iy*1e4)+' mm&#x2074;',
     fmt(r.dSvc,1)+' / '+fmt(r.limD,1)+' mm', r.dOk);
   h += '</table>'
      + '<div class="report-warn"><span>&#9432;</span><div>Full lateral bracing assumed. LTB not checked. Deflection under G+Q service combination per TSDS §15.1; E = 200 GPa.</div></div>'
@@ -2675,8 +2675,8 @@ function fdRenderIS800(r) {
         + '<tr><td>Imposed IL (live + L<sub>r</sub>)</td><td class="inp-num">' + fmt(r.IL, 2) + ' kN/m' + _apSum('fd-aL','fd-aLr') + '</td></tr>'
         + (r.SL > 0 ? '<tr><td>Snow SL</td><td class="inp-num">' + fmt(r.SL, 2) + ' kN/m' + _ap('fd-aS') + '</td></tr>' : '')
         + (r.WL > 0 ? '<tr><td>Wind WL</td><td class="inp-num">' + fmt(r.WL, 2) + ' kN/m' + _ap('fd-aW') + '</td></tr>' : ''))
-     + '<tr><td>I<sub>y</sub></td><td class="inp-num">' + r.Iy + ' cm&#x2074;</td></tr>'
-     + '<tr><td>Z<sub>px</sub>' + (r.Wely ? ' | Z<sub>ex</sub>' : '') + '</td><td class="inp-num">' + fmt(r.Wply, 1) + (r.Wely ? ' | ' + fmt(r.Wely, 1) : '') + ' cm&sup3;</td></tr>'
+     + '<tr><td>I<sub>y</sub></td><td class="inp-num">' + Math.round(r.Iy*1e4) + ' mm&#x2074;</td></tr>'
+     + '<tr><td>Z<sub>px</sub>' + (r.Wely ? ' | Z<sub>ex</sub>' : '') + '</td><td class="inp-num">' + Math.round(r.Wply*1e3) + (r.Wely ? ' | ' + Math.round(r.Wely*1e3) : '') + ' mm&sup3;</td></tr>'
      + '</table></div>';
 
   if (!r.isDirect) {
@@ -2715,7 +2715,7 @@ function fdRenderIS800(r) {
       'w<sub>z</sub> &times; L&sup2; &times; ' + r.bcCmStr,
       'M<sub>u,z</sub> = ' + fmt(r.Mu_z, 2) + ' kN&middot;m');
     h += step(5, 'Section class &amp; strong-axis design strength M<sub>d,y</sub>',
-      '&epsilon; = ' + fmt(r.cls ? r.cls.eps : 1, 4) + ' &nbsp;|&nbsp; Class ' + sc + ' &rarr; ' + modName + ' = ' + fmt(modVal, 1) + ' cm&sup3; &nbsp;|&nbsp; f<sub>yd</sub> = ' + r.Fy + '/' + r.gm0.toFixed(2),
+      '&epsilon; = ' + fmt(r.cls ? r.cls.eps : 1, 4) + ' &nbsp;|&nbsp; Class ' + sc + ' &rarr; ' + modName + ' = ' + Math.round(modVal*1e3) + ' mm&sup3; &nbsp;|&nbsp; f<sub>yd</sub> = ' + r.Fy + '/' + r.gm0.toFixed(2),
       'M<sub>d,y</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m');
     if (r.Md_z !== null) {
       var wzNote = r.approxWeak ? 'Z<sub>ez</sub> (Z<sub>pz</sub> not in DB)' : (r.useWply ? 'Z<sub>pz</sub>' : 'Z<sub>ez</sub>');
@@ -2738,7 +2738,7 @@ function fdRenderIS800(r) {
       '&epsilon; = &radic;(250/' + r.Fy + ') = ' + fmt(r.cls ? r.cls.eps : 1, 4),
       'Class ' + sc + ' &rarr; use ' + modName);
     h += step(r.isDirect?3:5, 'Design strength M<sub>d</sub> = ' + modName + ' &times; f<sub>yd</sub> / 1000',
-      fmt(modVal, 1) + ' cm&sup3; &times; (' + r.Fy + ' / ' + r.gm0.toFixed(2) + ') / 1000',
+      Math.round(modVal*1e3) + ' mm&sup3; &times; (' + r.Fy + ' / ' + r.gm0.toFixed(2) + ') / 1,000,000',
       'M<sub>d</sub> = ' + fmt(r.Md_y, 2) + ' kN&middot;m');
     h += step(r.isDirect?4:6, 'Demand / Capacity &mdash; Cl. 8.2.1',
       'M<sub>u</sub> / M<sub>d</sub> = ' + fmt(r.Mu_y, 2) + ' / ' + fmt(r.Md_y, 2),
@@ -2777,8 +2777,8 @@ function fdRenderIS800(r) {
   var defILlbl = (r.isInclined && !r.isDirect) ? 'IL&middot;cos&theta;' : (r.isDirect ? 'w<sub>equiv</sub>' : 'IL');
   h += step('a', r.isDirect ? 'Deflection (equiv. from M<sub>svc</sub>) vs ' + r.limLstr : 'Imposed load deflection &delta;<sub>IL</sub> vs ' + r.limLstr,
     r.isDirect
-      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&#x2074;'
-      : r.defCoef + ' &times; ' + defILlbl + ' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + r.Iy + ' cm&#x2074;',
+      ? 'w<sub>equiv</sub> = M<sub>svc</sub>/(C<sub>m</sub>·L²) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + Math.round(r.Iy*1e4) + ' mm&#x2074;'
+      : r.defCoef + ' &times; ' + defILlbl + ' &times; L<sup>4</sup> / (EI) &nbsp;|&nbsp; E = 200 GPa, I<sub>y</sub> = ' + Math.round(r.Iy*1e4) + ' mm&#x2074;',
     fmt(r.dL, 1) + ' / ' + fmt(r.limL, 1) + ' mm', r.dLok);
   h += step('b', r.isDirect ? 'Total deflection (equiv. from M<sub>svc</sub>) vs ' + r.limTstr : 'Total deflection &delta;<sub>max</sub> (DL+IL+SL) vs ' + r.limTstr,
     r.isDirect

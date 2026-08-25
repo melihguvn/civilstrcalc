@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>Steel Column Design — AISC 360 / EN 1993-1-1 / IS 800 / TSDS | CivilStrCalc</title>
+<meta name="description" content="Steel column design under combined axial compression and biaxial bending. AISC 360 / EN 1993-1-1 / IS 800:2007 / TSDS 2016. W sections (US), IPE-HEA-HEB (SI).">
+<meta name="robots" content="index, follow">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSansCondensed-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+.combo-ref-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:10px 0;}
+.combo-ref-tbl th{padding:6px 10px;text-align:left;font-weight:600;font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-ref-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.74rem;}
+.combo-ref-tbl td:first-child{font-family:var(--sans);color:var(--text-mid);font-weight:500;}
+.inp-tbl{width:100%;border-collapse:collapse;font-size:.78rem;}
+.inp-tbl td{padding:4px 8px;border-bottom:1px solid var(--border);}
+.inp-tbl tr:last-child td{border-bottom:none;}
+.inp-tbl td:last-child{font-family:var(--mono);text-align:right;color:var(--text);}
+.bg-section .bg-pane{display:block;height:0;overflow:hidden;padding:0;}
+.bg-section .bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.bg-toc a.active{background:var(--accent);color:var(--white);border-color:var(--accent);}
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans);}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5;}
+@media print{
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;padding:0!important;}
+  .no-print,.bg-section,.page-title,.unit-switcher,footer{display:none!important;}
+  .print-only{display:flex!important;}
+  .print-footer{display:flex!important;}
+  .print-disclaimer{display:block!important;}
+  .calc-layout{display:block!important;}
+  .card{display:none!important;}
+  .report-card{box-shadow:none!important;border:none!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Steel Column Design &mdash; Combined Axial + Biaxial Bending</h1>
+  <p id="bc-subtitle">AISC 360 LRFD combined axial compression + biaxial bending &mdash; interaction check per Chapter H. Axial per Ch. E, flexural per Ch. F2 / F6.</p>
+</div>
+
+<div class="calc-layout">
+
+<!-- ── INPUT CARD ── -->
+<div class="card no-print">
+  <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="bc-unit-tag">kip &middot; ft &middot; in</span></div>
+  <div class="card-body">
+
+    <div class="unit-switcher">
+      <label>Design Code:</label>
+      <div class="unit-btns">
+        <button class="unit-btn active" id="bc-btn-aisc"  onclick="bcSetCode('aisc')">AISC LRFD</button>
+        <button class="unit-btn"        id="bc-btn-ec3"   onclick="bcSetCode('ec3')">EN 1993-1-1</button>
+        <button class="unit-btn"        id="bc-btn-is800" onclick="bcSetCode('is800')">IS 800:2007</button>
+        <button class="unit-btn"        id="bc-btn-tsds"  onclick="bcSetCode('tsds')">TSDS 2016</button>
+      </div>
+    </div>
+    <div class="unit-switcher" id="bc-unit-sw">
+      <label>Units:</label>
+      <div class="unit-btns">
+        <button class="unit-btn active" id="bc-btn-us" onclick="bcSetUnit('us')">US (kip &middot; ft)</button>
+        <button class="unit-btn"        id="bc-btn-si" onclick="bcSetUnit('si')">SI (kN &middot; m)</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Steel Grade</label>
+      <select id="bc-grade" onchange="bcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+    </div>
+
+    <div class="form-div"><div class="form-div-lbl">Section</div></div>
+    <div class="form-group">
+      <label>Section Type</label>
+      <select id="bc-sec-type" onchange="bcPopSections()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+    </div>
+    <div class="form-group">
+      <label>Section</label>
+      <select id="bc-section" onchange="bcSecChange()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+    </div>
+
+    <div class="form-div"></div>
+    <div class="form-group">
+      <label>Column height L <span id="bc-L-lbl" class="unit-lbl">[ft]</span></label>
+      <div class="iw"><input type="number" id="bc-L" value="14" min="0.1" step="0.5" oninput="bcAutoCalc()"><span class="us" id="bc-L-us">ft</span></div>
+    </div>
+
+    <div id="bc-schema" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px 12px 10px;margin:10px 0 8px">
+      <svg id="bc-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto"></svg>
+      <div style="font-size:.68rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:4px 0 10px">Select end conditions per buckling axis</div>
+      <div class="form-row-2">
+        <div class="form-group" style="margin-bottom:6px">
+          <label>x&#x2011;x Axis &mdash; K<sub>x</sub></label>
+          <select id="bc-bc-x" onchange="bcAutoCalc()" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
+            <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+            <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+            <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+          </select>
+          <div style="margin-top:5px">
+            <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced L<sub>b,x</sub> / L</label>
+            <div class="iw"><input type="number" id="bc-lb-x" value="1.00" min="0.05" max="1" step="0.05" oninput="bcAutoCalc()" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:6px">
+          <label>y&#x2011;y Axis &mdash; K<sub>y</sub></label>
+          <select id="bc-bc-y" onchange="bcAutoCalc()" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
+            <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+            <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+            <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+          </select>
+          <div style="margin-top:5px">
+            <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced L<sub>b,y</sub> / L</label>
+            <div class="iw"><input type="number" id="bc-lb-y" value="1.00" min="0.05" max="1" step="0.05" oninput="bcAutoCalc()" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:.71rem;color:var(--text-dim);font-family:var(--sans);padding:6px 8px;background:var(--bg);border-radius:4px;border:1px solid var(--border);margin-top:4px">
+        LTB unbraced length L<sub>b</sub> = L<sub>b,y</sub> &middot; L (derived). C<sub>b</sub> = 1.0 (uniform moment).
+      </div>
+    </div>
+
+    <div class="form-div"><div class="form-div-lbl">Factored Design Forces</div></div>
+    <div class="form-group">
+      <label>P<sub>u</sub> &mdash; factored axial compression <span id="bc-Pu-lbl" class="unit-lbl">[kip]</span></label>
+      <div class="iw"><input type="number" id="bc-Pu" value="100" min="0" step="5" oninput="bcAutoCalc()"><span class="us" id="bc-Pu-us">kip</span></div>
+    </div>
+    <div class="form-group">
+      <label>M<sub>ux</sub> &mdash; factored moment x&#x2011;x <span id="bc-Mux-lbl" class="unit-lbl">[kip&middot;ft]</span></label>
+      <div class="iw"><input type="number" id="bc-Mux" value="100" min="0" step="5" oninput="bcAutoCalc()"><span class="us" id="bc-Mux-us">kip&middot;ft</span></div>
+    </div>
+    <div class="form-group">
+      <label>M<sub>uy</sub> &mdash; factored moment y&#x2011;y <span id="bc-Muy-lbl" class="unit-lbl">[kip&middot;ft]</span></label>
+      <div class="iw"><input type="number" id="bc-Muy" value="0" min="0" step="5" oninput="bcAutoCalc()"><span class="us" id="bc-Muy-us">kip&middot;ft</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div>
+  <div class="res-empty" id="bc-empty"><div class="ri">&#9881;</div>Select a section and enter column height to see results.</div>
+  <div class="report-card" id="bc-card" style="display:none">
+    <div class="report-hdr">
+      <h4>Column Design Calculation Report</h4>
+      <span class="rh-code" id="bc-rh-code">AISC 360 &middot; kip &middot; ft &middot; in</span>
+      <button class="print-btn no-print" onclick="window.print()">&#128438; Print / PDF</button>
+    </div>
+    <div class="report-body" id="bc-body"></div>
+  </div>
+</div>
+
+</div><!-- calc-layout -->
+
+<!-- ── DESIGN BACKGROUND ── -->
+<div class="bg-section no-print">
+  <div class="bg-hdr"><h3>&#128218; Steel Column Design &mdash; Theory Reference</h3></div>
+  <nav class="bg-toc">
+    <a href="#bg-aisc" onclick="bcBgTab('bg-aisc',this);return false;" class="active">AISC / TSDS</a>
+    <a href="#bg-ec3"  onclick="bcBgTab('bg-ec3',this);return false;">EN 1993-1-1</a>
+    <a href="#bg-is8"  onclick="bcBgTab('bg-is8',this);return false;">IS 800:2007</a>
+    <a href="#bg-ck"   onclick="bcBgTab('bg-ck',this);return false;">K Factors</a>
+  </nav>
+
+  <div class="bg-pane active" id="bg-aisc">
+    <div class="tb">
+      <h4>Interaction &mdash; AISC 360 &sect;H1-1</h4>
+      <div class="fml-blk"><span class="ft">P<sub>u</sub>/&phi;P<sub>n</sub> &ge; 0.2 (H1-1a)</span>P<sub>u</sub>/(&phi;<sub>c</sub>P<sub>n</sub>) + (8/9)[M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>)] &le; 1.0</div>
+      <div class="fml-blk"><span class="ft">P<sub>u</sub>/&phi;P<sub>n</sub> &lt; 0.2 (H1-1b)</span>P<sub>u</sub>/(2&phi;<sub>c</sub>P<sub>n</sub>) + M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>) &le; 1.0</div>
+      <p>&phi;<sub>c</sub> = &phi;<sub>b</sub> = 0.90. C<sub>b</sub> = 1.0 (uniform moment). L<sub>b</sub> = weak-axis unbraced length.</p>
+      <h4>Axial &mdash; &sect;E3</h4>
+      <div class="fml-blk"><span class="ft">KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft">KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub> &nbsp;&nbsp;where F<sub>e</sub> = &pi;&sup2;E/(KL/r)&sup2;</div>
+      <h4>Strong-Axis Flexure &mdash; &sect;F2</h4>
+      <div class="fml-blk"><span class="ft">L<sub>b</sub> &le; L<sub>p</sub></span>M<sub>nx</sub> = M<sub>p</sub> = F<sub>y</sub>Z<sub>x</sub></div>
+      <div class="fml-blk"><span class="ft">L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></span>M<sub>nx</sub> = M<sub>p</sub> &minus; (M<sub>p</sub> &minus; 0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>) &le; M<sub>p</sub></div>
+      <div class="fml-blk"><span class="ft">L<sub>b</sub> &gt; L<sub>r</sub></span>M<sub>nx</sub> = F<sub>cr,LTB</sub> &times; S<sub>x</sub> &le; M<sub>p</sub></div>
+      <h4>Weak-Axis Flexure &mdash; &sect;F6</h4>
+      <div class="fml-blk"><span class="ft">&sect;F6</span>M<sub>ny</sub> = min(F<sub>y</sub>Z<sub>y</sub>, 1.6F<sub>y</sub>S<sub>y</sub>)</div>
+      <p>TSDS 2016 uses the same interaction equations in SI units (E = 200,000 MPa).</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-ec3">
+    <div class="tb">
+      <h4>Axial Buckling &mdash; EN 1993-1-1 &sect;6.3.1</h4>
+      <p>N<sub>b,Rd</sub> = &chi; &times; A &times; f<sub>y</sub> / &gamma;<sub>M1</sub>. Imperfection factor &alpha; from buckling curve (Table 6.2): h/b &gt; 1.2 &rarr; curves a/b; h/b &le; 1.2 &rarr; curves b/c.</p>
+      <div class="fml-blk"><span class="ft">Slenderness</span>&lambda;&#772; = &radic;(A&middot;f<sub>y</sub> / N<sub>cr</sub>) &nbsp;&nbsp; N<sub>cr</sub> = &pi;&sup2;EI/(KL)&sup2;</div>
+      <div class="fml-blk"><span class="ft">Reduction factor</span>&chi; = 1 / [&phi; + &radic;(&phi;&sup2; &minus; &lambda;&#772;&sup2;)] &le; 1.0 &nbsp;&nbsp; &phi; = 0.5[1 + &alpha;(&lambda;&#772; &minus; 0.2) + &lambda;&#772;&sup2;]</div>
+      <h4>LTB &mdash; &sect;6.3.2.3 (Rolled Sections)</h4>
+      <div class="fml-blk"><span class="ft">M<sub>cr</sub></span>M<sub>cr</sub> = (&pi;/L<sub>b</sub>) &radic;(EI<sub>z</sub>&middot;GJ) &times; &radic;(1 + &pi;&sup2;EI<sub>w</sub>/(GJL<sub>b</sub>&sup2;))</div>
+      <div class="fml-blk"><span class="ft">&lambda;&#772;<sub>LT</sub></span>&radic;(W<sub>y,pl</sub>&middot;f<sub>y</sub> / M<sub>cr</sub>). Curves: h/b &le; 2 &rarr; b (&alpha;<sub>LT</sub>=0.34); h/b &gt; 2 &rarr; c (&alpha;<sub>LT</sub>=0.49)</div>
+      <div class="fml-blk"><span class="ft">&chi;<sub>LT</sub></span>&lambda;&#772;<sub>LT,0</sub> = 0.4, &beta; = 0.75. If &lambda;&#772;<sub>LT</sub> &le; 0.4: &chi;<sub>LT</sub>=1.0; else &chi;<sub>LT</sub> = 1/[&phi;<sub>LT</sub>+&radic;(&phi;<sub>LT</sub>&sup2;&minus;&beta;&lambda;&#772;<sub>LT</sub>&sup2;)] &le; 1/&lambda;&#772;<sub>LT</sub>&sup2;</div>
+      <h4>Interaction &mdash; &sect;6.3.3 Method 2 (Annex B, C<sub>my</sub>=C<sub>mz</sub>=1.0)</h4>
+      <div class="fml-blk"><span class="ft">Eq. 6.61</span>N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0</div>
+      <div class="fml-blk"><span class="ft">Eq. 6.62</span>N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0</div>
+      <p>n<sub>y</sub>=N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>), n<sub>z</sub>=N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>). k<sub>yy</sub>=1+min(&lambda;&#772;<sub>y</sub>&minus;0.2, 0.8)n<sub>y</sub>; k<sub>zz</sub>=1+min(2&lambda;&#772;<sub>z</sub>&minus;0.6, 1.4)n<sub>z</sub>; k<sub>yz</sub>=0.6k<sub>zz</sub>; k<sub>zy</sub>=1&minus;min(0.133&lambda;&#772;<sub>z</sub>, 0.133)n<sub>z</sub>.</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-is8">
+    <div class="tb">
+      <h4>Axial Compression &mdash; IS 800:2007 &sect;7</h4>
+      <p>P<sub>d</sub> = A &times; f<sub>cd</sub>. Buckling classes from Table 7: strong axis &rarr; class b (&alpha;=0.34); weak axis &rarr; class c (&alpha;=0.49). E = 200,000 MPa, G = 77,000 MPa, &gamma;<sub>m0</sub> = 1.10.</p>
+      <div class="fml-blk"><span class="ft">Non-dimensional slenderness</span>&lambda;&#772; = &radic;(Af<sub>y</sub>/N<sub>cr</sub>). Same &chi; formula as EC3.</div>
+      <div class="fml-blk"><span class="ft">Design compressive stress</span>f<sub>cd</sub> = &chi; &times; f<sub>y</sub> / &gamma;<sub>m0</sub>. Governing axis: min(f<sub>cd,x</sub>, f<sub>cd,y</sub>).</div>
+      <h4>Bending Capacity &mdash; IS 800:2007 &sect;8.2</h4>
+      <p>LTB curve from Table 6b (rolled sections): h/b &le; 2 &rarr; curve a (&alpha;<sub>LT</sub>=0.21); h/b &gt; 2 &rarr; curve b (&alpha;<sub>LT</sub>=0.34).</p>
+      <div class="fml-blk"><span class="ft">M<sub>cr</sub></span>Same formula as EC3 (E=200,000, G=77,000 MPa)</div>
+      <div class="fml-blk"><span class="ft">M<sub>dx</sub></span>&chi;<sub>LT</sub> &times; Z<sub>pl,x</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub> &nbsp;&nbsp; M<sub>dz</sub> = Z<sub>pl,z</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub></div>
+      <h4>Interaction &mdash; IS 800:2007 &sect;9.3.2.2</h4>
+      <div class="fml-blk"><span class="ft">&sect;9.3.2.2</span>P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> &le; 1.0</div>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-ck">
+    <div class="tb">
+      <h4>Effective Length Factor K</h4>
+      <table class="combo-ref-tbl" style="max-width:560px">
+        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (recommended)</th></tr>
+        <tr><td>Both ends pinned</td><td>1.0</td><td>1.00</td></tr>
+        <tr><td>One pinned, one fixed (no sway)</td><td>0.7</td><td>0.80</td></tr>
+        <tr><td>Both ends fixed (no sway)</td><td>0.5</td><td>0.65</td></tr>
+        <tr><td>One fixed, one free (cantilever)</td><td>2.0</td><td>2.10</td></tr>
+      </table>
+      <p>K<sub>x</sub> governs strong-axis buckling; K<sub>y</sub> governs weak-axis buckling. L<sub>b</sub> (LTB unbraced length) = L<sub>b,y</sub> &times; L (weak-axis unbraced fraction).</p>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+// ── W SECTION DATABASE (US) ───────────────────────────────────────────────────
+// [name, d(in), bf(in), tf(in), tw(in), A(in²), W(lb/ft), Ix, Sx, Zx, rx, Iy, Sy, Zy, ry, J(in⁴), Cw(in⁶)]
+var W_DATA=[
+['W4\xd713',4.16,4.06,0.345,0.280,3.83,13,11.3,5.46,6.28,1.72,3.86,1.90,2.92,1.00,0.151,34.8],
+['W5\xd716',5.01,5.00,0.360,0.240,4.71,16,21.4,8.55,9.63,2.13,7.51,3.00,4.67,1.27,0.192,108],
+['W5\xd719',5.15,5.03,0.430,0.270,5.54,19,26.3,10.2,11.6,2.18,9.13,3.63,5.53,1.28,0.313,134],
+['W6\xd79',5.90,3.94,0.215,0.170,2.68,9,16.4,5.56,6.23,2.47,2.20,1.11,1.72,0.905,0.0353,68.0],
+['W6\xd712',6.00,4.00,0.280,0.230,3.55,12,22.1,7.31,8.30,2.49,2.99,1.50,2.32,0.918,0.0903,96.1],
+['W6\xd715',5.99,5.99,0.260,0.230,4.43,15,29.1,9.72,10.8,2.56,9.32,3.11,4.75,1.45,0.100,241],
+['W6\xd716',6.28,4.03,0.405,0.260,4.74,16,32.1,10.2,11.7,2.60,4.43,2.20,3.39,0.967,0.223,143],
+['W6\xd720',6.20,6.02,0.365,0.260,5.87,20,41.4,13.4,14.9,2.66,13.3,4.41,6.72,1.50,0.281,352],
+['W6\xd725',6.38,6.08,0.455,0.320,7.34,25,53.4,16.7,18.9,2.70,17.1,5.61,8.56,1.52,0.461,295],
+['W8\xd710',7.89,3.94,0.205,0.170,2.96,10,30.8,7.81,8.87,3.22,2.09,1.06,1.66,0.841,0.0330,152],
+['W8\xd713',7.99,4.00,0.255,0.230,3.84,13,39.6,9.91,11.4,3.21,2.73,1.37,2.19,0.843,0.0861,200],
+['W8\xd718',8.14,5.25,0.330,0.230,5.26,18,61.9,15.2,17.0,3.43,7.97,3.04,4.66,1.23,0.171,555],
+['W8\xd721',8.28,5.27,0.400,0.250,6.16,21,75.3,18.2,20.4,3.49,9.77,3.71,5.69,1.26,0.281,694],
+['W8\xd724',7.93,6.50,0.400,0.245,7.08,24,82.8,20.9,23.1,3.42,18.3,5.63,8.57,1.61,0.346,1430],
+['W8\xd728',8.06,6.535,0.465,0.285,8.24,28,98.0,24.3,27.2,3.45,21.7,6.63,10.1,1.62,0.537,1760],
+['W8\xd731',8.00,8.00,0.435,0.285,9.13,31,110,27.5,30.4,3.47,37.1,9.27,14.1,2.02,0.536,4680],
+['W8\xd735',8.12,8.02,0.495,0.310,10.3,35,127,31.2,34.7,3.51,42.6,10.6,16.1,2.03,0.769,5500],
+['W8\xd740',8.25,8.07,0.560,0.360,11.7,40,146,35.5,39.8,3.53,49.1,12.2,18.5,2.04,1.12,6480],
+['W8\xd748',8.50,8.11,0.685,0.400,14.1,48,184,43.2,49.0,3.61,60.9,15.0,22.9,2.08,2.08,8260],
+['W8\xd758',8.75,8.22,0.810,0.510,17.1,58,228,52.0,59.8,3.65,75.1,18.3,28.0,2.10,3.64,10500],
+['W8\xd767',9.00,8.28,0.935,0.570,19.7,67,272,60.4,70.1,3.72,88.6,21.4,32.7,2.12,5.82,12600],
+['W10\xd712',9.87,3.96,0.210,0.190,3.54,12,53.8,10.9,12.6,3.90,2.18,1.10,1.74,0.785,0.0547,301],
+['W10\xd715',9.99,4.00,0.270,0.230,4.41,15,68.9,13.8,16.0,3.95,2.89,1.45,2.30,0.810,0.112,404],
+['W10\xd717',10.1,4.01,0.330,0.240,4.99,17,81.9,16.2,18.7,4.05,3.56,1.78,2.80,0.844,0.195,508],
+['W10\xd719',10.2,4.02,0.395,0.250,5.62,19,96.3,18.8,21.6,4.14,4.29,2.14,3.35,0.874,0.318,623],
+['W10\xd722',10.2,5.75,0.360,0.240,6.49,22,118,23.2,26.0,4.27,11.4,3.97,6.10,1.33,0.239,1550],
+['W10\xd726',10.3,5.77,0.440,0.260,7.61,26,144,27.9,31.3,4.35,14.1,4.89,7.50,1.36,0.402,1950],
+['W10\xd730',10.5,5.81,0.510,0.300,8.84,30,170,32.4,36.6,4.38,16.7,5.75,8.84,1.37,0.622,2360],
+['W10\xd733',9.73,7.96,0.435,0.290,9.71,33,171,35.0,38.8,4.19,36.6,9.20,13.9,1.94,0.583,7840],
+['W10\xd739',9.92,7.99,0.530,0.315,11.5,39,209,42.1,46.8,4.27,45.0,11.3,17.2,1.98,1.02,9500],
+['W10\xd745',10.1,8.02,0.620,0.350,13.3,45,248,49.1,54.9,4.32,53.4,13.3,20.3,2.01,1.51,11400],
+['W10\xd749',10.0,10.0,0.560,0.340,14.4,49,272,54.6,60.4,4.35,93.4,18.7,28.3,2.54,1.39,14900],
+['W10\xd754',10.1,10.0,0.615,0.370,15.8,54,303,60.0,66.6,4.37,103,20.6,31.3,2.56,1.82,16700],
+['W10\xd760',10.2,10.1,0.680,0.420,17.6,60,341,66.7,74.6,4.41,116,23.0,35.0,2.57,2.48,19100],
+['W12\xd714',11.9,3.97,0.225,0.200,4.16,14,88.6,14.9,17.4,4.62,2.36,1.19,1.90,0.753,0.0704,660],
+['W12\xd716',12.0,3.99,0.265,0.220,4.71,16,103,17.1,20.1,4.67,2.82,1.41,2.26,0.773,0.114,795],
+['W12\xd719',12.2,4.01,0.350,0.235,5.57,19,130,21.3,24.7,4.82,3.76,1.88,2.98,0.822,0.247,1090],
+['W12\xd722',12.3,4.03,0.425,0.260,6.48,22,156,25.4,29.3,4.91,4.66,2.31,3.66,0.848,0.416,1340],
+['W12\xd726',12.2,6.49,0.380,0.230,7.65,26,204,33.4,37.2,5.17,17.3,5.34,8.17,1.51,0.300,3830],
+['W12\xd730',12.3,6.52,0.440,0.260,8.79,30,238,38.6,43.1,5.21,20.3,6.24,9.56,1.52,0.457,4540],
+['W12\xd735',12.5,6.56,0.520,0.300,10.3,35,285,45.6,51.2,5.25,24.5,7.47,11.5,1.54,0.741,5580],
+['W12\xd740',11.9,8.01,0.515,0.295,11.7,40,307,51.5,57.0,5.13,44.1,11.0,16.8,1.94,0.785,10200],
+['W12\xd745',12.1,8.05,0.575,0.335,13.2,45,350,58.1,64.7,5.15,50.0,12.4,19.0,1.95,1.26,11600],
+['W12\xd750',12.2,8.08,0.640,0.370,14.7,50,394,64.7,72.4,5.18,56.3,13.9,21.4,1.96,1.71,13200],
+['W12\xd753',12.1,9.995,0.575,0.345,15.6,53,425,70.6,77.9,5.23,95.8,19.2,29.1,2.48,1.58,20900],
+['W12\xd758',12.2,10.0,0.640,0.360,17.0,58,475,78.0,86.4,5.28,107,21.4,32.5,2.51,2.10,23400],
+['W12\xd765',12.1,12.0,0.605,0.390,19.1,65,533,87.9,96.8,5.28,174,29.1,44.1,3.02,2.18,41100],
+['W12\xd772',12.3,12.0,0.670,0.430,21.1,72,597,97.4,108,5.31,195,32.4,49.2,3.04,2.93,46700],
+['W12\xd779',12.4,12.1,0.735,0.470,23.2,79,663,107,119,5.34,216,35.8,54.3,3.05,3.84,52300],
+['W12\xd787',12.5,12.1,0.810,0.515,25.6,87,740,118,132,5.38,241,39.7,60.4,3.07,5.10,59200],
+['W12\xd796',12.7,12.2,0.900,0.550,28.2,96,833,131,147,5.44,270,44.4,67.5,3.09,7.12,67200],
+['W14\xd722',13.7,5.00,0.335,0.230,6.49,22,199,29.0,33.2,5.54,7.00,2.80,4.39,1.04,0.208,2410],
+['W14\xd726',13.9,5.025,0.420,0.255,7.69,26,245,35.3,40.2,5.65,8.91,3.54,5.54,1.08,0.358,3070],
+['W14\xd730',13.8,6.73,0.385,0.270,8.85,30,291,42.0,47.3,5.73,19.6,5.82,8.99,1.49,0.380,7550],
+['W14\xd734',14.0,6.745,0.455,0.285,10.0,34,340,48.6,54.6,5.83,23.3,6.91,10.6,1.53,0.569,9110],
+['W14\xd738',14.1,6.77,0.515,0.310,11.2,38,385,54.6,61.5,5.87,26.7,7.88,12.1,1.55,0.798,10500],
+['W14\xd743',13.7,7.995,0.530,0.305,12.6,43,428,62.7,69.6,5.82,45.2,11.3,17.3,1.89,1.05,18900],
+['W14\xd748',13.8,8.031,0.595,0.340,14.1,48,484,70.2,78.4,5.85,51.4,12.8,19.6,1.91,1.45,21700],
+['W14\xd753',13.9,7.99,0.660,0.370,15.6,53,541,77.8,87.1,5.89,57.7,14.4,22.0,1.92,1.56,24500],
+['W14\xd761',13.9,9.995,0.645,0.375,17.9,61,640,92.2,102,5.98,107,21.5,32.8,2.45,2.19,49600],
+['W14\xd768',14.0,10.035,0.720,0.415,20.0,68,722,103,115,6.01,121,24.2,37.0,2.46,3.01,56900],
+['W14\xd774',14.2,10.07,0.785,0.450,21.8,74,796,112,126,6.04,134,26.6,40.6,2.48,3.87,63600],
+['W14\xd782',14.3,10.1,0.855,0.510,24.0,82,882,123,139,6.05,148,29.3,44.8,2.48,5.07,70800],
+['W14\xd790',14.0,14.520,0.710,0.440,26.5,90,999,143,157,6.14,362,49.9,75.6,3.70,4.06,177000],
+['W14\xd799',14.2,14.565,0.780,0.485,29.1,99,1110,157,173,6.17,402,55.2,83.6,3.71,5.37,199000],
+['W14\xd7109',14.3,14.605,0.860,0.525,32.0,109,1240,173,192,6.22,447,61.2,92.7,3.73,7.12,224000],
+['W14\xd7120',14.5,14.670,0.940,0.590,35.3,120,1380,190,212,6.24,495,67.5,102,3.74,9.37,251000],
+['W14\xd7132',14.7,14.725,1.03,0.645,38.8,132,1530,209,234,6.28,548,74.5,113,3.76,12.3,282000],
+['W16\xd726',15.7,5.500,0.345,0.250,7.68,26,301,38.4,44.2,6.26,9.59,3.49,5.48,1.12,0.262,4590],
+['W16\xd731',15.9,5.525,0.440,0.275,9.12,31,375,47.2,54.0,6.41,12.4,4.49,7.03,1.17,0.461,5840],
+['W16\xd736',15.9,6.985,0.430,0.295,10.6,36,448,56.5,64.0,6.51,24.5,7.00,10.8,1.52,0.543,15600],
+['W16\xd740',16.0,7.000,0.505,0.305,11.8,40,518,64.7,73.0,6.63,28.9,8.25,12.7,1.57,0.794,18700],
+['W16\xd745',16.1,7.035,0.565,0.345,13.3,45,586,72.7,82.3,6.65,32.8,9.34,14.5,1.57,1.11,21500],
+['W16\xd750',16.3,7.073,0.630,0.380,14.7,50,659,81.0,92.0,6.68,37.2,10.5,16.3,1.59,1.52,24700],
+['W16\xd757',16.4,7.120,0.715,0.430,16.8,57,758,92.2,105,6.72,43.1,12.1,18.9,1.60,2.22,29100],
+['W16\xd767',16.3,10.235,0.665,0.395,19.7,67,954,117,130,6.96,119,23.2,35.5,2.46,2.39,63900],
+['W16\xd777',16.5,10.295,0.760,0.455,22.6,77,1110,134,150,7.00,138,26.9,41.1,2.47,3.57,75200],
+['W16\xd789',16.8,10.365,0.875,0.525,26.2,89,1300,155,175,7.05,163,31.4,48.1,2.49,5.45,90300],
+['W18\xd735',17.7,6.000,0.425,0.300,10.3,35,510,57.6,66.5,7.04,15.3,5.12,8.06,1.22,0.506,12900],
+['W18\xd740',17.9,6.015,0.525,0.315,11.8,40,612,68.4,78.4,7.21,19.1,6.35,9.95,1.27,0.810,16200],
+['W18\xd746',18.1,6.060,0.605,0.360,13.5,46,712,78.8,90.7,7.25,22.5,7.43,11.7,1.29,1.22,19600],
+['W18\xd750',18.0,7.50,0.570,0.355,14.7,50,800,88.9,101,7.38,40.1,10.7,16.6,1.65,1.14,38600],
+['W18\xd755',18.1,7.530,0.630,0.390,16.2,55,890,98.3,110,7.41,44.9,11.9,18.5,1.67,1.91,41000],
+['W18\xd760',18.2,7.555,0.695,0.415,17.6,60,984,108,123,7.47,50.1,13.3,20.6,1.69,2.49,46400],
+['W18\xd765',18.4,7.590,0.750,0.450,19.1,65,1070,117,133,7.49,54.8,14.4,22.5,1.69,3.00,51100],
+['W18\xd771',18.5,7.635,0.810,0.495,20.8,71,1170,127,146,7.50,60.3,15.8,24.7,1.70,3.76,57100],
+['W18\xd776',18.2,11.035,0.680,0.425,22.3,76,1330,146,163,7.73,152,27.6,42.2,2.61,3.04,94400],
+['W18\xd786',18.4,11.090,0.770,0.480,25.3,86,1530,166,186,7.77,175,31.6,48.4,2.63,4.45,110000],
+['W18\xd797',18.6,11.145,0.870,0.535,28.5,97,1750,188,211,7.82,201,36.1,55.3,2.65,6.41,128000],
+['W21\xd744',20.7,6.500,0.450,0.350,13.0,44,843,81.6,95.4,8.06,20.7,6.36,10.2,1.26,0.770,29700],
+['W21\xd750',20.8,6.530,0.535,0.380,14.7,50,984,94.5,110,8.18,24.9,7.64,12.2,1.30,1.14,36200],
+['W21\xd757',21.1,6.555,0.650,0.405,16.7,57,1170,111,129,8.36,30.6,9.35,14.8,1.35,1.77,46200],
+['W21\xd762',21.0,8.24,0.615,0.400,18.3,62,1330,127,144,8.54,57.5,13.9,21.7,1.77,1.83,84600],
+['W21\xd768',21.1,8.270,0.685,0.430,20.0,68,1480,140,160,8.60,64.7,15.7,24.4,1.80,2.45,98800],
+['W21\xd773',21.2,8.295,0.740,0.455,21.5,73,1600,151,172,8.64,70.6,17.0,26.6,1.81,3.02,108000],
+['W21\xd783',21.4,8.355,0.835,0.515,24.3,83,1830,171,196,8.67,81.4,19.5,30.5,1.83,4.34,127000],
+['W21\xd793',21.6,8.420,0.930,0.580,27.3,93,2070,192,221,8.70,92.9,22.1,34.7,1.84,6.03,146000],
+['W24\xd755',23.6,7.00,0.505,0.395,16.2,55,1350,114,130,9.11,29.1,8.30,13.3,1.34,0.985,69500],
+['W24\xd762',23.7,7.040,0.590,0.430,18.2,62,1550,131,153,9.23,34.5,9.80,15.7,1.38,1.71,82800],
+['W24\xd768',23.7,8.965,0.585,0.415,20.1,68,1830,154,177,9.55,70.4,15.7,24.5,1.87,1.87,150000],
+['W24\xd776',23.9,8.99,0.680,0.440,22.4,76,2100,176,200,9.69,82.5,18.4,28.6,1.92,2.68,176000],
+['W24\xd784',24.1,9.020,0.770,0.470,24.7,84,2370,196,224,9.79,94.4,20.9,32.6,1.95,3.45,200000],
+['W24\xd794',24.3,9.065,0.875,0.515,27.7,94,2700,222,254,9.87,109,24.0,37.6,1.98,4.99,231000],
+['W24\xd7104',24.1,12.750,0.750,0.500,30.6,104,3100,258,289,10.1,259,40.7,62.4,2.91,4.72,569000],
+['W24\xd7117',24.3,12.800,0.850,0.550,34.4,117,3540,291,327,10.1,297,46.5,71.4,2.94,6.72,659000],
+['W27\xd784',26.7,10.0,0.640,0.460,24.7,84,2850,213,244,10.7,106,21.2,33.2,2.07,1.83,400000],
+['W27\xd794',26.9,9.990,0.745,0.490,27.7,94,3270,243,278,10.9,124,24.8,38.8,2.12,3.94,451000],
+['W27\xd7102',27.1,10.015,0.830,0.515,30.0,102,3620,267,305,11.0,139,27.8,43.4,2.15,5.29,508000],
+['W27\xd7114',27.3,10.070,0.930,0.570,33.6,114,4090,299,343,11.0,159,31.5,49.3,2.18,7.33,587000],
+['W30\xd790',29.5,10.400,0.610,0.470,26.3,90,3610,245,283,11.7,115,22.1,34.7,2.09,2.84,538000],
+['W30\xd799',29.7,10.450,0.670,0.520,29.0,99,3990,269,312,11.7,128,24.5,38.6,2.10,3.77,603000],
+['W30\xd7108',29.8,10.5,0.760,0.545,31.7,108,4470,299,346,11.9,146,27.9,43.9,2.15,5.68,698000],
+['W30\xd7116',30.0,10.495,0.850,0.565,34.2,116,4930,329,378,12.0,164,31.3,49.2,2.19,7.67,795000],
+['W33\xd7118',32.9,11.480,0.740,0.550,34.7,118,5900,359,415,13.0,187,32.6,51.3,2.32,4.83,948000],
+['W33\xd7130',33.1,11.5,0.855,0.580,38.3,130,6710,406,467,13.2,218,38.0,59.5,2.38,7.08,1130000],
+['W33\xd7141',33.3,11.535,0.960,0.605,41.6,141,7450,448,514,13.4,246,42.7,67.1,2.43,10.0,1290000],
+['W36\xd7150',35.9,17.0,0.940,0.625,44.3,150,9040,504,581,14.3,1010,119,180,4.77,6.52,8540000],
+['W36\xd7256',36.7,16.6,1.44,0.960,75.4,256,16800,917,1040,14.9,1300,157,239,4.15,28.6,9700000]
+];
+
+// ── EUROPEAN SECTION DATABASE (SI) ───────────────────────────────────────────
+// [name, d(mm), bf(mm), tf(mm), tw(mm), A(mm²), W(kg/m), Ix(mm⁴), Sx(mm³), Zx(mm³), rx(mm), Iy(mm⁴), Sy(mm³), Zy(mm³), ry(mm), J(mm⁴), Cw(mm⁶)]
+var EU_DATA=[
+// IPE series
+['IPE 80',80,46,5.2,3.8,764,6.0,801000,20000,23200,32.4,84900,3690,5820,10.5,724,274000000],
+['IPE 100',100,55,5.7,4.1,1030,8.1,1710000,34200,39400,40.7,159000,5790,9150,12.4,1240,1050000000],
+['IPE 120',120,64,6.3,4.4,1320,10.4,3180000,53000,60700,49.0,277000,8650,13600,14.5,1880,2750000000],
+['IPE 140',140,73,6.9,4.7,1640,12.9,5410000,77300,88300,57.4,449000,12300,19200,16.5,2810,6000000000],
+['IPE 160',160,82,7.4,5.0,2010,15.8,8690000,109000,124000,65.8,683000,16700,26100,18.4,4120,11900000000],
+['IPE 180',180,91,8.0,5.3,2390,18.8,13200000,146000,166000,74.2,1010000,22200,34600,20.5,5950,22200000000],
+['IPE 200',200,100,8.5,5.6,2850,22.4,19430000,194000,221000,82.6,1420000,28500,44600,22.4,8460,37900000000],
+['IPE 220',220,110,9.2,5.9,3340,26.2,27720000,252000,285000,91.1,2050000,37300,58100,24.8,12400,67100000000],
+['IPE 240',240,120,9.8,6.2,3910,30.7,38920000,324000,367000,99.7,2840000,47300,73900,26.9,17000,111000000000],
+['IPE 270',270,135,10.2,6.6,4590,36.1,57900000,429000,484000,112,4200000,62200,97000,30.2,21600,204000000000],
+['IPE 300',300,150,10.7,7.1,5380,42.2,83560000,557000,628000,125,6040000,80500,125000,33.5,29000,358000000000],
+['IPE 330',330,160,11.5,7.5,6260,49.1,117700000,713000,804000,137,7880000,98500,154000,35.5,42000,565000000000],
+['IPE 360',360,170,12.7,8.0,7270,57.1,162700000,904000,1019000,149,10430000,123000,191000,37.9,65800,888000000000],
+['IPE 400',400,180,13.5,8.6,8450,66.3,231300000,1160000,1307000,165,13180000,146000,229000,39.5,90300,1350000000000],
+['IPE 450',450,190,14.6,9.4,9880,77.6,337400000,1500000,1702000,185,16760000,176000,276000,41.2,128000,2100000000000],
+['IPE 500',500,200,16.0,10.2,11600,90.7,482000000,1928000,2194000,204,21420000,214000,336000,43.1,191000,3060000000000],
+['IPE 550',550,210,17.2,11.1,13400,106,671200000,2441000,2787000,223,26680000,254000,401000,44.5,269000,4560000000000],
+['IPE 600',600,220,19.0,12.0,15600,122,920800000,3069000,3512000,243,33870000,308000,485000,46.6,420000,7030000000000],
+// HEA series
+['HEA 100',96,100,8.0,5.0,2120,16.7,3490000,72800,83000,40.6,1340000,26800,41100,25.1,18900,29500000000],
+['HEA 120',114,120,8.0,5.0,2530,19.9,6060000,106000,119500,48.9,2310000,38500,58800,30.2,22400,68000000000],
+['HEA 140',133,140,8.5,5.5,3140,24.7,10330000,155000,173500,57.3,3890000,55600,84900,35.2,30000,161000000000],
+['HEA 160',152,160,9.0,6.0,3880,30.4,16730000,220000,245100,65.7,6160000,77100,117600,39.8,42500,332000000000],
+['HEA 180',171,180,9.5,6.0,4530,35.5,25100000,294000,325400,74.5,9250000,103000,156300,45.2,56200,628000000000],
+['HEA 200',190,200,10.0,6.5,5380,42.3,36920000,389000,429500,82.8,13360000,134000,203800,49.8,79800,1150000000000],
+['HEA 220',210,220,11.0,7.0,6430,50.5,54100000,515000,568500,91.7,19550000,178000,270600,55.1,123000,2130000000000],
+['HEA 240',230,240,12.0,7.5,7680,60.3,77630000,675000,744600,101,27690000,231000,351700,60.0,186000,3680000000000],
+['HEA 260',250,260,12.5,7.5,8680,68.2,104500000,836000,919800,110,36680000,282000,430200,65.0,235000,5800000000000],
+['HEA 280',270,280,13.0,8.0,9730,76.4,136700000,1013000,1112900,119,47630000,340000,518200,69.9,300000,8980000000000],
+['HEA 300',290,300,14.0,8.5,11250,88.3,182600000,1260000,1383400,127,63100000,421000,641200,74.9,422000,14400000000000],
+['HEA 320',310,300,15.5,9.0,12440,97.6,229300000,1479000,1628500,136,69850000,466000,709000,74.9,601000,17150000000000],
+['HEA 340',330,300,16.5,9.5,13350,105,276900000,1678000,1850000,144,74360000,496000,754000,74.6,764000,19580000000000],
+['HEA 360',350,300,17.5,10.0,14280,112,330900000,1891000,2088000,152,78870000,526000,800000,74.3,967000,22160000000000],
+['HEA 400',390,300,19.0,11.0,15900,125,450700000,2311000,2562000,168,85640000,571000,867000,73.4,1390000,25620000000000],
+['HEA 450',440,300,21.0,11.5,17800,140,637200000,2896000,3216000,189,94650000,631000,958000,72.9,2090000,30810000000000],
+['HEA 500',490,300,23.0,12.0,19800,155,869700000,3550000,3949000,210,103700000,691000,1050000,72.4,3020000,36700000000000],
+['HEA 550',540,300,24.0,12.5,21200,166,1119000000,4146000,4622000,230,108200000,721000,1097000,71.5,3760000,40950000000000],
+['HEA 600',590,300,25.0,13.0,22600,178,1412000000,4787000,5350000,250,112700000,751000,1143000,70.6,4590000,45220000000000],
+['HEA 650',640,300,26.0,13.5,24200,190,1752000000,5474000,6136000,269,117200000,782000,1192000,69.6,5610000,49800000000000],
+['HEA 700',690,300,27.0,14.5,26000,204,2153000000,6241000,7032000,288,121800000,812000,1240000,68.4,6930000,54820000000000],
+// HEB series
+['HEB 100',100,100,10.0,6.0,2600,20.4,4500000,89900,104200,41.6,1670000,33500,51400,25.3,31200,38800000000],
+['HEB 120',120,120,11.0,6.5,3400,26.7,8640000,144000,165200,50.4,3180000,52900,81200,30.6,54000,102000000000],
+['HEB 140',140,140,12.0,7.0,4300,33.7,15090000,215000,245400,59.3,5500000,78500,120300,35.8,89000,231000000000],
+['HEB 160',160,160,13.0,8.0,5430,42.6,24920000,312000,354000,67.8,8890000,111000,170000,40.5,153000,456000000000],
+['HEB 180',180,180,14.0,8.5,6530,51.2,38310000,426000,481400,76.6,13630000,151000,231700,45.7,239000,828000000000],
+['HEB 200',200,200,15.0,9.0,7810,61.3,56960000,570000,642500,85.4,20030000,200000,305800,50.7,368000,1410000000000],
+['HEB 220',220,220,16.0,9.5,9100,71.5,80910000,736000,827000,94.3,28430000,258000,395500,55.9,532000,2320000000000],
+['HEB 240',240,240,17.0,10.0,10600,83.2,112600000,938000,1053200,103,39230000,327000,500700,60.8,750000,3670000000000],
+['HEB 260',260,260,17.5,10.0,11800,93.0,149200000,1148000,1283000,112,51350000,395000,604800,65.8,972000,5720000000000],
+['HEB 280',280,280,18.0,10.5,13100,103,192700000,1376000,1534800,121,65950000,471000,721900,70.9,1250000,8560000000000],
+['HEB 300',300,300,19.0,11.0,14900,117,251700000,1678000,1869200,130,85630000,571000,870600,75.8,1850000,12680000000000],
+['HEB 320',320,300,20.5,11.5,16100,127,308200000,1926000,2149000,138,92390000,616000,939000,75.7,2460000,14940000000000],
+['HEB 340',340,300,21.5,12.0,17100,134,366600000,2156000,2408000,146,96900000,646000,985000,75.3,3030000,16880000000000],
+['HEB 360',360,300,22.5,12.5,18100,142,431900000,2400000,2683000,155,101400000,676000,1032000,74.9,3700000,19050000000000],
+['HEB 400',400,300,24.0,13.5,19800,155,576800000,2884000,3232000,171,108200000,721000,1104000,74.0,5090000,22260000000000],
+['HEB 450',450,300,26.0,14.0,21800,171,798900000,3551000,3982000,191,117200000,782000,1198000,73.3,7390000,26890000000000],
+['HEB 500',500,300,28.0,14.5,23900,187,1072000000,4287000,4815000,212,126200000,841000,1287000,72.7,10430000,31680000000000],
+['HEB 550',550,300,29.0,15.0,25400,199,1367000000,4971000,5591000,232,130800000,872000,1335000,71.7,13400000,34720000000000],
+['HEB 600',600,300,30.0,15.5,27000,212,1710000000,5701000,6425000,252,135300000,902000,1383000,70.8,17000000,37920000000000],
+// HEM series
+['HEM 100',120,106,20.0,12.0,5320,41.8,11430000,190000,235000,46.4,3990000,75400,116000,27.4,513000,9975000000],
+['HEM 120',140,126,21.0,12.5,6640,52.1,20180000,288000,351000,55.1,7030000,112000,172000,32.6,757000,24888000000],
+['HEM 140',160,146,22.0,13.0,8060,63.3,32910000,411000,499000,63.9,11440000,157000,241000,37.7,1070000,54466000000],
+['HEM 160',180,166,23.0,14.0,9710,76.2,50980000,566000,688000,72.4,17590000,212000,325000,42.5,1490000,108394000000],
+['HEM 180',200,186,24.0,14.5,11300,89,74830000,748000,909000,81.3,25800000,277000,424000,47.7,1990000,199795000000],
+['HEM 200',220,206,25.0,15.0,13100,103,106400000,967000,1175000,90.1,36510000,355000,542000,52.8,2650000,347073000000],
+['HEM 220',240,226,26.0,15.5,14900,117,146000000,1217000,1479000,99.0,50120000,444000,678000,58.0,3440000,573824000000],
+['HEM 240',270,248,32.0,18.0,20000,157,242900000,1799000,2174000,110.0,81530000,658000,1001000,63.9,6920000,1154546000000],
+['HEM 260',290,268,32.5,18.0,22000,172,313100000,2159000,2600000,119.0,104500000,780000,1188000,68.9,7880000,1732251000000],
+['HEM 280',310,288,33.0,18.5,24000,188,395500000,2551000,3061000,128.0,131600000,915000,1392000,74.0,9220000,2524384000000],
+['HEM 300',340,310,39.0,21.0,30300,238,592000000,3482000,4078000,140.0,194000000,1252000,1874000,80.0,14080000,4394149000000],
+['HEM 320',359,309,40.0,21.0,31200,245,681300000,3798000,4435000,148.0,197100000,1277000,1913000,79.5,15100000,5014273000000],
+['HEM 340',377,309,40.0,21.0,31600,248,763700000,4052000,4718000,155.0,197100000,1277000,1913000,79.0,15200000,5596112000000],
+['HEM 360',395,308,40.0,21.0,32000,251,848700000,4297000,5007000,163.0,195200000,1268000,1901000,78.1,15300000,6150020000000],
+['HEM 400',432,307,40.0,21.0,32600,256,1041000000,4823000,5632000,179.0,192800000,1257000,1884000,76.9,15400000,7406605000000],
+['HEM 450',478,307,40.0,21.0,33500,263,1315000000,5501000,6431000,198.0,192800000,1257000,1884000,75.8,15600000,9246881000000],
+['HEM 500',524,306,40.0,21.0,34400,270,1619000000,6183000,7238000,217.0,190900000,1248000,1871000,74.5,15800000,11179868000000],
+['HEM 550',572,306,40.0,21.0,35400,278,1980000000,6924000,8117000,237.0,190900000,1248000,1871000,73.4,16000000,13507320000000],
+['HEM 600',620,305,40.0,21.0,36400,286,2374000000,7660000,8985000,255.0,189000000,1239000,1858000,72.0,16200000,15894900000000],
+['HEM 700',716,304,40.0,21.0,38400,302,3293000000,9200000,10820000,293.0,187200000,1232000,1847000,69.8,16600000,21386477000000],
+['HEM 800',814,303,40.0,21.0,37400,294,4745000000,11650000,13680000,356.0,190900000,1260000,1888000,71.4,16800000,28590902000000],
+['HEM 900',910,302,40.0,21.0,38100,299,5865000000,12890000,15170000,392.0,187600000,1243000,1862000,70.2,17000000,35498610000000],
+['HEM 1000',1008,302,40.0,21.0,40000,314,7222000000,14330000,16870000,425.0,191500000,1269000,1899000,69.2,17200000,44860024000000],
+// HD series
+['HD 260×54.1',254,260,10.0,6.4,6880,54.1,51350000,404000,450000,86.3,36680000,282000,430000,73.0,240000,545945000000],
+['HD 260×68.2',260,260,12.5,7.1,8680,68.2,69300000,533000,599000,89.3,39600000,305000,465000,67.5,469000,606437000000],
+['HD 260×93',266,260,17.5,8.0,11800,93.0,99800000,750000,845000,91.9,43400000,334000,509000,60.7,1150000,670012000000],
+['HD 260×114',271,262,21.0,9.7,14500,114,126700000,935000,1060000,93.5,55500000,424000,645000,61.9,1950000,867188000000],
+['HD 320×74.2',306,300,11.0,8.0,9440,74.2,170100000,1113000,1240000,134.0,81100000,541000,823000,92.7,575000,1764432000000],
+['HD 320×97.6',312,300,14.5,8.9,12400,97.6,225000000,1442000,1613000,135.0,87100000,581000,885000,83.8,1140000,1927222000000],
+['HD 320×127',320,300,19.5,10.0,16200,127,305300000,1908000,2148000,137.0,97900000,653000,996000,77.7,2340000,2210099000000],
+['HD 320×158',328,300,25.0,11.0,20100,158,391600000,2388000,2710000,140.0,108500000,724000,1104000,73.4,4290000,2490319000000],
+['HD 320×198',339,309,29.5,16.5,25200,198,520200000,3070000,3553000,144.0,148200000,959000,1461000,76.7,7260000,3549029000000],
+['HD 320×245',350,309,36.5,18.5,31200,245,663600000,3792000,4441000,146.0,176400000,1142000,1741000,75.2,13440000,4334247000000],
+['HD 320×300',359,309,45.0,19.5,38200,300,822000000,4581000,5428000,147.0,212300000,1375000,2099000,74.5,24600000,5232983000000],
+['HD 400×187',380,400,27.0,13.5,23800,187,1127000000,5935000,6654000,218.0,562800000,2814000,4273000,154.0,5820000,17532504000000],
+['HD 400×216',390,400,31.0,14.4,27500,216,1315000000,6745000,7607000,219.0,624800000,3124000,4751000,151.0,8820000,20131212000000],
+['HD 400×262',400,400,36.0,16.5,33400,262,1619000000,8097000,9173000,220.0,733800000,3669000,5584000,148.0,14000000,24306391000000],
+['HD 400×314',408,400,43.0,18.0,40000,314,1961000000,9609000,10960000,221.0,852000000,4260000,6510000,146.0,23400000,28376925000000],
+['HD 400×382',417,400,51.5,20.0,48700,382,2431000000,11660000,13390000,223.0,1002000000,5010000,7680000,143.0,39100000,33464358000000],
+['HD 400×463',427,401,62.0,22.0,59000,463,3022000000,14150000,16340000,226.0,1215000000,6060000,9320000,143.0,68100000,40467094000000],
+['HD 400×551',437,401,73.5,24.0,70200,551,3671000000,16800000,19510000,229.0,1423000000,7100000,10960000,142.0,112000000,47006028000000],
+['HD 400×634',446,402,82.0,26.0,80800,634,4267000000,19130000,22280000,230.0,1604000000,7980000,12380000,141.0,156000000,53130896000000],
+// RHS — Rectangular Hollow Section (EN 10210/10219) — Cw=0 for closed sections
+['RHS 50×30×3',50,30,3,3,444,3.49,142000,5690,7130,17.9,61800,4120,4910,11.8,131000,0],
+['RHS 60×40×3',60,40,3,3,564,4.43,274000,9130,11200,22.0,143000,7160,8390,15.9,284000,0],
+['RHS 60×40×4',60,40,4,4,736,5.78,345000,11500,14400,21.7,178000,8900,10700,15.6,353000,0],
+['RHS 80×40×3',80,40,3,3,684,5.37,559000,14000,17500,28.6,184000,9210,10600,16.4,427000,0],
+['RHS 80×40×4',80,40,4,4,896,7.03,711000,17800,22500,28.2,230000,11500,13600,16.0,535000,0],
+['RHS 80×40×5',80,40,5,5,1100,8.63,849000,21200,27200,27.8,269000,13500,16200,15.6,626000,0],
+['RHS 80×60×4',80,60,4,4,1060,8.29,943000,23600,28600,29.9,596000,19900,23300,23.8,1100000,0],
+['RHS 80×60×5',80,60,5,5,1300,10.2,1130000,28300,34800,29.5,711000,23700,28200,23.4,1310000,0],
+['RHS 80×60×6',80,60,6,6,1540,12.1,1300000,32600,40500,29.1,813000,27100,32800,23.0,1500000,0],
+['RHS 100×40×4',100,40,4,4,1060,8.29,1260000,25100,32300,34.5,282000,14100,16400,16.3,724000,0],
+['RHS 100×50×4',100,50,4,4,1140,8.92,1440000,28800,36100,35.6,474000,18900,21900,20.4,1100000,0],
+['RHS 100×50×5',100,50,5,5,1400,11.0,1740000,34700,44000,35.2,562000,22500,26500,20.0,1310000,0],
+['RHS 100×60×4',100,60,4,4,1220,9.55,1630000,32500,40000,36.6,722000,24100,27800,24.4,1520000,0],
+['RHS 100×60×5',100,60,5,5,1500,11.8,1960000,39200,48800,36.2,862000,28800,33800,24.0,1820000,0],
+['RHS 100×80×5',100,80,5,5,1700,13.3,2410000,48300,58200,37.7,1690000,42400,49800,31.6,2990000,0],
+['RHS 100×80×6',100,80,6,6,2020,15.8,2800000,56100,68400,37.3,1960000,49000,58300,31.2,3460000,0],
+['RHS 120×60×4',120,60,4,4,1380,10.8,2550000,42500,52900,43.1,848000,28300,32300,24.8,1960000,0],
+['RHS 120×60×5',120,60,5,5,1700,13.3,3090000,51600,64800,42.7,1010000,33800,39200,24.4,2350000,0],
+['RHS 120×60×6',120,60,6,6,2020,15.8,3600000,60000,76000,42.3,1160000,38800,45800,24.0,2710000,0],
+['RHS 120×80×5',120,80,5,5,1900,14.9,3760000,62600,76200,44.5,1980000,49400,57200,32.2,3920000,0],
+['RHS 120×80×6',120,80,6,6,2260,17.7,4380000,73000,89700,44.1,2290000,57300,67200,31.9,4540000,0],
+['RHS 120×80×8',120,80,8,8,2940,23.1,5520000,92000,115000,43.3,2850000,71200,85500,31.1,5650000,0],
+['RHS 140×80×5',140,80,5,5,2100,16.5,5480000,78200,96200,51.1,2260000,56400,64800,32.8,4880000,0],
+['RHS 140×80×6',140,80,6,6,2500,19.6,6410000,91600,113000,50.7,2620000,65500,76000,32.4,5670000,0],
+['RHS 140×80×8',140,80,8,8,3260,25.6,8120000,116000,146000,49.9,3260000,81600,97000,31.6,7080000,0],
+['RHS 150×75×5',150,75,5,5,2150,16.9,6230000,83100,103000,53.8,2070000,55200,63100,31.0,4790000,0],
+['RHS 150×100×5',150,100,5,5,2400,18.8,7540000,101000,122000,56.1,4000000,79900,91500,40.8,7910000,0],
+['RHS 150×100×6',150,100,6,6,2860,22.4,8850000,118000,144000,55.7,4660000,93300,108000,40.4,9240000,0],
+['RHS 150×100×8',150,100,8,8,3740,29.4,11300000,150000,185000,54.9,5880000,118000,139000,39.6,11700000,0],
+['RHS 160×80×5',160,80,5,5,2300,18.1,7620000,95200,118000,57.6,2540000,63500,72200,33.2,5880000,0],
+['RHS 160×80×6',160,80,6,6,2740,21.5,8940000,112000,140000,57.2,2950000,73700,84900,32.8,6840000,0],
+['RHS 160×80×8',160,80,8,8,3580,28.1,11400000,142000,180000,56.4,3680000,92000,109000,32.0,8560000,0],
+['RHS 180×100×6',180,100,6,6,3220,25.2,13800000,154000,189000,65.6,5460000,109000,125000,41.2,12000000,0],
+['RHS 180×100×8',180,100,8,8,4220,33.2,17700000,197000,245000,64.8,6900000,138000,161000,40.4,15200000,0],
+['RHS 200×100×6',200,100,6,6,3460,27.1,17900000,179000,222000,72.0,5990000,120000,136000,41.6,13900000,0],
+['RHS 200×100×8',200,100,8,8,4540,35.7,23100000,231000,289000,71.2,7580000,152000,175000,40.8,17600000,0],
+['RHS 200×120×6',200,120,6,6,3700,29.0,20200000,202000,246000,73.9,9060000,151000,172000,49.5,19100000,0],
+['RHS 200×120×8',200,120,8,8,4860,38.2,26000000,260000,320000,73.1,11600000,193000,222000,48.7,24300000,0],
+['RHS 200×150×6',200,150,6,6,4060,31.8,23600000,236000,281000,76.3,15100000,201000,230000,61.0,27700000,0],
+['RHS 200×150×8',200,150,8,8,5340,42.0,30400000,304000,366000,75.5,19400000,258000,299000,60.2,35600000,0],
+['RHS 250×150×8',250,150,8,8,6140,48.2,52200000,418000,509000,92.2,23400000,312000,356000,61.7,49200000,0],
+['RHS 250×150×10',250,150,10,10,7600,59.7,63500000,508000,624000,91.4,28200000,376000,434000,60.9,59400000,0],
+['RHS 250×150×12',250,150,12,12,9020,70.8,74100000,593000,735000,90.6,32600000,435000,509000,60.1,68900000,0],
+['RHS 250×200×8',250,200,8,8,6940,54.5,64000000,512000,606000,96.0,45200000,452000,519000,80.7,79600000,0],
+['RHS 250×200×10',250,200,10,10,8600,67.5,77900000,623000,744000,95.2,54900000,549000,637000,79.9,96700000,0],
+['RHS 300×150×8',300,150,8,8,6940,54.5,81700000,545000,673000,108.0,27400000,366000,413000,62.9,63400000,0],
+['RHS 300×150×10',300,150,10,10,8600,67.5,99700000,665000,827000,108.0,33100000,441000,504000,62.0,76700000,0],
+['RHS 300×200×8',300,200,8,8,7740,60.8,98800000,658000,790000,113.0,52600000,526000,596000,82.4,104000000,0],
+['RHS 300×200×10',300,200,10,10,9600,75.4,121000000,805000,972000,112.0,63900000,639000,732000,81.6,127000000,0],
+['RHS 300×200×12',300,200,12,12,11400,89.7,142000000,944000,1150000,111.0,74600000,746000,863000,80.8,148000000,0],
+['RHS 350×200×10',350,200,10,10,10600,83.2,176000000,1000000,1220000,129.0,73000000,730000,827000,83.0,157000000,0],
+['RHS 350×250×10',350,250,10,10,11600,91.1,204000000,1170000,1390000,133.0,121000000,969000,1100000,102.0,230000000,0],
+['RHS 400×200×10',400,200,10,10,11600,91.1,244000000,1220000,1500000,145.0,82000000,820000,922000,84.1,189000000,0],
+['RHS 400×200×12',400,200,12,12,13800,109.0,287000000,1440000,1780000,144.0,95800000,958000,1090000,83.3,222000000,0],
+['RHS 400×300×10',400,300,10,10,13600,107.0,320000000,1600000,1890000,153.0,205000000,1370000,1550000,123.0,376000000,0],
+['RHS 400×300×12',400,300,12,12,16200,127.0,377000000,1890000,2250000,153.0,241000000,1610000,1840000,122.0,443000000,0],
+['RHS 500×300×10',500,300,10,10,15600,122.0,545000000,2180000,2620000,187.0,247000000,1650000,1840000,126.0,518000000,0],
+['RHS 500×300×12',500,300,12,12,18600,146.0,644000000,2580000,3120000,186.0,291000000,1940000,2190000,125.0,611000000,0],
+// SHS — Square Hollow Section (EN 10210/10219) — Cw=0, Ix=Iy (symmetric)
+['SHS 20×2',20,20,2,2,144,1.13,7870,787,976,7.39,7870,787,976,7.39,11700,0],
+['SHS 25×2',25,25,2,2,184,1.44,16300,1310,1590,9.43,16300,1310,1590,9.43,24300,0],
+['SHS 25×3',25,25,3,3,264,2.07,21700,1740,2190,9.06,21700,1740,2190,9.06,31900,0],
+['SHS 30×2',30,30,2,2,224,1.76,29400,1960,2360,11.5,29400,1960,2360,11.5,43900,0],
+['SHS 30×3',30,30,3,3,324,2.54,39900,2660,3290,11.1,39900,2660,3290,11.1,59000,0],
+['SHS 35×3',35,35,3,3,384,3.01,66100,3780,4620,13.1,66100,3780,4620,13.1,98300,0],
+['SHS 40×3',40,40,3,3,444,3.49,102000,5100,6170,15.2,102000,5100,6170,15.2,152000,0],
+['SHS 40×4',40,40,4,4,576,4.52,126000,6300,7810,14.8,126000,6300,7810,14.8,187000,0],
+['SHS 50×3',50,50,3,3,564,4.43,208000,8340,9950,19.2,208000,8340,9950,19.2,311000,0],
+['SHS 50×4',50,50,4,4,736,5.78,262000,10500,12700,18.9,262000,10500,12700,18.9,389000,0],
+['SHS 50×5',50,50,5,5,900,7.07,308000,12300,15200,18.5,308000,12300,15200,18.5,456000,0],
+['SHS 60×3',60,60,3,3,684,5.37,371000,12400,14600,23.3,371000,12400,14600,23.3,556000,0],
+['SHS 60×4',60,60,4,4,896,7.03,471000,15700,18800,22.9,471000,15700,18800,22.9,702000,0],
+['SHS 60×5',60,60,5,5,1100,8.63,559000,18600,22800,22.5,559000,18600,22800,22.5,832000,0],
+['SHS 70×4',70,70,4,4,1060,8.29,769000,22000,26200,27.0,769000,22000,26200,27.0,1150000,0],
+['SHS 70×5',70,70,5,5,1300,10.2,921000,26300,31800,26.6,921000,26300,31800,26.6,1370000,0],
+['SHS 80×4',80,80,4,4,1220,9.55,1170000,29300,34700,31.1,1170000,29300,34700,31.1,1760000,0],
+['SHS 80×5',80,80,5,5,1500,11.8,1410000,35300,42200,30.7,1410000,35300,42200,30.7,2110000,0],
+['SHS 80×6',80,80,6,6,1780,13.9,1630000,40800,49400,30.3,1630000,40800,49400,30.3,2430000,0],
+['SHS 90×5',90,90,5,5,1700,13.3,2050000,45600,54200,34.8,2050000,45600,54200,34.8,3070000,0],
+['SHS 90×6',90,90,6,6,2020,15.8,2380000,53000,63600,34.4,2380000,53000,63600,34.4,3560000,0],
+['SHS 100×4',100,100,4,4,1540,12.1,2360000,47300,55300,39.2,2360000,47300,55300,39.2,3540000,0],
+['SHS 100×5',100,100,5,5,1900,14.9,2870000,57300,67800,38.8,2870000,57300,67800,38.8,4290000,0],
+['SHS 100×6',100,100,6,6,2260,17.7,3340000,66700,79600,38.5,3340000,66700,79600,38.5,4980000,0],
+['SHS 100×8',100,100,8,8,2940,23.1,4180000,83700,102000,37.7,4180000,83700,102000,37.7,6230000,0],
+['SHS 120×5',120,120,5,5,2300,18.1,5080000,84700,99200,47.0,5080000,84700,99200,47.0,7600000,0],
+['SHS 120×6',120,120,6,6,2740,21.5,5940000,99000,117000,46.6,5940000,99000,117000,46.6,8890000,0],
+['SHS 120×8',120,120,8,8,3580,28.1,7530000,126000,151000,45.8,7530000,126000,151000,45.8,11200000,0],
+['SHS 140×5',140,140,5,5,2700,21.2,8210000,117000,137000,55.2,8210000,117000,137000,55.2,12300000,0],
+['SHS 140×6',140,140,6,6,3220,25.2,9640000,138000,162000,54.8,9640000,138000,162000,54.8,14400000,0],
+['SHS 140×8',140,140,8,8,4220,33.2,12300000,176000,209000,54.0,12300000,176000,209000,54.0,18400000,0],
+['SHS 150×6',150,150,6,6,3460,27.1,12000000,160000,187000,58.8,12000000,160000,187000,58.8,17900000,0],
+['SHS 150×8',150,150,8,8,4540,35.7,15300000,204000,242000,58.1,15300000,204000,242000,58.1,22900000,0],
+['SHS 150×10',150,150,10,10,5600,44.0,18400000,245000,294000,57.3,18400000,245000,294000,57.3,27400000,0],
+['SHS 160×6',160,160,6,6,3700,29.0,14600000,183000,214000,62.9,14600000,183000,214000,62.9,21900000,0],
+['SHS 160×8',160,160,8,8,4860,38.2,18800000,235000,278000,62.1,18800000,235000,278000,62.1,28100000,0],
+['SHS 160×10',160,160,10,10,6000,47.1,22600000,282000,338000,61.4,22600000,282000,338000,61.4,33800000,0],
+['SHS 180×6',180,180,6,6,4180,32.8,21100000,234000,273000,71.1,21100000,234000,273000,71.1,31600000,0],
+['SHS 180×8',180,180,8,8,5500,43.2,27200000,302000,355000,70.3,27200000,302000,355000,70.3,40700000,0],
+['SHS 180×10',180,180,10,10,6800,53.4,32900000,365000,434000,69.5,32900000,365000,434000,69.5,49100000,0],
+['SHS 200×6',200,200,6,6,4660,36.5,29200000,292000,339000,79.2,29200000,292000,339000,79.2,43800000,0],
+['SHS 200×8',200,200,8,8,6140,48.2,37800000,378000,443000,78.5,37800000,378000,443000,78.5,56600000,0],
+['SHS 200×10',200,200,10,10,7600,59.7,45900000,459000,542000,77.7,45900000,459000,542000,77.7,68600000,0],
+['SHS 200×12',200,200,12,12,9020,70.8,53400000,534000,637000,76.9,53400000,534000,637000,76.9,79700000,0],
+['SHS 220×8',220,220,8,8,6780,53.2,50900000,463000,540000,86.6,50900000,463000,540000,86.6,76200000,0],
+['SHS 220×10',220,220,10,10,8400,65.9,61900000,563000,662000,85.8,61900000,563000,662000,85.8,92600000,0],
+['SHS 250×8',250,250,8,8,7740,60.8,75700000,605000,703000,98.9,75700000,605000,703000,98.9,113000000,0],
+['SHS 250×10',250,250,10,10,9600,75.4,92300000,739000,864000,98.1,92300000,739000,864000,98.1,138000000,0],
+['SHS 250×12',250,250,12,12,11400,89.7,108000000,865000,1020000,97.3,108000000,865000,1020000,97.3,162000000,0],
+['SHS 300×8',300,300,8,8,9340,73.3,133000000,886000,1020000,119.0,133000000,886000,1020000,119.0,199000000,0],
+['SHS 300×10',300,300,10,10,11600,91.1,163000000,1090000,1260000,118.0,163000000,1090000,1260000,118.0,244000000,0],
+['SHS 300×12',300,300,12,12,13800,109.0,191000000,1280000,1490000,118.0,191000000,1280000,1490000,118.0,287000000,0],
+['SHS 300×16',300,300,16,16,18200,143.0,245000000,1630000,1940000,116.0,245000000,1630000,1940000,116.0,367000000,0],
+['SHS 350×10',350,350,10,10,13600,107.0,262000000,1500000,1730000,139.0,262000000,1500000,1730000,139.0,393000000,0],
+['SHS 350×12',350,350,12,12,16200,127.0,309000000,1770000,2060000,138.0,309000000,1770000,2060000,138.0,463000000,0],
+['SHS 350×16',350,350,16,16,21400,168.0,398000000,2280000,2680000,137.0,398000000,2280000,2680000,137.0,596000000,0],
+['SHS 400×10',400,400,10,10,15600,122.0,396000000,1980000,2280000,159.0,396000000,1980000,2280000,159.0,593000000,0],
+['SHS 400×12',400,400,12,12,18600,146.0,468000000,2340000,2710000,158.0,468000000,2340000,2710000,158.0,701000000,0],
+['SHS 400×16',400,400,16,16,24600,193.0,605000000,3030000,3540000,157.0,605000000,3030000,3540000,157.0,906000000,0],
+['SHS 450×12',450,450,12,12,21000,165.0,673000000,2990000,3450000,179.0,673000000,2990000,3450000,179.0,1010000000,0],
+['SHS 450×16',450,450,16,16,27800,218.0,873000000,3880000,4520000,177.0,873000000,3880000,4520000,177.0,1310000000,0],
+['SHS 500×12',500,500,12,12,23400,184.0,930000000,3720000,4290000,199.0,930000000,3720000,4290000,199.0,1390000000,0],
+['SHS 500×16',500,500,16,16,31000,243.0,1210000000,4840000,5620000,198.0,1210000000,4840000,5620000,198.0,1810000000,0],
+// CHS — Circular Hollow Section (EN 10210/10219) — Cw=0, d=bf=D, fully symmetric
+['CHS 21.3×2.0',21.3,21.3,2,2,121,0.95,5710,536,748,6.86,5710,536,748,6.86,11400,0],
+['CHS 21.3×2.6',21.3,21.3,2.6,2.6,153,1.2,6810,639,915,6.68,6810,639,915,6.68,13600,0],
+['CHS 21.3×3.2',21.3,21.3,3.2,3.2,182,1.43,7680,722,1060,6.5,7680,722,1060,6.5,15400,0],
+['CHS 26.9×2.0',26.9,26.9,2,2,156,1.23,12200,907,1240,8.83,12200,907,1240,8.83,24400,0],
+['CHS 26.9×2.6',26.9,26.9,2.6,2.6,198,1.56,14800,1100,1540,8.64,14800,1100,1540,8.64,29600,0],
+['CHS 26.9×3.2',26.9,26.9,3.2,3.2,238,1.87,17000,1270,1810,8.46,17000,1270,1810,8.46,34100,0],
+['CHS 33.7×2.6',33.7,33.7,2.6,2.6,254,1.99,30900,1840,2520,11.0,30900,1840,2520,11.0,61900,0],
+['CHS 33.7×3.2',33.7,33.7,3.2,3.2,307,2.41,36000,2140,2990,10.8,36000,2140,2990,10.8,72100,0],
+['CHS 33.7×4.0',33.7,33.7,4,4,373,2.93,41900,2490,3550,10.6,41900,2490,3550,10.6,83800,0],
+['CHS 42.4×2.6',42.4,42.4,2.6,2.6,325,2.55,64600,3050,4120,14.1,64600,3050,4120,14.1,129000,0],
+['CHS 42.4×3.2',42.4,42.4,3.2,3.2,394,3.09,76200,3590,4930,13.9,76200,3590,4930,13.9,152000,0],
+['CHS 42.4×4.0',42.4,42.4,4,4,483,3.79,89900,4240,5920,13.6,89900,4240,5920,13.6,180000,0],
+['CHS 42.4×5.0',42.4,42.4,5,5,587,4.61,105000,4930,7040,13.3,105000,4930,7040,13.3,209000,0],
+['CHS 48.3×2.6',48.3,48.3,2.6,2.6,373,2.93,97800,4050,5440,16.2,97800,4050,5440,16.2,196000,0],
+['CHS 48.3×3.2',48.3,48.3,3.2,3.2,453,3.56,116000,4800,6520,16.0,116000,4800,6520,16.0,232000,0],
+['CHS 48.3×4.0',48.3,48.3,4,4,557,4.37,138000,5700,7870,15.7,138000,5700,7870,15.7,275000,0],
+['CHS 48.3×5.0',48.3,48.3,5,5,680,5.34,162000,6690,9420,15.4,162000,6690,9420,15.4,323000,0],
+['CHS 60.3×3.2',60.3,60.3,3.2,3.2,574,4.51,235000,7780,10400,20.2,235000,7780,10400,20.2,469000,0],
+['CHS 60.3×4.0',60.3,60.3,4,4,707,5.55,282000,9340,12700,20.0,282000,9340,12700,20.0,563000,0],
+['CHS 60.3×5.0',60.3,60.3,5,5,869,6.82,335000,11100,15300,19.6,335000,11100,15300,19.6,670000,0],
+['CHS 60.3×6.3',60.3,60.3,6.3,6.3,1070,8.39,395000,13100,18500,19.2,395000,13100,18500,19.2,790000,0],
+['CHS 76.1×3.2',76.1,76.1,3.2,3.2,733,5.75,488000,12800,17000,25.8,488000,12800,17000,25.8,976000,0],
+['CHS 76.1×4.0',76.1,76.1,4,4,906,7.11,591000,15500,20800,25.5,591000,15500,20800,25.5,1180000,0],
+['CHS 76.1×5.0',76.1,76.1,5,5,1120,8.77,709000,18600,25300,25.2,709000,18600,25300,25.2,1420000,0],
+['CHS 76.1×6.3',76.1,76.1,6.3,6.3,1380,10.8,848000,22300,30800,24.8,848000,22300,30800,24.8,1700000,0],
+['CHS 88.9×3.2',88.9,88.9,3.2,3.2,862,6.76,792000,17800,23500,30.3,792000,17800,23500,30.3,1580000,0],
+['CHS 88.9×4.0',88.9,88.9,4,4,1070,8.38,963000,21700,28900,30.0,963000,21700,28900,30.0,1930000,0],
+['CHS 88.9×5.0',88.9,88.9,5,5,1320,10.3,1160000,26200,35200,29.7,1160000,26200,35200,29.7,2330000,0],
+['CHS 88.9×6.3',88.9,88.9,6.3,6.3,1630,12.8,1400000,31500,43100,29.3,1400000,31500,43100,29.3,2800000,0],
+['CHS 88.9×8.0',88.9,88.9,8,8,2030,16.0,1680000,37800,52500,28.7,1680000,37800,52500,28.7,3360000,0],
+['CHS 101.6×3.6',101.6,101.6,3.6,3.6,1110,8.7,1330000,26200,34600,34.7,1330000,26200,34600,34.7,2660000,0],
+['CHS 101.6×4.0',101.6,101.6,4,4,1230,9.63,1460000,28800,38100,34.5,1460000,28800,38100,34.5,2930000,0],
+['CHS 101.6×5.0',101.6,101.6,5,5,1520,11.9,1770000,34900,46700,34.2,1770000,34900,46700,34.2,3550000,0],
+['CHS 101.6×6.3',101.6,101.6,6.3,6.3,1890,14.8,2150000,42300,57300,33.8,2150000,42300,57300,33.8,4300000,0],
+['CHS 101.6×8.0',101.6,101.6,8,8,2350,18.5,2600000,51100,70300,33.2,2600000,51100,70300,33.2,5190000,0],
+['CHS 114.3×3.6',114.3,114.3,3.6,3.6,1250,9.83,1920000,33600,44100,39.2,1920000,33600,44100,39.2,3840000,0],
+['CHS 114.3×5.0',114.3,114.3,5,5,1720,13.5,2570000,45000,59800,38.7,2570000,45000,59800,38.7,5140000,0],
+['CHS 114.3×6.3',114.3,114.3,6.3,6.3,2140,16.8,3130000,54700,73600,38.2,3130000,54700,73600,38.2,6250000,0],
+['CHS 114.3×8.0',114.3,114.3,8,8,2670,21.0,3790000,66400,90600,37.7,3790000,66400,90600,37.7,7590000,0],
+['CHS 114.3×10.0',114.3,114.3,10,10,3280,25.7,4500000,78700,109000,37.0,4500000,78700,109000,37.0,8990000,0],
+['CHS 127.0×4.0',127,127,4,4,1550,12.1,2930000,46100,60500,43.5,2930000,46100,60500,43.5,5850000,0],
+['CHS 127.0×5.0',127,127,5,5,1920,15.0,3570000,56200,74500,43.2,3570000,56200,74500,43.2,7140000,0],
+['CHS 127.0×6.3',127,127,6.3,6.3,2390,18.8,4360000,68700,91900,42.7,4360000,68700,91900,42.7,8720000,0],
+['CHS 127.0×8.0',127,127,8,8,2990,23.5,5320000,83700,113000,42.2,5320000,83700,113000,42.2,10600000,0],
+['CHS 127.0×10.0',127,127,10,10,3680,28.9,6340000,99800,137000,41.5,6340000,99800,137000,41.5,12700000,0],
+['CHS 139.7×4.0',139.7,139.7,4,4,1710,13.4,3930000,56200,73700,48.0,3930000,56200,73700,48.0,7860000,0],
+['CHS 139.7×5.0',139.7,139.7,5,5,2120,16.6,4810000,68800,90800,47.7,4810000,68800,90800,47.7,9610000,0],
+['CHS 139.7×6.3',139.7,139.7,6.3,6.3,2640,20.7,5890000,84300,112000,47.2,5890000,84300,112000,47.2,11800000,0],
+['CHS 139.7×8.0',139.7,139.7,8,8,3310,26.0,7200000,103000,139000,46.6,7200000,103000,139000,46.6,14400000,0],
+['CHS 139.7×10.0',139.7,139.7,10,10,4070,32.0,8620000,123000,169000,46.0,8620000,123000,169000,46.0,17200000,0],
+['CHS 152.4×4.0',152.4,152.4,4,4,1860,14.6,5140000,67400,88100,52.5,5140000,67400,88100,52.5,10300000,0],
+['CHS 152.4×5.0',152.4,152.4,5,5,2320,18.2,6300000,82600,109000,52.1,6300000,82600,109000,52.1,12600000,0],
+['CHS 152.4×6.3',152.4,152.4,6.3,6.3,2890,22.7,7730000,101000,135000,51.7,7730000,101000,135000,51.7,15500000,0],
+['CHS 152.4×8.0',152.4,152.4,8,8,3630,28.5,9490000,125000,167000,51.1,9490000,125000,167000,51.1,19000000,0],
+['CHS 152.4×10.0',152.4,152.4,10,10,4470,35.1,11400000,150000,203000,50.5,11400000,150000,203000,50.5,22800000,0],
+['CHS 168.3×4.0',168.3,168.3,4,4,2060,16.2,6970000,82800,108000,58.1,6970000,82800,108000,58.1,13900000,0],
+['CHS 168.3×5.0',168.3,168.3,5,5,2570,20.1,8560000,102000,133000,57.8,8560000,102000,133000,57.8,17100000,0],
+['CHS 168.3×6.3',168.3,168.3,6.3,6.3,3210,25.2,10500000,125000,165000,57.3,10500000,125000,165000,57.3,21100000,0],
+['CHS 168.3×8.0',168.3,168.3,8,8,4030,31.6,13000000,154000,206000,56.7,13000000,154000,206000,56.7,25900000,0],
+['CHS 168.3×10.0',168.3,168.3,10,10,4970,39.0,15600000,186000,251000,56.1,15600000,186000,251000,56.1,31300000,0],
+['CHS 168.3×12.5',168.3,168.3,12.5,12.5,6120,48.0,18700000,222000,304000,55.3,18700000,222000,304000,55.3,37400000,0],
+['CHS 193.7×5.0',193.7,193.7,5,5,2960,23.3,13200000,136000,178000,66.7,13200000,136000,178000,66.7,26400000,0],
+['CHS 193.7×6.3',193.7,193.7,6.3,6.3,3710,29.1,16300000,168000,221000,66.3,16300000,168000,221000,66.3,32600000,0],
+['CHS 193.7×8.0',193.7,193.7,8,8,4670,36.6,20200000,208000,276000,65.7,20200000,208000,276000,65.7,40300000,0],
+['CHS 193.7×10.0',193.7,193.7,10,10,5770,45.3,24400000,252000,338000,65.0,24400000,252000,338000,65.0,48800000,0],
+['CHS 193.7×12.5',193.7,193.7,12.5,12.5,7120,55.9,29300000,303000,411000,64.2,29300000,303000,411000,64.2,58700000,0],
+['CHS 219.1×5.0',219.1,219.1,5,5,3360,26.4,19300000,176000,229000,75.7,19300000,176000,229000,75.7,38600000,0],
+['CHS 219.1×6.3',219.1,219.1,6.3,6.3,4210,33.1,23900000,218000,285000,75.3,23900000,218000,285000,75.3,47700000,0],
+['CHS 219.1×8.0',219.1,219.1,8,8,5310,41.6,29600000,270000,357000,74.7,29600000,270000,357000,74.7,59200000,0],
+['CHS 219.1×10.0',219.1,219.1,10,10,6570,51.6,36000000,328000,438000,74.0,36000000,328000,438000,74.0,72000000,0],
+['CHS 219.1×12.5',219.1,219.1,12.5,12.5,8110,63.7,43400000,397000,534000,73.2,43400000,397000,534000,73.2,86900000,0],
+['CHS 219.1×16.0',219.1,219.1,16,16,10200,80.1,53000000,483000,661000,72.0,53000000,483000,661000,72.0,106000000,0],
+['CHS 244.5×5.0',244.5,244.5,5,5,3760,29.5,27000000,221000,287000,84.7,27000000,221000,287000,84.7,54000000,0],
+['CHS 244.5×6.3',244.5,244.5,6.3,6.3,4710,37.0,33500000,274000,358000,84.2,33500000,274000,358000,84.2,66900000,0],
+['CHS 244.5×8.0',244.5,244.5,8,8,5940,46.7,41600000,340000,448000,83.7,41600000,340000,448000,83.7,83200000,0],
+['CHS 244.5×10.0',244.5,244.5,10,10,7370,57.8,50700000,415000,550000,83.0,50700000,415000,550000,83.0,101000000,0],
+['CHS 244.5×12.5',244.5,244.5,12.5,12.5,9110,71.5,61500000,503000,673000,82.1,61500000,503000,673000,82.1,123000000,0],
+['CHS 273.0×6.3',273,273,6.3,6.3,5280,41.4,47000000,344000,448000,94.3,47000000,344000,448000,94.3,93900000,0],
+['CHS 273.0×8.0',273,273,8,8,6660,52.3,58500000,429000,562000,93.7,58500000,429000,562000,93.7,117000000,0],
+['CHS 273.0×10.0',273,273,10,10,8260,64.9,71500000,524000,692000,93.1,71500000,524000,692000,93.1,143000000,0],
+['CHS 273.0×12.5',273,273,12.5,12.5,10200,80.3,87000000,637000,849000,92.2,87000000,637000,849000,92.2,174000000,0],
+['CHS 273.0×16.0',273,273,16,16,12900,101.0,107000000,784000,1060000,91.0,107000000,784000,1060000,91.0,214000000,0],
+['CHS 323.9×6.3',323.9,323.9,6.3,6.3,6290,49.3,79300000,490000,636000,112.0,79300000,490000,636000,112.0,159000000,0],
+['CHS 323.9×8.0',323.9,323.9,8,8,7940,62.3,99100000,612000,799000,112.0,99100000,612000,799000,112.0,198000000,0],
+['CHS 323.9×10.0',323.9,323.9,10,10,9860,77.4,122000000,751000,986000,111.0,122000000,751000,986000,111.0,243000000,0],
+['CHS 323.9×12.5',323.9,323.9,12.5,12.5,12200,96.0,148000000,917000,1210000,110.0,148000000,917000,1210000,110.0,297000000,0],
+['CHS 323.9×16.0',323.9,323.9,16,16,15500,121.0,184000000,1140000,1520000,109.0,184000000,1140000,1520000,109.0,368000000,0],
+['CHS 355.6×8.0',355.6,355.6,8,8,8740,68.6,132000000,742000,967000,123.0,132000000,742000,967000,123.0,264000000,0],
+['CHS 355.6×10.0',355.6,355.6,10,10,10900,85.2,162000000,912000,1190000,122.0,162000000,912000,1190000,122.0,324000000,0],
+['CHS 355.6×12.5',355.6,355.6,12.5,12.5,13500,106.0,199000000,1120000,1470000,121.0,199000000,1120000,1470000,121.0,397000000,0],
+['CHS 355.6×16.0',355.6,355.6,16,16,17100,134.0,247000000,1390000,1850000,120.0,247000000,1390000,1850000,120.0,493000000,0],
+['CHS 406.4×8.0',406.4,406.4,8,8,10000,78.6,199000000,978000,1270000,141.0,199000000,978000,1270000,141.0,397000000,0],
+['CHS 406.4×10.0',406.4,406.4,10,10,12500,97.8,245000000,1200000,1570000,140.0,245000000,1200000,1570000,140.0,490000000,0],
+['CHS 406.4×12.5',406.4,406.4,12.5,12.5,15500,121.0,300000000,1480000,1940000,139.0,300000000,1480000,1940000,139.0,601000000,0],
+['CHS 406.4×16.0',406.4,406.4,16,16,19600,154.0,374000000,1840000,2440000,138.0,374000000,1840000,2440000,138.0,749000000,0],
+['CHS 457.0×8.0',457,457,8,8,11300,88.6,284000000,1240000,1610000,159.0,284000000,1240000,1610000,159.0,569000000,0],
+['CHS 457.0×10.0',457,457,10,10,14000,110.0,351000000,1540000,2000000,158.0,351000000,1540000,2000000,158.0,702000000,0],
+['CHS 457.0×12.5',457,457,12.5,12.5,17500,137.0,431000000,1890000,2470000,157.0,431000000,1890000,2470000,157.0,863000000,0],
+['CHS 457.0×16.0',457,457,16,16,22200,174.0,540000000,2360000,3110000,156.0,540000000,2360000,3110000,156.0,1080000000,0],
+['CHS 508.0×8.0',508,508,8,8,12600,98.7,393000000,1550000,2000000,177.0,393000000,1550000,2000000,177.0,786000000,0],
+['CHS 508.0×10.0',508,508,10,10,15600,123.0,485000000,1910000,2480000,176.0,485000000,1910000,2480000,176.0,970000000,0],
+['CHS 508.0×12.5',508,508,12.5,12.5,19500,153.0,598000000,2350000,3070000,175.0,598000000,2350000,3070000,175.0,1200000000,0],
+['CHS 508.0×16.0',508,508,16,16,24700,194.0,749000000,2950000,3870000,174.0,749000000,2950000,3870000,174.0,1500000000,0],
+['CHS 559.0×10.0',559,559,10,10,17200,135.0,650000000,2330000,3010000,194.0,650000000,2330000,3010000,194.0,1300000000,0],
+['CHS 559.0×12.5',559,559,12.5,12.5,21500,168.0,802000000,2870000,3730000,193.0,802000000,2870000,3730000,193.0,1600000000,0],
+['CHS 559.0×16.0',559,559,16,16,27300,214.0,1010000000,3600000,4720000,192.0,1010000000,3600000,4720000,192.0,2010000000,0],
+['CHS 610.0×10.0',610,610,10,10,18800,148.0,848000000,2780000,3600000,212.0,848000000,2780000,3600000,212.0,1700000000,0],
+['CHS 610.0×12.5',610,610,12.5,12.5,23500,184.0,1050000000,3430000,4460000,211.0,1050000000,3430000,4460000,211.0,2100000000,0],
+['CHS 610.0×16.0',610,610,16,16,29900,234.0,1320000000,4320000,5650000,210.0,1320000000,4320000,5650000,210.0,2640000000,0]
+];
+
+// Indian profiles (IS 808): [name,d,bf,tf,tw,A(mm²),W(kg/m),Ix(mm⁴),Sx(mm³),Zx(mm³),rx(mm),Iy(mm⁴),Sy(mm³),Zy(mm³),ry(mm),J(mm⁴),Cw(mm⁶)]
+var IN_DATA=[
+// ISMB — Medium Weight Beams
+['ISMB 100',100,75,7.2,4.0,1460,11.5,2590000,51900,60600,42.2,495000,13200,20500,18.4,20489,1065000000],
+['ISMB 125',125,75,7.6,4.4,1659,13.0,4490000,71800,83800,52.0,529000,14100,21900,17.9,25067,1822000000],
+['ISMB 150',150,80,7.6,4.8,1900,14.9,7260000,96900,113200,61.8,522000,16800,26100,16.6,28381,2645000000],
+['ISMB 175',175,90,8.6,5.5,2462,19.3,12720000,145000,170000,71.9,997000,22200,34200,20.1,46913,6903000000],
+['ISMB 200',200,100,10.8,5.7,3233,25.4,22350000,224000,261000,83.2,1500000,30100,46600,21.5,94994,13430000000],
+['ISMB 225',225,110,11.8,6.5,3972,31.2,34410000,306000,357000,93.0,2180000,39600,61400,23.4,138926,24800000000],
+['ISMB 250',250,125,12.5,6.9,4755,37.3,51320000,411000,480000,103.9,3340000,53400,82700,26.5,187399,47100000000],
+['ISMB 300',300,140,13.1,7.5,5864,46.1,86900000,579000,678000,121.8,4770000,68200,105000,28.5,248312,98200000000],
+['ISMB 350',350,140,14.2,8.1,6671,52.4,136300000,779000,915000,142.9,5380000,76800,119000,28.4,324211,151700000000],
+['ISMB 400',400,140,16.0,8.9,7846,61.6,204580000,1022000,1202000,161.4,6220000,88800,138000,28.2,468770,229300000000],
+['ISMB 450',450,150,17.4,9.4,9227,72.4,303900000,1350000,1590000,181.5,8340000,111000,173000,30.1,641755,390200000000],
+['ISMB 500',500,180,17.2,10.2,11074,86.9,452180000,1809000,2115000,202.1,13700000,152000,235000,35.2,775313,798400000000],
+['ISMB 550',550,190,19.3,11.2,13211,103.7,648930000,2360000,2759000,221.7,18330000,193000,299000,37.3,1150068,1289000000000],
+['ISMB 600',600,210,20.8,12.0,15621,122.6,918130000,3061000,3573000,242.5,26510000,252000,390000,41.2,1581473,2223000000000],
+// ISLB — Light Weight Beams
+['ISLB 75',75,50,5.0,3.7,726,5.70,521000,13900,16400,26.8,97100,3880,6110,11.6,5264,119000000],
+['ISLB 100',100,50,6.4,4.0,1026,8.06,1680000,33600,39600,40.4,154000,6160,9670,12.2,10598,337300000],
+['ISLB 125',125,75,6.5,4.4,1493,11.72,4060000,64900,75700,52.1,499000,13300,20800,18.3,16912,1752000000],
+['ISLB 150',150,80,6.8,4.8,1701,13.36,6880000,91700,107000,63.6,552000,13800,21500,18.0,21798,2832000000],
+['ISLB 175',175,90,7.8,5.1,2209,17.34,12050000,137000,161000,73.8,899000,20000,31100,20.2,35521,6291000000],
+['ISLB 200',200,100,8.6,5.4,2622,20.58,16960000,170000,198000,80.4,1150000,23000,35800,21.0,51999,10540000000],
+['ISLB 225',225,100,9.9,5.8,3028,23.77,26900000,239000,280000,94.2,1310000,26300,40900,20.8,78032,15150000000],
+['ISLB 250',250,125,10.0,6.1,3662,28.74,43540000,348000,407000,109.0,2310000,37000,57500,25.1,100735,33260000000],
+['ISLB 300',300,150,10.6,6.7,4808,37.74,73320000,489000,572000,123.5,3760000,50100,78000,28.0,147053,78750000000],
+['ISLB 350',350,165,11.4,7.4,6052,47.51,131580000,751000,879000,147.4,6310000,76500,119000,32.3,207166,180900000000],
+['ISLB 400',400,165,12.5,8.0,7152,56.14,193060000,965000,1135000,164.2,7160000,86800,135000,31.6,278844,268600000000],
+['ISLB 450',450,170,13.4,8.6,8311,65.24,275360000,1224000,1443000,182.0,8360000,98400,153000,31.7,362359,398400000000],
+['ISLB 500',500,180,14.1,9.2,9550,75.00,385480000,1542000,1818000,201.0,10630000,118000,184000,33.4,458863,627300000000],
+['ISLB 550',550,190,15.0,9.9,10967,86.09,531610000,1933000,2281000,220.1,13500000,142000,222000,35.1,595685,966800000000],
+['ISLB 600',600,210,15.5,10.5,12753,100.11,728680000,2429000,2865000,239.0,19450000,185000,289000,39.1,740949,1661000000000],
+// ISWB — Wide Flange Beams
+['ISWB 150',150,100,7.0,5.4,1930,15.16,7420000,99000,116000,62.0,716000,14300,22200,19.3,30005,3660000000],
+['ISWB 175',175,125,7.4,5.8,2506,19.67,15080000,172000,202000,77.6,1750000,28000,43400,26.4,44195,12290000000],
+['ISWB 200',200,140,9.0,6.1,3552,27.88,26810000,268000,316000,86.8,3040000,43400,67200,29.3,81810,27730000000],
+['ISWB 225',225,150,9.9,6.4,4323,33.94,43450000,386000,454000,100.2,4400000,58600,91000,31.9,114961,50870000000],
+['ISWB 250',250,200,10.7,6.7,6080,47.73,77090000,617000,721000,112.6,11490000,115000,178000,43.5,186257,164600000000],
+['ISWB 300',300,200,10.0,7.1,6133,48.14,98210000,655000,773000,126.5,9880000,98800,153000,40.1,166738,207700000000],
+['ISWB 350',350,200,12.5,8.0,7993,62.77,191530000,1094000,1283000,154.9,11780000,118000,183000,38.4,315883,335400000000],
+['ISWB 400',400,200,13.0,8.0,8500,66.72,250640000,1253000,1473000,171.7,12090000,121000,187000,37.7,356763,452500000000],
+['ISWB 450',450,200,15.4,9.0,10115,79.40,350580000,1558000,1834000,186.2,13100000,131000,203000,36.0,588834,618400000000],
+['ISWB 500',500,250,14.7,10.0,12800,100.50,522910000,2092000,2464000,202.0,29450000,236000,363000,48.0,686287,1733000000000],
+['ISWB 550',550,250,17.6,10.5,14935,117.25,728750000,2650000,3121000,220.9,34640000,277000,428000,48.2,1107310,2452000000000],
+['ISWB 600',600,250,17.8,11.2,14573,114.40,988180000,3294000,3876000,260.2,34710000,278000,430000,48.8,1204206,2940000000000],
+// ISHB — Column/H Sections
+['ISHB 150',150,150,7.0,5.4,2874,22.57,8930000,119000,140000,55.8,3640000,48500,75400,35.6,41438,18610000000],
+['ISHB 200',200,200,9.0,6.1,5259,41.28,36090000,361000,421000,82.8,13280000,133000,204000,50.3,110970,121200000000],
+['ISHB 200A',200,200,9.0,7.0,5598,43.94,38600000,386000,451000,83.0,13400000,134000,206000,48.9,118009,122200000000],
+['ISHB 225',225,225,9.1,6.5,6465,50.75,61860000,550000,641000,97.8,23580000,209000,322000,60.4,131967,275100000000],
+['ISHB 250',250,250,9.7,6.9,7847,61.60,103810000,830000,967000,115.0,38150000,305000,471000,69.7,177037,550900000000],
+['ISHB 300',300,250,10.6,7.6,8667,68.03,125460000,836000,985000,120.3,33100000,265000,408000,61.8,239299,693100000000],
+['ISHB 350',350,250,11.6,8.1,9967,78.23,194500000,1111000,1310000,139.7,34960000,280000,433000,59.2,318048,1001000000000],
+['ISHB 400',400,250,12.7,8.8,11400,89.49,290350000,1452000,1711000,159.6,36040000,288000,447000,56.2,426445,1351000000000],
+['ISHB 450',450,250,13.7,9.8,13167,103.36,415880000,1848000,2176000,177.8,37400000,299000,463000,53.3,561092,1781000000000],
+['ISHB 500',500,250,14.7,10.2,14935,117.24,564920000,2260000,2665000,194.5,38680000,309000,479000,50.9,695891,2278000000000]
+];
+
+var GRADES_US=[{n:'A992 / A572 Gr 50 — Fy = 50 ksi',Fy:50},{n:'A572 Gr 60 — Fy = 60 ksi',Fy:60},{n:'A36 — Fy = 36 ksi',Fy:36}];
+var GRADES_SI=[{n:'S235 — Fy = 235 MPa',Fy:235},{n:'S275 — Fy = 275 MPa',Fy:275},{n:'S355 — Fy = 355 MPa',Fy:355},{n:'S460 — Fy = 460 MPa',Fy:460}];
+var GRADES_IN=[{n:'IS 2062 E250 — Fy = 250 MPa',Fy:250},{n:'IS 2062 E300 — Fy = 300 MPa',Fy:300},{n:'IS 2062 E350 — Fy = 350 MPa',Fy:350},{n:'IS 2062 E410 — Fy = 410 MPa',Fy:410}];
+
+var TYPES_US=[{key:'W',label:'W — Wide Flange (ASTM)'}];
+var TYPES_SI=[
+  {key:'IPE',label:'IPE — Parallel Flange I-Beam (EN 10365)'},
+  {key:'HEA',label:'HEA — Wide Flange H, Light (EN 10365)'},
+  {key:'HEB',label:'HEB — Wide Flange H, Medium (EN 10365)'},
+  {key:'HEM',label:'HEM — Wide Flange H, Heavy (EN 10365)'},
+  {key:'HD', label:'HD — Heavy Column Section (EN 10365)'},
+  {key:'RHS',label:'RHS — Rectangular Hollow Section (EN 10210)'},
+  {key:'SHS',label:'SHS — Square Hollow Section (EN 10210)'},
+  {key:'CHS',label:'CHS — Circular Hollow Section (EN 10210)'}
+];
+var TYPES_IN=[
+  {key:'ISMB',label:'ISMB — Medium Weight Beam (IS 808)'},
+  {key:'ISLB',label:'ISLB — Light Weight Beam (IS 808)'},
+  {key:'ISWB',label:'ISWB — Wide Flange Beam (IS 808)'},
+  {key:'ISHB',label:'ISHB — Column/H Section (IS 808)'}
+];
+
+var BC_UNIT='us';
+var BC_CODE='aisc';
+var BC_SEC_TYPE='W';
+
+function fmt(v,d){return(isNaN(v)||!isFinite(v))?'—':(+v).toFixed(d);}
+
+// ── CODE SWITCHER ────────────────────────────────────────────────────────────
+function bcSetCode(c){
+  BC_CODE=c;
+  ['aisc','ec3','is800','tsds'].forEach(function(x){
+    document.getElementById('bc-btn-'+x).classList.toggle('active',x===c);
+  });
+  var uBtn=document.getElementById('bc-btn-us');
+  var noUS=c!=='aisc';
+  uBtn.disabled=noUS;uBtn.style.opacity=noUS?'0.4':'';uBtn.style.cursor=noUS?'not-allowed':'';
+  if(noUS&&BC_UNIT==='us'){bcSetUnit('si');}
+  else{bcPopGrades();bcPopTypes();bcUpdateLabels();bcAutoCalc();}
+}
+
+// ── UNIT SWITCHER ────────────────────────────────────────────────────────────
+function bcSetUnit(u){
+  BC_UNIT=u;
+  document.getElementById('bc-btn-us').classList.toggle('active',u==='us');
+  document.getElementById('bc-btn-si').classList.toggle('active',u==='si');
+  document.getElementById('bc-L').value  =u==='us'?14:4;
+  document.getElementById('bc-Pu').value =u==='us'?100:450;
+  document.getElementById('bc-Mux').value=u==='us'?100:135;
+  document.getElementById('bc-Muy').value=0;
+  document.getElementById('bc-lb-x').value=1.00;
+  document.getElementById('bc-lb-y').value=1.00;
+  document.getElementById('bc-bc-x').selectedIndex=0;
+  document.getElementById('bc-bc-y').selectedIndex=0;
+  bcPopGrades();
+  bcPopTypes();
+  // For SI default: select HEB type first, then find HEB 240
+  if(u==='si'){
+    var tp=document.getElementById('bc-sec-type');
+    for(var j=0;j<tp.options.length;j++){if(tp.options[j].value==='HEB'){tp.selectedIndex=j;break;}}
+    bcPopSections();
+  }
+  var defSec=u==='us'?'W14\xd782':'HEB 240';
+  var sel=document.getElementById('bc-section');
+  for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===defSec){sel.selectedIndex=i;break;}}
+  bcUpdateLabels();
+  bcSecChange();
+}
+
+function bcPopGrades(){
+  var gr=BC_UNIT==='us'?GRADES_US:(BC_CODE==='is800'?GRADES_IN:GRADES_SI);
+  var defFy=BC_UNIT==='us'?50:(BC_CODE==='is800'?250:355);
+  document.getElementById('bc-grade').innerHTML=gr.map(function(g){
+    return '<option value="'+g.Fy+'"'+(g.Fy===defFy?' selected':'')+'>'+g.n+'</option>';
+  }).join('');
+}
+
+function bcUpdateLabels(){
+  var isUS=BC_UNIT==='us';
+  var fU=isUS?'kip':'kN',mU=isUS?'kip\xb7ft':'kN\xb7m',lU=isUS?'ft':'m';
+  var uStr=isUS?'kip \xb7 ft \xb7 in':'kN \xb7 m \xb7 mm';
+  var codeLabel={aisc:'AISC 360',ec3:'EN 1993-1-1',is800:'IS 800:2007',tsds:'TSDS 2016'}[BC_CODE];
+  var subtitles={
+    aisc:'AISC 360 LRFD — combined axial + biaxial bending, Chapter H interaction. Axial per Ch. E, flexural per Ch. F2/F6.',
+    ec3:'EN 1993-1-1 §6.3.3 Method 2 (Annex B) — interaction Eq. 6.61/6.62. Axial per §6.3.1, LTB per §6.3.2.3.',
+    is800:'IS 800:2007 §9.3.2.2 — linear interaction P/Pₙ + Mₓ/Mₙˣ + Mʸ/Mₙˠ ≤ 1.0. Buckling per §7, LTB per §8.2.',
+    tsds:'TSDS 2016 LRFD — same as AISC 360 in SI units (E=200 000 MPa). Interaction per Chapter H.'
+  };
+  document.getElementById('bc-subtitle').textContent=subtitles[BC_CODE];
+  document.getElementById('bc-unit-tag').textContent=uStr;
+  document.getElementById('bc-rh-code').textContent=codeLabel+' \xb7 '+uStr;
+  document.getElementById('bc-L-lbl').textContent='['+lU+']';
+  document.getElementById('bc-L-us').textContent=lU;
+  document.getElementById('bc-Pu-lbl').textContent='['+fU+']';
+  document.getElementById('bc-Pu-us').textContent=fU;
+  document.getElementById('bc-Mux-lbl').textContent='['+mU+']';
+  document.getElementById('bc-Mux-us').textContent=mU;
+  document.getElementById('bc-Muy-lbl').textContent='['+mU+']';
+  document.getElementById('bc-Muy-us').textContent=mU;
+}
+
+// ── SECTION SELECTOR ─────────────────────────────────────────────────────────
+function bcPopTypes(){
+  var types=BC_UNIT==='us'?TYPES_US:(BC_CODE==='is800'?TYPES_IN:TYPES_SI);
+  BC_SEC_TYPE=types[0].key;
+  var sel=document.getElementById('bc-sec-type');
+  sel.innerHTML=types.map(function(t){
+    return '<option value="'+t.key+'">'+t.label+'</option>';
+  }).join('');
+  bcPopSections();
+}
+
+function bcPopSections(){
+  BC_SEC_TYPE=document.getElementById('bc-sec-type').value;
+  var sel=document.getElementById('bc-section');
+  sel.innerHTML='';
+  if(BC_UNIT==='us'){
+    // W sections grouped by nominal depth
+    var groups={};
+    W_DATA.forEach(function(s){
+      var m=s[0].match(/^W(\d+)/);var dep=m?parseInt(m[1]):999;
+      if(!groups[dep])groups[dep]=[];groups[dep].push(s);
+    });
+    Object.keys(groups).map(Number).sort(function(a,b){return a-b;}).forEach(function(dep){
+      var og=document.createElement('optgroup');og.label='W'+dep+' series';
+      groups[dep].forEach(function(s){var o=document.createElement('option');o.value=s[0];o.textContent=s[0];og.appendChild(o);});
+      sel.appendChild(og);
+    });
+  } else if(BC_CODE==='is800'){
+    IN_DATA.filter(function(s){return s[0].startsWith(BC_SEC_TYPE);}).forEach(function(s){
+      var o=document.createElement('option');o.value=s[0];o.textContent=s[0];sel.appendChild(o);
+    });
+  } else {
+    // EU sections filtered by selected type prefix
+    EU_DATA.filter(function(s){return s[0].startsWith(BC_SEC_TYPE);}).forEach(function(s){
+      var o=document.createElement('option');o.value=s[0];o.textContent=s[0];sel.appendChild(o);
+    });
+  }
+  sel.selectedIndex=0;
+  bcSecChange();
+}
+
+function bcGetSec(name){
+  var db=BC_UNIT==='us'?W_DATA:(BC_CODE==='is800'?IN_DATA:EU_DATA);
+  return db.find(function(s){return s[0]===name;})||null;
+}
+
+function bcSecChange(){
+  var sec=bcGetSec(document.getElementById('bc-section').value);
+  var schDiv=document.getElementById('bc-schema');
+  if(!sec){schDiv.style.display='none';return;}
+  schDiv.style.display='';
+  bcUpdateSvg();
+  bcAutoCalc();
+}
+
+// ── SVG ──────────────────────────────────────────────────────────────────────
+function bcUpdateSvg(){
+  var cx=100,cy=84,axR=72,col='#5b8fc4',ac='#888',s='';
+  if(BC_SEC_TYPE==='CHS'){
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="24" fill="'+col+'"/>';
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="17" fill="#fff"/>';
+  }else if(BC_SEC_TYPE==='RHS'||BC_SEC_TYPE==='SHS'){
+    var W=BC_SEC_TYPE==='SHS'?46:52,H=BC_SEC_TYPE==='SHS'?46:42,t=6;
+    s+='<rect x="'+(cx-W/2)+'" y="'+(cy-H/2)+'" width="'+W+'" height="'+H+'" fill="'+col+'"/>';
+    s+='<rect x="'+(cx-W/2+t)+'" y="'+(cy-H/2+t)+'" width="'+(W-2*t)+'" height="'+(H-2*t)+'" fill="#fff"/>';
+  }else{
+    var fw=58,fh=9,ww=7,wh=46;
+    s+='<rect x="'+(cx-fw/2)+'" y="'+(cy-wh/2-fh)+'" width="'+fw+'" height="'+fh+'" rx="1" fill="'+col+'"/>';
+    s+='<rect x="'+(cx-ww/2)+'" y="'+(cy-wh/2)+'" width="'+ww+'" height="'+wh+'" fill="'+col+'"/>';
+    s+='<rect x="'+(cx-fw/2)+'" y="'+(cy+wh/2)+'" width="'+fw+'" height="'+fh+'" rx="1" fill="'+col+'"/>';
+  }
+  s+='<line x1="'+(cx-axR)+'" y1="'+cy+'" x2="'+(cx+axR)+'" y2="'+cy+'" stroke="'+ac+'" stroke-width="1.2" stroke-dasharray="5,3"/>';
+  s+='<line x1="'+cx+'" y1="'+(cy-axR)+'" x2="'+cx+'" y2="'+(cy+axR)+'" stroke="'+ac+'" stroke-width="1.2" stroke-dasharray="5,3"/>';
+  s+='<text x="'+(cx-axR-3)+'" y="'+(cy+4)+'" text-anchor="end" font-size="10" font-family="sans-serif" fill="'+ac+'" font-weight="bold">x</text>';
+  s+='<text x="'+(cx+axR+3)+'" y="'+(cy+4)+'" text-anchor="start" font-size="10" font-family="sans-serif" fill="'+ac+'" font-weight="bold">x</text>';
+  s+='<text x="'+cx+'" y="'+(cy-axR-5)+'" text-anchor="middle" font-size="10" font-family="sans-serif" fill="'+ac+'" font-weight="bold">y</text>';
+  s+='<text x="'+cx+'" y="'+(cy+axR+13)+'" text-anchor="middle" font-size="10" font-family="sans-serif" fill="'+ac+'" font-weight="bold">y</text>';
+  document.getElementById('bc-svg').innerHTML=s;
+}
+
+// ── CALCULATIONS ─────────────────────────────────────────────────────────────
+function bcReadInputs(){
+  var sr=bcGetSec(document.getElementById('bc-section').value);
+  if(!sr)return null;
+  var Fy=parseFloat(document.getElementById('bc-grade').value)||50;
+  var Lin=parseFloat(document.getElementById('bc-L').value)||0;
+  if(Lin<=0)return null;
+  var bcXv=document.getElementById('bc-bc-x').value;
+  var bcYv=document.getElementById('bc-bc-y').value;
+  var KX={pp:1.00,pf:0.80,ff:0.65}[bcXv];
+  var KY={pp:1.00,pf:0.80,ff:0.65}[bcYv];
+  var lbXlbl={pp:'Pin–Pin',pf:'Pin–Fixed',ff:'Fixed–Fixed'}[bcXv];
+  var lbYlbl={pp:'Pin–Pin',pf:'Pin–Fixed',ff:'Fixed–Fixed'}[bcYv];
+  var lrx=Math.min(1,Math.max(0.05,parseFloat(document.getElementById('bc-lb-x').value)||1));
+  var lry=Math.min(1,Math.max(0.05,parseFloat(document.getElementById('bc-lb-y').value)||1));
+  var Pu=Math.max(0,parseFloat(document.getElementById('bc-Pu').value)||0);
+  var Mux=Math.abs(parseFloat(document.getElementById('bc-Mux').value)||0);
+  var Muy=Math.abs(parseFloat(document.getElementById('bc-Muy').value)||0);
+  return{sr:sr,Fy:Fy,Lin:Lin,KX:KX,KY:KY,lbXlbl:lbXlbl,lbYlbl:lbYlbl,lrx:lrx,lry:lry,Pu:Pu,Mux:Mux,Muy:Muy};
+}
+
+function bcCalcAISC(i){
+  var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var lbXlbl=i.lbXlbl,lbYlbl=i.lbYlbl;
+
+  var isUS=BC_UNIT==='us';
+  var E=isUS?29000:200000;
+  var lf=isUS?12:1000; // ft→in or m→mm
+
+  // Section properties — US: raw in/in²/in³/in⁴/in⁶; SI: raw mm/mm²/mm³/mm⁴/mm⁶
+  var A =sr[5], d=sr[1], tf=sr[3];
+  var rx=sr[10],ry=sr[14];
+  var Zx=sr[9], Sx=sr[8], Zy=sr[13], Sy=sr[12];
+  var Iy=sr[11],J=sr[15], Cw=sr[16];
+  var ho=d-tf;
+
+  var Lbx=lrx*Lin, Lby=lry*Lin;
+  var KLx=KX*Lbx*lf, KLy=KY*Lby*lf; // in or mm
+
+  // LTB unbraced length = weak-axis unbraced length; Cb = 1.0 (uniform moment)
+  var Lb=Lby; // display units (ft or m)
+  var LbR=Lb*lf; // in or mm
+
+  // Ch. E
+  var lx=KLx/rx, ly=KLy/ry;
+  var lMax=Math.max(lx,ly), govAx=lx>=ly?'x':'y';
+  var lLim=4.71*Math.sqrt(E/Fy);
+  var Fe=Math.PI*Math.PI*E/(lMax*lMax);
+  var Fcr,bMode;
+  if(lMax<=lLim){Fcr=Math.pow(0.658,Fy/Fe)*Fy;bMode='Inelastic';}
+  else          {Fcr=0.877*Fe;                  bMode='Elastic';}
+  var Pn=isUS?Fcr*A:Fcr*A/1000;
+  var phiPn=0.90*Pn;
+
+  // Ch. F2
+  var Mp =isUS?Fy*Zx/12:Fy*Zx/1e6;
+  var M07=isUS?0.7*Fy*Sx/12:0.7*Fy*Sx/1e6;
+  var Lp =1.76*ry*Math.sqrt(E/Fy)/lf;
+  var tv =J/(Sx*ho);
+  var rts,Lr;
+  if(Cw>0){rts=Math.sqrt(Math.sqrt(Iy*Cw)/Sx);Lr=1.95*rts*(E/(0.7*Fy))*Math.sqrt(tv+Math.sqrt(tv*tv+6.76*Math.pow(0.7*Fy/E,2)))/lf;}
+  else{rts=0;Lr=0;}
+  var Mnx,ltbMode;
+  if(Cw===0||Lb<=Lp){
+    Mnx=Mp; ltbMode=Cw===0?'No LTB (closed section)':'Plastic (Lᵇ ≤ Lₚ)';
+  } else if(Lb<=Lr){
+    Mnx=Math.min(Mp-(Mp-M07)*(Lb-Lp)/(Lr-Lp),Mp); ltbMode='Inelastic LTB';
+  } else {
+    var LbRts=LbR/rts;
+    var Fc2=Math.PI*Math.PI*E/(LbRts*LbRts)*Math.sqrt(1+0.078*tv*LbRts*LbRts);
+    Mnx=Math.min(isUS?Fc2*Sx/12:Fc2*Sx/1e6,Mp); ltbMode='Elastic LTB';
+  }
+  var phiMnx=0.90*Mnx;
+
+  // Ch. F6
+  var Mpy =isUS?Fy*Zy/12:Fy*Zy/1e6;
+  var capy =isUS?1.6*Fy*Sy/12:1.6*Fy*Sy/1e6;
+  var Mny  =Math.min(Mpy,capy);
+  var phiMny=0.90*Mny;
+
+  // Ch. H
+  var rP =phiPn>0?Pu/phiPn:999;
+  var rMx=phiMnx>0?Mux/phiMnx:0;
+  var rMy=phiMny>0?Muy/phiMny:0;
+  var H,eq;
+  if(rP>=0.2){H=rP+(8/9)*(rMx+rMy);eq='H1-1a';}
+  else       {H=rP/2+rMx+rMy;       eq='H1-1b';}
+
+  return{
+    code:BC_CODE,name:sr[0],Fy:Fy,E:E,isUS:isUS,lf:lf,
+    L:Lin,KX:KX,KY:KY,lbXlbl:lbXlbl,lbYlbl:lbYlbl,lrx:lrx,lry:lry,Lbx:Lbx,Lby:Lby,KLx:KLx,KLy:KLy,
+    A:A,rx:rx,ry:ry,lx:lx,ly:ly,lMax:lMax,govAx:govAx,lLim:lLim,Fe:Fe,Fcr:Fcr,bMode:bMode,Pn:Pn,phiPn:phiPn,
+    rts:rts,ho:ho,Iy:Iy,Cw:Cw,Zx:Zx,Sx:Sx,Zy:Zy,Sy:Sy,J:J,tv:tv,
+    Lb:Lb,LbR:LbR,Lp:Lp,Lr:Lr,Mp:Mp,M07:M07,Mnx:Mnx,phiMnx:phiMnx,ltbMode:ltbMode,
+    Mpy:Mpy,capy:capy,Mny:Mny,phiMny:phiMny,
+    Pu:Pu,Mux:Mux,Muy:Muy,rP:rP,rMx:rMx,rMy:rMy,H:H,eq:eq,DCR:H,slOk:lMax<=200,
+    uF:isUS?'kip':'kN',uM:isUS?'kip\xb7ft':'kN\xb7m',uL:isUS?'ft':'m',
+    uSt:isUS?'ksi':'MPa',uLen:isUS?'in':'mm'
+  };
+}
+
+function bcCalcEC3(i){
+  var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var E=210000,G=81000,gM0=1.0,gM1=1.0,lf=1000;
+  var A=sr[5],d=sr[1],bf=sr[2],tf=sr[3];
+  var Ix=sr[7],Sx=sr[8],Zx=sr[9],rx=sr[10];
+  var Iy=sr[11],Sy=sr[12],Zy=sr[13],ry=sr[14];
+  var J=sr[15],Cw=sr[16];
+  var hb=d/bf;
+  var Lbx=lrx*Lin,Lby=lry*Lin;
+  var KLy_mm=KX*Lbx*lf,KLz_mm=KY*Lby*lf;
+  var Lb_mm=lry*Lin*lf;
+  // Axial §6.3.1
+  var NRk_N=A*Fy,NRk_kN=NRk_N/1000;
+  var Ncr_y=Math.PI*Math.PI*E*Ix/(KLy_mm*KLy_mm);
+  var Ncr_z=Math.PI*Math.PI*E*Iy/(KLz_mm*KLz_mm);
+  var lam_y=Math.sqrt(NRk_N/Ncr_y),lam_z=Math.sqrt(NRk_N/Ncr_z);
+  var ay,az,curveY,curveZ;
+  if(Cw===0)         {ay=0.21;az=0.21;curveY='a (α=0.21)';curveZ='a (α=0.21)';}
+  else if(hb>1.2&&tf<=100){ay=0.21;az=0.34;curveY='a (α=0.21)';curveZ='b (α=0.34)';}
+  else               {ay=0.34;az=0.49;curveY='b (α=0.34)';curveZ='c (α=0.49)';}
+  var phiy=0.5*(1+ay*(lam_y-0.2)+lam_y*lam_y);
+  var chiy=Math.min(1,1/(phiy+Math.sqrt(Math.max(0,phiy*phiy-lam_y*lam_y))));
+  var phiz=0.5*(1+az*(lam_z-0.2)+lam_z*lam_z);
+  var chiz=Math.min(1,1/(phiz+Math.sqrt(Math.max(0,phiz*phiz-lam_z*lam_z))));
+  var NbRdy=chiy*NRk_kN/gM1,NbRdz=chiz*NRk_kN/gM1;
+  // LTB §6.3.2.3
+  var t1=Math.PI/Lb_mm*Math.sqrt(E*Iy*G*J);
+  var t2=Math.sqrt(1+Math.PI*Math.PI*E*Cw/(G*J*Lb_mm*Lb_mm));
+  var Mcr_N=t1*t2,Mcr_kNm=Mcr_N/1e6;
+  var MRky_N=Zx*Fy,MRky_kNm=MRky_N/1e6;
+  var lamLT=Math.sqrt(MRky_N/Mcr_N);
+  var aLT=hb<=2?0.34:0.49,curveLT=hb<=2?'b (α=0.34)':'c (α=0.49)';
+  var chiLT,ltbEC3;
+  if(lamLT<=0.4){chiLT=1.0;ltbEC3='No LTB (λ̄LT ≤ 0.4)';}
+  else{
+    var phiLT=0.5*(1+aLT*(lamLT-0.4)+0.75*lamLT*lamLT);
+    chiLT=Math.min(1,Math.min(1/(phiLT+Math.sqrt(Math.max(0,phiLT*phiLT-0.75*lamLT*lamLT))),1/(lamLT*lamLT)));
+    ltbEC3=lamLT<=1.2?'Inelastic LTB':'Elastic LTB';
+  }
+  var MbRd=chiLT*MRky_kNm/gM1;
+  var MRdz=Zy*Fy/(gM0*1e6);
+  // k-factors Annex B
+  var nEdy=Pu/(chiy*NRk_kN),nEdz=Pu/(chiz*NRk_kN);
+  var kyy=1+Math.min(Math.max(lam_y-0.2,0),0.8)*nEdy;
+  var kzz=1+Math.min(Math.max(2*lam_z-0.6,0),1.4)*nEdz;
+  var kyz=0.6*kzz;
+  var kzy=Math.max(1-Math.min(0.133*lam_z,0.133)*nEdz,0.01);
+  // Interaction §6.3.3
+  var aN=chiy>0?Pu/(chiy*NRk_kN/gM1):999;
+  var aMx=MbRd>0?kyy*Mux/MbRd:0,aMy=MRdz>0?kyz*Muy/MRdz:0;
+  var eq661=aN+aMx+aMy;
+  var bN=chiz>0?Pu/(chiz*NRk_kN/gM1):999;
+  var bMx=MbRd>0?kzy*Mux/MbRd:0,bMy=MRdz>0?kzz*Muy/MRdz:0;
+  var eq662=bN+bMx+bMy;
+  var DCR=Math.max(eq661,eq662),govEq=eq661>=eq662?'6.61':'6.62';
+  return{
+    code:'ec3',name:sr[0],Fy:Fy,E:E,G:G,L:Lin,KX:KX,KY:KY,lrx:lrx,lry:lry,
+    lbXlbl:i.lbXlbl,lbYlbl:i.lbYlbl,Lbx:Lbx,Lby:Lby,KLy_mm:KLy_mm,KLz_mm:KLz_mm,
+    hb:hb,tf:tf,ay:ay,az:az,curveY:curveY,curveZ:curveZ,
+    A:A,Ix:Ix,Iy:Iy,Zx:Zx,Zy:Zy,Sx:Sx,Sy:Sy,J:J,Cw:Cw,
+    NRk_kN:NRk_kN,Ncr_y:Ncr_y,Ncr_z:Ncr_z,
+    lam_y:lam_y,lam_z:lam_z,phiy:phiy,phiz:phiz,chiy:chiy,chiz:chiz,
+    NbRdy:NbRdy,NbRdz:NbRdz,
+    Lb_mm:Lb_mm,Mcr_kNm:Mcr_kNm,MRky_kNm:MRky_kNm,
+    lamLT:lamLT,aLT:aLT,curveLT:curveLT,chiLT:chiLT,ltbEC3:ltbEC3,MbRd:MbRd,MRdz:MRdz,
+    nEdy:nEdy,nEdz:nEdz,kyy:kyy,kzz:kzz,kyz:kyz,kzy:kzy,
+    eq661:eq661,eq662:eq662,govEq:govEq,DCR:DCR,
+    Pu:Pu,Mux:Mux,Muy:Muy,
+    uF:'kN',uM:'kN\xb7m',uL:'m',uSt:'MPa',uLen:'mm',isUS:false,lf:1000
+  };
+}
+
+function bcCalcIS800(i){
+  var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var E=200000,G=77000,gm0=1.10,lf=1000;
+  var A=sr[5],d=sr[1],bf=sr[2],tf=sr[3];
+  var Ix=sr[7],Sx=sr[8],Zx=sr[9],rx=sr[10];
+  var Iy=sr[11],Sy=sr[12],Zy=sr[13],ry=sr[14];
+  var J=sr[15],Cw=sr[16];
+  var hb=d/bf;
+  var Lbx=lrx*Lin,Lby=lry*Lin;
+  var KLx_mm=KX*Lbx*lf,KLy_mm=KY*Lby*lf;
+  var Lb_mm=lry*Lin*lf;
+  // Axial §7
+  var NRk_N=A*Fy,NRk_kN=NRk_N/1000;
+  var Ncr_x=Math.PI*Math.PI*E*Ix/(KLx_mm*KLx_mm);
+  var Ncr_y=Math.PI*Math.PI*E*Iy/(KLy_mm*KLy_mm);
+  var lamx=Math.sqrt(NRk_N/Ncr_x),lamy=Math.sqrt(NRk_N/Ncr_y);
+  // Table 7/10: hollow → a/a; ISMB/ISLB/ISWB (h/b>1.2) → a/b; ISHB/other → b/c
+  var ax,ayw;
+  if(Cw===0){ax=0.21;ayw=0.21;}
+  else if(BC_SEC_TYPE==='ISMB'||BC_SEC_TYPE==='ISLB'||BC_SEC_TYPE==='ISWB'){ax=0.21;ayw=0.34;}
+  else{ax=0.34;ayw=0.49;}
+  var phix=0.5*(1+ax*(lamx-0.2)+lamx*lamx);
+  var chix=Math.min(1,1/(phix+Math.sqrt(Math.max(0,phix*phix-lamx*lamx))));
+  var phiy=0.5*(1+ayw*(lamy-0.2)+lamy*lamy);
+  var chiy=Math.min(1,1/(phiy+Math.sqrt(Math.max(0,phiy*phiy-lamy*lamy))));
+  var fcdx=chix*Fy/gm0,fcdy=chiy*Fy/gm0;
+  var fcd_gov=Math.min(fcdx,fcdy);
+  var govAxis=fcdx<=fcdy?'x-x':'y-y';
+  var Pd=A*fcd_gov/1000;
+  // LTB §8.2
+  var t1=Math.PI/Lb_mm*Math.sqrt(E*Iy*G*J);
+  var t2=Math.sqrt(1+Math.PI*Math.PI*E*Cw/(G*J*Lb_mm*Lb_mm));
+  var Mcr_N=t1*t2,Mcr_kNm=Mcr_N/1e6;
+  var lamLT=Math.sqrt(Zx*Fy/Mcr_N);
+  // Table 6b (rolled): h/b≤2 → curve a (α=0.21); h/b>2 → curve b (α=0.34)
+  var aLT=hb<=2?0.21:0.34,curveLT=hb<=2?'a (α=0.21)':'b (α=0.34)';
+  var chiLT,ltbIS;
+  if(lamLT<=0.4){chiLT=1.0;ltbIS='No LTB (λ̄LT ≤ 0.4)';}
+  else{
+    var phiLT=0.5*(1+aLT*(lamLT-0.2)+lamLT*lamLT);
+    chiLT=Math.min(1,1/(phiLT+Math.sqrt(Math.max(0,phiLT*phiLT-lamLT*lamLT))));
+    ltbIS=lamLT<=1.0?'Inelastic LTB':'Elastic LTB';
+  }
+  var Mdx=chiLT*Zx*Fy/(gm0*1e6);
+  var Mdz=Zy*Fy/(gm0*1e6);
+  // §9.3.2.2
+  var rP=Pd>0?Pu/Pd:999;
+  var rMx=Mdx>0?Mux/Mdx:0,rMy=Mdz>0?Muy/Mdz:0;
+  var H=rP+rMx+rMy;
+  return{
+    code:'is800',name:sr[0],Fy:Fy,E:E,G:G,L:Lin,KX:KX,KY:KY,lrx:lrx,lry:lry,
+    lbXlbl:i.lbXlbl,lbYlbl:i.lbYlbl,Lbx:Lbx,Lby:Lby,KLx_mm:KLx_mm,KLy_mm:KLy_mm,
+    hb:hb,A:A,Ix:Ix,Iy:Iy,Zx:Zx,Zy:Zy,J:J,Cw:Cw,
+    NRk_kN:NRk_kN,Ncr_x:Ncr_x,Ncr_y:Ncr_y,lamx:lamx,lamy:lamy,
+    phix:phix,phiy:phiy,chix:chix,chiy:chiy,fcdx:fcdx,fcdy:fcdy,fcd_gov:fcd_gov,govAxis:govAxis,Pd:Pd,
+    Lb_mm:Lb_mm,Mcr_kNm:Mcr_kNm,lamLT:lamLT,aLT:aLT,curveLT:curveLT,
+    chiLT:chiLT,ltbIS:ltbIS,Mdx:Mdx,Mdz:Mdz,
+    rP:rP,rMx:rMx,rMy:rMy,H:H,DCR:H,
+    Pu:Pu,Mux:Mux,Muy:Muy,
+    uF:'kN',uM:'kN\xb7m',uL:'m',uSt:'MPa',uLen:'mm',isUS:false,lf:1000
+  };
+}
+
+function bcCalc(){
+  var i=bcReadInputs();
+  if(!i)return null;
+  if(BC_CODE==='ec3')return bcCalcEC3(i);
+  if(BC_CODE==='is800')return bcCalcIS800(i);
+  return bcCalcAISC(i);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function bcRender(r){
+  if(!r){document.getElementById('bc-empty').style.display='';document.getElementById('bc-card').style.display='none';return;}
+  var dc=r.DCR<0.85?'ok':(r.DCR<=1.0?'warn':'err');
+  var dcLbl=r.DCR<0.85?'Section Adequate':(r.DCR<=1.0?'Adequate — Near Limit':'Section Overstressed');
+  var date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  var codeLabel={aisc:'AISC 360',ec3:'EN 1993-1-1',is800:'IS 800:2007',tsds:'TSDS 2016'}[r.code];
+  var uStr=r.isUS?'kip \xb7 ft \xb7 in':'kN \xb7 m \xb7 mm';
+  var agLbl=r.isUS?'in\xb2':'mm\xb2', rLbl=r.uLen;
+  var agD=r.isUS?fmt(r.A,2):fmt(r.A,0);
+
+  function step(n,desc,fml,val,ok){
+    var chk=ok===undefined?'':'<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc=ok===true?'ok':(ok===false?'err':'');
+    return '<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
+  }
+
+  var h='';
+  // Print header
+  h+='<div class="print-only"><div><div class="ph-title">Steel Column Design</div>'
+    +'<div class="ph-sub">civilstrcalc.com \xb7 '+codeLabel+' \xb7 '+uStr+'</div></div>'
+    +'<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+date+'</div></div>';
+
+  // DCR banner
+  var dcRef=r.code==='ec3'?('Eq. '+r.govEq):(r.code==='is800'?'\xa79.3.2.2':r.eq);
+  h+='<div class="dcr-banner '+dc+'"><div class="dcr-text"><strong>'+dcLbl+'</strong>'
+    +'<span>'+r.name+' \xb7 F<sub>y</sub>='+r.Fy+' '+r.uSt+' \xb7 L='+r.L+' '+r.uL+' \xb7 '+dcRef+'</span></div></div>';
+
+  // Result box — code-specific
+  if(r.code==='ec3'){
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,y</sub></div><div class="ri-value">'+fmt(r.NbRdy,1)+'</div><div class="ri-unit">kN</div></div>'
+      +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,z</sub></div><div class="ri-value">'+fmt(r.NbRdz,1)+'</div><div class="ri-unit">kN</div></div>'
+      +'<div class="result-item"><div class="ri-label">M<sub>b,Rd</sub></div><div class="ri-value">'+fmt(r.MbRd,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+      +'<div class="result-item"><div class="ri-label">M<sub>Rd,z</sub></div><div class="ri-value">'+fmt(r.MRdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+      +'<div class="result-item '+dc+'"><div class="ri-label">DCR (Eq.'+r.govEq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+      +'</div>';
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lam_y,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>z</sub></div><div class="ri-value">'+fmt(r.lam_z,3)+'</div><div class="ri-unit">χ<sub>z</sub>='+fmt(r.chiz,3)+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbEC3+'</div></div>'
+      +'</div>';
+  } else if(r.code==='is800'){
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item"><div class="ri-label">P<sub>d</sub></div><div class="ri-value">'+fmt(r.Pd,1)+'</div><div class="ri-unit">kN</div></div>'
+      +'<div class="result-item"><div class="ri-label">M<sub>dx</sub></div><div class="ri-value">'+fmt(r.Mdx,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+      +'<div class="result-item"><div class="ri-label">M<sub>dz</sub></div><div class="ri-value">'+fmt(r.Mdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+      +'<div class="result-item '+dc+'"><div class="ri-label">H (\xa79.3.2.2)</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+      +'</div>';
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>x</sub></div><div class="ri-value">'+fmt(r.lamx,3)+'</div><div class="ri-unit">χ<sub>x</sub>='+fmt(r.chix,3)+' ('+r.govAxis+' gov.)</div></div>'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lamy,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbIS+'</div></div>'
+      +'</div>';
+  } else {
+    // AISC / TSDS
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item"><div class="ri-label">&phi;<sub>c</sub>P<sub>n</sub></div><div class="ri-value">'+fmt(r.phiPn,1)+'</div><div class="ri-unit">'+r.uF+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">&phi;<sub>b</sub>M<sub>nx</sub></div><div class="ri-value">'+fmt(r.phiMnx,1)+'</div><div class="ri-unit">'+r.uM+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">&phi;<sub>b</sub>M<sub>ny</sub></div><div class="ri-value">'+fmt(r.phiMny,1)+'</div><div class="ri-unit">'+r.uM+'</div></div>'
+      +'<div class="result-item '+dc+'"><div class="ri-label">H ('+r.eq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">&le; 1.0 &nbsp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+      +'</div>';
+    var slOk=r.lMax<=200;
+    h+='<div class="result-box" style="margin-bottom:8px">'
+      +'<div class="result-item '+(slOk?'ok':'warn')+'"><div class="ri-label">KL/r ('+r.govAx+')</div><div class="ri-value">'+fmt(r.lMax,1)+'</div><div class="ri-unit">limit 200 &nbsp;'+(slOk?'&#10003; OK':'&#9888;')+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">LTB mode</div><div class="ri-value" style="font-size:.82rem">'+r.ltbMode+'</div><div class="ri-unit">L<sub>b</sub>='+fmt(r.Lb,2)+' / L<sub>p</sub>='+fmt(r.Lp,2)+' / L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL+'</div></div>'
+      +'</div>';
+  }
+
+  // Input Summary (common)
+  var Lb_disp=r.code==='ec3'?fmt(r.Lb_mm/1000,2):r.code==='is800'?fmt(r.Lb_mm/1000,2):fmt(r.Lb,2);
+  h+='<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div><table class="inp-tbl">'
+    +'<tr><td>Section</td><td>'+r.name+'</td></tr>'
+    +'<tr><td>Steel grade / f<sub>y</sub></td><td>'+r.Fy+' '+r.uSt+'</td></tr>'
+    +'<tr><td>E</td><td>'+r.E.toLocaleString()+' '+r.uSt+'</td></tr>'
+    +'<tr><td>A<sub>g</sub></td><td>'+agD+' '+agLbl+'</td></tr>'
+    +'<tr><td>x&#x2011;x end cond. (K)</td><td>'+r.lbXlbl+' (K = '+r.KX.toFixed(2)+')  |  L<sub>b,x</sub> = '+fmt(r.Lbx,2)+' '+r.uL+(r.lrx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+    +'<tr><td>y&#x2011;y end cond. (K)</td><td>'+r.lbYlbl+' (K = '+r.KY.toFixed(2)+')  |  L<sub>b,y</sub> = '+fmt(r.Lby,2)+' '+r.uL+(r.lry<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+    +'<tr><td>L<sub>b</sub> (LTB)</td><td>'+Lb_disp+' m  |  C<sub>b</sub>/C<sub>m</sub> = 1.00</td></tr>'
+    +'<tr><td>N<sub>Ed</sub> / P<sub>u</sub></td><td>'+fmt(r.Pu,1)+' '+r.uF+'</td></tr>'
+    +'<tr><td>M<sub>y,Ed</sub> / M<sub>ux</sub></td><td>'+fmt(r.Mux,1)+' '+r.uM+'</td></tr>'
+    +'<tr><td>M<sub>z,Ed</sub> / M<sub>uy</sub></td><td>'+fmt(r.Muy,1)+' '+r.uM+'</td></tr>'
+    +'</table></div>';
+
+  // Code-specific calculation sections
+  if(r.code==='ec3'){
+    // §6.3.1 Axial
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Buckling Resistance — EN 1993-1-1 \xa76.3.1</div><table class="steps-table">';
+    h+=step(1,'N<sub>Rk</sub> = A \xd7 f<sub>y</sub>',fmt(r.A,0)+' mm\xb2 \xd7 '+r.Fy+' MPa / 1000','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
+    h+=step(2,'N<sub>cr,y</sub> (strong-axis, KL = '+fmt(r.KLy_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>x</sub> / (KL<sub>y</sub>)²','N<sub>cr,y</sub> = '+fmt(r.Ncr_y/1000,0)+' kN');
+    h+=step(3,'N<sub>cr,z</sub> (weak-axis, KL = '+fmt(r.KLz_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>y</sub> / (KL<sub>z</sub>)²','N<sub>cr,z</sub> = '+fmt(r.Ncr_z/1000,0)+' kN');
+    h+=step(4,'&lambda;&#772;<sub>y</sub> and &lambda;&#772;<sub>z</sub>','&radic;(N<sub>Rk</sub>/N<sub>cr</sub>)','&lambda;&#772;<sub>y</sub>='+fmt(r.lam_y,3)+'  |  &lambda;&#772;<sub>z</sub>='+fmt(r.lam_z,3));
+    h+=step(5,'Buckling curves (h/b='+fmt(r.hb,2)+', t<sub>f</sub>='+r.tf+' mm)','Table 6.2','y: curve '+r.curveY+'  |  z: curve '+r.curveZ);
+    h+=step(6,'&chi;<sub>y</sub> (strong axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4));
+    h+=step(7,'&chi;<sub>z</sub> (weak axis)','&phi;<sub>z</sub>='+fmt(r.phiz,4),'&chi;<sub>z</sub> = '+fmt(r.chiz,4));
+    h+=step(8,'N<sub>b,Rd,y</sub> = &chi;<sub>y</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdy,1)+' kN');
+    h+=step(9,'N<sub>b,Rd,z</sub> = &chi;<sub>z</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdz,1)+' kN');
+    h+='</table></div>';
+    // §6.3.2.3 LTB
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Lateral-Torsional Buckling — EN 1993-1-1 \xa76.3.2.3</div><table class="steps-table">';
+    h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>z</sub>GJ) \xd7 √(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
+    h+=step(2,'M<sub>Rk,y</sub> = Z<sub>pl,y</sub> \xd7 f<sub>y</sub>',fmt(r.Zx,0)+' \xd7 '+r.Fy+' / 10⁶','M<sub>Rk,y</sub> = '+fmt(r.MRky_kNm,1)+' kN\xb7m');
+    h+=step(3,'&lambda;&#772;<sub>LT</sub> = √(M<sub>Rk,y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
+    h+=step(4,'LTB curve (h/b='+fmt(r.hb,2)+')','h/b≤ 2 → curve b; h/b>2 → curve c',''+r.curveLT);
+    h+=step(5,'&chi;<sub>LT</sub> (λ&#772;<sub>LT,0</sub>=0.4, &beta;=0.75)','','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbEC3);
+    h+=step(6,'M<sub>b,Rd</sub> = &chi;<sub>LT</sub> \xd7 M<sub>Rk,y</sub> / &gamma;<sub>M1</sub>','','M<sub>b,Rd</sub> = '+fmt(r.MbRd,1)+' kN\xb7m');
+    h+=step(7,'M<sub>Rd,z</sub> = Z<sub>pl,z</sub> \xd7 f<sub>y</sub> / &gamma;<sub>M0</sub> (no LTB)','','M<sub>Rd,z</sub> = '+fmt(r.MRdz,1)+' kN\xb7m');
+    h+='</table></div>';
+    // Annex B k-factors
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction Factors — EN 1993-1-1 Annex B (C<sub>my</sub>=C<sub>mz</sub>=1.0)</div><table class="steps-table">';
+    h+=step(1,'n<sub>y</sub> = N<sub>Ed</sub> / (&chi;<sub>y</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiy,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>y</sub> = '+fmt(r.nEdy,4));
+    h+=step(2,'n<sub>z</sub> = N<sub>Ed</sub> / (&chi;<sub>z</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiz,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>z</sub> = '+fmt(r.nEdz,4));
+    h+=step(3,'k<sub>yy</sub> = 1 + min(&lambda;&#772;<sub>y</sub>−0.2, 0.8) \xd7 n<sub>y</sub>','','k<sub>yy</sub> = '+fmt(r.kyy,4));
+    h+=step(4,'k<sub>zz</sub> = 1 + min(2&lambda;&#772;<sub>z</sub>−0.6, 1.4) \xd7 n<sub>z</sub>','','k<sub>zz</sub> = '+fmt(r.kzz,4));
+    h+=step(5,'k<sub>yz</sub> = 0.6 \xd7 k<sub>zz</sub>','','k<sub>yz</sub> = '+fmt(r.kyz,4));
+    h+=step(6,'k<sub>zy</sub> = 1 − min(0.133&lambda;&#772;<sub>z</sub>, 0.133) \xd7 n<sub>z</sub>','','k<sub>zy</sub> = '+fmt(r.kzy,4));
+    h+='</table></div>';
+    // §6.3.3 Interaction
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — EN 1993-1-1 \xa76.3.3</div><table class="steps-table">';
+    var t61a=fmt(r.Pu/(r.chiy*r.NRk_kN),4),t61b=fmt(r.kyy*r.Mux/r.MbRd,4),t61c=fmt(r.kyz*r.Muy/(r.MRdz||1),4);
+    var t62a=fmt(r.Pu/(r.chiz*r.NRk_kN),4),t62b=fmt(r.kzy*r.Mux/r.MbRd,4),t62c=fmt(r.kzz*r.Muy/(r.MRdz||1),4);
+    h+=step(1,'Eq. 6.61: N/(&chi;<sub>y</sub>N<sub>Rk</sub>) + k<sub>yy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>yz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
+      t61a+' + '+t61b+' + '+t61c,'= <strong>'+fmt(r.eq661,4)+'</strong>');
+    h+=step(2,'Eq. 6.62: N/(&chi;<sub>z</sub>N<sub>Rk</sub>) + k<sub>zy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>zz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
+      t62a+' + '+t62b+' + '+t62c,'= <strong>'+fmt(r.eq662,4)+'</strong>');
+    h+=step(3,'DCR = max(Eq. 6.61, Eq. 6.62)','Governing: Eq. '+r.govEq,
+      'DCR = '+fmt(r.DCR,4)+'  '+(r.DCR<=1?'&#10003; OK':'&#10007; NG'),r.DCR<=1.0);
+    h+='</table></div>';
+    h+='<div class="report-warn"><span>&#9432;</span><div>Class 1 cross-section assumed. &gamma;<sub>M0</sub>=&gamma;<sub>M1</sub>=1.0. Local buckling and shear not checked.</div></div>';
+  } else if(r.code==='is800'){
+    // §7 Axial
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — IS 800:2007 \xa77</div><table class="steps-table">';
+    h+=step(1,'f<sub>y</sub> \xd7 A','','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
+    h+=step(2,'&lambda;&#772;<sub>x</sub> (strong axis, KL='+fmt(r.KLx_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,x</sub>)','&lambda;&#772;<sub>x</sub> = '+fmt(r.lamx,3));
+    h+=step(3,'&lambda;&#772;<sub>y</sub> (weak axis, KL='+fmt(r.KLy_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,y</sub>)','&lambda;&#772;<sub>y</sub> = '+fmt(r.lamy,3));
+    h+=step(4,'Buckling class (Table 7)','Strong axis: class b (&alpha;=0.34)  |  Weak axis: class c (&alpha;=0.49)','');
+    h+=step(5,'&chi;<sub>x</sub> (strong axis)','&phi;<sub>x</sub>='+fmt(r.phix,4),'&chi;<sub>x</sub> = '+fmt(r.chix,4)+'  → f<sub>cd,x</sub>='+fmt(r.fcdx,1)+' MPa');
+    h+=step(6,'&chi;<sub>y</sub> (weak axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4)+'  → f<sub>cd,y</sub>='+fmt(r.fcdy,1)+' MPa');
+    h+=step(7,'P<sub>d</sub> = A \xd7 f<sub>cd,gov</sub> / 1000','Governing axis: '+r.govAxis+' (f<sub>cd</sub>='+fmt(r.fcd_gov,1)+' MPa)','P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
+    h+='</table></div>';
+    // §8.2 Flexure
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Bending Capacity — IS 800:2007 \xa78.2</div><table class="steps-table">';
+    h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>y</sub>GJ)√(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
+    h+=step(2,'&lambda;&#772;<sub>LT</sub> = √(Z<sub>px</sub>f<sub>y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
+    h+=step(3,'LTB curve (Table 6b, h/b='+fmt(r.hb,2)+')','h/b ≤ 2 → curve a; h/b > 2 → curve b',''+r.curveLT);
+    h+=step(4,'&chi;<sub>LT</sub>','&phi;<sub>LT</sub> → &chi;<sub>LT</sub>','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbIS);
+    h+=step(5,'M<sub>dx</sub> = &chi;<sub>LT</sub> Z<sub>px</sub> f<sub>y</sub> / &gamma;<sub>m0</sub>','/ 1.10','M<sub>dx</sub> = '+fmt(r.Mdx,1)+' kN\xb7m');
+    h+=step(6,'M<sub>dz</sub> = Z<sub>pz</sub> f<sub>y</sub> / &gamma;<sub>m0</sub> (no LTB)','/ 1.10','M<sub>dz</sub> = '+fmt(r.Mdz,1)+' kN\xb7m');
+    h+='</table></div>';
+    // §9.3.2.2 Interaction
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — IS 800:2007 \xa79.3.2.2</div><table class="steps-table">';
+    h+=step(1,'P / P<sub>d</sub>',fmt(r.Pu,1)+' / '+fmt(r.Pd,1),'= '+fmt(r.rP,4));
+    h+=step(2,'M<sub>x</sub> / M<sub>dx</sub>',fmt(r.Mux,1)+' / '+fmt(r.Mdx,1),'= '+fmt(r.rMx,4));
+    h+=step(3,'M<sub>y</sub> / M<sub>dz</sub>',fmt(r.Muy,1)+' / '+fmt(r.Mdz,1),'= '+fmt(r.rMy,4));
+    h+=step(4,'P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> ≤ 1.0',
+      fmt(r.rP,4)+' + '+fmt(r.rMx,4)+' + '+fmt(r.rMy,4),
+      'H = '+fmt(r.H,4)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
+    h+='</table></div>';
+    h+='<div class="report-warn"><span>&#9432;</span><div>Plastic (class 1) section assumed. &gamma;<sub>m0</sub> = 1.10. Local buckling and shear not checked.</div></div>';
+  } else {
+    // AISC / TSDS
+    var codeStr=r.code==='tsds'?'TSDS 2016':'AISC 360';
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — '+codeStr+' Chapter E</div><table class="steps-table">';
+    h+=step(1,'A<sub>g</sub>','','A<sub>g</sub> = '+agD+' '+agLbl);
+    h+=step(2,'Effective lengths KL',
+      'x: '+r.KX.toFixed(2)+'\xd7'+fmt(r.Lbx,2)+r.uL+'\xd7'+r.lf+'  |  y: '+r.KY.toFixed(2)+'\xd7'+fmt(r.Lby,2)+r.uL+'\xd7'+r.lf,
+      'KL<sub>x</sub>='+fmt(r.KLx,0)+' '+r.uLen+'  |  KL<sub>y</sub>='+fmt(r.KLy,0)+' '+r.uLen);
+    var slOk2=r.lMax<=200;
+    h+=step(3,'Slenderness — governing: <strong>'+r.govAx+'</strong>',
+      'KL/r<sub>x</sub>='+fmt(r.lx,1)+'  |  KL/r<sub>y</sub>='+fmt(r.ly,1),
+      '&lambda;<sub>max</sub>='+fmt(r.lMax,1),slOk2);
+    h+=step(4,'4.71√(E/F<sub>y</sub>) — '+r.bMode,'','&lambda;<sub>lim</sub>='+fmt(r.lLim,1));
+    h+=step(5,'F<sub>e</sub> = π\xb2E/λ\xb2','','F<sub>e</sub>='+fmt(r.Fe,2)+' '+r.uSt);
+    h+=step(6,'F<sub>cr</sub>',
+      r.bMode==='Inelastic'?'0.658<sup>'+fmt(r.Fy/r.Fe,4)+'</sup>\xd7'+r.Fy:'0.877\xd7'+fmt(r.Fe,2),
+      'F<sub>cr</sub>='+fmt(r.Fcr,2)+' '+r.uSt);
+    h+=step(7,'&phi;<sub>c</sub>P<sub>n</sub> = 0.90 \xd7 F<sub>cr</sub> \xd7 A','',''+fmt(r.phiPn,1)+' '+r.uF);
+    h+='</table></div>';
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Strong-Axis Flexure — '+codeStr+' Chapter F2</div><table class="steps-table">';
+    h+=step(1,'M<sub>p</sub>=F<sub>y</sub>Z<sub>x</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zx,1)+'/12':r.Fy+'\xd7'+fmt(r.Zx,0)+'/10⁶','M<sub>p</sub>='+fmt(r.Mp,1)+' '+r.uM);
+    h+=step(2,'L<sub>p</sub>','1.76r<sub>y</sub>√(E/F<sub>y</sub>)/'+r.lf,'L<sub>p</sub>='+fmt(r.Lp,2)+' '+r.uL);
+    h+=step(3,'L<sub>r</sub>','1.95r<sub>ts</sub>(E/0.7F<sub>y</sub>)√[…]','L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL);
+    h+=step(4,'L<sub>b</sub>=L<sub>b,y</sub>  →  '+r.ltbMode,'C<sub>b</sub>=1.00','L<sub>b</sub>='+fmt(r.Lb,2)+' '+r.uL);
+    h+=step(5,'&phi;<sub>b</sub>M<sub>nx</sub>=0.90\xd7M<sub>nx</sub>','',''+fmt(r.phiMnx,1)+' '+r.uM);
+    h+='</table></div>';
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Weak-Axis Flexure — '+codeStr+' Chapter F6</div><table class="steps-table">';
+    h+=step(1,'M<sub>ny</sub>=min(F<sub>y</sub>Z<sub>y</sub>, 1.6F<sub>y</sub>S<sub>y</sub>)','','M<sub>ny</sub>='+fmt(r.Mny,1)+' '+r.uM);
+    h+=step(2,'&phi;<sub>b</sub>M<sub>ny</sub>=0.90\xd7M<sub>ny</sub>','',''+fmt(r.phiMny,1)+' '+r.uM);
+    h+='</table></div>';
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction — '+codeStr+' \xa7H1-1</div><table class="steps-table">';
+    h+=step(1,'P<sub>u</sub>/&phi;P<sub>n</sub>',fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),'= '+fmt(r.rP,4)+' → use '+r.eq);
+    h+=step(2,'M<sub>ux</sub>/&phi;M<sub>nx</sub>',fmt(r.Mux,1)+'/'+fmt(r.phiMnx,1),'= '+fmt(r.rMx,4));
+    h+=step(3,'M<sub>uy</sub>/&phi;M<sub>ny</sub>',fmt(r.Muy,1)+'/'+fmt(r.phiMny,1),'= '+fmt(r.rMy,4));
+    if(r.eq==='H1-1a'){
+      h+=step(4,'Eq. H1-1a (P/φP ≥ 0.2)','P/φP + (8/9)(M<sub>x</sub>/φM<sub>x</sub>+M<sub>y</sub>/φM<sub>y</sub>)',
+        fmt(r.rP,4)+' + (8/9)['+fmt(r.rMx,4)+'+'+fmt(r.rMy,4)+'] = <strong>'+fmt(r.H,4)+'</strong>');
+    } else {
+      h+=step(4,'Eq. H1-1b (P/φP < 0.2)','P/(2φP)+M<sub>x</sub>/φM<sub>x</sub>+M<sub>y</sub>/φM<sub>y</sub>',
+        fmt(r.rP/2,4)+'+'+fmt(r.rMx,4)+'+'+fmt(r.rMy,4)+' = <strong>'+fmt(r.H,4)+'</strong>');
+    }
+    h+=step(5,'D/C check H ≤ 1.0','','H='+fmt(r.H,3)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
+    h+='</table></div>';
+    if(!slOk2)h+='<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds recommended limit of 200.</div></div>';
+    h+='<div class="report-warn"><span>&#9432;</span><div>Compact section assumed (AISC Table B4.1). Local buckling, shear, and connections not checked.</div></div>';
+  }
+
+  h+='<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
+  h+='<div class="print-footer"><span>CivilStrCalc.com — '+codeLabel+'</span><span>\xa9 '+new Date().getFullYear()+'</span></div>';
+  document.getElementById('bc-empty').style.display='none';
+  document.getElementById('bc-card').style.display='';
+  document.getElementById('bc-body').innerHTML=h;
+}
+
+// ── BACKGROUND TABS ──────────────────────────────────────────────────────────
+function bcBgTab(id,el){
+  document.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bg-toc a').forEach(function(a){a.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  if(el)el.classList.add('active');
+}
+
+function bcAutoCalc(){bcRender(bcCalc());}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(function(){
+  bcPopGrades();
+  bcPopTypes();
+  var sel=document.getElementById('bc-section');
+  for(var i=0;i<sel.options.length;i++){if(sel.options[i].value==='W14\xd782'){sel.selectedIndex=i;break;}}
+  bcSecChange();
+})();
+</script>
+</body>
+</html>

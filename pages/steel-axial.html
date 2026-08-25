@@ -30,6 +30,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .combo-ref-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.74rem;}
 .combo-ref-tbl td:first-child{font-family:var(--sans);color:var(--text-mid);font-weight:500;}
 .inp-tbl td:last-child{font-family:var(--sans);}
+.bg-section .bg-pane{display:block;height:0;overflow:hidden;padding:0;}
+.bg-section .bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.bg-toc a.active{background:var(--accent);color:var(--white);border-color:var(--accent);}
 .print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
 .ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
 .ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
@@ -70,14 +73,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="unit-switcher">
         <label>Design Code:</label>
         <div class="unit-btns">
-          <button class="unit-btn active" id="ac-btn-aisc">AISC LRFD</button>
-          <button class="unit-btn" disabled style="opacity:.4">EN 1993-1-1</button>
-          <button class="unit-btn" disabled style="opacity:.4">IS 800:2000</button>
-          <button class="unit-btn" disabled style="opacity:.4">TSDS 2016</button>
+          <button class="unit-btn active" id="ac-btn-aisc"  onclick="acSetCode('aisc')">AISC LRFD</button>
+          <button class="unit-btn"        id="ac-btn-ec3"   onclick="acSetCode('ec3')">EN 1993-1-1</button>
+          <button class="unit-btn"        id="ac-btn-is800" onclick="acSetCode('is800')">IS 800:2000</button>
+          <button class="unit-btn"        id="ac-btn-tsds"  onclick="acSetCode('tsds')">TSDS 2016</button>
         </div>
       </div>
 
-      <div class="unit-switcher">
+      <div class="unit-switcher" id="ac-unit-sw">
         <label>Units:</label>
         <div class="unit-btns">
           <button class="unit-btn active" id="ac-btn-us" onclick="acSetUnit('us',this)">US (kip &middot; ft)</button>
@@ -108,8 +111,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="iw"><input type="number" id="ac-L" min="0" step="0.5" value="14"><span class="us" id="ac-L-us">ft</span></div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl" id="ac-loads-lbl">Loads &mdash; ASCE 7-22</div></div>
+      <div class="form-div"><div class="form-div-lbl" id="ac-loads-lbl">Loads</div></div>
 
+      <div class="sub-tabs" style="margin-bottom:8px">
+        <button class="sub-tab active" id="ac-mode-combo" onclick="acSetLoadMode('combo')">Load Combos</button>
+        <button class="sub-tab" id="ac-mode-direct" onclick="acSetLoadMode('direct')">Design Load</button>
+      </div>
+
+      <div id="ac-panel-combo">
       <div class="form-row-2">
         <div class="form-group">
           <label>Dead P<sub>D</sub> (excl. SW) <span id="ac-PD-lbl" class="unit-lbl">[kip]</span></label>
@@ -134,6 +143,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <label>Wind P<sub>W</sub> <span id="ac-PW-lbl" class="unit-lbl">[kip]</span></label>
         <div class="iw"><input type="number" id="ac-PW" min="0" step="1" value="0"><span class="us" id="ac-PW-us">kip</span></div>
       </div>
+      </div><!-- /ac-panel-combo -->
+
+      <div id="ac-panel-direct" style="display:none">
+        <div style="font-size:.73rem;color:var(--text-dim);font-family:var(--sans);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px 10px;margin-bottom:10px">Enter the pre-calculated factored axial force. Load combinations and self-weight are excluded from the report.</div>
+        <div class="form-group">
+          <label>Factored axial P<sub>u</sub> <span id="ac-dm-pu-lbl" class="unit-lbl">[kip]</span></label>
+          <div class="iw"><input type="number" id="ac-dm-pu" value="50" step="5" min="0"><span class="us" id="ac-dm-pu-us">kip</span></div>
+        </div>
+      </div><!-- /ac-panel-direct -->
 
       <div id="ac-schema" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px 12px 10px;margin:10px 0 8px">
         <svg id="ac-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto"></svg>
@@ -165,13 +183,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
       </div>
-      <button class="btn-calc" onclick="acCalc()">&#9654; Calculate</button>
+      <button class="btn-calc" onclick="acCalc()" style="display:none">&#9654; Calculate</button>
     </div>
   </div>
 
   <!-- ── RIGHT ── -->
   <div>
-    <div class="res-empty" id="ac-empty"><div class="ri">&#9881;</div>Select a section, enter loads and column height, then click Calculate.</div>
+    <div class="res-empty" id="ac-empty"><div class="ri">&#9881;</div>Select a section and enter column height to see results.</div>
     <div class="report-card" id="ac-card" style="display:none">
       <div class="report-hdr">
         <h4>Calculation Report</h4>
@@ -185,41 +203,31 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ── DESIGN BACKGROUND ── -->
 <div class="bg-section no-print">
-  <div class="bg-hdr"><h3>&#128218; AISC 360 Chapter E &mdash; Column Axial Design Theory</h3></div>
+  <div class="bg-hdr"><h3>&#128218; Column Axial Compression &mdash; Design Theory</h3></div>
   <nav class="bg-toc">
-    <a href="#bg-ch-e" onclick="acBgTab('bg-ch-e',this);return false;" class="active">AISC Ch. E</a>
-    <a href="#bg-combos" onclick="acBgTab('bg-combos',this);return false;">ASCE 7-22 Combos</a>
-    <a href="#bg-kfact" onclick="acBgTab('bg-kfact',this);return false;">K Factors</a>
+    <a href="#bg-aisc" onclick="acBgTab('bg-aisc',this);return false;" class="active">AISC 360</a>
+    <a href="#bg-ec3"  onclick="acBgTab('bg-ec3',this);return false;">EC3</a>
+    <a href="#bg-tsds" onclick="acBgTab('bg-tsds',this);return false;">TSDS 2016</a>
+    <a href="#bg-is800" onclick="acBgTab('bg-is800',this);return false;">IS 800</a>
   </nav>
 
-  <div class="bg-pane active" id="bg-ch-e">
-    <div class="bg-panel-hdr"><span>AISC 360 Chapter E &mdash; Members Subject to Axial Compression</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+  <!-- ── AISC 360 ── -->
+  <div class="bg-pane active" id="bg-aisc">
     <div class="tb">
-      <h4>Flexural Buckling Stress &mdash; AISC 360 &sect;E3</h4>
-      <p>The nominal compressive strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>. Design strength &phi;<sub>c</sub>P<sub>n</sub> with &phi;<sub>c</sub> = 0.90.</p>
-      <div class="fml-blk"><span class="ft">Inelastic buckling &mdash; KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
-      <div class="fml-blk"><span class="ft">Elastic buckling &mdash; KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
-      <div class="fml-blk"><span class="ft">Euler elastic buckling stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2;</div>
-      <p>K<sub>x</sub> and K<sub>y</sub> can be set independently for each axis. KL<sub>x</sub>/r<sub>x</sub> governs for the x&#x2011;x (strong) axis; KL<sub>y</sub>/r<sub>y</sub> governs for the y&#x2011;y (weak) axis. The <strong>maximum</strong> of the two controls. Recommended limit: KL/r &le; 200.</p>
-      <h4>Euler Critical Load P<sub>e</sub></h4>
-      <div class="fml-blk"><span class="ft">Per axis</span>P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2; &nbsp;=&nbsp; F<sub>e</sub> &times; A<sub>g</sub></div>
-      <p>P<sub>e</sub> is the elastic Euler buckling load. F<sub>cr</sub> reduces P<sub>e</sub> by the inelastic knock-down factor when KL/r &le; &lambda;<sub>lim</sub>.</p>
-      <h4>Design Check</h4>
-      <div class="fml-blk"><span class="ft">LRFD</span>P<sub>u</sub> &le; &phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A<sub>g</sub></div>
-      <table class="combo-ref-tbl" style="max-width:440px">
+      <h4>Flexural Buckling &mdash; AISC 360 &sect;E3</h4>
+      <p>Nominal compressive strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>. Design strength &phi;<sub>c</sub>P<sub>n</sub> with &phi;<sub>c</sub> = 0.90, E = 29,000 ksi / 200,000 MPa.</p>
+      <div class="fml-blk"><span class="ft">Inelastic &mdash; KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft">Elastic &mdash; KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
+      <div class="fml-blk"><span class="ft">Euler stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2;</div>
+      <div class="fml-blk"><span class="ft">LRFD check</span>P<sub>u</sub> &le; &phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A<sub>g</sub></div>
+      <table class="combo-ref-tbl" style="max-width:400px">
         <tr><th>F<sub>y</sub></th><th>4.71&radic;(E/F<sub>y</sub>)</th></tr>
         <tr><td>36 ksi / 250 MPa</td><td>133.7</td></tr>
         <tr><td>50 ksi / 345 MPa</td><td>113.4</td></tr>
         <tr><td>355 MPa</td><td>107.0</td></tr>
       </table>
-      <p>The same Fcr formulas apply in both US (ksi, in) and SI (MPa, mm) units — the ratio KL/r is dimensionless and E/Fy is dimensionless.</p>
-    </div>
-  </div>
-
-  <div class="bg-pane" id="bg-combos">
-    <div class="bg-panel-hdr"><span>ASCE 7-22 &sect;2.3.1 &mdash; LRFD Load Combinations</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
-    <div class="tb">
-      <table class="combo-ref-tbl" style="max-width:500px">
+      <h4>ASCE 7-22 &sect;2.3.1 &mdash; LRFD Load Combinations</h4>
+      <table class="combo-ref-tbl" style="max-width:480px">
         <tr><th>#</th><th>Combination</th></tr>
         <tr><td>1</td><td>1.4D</td></tr>
         <tr><td>2</td><td>1.2D + 1.6L + 0.5S</td></tr>
@@ -227,20 +235,116 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <tr><td>4</td><td>1.2D + 1.0W + L + 0.5S</td></tr>
         <tr><td>5</td><td>0.9D + 1.0W</td></tr>
       </table>
-      <p>D = Dead (incl. self-weight) &nbsp;|&nbsp; L = Live + Roof Live &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind (compressive contribution)</p>
-    </div>
-  </div>
-
-  <div class="bg-pane" id="bg-kfact">
-    <div class="bg-panel-hdr"><span>Effective Length Factor K &mdash; AISC Commentary Table C-A-7.1</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
-    <div class="tb">
-      <table class="combo-ref-tbl" style="max-width:580px">
-        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (AISC recommended)</th></tr>
+      <p>D = Dead (incl. self-weight) &nbsp;|&nbsp; L = Live + Roof Live &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind</p>
+      <h4>Effective Length Factor K &mdash; AISC Commentary Table C-A-7.1</h4>
+      <table class="combo-ref-tbl" style="max-width:560px">
+        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (recommended)</th></tr>
         <tr><td>Both ends pinned</td><td>1.0</td><td>1.00</td></tr>
         <tr><td>One pinned, one fixed (no sway)</td><td>0.7</td><td>0.80</td></tr>
         <tr><td>Both ends fixed (no sway)</td><td>0.5</td><td>0.65</td></tr>
+        <tr><td>One fixed, one free (cantilever)</td><td>2.0</td><td>2.10</td></tr>
+        <tr><td>Both pinned, sway permitted</td><td>1.0</td><td>1.20</td></tr>
+        <tr><td>Both fixed, sway permitted</td><td>1.0</td><td>1.20</td></tr>
       </table>
-      <p>AISC recommended values account for practical imperfections in end fixity. Cantilever (K = 2.1) is not included.</p>
+    </div>
+  </div>
+
+  <!-- ── EC3 ── -->
+  <div class="bg-pane" id="bg-ec3">
+    <div class="tb">
+      <h4>Flexural Buckling &mdash; EN 1993-1-1 &sect;6.3.1.2</h4>
+      <p>The buckling resistance N<sub>b,Rd</sub> uses a reduction factor &chi; from the Perry-Robertson imperfection model. &gamma;<sub>M1</sub> = 1.00, E = 210,000 MPa.</p>
+      <div class="fml-blk"><span class="ft">Non-dimensional slenderness</span>&lambda;&#772; = (KL/r) / (&pi;&radic;(E/f<sub>y</sub>))</div>
+      <div class="fml-blk"><span class="ft">Auxiliary value</span>&Phi; = 0.5 [1 + &alpha;(&lambda;&#772; &minus; 0.2) + &lambda;&#772;&sup2;]</div>
+      <div class="fml-blk"><span class="ft">Reduction factor</span>&chi; = 1 / (&Phi; + &radic;(&Phi;&sup2; &minus; &lambda;&#772;&sup2;)) &nbsp;&le;&nbsp; 1.0</div>
+      <div class="fml-blk"><span class="ft">Buckling resistance</span>N<sub>b,Rd</sub> = &chi; &middot; A &middot; f<sub>y</sub> / &gamma;<sub>M1</sub></div>
+      <h4>Buckling Curves &mdash; EN 1993-1-1 Table 6.2</h4>
+      <table class="combo-ref-tbl" style="max-width:620px">
+        <tr><th>Section type</th><th>Axis</th><th>Curve</th><th>&alpha;</th></tr>
+        <tr><td>IPE / HE (h/b &gt; 1.2), t<sub>f</sub> &le; 40 mm</td><td>y&#x2011;y (strong)</td><td>a</td><td>0.21</td></tr>
+        <tr><td>IPE / HE (h/b &gt; 1.2), t<sub>f</sub> &le; 40 mm</td><td>z&#x2011;z (weak)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>HEA / HEB (h/b &le; 1.2), t<sub>f</sub> &le; 100 mm</td><td>y&#x2011;y (strong)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>HEA / HEB (h/b &le; 1.2), t<sub>f</sub> &le; 100 mm</td><td>z&#x2011;z (weak)</td><td>c</td><td>0.49</td></tr>
+        <tr><td>SHS / RHS (hot-formed)</td><td>any</td><td>a</td><td>0.21</td></tr>
+        <tr><td>CHS (hot-formed)</td><td>any</td><td>a</td><td>0.21</td></tr>
+        <tr><td>Welded I, t<sub>f</sub> &le; 40 mm</td><td>y&#x2011;y</td><td>b</td><td>0.34</td></tr>
+        <tr><td>Welded I, t<sub>f</sub> &le; 40 mm</td><td>z&#x2011;z</td><td>c</td><td>0.49</td></tr>
+      </table>
+      <h4>EN 1990 &sect;6.4.3 &mdash; ULS Load Combinations (Exp. 6.10)</h4>
+      <table class="combo-ref-tbl" style="max-width:520px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.35 G</td></tr>
+        <tr><td>2</td><td>1.35 G + 1.5 Q</td></tr>
+        <tr><td>3</td><td>1.35 G + 1.5 S + 0.75 Q</td></tr>
+        <tr><td>4</td><td>1.35 G + 1.5 Q + 0.5 S</td></tr>
+        <tr><td>5</td><td>1.35 G + 1.5 W + 0.9 Q</td></tr>
+        <tr><td>6</td><td>1.0 G + 1.5 W</td></tr>
+      </table>
+      <p>G = Permanent &nbsp;|&nbsp; Q = Imposed (live) &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind. &psi;<sub>0</sub> values from EN 1990 Table A1.1; National Annexes may modify &gamma; factors.</p>
+    </div>
+  </div>
+
+  <!-- ── TSDS 2016 ── -->
+  <div class="bg-pane" id="bg-tsds">
+    <div class="tb">
+      <h4>Flexural Buckling &mdash; TSDS 2016 &sect;5.2</h4>
+      <p>TSDS 2016 adopts the same F<sub>cr</sub> formulas as AISC 360 Ch. E in SI units. &phi;<sub>c</sub> = 0.90, E = 200,000 MPa. Slenderness limit: KL/r &le; 200.</p>
+      <div class="fml-blk"><span class="ft">Inelastic &mdash; KL/r &le; 4.71&radic;(E/f<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>f<sub>y</sub>/F<sub>e</sub></sup> &times; f<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft">Elastic &mdash; KL/r &gt; 4.71&radic;(E/f<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
+      <div class="fml-blk"><span class="ft">Euler stress (SI)</span>F<sub>e</sub> = &pi;&sup2; &times; 200,000 / (KL/r)&sup2; &nbsp;(MPa)</div>
+      <div class="fml-blk"><span class="ft">Design strength</span>&phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A &nbsp;(kN)</div>
+      <table class="combo-ref-tbl" style="max-width:400px">
+        <tr><th>f<sub>y</sub> (MPa)</th><th>4.71&radic;(E/f<sub>y</sub>)</th></tr>
+        <tr><td>S235 — 235</td><td>130.2</td></tr>
+        <tr><td>S275 — 275</td><td>120.4</td></tr>
+        <tr><td>S355 — 355</td><td>106.0</td></tr>
+      </table>
+      <h4>TSDS 2016 &mdash; Strength Design Load Combinations</h4>
+      <table class="combo-ref-tbl" style="max-width:500px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.4 G</td></tr>
+        <tr><td>2</td><td>1.2 G + 1.6 Q + 0.5 S</td></tr>
+        <tr><td>3</td><td>1.2 G + 1.6 S + Q</td></tr>
+        <tr><td>4</td><td>1.2 G + 1.0 W + Q + 0.5 S</td></tr>
+        <tr><td>5</td><td>0.9 G + 1.0 W</td></tr>
+      </table>
+      <p>G = Dead load &nbsp;|&nbsp; Q = Live load &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind</p>
+    </div>
+  </div>
+
+  <!-- ── IS 800 ── -->
+  <div class="bg-pane" id="bg-is800">
+    <div class="tb">
+      <h4>Flexural Buckling &mdash; IS 800:2007 &sect;7.1.2</h4>
+      <p>IS 800 uses the same Perry-Robertson model as EC3 with &gamma;<sub>m0</sub> = 1.10, E = 200,000 MPa. Slenderness limit: KL/r &le; 180.</p>
+      <div class="fml-blk"><span class="ft">Non-dimensional slenderness</span>&lambda;&#772; = (KL/r) / (&pi;&radic;(E/f<sub>y</sub>))</div>
+      <div class="fml-blk"><span class="ft">Auxiliary value</span>&phi; = 0.5 [1 + &alpha;(&lambda;&#772; &minus; 0.2) + &lambda;&#772;&sup2;]</div>
+      <div class="fml-blk"><span class="ft">Reduction factor</span>&chi; = 1 / (&phi; + &radic;(&phi;&sup2; &minus; &lambda;&#772;&sup2;)) &nbsp;&le;&nbsp; 1.0</div>
+      <div class="fml-blk"><span class="ft">Design strength</span>P<sub>d</sub> = &chi; &middot; A &middot; f<sub>y</sub> / (&gamma;<sub>m0</sub> &middot; 1000) &nbsp;(kN)</div>
+      <h4>Buckling Classes &mdash; IS 800:2007 Table 10</h4>
+      <table class="combo-ref-tbl" style="max-width:620px">
+        <tr><th>Section type</th><th>Axis</th><th>Class</th><th>&alpha;</th></tr>
+        <tr><td>Hot-rolled I (h/b &gt; 1.2), t<sub>f</sub> &le; 40 mm</td><td>y&#x2011;y (strong)</td><td>a</td><td>0.21</td></tr>
+        <tr><td>Hot-rolled I (h/b &gt; 1.2), t<sub>f</sub> &le; 40 mm</td><td>z&#x2011;z (weak)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>Hot-rolled I (h/b &le; 1.2), t<sub>f</sub> &le; 100 mm</td><td>y&#x2011;y (strong)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>Hot-rolled I (h/b &le; 1.2), t<sub>f</sub> &le; 100 mm</td><td>z&#x2011;z (weak)</td><td>c</td><td>0.49</td></tr>
+        <tr><td>SHS / RHS (hot-formed)</td><td>any</td><td>a</td><td>0.21</td></tr>
+        <tr><td>CHS (hot-formed)</td><td>any</td><td>a</td><td>0.21</td></tr>
+        <tr><td>Welded I, t<sub>f</sub> &le; 40 mm</td><td>y&#x2011;y</td><td>b</td><td>0.34</td></tr>
+        <tr><td>Welded I, t<sub>f</sub> &le; 40 mm</td><td>z&#x2011;z</td><td>c</td><td>0.49</td></tr>
+      </table>
+      <p>IS 800 buckling classes a/b/c/d match EC3 curves a/b/c/d exactly — imperfection factor &alpha; values are identical.</p>
+      <h4>IS 800:2007 Table 4 &mdash; ULS Load Combinations</h4>
+      <table class="combo-ref-tbl" style="max-width:520px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.5 (DL + LL)</td></tr>
+        <tr><td>2</td><td>1.5 (DL + SL)</td></tr>
+        <tr><td>3</td><td>1.5 (DL + WL)</td></tr>
+        <tr><td>4</td><td>1.2 (DL + LL + WL)</td></tr>
+        <tr><td>5</td><td>1.2 (DL + LL + SL)</td></tr>
+        <tr><td>6</td><td>0.9 DL + 1.5 WL</td></tr>
+      </table>
+      <p>DL = Dead Load &nbsp;|&nbsp; LL = Imposed Load &nbsp;|&nbsp; SL = Snow Load &nbsp;|&nbsp; WL = Wind Load. &gamma;<sub>f</sub> from IS 875 (Part 5).</p>
     </div>
   </div>
 </div>
@@ -312,7 +416,100 @@ SHS:{std:'si',data:[
 ['SHS 200×6.3',48.8,38.3,7.91,7.91],['SHS 200×8',61.4,48.2,7.85,7.85],['SHS 200×10',76.0,59.7,7.77,7.77],['SHS 200×12.5',93.8,73.6,7.67,7.67],['SHS 200×16',117.8,92.4,7.54,7.54],
 ['SHS 220×8',67.8,53.3,8.66,8.66],['SHS 220×10',84.0,65.9,8.59,8.59],['SHS 220×12.5',103,81.0,8.49,8.49],
 ['SHS 250×8',77.8,61.1,9.87,9.87],['SHS 250×10',96.0,75.4,9.80,9.80],['SHS 250×12.5',119,93.3,9.68,9.68],['SHS 250×16',150,117,9.52,9.52],
-['SHS 300×10',116,91.0,11.8,11.8],['SHS 300×12.5',144,113,11.7,11.7],['SHS 300×16',182,143,11.5,11.5]]}
+['SHS 300×10',116,91.0,11.8,11.8],['SHS 300×12.5',144,113,11.7,11.7],['SHS 300×16',182,143,11.5,11.5]]},
+HEM:{std:'si',data:[
+['HEM 100',53.2,41.8,4.64,2.74],['HEM 120',66.4,52.1,5.51,3.26],['HEM 140',80.6,63.3,6.39,3.77],
+['HEM 160',97.1,76.2,7.24,4.25],['HEM 180',113,89,8.13,4.77],['HEM 200',131,103,9.01,5.28],
+['HEM 220',149,117,9.90,5.80],['HEM 240',200,157,11.0,6.39],['HEM 260',220,172,11.9,6.89],
+['HEM 280',240,188,12.8,7.40],['HEM 300',303,238,14.0,8.00],['HEM 320',312,245,14.8,7.95],
+['HEM 340',316,248,15.5,7.90],['HEM 360',320,251,16.3,7.81],['HEM 400',326,256,17.9,7.69],
+['HEM 450',335,263,19.8,7.58],['HEM 500',344,270,21.7,7.45],['HEM 550',354,278,23.7,7.34],
+['HEM 600',364,286,25.5,7.20],['HEM 700',384,302,29.3,6.98],['HEM 800',374,294,35.6,7.14],
+['HEM 900',381,299,39.2,7.02],['HEM 1000',400,314,42.5,6.92]]},
+HD:{std:'si',data:[
+['HD 260×54.1',68.8,54.1,8.63,7.30],['HD 260×68.2',86.8,68.2,8.93,6.75],
+['HD 260×93',118,93.0,9.19,6.07],['HD 260×114',145,114,9.35,6.19],
+['HD 320×74.2',94.4,74.2,13.4,9.27],['HD 320×97.6',124,97.6,13.5,8.38],
+['HD 320×127',162,127,13.7,7.77],['HD 320×158',201,158,14.0,7.34],
+['HD 320×198',252,198,14.4,7.67],['HD 320×245',312,245,14.6,7.52],['HD 320×300',382,300,14.7,7.45],
+['HD 400×187',238,187,21.8,15.4],['HD 400×216',275,216,21.9,15.1],
+['HD 400×262',334,262,22.0,14.8],['HD 400×314',400,314,22.1,14.6],
+['HD 400×382',487,382,22.3,14.3],['HD 400×463',590,463,22.6,14.3],
+['HD 400×551',702,551,22.9,14.2],['HD 400×634',808,634,23.0,14.1]]},
+RHS:{std:'si',data:[
+['RHS 50×30×3',4.44,3.49,1.79,1.18],['RHS 60×40×3',5.64,4.43,2.20,1.59],['RHS 60×40×4',7.36,5.78,2.17,1.56],
+['RHS 80×40×3',6.84,5.37,2.86,1.64],['RHS 80×40×4',8.96,7.03,2.82,1.60],['RHS 80×40×5',11.0,8.63,2.78,1.56],
+['RHS 80×60×4',10.6,8.29,2.99,2.38],['RHS 80×60×5',13.0,10.2,2.95,2.34],['RHS 80×60×6',15.4,12.1,2.91,2.30],
+['RHS 100×40×4',10.6,8.29,3.45,1.63],['RHS 100×50×4',11.4,8.92,3.56,2.04],['RHS 100×50×5',14.0,11.0,3.52,2.00],
+['RHS 100×60×4',12.2,9.55,3.66,2.44],['RHS 100×60×5',15.0,11.8,3.62,2.40],
+['RHS 100×80×5',17.0,13.3,3.77,3.16],['RHS 100×80×6',20.2,15.8,3.73,3.12],
+['RHS 120×60×4',13.8,10.8,4.31,2.48],['RHS 120×60×5',17.0,13.3,4.27,2.44],['RHS 120×60×6',20.2,15.8,4.23,2.40],
+['RHS 120×80×5',19.0,14.9,4.45,3.22],['RHS 120×80×6',22.6,17.7,4.41,3.19],['RHS 120×80×8',29.4,23.1,4.33,3.11],
+['RHS 140×80×5',21.0,16.5,5.11,3.28],['RHS 140×80×6',25.0,19.6,5.07,3.24],['RHS 140×80×8',32.6,25.6,4.99,3.16],
+['RHS 150×75×5',21.5,16.9,5.38,3.10],
+['RHS 150×100×5',24.0,18.8,5.61,4.08],['RHS 150×100×6',28.6,22.4,5.57,4.04],['RHS 150×100×8',37.4,29.4,5.49,3.96],
+['RHS 160×80×5',23.0,18.1,5.76,3.32],['RHS 160×80×6',27.4,21.5,5.72,3.28],['RHS 160×80×8',35.8,28.1,5.64,3.20],
+['RHS 180×100×6',32.2,25.2,6.56,4.12],['RHS 180×100×8',42.2,33.2,6.48,4.04],
+['RHS 200×100×6',34.6,27.1,7.20,4.16],['RHS 200×100×8',45.4,35.7,7.12,4.08],
+['RHS 200×120×6',37.0,29.0,7.39,4.95],['RHS 200×120×8',48.6,38.2,7.31,4.87],
+['RHS 200×150×6',40.6,31.8,7.63,6.10],['RHS 200×150×8',53.4,42.0,7.55,6.02],
+['RHS 250×150×8',61.4,48.2,9.22,6.17],['RHS 250×150×10',76.0,59.7,9.14,6.09],['RHS 250×150×12',90.2,70.8,9.06,6.01],
+['RHS 250×200×8',69.4,54.5,9.60,8.07],['RHS 250×200×10',86.0,67.5,9.52,7.99],
+['RHS 300×150×8',69.4,54.5,10.8,6.29],['RHS 300×150×10',86.0,67.5,10.8,6.20],
+['RHS 300×200×8',77.4,60.8,11.3,8.24],['RHS 300×200×10',96.0,75.4,11.2,8.16],['RHS 300×200×12',114,89.7,11.1,8.08],
+['RHS 350×200×10',106,83.2,12.9,8.30],['RHS 350×250×10',116,91.1,13.3,10.2],
+['RHS 400×200×10',116,91.1,14.5,8.41],['RHS 400×200×12',138,109,14.4,8.33],
+['RHS 400×300×10',136,107,15.3,12.3],['RHS 400×300×12',162,127,15.3,12.2],
+['RHS 500×300×10',156,122,18.7,12.6],['RHS 500×300×12',186,146,18.6,12.5]]},
+CHS:{std:'si',data:[
+['CHS 21.3×2.0',1.21,0.95,0.686,0.686],['CHS 21.3×2.6',1.53,1.20,0.668,0.668],['CHS 21.3×3.2',1.82,1.43,0.650,0.650],
+['CHS 26.9×2.0',1.56,1.23,0.883,0.883],['CHS 26.9×2.6',1.98,1.56,0.864,0.864],['CHS 26.9×3.2',2.38,1.87,0.846,0.846],
+['CHS 33.7×2.6',2.54,1.99,1.10,1.10],['CHS 33.7×3.2',3.07,2.41,1.08,1.08],['CHS 33.7×4.0',3.73,2.93,1.06,1.06],
+['CHS 42.4×2.6',3.25,2.55,1.41,1.41],['CHS 42.4×3.2',3.94,3.09,1.39,1.39],['CHS 42.4×4.0',4.83,3.79,1.36,1.36],['CHS 42.4×5.0',5.87,4.61,1.33,1.33],
+['CHS 48.3×2.6',3.73,2.93,1.62,1.62],['CHS 48.3×3.2',4.53,3.56,1.60,1.60],['CHS 48.3×4.0',5.57,4.37,1.57,1.57],['CHS 48.3×5.0',6.80,5.34,1.54,1.54],
+['CHS 60.3×3.2',5.74,4.51,2.02,2.02],['CHS 60.3×4.0',7.07,5.55,2.00,2.00],['CHS 60.3×5.0',8.69,6.82,1.96,1.96],['CHS 60.3×6.3',10.7,8.39,1.92,1.92],
+['CHS 76.1×3.2',7.33,5.75,2.58,2.58],['CHS 76.1×4.0',9.06,7.11,2.55,2.55],['CHS 76.1×5.0',11.2,8.77,2.52,2.52],['CHS 76.1×6.3',13.8,10.8,2.48,2.48],
+['CHS 88.9×3.2',8.62,6.76,3.03,3.03],['CHS 88.9×4.0',10.7,8.38,3.00,3.00],['CHS 88.9×5.0',13.2,10.3,2.97,2.97],['CHS 88.9×6.3',16.3,12.8,2.93,2.93],['CHS 88.9×8.0',20.3,16.0,2.87,2.87],
+['CHS 101.6×3.6',11.1,8.70,3.47,3.47],['CHS 101.6×4.0',12.3,9.63,3.45,3.45],['CHS 101.6×5.0',15.2,11.9,3.42,3.42],['CHS 101.6×6.3',18.9,14.8,3.38,3.38],['CHS 101.6×8.0',23.5,18.5,3.32,3.32],
+['CHS 114.3×3.6',12.5,9.83,3.92,3.92],['CHS 114.3×5.0',17.2,13.5,3.87,3.87],['CHS 114.3×6.3',21.4,16.8,3.82,3.82],['CHS 114.3×8.0',26.7,21.0,3.77,3.77],['CHS 114.3×10.0',32.8,25.7,3.70,3.70],
+['CHS 127.0×4.0',15.5,12.1,4.35,4.35],['CHS 127.0×5.0',19.2,15.0,4.32,4.32],['CHS 127.0×6.3',23.9,18.8,4.27,4.27],['CHS 127.0×8.0',29.9,23.5,4.22,4.22],['CHS 127.0×10.0',36.8,28.9,4.15,4.15],
+['CHS 139.7×4.0',17.1,13.4,4.80,4.80],['CHS 139.7×5.0',21.2,16.6,4.77,4.77],['CHS 139.7×6.3',26.4,20.7,4.72,4.72],['CHS 139.7×8.0',33.1,26.0,4.66,4.66],['CHS 139.7×10.0',40.7,32.0,4.60,4.60],
+['CHS 152.4×4.0',18.6,14.6,5.25,5.25],['CHS 152.4×5.0',23.2,18.2,5.21,5.21],['CHS 152.4×6.3',28.9,22.7,5.17,5.17],['CHS 152.4×8.0',36.3,28.5,5.11,5.11],['CHS 152.4×10.0',44.7,35.1,5.05,5.05],
+['CHS 168.3×4.0',20.6,16.2,5.81,5.81],['CHS 168.3×5.0',25.7,20.1,5.78,5.78],['CHS 168.3×6.3',32.1,25.2,5.73,5.73],['CHS 168.3×8.0',40.3,31.6,5.67,5.67],['CHS 168.3×10.0',49.7,39.0,5.61,5.61],['CHS 168.3×12.5',61.2,48.0,5.53,5.53],
+['CHS 193.7×5.0',29.6,23.3,6.67,6.67],['CHS 193.7×6.3',37.1,29.1,6.63,6.63],['CHS 193.7×8.0',46.7,36.6,6.57,6.57],['CHS 193.7×10.0',57.7,45.3,6.50,6.50],['CHS 193.7×12.5',71.2,55.9,6.42,6.42],
+['CHS 219.1×5.0',33.6,26.4,7.57,7.57],['CHS 219.1×6.3',42.1,33.1,7.53,7.53],['CHS 219.1×8.0',53.1,41.6,7.47,7.47],['CHS 219.1×10.0',65.7,51.6,7.40,7.40],['CHS 219.1×12.5',81.1,63.7,7.32,7.32],['CHS 219.1×16.0',102,80.1,7.20,7.20],
+['CHS 244.5×5.0',37.6,29.5,8.47,8.47],['CHS 244.5×6.3',47.1,37.0,8.42,8.42],['CHS 244.5×8.0',59.4,46.7,8.37,8.37],['CHS 244.5×10.0',73.7,57.8,8.30,8.30],['CHS 244.5×12.5',91.1,71.5,8.21,8.21],
+['CHS 273.0×6.3',52.8,41.4,9.43,9.43],['CHS 273.0×8.0',66.6,52.3,9.37,9.37],['CHS 273.0×10.0',82.6,64.9,9.31,9.31],['CHS 273.0×12.5',102,80.3,9.22,9.22],['CHS 273.0×16.0',129,101,9.10,9.10],
+['CHS 323.9×6.3',62.9,49.3,11.2,11.2],['CHS 323.9×8.0',79.4,62.3,11.2,11.2],['CHS 323.9×10.0',98.6,77.4,11.1,11.1],['CHS 323.9×12.5',122,96.0,11.0,11.0],['CHS 323.9×16.0',155,121,10.9,10.9],
+['CHS 355.6×8.0',87.4,68.6,12.3,12.3],['CHS 355.6×10.0',109,85.2,12.2,12.2],['CHS 355.6×12.5',135,106,12.1,12.1],['CHS 355.6×16.0',171,134,12.0,12.0],
+['CHS 406.4×8.0',100,78.6,14.1,14.1],['CHS 406.4×10.0',125,97.8,14.0,14.0],['CHS 406.4×12.5',155,121,13.9,13.9],['CHS 406.4×16.0',196,154,13.8,13.8],
+['CHS 457.0×8.0',113,88.6,15.9,15.9],['CHS 457.0×10.0',140,110,15.8,15.8],['CHS 457.0×12.5',175,137,15.7,15.7],['CHS 457.0×16.0',222,174,15.6,15.6],
+['CHS 508.0×8.0',126,98.7,17.7,17.7],['CHS 508.0×10.0',156,123,17.6,17.6],['CHS 508.0×12.5',195,153,17.5,17.5],['CHS 508.0×16.0',247,194,17.4,17.4],
+['CHS 559.0×10.0',172,135,19.4,19.4],['CHS 559.0×12.5',215,168,19.3,19.3],['CHS 559.0×16.0',273,214,19.2,19.2],
+['CHS 610.0×10.0',188,148,21.2,21.2],['CHS 610.0×12.5',235,184,21.1,21.1],['CHS 610.0×16.0',299,234,21.0,21.0]]},
+// Indian sections (IS 808:1989): [name, A(cm²), G(kg/m), rx(cm), ry(cm)]
+ISMB:{std:'india',data:[
+['ISMB 100',14.60,11.5,4.22,1.84],['ISMB 125',16.59,13.0,5.20,1.79],['ISMB 150',19.00,14.9,6.18,1.66],['ISMB 175',24.62,19.3,7.19,2.01],
+['ISMB 200',32.33,25.4,8.32,2.15],['ISMB 225',39.72,31.2,9.30,2.34],['ISMB 250',47.55,37.3,10.39,2.65],['ISMB 300',58.64,46.1,12.18,2.85],
+['ISMB 350',66.71,52.4,14.29,2.84],['ISMB 400',78.46,61.6,16.14,2.82],['ISMB 450',92.27,72.4,18.15,3.01],
+['ISMB 500',110.74,86.9,20.21,3.52],['ISMB 550',132.11,103.7,22.17,3.73],['ISMB 600',156.21,122.6,24.25,4.12]]},
+ISLB:{std:'india',data:[
+['ISLB 75',7.26,5.70,2.68,1.16],['ISLB 100',10.26,8.06,4.04,1.22],['ISLB 125',14.93,11.72,5.21,1.83],['ISLB 150',17.01,13.36,6.36,1.80],
+['ISLB 175',22.09,17.34,7.38,2.02],['ISLB 200',26.22,20.58,8.04,2.10],['ISLB 225',30.28,23.77,9.42,2.08],['ISLB 250',36.62,28.74,10.90,2.51],
+['ISLB 300',48.08,37.74,12.35,2.80],['ISLB 350',60.52,47.51,14.74,3.23],['ISLB 400',71.52,56.14,16.42,3.16],
+['ISLB 450',83.11,65.24,18.20,3.17],['ISLB 500',95.50,75.00,20.10,3.34],['ISLB 550',109.67,86.09,22.01,3.51],['ISLB 600',127.53,100.11,23.90,3.91]]},
+ISWB:{std:'india',data:[
+['ISWB 150',19.30,15.16,6.20,1.93],['ISWB 175',25.06,19.67,7.76,2.64],['ISWB 200',35.52,27.88,8.68,2.93],['ISWB 225',43.23,33.94,10.02,3.19],
+['ISWB 250',60.80,47.73,11.26,4.35],['ISWB 300',61.33,48.14,12.65,4.01],['ISWB 350',79.93,62.77,15.49,3.84],['ISWB 400',85.00,66.72,17.17,3.77],
+['ISWB 450',101.15,79.40,18.62,3.60],['ISWB 500',128.00,100.50,20.20,4.80],['ISWB 550',149.35,117.25,22.09,4.82],['ISWB 600',145.73,114.40,26.02,4.88]]},
+ISHB:{std:'india',data:[
+['ISHB 150',28.74,22.57,5.58,3.56],['ISHB 200',52.59,41.28,8.28,5.03],['ISHB 200A',55.98,43.94,8.30,4.89],
+['ISHB 225',64.65,50.75,9.78,6.04],['ISHB 250',78.47,61.60,11.50,6.97],['ISHB 300',86.67,68.03,12.03,6.18],
+['ISHB 350',99.67,78.23,13.97,5.92],['ISHB 400',114.00,89.49,15.96,5.62],['ISHB 450',131.67,103.36,17.78,5.33],['ISHB 500',149.35,117.24,19.45,5.09]]},
+ISMC:{std:'india',data:[
+['ISMC 75',8.67,6.80,2.80,1.02],['ISMC 100',11.70,9.19,3.99,1.29],['ISMC 125',16.19,12.71,5.07,1.64],['ISMC 150',20.88,16.40,6.11,1.98],
+['ISMC 175',23.63,18.55,7.32,2.01],['ISMC 200',28.21,22.14,8.03,1.91],['ISMC 225',32.35,25.39,9.13,2.00],['ISMC 250',38.68,30.36,9.81,1.92],
+['ISMC 300',49.62,38.95,11.33,2.10],['ISMC 350',57.28,44.96,13.23,2.31],['ISMC 400',68.43,53.72,14.85,2.14]]}
 };
 
 var TYPES_US = [
@@ -325,8 +522,12 @@ var TYPES_US = [
 var TYPES_SI = [
   {key:'HEA', label:'HEA — Wide Flange H, Light (EN 10365)'},
   {key:'HEB', label:'HEB — Wide Flange H, Medium (EN 10365)'},
+  {key:'HEM', label:'HEM — Wide Flange H, Heavy (EN 10365)'},
+  {key:'HD',  label:'HD — Heavy Column Section (EN 10365)'},
   {key:'IPE', label:'IPE — Parallel Flange I-Beam (EN 10365)'},
-  {key:'SHS', label:'SHS — Square Hollow Section (EN 10210)'}
+  {key:'SHS', label:'SHS — Square Hollow Section (EN 10210)'},
+  {key:'RHS', label:'RHS — Rectangular Hollow Section (EN 10210)'},
+  {key:'CHS', label:'CHS — Circular Hollow Section (EN 10210)'}
 ];
 var GRADES_US = [
   {n:'A992 Gr 50 (W shapes)', Fy:50},
@@ -336,14 +537,61 @@ var GRADES_US = [
   {n:'A36',                   Fy:36}
 ];
 var GRADES_SI = [
-  {n:'S355', Fy:355},
-  {n:'S275', Fy:275},
   {n:'S235', Fy:235},
+  {n:'S275', Fy:275},
+  {n:'S355', Fy:355},
   {n:'S460', Fy:460}
 ];
 
+var GRADES_IS800 = [
+  {n:'IS 2062 E250 (Fe 410-W)', Fy:250},
+  {n:'IS 2062 E300 (Fe 440)',   Fy:300},
+  {n:'IS 2062 E350 (Fe 490)',   Fy:350},
+  {n:'IS 2062 E410 (Fe 540)',   Fy:410}
+];
+var TYPES_IN = [
+  {key:'ISMB', label:'ISMB — Medium Weight Beam (IS 808)'},
+  {key:'ISLB', label:'ISLB — Light Weight Beam (IS 808)'},
+  {key:'ISWB', label:'ISWB — Wide Flange Beam (IS 808)'},
+  {key:'ISHB', label:'ISHB — Column/H Section (IS 808)'},
+  {key:'ISMC', label:'ISMC — Medium Weight Channel (IS 808)'}
+];
+
 var acUnit = 'us';
+var acCode = 'aisc';
 var acSecType = 'W';
+var acLoadMode = 'combo';
+
+function acSetCode(code) {
+  acCode = code;
+  ['aisc','ec3','is800','tsds'].forEach(function(c){
+    var b = document.getElementById('ac-btn-'+c); if(b) b.classList.toggle('active', c===code);
+  });
+  if (code !== 'aisc') {
+    acUnit = 'si';
+    document.getElementById('ac-btn-us').classList.remove('active');
+    document.getElementById('ac-btn-si').classList.add('active');
+    document.getElementById('ac-L').value = 3;
+  }
+  document.getElementById('ac-unit-sw').style.display = (code==='aisc') ? '' : 'none';
+  var subs = {
+    aisc: 'AISC 360 LRFD axial compression &mdash; flexural buckling per Chapter E. ASCE 7-22 combinations.',
+    ec3:  'EN 1993-1-1 axial compression &mdash; flexural buckling per &sect;6.3.1. EN 1990 combinations.',
+    is800:'IS 800:2000 axial compression &mdash; design compressive strength per &sect;7.1.2. IS 875 combinations.',
+    tsds: 'TSDS 2016 LRFD axial compression &mdash; flexural buckling per &sect;5. TSDS 2016 combinations.'
+  };
+  document.getElementById('ac-subtitle').innerHTML = subs[code];
+  acPopGrades(); acPopTypes(); acUpdateLabels();
+}
+
+function acSetLoadMode(mode) {
+  acLoadMode = mode;
+  document.getElementById('ac-panel-combo').style.display  = mode==='combo'  ? '' : 'none';
+  document.getElementById('ac-panel-direct').style.display = mode==='direct' ? '' : 'none';
+  document.getElementById('ac-mode-combo').classList.toggle('active',  mode==='combo');
+  document.getElementById('ac-mode-direct').classList.toggle('active', mode==='direct');
+  acAutoCalc();
+}
 
 function fmt(v,d){ return (+v).toFixed(d); }
 
@@ -355,37 +603,45 @@ function acSetUnit(unit, btn) {
   acPopGrades();
   acPopTypes();
   acUpdateLabels();
-  document.getElementById('ac-empty').style.display = '';
-  document.getElementById('ac-card').style.display  = 'none';
 }
 
 function acUpdateLabels() {
-  var isUS = acUnit === 'us';
+  var isUS = acUnit === 'us' && acCode === 'aisc';
   var fU = isUS ? 'kip' : 'kN';
   var lU = isUS ? 'ft'  : 'm';
+  var codeLabels = {aisc:isUS?'AISC 360 · kip · ft · in':'AISC 360 · kN · m · mm', ec3:'EN 1993-1-1 · kN · m · mm', is800:'IS 800:2000 · kN · m · mm', tsds:'TSDS 2016 · kN · m · mm'};
   document.getElementById('ac-unit-tag').textContent = isUS ? 'kip · ft · in' : 'kN · m · mm';
-  document.getElementById('ac-rh-code').textContent  = isUS ? 'AISC 360 · kip · ft · in' : 'AISC 360 · kN · m · mm';
+  document.getElementById('ac-rh-code').textContent  = codeLabels[acCode];
   document.getElementById('ac-L-lbl').textContent = '[' + lU + ']';
   document.getElementById('ac-L-us').textContent  = lU;
+  var loadsLblMap = {aisc:'Loads &mdash; ASCE 7-22', ec3:'Loads &mdash; EN 1990', is800:'Loads &mdash; IS 875:2015', tsds:'Loads &mdash; TSDS 2016'};
+  var ll = document.getElementById('ac-loads-lbl'); if(ll) ll.innerHTML = loadsLblMap[acCode];
   ['PD','PL','PLr','PS','PW'].forEach(function(k){
     var el = document.getElementById('ac-'+k+'-lbl');
     var us = document.getElementById('ac-'+k+'-us');
     if(el) el.textContent = '[' + fU + ']';
     if(us) us.textContent = fU;
   });
+  var dmLbl = document.getElementById('ac-dm-pu-lbl');
+  var dmUs  = document.getElementById('ac-dm-pu-us');
+  var dmEl  = document.getElementById('ac-dm-pu');
+  if(dmLbl) dmLbl.textContent = '[' + fU + ']';
+  if(dmUs)  dmUs.textContent  = fU;
+  if(dmEl)  dmEl.value = isUS ? 50 : 200;
 }
 
 function acPopGrades() {
-  var grades = acUnit==='us' ? GRADES_US : GRADES_SI;
-  var fy = (acUnit==='us') ? 50 : 355;
+  var grades = acCode==='is800' ? GRADES_IS800 : (acUnit==='us'&&acCode==='aisc' ? GRADES_US : GRADES_SI);
+  var defFy  = acCode==='is800' ? 250 : (acUnit==='us'&&acCode==='aisc' ? 50 : 355);
+  var uSt    = (acUnit==='us'&&acCode==='aisc') ? ' ksi' : ' MPa';
   var sel = document.getElementById('ac-grade');
   sel.innerHTML = grades.map(function(g){
-    return '<option value="'+g.Fy+'"'+(g.Fy===fy?' selected':'')+'>'+g.n+' &mdash; Fy = '+g.Fy+(acUnit==='us'?' ksi':' MPa')+'</option>';
+    return '<option value="'+g.Fy+'"'+(g.Fy===defFy?' selected':'')+'>'+g.n+' &mdash; Fy = '+g.Fy+uSt+'</option>';
   }).join('');
 }
 
 function acPopTypes() {
-  var types = acUnit==='us' ? TYPES_US : TYPES_SI;
+  var types = (acUnit==='us'&&acCode==='aisc') ? TYPES_US : (acCode==='is800' ? TYPES_IN : TYPES_SI);
   acSecType = types[0].key;
   var sel = document.getElementById('ac-sec-type');
   sel.innerHTML = types.map(function(t){
@@ -404,6 +660,14 @@ function acPopSections() {
   acUpdateSchema();
 }
 
+function acAutoCalc() {
+  var name = document.getElementById('ac-section').value;
+  if (!name) return;
+  var Lval = +document.getElementById('ac-L').value;
+  if (!(Lval > 0)) return;
+  acCalc();
+}
+
 function acUpdateSchema() {
   var name = document.getElementById('ac-section').value;
   var schDiv = document.getElementById('ac-schema');
@@ -415,7 +679,7 @@ function acUpdateSchema() {
   var s = '';
 
   var st = acSecType;
-  if (st==='W'||st==='HP'||st==='HEA'||st==='HEB'||st==='IPE') {
+  if (st==='W'||st==='HP'||st==='HEA'||st==='HEB'||st==='HEM'||st==='HD'||st==='IPE') {
     var fw=58,fh=9,ww=7,wh=46;
     s += '<rect x="'+(cx-fw/2)+'" y="'+(cy-wh/2-fh)+'" width="'+fw+'" height="'+fh+'" rx="1" fill="'+col+'"/>';
     s += '<rect x="'+(cx-ww/2)+'" y="'+(cy-wh/2)+'" width="'+ww+'" height="'+wh+'" fill="'+col+'"/>';
@@ -424,7 +688,7 @@ function acUpdateSchema() {
     var sz=52, t=7;
     s += '<rect x="'+(cx-sz/2)+'" y="'+(cy-sz/2)+'" width="'+sz+'" height="'+sz+'" rx="2" fill="'+col+'"/>';
     s += '<rect x="'+(cx-sz/2+t)+'" y="'+(cy-sz/2+t)+'" width="'+(sz-2*t)+'" height="'+(sz-2*t)+'" fill="var(--bg2)"/>';
-  } else if (st==='HSS_RECT') {
+  } else if (st==='HSS_RECT'||st==='RHS') {
     var bw=62, bh=42, t=7;
     s += '<rect x="'+(cx-bw/2)+'" y="'+(cy-bh/2)+'" width="'+bw+'" height="'+bh+'" rx="2" fill="'+col+'"/>';
     s += '<rect x="'+(cx-bw/2+t)+'" y="'+(cy-bh/2+t)+'" width="'+(bw-2*t)+'" height="'+(bh-2*t)+'" fill="var(--bg2)"/>';
@@ -446,6 +710,7 @@ function acUpdateSchema() {
   s += '<text x="'+cx+'" y="'+(cy+axR+13)+'" text-anchor="middle" font-size="'+fsz+'" font-family="sans-serif" fill="'+axCol+'" font-weight="'+fw2+'">y</text>';
 
   document.getElementById('ac-svg').innerHTML = s;
+  acAutoCalc();
 }
 
 function acBgTab(id,el) {
@@ -457,6 +722,9 @@ function acBgTab(id,el) {
 
 // ── CALCULATION ────────────────────────────────────────────────────────────────
 function acCalc() {
+  if (acCode === 'ec3')   return acCalcEC3();
+  if (acCode === 'tsds')  return acCalcTSDS();
+  if (acCode === 'is800') return acCalcIS800();
   var name = document.getElementById('ac-section').value;
   if (!name) { alert('Please select a section.'); return; }
   var row = (DB[acSecType]&&DB[acSecType].data||[]).find(function(r){ return r[0]===name; });
@@ -497,27 +765,35 @@ function acCalc() {
     uF  = 'kN'; uL = 'm'; uSt = 'MPa';
   }
 
-  // Applied loads in kip or kN
-  var PD  = +document.getElementById('ac-PD').value  || 0;
-  var PL  = +document.getElementById('ac-PL').value  || 0;
-  var PLr = +document.getElementById('ac-PLr').value || 0;
-  var PS  = +document.getElementById('ac-PS').value  || 0;
-  var PW  = +document.getElementById('ac-PW').value  || 0;
+  var isDirect = acLoadMode === 'direct';
+  var PD, PL, PLr, PS, PW, D, L, S, W, combos, gov, Pu;
 
-  var D = PD + sw;
-  var L = PL + PLr;
-  var S = PS;
-  var W = PW;
-
-  var combos = [
-    {n:'1', f:'1.4D',                    P: 1.4*D},
-    {n:'2', f:'1.2D + 1.6L + 0.5S',     P: 1.2*D + 1.6*L + 0.5*S},
-    {n:'3', f:'1.2D + 1.6S + L',        P: 1.2*D + 1.6*S + L},
-    {n:'4', f:'1.2D + 1.0W + L + 0.5S', P: 1.2*D + W + L + 0.5*S},
-    {n:'5', f:'0.9D + 1.0W',            P: 0.9*D + W}
-  ];
-  var gov = combos.reduce(function(a,b){ return a.P >= b.P ? a : b; });
-  var Pu = gov.P;
+  if (isDirect) {
+    Pu = +document.getElementById('ac-dm-pu').value || 0;
+    PD = 0; PL = 0; PLr = 0; PS = 0; PW = 0;
+    D = 0; L = 0; S = 0; W = 0; sw = 0;
+    combos = [];
+    gov = {n:'—', f:'User-defined'};
+  } else {
+    PD  = +document.getElementById('ac-PD').value  || 0;
+    PL  = +document.getElementById('ac-PL').value  || 0;
+    PLr = +document.getElementById('ac-PLr').value || 0;
+    PS  = +document.getElementById('ac-PS').value  || 0;
+    PW  = +document.getElementById('ac-PW').value  || 0;
+    D = PD + sw;
+    L = PL + PLr;
+    S = PS;
+    W = PW;
+    combos = [
+      {n:'1', f:'1.4D',                    P: 1.4*D},
+      {n:'2', f:'1.2D + 1.6L + 0.5S',     P: 1.2*D + 1.6*L + 0.5*S},
+      {n:'3', f:'1.2D + 1.6S + L',        P: 1.2*D + 1.6*S + L},
+      {n:'4', f:'1.2D + 1.0W + L + 0.5S', P: 1.2*D + W + L + 0.5*S},
+      {n:'5', f:'0.9D + 1.0W',            P: 0.9*D + W}
+    ];
+    gov = combos.reduce(function(a,b){ return a.P >= b.P ? a : b; });
+    Pu = gov.P;
+  }
 
   // Unbraced length ratios (clamped 0.05–1.0)
   var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
@@ -564,7 +840,7 @@ function acCalc() {
     Lval:Lval, bcX:bcX, bcY:bcY, bcLblX:bcLblX, bcLblY:bcLblY, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, Lbx:Lbx, Lby:Lby,
     Ag:Ag_r, Ag_calc:Ag, rx:rx_r, ry:ry_r, wt:wt_r, sw:sw,
     PD:PD, PL:PL, PLr:PLr, D:D, L:L, S:S, W:W,
-    combos:combos, gov:gov.n, govF:gov.f, Pu:Pu,
+    combos:combos, gov:gov.n, govF:gov.f, Pu:Pu, isDirect:isDirect,
     KLx:KLx, KLy:KLy, lx:lx, ly:ly, lMax:lMax, govAx:govAx, lLim:lLim,
     slOk:slOk, Fe_x:Fe_x, Fe_y:Fe_y, Fe:Fe, Pe_x:Pe_x, Pe_y:Pe_y, Fcr:Fcr, bMode:bMode,
     Pn:Pn, phiPn:phiPn, DCR:DCR,
@@ -634,76 +910,87 @@ function acRender(r) {
      + '<tr><td>A<sub>g</sub></td><td class="inp-num">'+agDisp+' '+agLbl+'</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+rxDisp+' '+rLbl+'</td></tr>'
      + '<tr><td>r<sub>y</sub></td><td class="inp-num">'+ryDisp+' '+rLbl+'</td></tr>'
-     + '<tr><td>Dead P<sub>D</sub> (applied)</td><td class="inp-num">'+fmt(r.PD,2)+' '+uF+'</td></tr>'
-     + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' '+uF+'<br><span style="font-size:.74em;color:var(--text-dim);">('+fmt(r.wt,1)+' '+wtLbl+' &times; '+r.Lval+' '+uL+')</span></td></tr>'
-     + '<tr><td>Total Dead D</td><td class="inp-num">'+fmt(r.D,2)+' '+uF+'</td></tr>'
-     + '<tr><td>Live P<sub>L</sub> + Roof P<sub>Lr</sub></td><td class="inp-num">'+fmt(r.PL,2)+' + '+fmt(r.PLr,2)+' = '+fmt(r.L,2)+' '+uF+'</td></tr>'
-     + (r.S>0 ? '<tr><td>Snow P<sub>S</sub></td><td class="inp-num">'+fmt(r.S,2)+' '+uF+'</td></tr>' : '')
-     + (r.W>0 ? '<tr><td>Wind P<sub>W</sub></td><td class="inp-num">'+fmt(r.W,2)+' '+uF+'</td></tr>' : '')
+     + (r.isDirect
+       ? '<tr><td>Factored axial P<sub>u</sub></td><td class="inp-num">'+fmt(r.Pu,2)+' '+uF+' <span style="color:var(--text-dim);font-size:.78em">(user-defined, combos &amp; SW excluded)</span></td></tr>'
+       : '<tr><td>Dead P<sub>D</sub> (applied)</td><td class="inp-num">'+fmt(r.PD,2)+' '+uF+'</td></tr>'
+         + '<tr><td>Self-Weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' '+uF+'<br><span style="font-size:.74em;color:var(--text-dim);">('+fmt(r.wt,1)+' '+wtLbl+' &times; '+r.Lval+' '+uL+')</span></td></tr>'
+         + '<tr><td>Total Dead D</td><td class="inp-num">'+fmt(r.D,2)+' '+uF+'</td></tr>'
+         + '<tr><td>Live P<sub>L</sub> + Roof P<sub>Lr</sub></td><td class="inp-num">'+fmt(r.PL,2)+' + '+fmt(r.PLr,2)+' = '+fmt(r.L,2)+' '+uF+'</td></tr>'
+         + (r.S>0 ? '<tr><td>Snow P<sub>S</sub></td><td class="inp-num">'+fmt(r.S,2)+' '+uF+'</td></tr>' : '')
+         + (r.W>0 ? '<tr><td>Wind P<sub>W</sub></td><td class="inp-num">'+fmt(r.W,2)+' '+uF+'</td></tr>' : ''))
      + '</table></div>';
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
-     + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">P<sub>u</sub> ('+uF+')</th></tr>';
-  r.combos.forEach(function(c){
-    var g = c.n === r.gov;
-    h += '<tr'+(g?' class="gov-row"':'')+'>'
-       + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
-       + '<td class="combo-lbl">'+c.f+'</td>'
-       + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,2)+(g?' &larr; governs':'')+'</td></tr>';
-  });
-  h += '</table></div>';
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">P<sub>u</sub> ('+uF+')</th></tr>';
+    r.combos.forEach(function(c){
+      var g = c.n === r.gov;
+      h += '<tr'+(g?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+c.n+'</td>'
+         + '<td class="combo-lbl">'+c.f+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,2)+(g?' &larr; governs':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
 
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design &mdash; AISC 360 Chapter E</div>'
      + '<table class="steps-table">';
 
-  h += step(1, 'Total dead D = P<sub>D</sub> + self-weight',
-    fmt(r.PD,2)+' + '+fmt(r.sw,3)+' '+uF, 'D = '+fmt(r.D,2)+' '+uF);
+  var s0 = r.isDirect ? 2 : 0;
 
-  h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
-    r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+  if (r.isDirect) {
+    h += step(1, 'Design force P<sub>u</sub> &mdash; user-defined (factored)',
+      'Entered directly &mdash; load combinations and self-weight excluded from report',
+      'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+  } else {
+    h += step(1, 'Total dead D = P<sub>D</sub> + self-weight',
+      fmt(r.PD,2)+' + '+fmt(r.sw,3)+' '+uF, 'D = '+fmt(r.D,2)+' '+uF);
+    h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
+      r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+  }
 
-  h += step(3, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
+  h += step(3-s0, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
     'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; L<sub>b,x</sub> = '+r.Kx.toFixed(2)+' &times; '+fmt(r.Lbx,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
     +'<br>y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; L<sub>b,y</sub> = '+r.Ky.toFixed(2)+' &times; '+fmt(r.Lby,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
     'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+'<br>KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
 
-  h += step(4, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
+  h += step(4-s0, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
     'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
     '&lambda;<sub>max</sub> = '+fmt(r.lMax,1), r.slOk);
 
-  h += step(5, 'Euler elastic buckling load P<sub>e</sub> &mdash; AISC E3-4',
+  h += step(5-s0, 'Euler elastic buckling load P<sub>e</sub> &mdash; AISC E3-4',
     'P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2;',
     'P<sub>e,x</sub> = '+fmt(r.Pe_x,1)+' '+uF+' &nbsp;|&nbsp; P<sub>e,y</sub> = '+fmt(r.Pe_y,1)+' '+uF);
 
-  h += step(6, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
+  h += step(6-s0, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
     '4.71 &times; &radic;('+r.E+'/'+r.Fy+')',
     '&lambda;<sub>lim</sub> = '+fmt(r.lLim,1));
 
-  h += step(7, 'Governing elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
+  h += step(7-s0, 'Governing elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
     '&pi;&sup2; &times; '+r.E+' / '+fmt(r.lMax,1)+'&sup2;',
     'F<sub>e</sub> = '+fmt(r.Fe,2)+' '+uSt);
 
   if (r.bMode === 'Inelastic') {
-    h += step(8, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
+    h += step(8-s0, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
       '0.658<sup>'+fmt(r.Fy/r.Fe,3)+'</sup> &times; '+r.Fy,
       'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
   } else {
-    h += step(8, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
+    h += step(8-s0, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
       '0.877 &times; '+fmt(r.Fe,2),
       'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
   }
 
-  h += step(9, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
+  h += step(9-s0, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
     r.isUS
       ? fmt(r.Fcr,2)+' '+uSt+' &times; '+fmt(r.Ag,2)+' in&sup2;'
       : fmt(r.Fcr,2)+' MPa &times; '+fmt(r.Ag_calc,0)+' mm&sup2; / 1000',
     'P<sub>n</sub> = '+fmt(r.Pn,1)+' '+uF);
 
-  h += step(10, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
+  h += step(10-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
     '0.90 &times; '+fmt(r.Pn,1)+' '+uF,
     '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' '+uF);
 
-  h += step(11, 'Demand / Capacity check',
+  h += step(11-s0, 'Demand / Capacity check',
     'P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,2)+' / '+fmt(r.phiPn,1),
     'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
 
@@ -723,9 +1010,654 @@ function acRender(r) {
   document.getElementById('ac-body').innerHTML = h;
 }
 
+// ── EC3 ───────────────────────────────────────────────────────────────────────
+function acCalcEC3() {
+  var name = document.getElementById('ac-section').value;
+  if (!name) { alert('Please select a section.'); return; }
+  var row = (DB[acSecType]&&DB[acSecType].data||[]).find(function(r){ return r[0]===name; });
+  if (!row) return;
+
+  var fy   = +document.getElementById('ac-grade').value;
+  var E    = 210000; // MPa
+  var gmM1 = 1.0;
+
+  var Lval = +document.getElementById('ac-L').value || 0;
+  if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
+  var bcX  = document.getElementById('ac-bc-x').value;
+  var bcY  = document.getElementById('ac-bc-y').value;
+  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
+  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
+  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
+  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
+
+  // DB stores cm²/cm; convert to mm
+  var A_cm2 = +row[1];
+  var A_mm2 = A_cm2 * 100;
+  var wt    = +row[2]; // kg/m
+  var rx_mm = +row[3] * 10; // cm → mm
+  var ry_mm = +row[4] * 10;
+
+  var Lmm   = Lval * 1000;
+  var sw    = wt * Lval * 9.81 / 1000; // kN
+
+  // Buckling curve per EN 1993-1-1 Table 6.2
+  var sType = acSecType;
+  var alphaY, alphaZ;
+  if (sType === 'IPE' || sType === 'UB')             { alphaY = 0.21; alphaZ = 0.34; }
+  else if (sType === 'HEA' || sType === 'UC')        { alphaY = 0.34; alphaZ = 0.49; }
+  else if (sType === 'HEB' || sType === 'HEM')       { alphaY = 0.34; alphaZ = 0.49; }
+  else                                               { alphaY = 0.21; alphaZ = 0.21; }
+
+  var KLrx = (Kx * lbRx * Lmm) / rx_mm;
+  var KLry = (Ky * lbRy * Lmm) / ry_mm;
+  var KLr  = Math.max(KLrx, KLry);
+  var govAxis = KLrx >= KLry ? 'x' : 'y';
+  var alpha = govAxis === 'x' ? alphaY : alphaZ;
+
+  var lam = KLr / (Math.PI * Math.sqrt(E / fy));
+  var Phi = 0.5 * (1 + alpha * (lam - 0.2) + lam * lam);
+  var chi = Math.min(1.0, 1 / (Phi + Math.sqrt(Math.max(0, Phi * Phi - lam * lam))));
+  var NbRd = chi * A_mm2 * fy / (gmM1 * 1000); // kN
+
+  var isDirect = acLoadMode === 'direct';
+  var Pu, combos, govCombo;
+  if (isDirect) {
+    Pu = +document.getElementById('ac-dm-pu').value || 0;
+    combos = null; govCombo = null;
+  } else {
+    var G = (+document.getElementById('ac-PD').value  || 0) + sw;
+    var Q = (+document.getElementById('ac-PL').value  || 0) + (+document.getElementById('ac-PLr').value || 0);
+    var S = (+document.getElementById('ac-PS').value  || 0);
+    var W = (+document.getElementById('ac-PW').value  || 0);
+    combos = [
+      {lbl:'1.35G',                P: 1.35*G},
+      {lbl:'1.35G + 1.5Q',        P: 1.35*G + 1.5*Q},
+      {lbl:'1.35G + 1.5S + 0.75Q',P: 1.35*G + 1.5*S + 0.75*Q},
+      {lbl:'1.35G + 1.5Q + 0.5S', P: 1.35*G + 1.5*Q + 0.5*S},
+      {lbl:'1.35G + 1.5W + 0.9Q', P: 1.35*G + 1.5*W + 0.9*Q},
+      {lbl:'1.0G + 1.5W',         P: 1.0*G  + 1.5*W}
+    ];
+    govCombo = combos.reduce(function(a,b){ return b.P > a.P ? b : a; });
+    Pu = govCombo.P;
+  }
+
+  var DCR = NbRd > 0 ? Pu / NbRd : Infinity;
+  var curveName = {0.21:'a', 0.34:'b', 0.49:'c', 0.76:'d'};
+  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
+  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
+
+  acRenderEC3({
+    name:name, fy:fy, E:E, gmM1:gmM1,
+    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
+    KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
+    alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, NbRd:NbRd,
+    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    slOk: KLr <= 200
+  });
+}
+
+function acRenderEC3(r) {
+  var fmt = function(v,d){ return (isNaN(v)||!isFinite(v)) ? '—' : v.toFixed(d); };
+  function step(n, desc, fml, val, ok){
+    var chk = ok===undefined ? '' : '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc  = ok===true ? 'ok' : (ok===false ? 'err' : '');
+    return '<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
+  }
+  var s0  = r.isDirect ? 2 : 0;
+  var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
+  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var slCls = r.slOk ? 'ok' : 'warn';
+  var date  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  var h = '';
+
+  h += '<div class="print-only"><div>'
+     + '<div class="ph-title">Steel Column Axial Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; EN 1993-1-1 &nbsp;&middot;&nbsp; kN &middot; m &middot; mm</div></div>'
+     + '<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+date+'</div></div>';
+
+  h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
+     + '<strong>'+dcLbl+'</strong>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">N<sub>Ed</sub> / N<sub>b,Rd</sub></div>'
+     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1)+'</div>'
+     + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+     + '<div class="result-item '+slCls+'">'
+     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">D/C Ratio</div>'
+     + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
+     + '<div class="ri-unit">&le; 1.0</div></div>'
+     + '</div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
+     + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
+     + '<tr><td>E / &gamma;<sub>M1</sub></td><td class="inp-num">210,000 MPa &nbsp;|&nbsp; &gamma;<sub>M1</sub> = '+r.gmM1.toFixed(1)+'</td></tr>'
+     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
+     + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm²</td></tr>'
+     + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
+     + '<tr><td>r<sub>y</sub></td><td class="inp-num">'+fmt(r.ry_mm,1)+' mm</td></tr>'
+     + (r.isDirect
+       ? '<tr><td>Design axial N<sub>Ed</sub></td><td class="inp-num">'+fmt(r.Pu,1)+' kN <span style="color:var(--text-dim);font-size:.78em">(user-defined, combos &amp; SW excluded)</span></td></tr>'
+       : '<tr><td>Dead G (applied)</td><td class="inp-num">'+fmt((r.combos[0].P/1.35)-r.sw,2)+' kN</td></tr>'
+         + '<tr><td>Self-weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN</td></tr>')
+     + '</table></div>';
+
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">EN 1990 &mdash; ULS Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">N<sub>Ed</sub> (kN)</th></tr>';
+    r.combos.forEach(function(c, i){
+      var isgov = c === r.govCombo;
+      h += '<tr'+(isgov?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(isgov?'&#9654;&nbsp;':'')+(i+1)+'</td>'
+         + '<td class="combo-lbl">'+c.lbl+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,1)+(isgov?' &larr; governs':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; EN 1993-1-1 &sect;6.3.1</div>'
+     + '<table class="steps-table">';
+
+  if (r.isDirect) {
+    h += step(1, 'Design axial N<sub>Ed</sub> &mdash; user-defined (factored)',
+      'Entered directly &mdash; load combinations and self-weight excluded from report',
+      'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+  } else {
+    h += step(1, 'Total permanent action G = G<sub>applied</sub> + self-weight',
+      fmt((r.combos[0].P/1.35)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+      'G = '+fmt(r.combos[0].P/1.35,2)+' kN');
+    h += step(2, 'Governing N<sub>Ed</sub> &mdash; EN 1990',
+      r.govCombo.lbl,
+      'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+  }
+
+  h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
+    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    fmt(r.KLrx,1));
+  h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
+    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
+  h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
+    'Section type ('+acSecType+') &rarr; curve '+r.curveName+' per EN 1993-1-1 Table 6.2',
+    '&alpha; = '+fmt(r.alpha,2));
+  h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
+    '(KL/r<sub>min</sub>) / (&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+' / (&pi;&radic;('+r.E+'/'+r.fy+'))',
+    '&lambda;&#773; = '+fmt(r.lam,4));
+  h += step(7-s0, 'Auxiliary value &Phi;',
+    '0.5[1 + &alpha;(&lambda;&#773;&minus;0.2) + &lambda;&#773;&sup2;] = 0.5[1 + '+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2) + '+fmt(r.lam*r.lam,4)+']',
+    '&Phi; = '+fmt(r.Phi,4));
+  h += step(8-s0, 'Reduction factor &chi; &mdash; &sect;6.3.1.2',
+    '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
+    '&chi; = '+fmt(r.chi,4));
+  h += step(9-s0, 'Design buckling resistance N<sub>b,Rd</sub>',
+    '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>M1</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM1.toFixed(1)+'&times;1000)',
+    'N<sub>b,Rd</sub> = '+fmt(r.NbRd,1)+' kN');
+  h += step(10-s0, 'Demand / Capacity check',
+    'N<sub>Ed</sub> / N<sub>b,Rd</sub> = '+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1),
+    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+  h += '</table></div>';
+
+  if (!r.slOk)
+    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
+  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per EN 1993-1-1 §6.3.1 and Table 5.2.</div></div>';
+  h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; EN 1993-1-1</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
+
+  document.getElementById('ac-empty').style.display = 'none';
+  document.getElementById('ac-card').style.display  = '';
+  document.getElementById('ac-body').innerHTML = h;
+}
+
+// ── TSDS 2016 ─────────────────────────────────────────────────────────────────
+function acCalcTSDS() {
+  var name = document.getElementById('ac-section').value;
+  if (!name) { alert('Please select a section.'); return; }
+  var row = (DB[acSecType]&&DB[acSecType].data||[]).find(function(r){ return r[0]===name; });
+  if (!row) return;
+
+  var fy   = +document.getElementById('ac-grade').value;
+  var E    = 200000; // MPa
+  var phiC = 0.90;
+
+  var Lval = +document.getElementById('ac-L').value || 0;
+  if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
+  var bcX  = document.getElementById('ac-bc-x').value;
+  var bcY  = document.getElementById('ac-bc-y').value;
+  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
+  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
+  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
+  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
+  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
+  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
+
+  var A_mm2 = +row[1] * 100;
+  var wt    = +row[2];
+  var rx_mm = +row[3] * 10;
+  var ry_mm = +row[4] * 10;
+  var sw    = wt * Lval * 9.81 / 1000; // kN
+
+  var KLrx = (Kx * lbRx * Lval * 1000) / rx_mm;
+  var KLry = (Ky * lbRy * Lval * 1000) / ry_mm;
+  var KLr  = Math.max(KLrx, KLry);
+  var govAxis = KLrx >= KLry ? 'x' : 'y';
+
+  var Fe   = Math.PI * Math.PI * E / (KLr * KLr);
+  var Fcr, mode;
+  if (KLr <= 4.71 * Math.sqrt(E / fy)) {
+    Fcr = Math.pow(0.658, fy / Fe) * fy;
+    mode = 'inelastic';
+  } else {
+    Fcr = 0.877 * Fe;
+    mode = 'elastic';
+  }
+  var Pn    = Fcr * A_mm2 / 1000;
+  var phiPn = phiC * Pn;
+
+  var isDirect = acLoadMode === 'direct';
+  var Pu, combos, govCombo;
+  if (isDirect) {
+    Pu = +document.getElementById('ac-dm-pu').value || 0;
+    combos = null; govCombo = null;
+  } else {
+    var G = (+document.getElementById('ac-PD').value  || 0) + sw;
+    var Q = (+document.getElementById('ac-PL').value  || 0) + (+document.getElementById('ac-PLr').value || 0);
+    var S = (+document.getElementById('ac-PS').value  || 0);
+    var W = (+document.getElementById('ac-PW').value  || 0);
+    combos = [
+      {lbl:'1.4G',                 P: 1.4*G},
+      {lbl:'1.2G + 1.6Q + 0.5S',  P: 1.2*G + 1.6*Q + 0.5*S},
+      {lbl:'1.2G + 1.6S + Q',     P: 1.2*G + 1.6*S + Q},
+      {lbl:'1.2G + W + Q + 0.5S', P: 1.2*G + W + Q + 0.5*S},
+      {lbl:'0.9G + W',            P: 0.9*G + W}
+    ];
+    govCombo = combos.reduce(function(a,b){ return b.P > a.P ? b : a; });
+    Pu = govCombo.P;
+  }
+
+  var DCR = phiPn > 0 ? Pu / phiPn : Infinity;
+
+  acRenderTSDS({
+    name:name, fy:fy, E:E, phiC:phiC,
+    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
+    KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
+    Fe:Fe, Fcr:Fcr, mode:mode, Pn:Pn, phiPn:phiPn,
+    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    slOk: KLr <= 200
+  });
+}
+
+function acRenderTSDS(r) {
+  var fmt = function(v,d){ return (isNaN(v)||!isFinite(v)) ? '—' : v.toFixed(d); };
+  function step(n, desc, fml, val, ok){
+    var chk = ok===undefined ? '' : '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc  = ok===true ? 'ok' : (ok===false ? 'err' : '');
+    return '<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
+  }
+  var s0  = r.isDirect ? 2 : 0;
+  var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
+  var dcLbl = r.DCR < 0.85 ? 'Column OK' : (r.DCR <= 1.0 ? 'OK — At Capacity Limit' : 'Column NG');
+  var slCls = r.slOk ? 'ok' : 'warn';
+  var date  = new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'});
+
+  var h = '';
+
+  h += '<div class="print-only"><div>'
+     + '<div class="ph-title">Steel Column Axial Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; TSDS 2016 &nbsp;&middot;&nbsp; kN &middot; m &middot; mm</div></div>'
+     + '<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+date+'</div></div>';
+
+  h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
+     + '<strong>'+dcLbl+'</strong>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">N<sub>d</sub> / &phi;<sub>c</sub>P<sub>n</sub></div>'
+     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>'
+     + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+     + '<div class="result-item '+slCls+'">'
+     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">D/C Ratio</div>'
+     + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
+     + '<div class="ri-unit">&le; 1.0</div></div>'
+     + '</div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
+     + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
+     + '<tr><td>E / &phi;<sub>c</sub></td><td class="inp-num">200,000 MPa &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
+     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
+     + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm&sup2;</td></tr>'
+     + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
+     + '<tr><td>r<sub>y</sub></td><td class="inp-num">'+fmt(r.ry_mm,1)+' mm</td></tr>'
+     + (r.isDirect
+       ? '<tr><td>Design axial force N<sub>d</sub></td><td class="inp-num">'+fmt(r.Pu,1)+' kN <span style="color:var(--text-dim);font-size:.78em">(user input, excl. combos &amp; self-weight)</span></td></tr>'
+       : '<tr><td>Dead load G (applied)</td><td class="inp-num">'+fmt((r.combos[0].P/1.4)-r.sw,2)+' kN</td></tr>'
+         + '<tr><td>Self-weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN</td></tr>')
+     + '</table></div>';
+
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">TSDS 2016 — Strength Design Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">N<sub>d</sub> (kN)</th></tr>';
+    r.combos.forEach(function(c, i){
+      var isgov = c === r.govCombo;
+      h += '<tr'+(isgov?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(isgov?'&#9654;&nbsp;':'')+(i+1)+'</td>'
+         + '<td class="combo-lbl">'+c.lbl+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,1)+(isgov?' &larr; governing':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design — TSDS 2016 §5</div>'
+     + '<table class="steps-table">';
+
+  if (r.isDirect) {
+    h += step(1, 'Design axial force N<sub>d</sub> — user input (factored)',
+      'Entered directly — load combinations &amp; self-weight excluded from report',
+      'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+  } else {
+    h += step(1, 'Total dead load G = G<sub>app</sub> + self-weight',
+      fmt((r.combos[0].P/1.4)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+      'G = '+fmt(r.combos[0].P/1.4,2)+' kN');
+    h += step(2, 'Governing N<sub>d</sub> — TSDS 2016',
+      r.govCombo.lbl,
+      'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+  }
+
+  h += step(3-s0, 'Slenderness — strong axis (x&#x2011;x)',
+    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    fmt(r.KLrx,1));
+  h += step(4-s0, 'Slenderness — weak axis (y&#x2011;y)',
+    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governing':' &larr; governing (x)'));
+  h += step(5-s0, 'Slenderness limit — inelastic / elastic buckling',
+    '4.71&radic;(E/f<sub>y</sub>) = 4.71&radic;('+r.E+'/'+r.fy+')',
+    fmt(4.71*Math.sqrt(r.E/r.fy),1)+' &rarr; '+r.mode);
+  h += step(6-s0, 'Elastic buckling stress F<sub>e</sub>',
+    '&pi;&sup2;E/(KL/r)<sup>2</sup> = &pi;&sup2;&times;'+r.E+'/'+fmt(r.KLr,2)+'&sup2;',
+    'F<sub>e</sub> = '+fmt(r.Fe,1)+' MPa');
+  h += step(7-s0, 'Critical stress F<sub>cr</sub> — TSDS 2016 §5.2',
+    r.mode==='inelastic'
+      ? '0.658<sup>f<sub>y</sub>/F<sub>e</sub></sup>&times;f<sub>y</sub> = 0.658<sup>'+fmt(r.fy/r.Fe,4)+'</sup>&times;'+r.fy
+      : '0.877&times;F<sub>e</sub> = 0.877&times;'+fmt(r.Fe,1),
+    'F<sub>cr</sub> = '+fmt(r.Fcr,1)+' MPa');
+  h += step(8-s0, 'Nominal strength P<sub>n</sub>',
+    'F<sub>cr</sub>&times;A/1000 = '+fmt(r.Fcr,1)+'&times;'+fmt(r.A_mm2,0)+'/1000',
+    'P<sub>n</sub> = '+fmt(r.Pn,1)+' kN');
+  h += step(9-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub>',
+    '0.90&times;'+fmt(r.Pn,1)+' kN',
+    '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' kN');
+  h += step(10-s0, 'Demand / Capacity check',
+    'N<sub>d</sub>/&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),
+    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+  h += '</table></div>';
+
+  if (!r.slOk)
+    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds the recommended limit of 200. Use a larger section or shorter unbraced length.</div></div>';
+  h += '<div class="report-warn"><span>&#9432;</span><div>Only flexural buckling has been checked. Lateral-torsional and local buckling are not verified — check per TSDS 2016 §5 and Table B4.1a.</div></div>';
+  h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; TSDS 2016</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
+
+  document.getElementById('ac-empty').style.display = 'none';
+  document.getElementById('ac-card').style.display  = '';
+  document.getElementById('ac-body').innerHTML = h;
+}
+
+// ── IS 800:2000 ───────────────────────────────────────────────────────────────
+function acCalcIS800() {
+  var name = document.getElementById('ac-section').value;
+  if (!name) { alert('Please select a section.'); return; }
+  var row = (DB[acSecType]&&DB[acSecType].data||[]).find(function(r){ return r[0]===name; });
+  if (!row) return;
+
+  var fy   = +document.getElementById('ac-grade').value;
+  var E    = 200000; // MPa
+  var gmM0 = 1.10;
+
+  var Lval = +document.getElementById('ac-L').value || 0;
+  if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
+  var bcX  = document.getElementById('ac-bc-x').value;
+  var bcY  = document.getElementById('ac-bc-y').value;
+  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
+  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
+  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
+  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
+  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
+  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
+
+  var A_mm2 = +row[1] * 100;
+  var wt    = +row[2];
+  var rx_mm = +row[3] * 10;
+  var ry_mm = +row[4] * 10;
+  var sw    = wt * Lval * 9.81 / 1000; // kN
+
+  var sType = acSecType;
+  var alphaY, alphaZ;
+  if (sType === 'IPE' || sType === 'UB')                       { alphaY = 0.21; alphaZ = 0.34; }
+  else if (sType === 'HEA' || sType === 'UC')                  { alphaY = 0.34; alphaZ = 0.49; }
+  else if (sType === 'HEB' || sType === 'HEM')                 { alphaY = 0.34; alphaZ = 0.49; }
+  else if (sType==='ISMB'||sType==='ISLB'||sType==='ISWB')     { alphaY = 0.21; alphaZ = 0.34; }
+  else if (sType==='ISHB'||sType==='ISMC')                     { alphaY = 0.34; alphaZ = 0.49; }
+  else                                                         { alphaY = 0.21; alphaZ = 0.21; }
+
+  var KLrx = (Kx * lbRx * Lval * 1000) / rx_mm;
+  var KLry = (Ky * lbRy * Lval * 1000) / ry_mm;
+  var KLr  = Math.max(KLrx, KLry);
+  var govAxis = KLrx >= KLry ? 'x' : 'y';
+  var alpha = govAxis === 'x' ? alphaY : alphaZ;
+
+  var lam = KLr / (Math.PI * Math.sqrt(E / fy));
+  var Phi = 0.5 * (1 + alpha * (lam - 0.2) + lam * lam);
+  var chi = Math.min(1.0, 1 / (Phi + Math.sqrt(Math.max(0, Phi * Phi - lam * lam))));
+  var Pd  = chi * A_mm2 * fy / (gmM0 * 1000); // kN
+
+  var isDirect = acLoadMode === 'direct';
+  var Pu, combos, govCombo;
+  if (isDirect) {
+    Pu = +document.getElementById('ac-dm-pu').value || 0;
+    combos = null; govCombo = null;
+  } else {
+    var DL = (+document.getElementById('ac-PD').value  || 0) + sw;
+    var LL = (+document.getElementById('ac-PL').value  || 0) + (+document.getElementById('ac-PLr').value || 0);
+    var SL = (+document.getElementById('ac-PS').value  || 0);
+    var WL = (+document.getElementById('ac-PW').value  || 0);
+    combos = [
+      {lbl:'1.5(DL + LL)',      P: 1.5*(DL+LL)},
+      {lbl:'1.5(DL + SL)',      P: 1.5*(DL+SL)},
+      {lbl:'1.5(DL + WL)',      P: 1.5*(DL+WL)},
+      {lbl:'1.2(DL + LL + WL)', P: 1.2*(DL+LL+WL)},
+      {lbl:'1.2(DL + LL + SL)', P: 1.2*(DL+LL+SL)},
+      {lbl:'0.9DL + 1.5WL',    P: 0.9*DL + 1.5*WL}
+    ];
+    govCombo = combos.reduce(function(a,b){ return b.P > a.P ? b : a; });
+    Pu = govCombo.P;
+  }
+
+  var DCR = Pd > 0 ? Pu / Pd : Infinity;
+  var curveName = {0.21:'a', 0.34:'b', 0.49:'c', 0.76:'d'};
+
+  acRenderIS800({
+    name:name, fy:fy, E:E, gmM0:gmM0,
+    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
+    KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
+    alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, Pd:Pd,
+    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    slOk: KLr <= 180
+  });
+}
+
+function acRenderIS800(r) {
+  var fmt = function(v,d){ return (isNaN(v)||!isFinite(v)) ? '—' : v.toFixed(d); };
+  function step(n, desc, fml, val, ok){
+    var chk = ok===undefined ? '' : '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc  = ok===true ? 'ok' : (ok===false ? 'err' : '');
+    return '<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
+  }
+  var s0  = r.isDirect ? 2 : 0;
+  var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
+  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var slCls = r.slOk ? 'ok' : 'warn';
+  var date  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  var h = '';
+
+  h += '<div class="print-only"><div>'
+     + '<div class="ph-title">Steel Column Axial Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; IS 800:2000 &nbsp;&middot;&nbsp; kN &middot; m &middot; mm</div></div>'
+     + '<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+date+'</div></div>';
+
+  h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
+     + '<strong>'+dcLbl+'</strong>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">P<sub>u</sub> / P<sub>d</sub></div>'
+     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.Pd,1)+'</div>'
+     + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+     + '<div class="result-item '+slCls+'">'
+     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+     + '<div class="ri-unit">limit 180 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + '<div class="result-item '+dc+'">'
+     + '<div class="ri-label">D/C Ratio</div>'
+     + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
+     + '<div class="ri-unit">&le; 1.0</div></div>'
+     + '</div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
+     + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
+     + '<tr><td>E / &gamma;<sub>m0</sub></td><td class="inp-num">200,000 MPa &nbsp;|&nbsp; &gamma;<sub>m0</sub> = '+r.gmM0.toFixed(2)+'</td></tr>'
+     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
+     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
+     + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm²</td></tr>'
+     + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
+     + '<tr><td>r<sub>y</sub></td><td class="inp-num">'+fmt(r.ry_mm,1)+' mm</td></tr>'
+     + (r.isDirect
+       ? '<tr><td>Design axial P<sub>u</sub></td><td class="inp-num">'+fmt(r.Pu,1)+' kN <span style="color:var(--text-dim);font-size:.78em">(user-defined, combos &amp; SW excluded)</span></td></tr>'
+       : '<tr><td>Dead DL (applied)</td><td class="inp-num">'+fmt((r.combos[0].P/1.5)-r.sw,2)+' kN</td></tr>'
+         + '<tr><td>Self-weight (auto)</td><td class="inp-num">'+fmt(r.sw,2)+' kN</td></tr>')
+     + '</table></div>';
+
+  if (!r.isDirect) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">IS 875:2015 &mdash; ULS Load Combinations</div>'
+       + '<table class="combo-tbl"><tr><th>#</th><th>Combination</th><th style="text-align:right">P<sub>u</sub> (kN)</th></tr>';
+    r.combos.forEach(function(c, i){
+      var isgov = c === r.govCombo;
+      h += '<tr'+(isgov?' class="gov-row"':'')+'>'
+         + '<td class="combo-lbl">'+(isgov?'&#9654;&nbsp;':'')+(i+1)+'</td>'
+         + '<td class="combo-lbl">'+c.lbl+'</td>'
+         + '<td style="text-align:right;font-family:var(--mono)">'+fmt(c.P,1)+(isgov?' &larr; governs':'')+'</td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; IS 800:2000 &sect;7.1.2</div>'
+     + '<table class="steps-table">';
+
+  if (r.isDirect) {
+    h += step(1, 'Design axial P<sub>u</sub> &mdash; user-defined (factored)',
+      'Entered directly &mdash; load combinations and self-weight excluded from report',
+      'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+  } else {
+    h += step(1, 'Total dead DL = DL<sub>applied</sub> + self-weight',
+      fmt((r.combos[0].P/1.5)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+      'DL = '+fmt(r.combos[0].P/1.5,2)+' kN');
+    h += step(2, 'Governing P<sub>u</sub> &mdash; IS 875',
+      r.govCombo.lbl,
+      'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+  }
+
+  h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
+    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    fmt(r.KLrx,1));
+  h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
+    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
+  h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
+    'Section type ('+acSecType+') &rarr; curve '+r.curveName+' (IS 800:2000 Table 10)',
+    '&alpha; = '+fmt(r.alpha,2));
+  h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
+    '(KL/r<sub>min</sub>)/(&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+'/(&pi;&radic;('+r.E+'/'+r.fy+'))',
+    '&lambda;&#773; = '+fmt(r.lam,4));
+  h += step(7-s0, 'Auxiliary value &Phi;',
+    '0.5[1+&alpha;(&lambda;&#773;&minus;0.2)+&lambda;&#773;&sup2;] = 0.5[1+'+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2)+'+fmt(r.lam*r.lam,4)+']',
+    '&Phi; = '+fmt(r.Phi,4));
+  h += step(8-s0, 'Reduction factor &chi; &mdash; IS 800:2000 &sect;7.1.2',
+    '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
+    '&chi; = '+fmt(r.chi,4));
+  h += step(9-s0, 'Design compressive strength P<sub>d</sub>',
+    '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>m0</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM0.toFixed(2)+'&times;1000)',
+    'P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
+  h += step(10-s0, 'Demand / Capacity check',
+    'P<sub>u</sub>/P<sub>d</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.Pd,1),
+    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+  h += '</table></div>';
+
+  if (!r.slOk)
+    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds IS 800:2000 recommended limit of 180. Consider a larger section or shorter unbraced length.</div></div>';
+  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per IS 800:2000 §7 and Table 2.</div></div>';
+  h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; IS 800:2000</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
+
+  document.getElementById('ac-empty').style.display = 'none';
+  document.getElementById('ac-card').style.display  = '';
+  document.getElementById('ac-body').innerHTML = h;
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (function(){
   acPopGrades(); acPopTypes(); acUpdateLabels();
+  // Auto-calc on any input change
+  ['ac-L','ac-PD','ac-PL','ac-PLr','ac-PS','ac-PW','ac-dm-pu','ac-lb-x','ac-lb-y'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', acAutoCalc);
+  });
+  ['ac-grade','ac-bc-x','ac-bc-y'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', acAutoCalc);
+  });
   document.addEventListener('wheel', function(){
     if (document.activeElement && document.activeElement.type === 'number') document.activeElement.blur();
   }, {passive:true});
