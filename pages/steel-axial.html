@@ -154,36 +154,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div><!-- /ac-panel-direct -->
 
-      <div id="ac-schema" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px 12px 10px;margin:10px 0 8px">
-        <svg id="ac-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto"></svg>
-        <div style="font-size:.68rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:4px 0 10px">Select end conditions per buckling axis</div>
-        <div class="form-row-2">
-          <div class="form-group" style="margin-bottom:6px">
-            <label>x&#x2011;x Axis &mdash; K<sub>x</sub></label>
-            <select id="ac-bc-x" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
-              <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
-              <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
-              <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
-            </select>
-            <div style="margin-top:5px">
-              <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced length L<sub>b,x</sub> / L</label>
-              <div class="iw"><input type="number" id="ac-lb-x" value="1.00" min="0.05" max="1" step="0.05" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:6px">
-            <label>y&#x2011;y Axis &mdash; K<sub>y</sub></label>
-            <select id="ac-bc-y" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.80rem;background:var(--bg);color:var(--text);font-family:var(--sans);cursor:pointer;">
-              <option value="pp">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
-              <option value="pf">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
-              <option value="ff">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
-            </select>
-            <div style="margin-top:5px">
-              <label style="font-size:.71rem;color:var(--text-dim);margin-bottom:2px">Unbraced length L<sub>b,y</sub> / L</label>
-              <div class="iw"><input type="number" id="ac-lb-y" value="1.00" min="0.05" max="1" step="0.05" style="font-family:var(--mono)"><span class="us">&times; L</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
       <button class="btn-calc" onclick="acCalc()" style="display:none">&#9654; Calculate</button>
     </div>
   </div>
@@ -658,7 +628,7 @@ function acPopSections() {
     return '<option value="'+r[0]+'">'+r[0]+'</option>';
   }).join('');
   sel.selectedIndex = 0;
-  acUpdateSchema();
+  acAutoCalc();
 }
 
 function acAutoCalc() {
@@ -670,11 +640,11 @@ function acAutoCalc() {
 }
 
 function acUpdateSchema() {
-  var name = document.getElementById('ac-section').value;
-  var schDiv = document.getElementById('ac-schema');
-  if (!name) { schDiv.style.display = 'none'; return; }
-  schDiv.style.display = '';
+  // SVG schema removed — pin-pin only
+  acAutoCalc();
+}
 
+function _acDrawSchema_noop() { return; // removed
   var cx = 100, cy = 84, axR = 72;
   var col = '#5b8fc4', axCol = '#888';
   var s = '';
@@ -734,14 +704,9 @@ function acCalc() {
   var isUS = DB[acSecType].std === 'us';
   var Fy   = +document.getElementById('ac-grade').value;
   var Lval = +document.getElementById('ac-L').value || 0;
-  var bcX  = document.getElementById('ac-bc-x').value;
-  var bcY  = document.getElementById('ac-bc-y').value;
   if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
 
-  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
-  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
-  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
-  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
+  var Kx = 1.0, Ky = 1.0; // pin-pin both axes
 
   // Raw section properties
   var Ag_r = +row[1]; // in² (US) or cm² (SI)
@@ -796,15 +761,10 @@ function acCalc() {
     Pu = gov.P;
   }
 
-  // Unbraced length ratios (clamped 0.05–1.0)
-  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
-  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
-  var Lbx = lbRx * Lval;  // unbraced length in uL units
-  var Lby = lbRy * Lval;
-
-  // Effective lengths per axis (in for US, mm for SI)
-  var KLx = isUS ? (Kx * Lbx * 12) : (Kx * Lbx * 1000);
-  var KLy = isUS ? (Ky * Lby * 12) : (Ky * Lby * 1000);
+  // K=1.0 pin-pin; KL = L for both axes
+  var KL = isUS ? (Lval * 12) : (Lval * 1000);
+  var KLx = KL, KLy = KL;
+  var Lbx = Lval, Lby = Lval;
   var lx = KLx / rx, ly = KLy / ry;
   var lMax = Math.max(lx, ly);
   var govAx = (lx >= ly) ? 'x' : 'y';
@@ -843,7 +803,7 @@ function acCalc() {
 
   acRender({
     name:name, gn:gn, Fy:Fy, phiC:phiC, E:E,
-    Lval:Lval, bcX:bcX, bcY:bcY, bcLblX:bcLblX, bcLblY:bcLblY, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, Lbx:Lbx, Lby:Lby,
+    Lval:Lval,
     Ag:Ag_r, Ag_calc:Ag, rx:rx_r, ry:ry_r, wt:wt_r, sw:sw,
     PD:PD, PL:PL, PLr:PLr, D:D, L:L, S:S, W:W,
     combos:combos, gov:gov.n, govF:gov.f, Pu:Pu, isDirect:isDirect,
@@ -887,7 +847,7 @@ function acRender(r) {
 
   h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
      + '<strong>'+dcLbl+'</strong>'
-     + '<span>'+r.name+' &nbsp;&middot;&nbsp; F<sub>y</sub> = '+r.Fy+' '+uSt+' &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' '+uL+'</span>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; F<sub>y</sub> = '+r.Fy+' '+uSt+' &nbsp;&middot;&nbsp; Pin&#x2013;Pin (K=1.0) &nbsp;&middot;&nbsp; L = '+r.Lval+' '+uL+'</span>'
      + '</div></div>';
 
   h += '<div class="result-box" style="margin-bottom:8px">'
@@ -912,10 +872,7 @@ function acRender(r) {
      + '<tr><td>Section</td><td>'+r.name+'</td></tr>'
      + '<tr><td>Steel Grade</td><td>'+r.gn+'</td></tr>'
      + '<tr><td>E / &phi;<sub>c</sub></td><td>'+r.E+' '+uSt+' &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
-     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+r.lbRx.toFixed(2)+' &times; '+r.Lval+' '+uL+' = '+fmt(r.Lbx,2)+' '+uL+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
-     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+r.lbRy.toFixed(2)+' &times; '+r.Lval+' '+uL+' = '+fmt(r.Lby,2)+' '+uL+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>End conditions</td><td>Pin&#x2013;Pin both axes &nbsp;(K = 1.00)</td></tr>'
      + '<tr><td>Column Height L</td><td class="inp-num">'+r.Lval+' '+uL+'</td></tr>'
      + '<tr><td>A<sub>g</sub></td><td class="inp-num">'+agDisp+' '+agLbl+'</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+rxDisp+' '+rLbl+'</td></tr>'
@@ -980,10 +937,9 @@ function acRender(r) {
         r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
     }
 
-    h += step(3-s0, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
-      'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; L<sub>b,x</sub> = '+r.Kx.toFixed(2)+' &times; '+fmt(r.Lbx,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
-      +'<br>y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; L<sub>b,y</sub> = '+r.Ky.toFixed(2)+' &times; '+fmt(r.Lby,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
-      'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+'<br>KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
+    h += step(3-s0, 'Effective length KL — pin-pin (K = 1.0)',
+      r.isUS ? '1.00 &times; '+r.Lval+' ft &times; 12' : '1.00 &times; '+r.Lval+' m &times; 1000',
+      'KL = '+fmt(r.KLx,1)+' '+lenLbl);
 
     h += step(4-s0, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
       'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
@@ -1055,12 +1011,6 @@ function acCalcEC3() {
 
   var Lval = +document.getElementById('ac-L').value || 0;
   if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
-  var bcX  = document.getElementById('ac-bc-x').value;
-  var bcY  = document.getElementById('ac-bc-y').value;
-  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
-  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
-  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
-  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
 
   // DB stores cm²/cm; convert to mm
   var A_cm2 = +row[1];
@@ -1080,8 +1030,8 @@ function acCalcEC3() {
   else if (sType === 'HEB' || sType === 'HEM')       { alphaY = 0.34; alphaZ = 0.49; }
   else                                               { alphaY = 0.21; alphaZ = 0.21; }
 
-  var KLrx = (Kx * lbRx * Lmm) / rx_mm;
-  var KLry = (Ky * lbRy * Lmm) / ry_mm;
+  var KLrx = Lmm / rx_mm; // K=1.0 pin-pin
+  var KLry = Lmm / ry_mm;
   var KLr  = Math.max(KLrx, KLry);
   var govAxis = KLrx >= KLry ? 'x' : 'y';
   var alpha = govAxis === 'x' ? alphaY : alphaZ;
@@ -1119,12 +1069,10 @@ function acCalcEC3() {
   var cap  = isTension ? NtRd : NbRd;
   var DCR  = cap > 0 ? Pu_abs / cap : Infinity;
   var curveName = {0.21:'a', 0.34:'b', 0.49:'c', 0.76:'d'};
-  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
-  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
 
   acRenderEC3({
     name:name, fy:fy, E:E, gmM1:gmM1,
-    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    Lval:Lval,
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
     alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, NbRd:NbRd,
@@ -1160,7 +1108,7 @@ function acRenderEC3(r) {
 
   h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
      + '<strong>'+dcLbl+'</strong>'
-     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; Pin&#x2013;Pin (K=1.0) &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
      + '</div></div>';
 
   h += '<div class="result-box" style="margin-bottom:8px">'
@@ -1185,10 +1133,7 @@ function acRenderEC3(r) {
      + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
      + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
      + '<tr><td>E / &gamma;<sub>M1</sub></td><td class="inp-num">210,000 MPa &nbsp;|&nbsp; &gamma;<sub>M1</sub> = '+r.gmM1.toFixed(1)+'</td></tr>'
-     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
-     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>End conditions</td><td>Pin&#x2013;Pin both axes &nbsp;(K = 1.00)</td></tr>'
      + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
      + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm²</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
@@ -1248,11 +1193,11 @@ function acRenderEC3(r) {
         'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
     }
 
-    h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
-      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    h += step(3-s0, 'Slenderness &mdash; strong axis (x&#x2011;x), K=1.0',
+      'L/r<sub>x</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
       fmt(r.KLrx,1));
-    h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
-      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    h += step(4-s0, 'Slenderness &mdash; weak axis (y&#x2011;y), K=1.0',
+      'L/r<sub>y</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
       fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
     h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
       'Section type ('+acSecType+') &rarr; curve '+r.curveName+' per EN 1993-1-1 Table 6.2',
@@ -1300,14 +1245,6 @@ function acCalcTSDS() {
 
   var Lval = +document.getElementById('ac-L').value || 0;
   if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
-  var bcX  = document.getElementById('ac-bc-x').value;
-  var bcY  = document.getElementById('ac-bc-y').value;
-  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
-  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
-  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
-  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
-  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
-  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
 
   var A_mm2 = +row[1] * 100;
   var wt    = +row[2];
@@ -1315,8 +1252,8 @@ function acCalcTSDS() {
   var ry_mm = +row[4] * 10;
   var sw    = wt * Lval * 9.81 / 1000; // kN
 
-  var KLrx = (Kx * lbRx * Lval * 1000) / rx_mm;
-  var KLry = (Ky * lbRy * Lval * 1000) / ry_mm;
+  var KLrx = (Lval * 1000) / rx_mm; // K=1.0 pin-pin
+  var KLry = (Lval * 1000) / ry_mm;
   var KLr  = Math.max(KLrx, KLry);
   var govAxis = KLrx >= KLry ? 'x' : 'y';
 
@@ -1361,7 +1298,7 @@ function acCalcTSDS() {
 
   acRenderTSDS({
     name:name, fy:fy, E:E, phiC:phiC,
-    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    Lval:Lval,
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
     Fe:Fe, Fcr:Fcr, mode:mode, Pn:Pn, phiPn:phiPn, phiTn:phiTn,
@@ -1397,7 +1334,7 @@ function acRenderTSDS(r) {
 
   h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
      + '<strong>'+dcLbl+'</strong>'
-     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; Pin&#x2013;Pin (K=1.0) &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
      + '</div></div>';
 
   h += '<div class="result-box" style="margin-bottom:8px">'
@@ -1422,10 +1359,7 @@ function acRenderTSDS(r) {
      + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
      + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
      + '<tr><td>E / &phi;<sub>c</sub></td><td class="inp-num">200,000 MPa &nbsp;|&nbsp; &phi;<sub>c</sub> = '+r.phiC.toFixed(2)+'</td></tr>'
-     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
-     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>End conditions</td><td>Pin&#x2013;Pin both axes &nbsp;(K = 1.00)</td></tr>'
      + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
      + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm&sup2;</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
@@ -1485,11 +1419,11 @@ function acRenderTSDS(r) {
         'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
     }
 
-    h += step(3-s0, 'Slenderness — strong axis (x&#x2011;x)',
-      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    h += step(3-s0, 'Slenderness &mdash; strong axis (x&#x2011;x), K=1.0',
+      'L/r<sub>x</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
       fmt(r.KLrx,1));
-    h += step(4-s0, 'Slenderness — weak axis (y&#x2011;y)',
-      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    h += step(4-s0, 'Slenderness &mdash; weak axis (y&#x2011;y), K=1.0',
+      'L/r<sub>y</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
       fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governing':' &larr; governing (x)'));
     h += step(5-s0, 'Slenderness limit — inelastic / elastic buckling',
       '4.71&radic;(E/f<sub>y</sub>) = 4.71&radic;('+r.E+'/'+r.fy+')',
@@ -1539,14 +1473,6 @@ function acCalcIS800() {
 
   var Lval = +document.getElementById('ac-L').value || 0;
   if (Lval <= 0) { alert('Column height must be greater than 0.'); return; }
-  var bcX  = document.getElementById('ac-bc-x').value;
-  var bcY  = document.getElementById('ac-bc-y').value;
-  var Kx   = {pp:1.00, pf:0.80, ff:0.65}[bcX];
-  var Ky   = {pp:1.00, pf:0.80, ff:0.65}[bcY];
-  var lbRx = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-x').value || 1));
-  var lbRy = Math.min(1, Math.max(0.05, +document.getElementById('ac-lb-y').value || 1));
-  var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
-  var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
 
   var A_mm2 = +row[1] * 100;
   var wt    = +row[2];
@@ -1563,8 +1489,8 @@ function acCalcIS800() {
   else if (sType==='ISHB'||sType==='ISMC')                     { alphaY = 0.34; alphaZ = 0.49; }
   else                                                         { alphaY = 0.21; alphaZ = 0.21; }
 
-  var KLrx = (Kx * lbRx * Lval * 1000) / rx_mm;
-  var KLry = (Ky * lbRy * Lval * 1000) / ry_mm;
+  var KLrx = (Lval * 1000) / rx_mm; // K=1.0 pin-pin
+  var KLry = (Lval * 1000) / ry_mm;
   var KLr  = Math.max(KLrx, KLry);
   var govAxis = KLrx >= KLry ? 'x' : 'y';
   var alpha = govAxis === 'x' ? alphaY : alphaZ;
@@ -1605,7 +1531,7 @@ function acCalcIS800() {
 
   acRenderIS800({
     name:name, fy:fy, E:E, gmM0:gmM0,
-    Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
+    Lval:Lval,
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
     alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, Pd:Pd,
@@ -1641,7 +1567,7 @@ function acRenderIS800(r) {
 
   h += '<div class="dcr-banner '+dc+'"><div class="dcr-text">'
      + '<strong>'+dcLbl+'</strong>'
-     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; K<sub>x</sub> = '+r.Kx.toFixed(2)+' / K<sub>y</sub> = '+r.Ky.toFixed(2)+' &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
+     + '<span>'+r.name+' &nbsp;&middot;&nbsp; f<sub>y</sub> = '+r.fy+' MPa &nbsp;&middot;&nbsp; Pin&#x2013;Pin (K=1.0) &nbsp;&middot;&nbsp; L = '+r.Lval+' m</span>'
      + '</div></div>';
 
   h += '<div class="result-box" style="margin-bottom:8px">'
@@ -1666,10 +1592,7 @@ function acRenderIS800(r) {
      + '<tr><td>Section</td><td class="inp-num">'+r.name+'</td></tr>'
      + '<tr><td>Steel grade / f<sub>y</sub></td><td class="inp-num">'+r.fy+' MPa</td></tr>'
      + '<tr><td>E / &gamma;<sub>m0</sub></td><td class="inp-num">200,000 MPa &nbsp;|&nbsp; &gamma;<sub>m0</sub> = '+r.gmM0.toFixed(2)+'</td></tr>'
-     + '<tr><td>x&#x2011;x axis (K<sub>x</sub>)</td><td>'+r.bcLblX+' &nbsp;(K = '+r.Kx.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,x</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRx,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRx*r.Lval,2)+' m'+(r.lbRx<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
-     + '<tr><td>y&#x2011;y axis (K<sub>y</sub>)</td><td>'+r.bcLblY+' &nbsp;(K = '+r.Ky.toFixed(2)+')</td></tr>'
-     + '<tr><td>L<sub>b,y</sub> unbraced length</td><td class="inp-num">'+fmt(r.lbRy,2)+' &times; '+r.Lval+' m = '+fmt(r.lbRy*r.Lval,2)+' m'+(r.lbRy<1?' <span style="color:var(--orange);font-size:.75em">[braced]</span>':'')+'</td></tr>'
+     + '<tr><td>End conditions</td><td>Pin&#x2013;Pin both axes &nbsp;(K = 1.00)</td></tr>'
      + '<tr><td>Column height L</td><td class="inp-num">'+r.Lval+' m</td></tr>'
      + '<tr><td>A</td><td class="inp-num">'+fmt(r.A_mm2,0)+' mm²</td></tr>'
      + '<tr><td>r<sub>x</sub></td><td class="inp-num">'+fmt(r.rx_mm,1)+' mm</td></tr>'
@@ -1729,11 +1652,11 @@ function acRenderIS800(r) {
         'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
     }
 
-    h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
-      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+    h += step(3-s0, 'Slenderness &mdash; strong axis (x&#x2011;x), K=1.0',
+      'L/r<sub>x</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
       fmt(r.KLrx,1));
-    h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
-      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+    h += step(4-s0, 'Slenderness &mdash; weak axis (y&#x2011;y), K=1.0',
+      'L/r<sub>y</sub> = '+fmt(r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
       fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
     h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
       'Section type ('+acSecType+') &rarr; curve '+r.curveName+' (IS 800:2000 Table 10)',
