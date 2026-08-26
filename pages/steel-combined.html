@@ -1893,8 +1893,11 @@ function bcRender(r){
     h+=step(5,'&phi;<sub>b</sub>M<sub>nx</sub>=0.90\xd7M<sub>nx</sub>','',''+fmt(r.phiMnx,1)+' '+r.uM);
     h+='</table></div>';
     h+='<div class="rpt-sec"><div class="rpt-sec-title">Weak-Axis Flexure — '+codeStr+' Chapter F6</div><table class="steps-table">';
-    h+=step(1,'M<sub>ny</sub>=min(F<sub>y</sub>Z<sub>y</sub>, 1.6F<sub>y</sub>S<sub>y</sub>)','','M<sub>ny</sub>='+fmt(r.Mny,1)+' '+r.uM);
-    h+=step(2,'&phi;<sub>b</sub>M<sub>ny</sub>=0.90\xd7M<sub>ny</sub>','',''+fmt(r.phiMny,1)+' '+r.uM);
+    h+=step(1,'M<sub>py</sub>=F<sub>y</sub>Z<sub>y</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zy,1)+'/12':r.Fy+'\xd7'+fmt(r.Zy,0)+'/10⁶','M<sub>py</sub>='+fmt(r.Mpy,1)+' '+r.uM);
+    h+=step(2,'Cap = 1.6F<sub>y</sub>S<sub>y</sub>',r.isUS?'1.6\xd7'+r.Fy+'\xd7'+fmt(r.Sy,1)+'/12':'1.6\xd7'+r.Fy+'\xd7'+fmt(r.Sy,0)+'/10⁶','Cap = '+fmt(r.capy,1)+' '+r.uM);
+    var wyGov=r.Mpy<=r.capy?'M<sub>py</sub> governs':'Cap governs (stocky flange)';
+    h+=step(3,'M<sub>ny</sub>=min(M<sub>py</sub>, Cap)',wyGov,'M<sub>ny</sub>='+fmt(r.Mny,1)+' '+r.uM);
+    h+=step(4,'&phi;<sub>b</sub>M<sub>ny</sub>=0.90\xd7M<sub>ny</sub>','No LTB for weak-axis bending',''+fmt(r.phiMny,1)+' '+r.uM);
     h+='</table></div>';
     h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction — '+codeStr+' \xa7H1-1</div><table class="steps-table">';
     h+=step(1,'P<sub>u</sub>/&phi;P<sub>n</sub>',fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),'= '+fmt(r.rP,4)+' → use '+r.eq);
