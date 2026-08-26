@@ -1772,7 +1772,7 @@ function bcRender(r){
     var slOk=r.lMax<=200;
     h+='<div class="result-box" style="margin-bottom:8px">'
       +'<div class="result-item '+(slOk?'ok':'warn')+'"><div class="ri-label">KL/r ('+r.govAx+')</div><div class="ri-value">'+fmt(r.lMax,1)+'</div><div class="ri-unit">limit 200 &nbsp;'+(slOk?'&#10003; OK':'&#9888;')+'</div></div>'
-      +'<div class="result-item"><div class="ri-label">LTB mode</div><div class="ri-value" style="font-size:.82rem">'+r.ltbMode+'</div><div class="ri-unit">L<sub>b</sub>='+fmt(r.Lb,2)+' / L<sub>p</sub>='+fmt(r.Lp,2)+' / L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">LTB mode</div><div class="ri-value" style="font-size:.82rem">'+r.ltbMode+'</div><div class="ri-unit">'+(r.Cw===0?'&phi;M<sub>nx</sub>=&phi;M<sub>p</sub> (length-independent)':'L<sub>b</sub>='+fmt(r.Lb,2)+' / L<sub>p</sub>='+fmt(r.Lp,2)+' / L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL)+'</div></div>'
       +'</div>';
   }
 
@@ -1835,6 +1835,7 @@ function bcRender(r){
     h+=step(3,'DCR = max(Eq. 6.61, Eq. 6.62)','Governing: Eq. '+r.govEq,
       'DCR = '+fmt(r.DCR,4)+'  '+(r.DCR<=1?'&#10003; OK':'&#10007; NG'),r.DCR<=1.0);
     h+='</table></div>';
+    if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — M<sub>bRd</sub>=M<sub>Rky</sub>/&gamma;<sub>M1</sub> for any unbraced length. The interaction ratio changes with length only through &chi;<sub>y</sub>/&chi;<sub>z</sub> and the k-factors. D/C is therefore less sensitive to length changes than for open I-sections where M<sub>bRd</sub> also decreases with length via LTB.</div></div>';
     h+='<div class="report-warn"><span>&#9432;</span><div>Class 1 cross-section assumed. &gamma;<sub>M0</sub>=&gamma;<sub>M1</sub>=1.0. Local buckling and shear not checked.</div></div>';
   } else if(r.code==='is800'){
     // §7 Axial
@@ -1885,12 +1886,20 @@ function bcRender(r){
       'F<sub>cr</sub>='+fmt(r.Fcr,2)+' '+r.uSt);
     h+=step(7,'&phi;<sub>c</sub>P<sub>n</sub> = 0.90 \xd7 F<sub>cr</sub> \xd7 A','',''+fmt(r.phiPn,1)+' '+r.uF);
     h+='</table></div>';
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Strong-Axis Flexure — '+codeStr+' Chapter F2</div><table class="steps-table">';
-    h+=step(1,'M<sub>p</sub>=F<sub>y</sub>Z<sub>x</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zx,1)+'/12':r.Fy+'\xd7'+fmt(r.Zx,0)+'/10⁶','M<sub>p</sub>='+fmt(r.Mp,1)+' '+r.uM);
-    h+=step(2,'L<sub>p</sub>','1.76r<sub>y</sub>√(E/F<sub>y</sub>)/'+r.lf,'L<sub>p</sub>='+fmt(r.Lp,2)+' '+r.uL);
-    h+=step(3,'L<sub>r</sub>','1.95r<sub>ts</sub>(E/0.7F<sub>y</sub>)√[…]','L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL);
-    h+=step(4,'L<sub>b</sub>=L<sub>b,y</sub>  →  '+r.ltbMode,'C<sub>b</sub>=1.00','L<sub>b</sub>='+fmt(r.Lb,2)+' '+r.uL);
-    h+=step(5,'&phi;<sub>b</sub>M<sub>nx</sub>=0.90\xd7M<sub>nx</sub>','',''+fmt(r.phiMnx,1)+' '+r.uM);
+    if(r.Cw===0){
+      var fCh=(r.name||'').toLowerCase().indexOf('chs')>=0?'§F8 (Round HSS/CHS)':'§F7 (Rect. HSS)';
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Strong-Axis Flexure — '+codeStr+' '+fCh+'</div><table class="steps-table">';
+      h+=step(1,'M<sub>px</sub>=F<sub>y</sub>Z<sub>x</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zx,1)+'/12':r.Fy+'\xd7'+fmt(r.Zx,0)+'/10⁶','M<sub>px</sub>='+fmt(r.Mp,1)+' '+r.uM);
+      h+=step(2,'No LTB — C<sub>w</sub>=0','Closed section: high GJ prevents lateral-torsional buckling. M<sub>nx</sub>=M<sub>p</sub> for any unbraced length — &phi;<sub>b</sub>M<sub>nx</sub> is independent of column length.','M<sub>nx</sub>=M<sub>px</sub>');
+      h+=step(3,'&phi;<sub>b</sub>M<sub>nx</sub>=0.90\xd7M<sub>px</sub>','',''+fmt(r.phiMnx,1)+' '+r.uM);
+    } else {
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Strong-Axis Flexure — '+codeStr+' Chapter F2</div><table class="steps-table">';
+      h+=step(1,'M<sub>p</sub>=F<sub>y</sub>Z<sub>x</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zx,1)+'/12':r.Fy+'\xd7'+fmt(r.Zx,0)+'/10⁶','M<sub>p</sub>='+fmt(r.Mp,1)+' '+r.uM);
+      h+=step(2,'L<sub>p</sub>','1.76r<sub>y</sub>√(E/F<sub>y</sub>)/'+r.lf,'L<sub>p</sub>='+fmt(r.Lp,2)+' '+r.uL);
+      h+=step(3,'L<sub>r</sub>','1.95r<sub>ts</sub>(E/0.7F<sub>y</sub>)√[…]','L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL);
+      h+=step(4,'L<sub>b</sub>=L<sub>b,y</sub>  →  '+r.ltbMode,'C<sub>b</sub>=1.00','L<sub>b</sub>='+fmt(r.Lb,2)+' '+r.uL);
+      h+=step(5,'&phi;<sub>b</sub>M<sub>nx</sub>=0.90\xd7M<sub>nx</sub>','',''+fmt(r.phiMnx,1)+' '+r.uM);
+    }
     h+='</table></div>';
     h+='<div class="rpt-sec"><div class="rpt-sec-title">Weak-Axis Flexure — '+codeStr+' Chapter F6</div><table class="steps-table">';
     h+=step(1,'M<sub>py</sub>=F<sub>y</sub>Z<sub>y</sub>',r.isUS?r.Fy+'\xd7'+fmt(r.Zy,1)+'/12':r.Fy+'\xd7'+fmt(r.Zy,0)+'/10⁶','M<sub>py</sub>='+fmt(r.Mpy,1)+' '+r.uM);
@@ -1913,6 +1922,7 @@ function bcRender(r){
     h+=step(5,'D/C check H ≤ 1.0','','H='+fmt(r.H,3)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
     h+='</table></div>';
     if(!slOk2)h+='<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds recommended limit of 200.</div></div>';
+    if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — &phi;<sub>b</sub>M<sub>nx</sub> and &phi;<sub>b</sub>M<sub>ny</sub> remain at their plastic values regardless of column length. Only the axial term P<sub>u</sub>/&phi;P<sub>n</sub> decreases with increasing length. D/C is therefore less sensitive to length changes than for open I-sections, where LTB also reduces M<sub>nx</sub> with length.</div></div>';
     h+='<div class="report-warn"><span>&#9432;</span><div>Compact section assumed (AISC Table B4.1). Local buckling, shear, and connections not checked.</div></div>';
   }
 
