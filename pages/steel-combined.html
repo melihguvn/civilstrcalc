@@ -31,6 +31,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .bg-section .bg-pane{display:block;height:0;overflow:hidden;padding:0;}
 .bg-section .bg-pane.active{height:auto;overflow:visible;padding:22px;}
 .bg-toc a.active{background:var(--accent);color:var(--white);border-color:var(--accent);}
+.bg-twocol{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;margin:12px 0;}
+.bg-twocol .bg-txt{flex:1;min-width:220px;}
+.bg-twocol .bg-fig{flex:0 0 auto;text-align:center;}
+.bg-note{background:#e8f2fc;border:1px solid #b8d0eb;border-left:4px solid #1a6db5;border-radius:0 6px 6px 0;padding:10px 14px;margin:10px 0;font-size:.78rem;color:#1a3f6f;line-height:1.7;}
+.bg-note b{color:#1a6db5;}
+.bg-warn{background:#fff8ed;border:1px solid #f4c97a;border-left:4px solid #e0930a;border-radius:0 6px 6px 0;padding:10px 14px;margin:10px 0;font-size:.78rem;color:#7a5000;line-height:1.7;}
+.bg-steps{counter-reset:step;list-style:none;padding:0;margin:10px 0;}
+.bg-steps li{counter-increment:step;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:.80rem;color:var(--text-mid);line-height:1.65;}
+.bg-steps li::before{content:counter(step);display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;background:var(--accent);color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+.bg-curve-tbl{width:100%;border-collapse:collapse;font-size:.76rem;margin:10px 0;}
+.bg-curve-tbl th{padding:5px 10px;text-align:left;font-weight:600;font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.bg-curve-tbl td{padding:5px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.73rem;}
+.bg-curve-tbl td:first-child{font-family:var(--sans);font-weight:500;color:var(--text-mid);}
+.bg-zone{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.68rem;font-weight:700;font-family:var(--mono);}
+.bg-zone-p{background:#d4edda;color:#1a6b33;}
+.bg-zone-i{background:#fff3cd;color:#856404;}
+.bg-zone-e{background:#fde8e8;color:#8b1a1a;}
 .print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
 .ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
 .ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
@@ -175,79 +192,566 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ── DESIGN BACKGROUND ── -->
 <div class="bg-section no-print">
-  <div class="bg-hdr"><h3>&#128218; Steel Column Design &mdash; Theory Reference</h3></div>
+  <div class="bg-hdr"><h3>&#128218; Steel Column Design &mdash; Theory &amp; Design Background</h3></div>
   <nav class="bg-toc">
-    <a href="#bg-aisc" onclick="bcBgTab('bg-aisc',this);return false;" class="active">AISC / TSDS</a>
+    <a href="#bg-aisc" onclick="bcBgTab('bg-aisc',this);return false;" class="active">AISC 360-22</a>
     <a href="#bg-ec3"  onclick="bcBgTab('bg-ec3',this);return false;">EN 1993-1-1</a>
     <a href="#bg-is8"  onclick="bcBgTab('bg-is8',this);return false;">IS 800:2007</a>
+    <a href="#bg-tsds" onclick="bcBgTab('bg-tsds',this);return false;">TSDS 2016</a>
     <a href="#bg-ck"   onclick="bcBgTab('bg-ck',this);return false;">K Factors</a>
   </nav>
 
+  <!-- ══ AISC 360-22 ══ -->
   <div class="bg-pane active" id="bg-aisc">
     <div class="tb">
-      <h4>Interaction &mdash; AISC 360 &sect;H1-1</h4>
-      <div class="fml-blk"><span class="ft">P<sub>u</sub>/&phi;P<sub>n</sub> &ge; 0.2 (H1-1a)</span>P<sub>u</sub>/(&phi;<sub>c</sub>P<sub>n</sub>) + (8/9)[M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>)] &le; 1.0</div>
-      <div class="fml-blk"><span class="ft">P<sub>u</sub>/&phi;P<sub>n</sub> &lt; 0.2 (H1-1b)</span>P<sub>u</sub>/(2&phi;<sub>c</sub>P<sub>n</sub>) + M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>) &le; 1.0</div>
-      <p>&phi;<sub>c</sub> = &phi;<sub>b</sub> = 0.90. C<sub>b</sub> = 1.0 (uniform moment). L<sub>b</sub> = weak-axis unbraced length.</p>
-      <h4>Axial &mdash; &sect;E3</h4>
-      <div class="fml-blk"><span class="ft">KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> &times; F<sub>y</sub></div>
-      <div class="fml-blk"><span class="ft">KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub> &nbsp;&nbsp;where F<sub>e</sub> = &pi;&sup2;E/(KL/r)&sup2;</div>
-      <h4>Strong-Axis Flexure &mdash; &sect;F2</h4>
-      <div class="fml-blk"><span class="ft">L<sub>b</sub> &le; L<sub>p</sub></span>M<sub>nx</sub> = M<sub>p</sub> = F<sub>y</sub>Z<sub>x</sub></div>
-      <div class="fml-blk"><span class="ft">L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></span>M<sub>nx</sub> = M<sub>p</sub> &minus; (M<sub>p</sub> &minus; 0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>) &le; M<sub>p</sub></div>
-      <div class="fml-blk"><span class="ft">L<sub>b</sub> &gt; L<sub>r</sub></span>M<sub>nx</sub> = F<sub>cr,LTB</sub> &times; S<sub>x</sub> &le; M<sub>p</sub></div>
-      <h4>Weak-Axis Flexure &mdash; &sect;F6</h4>
-      <div class="fml-blk"><span class="ft">&sect;F6</span>M<sub>ny</sub> = min(F<sub>y</sub>Z<sub>y</sub>, 1.6F<sub>y</sub>S<sub>y</sub>)</div>
-      <p>TSDS 2016 uses the same interaction equations in SI units (E = 200,000 MPa).</p>
-    </div>
-  </div>
 
+      <h4>Design Procedure Overview</h4>
+      <ol class="bg-steps">
+        <li>Select section and compute properties (A, Z<sub>x</sub>, Z<sub>y</sub>, S<sub>x</sub>, r<sub>x</sub>, r<sub>y</sub>, J, C<sub>w</sub>).</li>
+        <li>Compute nominal axial capacity &phi;<sub>c</sub>P<sub>n</sub> for both axes using AISC §E3. Governing KL/r controls.</li>
+        <li>Compute strong-axis moment capacity &phi;<sub>b</sub>M<sub>nx</sub> considering LTB zones (§F2).</li>
+        <li>Compute weak-axis moment capacity &phi;<sub>b</sub>M<sub>ny</sub> (§F6, no LTB).</li>
+        <li>Evaluate interaction ratio using §H1-1. If P<sub>u</sub>/&phi;<sub>c</sub>P<sub>n</sub> &ge; 0.2 use H1-1a; otherwise H1-1b.</li>
+      </ol>
+
+      <h4>Interaction Equations &mdash; AISC 360 &sect;H1-1</h4>
+      <div class="bg-twocol">
+        <div class="bg-txt">
+          <div class="fml-blk"><span class="ft">H1-1a &mdash; High axial (P<sub>u</sub>/&phi;P<sub>n</sub> &ge; 0.2)</span>
+            P<sub>u</sub> / (&phi;<sub>c</sub>P<sub>n</sub>) + (8/9)[M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>)] &le; 1.0
+          </div>
+          <div class="fml-blk"><span class="ft">H1-1b &mdash; Low axial (P<sub>u</sub>/&phi;P<sub>n</sub> &lt; 0.2)</span>
+            P<sub>u</sub>/(2&phi;<sub>c</sub>P<sub>n</sub>) + M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>) &le; 1.0
+          </div>
+          <p>&phi;<sub>c</sub> = &phi;<sub>b</sub> = 0.90. The two equations share the same boundary point at P<sub>u</sub>/&phi;P<sub>n</sub> = 0.2, M/&phi;M<sub>n</sub> = 0.9, ensuring a continuous interaction surface. C<sub>b</sub> = 1.0 assumed (uniform moment, conservative).</p>
+          <div class="bg-note"><b>Why two equations?</b> When axial force dominates (&ge;20% capacity), bending reduces the remaining capacity by 8/9 of its ratio — yielding a steeper envelope. When axial is small, the column behaves more like a beam-column with near-full flexural capacity.</div>
+        </div>
+        <div class="bg-fig">
+          <!-- AISC H1-1 Interaction Diagram -->
+          <svg viewBox="0 0 280 245" width="260" height="228" xmlns="http://www.w3.org/2000/svg" style="display:block;font-size:11px;font-family:sans-serif">
+            <!-- Grid -->
+            <line x1="55" y1="175" x2="250" y2="175" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="55" y1="135" x2="250" y2="135" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="55" y1="95"  x2="250" y2="95"  stroke="#edf0f3" stroke-width="1"/>
+            <line x1="55" y1="55"  x2="250" y2="55"  stroke="#edf0f3" stroke-width="1"/>
+            <line x1="95"  y1="15" x2="95"  y2="215" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="135" y1="15" x2="135" y2="215" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="175" y1="15" x2="175" y2="215" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="215" y1="15" x2="215" y2="215" stroke="#edf0f3" stroke-width="1"/>
+            <!-- Safe zone fill -->
+            <polygon points="55,215 215,215 231,175 55,15" fill="#e8f2fc" opacity="0.65"/>
+            <!-- Axes -->
+            <line x1="55" y1="215" x2="255" y2="215" stroke="#8898aa" stroke-width="1.5"/>
+            <line x1="55" y1="215" x2="55"  y2="10"  stroke="#8898aa" stroke-width="1.5"/>
+            <!-- H1-1a line: (0,1)→(0.9,0.2) in data = (55,15)→(231,175) -->
+            <line x1="55" y1="15" x2="231" y2="175" stroke="#1a6db5" stroke-width="2.5"/>
+            <!-- H1-1b line: (0.9,0.2)→(1,0) = (231,175)→(255,215) -->
+            <line x1="231" y1="175" x2="255" y2="215" stroke="#1a6db5" stroke-width="2.5" stroke-dasharray="5,3"/>
+            <!-- Junction circle -->
+            <circle cx="231" cy="175" r="4" fill="white" stroke="#1a6db5" stroke-width="2"/>
+            <!-- 0.2 dashed guide -->
+            <line x1="55" y1="175" x2="231" y2="175" stroke="#1a6db5" stroke-width="1" stroke-dasharray="3,2" opacity="0.4"/>
+            <!-- X ticks -->
+            <line x1="95"  y1="215" x2="95"  y2="220" stroke="#8898aa"/>
+            <line x1="135" y1="215" x2="135" y2="220" stroke="#8898aa"/>
+            <line x1="175" y1="215" x2="175" y2="220" stroke="#8898aa"/>
+            <line x1="215" y1="215" x2="215" y2="220" stroke="#8898aa"/>
+            <text x="95"  y="230" text-anchor="middle" fill="#8898aa" font-size="10">0.2</text>
+            <text x="135" y="230" text-anchor="middle" fill="#8898aa" font-size="10">0.4</text>
+            <text x="175" y="230" text-anchor="middle" fill="#8898aa" font-size="10">0.6</text>
+            <text x="215" y="230" text-anchor="middle" fill="#8898aa" font-size="10">0.8</text>
+            <text x="255" y="230" text-anchor="middle" fill="#8898aa" font-size="10">1.0</text>
+            <!-- Y ticks -->
+            <line x1="50" y1="175" x2="55" y2="175" stroke="#8898aa"/>
+            <line x1="50" y1="135" x2="55" y2="135" stroke="#8898aa"/>
+            <line x1="50" y1="95"  x2="55" y2="95"  stroke="#8898aa"/>
+            <line x1="50" y1="55"  x2="55" y2="55"  stroke="#8898aa"/>
+            <line x1="50" y1="15"  x2="55" y2="15"  stroke="#8898aa"/>
+            <text x="46" y="179" text-anchor="end" fill="#8898aa" font-size="10">0.2</text>
+            <text x="46" y="139" text-anchor="end" fill="#8898aa" font-size="10">0.4</text>
+            <text x="46" y="99"  text-anchor="end" fill="#8898aa" font-size="10">0.6</text>
+            <text x="46" y="59"  text-anchor="end" fill="#8898aa" font-size="10">0.8</text>
+            <text x="46" y="19"  text-anchor="end" fill="#8898aa" font-size="10">1.0</text>
+            <!-- Labels on lines -->
+            <text x="112" y="68" fill="#1a6db5" font-weight="700" font-size="10" transform="rotate(-47,112,68)">H1-1a</text>
+            <text x="240" y="200" fill="#1a6db5" font-weight="700" font-size="10">H1-1b</text>
+            <!-- Zone labels -->
+            <text x="138" y="185" text-anchor="middle" fill="#1a6db5" font-size="10" opacity="0.8">&#x2713; SAFE</text>
+            <text x="215" y="100" text-anchor="middle" fill="#c0392b" font-size="10" opacity="0.7">N.G.</text>
+            <!-- Axis labels -->
+            <text x="155" y="243" text-anchor="middle" fill="#5a6a7a" font-weight="600" font-size="10">M<tspan font-size="8">ux</tspan> / &#x3C6;M<tspan font-size="8">nx</tspan></text>
+            <text x="12" y="115" text-anchor="middle" fill="#5a6a7a" font-weight="600" font-size="10" transform="rotate(-90,12,115)">P<tspan font-size="8">u</tspan> / &#x3C6;P<tspan font-size="8">n</tspan></text>
+          </svg>
+          <p style="font-size:.7rem;color:#8898aa;text-align:center;margin-top:4px">AISC §H1-1 interaction envelope</p>
+        </div>
+      </div>
+
+      <h4>Axial Compression Capacity &mdash; AISC 360 &sect;E3</h4>
+      <p>The critical buckling stress depends on the governing slenderness ratio KL/r (larger of strong and weak axis):</p>
+      <div class="fml-blk"><span class="ft">Elastic critical stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2;</div>
+      <div class="fml-blk"><span class="ft"><span class="bg-zone bg-zone-i">Inelastic</span> &nbsp; KL/r &le; 4.71&radic;(E/F<sub>y</sub>) &nbsp;[typically &le;200 for A992]</span>F<sub>cr</sub> = 0.658<sup>(F<sub>y</sub>/F<sub>e</sub>)</sup> &times; F<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft"><span class="bg-zone bg-zone-e">Elastic</span> &nbsp; KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub> &nbsp;&nbsp;(10% knock-down for imperfections)</div>
+      <div class="fml-blk"><span class="ft">Nominal &amp; design strength</span>P<sub>n</sub> = F<sub>cr</sub> &times; A &nbsp;&nbsp; &phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; P<sub>n</sub></div>
+      <div class="bg-note"><b>Limit KL/r &le; 200</b> is recommended by AISC commentary as a practical upper bound for compression members. Above this, columns are very slender and efficiency drops sharply.</div>
+
+      <h4>Strong-Axis Flexure &amp; LTB &mdash; AISC 360 &sect;F2</h4>
+      <p>Three zones govern depending on the unbraced length L<sub>b</sub> (taken as a fraction of column height):</p>
+      <!-- LTB zone diagram -->
+      <svg viewBox="0 0 560 100" width="100%" style="max-width:560px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg" font-size="11" font-family="sans-serif">
+        <!-- Background zones -->
+        <rect x="0"   y="0" width="170" height="70" fill="#d4edda" rx="4"/>
+        <rect x="174" y="0" width="212" height="70" fill="#fff3cd" rx="4"/>
+        <rect x="390" y="0" width="170" height="70" fill="#fde8e8" rx="4"/>
+        <!-- Zone labels -->
+        <text x="85"  y="20" text-anchor="middle" fill="#1a6b33" font-weight="700" font-size="11">Plastic</text>
+        <text x="85"  y="36" text-anchor="middle" fill="#1a6b33" font-size="10">M<tspan font-size="8">nx</tspan> = M<tspan font-size="8">p</tspan> = F<tspan font-size="8">y</tspan>Z<tspan font-size="8">x</tspan></text>
+        <text x="85"  y="52" text-anchor="middle" fill="#1a6b33" font-size="10">L<tspan font-size="8">b</tspan> &lt;= L<tspan font-size="8">p</tspan></text>
+        <text x="280" y="20" text-anchor="middle" fill="#856404" font-weight="700" font-size="11">Inelastic LTB</text>
+        <text x="280" y="36" text-anchor="middle" fill="#856404" font-size="10">Linear interpolation</text>
+        <text x="280" y="52" text-anchor="middle" fill="#856404" font-size="10">M<tspan font-size="8">p</tspan> &rarr; 0.7F<tspan font-size="8">y</tspan>S<tspan font-size="8">x</tspan></text>
+        <text x="475" y="20" text-anchor="middle" fill="#8b1a1a" font-weight="700" font-size="11">Elastic LTB</text>
+        <text x="475" y="36" text-anchor="middle" fill="#8b1a1a" font-size="10">M<tspan font-size="8">nx</tspan> = F<tspan font-size="8">cr</tspan> &times; S<tspan font-size="8">x</tspan></text>
+        <text x="475" y="52" text-anchor="middle" fill="#8b1a1a" font-size="10">L<tspan font-size="8">b</tspan> &gt; L<tspan font-size="8">r</tspan></text>
+        <!-- Dividers -->
+        <line x1="170" y1="0" x2="170" y2="70" stroke="#aaa" stroke-width="1" stroke-dasharray="4,2"/>
+        <line x1="386" y1="0" x2="386" y2="70" stroke="#aaa" stroke-width="1" stroke-dasharray="4,2"/>
+        <!-- Lp Lr labels -->
+        <text x="170" y="85" text-anchor="middle" fill="#5a6a7a" font-size="10">L<tspan font-size="8">p</tspan> = 1.76r<tspan font-size="8">y</tspan>&radic;(E/F<tspan font-size="8">y</tspan>)</text>
+        <text x="386" y="85" text-anchor="middle" fill="#5a6a7a" font-size="10">L<tspan font-size="8">r</tspan> = 1.95r<tspan font-size="8">ts</tspan>&radic;(0.078+...)</text>
+        <!-- Arrow -->
+        <line x1="0" y1="95" x2="550" y2="95" stroke="#8898aa" stroke-width="1.5" marker-end="url(#arrA)"/>
+        <defs><marker id="arrA" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8898aa"/></marker></defs>
+        <text x="555" y="98" fill="#5a6a7a" font-size="10">L<tspan font-size="8">b</tspan></text>
+      </svg>
+      <div class="fml-blk"><span class="ft">Inelastic LTB (L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub>)</span>
+        M<sub>nx</sub> = C<sub>b</sub>[M<sub>p</sub> &minus; (M<sub>p</sub> &minus; 0.7F<sub>y</sub>S<sub>x</sub>) &times; (L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub>
+      </div>
+      <div class="fml-blk"><span class="ft">Elastic LTB (L<sub>b</sub> &gt; L<sub>r</sub>)</span>
+        F<sub>cr</sub> = C<sub>b</sub>&pi;&sup2;E / (L<sub>b</sub>/r<sub>ts</sub>)&sup2; &times; &radic;(1 + 0.078Jc/(S<sub>x</sub>h<sub>o</sub>) &times; (L<sub>b</sub>/r<sub>ts</sub>)&sup2;) &nbsp;&nbsp; M<sub>nx</sub> = F<sub>cr</sub>S<sub>x</sub> &le; M<sub>p</sub>
+      </div>
+
+      <h4>Weak-Axis Flexure &mdash; AISC 360 &sect;F6</h4>
+      <p>No LTB possible for bending about the weak axis. Capacity is governed by local flange yielding only:</p>
+      <div class="fml-blk"><span class="ft">&sect;F6 (compact flanges)</span>M<sub>ny</sub> = F<sub>y</sub>Z<sub>y</sub> &le; 1.6F<sub>y</sub>S<sub>y</sub></div>
+      <p>The 1.6F<sub>y</sub>S<sub>y</sub> cap prevents overly optimistic plastic moments for sections with very stocky flanges.</p>
+
+      <h4>ASCE 7-22 &mdash; LRFD Load Combinations</h4>
+      <table class="combo-ref-tbl" style="max-width:520px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.4D</td></tr>
+        <tr><td>2</td><td>1.2D + 1.6L + 0.5(L<sub>r</sub> or S or R)</td></tr>
+        <tr><td>3</td><td>1.2D + 1.6(L<sub>r</sub> or S or R) + (L or 0.5W)</td></tr>
+        <tr><td>4</td><td>1.2D + 1.0W + L + 0.5(L<sub>r</sub> or S or R)</td></tr>
+        <tr><td>5</td><td>0.9D + 1.0W</td></tr>
+      </table>
+
+      <h4>ASTM Steel Grades</h4>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Grade</th><th>F<sub>y</sub> (ksi)</th><th>F<sub>u</sub> (ksi)</th><th>Typical use</th></tr>
+        <tr><td>A992 Gr.50</td><td>50</td><td>65</td><td>W-shapes (standard)</td></tr>
+        <tr><td>A572 Gr.50</td><td>50</td><td>65</td><td>Plates, HSS</td></tr>
+        <tr><td>A572 Gr.60</td><td>60</td><td>75</td><td>Higher strength</td></tr>
+        <tr><td>A36</td><td>36</td><td>58</td><td>Older / misc shapes</td></tr>
+      </table>
+
+    </div>
+  </div><!-- /bg-aisc -->
+
+  <!-- ══ EN 1993-1-1 ══ -->
   <div class="bg-pane" id="bg-ec3">
     <div class="tb">
-      <h4>Axial Buckling &mdash; EN 1993-1-1 &sect;6.3.1</h4>
-      <p>N<sub>b,Rd</sub> = &chi; &times; A &times; f<sub>y</sub> / &gamma;<sub>M1</sub>. Imperfection factor &alpha; from buckling curve (Table 6.2): h/b &gt; 1.2 &rarr; curves a/b; h/b &le; 1.2 &rarr; curves b/c.</p>
-      <div class="fml-blk"><span class="ft">Slenderness</span>&lambda;&#772; = &radic;(A&middot;f<sub>y</sub> / N<sub>cr</sub>) &nbsp;&nbsp; N<sub>cr</sub> = &pi;&sup2;EI/(KL)&sup2;</div>
-      <div class="fml-blk"><span class="ft">Reduction factor</span>&chi; = 1 / [&phi; + &radic;(&phi;&sup2; &minus; &lambda;&#772;&sup2;)] &le; 1.0 &nbsp;&nbsp; &phi; = 0.5[1 + &alpha;(&lambda;&#772; &minus; 0.2) + &lambda;&#772;&sup2;]</div>
-      <h4>LTB &mdash; &sect;6.3.2.3 (Rolled Sections)</h4>
-      <div class="fml-blk"><span class="ft">M<sub>cr</sub></span>M<sub>cr</sub> = (&pi;/L<sub>b</sub>) &radic;(EI<sub>z</sub>&middot;GJ) &times; &radic;(1 + &pi;&sup2;EI<sub>w</sub>/(GJL<sub>b</sub>&sup2;))</div>
-      <div class="fml-blk"><span class="ft">&lambda;&#772;<sub>LT</sub></span>&radic;(W<sub>y,pl</sub>&middot;f<sub>y</sub> / M<sub>cr</sub>). Curves: h/b &le; 2 &rarr; b (&alpha;<sub>LT</sub>=0.34); h/b &gt; 2 &rarr; c (&alpha;<sub>LT</sub>=0.49)</div>
-      <div class="fml-blk"><span class="ft">&chi;<sub>LT</sub></span>&lambda;&#772;<sub>LT,0</sub> = 0.4, &beta; = 0.75. If &lambda;&#772;<sub>LT</sub> &le; 0.4: &chi;<sub>LT</sub>=1.0; else &chi;<sub>LT</sub> = 1/[&phi;<sub>LT</sub>+&radic;(&phi;<sub>LT</sub>&sup2;&minus;&beta;&lambda;&#772;<sub>LT</sub>&sup2;)] &le; 1/&lambda;&#772;<sub>LT</sub>&sup2;</div>
-      <h4>Interaction &mdash; &sect;6.3.3 Method 2 (Annex B, C<sub>my</sub>=C<sub>mz</sub>=1.0)</h4>
-      <div class="fml-blk"><span class="ft">Eq. 6.61</span>N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0</div>
-      <div class="fml-blk"><span class="ft">Eq. 6.62</span>N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0</div>
-      <p>n<sub>y</sub>=N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>), n<sub>z</sub>=N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>). k<sub>yy</sub>=1+min(&lambda;&#772;<sub>y</sub>&minus;0.2, 0.8)n<sub>y</sub>; k<sub>zz</sub>=1+min(2&lambda;&#772;<sub>z</sub>&minus;0.6, 1.4)n<sub>z</sub>; k<sub>yz</sub>=0.6k<sub>zz</sub>; k<sub>zy</sub>=1&minus;min(0.133&lambda;&#772;<sub>z</sub>, 0.133)n<sub>z</sub>.</p>
-    </div>
-  </div>
 
+      <h4>Design Procedure Overview</h4>
+      <ol class="bg-steps">
+        <li>Compute elastic critical axial load N<sub>cr</sub> = &pi;&sup2;EI/(KL)&sup2; for both axes.</li>
+        <li>Compute non-dimensional slenderness &lambda;&#772; = &radic;(Af<sub>y</sub>/N<sub>cr</sub>) for each axis.</li>
+        <li>Select buckling curve (a/b/c) from Table 6.2 based on cross-section type and h/b ratio.</li>
+        <li>Calculate reduction factor &chi; using the Perry–Robertson formula and get N<sub>b,Rd</sub>.</li>
+        <li>Compute M<sub>cr</sub> for LTB, derive &chi;<sub>LT</sub>, get M<sub>b,Rd</sub> and M<sub>Rd,z</sub>.</li>
+        <li>Check both interaction equations 6.61 and 6.62 (§6.3.3 Method 2).</li>
+      </ol>
+
+      <h4>Axial Buckling &mdash; EN 1993-1-1 &sect;6.3.1</h4>
+      <div class="bg-twocol">
+        <div class="bg-txt">
+          <div class="fml-blk"><span class="ft">Elastic critical load</span>N<sub>cr</sub> = &pi;&sup2;EI / (KL)&sup2;</div>
+          <div class="fml-blk"><span class="ft">Non-dimensional slenderness</span>&lambda;&#772; = &radic;(Af<sub>y</sub> / N<sub>cr</sub>)</div>
+          <div class="fml-blk"><span class="ft">Ayrton–Perry (Robertson) factor</span>&phi; = 0.5[1 + &alpha;(&lambda;&#772; &minus; 0.2) + &lambda;&#772;&sup2;]</div>
+          <div class="fml-blk"><span class="ft">Reduction factor &chi;</span>&chi; = 1 / [&phi; + &radic;(&phi;&sup2; &minus; &lambda;&#772;&sup2;)] &le; 1.0</div>
+          <div class="fml-blk"><span class="ft">Buckling resistance</span>N<sub>b,Rd</sub> = &chi; &times; A &times; f<sub>y</sub> / &gamma;<sub>M1</sub> &nbsp;&nbsp;(&gamma;<sub>M1</sub> = 1.0)</div>
+          <p>The imperfection factor &alpha; reflects initial out-of-straightness, residual stresses, and end restraint imperfections. Higher &alpha; = more conservative curve.</p>
+        </div>
+        <div class="bg-fig">
+          <!-- χ vs λ̄ buckling curves -->
+          <svg viewBox="0 0 270 230" width="255" height="217" xmlns="http://www.w3.org/2000/svg" style="display:block;font-size:10px;font-family:sans-serif">
+            <defs><marker id="arrB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8898aa"/></marker></defs>
+            <!-- Grid -->
+            <line x1="45" y1="165" x2="240" y2="165" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="45" y1="125" x2="240" y2="125" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="45" y1="85"  x2="240" y2="85"  stroke="#edf0f3" stroke-width="1"/>
+            <line x1="45" y1="45"  x2="240" y2="45"  stroke="#edf0f3" stroke-width="1"/>
+            <line x1="92"  y1="5" x2="92"  y2="205" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="140" y1="5" x2="140" y2="205" stroke="#edf0f3" stroke-width="1"/>
+            <line x1="188" y1="5" x2="188" y2="205" stroke="#edf0f3" stroke-width="1"/>
+            <!-- Euler reference -->
+            <polyline points="45,5 92,5 140,45 188,85 240,117" stroke="#8898aa" stroke-width="1" stroke-dasharray="4,3" fill="none" opacity="0.6"/>
+            <!-- Curve a (α=0.21) -->
+            <polyline points="45,5 92,5 116,22 140,60 164,90 188,112 216,128 240,143" stroke="#1a9e6b" stroke-width="2" fill="none"/>
+            <!-- Curve b (α=0.34) -->
+            <polyline points="45,5 92,5 116,34 140,79 164,107 188,126 216,140 240,153" stroke="#1a6db5" stroke-width="2" fill="none"/>
+            <!-- Curve c (α=0.49) -->
+            <polyline points="45,5 92,5 116,47 140,99 164,122 188,139 216,151 240,160" stroke="#c0392b" stroke-width="2" fill="none"/>
+            <!-- Axes -->
+            <line x1="45" y1="205" x2="245" y2="205" stroke="#8898aa" stroke-width="1.5" marker-end="url(#arrB)"/>
+            <line x1="45" y1="205" x2="45"  y2="0"   stroke="#8898aa" stroke-width="1.5" marker-end="url(#arrB)"/>
+            <!-- X ticks -->
+            <line x1="92"  y1="205" x2="92"  y2="210" stroke="#8898aa"/>
+            <line x1="140" y1="205" x2="140" y2="210" stroke="#8898aa"/>
+            <line x1="188" y1="205" x2="188" y2="210" stroke="#8898aa"/>
+            <text x="45"  y="219" text-anchor="middle" fill="#8898aa">0</text>
+            <text x="92"  y="219" text-anchor="middle" fill="#8898aa">0.5</text>
+            <text x="140" y="219" text-anchor="middle" fill="#8898aa">1.0</text>
+            <text x="188" y="219" text-anchor="middle" fill="#8898aa">1.5</text>
+            <text x="236" y="219" text-anchor="middle" fill="#8898aa">2.0</text>
+            <!-- Y ticks -->
+            <line x1="40" y1="165" x2="45" y2="165" stroke="#8898aa"/>
+            <line x1="40" y1="125" x2="45" y2="125" stroke="#8898aa"/>
+            <line x1="40" y1="85"  x2="45" y2="85"  stroke="#8898aa"/>
+            <line x1="40" y1="45"  x2="45" y2="45"  stroke="#8898aa"/>
+            <line x1="40" y1="5"   x2="45" y2="5"   stroke="#8898aa"/>
+            <text x="36" y="169" text-anchor="end" fill="#8898aa">0.2</text>
+            <text x="36" y="129" text-anchor="end" fill="#8898aa">0.4</text>
+            <text x="36" y="89"  text-anchor="end" fill="#8898aa">0.6</text>
+            <text x="36" y="49"  text-anchor="end" fill="#8898aa">0.8</text>
+            <text x="36" y="9"   text-anchor="end" fill="#8898aa">1.0</text>
+            <!-- Legend -->
+            <line x1="155" y1="58" x2="175" y2="58" stroke="#1a9e6b" stroke-width="2"/>
+            <text x="178" y="62" fill="#1a9e6b" font-weight="600">a (&alpha;=0.21)</text>
+            <line x1="155" y1="73" x2="175" y2="73" stroke="#1a6db5" stroke-width="2"/>
+            <text x="178" y="77" fill="#1a6db5" font-weight="600">b (&alpha;=0.34)</text>
+            <line x1="155" y1="88" x2="175" y2="88" stroke="#c0392b" stroke-width="2"/>
+            <text x="178" y="92" fill="#c0392b" font-weight="600">c (&alpha;=0.49)</text>
+            <line x1="155" y1="103" x2="175" y2="103" stroke="#8898aa" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="178" y="107" fill="#8898aa">Euler</text>
+            <!-- Axis labels -->
+            <text x="145" y="228" text-anchor="middle" fill="#5a6a7a" font-weight="600">&lambda;&#772; (non-dim. slenderness)</text>
+            <text x="10" y="103" text-anchor="middle" fill="#5a6a7a" font-weight="600" transform="rotate(-90,10,103)">&chi; (reduction)</text>
+          </svg>
+          <p style="font-size:.7rem;color:#8898aa;text-align:center;margin-top:4px">EN 1993-1-1 Table 6.2 buckling curves</p>
+        </div>
+      </div>
+
+      <h4>Buckling Curve Selection &mdash; EN 1993-1-1 Table 6.2</h4>
+      <table class="bg-curve-tbl" style="max-width:640px">
+        <tr><th>Section</th><th>h/b</th><th>t<sub>f</sub></th><th>Strong axis (y-y)</th><th>Weak axis (z-z)</th></tr>
+        <tr><td>IPE / HEA / HEB</td><td>&gt; 1.2</td><td>&le; 40 mm</td><td>a (&alpha;=0.21)</td><td>b (&alpha;=0.34)</td></tr>
+        <tr><td>IPE / HEA / HEB</td><td>&gt; 1.2</td><td>40–100 mm</td><td>b (&alpha;=0.34)</td><td>c (&alpha;=0.49)</td></tr>
+        <tr><td>HEA / HEB / UC</td><td>&le; 1.2</td><td>&le; 100 mm</td><td>b (&alpha;=0.34)</td><td>c (&alpha;=0.49)</td></tr>
+        <tr><td>Hot-rolled SHS/RHS</td><td>—</td><td>—</td><td>a (&alpha;=0.21)</td><td>a (&alpha;=0.21)</td></tr>
+        <tr><td>CHS (hot-rolled)</td><td>—</td><td>—</td><td>a (&alpha;=0.21)</td><td>a (&alpha;=0.21)</td></tr>
+      </table>
+
+      <h4>Lateral-Torsional Buckling &mdash; EN 1993-1-1 &sect;6.3.2.3</h4>
+      <div class="fml-blk"><span class="ft">Elastic critical moment</span>M<sub>cr</sub> = (&pi;/L<sub>b</sub>) &radic;(EI<sub>z</sub>&middot;GJ) &times; &radic;(1 + &pi;&sup2;EI<sub>w</sub> / (GJL<sub>b</sub>&sup2;))</div>
+      <div class="fml-blk"><span class="ft">LTB slenderness</span>&lambda;&#772;<sub>LT</sub> = &radic;(W<sub>y,pl</sub>&middot;f<sub>y</sub> / M<sub>cr</sub>)</div>
+      <div class="fml-blk"><span class="ft">LTB factor (§6.3.2.3 rolled, &lambda;&#772;<sub>LT,0</sub>=0.4, &beta;=0.75)</span>
+        If &lambda;&#772;<sub>LT</sub> &le; 0.4: &chi;<sub>LT</sub> = 1.0 &nbsp;&nbsp;
+        Else: &chi;<sub>LT</sub> = 1 / [&phi;<sub>LT</sub> + &radic;(&phi;<sub>LT</sub>&sup2; &minus; &beta;&lambda;&#772;<sub>LT</sub>&sup2;)] &le; min(1.0, 1/&lambda;&#772;<sub>LT</sub>&sup2;)
+      </div>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Cross-section</th><th>h/b</th><th>LTB curve</th><th>&alpha;<sub>LT</sub></th></tr>
+        <tr><td>Rolled I/H sections</td><td>&le; 2</td><td>b</td><td>0.34</td></tr>
+        <tr><td>Rolled I/H sections</td><td>&gt; 2</td><td>c</td><td>0.49</td></tr>
+        <tr><td>SHS / CHS</td><td>—</td><td>—</td><td>LTB not critical</td></tr>
+      </table>
+
+      <h4>Interaction Equations &mdash; EN 1993-1-1 &sect;6.3.3 Method 2 (Annex B)</h4>
+      <div class="fml-blk"><span class="ft">Eq. 6.61 (strong-axis check)</span>
+        N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>yz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0
+      </div>
+      <div class="fml-blk"><span class="ft">Eq. 6.62 (weak-axis check)</span>
+        N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zy</sub>M<sub>y,Ed</sub>/(&chi;<sub>LT</sub>M<sub>y,Rk</sub>/&gamma;<sub>M1</sub>) + k<sub>zz</sub>M<sub>z,Ed</sub>/(M<sub>z,Rk</sub>/&gamma;<sub>M0</sub>) &le; 1.0
+      </div>
+      <p>Interaction factors (C<sub>my</sub>=C<sub>mz</sub>=1.0 for uniform moment, conservative):</p>
+      <table class="bg-curve-tbl" style="max-width:580px">
+        <tr><th>Factor</th><th>Formula (uniform moment, C<sub>m</sub>=1)</th></tr>
+        <tr><td>k<sub>yy</sub></td><td>1 + min(&lambda;&#772;<sub>y</sub>&minus;0.2, 0.8) &times; n<sub>y</sub></td></tr>
+        <tr><td>k<sub>zz</sub></td><td>1 + min(2&lambda;&#772;<sub>z</sub>&minus;0.6, 1.4) &times; n<sub>z</sub></td></tr>
+        <tr><td>k<sub>yz</sub></td><td>0.6 &times; k<sub>zz</sub></td></tr>
+        <tr><td>k<sub>zy</sub></td><td>1 &minus; min(0.133&lambda;&#772;<sub>z</sub>, 0.133) &times; n<sub>z</sub></td></tr>
+      </table>
+      <p>n<sub>y</sub> = N<sub>Ed</sub>/(&chi;<sub>y</sub>N<sub>Rk</sub>), &nbsp; n<sub>z</sub> = N<sub>Ed</sub>/(&chi;<sub>z</sub>N<sub>Rk</sub>). &nbsp; &gamma;<sub>M0</sub> = &gamma;<sub>M1</sub> = 1.0 (recommended value).</p>
+      <div class="bg-note"><b>Both equations must be satisfied.</b> Eq. 6.61 tends to govern when strong-axis moment is large; Eq. 6.62 governs when weak-axis buckling or moment is critical. The calculator reports the maximum of the two ratios.</div>
+
+      <h4>EN 10025-2 Steel Grades</h4>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Grade</th><th>f<sub>y</sub> (MPa)</th><th>f<sub>u</sub> (MPa)</th></tr>
+        <tr><td>S235</td><td>235</td><td>360</td></tr>
+        <tr><td>S275</td><td>275</td><td>430</td></tr>
+        <tr><td>S355</td><td>355</td><td>490</td></tr>
+        <tr><td>S460</td><td>460</td><td>550</td></tr>
+      </table>
+
+    </div>
+  </div><!-- /bg-ec3 -->
+
+  <!-- ══ IS 800:2007 ══ -->
   <div class="bg-pane" id="bg-is8">
     <div class="tb">
-      <h4>Axial Compression &mdash; IS 800:2007 &sect;7</h4>
-      <p>P<sub>d</sub> = A &times; f<sub>cd</sub>. Buckling classes from Table 7: strong axis &rarr; class b (&alpha;=0.34); weak axis &rarr; class c (&alpha;=0.49). E = 200,000 MPa, G = 77,000 MPa, &gamma;<sub>m0</sub> = 1.10.</p>
-      <div class="fml-blk"><span class="ft">Non-dimensional slenderness</span>&lambda;&#772; = &radic;(Af<sub>y</sub>/N<sub>cr</sub>). Same &chi; formula as EC3.</div>
-      <div class="fml-blk"><span class="ft">Design compressive stress</span>f<sub>cd</sub> = &chi; &times; f<sub>y</sub> / &gamma;<sub>m0</sub>. Governing axis: min(f<sub>cd,x</sub>, f<sub>cd,y</sub>).</div>
-      <h4>Bending Capacity &mdash; IS 800:2007 &sect;8.2</h4>
-      <p>LTB curve from Table 6b (rolled sections): h/b &le; 2 &rarr; curve a (&alpha;<sub>LT</sub>=0.21); h/b &gt; 2 &rarr; curve b (&alpha;<sub>LT</sub>=0.34).</p>
-      <div class="fml-blk"><span class="ft">M<sub>cr</sub></span>Same formula as EC3 (E=200,000, G=77,000 MPa)</div>
-      <div class="fml-blk"><span class="ft">M<sub>dx</sub></span>&chi;<sub>LT</sub> &times; Z<sub>pl,x</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub> &nbsp;&nbsp; M<sub>dz</sub> = Z<sub>pl,z</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub></div>
-      <h4>Interaction &mdash; IS 800:2007 &sect;9.3.2.2</h4>
-      <div class="fml-blk"><span class="ft">&sect;9.3.2.2</span>P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> &le; 1.0</div>
-    </div>
-  </div>
 
+      <h4>Design Procedure Overview</h4>
+      <ol class="bg-steps">
+        <li>Compute N<sub>cr</sub> = &pi;&sup2;EI/(KL)&sup2; for both axes. Use E = 200,000 MPa, G = 77,000 MPa.</li>
+        <li>Compute &lambda;&#772; and &chi; using the same Ayrton–Perry formula as EC3, but with IS 800 Table 7 buckling curves.</li>
+        <li>Design axial stress f<sub>cd</sub> = &chi; &times; f<sub>y</sub> / &gamma;<sub>m0</sub> (govern by minimum axis). P<sub>d</sub> = A &times; f<sub>cd</sub>.</li>
+        <li>Compute M<sub>cr</sub>, &lambda;&#772;<sub>LT</sub>, &chi;<sub>LT</sub> using IS 800 Table 6b LTB curves. M<sub>dx</sub> = &chi;<sub>LT</sub> &times; Z<sub>pl,x</sub> &times; f<sub>y</sub>/&gamma;<sub>m0</sub>.</li>
+        <li>Weak-axis: M<sub>dz</sub> = Z<sub>pl,z</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub> (no LTB).</li>
+        <li>Check linear interaction §9.3.2.2: P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> &le; 1.0.</li>
+      </ol>
+
+      <h4>Axial Compression &mdash; IS 800:2007 &sect;7.1</h4>
+      <p>&gamma;<sub>m0</sub> = 1.10 (IS 800 Table 5). The design compressive strength is:</p>
+      <div class="fml-blk"><span class="ft">Design axial capacity</span>P<sub>d</sub> = A &times; f<sub>cd</sub> &nbsp;&nbsp; where &nbsp;&nbsp; f<sub>cd</sub> = &chi; &times; f<sub>y</sub> / &gamma;<sub>m0</sub></div>
+      <div class="fml-blk"><span class="ft">Governing axis</span>f<sub>cd</sub> = min(f<sub>cd,x</sub>, f<sub>cd,y</sub>) &nbsp; — both axes checked independently</div>
+      <div class="bg-note"><b>IS vs EC3 partial factors:</b> IS 800 uses &gamma;<sub>m0</sub> = 1.10 (EC3 uses 1.00). This makes IS 800 approximately 10% more conservative than EC3 for the same section and yield strength.</div>
+
+      <h4>IS 800:2007 Buckling Curves &mdash; Table 7</h4>
+      <table class="bg-curve-tbl" style="max-width:620px">
+        <tr><th>Section type</th><th>Axis</th><th>Buckling curve</th><th>&alpha;</th></tr>
+        <tr><td>ISMB / ISLB / ISWB (h/b &gt; 1.2)</td><td>Strong (y-y)</td><td>a</td><td>0.21</td></tr>
+        <tr><td>ISMB / ISLB / ISWB (h/b &gt; 1.2)</td><td>Weak (z-z)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>ISHB / ISMC (h/b &le; 1.2)</td><td>Strong (y-y)</td><td>b</td><td>0.34</td></tr>
+        <tr><td>ISHB / ISMC (h/b &le; 1.2)</td><td>Weak (z-z)</td><td>c</td><td>0.49</td></tr>
+        <tr><td>SHS / RHS (hollow)</td><td>Both</td><td>a</td><td>0.21</td></tr>
+      </table>
+
+      <h4>Lateral-Torsional Buckling &mdash; IS 800:2007 &sect;8.2</h4>
+      <div class="fml-blk"><span class="ft">Elastic critical moment M<sub>cr</sub></span>
+        M<sub>cr</sub> = (&pi;/L<sub>b</sub>) &radic;(EI<sub>z</sub>GJ) &times; &radic;(1 + &pi;&sup2;EI<sub>w</sub>/(GJL<sub>b</sub>&sup2;))
+      </div>
+      <div class="fml-blk"><span class="ft">LTB slenderness &amp; reduction</span>
+        &lambda;&#772;<sub>LT</sub> = &radic;(Z<sub>pl,x</sub>f<sub>y</sub>/M<sub>cr</sub>) &nbsp;&nbsp; &rarr; &nbsp;&nbsp; &chi;<sub>LT</sub> using IS 800 Table 6b curves
+      </div>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Section</th><th>h/b</th><th>LTB curve</th><th>&alpha;<sub>LT</sub></th></tr>
+        <tr><td>Rolled I/H</td><td>&le; 2</td><td>a</td><td>0.21</td></tr>
+        <tr><td>Rolled I/H</td><td>&gt; 2</td><td>b</td><td>0.34</td></tr>
+      </table>
+      <div class="fml-blk"><span class="ft">Strong-axis capacity</span>M<sub>dx</sub> = &chi;<sub>LT</sub> &times; Z<sub>pl,x</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub></div>
+      <div class="fml-blk"><span class="ft">Weak-axis capacity (no LTB)</span>M<sub>dz</sub> = Z<sub>pl,z</sub> &times; f<sub>y</sub> / &gamma;<sub>m0</sub></div>
+
+      <h4>Combined Loading &mdash; IS 800:2007 &sect;9.3.2.2</h4>
+      <div class="fml-blk"><span class="ft">Linear interaction check</span>
+        P / P<sub>d</sub> + M<sub>x</sub> / M<sub>dx</sub> + M<sub>y</sub> / M<sub>dz</sub> &le; 1.0
+      </div>
+      <div class="bg-note"><b>Comparison with EC3:</b> IS 800 uses a single linear interaction equation, while EC3 §6.3.3 uses two equations with amplification factors k<sub>yy</sub>, k<sub>zz</sub>, k<sub>yz</sub>, k<sub>zy</sub>. The IS 800 approach is simpler but may be more conservative for stocky columns (low &lambda;&#772;) and less conservative than EC3 for slender columns with high bending.</div>
+
+      <h4>IS 875 Load Combinations (ULS)</h4>
+      <table class="combo-ref-tbl" style="max-width:520px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.5 DL + 1.5 IL</td></tr>
+        <tr><td>2</td><td>1.5 DL + 1.5 WL</td></tr>
+        <tr><td>3</td><td>1.2 DL + 1.2 IL + 1.2 WL</td></tr>
+        <tr><td>4</td><td>0.9 DL + 1.5 WL &nbsp;(uplift)</td></tr>
+      </table>
+
+      <h4>IS 2062 Steel Grades</h4>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Grade</th><th>f<sub>y</sub> (MPa)</th><th>f<sub>u</sub> (MPa)</th></tr>
+        <tr><td>E250 (Fe 410)</td><td>250</td><td>410</td></tr>
+        <tr><td>E300 (Fe 440)</td><td>300</td><td>440</td></tr>
+        <tr><td>E350 (Fe 490)</td><td>350</td><td>490</td></tr>
+        <tr><td>E410 (Fe 540)</td><td>410</td><td>540</td></tr>
+      </table>
+
+    </div>
+  </div><!-- /bg-is8 -->
+
+  <!-- ══ TSDS 2016 ══ -->
+  <div class="bg-pane" id="bg-tsds">
+    <div class="tb">
+
+      <h4>Overview</h4>
+      <p>TSDS 2016 (T&uuml;rk &Ccedil;elik Yap&#305; Tasarım Y&ouml;netmeli&#287;i) is the Turkish steel design standard. It adopts the AISC 360-10/16 LRFD framework directly, with SI units (MPa, kN, mm). All interaction equations, buckling checks, and resistance factors are identical to AISC — only units and some load combinations differ.</p>
+      <div class="bg-note"><b>TSDS = AISC 360 in SI:</b> The design procedure is exactly the same as the AISC tab above. Refer to those formulas for full derivations. Key difference: E = 200,000 MPa (vs 29,000 ksi in AISC), F<sub>y</sub> in MPa.</div>
+
+      <h4>Axial Compression — TSDS 2016 §5.3 (= AISC §E3)</h4>
+      <div class="fml-blk"><span class="ft">Elastic critical stress</span>F<sub>e</sub> = &pi;&sup2;E / (KL/r)&sup2; &nbsp;&nbsp; [MPa] &nbsp;&nbsp; E = 200,000 MPa</div>
+      <div class="fml-blk"><span class="ft">Inelastic: KL/r &le; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.658<sup>(F<sub>y</sub>/F<sub>e</sub>)</sup> &times; F<sub>y</sub></div>
+      <div class="fml-blk"><span class="ft">Elastic: KL/r &gt; 4.71&radic;(E/F<sub>y</sub>)</span>F<sub>cr</sub> = 0.877 &times; F<sub>e</sub></div>
+      <div class="fml-blk"><span class="ft">Design strength</span>&phi;<sub>c</sub>P<sub>n</sub> = 0.90 &times; F<sub>cr</sub> &times; A &nbsp;&nbsp; [kN]</div>
+
+      <h4>Flexure &amp; LTB — TSDS 2016 §6 (= AISC §F)</h4>
+      <p>Same three-zone LTB model as AISC §F2. L<sub>p</sub> and L<sub>r</sub> formulas identical; all section properties in mm.</p>
+      <div class="fml-blk"><span class="ft">Plastic zone (L<sub>b</sub> &le; L<sub>p</sub>)</span>&phi;<sub>b</sub>M<sub>nx</sub> = 0.90 &times; F<sub>y</sub> &times; Z<sub>x</sub> &nbsp;[kN&middot;m] &nbsp;(Z<sub>x</sub> in mm&sup3;, divide by 10&sup6;)</div>
+      <div class="fml-blk"><span class="ft">Weak axis (§F6)</span>&phi;<sub>b</sub>M<sub>ny</sub> = 0.90 &times; min(F<sub>y</sub>Z<sub>y</sub>, 1.6F<sub>y</sub>S<sub>y</sub>) &nbsp;[kN&middot;m]</div>
+
+      <h4>Interaction — TSDS 2016 §7 (= AISC §H1-1)</h4>
+      <div class="fml-blk"><span class="ft">H1-1a (P<sub>u</sub>/&phi;P<sub>n</sub> &ge; 0.2)</span>
+        P<sub>u</sub>/(&phi;<sub>c</sub>P<sub>n</sub>) + (8/9)[M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>)] &le; 1.0
+      </div>
+      <div class="fml-blk"><span class="ft">H1-1b (P<sub>u</sub>/&phi;P<sub>n</sub> &lt; 0.2)</span>
+        P<sub>u</sub>/(2&phi;<sub>c</sub>P<sub>n</sub>) + M<sub>ux</sub>/(&phi;<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(&phi;<sub>b</sub>M<sub>ny</sub>) &le; 1.0
+      </div>
+
+      <h4>TBDY 2018 / TS 498 Load Combinations</h4>
+      <table class="combo-ref-tbl" style="max-width:520px">
+        <tr><th>#</th><th>Combination</th></tr>
+        <tr><td>1</td><td>1.4G</td></tr>
+        <tr><td>2</td><td>1.2G + 1.6Q + 0.5S</td></tr>
+        <tr><td>3</td><td>1.2G + 1.6S + Q</td></tr>
+        <tr><td>4</td><td>1.2G + 1.0W + Q + 0.5S</td></tr>
+        <tr><td>5</td><td>0.9G + 1.0W &nbsp;(uplift)</td></tr>
+      </table>
+      <p>G = Permanent (DL + self-weight) &nbsp;|&nbsp; Q = Live (LL + roof live) &nbsp;|&nbsp; S = Snow &nbsp;|&nbsp; W = Wind</p>
+
+      <h4>TS EN 10025-2 Steel Grades (Turkey)</h4>
+      <table class="bg-curve-tbl" style="max-width:420px">
+        <tr><th>Grade</th><th>f<sub>y</sub> (MPa)</th><th>f<sub>u</sub> (MPa)</th></tr>
+        <tr><td>S235</td><td>235</td><td>360</td></tr>
+        <tr><td>S275</td><td>275</td><td>430</td></tr>
+        <tr><td>S355</td><td>355</td><td>490</td></tr>
+        <tr><td>S450</td><td>440</td><td>550</td></tr>
+      </table>
+      <div class="bg-warn"><b>Sismik tasarım notu:</b> TBDY 2018 §9 kapsamındaki sismik tasarımda &phi; faktörleri ve bağlantı kapasiteleri ek kısıtlara tabidir. Bu hesap aracı statik yükler için tasarlanmıştır; deprem yükü kombinasyonları ayrıca doğrulanmalıdır.</div>
+
+    </div>
+  </div><!-- /bg-tsds -->
+
+  <!-- ══ K FACTORS ══ -->
   <div class="bg-pane" id="bg-ck">
     <div class="tb">
-      <h4>Effective Length Factor K</h4>
-      <table class="combo-ref-tbl" style="max-width:560px">
-        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (recommended)</th></tr>
-        <tr><td>Both ends pinned</td><td>1.0</td><td>1.00</td></tr>
-        <tr><td>One pinned, one fixed (no sway)</td><td>0.7</td><td>0.80</td></tr>
-        <tr><td>Both ends fixed (no sway)</td><td>0.5</td><td>0.65</td></tr>
-        <tr><td>One fixed, one free (cantilever)</td><td>2.0</td><td>2.10</td></tr>
+
+      <h4>Effective Length Factor K &mdash; Column End Conditions</h4>
+      <p>The effective length KL represents the distance between inflection points of the buckled shape. K depends on the rotational and translational restraint at each end.</p>
+
+      <!-- K factor diagrams SVG -->
+      <svg viewBox="0 0 580 210" width="100%" style="max-width:580px;display:block;margin:14px 0;font-size:11px;font-family:sans-serif" xmlns="http://www.w3.org/2000/svg">
+        <!-- Case 1: Pin-Pin, K=1.0 -->
+        <g transform="translate(20,10)">
+          <text x="55" y="12" text-anchor="middle" fill="#2c3a4a" font-weight="700" font-size="11">Pin–Pin</text>
+          <!-- Column -->
+          <line x1="55" y1="20" x2="55" y2="160" stroke="#dde2e8" stroke-width="2"/>
+          <!-- Buckled shape: half sine wave -->
+          <path d="M55,20 Q85,90 55,160" stroke="#1a6db5" stroke-width="2.5" fill="none"/>
+          <!-- Pin symbols -->
+          <polygon points="55,20 47,5 63,5" fill="none" stroke="#5a6a7a" stroke-width="1.5"/>
+          <polygon points="55,160 47,175 63,175" fill="none" stroke="#5a6a7a" stroke-width="1.5"/>
+          <line x1="42" y1="5" x2="68" y2="5" stroke="#5a6a7a" stroke-width="2"/>
+          <line x1="42" y1="175" x2="68" y2="175" stroke="#5a6a7a" stroke-width="2"/>
+          <!-- Dimension lines -->
+          <line x1="85" y1="20" x2="85" y2="160" stroke="#8898aa" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="93" y="95" fill="#8898aa" font-size="10">L</text>
+          <!-- K label -->
+          <text x="55" y="196" text-anchor="middle" fill="#1a6db5" font-weight="700" font-size="12">K = 1.0</text>
+          <text x="55" y="208" text-anchor="middle" fill="#8898aa" font-size="9">(theor. 1.00)</text>
+        </g>
+        <!-- Case 2: Fixed-Free (Cantilever), K=2.0 -->
+        <g transform="translate(155,10)">
+          <text x="55" y="12" text-anchor="middle" fill="#2c3a4a" font-weight="700" font-size="11">Fixed–Free</text>
+          <!-- Column -->
+          <line x1="55" y1="160" x2="55" y2="20" stroke="#dde2e8" stroke-width="2"/>
+          <!-- Buckled shape: quarter wave, extends to 2L effective -->
+          <path d="M55,160 Q85,90 68,20" stroke="#1a6db5" stroke-width="2.5" fill="none"/>
+          <!-- Effective length dashed extension -->
+          <path d="M68,20 Q52,-50 55,-20" stroke="#1a6db5" stroke-width="1.5" fill="none" stroke-dasharray="5,3" opacity="0.5"/>
+          <!-- Fixed base -->
+          <rect x="38" y="160" width="34" height="8" fill="#8898aa" rx="1"/>
+          <line x1="30" y1="168" x2="80" y2="168" stroke="#5a6a7a" stroke-width="2"/>
+          <line x1="33" y1="172" x2="40" y2="168" stroke="#5a6a7a"/>
+          <line x1="42" y1="172" x2="49" y2="168" stroke="#5a6a7a"/>
+          <line x1="51" y1="172" x2="58" y2="168" stroke="#5a6a7a"/>
+          <line x1="60" y1="172" x2="67" y2="168" stroke="#5a6a7a"/>
+          <line x1="69" y1="172" x2="76" y2="168" stroke="#5a6a7a"/>
+          <!-- Free top arrow -->
+          <line x1="68" y1="20" x2="85" y2="20" stroke="#5a6a7a" stroke-width="1" stroke-dasharray="3,2"/>
+          <!-- Dimension -->
+          <line x1="88" y1="20" x2="88" y2="160" stroke="#8898aa" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="96" y="95" fill="#8898aa" font-size="10">L</text>
+          <text x="55" y="196" text-anchor="middle" fill="#1a6db5" font-weight="700" font-size="12">K = 2.0</text>
+          <text x="55" y="208" text-anchor="middle" fill="#8898aa" font-size="9">(AISC rec. 2.10)</text>
+        </g>
+        <!-- Case 3: Fixed-Pin, K=0.7 -->
+        <g transform="translate(290,10)">
+          <text x="55" y="12" text-anchor="middle" fill="#2c3a4a" font-weight="700" font-size="11">Fixed–Pin</text>
+          <line x1="55" y1="20" x2="55" y2="160" stroke="#dde2e8" stroke-width="2"/>
+          <!-- Buckled shape: inflection at ~0.3L from fixed end -->
+          <path d="M55,20 Q38,80 55,105 Q72,130 55,160" stroke="#1a6db5" stroke-width="2.5" fill="none"/>
+          <!-- Fixed top -->
+          <rect x="38" y="12" width="34" height="8" fill="#8898aa" rx="1"/>
+          <line x1="30" y1="12" x2="80" y2="12" stroke="#5a6a7a" stroke-width="2"/>
+          <line x1="33" y1="8" x2="40" y2="12" stroke="#5a6a7a"/>
+          <line x1="42" y1="8" x2="49" y2="12" stroke="#5a6a7a"/>
+          <line x1="51" y1="8" x2="58" y2="12" stroke="#5a6a7a"/>
+          <line x1="60" y1="8" x2="67" y2="12" stroke="#5a6a7a"/>
+          <line x1="69" y1="8" x2="76" y2="12" stroke="#5a6a7a"/>
+          <!-- Pin bottom -->
+          <polygon points="55,160 47,175 63,175" fill="none" stroke="#5a6a7a" stroke-width="1.5"/>
+          <line x1="42" y1="175" x2="68" y2="175" stroke="#5a6a7a" stroke-width="2"/>
+          <!-- Inflection point marker -->
+          <circle cx="55" cy="105" r="3" fill="white" stroke="#8898aa" stroke-width="1.5"/>
+          <text x="62" y="108" fill="#8898aa" font-size="9">infl. pt</text>
+          <text x="55" y="196" text-anchor="middle" fill="#1a6db5" font-weight="700" font-size="12">K = 0.7</text>
+          <text x="55" y="208" text-anchor="middle" fill="#8898aa" font-size="9">(AISC rec. 0.80)</text>
+        </g>
+        <!-- Case 4: Fixed-Fixed, K=0.5 -->
+        <g transform="translate(440,10)">
+          <text x="55" y="12" text-anchor="middle" fill="#2c3a4a" font-weight="700" font-size="11">Fixed–Fixed</text>
+          <line x1="55" y1="20" x2="55" y2="160" stroke="#dde2e8" stroke-width="2"/>
+          <!-- S-curve buckled shape: inflection at L/4 and 3L/4 -->
+          <path d="M55,20 Q38,55 55,90 Q72,125 55,160" stroke="#1a6db5" stroke-width="2.5" fill="none"/>
+          <!-- Fixed top -->
+          <rect x="38" y="12" width="34" height="8" fill="#8898aa" rx="1"/>
+          <line x1="30" y1="12" x2="80" y2="12" stroke="#5a6a7a" stroke-width="2"/>
+          <line x1="33" y1="8" x2="40" y2="12" stroke="#5a6a7a"/>
+          <line x1="42" y1="8" x2="49" y2="12" stroke="#5a6a7a"/>
+          <line x1="51" y1="8" x2="58" y2="12" stroke="#5a6a7a"/>
+          <line x1="60" y1="8" x2="67" y2="12" stroke="#5a6a7a"/>
+          <line x1="69" y1="8" x2="76" y2="12" stroke="#5a6a7a"/>
+          <!-- Fixed bottom -->
+          <rect x="38" y="160" width="34" height="8" fill="#8898aa" rx="1"/>
+          <line x1="30" y1="168" x2="80" y2="168" stroke="#5a6a7a" stroke-width="2"/>
+          <line x1="33" y1="172" x2="40" y2="168" stroke="#5a6a7a"/>
+          <line x1="42" y1="172" x2="49" y2="168" stroke="#5a6a7a"/>
+          <line x1="51" y1="172" x2="58" y2="168" stroke="#5a6a7a"/>
+          <line x1="60" y1="172" x2="67" y2="168" stroke="#5a6a7a"/>
+          <line x1="69" y1="172" x2="76" y2="168" stroke="#5a6a7a"/>
+          <!-- Inflection points -->
+          <circle cx="55" cy="55" r="3" fill="white" stroke="#8898aa" stroke-width="1.5"/>
+          <circle cx="55" cy="125" r="3" fill="white" stroke="#8898aa" stroke-width="1.5"/>
+          <!-- KL = 0.5L label -->
+          <line x1="88" y1="55" x2="88" y2="125" stroke="#1a6db5" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="83" y1="55" x2="93" y2="55" stroke="#1a6db5" stroke-width="1.5"/>
+          <line x1="83" y1="125" x2="93" y2="125" stroke="#1a6db5" stroke-width="1.5"/>
+          <text x="96" y="95" fill="#1a6db5" font-size="9">KL</text>
+          <text x="55" y="196" text-anchor="middle" fill="#1a6db5" font-weight="700" font-size="12">K = 0.5</text>
+          <text x="55" y="208" text-anchor="middle" fill="#8898aa" font-size="9">(AISC rec. 0.65)</text>
+        </g>
+      </svg>
+
+      <h4>K Factor Reference Table</h4>
+      <table class="combo-ref-tbl" style="max-width:580px">
+        <tr><th>End Condition</th><th>K (theoretical)</th><th>K (AISC rec.)</th><th>Notes</th></tr>
+        <tr><td>Pin–Pin (both ends free to rotate)</td><td>1.00</td><td>1.00</td><td>Standard braced frame column</td></tr>
+        <tr><td>Fixed–Pin (one end restrained)</td><td>0.699</td><td>0.80</td><td>Accounts for realistic fixity</td></tr>
+        <tr><td>Fixed–Fixed (both ends restrained)</td><td>0.500</td><td>0.65</td><td>No sway assumed</td></tr>
+        <tr><td>Fixed–Free (cantilever)</td><td>2.00</td><td>2.10</td><td>Free top can translate + rotate</td></tr>
+        <tr><td>Pin–Fixed (sway permitted)</td><td>2.00</td><td>2.00</td><td>Unbraced frame, conservative</td></tr>
       </table>
-      <p>K<sub>x</sub> governs strong-axis buckling; K<sub>y</sub> governs weak-axis buckling. L<sub>b</sub> (LTB unbraced length) = L<sub>b,y</sub> &times; L (weak-axis unbraced fraction).</p>
+      <div class="bg-warn"><b>Sway vs. no-sway frames:</b> The theoretical K values above assume no sidesway. In an unbraced (sway) frame, K &ge; 1.0 always. The K values 0.5–0.7 are only valid if lateral drift is prevented by bracing, shear walls, or rigid diaphragms.</div>
+
+      <h4>Strong vs. Weak Axis &amp; L<sub>b</sub></h4>
+      <p>K<sub>x</sub> applies to strong-axis (in-plane) buckling; K<sub>y</sub> applies to weak-axis (out-of-plane) buckling. The larger of KL/r<sub>x</sub> and KL/r<sub>y</sub> governs the axial design. The LTB unbraced length L<sub>b</sub> equals the full column height multiplied by the unbraced fraction input (0–1), representing the distance between lateral braces on the compression flange.</p>
+
+      <h4>Alignment Chart Method (Jackson–Moreland)</h4>
+      <p>For columns in frames, K can be determined from the stiffness ratios G<sub>top</sub> and G<sub>bot</sub> using the AISC alignment charts (Commentary §C-C2):</p>
+      <div class="fml-blk"><span class="ft">G factor at each end</span>G = &Sigma;(EI<sub>col</sub>/L<sub>col</sub>) / &Sigma;(EI<sub>beam</sub>/L<sub>beam</sub>)</div>
+      <p>G = 1.0 for a theoretically fixed base (pinned base: G = 10). The alignment chart then gives K for the braced or unbraced frame case. This calculator uses the K values you input directly — determine them from the alignment chart or engineering judgment for frame columns.</p>
+
     </div>
-  </div>
-</div>
+  </div><!-- /bg-ck -->
+
+</div><!-- bg-section -->
 
 </main>
 <script>
