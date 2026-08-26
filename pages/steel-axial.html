@@ -5,7 +5,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
 <title>Steel Column Axial Design - AISC LRFD | CivilStrCalc</title>
-<meta name="description" content="AISC 360 LRFD steel column axial design. W, HP, HSS, HEA, HEB, IPE, SHS sections. ASCE 7-22 load combinations. Buckling check per Chapter E.">
+<meta name="description" content="AISC 360 LRFD steel column axial design. W, HP, HSS, HEA, HEB, IPE, SHS sections. Buckling check per Chapter E. EN 1993-1-1, IS 800, TSDS 2016.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://civilstrcalc.com/pages/steel-axial">
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -20,12 +20,6 @@
 <style>
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;appearance:textfield;}
-.combo-tbl{width:100%;border-collapse:collapse;font-size:.76rem;}
-.combo-tbl th{padding:5px 8px;text-align:left;font-family:var(--sans);font-weight:600;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
-.combo-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
-.combo-tbl tr:last-child td{border-bottom:none;}
-.combo-tbl tr.gov-row td{background:var(--green-bg);font-weight:700;color:var(--green);}
-.combo-lbl{font-family:var(--sans);color:var(--text-mid);}
 .combo-ref-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:10px 0;}
 .combo-ref-tbl th{padding:6px 10px;text-align:left;font-weight:600;font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
 .combo-ref-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.74rem;}
@@ -62,7 +56,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>Steel Column Axial Design</h1>
-  <p id="ac-subtitle">AISC 360 LRFD axial compression design &mdash; buckling check per Chapter E. ASCE 7-22 load combinations &mdash; P<sub>D</sub>, P<sub>L</sub>, P<sub>S</sub>, P<sub>W</sub>. Self-weight automatically applied.</p>
+  <p id="ac-subtitle">AISC 360 LRFD axial compression design &mdash; buckling check per Chapter E. Enter the factored design axial load directly.</p>
 </div>
 
 <div class="calc-layout">
@@ -112,47 +106,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="iw"><input type="number" id="ac-L" min="0" step="0.5" value="14"><span class="us" id="ac-L-us">ft</span></div>
       </div>
 
-      <div class="form-div"><div class="form-div-lbl" id="ac-loads-lbl">Loads</div></div>
+      <div class="form-div"><div class="form-div-lbl">Design Load</div></div>
 
-      <div class="sub-tabs" style="margin-bottom:8px">
-        <button class="sub-tab active" id="ac-mode-combo" onclick="acSetLoadMode('combo')">Load Combos</button>
-        <button class="sub-tab" id="ac-mode-direct" onclick="acSetLoadMode('direct')">Design Load</button>
-      </div>
-
-      <div id="ac-panel-combo">
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>Dead P<sub>D</sub> (excl. SW) <span id="ac-PD-lbl" class="unit-lbl">[kip]</span></label>
-          <div class="iw"><input type="number" id="ac-PD" min="0" step="1" value="0"><span class="us" id="ac-PD-us">kip</span></div>
-        </div>
-        <div class="form-group">
-          <label>Live P<sub>L</sub> <span id="ac-PL-lbl" class="unit-lbl">[kip]</span></label>
-          <div class="iw"><input type="number" id="ac-PL" min="0" step="1" value="0"><span class="us" id="ac-PL-us">kip</span></div>
-        </div>
-      </div>
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>Roof Live P<sub>Lr</sub> <span id="ac-PLr-lbl" class="unit-lbl">[kip]</span></label>
-          <div class="iw"><input type="number" id="ac-PLr" min="0" step="1" value="0"><span class="us" id="ac-PLr-us">kip</span></div>
-        </div>
-        <div class="form-group">
-          <label>Snow P<sub>S</sub> <span id="ac-PS-lbl" class="unit-lbl">[kip]</span></label>
-          <div class="iw"><input type="number" id="ac-PS" min="0" step="1" value="0"><span class="us" id="ac-PS-us">kip</span></div>
-        </div>
-      </div>
       <div class="form-group">
-        <label>Wind P<sub>W</sub> <span id="ac-PW-lbl" class="unit-lbl">[kip]</span></label>
-        <div class="iw"><input type="number" id="ac-PW" min="0" step="1" value="0"><span class="us" id="ac-PW-us">kip</span></div>
+        <label>Factored axial P<sub>u</sub> <span id="ac-dm-pu-lbl" class="unit-lbl">[kip]</span> <span style="font-size:.74rem;color:var(--text-dim)">(negative = tension)</span></label>
+        <div class="iw"><input type="number" id="ac-dm-pu" value="50" step="5"><span class="us" id="ac-dm-pu-us">kip</span></div>
       </div>
-      </div><!-- /ac-panel-combo -->
-
-      <div id="ac-panel-direct" style="display:none">
-        <div style="font-size:.73rem;color:var(--text-dim);font-family:var(--sans);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px 10px;margin-bottom:10px">Enter the pre-calculated factored axial force. Load combinations and self-weight are excluded from the report.</div>
-        <div class="form-group">
-          <label>Factored axial P<sub>u</sub> <span id="ac-dm-pu-lbl" class="unit-lbl">[kip]</span> <span style="font-size:.74rem;color:var(--text-dim)">(negative = tension)</span></label>
-          <div class="iw"><input type="number" id="ac-dm-pu" value="50" step="5"><span class="us" id="ac-dm-pu-us">kip</span></div>
-        </div>
-      </div><!-- /ac-panel-direct -->
 
       <button class="btn-calc" onclick="acCalc()" style="display:none">&#9654; Calculate</button>
     </div>
@@ -531,7 +490,7 @@ var TYPES_IN = [
 var acUnit = 'us';
 var acCode = 'aisc';
 var acSecType = 'W';
-var acLoadMode = 'combo';
+var acLoadMode = 'direct';
 
 function acSetCode(code) {
   acCode = code;
@@ -546,23 +505,15 @@ function acSetCode(code) {
   }
   document.getElementById('ac-unit-sw').style.display = (code==='aisc') ? '' : 'none';
   var subs = {
-    aisc: 'AISC 360 LRFD axial compression &mdash; flexural buckling per Chapter E. ASCE 7-22 combinations.',
-    ec3:  'EN 1993-1-1 axial compression &mdash; flexural buckling per &sect;6.3.1. EN 1990 combinations.',
-    is800:'IS 800:2000 axial compression &mdash; design compressive strength per &sect;7.1.2. IS 875 combinations.',
-    tsds: 'TSDS 2016 LRFD axial compression &mdash; flexural buckling per &sect;5. TSDS 2016 combinations.'
+    aisc: 'AISC 360 LRFD axial compression &mdash; flexural buckling per Chapter E.',
+    ec3:  'EN 1993-1-1 axial compression &mdash; flexural buckling per &sect;6.3.1.',
+    is800:'IS 800:2000 axial compression &mdash; design compressive strength per &sect;7.1.2.',
+    tsds: 'TSDS 2016 LRFD axial compression &mdash; flexural buckling per &sect;5.'
   };
   document.getElementById('ac-subtitle').innerHTML = subs[code];
   acPopGrades(); acPopTypes(); acUpdateLabels();
 }
 
-function acSetLoadMode(mode) {
-  acLoadMode = mode;
-  document.getElementById('ac-panel-combo').style.display  = mode==='combo'  ? '' : 'none';
-  document.getElementById('ac-panel-direct').style.display = mode==='direct' ? '' : 'none';
-  document.getElementById('ac-mode-combo').classList.toggle('active',  mode==='combo');
-  document.getElementById('ac-mode-direct').classList.toggle('active', mode==='direct');
-  acAutoCalc();
-}
 
 function fmt(v,d){ return (+v).toFixed(d); }
 
@@ -585,14 +536,6 @@ function acUpdateLabels() {
   document.getElementById('ac-rh-code').textContent  = codeLabels[acCode];
   document.getElementById('ac-L-lbl').textContent = '[' + lU + ']';
   document.getElementById('ac-L-us').textContent  = lU;
-  var loadsLblMap = {aisc:'Loads &mdash; ASCE 7-22', ec3:'Loads &mdash; EN 1990', is800:'Loads &mdash; IS 875:2015', tsds:'Loads &mdash; TSDS 2016'};
-  var ll = document.getElementById('ac-loads-lbl'); if(ll) ll.innerHTML = loadsLblMap[acCode];
-  ['PD','PL','PLr','PS','PW'].forEach(function(k){
-    var el = document.getElementById('ac-'+k+'-lbl');
-    var us = document.getElementById('ac-'+k+'-us');
-    if(el) el.textContent = '[' + fU + ']';
-    if(us) us.textContent = fU;
-  });
   var dmLbl = document.getElementById('ac-dm-pu-lbl');
   var dmUs  = document.getElementById('ac-dm-pu-us');
   var dmEl  = document.getElementById('ac-dm-pu');
@@ -924,7 +867,7 @@ function acRender(r) {
     h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design &mdash; AISC 360 Chapter E</div>'
        + '<table class="steps-table">';
 
-    var s0 = r.isDirect ? 2 : 0;
+    var s0 = 1;
 
     if (r.isDirect) {
       h += step(1, 'Design force P<sub>u</sub> &mdash; user-defined (factored)',
@@ -1091,7 +1034,7 @@ function acRenderEC3(r) {
       +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
       +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
   }
-  var s0  = r.isDirect ? 2 : 0;
+  var s0  = 1;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
   var dcLbl = r.isTension
     ? (r.DCR < 0.85 ? 'Tension Member Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Tension Member Overstressed'))
@@ -1317,7 +1260,7 @@ function acRenderTSDS(r) {
       +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
       +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
   }
-  var s0  = r.isDirect ? 2 : 0;
+  var s0  = 1;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
   var dcLbl = r.isTension
     ? (r.DCR < 0.85 ? 'Tension Member OK' : (r.DCR <= 1.0 ? 'OK — At Capacity Limit' : 'Tension Member NG'))
@@ -1550,7 +1493,7 @@ function acRenderIS800(r) {
       +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
       +'<td style="width:200px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+chk+'</td></tr>';
   }
-  var s0  = r.isDirect ? 2 : 0;
+  var s0  = 1;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
   var dcLbl = r.isTension
     ? (r.DCR < 0.85 ? 'Tension Member Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Tension Member Overstressed'))
@@ -1695,11 +1638,11 @@ function acRenderIS800(r) {
 (function(){
   acPopGrades(); acPopTypes(); acUpdateLabels();
   // Auto-calc on any input change
-  ['ac-L','ac-PD','ac-PL','ac-PLr','ac-PS','ac-PW','ac-dm-pu','ac-lb-x','ac-lb-y'].forEach(function(id){
+  ['ac-L','ac-dm-pu'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', acAutoCalc);
   });
-  ['ac-grade','ac-bc-x','ac-bc-y'].forEach(function(id){
+  ['ac-grade'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', acAutoCalc);
   });
