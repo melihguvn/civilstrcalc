@@ -134,7 +134,7 @@
       sub('/pages/slab.html#flexdesign',  'Flexural Design', 'slab') +
       sub('/pages/slab.html#flexcap',     'Flexural Capacity', '') +
       sub('/pages/slab.html#punchshear',  'Punching Design', '')) +
-    grp(ic.col, 'Column Design', ['column'],
+    grp(ic.col, 'Column Strength Design', ['column'],
       sub('/pages/column.html#pmm',      'PMM Design', 'column') +
       sub('/pages/column.html#colshear', 'Shear Design', '')) +
     item('/pages/development-length.html', ic.devlen, 'Dev. & Splice Length', 'devlen') +
@@ -145,7 +145,7 @@
     '<div class="sh-sec">Steel Design</div>' +
     grp(ic.st, 'Steel Design', ['steelfd','steelbc'],
       sub('/pages/steel-flexural.html',  'Flexural Design',       'steelfd') +
-      sub('/pages/steel-combined.html',  'Column Design',         'steelbc')) +
+      sub('/pages/steel-combined.html',  'Column Strength Design', 'steelbc')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',    'steel') +
