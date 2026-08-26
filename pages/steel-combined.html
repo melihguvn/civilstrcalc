@@ -160,8 +160,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
     <div class="form-div"><div class="form-div-lbl">Factored Design Forces</div></div>
     <div class="form-group">
-      <label>P<sub>u</sub> &mdash; factored axial compression <span id="bc-Pu-lbl" class="unit-lbl">[kip]</span></label>
-      <div class="iw"><input type="number" id="bc-Pu" value="100" min="0" step="5" oninput="bcAutoCalc()"><span class="us" id="bc-Pu-us">kip</span></div>
+      <label>P<sub>u</sub> &mdash; factored axial <span id="bc-Pu-lbl" class="unit-lbl">[kip]</span> <span style="font-size:.74rem;color:var(--text-dim)">(negative = tension)</span></label>
+      <div class="iw"><input type="number" id="bc-Pu" value="100" step="5" oninput="bcAutoCalc()"><span class="us" id="bc-Pu-us">kip</span></div>
     </div>
     <div class="form-group">
       <label>M<sub>ux</sub> &mdash; factored moment x&#x2011;x <span id="bc-Mux-lbl" class="unit-lbl">[kip&middot;ft]</span></label>
@@ -1484,6 +1484,7 @@ function bcReadInputs(){
 
 function bcCalcAISC(i){
   var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var isTension=Pu<0, Pu_abs=Math.abs(Pu);
   var lbXlbl=i.lbXlbl,lbYlbl=i.lbYlbl;
 
   var isUS=BC_UNIT==='us';
@@ -1514,6 +1515,7 @@ function bcCalcAISC(i){
   else          {Fcr=0.877*Fe;                  bMode='Elastic';}
   var Pn=isUS?Fcr*A:Fcr*A/1000;
   var phiPn=0.90*Pn;
+  var phiTn=isUS?0.90*Fy*A:0.90*Fy*A/1000; // §D2 gross section yielding
 
   // Ch. F2
   var Mp =isUS?Fy*Zx/12:Fy*Zx/1e6;
@@ -1541,8 +1543,9 @@ function bcCalcAISC(i){
   var Mny  =Math.min(Mpy,capy);
   var phiMny=0.90*Mny;
 
-  // Ch. H
-  var rP =phiPn>0?Pu/phiPn:999;
+  // Ch. H (applies to both tension §H1-1 and compression)
+  var phiCap=isTension?phiTn:phiPn;
+  var rP =phiCap>0?Pu_abs/phiCap:999;
   var rMx=phiMnx>0?Mux/phiMnx:0;
   var rMy=phiMny>0?Muy/phiMny:0;
   var H,eq;
@@ -1553,10 +1556,11 @@ function bcCalcAISC(i){
     code:BC_CODE,name:sr[0],Fy:Fy,E:E,isUS:isUS,lf:lf,
     L:Lin,KX:KX,KY:KY,lbXlbl:lbXlbl,lbYlbl:lbYlbl,lrx:lrx,lry:lry,Lbx:Lbx,Lby:Lby,KLx:KLx,KLy:KLy,
     A:A,rx:rx,ry:ry,lx:lx,ly:ly,lMax:lMax,govAx:govAx,lLim:lLim,Fe:Fe,Fcr:Fcr,bMode:bMode,Pn:Pn,phiPn:phiPn,
+    phiTn:phiTn,isTension:isTension,
     rts:rts,ho:ho,Iy:Iy,Cw:Cw,Zx:Zx,Sx:Sx,Zy:Zy,Sy:Sy,J:J,tv:tv,
     Lb:Lb,LbR:LbR,Lp:Lp,Lr:Lr,Mp:Mp,M07:M07,Mnx:Mnx,phiMnx:phiMnx,ltbMode:ltbMode,
     Mpy:Mpy,capy:capy,Mny:Mny,phiMny:phiMny,
-    Pu:Pu,Mux:Mux,Muy:Muy,rP:rP,rMx:rMx,rMy:rMy,H:H,eq:eq,DCR:H,slOk:lMax<=200,
+    Pu:Pu_abs,Mux:Mux,Muy:Muy,rP:rP,rMx:rMx,rMy:rMy,H:H,eq:eq,DCR:H,slOk:lMax<=200,
     uF:isUS?'kip':'kN',uM:isUS?'kip\xb7ft':'kN\xb7m',uL:isUS?'ft':'m',
     uSt:isUS?'ksi':'MPa',uLen:isUS?'in':'mm'
   };
@@ -1564,6 +1568,7 @@ function bcCalcAISC(i){
 
 function bcCalcEC3(i){
   var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var isTension=Pu<0, Pu_abs=Math.abs(Pu);
   var E=210000,G=81000,gM0=1.0,gM1=1.0,lf=1000;
   var A=sr[5],d=sr[1],bf=sr[2],tf=sr[3];
   var Ix=sr[7],Sx=sr[8],Zx=sr[9],rx=sr[10];
@@ -1575,6 +1580,7 @@ function bcCalcEC3(i){
   var Lb_mm=lry*Lin*lf;
   // Axial §6.3.1
   var NRk_N=A*Fy,NRk_kN=NRk_N/1000;
+  var NtRd=A*Fy/(gM0*1000); // §6.2.3 gross section yielding
   var Ncr_y=Math.PI*Math.PI*E*Ix/(KLy_mm*KLy_mm);
   var Ncr_z=Math.PI*Math.PI*E*Iy/(KLz_mm*KLz_mm);
   var lam_y=Math.sqrt(NRk_N/Ncr_y),lam_z=Math.sqrt(NRk_N/Ncr_z);
@@ -1603,39 +1609,47 @@ function bcCalcEC3(i){
   }
   var MbRd=chiLT*MRky_kNm/gM1;
   var MRdz=Zy*Fy/(gM0*1e6);
-  // k-factors Annex B
-  var nEdy=Pu/(chiy*NRk_kN),nEdz=Pu/(chiz*NRk_kN);
-  var kyy=1+Math.min(Math.max(lam_y-0.2,0),0.8)*nEdy;
-  var kzz=1+Math.min(Math.max(2*lam_z-0.6,0),1.4)*nEdz;
-  var kyz=0.6*kzz;
-  var kzy=Math.max(1-Math.min(0.133*lam_z,0.133)*nEdz,0.01);
-  // Interaction §6.3.3
-  var aN=chiy>0?Pu/(chiy*NRk_kN/gM1):999;
-  var aMx=MbRd>0?kyy*Mux/MbRd:0,aMy=MRdz>0?kyz*Muy/MRdz:0;
-  var eq661=aN+aMx+aMy;
-  var bN=chiz>0?Pu/(chiz*NRk_kN/gM1):999;
-  var bMx=MbRd>0?kzy*Mux/MbRd:0,bMy=MRdz>0?kzz*Muy/MRdz:0;
-  var eq662=bN+bMx+bMy;
-  var DCR=Math.max(eq661,eq662),govEq=eq661>=eq662?'6.61':'6.62';
+  // k-factors (Annex B) and interaction
+  var nEdy=0,nEdz=0,kyy=1,kzz=1,kyz=1,kzy=1;
+  var eq661,eq662,DCR,govEq;
+  if(isTension){
+    // §6.2.1 linear interaction (§6.3.3 is for compression only)
+    eq661=Pu_abs/NtRd+(MbRd>0?Mux/MbRd:0)+(MRdz>0?Muy/MRdz:0);
+    eq662=0; govEq='§6.2.1(T)'; DCR=eq661;
+  } else {
+    nEdy=Pu_abs/(chiy*NRk_kN);nEdz=Pu_abs/(chiz*NRk_kN);
+    kyy=1+Math.min(Math.max(lam_y-0.2,0),0.8)*nEdy;
+    kzz=1+Math.min(Math.max(2*lam_z-0.6,0),1.4)*nEdz;
+    kyz=0.6*kzz;
+    kzy=Math.max(1-Math.min(0.133*lam_z,0.133)*nEdz,0.01);
+    var aN=chiy>0?Pu_abs/(chiy*NRk_kN/gM1):999;
+    var aMx=MbRd>0?kyy*Mux/MbRd:0,aMy=MRdz>0?kyz*Muy/MRdz:0;
+    eq661=aN+aMx+aMy;
+    var bN=chiz>0?Pu_abs/(chiz*NRk_kN/gM1):999;
+    var bMx=MbRd>0?kzy*Mux/MbRd:0,bMy=MRdz>0?kzz*Muy/MRdz:0;
+    eq662=bN+bMx+bMy;
+    DCR=Math.max(eq661,eq662);govEq=eq661>=eq662?'6.61':'6.62';
+  }
   return{
     code:'ec3',name:sr[0],Fy:Fy,E:E,G:G,L:Lin,KX:KX,KY:KY,lrx:lrx,lry:lry,
     lbXlbl:i.lbXlbl,lbYlbl:i.lbYlbl,Lbx:Lbx,Lby:Lby,KLy_mm:KLy_mm,KLz_mm:KLz_mm,
     hb:hb,tf:tf,ay:ay,az:az,curveY:curveY,curveZ:curveZ,
     A:A,Ix:Ix,Iy:Iy,Zx:Zx,Zy:Zy,Sx:Sx,Sy:Sy,J:J,Cw:Cw,
-    NRk_kN:NRk_kN,Ncr_y:Ncr_y,Ncr_z:Ncr_z,
+    NRk_kN:NRk_kN,Ncr_y:Ncr_y,Ncr_z:Ncr_z,NtRd:NtRd,isTension:isTension,
     lam_y:lam_y,lam_z:lam_z,phiy:phiy,phiz:phiz,chiy:chiy,chiz:chiz,
     NbRdy:NbRdy,NbRdz:NbRdz,
     Lb_mm:Lb_mm,Mcr_kNm:Mcr_kNm,MRky_kNm:MRky_kNm,
     lamLT:lamLT,aLT:aLT,curveLT:curveLT,chiLT:chiLT,ltbEC3:ltbEC3,MbRd:MbRd,MRdz:MRdz,
     nEdy:nEdy,nEdz:nEdz,kyy:kyy,kzz:kzz,kyz:kyz,kzy:kzy,
     eq661:eq661,eq662:eq662,govEq:govEq,DCR:DCR,
-    Pu:Pu,Mux:Mux,Muy:Muy,
+    Pu:Pu_abs,Mux:Mux,Muy:Muy,
     uF:'kN',uM:'kN\xb7m',uL:'m',uSt:'MPa',uLen:'mm',isUS:false,lf:1000
   };
 }
 
 function bcCalcIS800(i){
   var sr=i.sr,Fy=i.Fy,Lin=i.Lin,KX=i.KX,KY=i.KY,lrx=i.lrx,lry=i.lry,Pu=i.Pu,Mux=i.Mux,Muy=i.Muy;
+  var isTension=Pu<0, Pu_abs=Math.abs(Pu);
   var E=200000,G=77000,gm0=1.10,lf=1000;
   var A=sr[5],d=sr[1],bf=sr[2],tf=sr[3];
   var Ix=sr[7],Sx=sr[8],Zx=sr[9],rx=sr[10];
@@ -1647,6 +1661,8 @@ function bcCalcIS800(i){
   var Lb_mm=lry*Lin*lf;
   // Axial §7
   var NRk_N=A*Fy,NRk_kN=NRk_N/1000;
+  var Tdg=A*Fy/(gm0*1000); // §6.2 gross section yielding
+  var Mdx0=Zx*Fy/(gm0*1e6); // full plastic moment without LTB (for tension member)
   var Ncr_x=Math.PI*Math.PI*E*Ix/(KLx_mm*KLx_mm);
   var Ncr_y=Math.PI*Math.PI*E*Iy/(KLy_mm*KLy_mm);
   var lamx=Math.sqrt(NRk_N/Ncr_x),lamy=Math.sqrt(NRk_N/Ncr_y);
@@ -1679,20 +1695,27 @@ function bcCalcIS800(i){
   }
   var Mdx=chiLT*Zx*Fy/(gm0*1e6);
   var Mdz=Zy*Fy/(gm0*1e6);
-  // §9.3.2.2
-  var rP=Pd>0?Pu/Pd:999;
-  var rMx=Mdx>0?Mux/Mdx:0,rMy=Mdz>0?Muy/Mdz:0;
-  var H=rP+rMx+rMy;
+  // §9.3.2.2 (compression) / §9.3.1.1 (tension)
+  var rP,rMx,rMy,H;
+  if(isTension){
+    rP=Tdg>0?Pu_abs/Tdg:999;
+    rMx=Mdx0>0?Mux/Mdx0:0;rMy=Mdz>0?Muy/Mdz:0;
+  } else {
+    rP=Pd>0?Pu_abs/Pd:999;
+    rMx=Mdx>0?Mux/Mdx:0;rMy=Mdz>0?Muy/Mdz:0;
+  }
+  H=rP+rMx+rMy;
   return{
     code:'is800',name:sr[0],Fy:Fy,E:E,G:G,L:Lin,KX:KX,KY:KY,lrx:lrx,lry:lry,
     lbXlbl:i.lbXlbl,lbYlbl:i.lbYlbl,Lbx:Lbx,Lby:Lby,KLx_mm:KLx_mm,KLy_mm:KLy_mm,
     hb:hb,A:A,Ix:Ix,Iy:Iy,Zx:Zx,Zy:Zy,J:J,Cw:Cw,
     NRk_kN:NRk_kN,Ncr_x:Ncr_x,Ncr_y:Ncr_y,lamx:lamx,lamy:lamy,
+    Tdg:Tdg,Mdx0:Mdx0,isTension:isTension,
     phix:phix,phiy:phiy,chix:chix,chiy:chiy,fcdx:fcdx,fcdy:fcdy,fcd_gov:fcd_gov,govAxis:govAxis,Pd:Pd,
     Lb_mm:Lb_mm,Mcr_kNm:Mcr_kNm,lamLT:lamLT,aLT:aLT,curveLT:curveLT,
     chiLT:chiLT,ltbIS:ltbIS,Mdx:Mdx,Mdz:Mdz,
     rP:rP,rMx:rMx,rMy:rMy,H:H,DCR:H,
-    Pu:Pu,Mux:Mux,Muy:Muy,
+    Pu:Pu_abs,Mux:Mux,Muy:Muy,
     uF:'kN',uM:'kN\xb7m',uL:'m',uSt:'MPa',uLen:'mm',isUS:false,lf:1000
   };
 }
@@ -1709,7 +1732,9 @@ function bcCalc(){
 function bcRender(r){
   if(!r){document.getElementById('bc-empty').style.display='';document.getElementById('bc-card').style.display='none';return;}
   var dc=r.DCR<0.85?'ok':(r.DCR<=1.0?'warn':'err');
-  var dcLbl=r.DCR<0.85?'Section Adequate':(r.DCR<=1.0?'Adequate — Near Limit':'Section Overstressed');
+  var dcLbl=r.isTension
+    ?(r.DCR<0.85?'Tension Member Adequate':(r.DCR<=1.0?'Tension Member — Near Limit':'Tension Member Overstressed'))
+    :(r.DCR<0.85?'Section Adequate':(r.DCR<=1.0?'Adequate — Near Limit':'Section Overstressed'));
   var date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   var codeLabel={aisc:'AISC 360',ec3:'EN 1993-1-1',is800:'IS 800:2007',tsds:'TSDS 2016'}[r.code];
   var uStr=r.isUS?'kip \xb7 ft \xb7 in':'kN \xb7 m \xb7 mm';
@@ -1731,49 +1756,73 @@ function bcRender(r){
     +'<div style="font-size:.63rem;color:var(--text-dim);font-family:var(--mono)">'+date+'</div></div>';
 
   // DCR banner
-  var dcRef=r.code==='ec3'?('Eq. '+r.govEq):(r.code==='is800'?'\xa79.3.2.2':r.eq);
+  var dcRef=r.isTension
+    ?(r.code==='ec3'?r.govEq:(r.code==='is800'?'\xa76.2+\xa79.3.1.1':r.eq+' (Tension)'))
+    :(r.code==='ec3'?('Eq. '+r.govEq):(r.code==='is800'?'\xa79.3.2.2':r.eq));
   h+='<div class="dcr-banner '+dc+'"><div class="dcr-text"><strong>'+dcLbl+'</strong>'
     +'<span>'+r.name+' \xb7 F<sub>y</sub>='+r.Fy+' '+r.uSt+' \xb7 L='+r.L+' '+r.uL+' \xb7 '+dcRef+'</span></div></div>';
 
   // Result box — code-specific
   if(r.code==='ec3'){
-    h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,y</sub></div><div class="ri-value">'+fmt(r.NbRdy,1)+'</div><div class="ri-unit">kN</div></div>'
-      +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,z</sub></div><div class="ri-value">'+fmt(r.NbRdz,1)+'</div><div class="ri-unit">kN</div></div>'
-      +'<div class="result-item"><div class="ri-label">M<sub>b,Rd</sub></div><div class="ri-value">'+fmt(r.MbRd,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
-      +'<div class="result-item"><div class="ri-label">M<sub>Rd,z</sub></div><div class="ri-value">'+fmt(r.MRdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
-      +'<div class="result-item '+dc+'"><div class="ri-label">DCR (Eq.'+r.govEq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-      +'</div>';
-    h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lam_y,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>z</sub></div><div class="ri-value">'+fmt(r.lam_z,3)+'</div><div class="ri-unit">χ<sub>z</sub>='+fmt(r.chiz,3)+'</div></div>'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbEC3+'</div></div>'
-      +'</div>';
+    if(r.isTension){
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">N<sub>t,Rd</sub></div><div class="ri-value">'+fmt(r.NtRd,1)+'</div><div class="ri-unit">kN</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>b,Rd</sub></div><div class="ri-value">'+fmt(r.MbRd,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>Rd,z</sub></div><div class="ri-value">'+fmt(r.MRdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item '+dc+'"><div class="ri-label">DCR ('+r.govEq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+        +'</div>';
+    } else {
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,y</sub></div><div class="ri-value">'+fmt(r.NbRdy,1)+'</div><div class="ri-unit">kN</div></div>'
+        +'<div class="result-item"><div class="ri-label">N<sub>b,Rd,z</sub></div><div class="ri-value">'+fmt(r.NbRdz,1)+'</div><div class="ri-unit">kN</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>b,Rd</sub></div><div class="ri-value">'+fmt(r.MbRd,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>Rd,z</sub></div><div class="ri-value">'+fmt(r.MRdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item '+dc+'"><div class="ri-label">DCR (Eq.'+r.govEq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+        +'</div>';
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lam_y,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>z</sub></div><div class="ri-value">'+fmt(r.lam_z,3)+'</div><div class="ri-unit">χ<sub>z</sub>='+fmt(r.chiz,3)+'</div></div>'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbEC3+'</div></div>'
+        +'</div>';
+    }
   } else if(r.code==='is800'){
-    h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item"><div class="ri-label">P<sub>d</sub></div><div class="ri-value">'+fmt(r.Pd,1)+'</div><div class="ri-unit">kN</div></div>'
-      +'<div class="result-item"><div class="ri-label">M<sub>dx</sub></div><div class="ri-value">'+fmt(r.Mdx,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
-      +'<div class="result-item"><div class="ri-label">M<sub>dz</sub></div><div class="ri-value">'+fmt(r.Mdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
-      +'<div class="result-item '+dc+'"><div class="ri-label">H (\xa79.3.2.2)</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-      +'</div>';
-    h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>x</sub></div><div class="ri-value">'+fmt(r.lamx,3)+'</div><div class="ri-unit">χ<sub>x</sub>='+fmt(r.chix,3)+' ('+r.govAxis+' gov.)</div></div>'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lamy,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
-      +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbIS+'</div></div>'
-      +'</div>';
+    if(r.isTension){
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">T<sub>dg</sub></div><div class="ri-value">'+fmt(r.Tdg,1)+'</div><div class="ri-unit">kN</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>dx</sub></div><div class="ri-value">'+fmt(r.Mdx0,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>dz</sub></div><div class="ri-value">'+fmt(r.Mdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item '+dc+'"><div class="ri-label">H (\xa79.3.1.1)</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+        +'</div>';
+    } else {
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">P<sub>d</sub></div><div class="ri-value">'+fmt(r.Pd,1)+'</div><div class="ri-unit">kN</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>dx</sub></div><div class="ri-value">'+fmt(r.Mdx,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item"><div class="ri-label">M<sub>dz</sub></div><div class="ri-value">'+fmt(r.Mdz,1)+'</div><div class="ri-unit">kN\xb7m</div></div>'
+        +'<div class="result-item '+dc+'"><div class="ri-label">H (\xa79.3.2.2)</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">≤ 1.0 \xa0'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
+        +'</div>';
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>x</sub></div><div class="ri-value">'+fmt(r.lamx,3)+'</div><div class="ri-unit">χ<sub>x</sub>='+fmt(r.chix,3)+' ('+r.govAxis+' gov.)</div></div>'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>y</sub></div><div class="ri-value">'+fmt(r.lamy,3)+'</div><div class="ri-unit">χ<sub>y</sub>='+fmt(r.chiy,3)+'</div></div>'
+        +'<div class="result-item"><div class="ri-label">λ&#772;<sub>LT</sub></div><div class="ri-value">'+fmt(r.lamLT,3)+'</div><div class="ri-unit">'+r.ltbIS+'</div></div>'
+        +'</div>';
+    }
   } else {
     // AISC / TSDS
+    var axLbl=r.isTension?'&phi;<sub>t</sub>T<sub>n</sub>':'&phi;<sub>c</sub>P<sub>n</sub>';
+    var axVal=r.isTension?fmt(r.phiTn,1):fmt(r.phiPn,1);
     h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item"><div class="ri-label">&phi;<sub>c</sub>P<sub>n</sub></div><div class="ri-value">'+fmt(r.phiPn,1)+'</div><div class="ri-unit">'+r.uF+'</div></div>'
+      +'<div class="result-item"><div class="ri-label">'+axLbl+'</div><div class="ri-value">'+axVal+'</div><div class="ri-unit">'+r.uF+'</div></div>'
       +'<div class="result-item"><div class="ri-label">&phi;<sub>b</sub>M<sub>nx</sub></div><div class="ri-value">'+fmt(r.phiMnx,1)+'</div><div class="ri-unit">'+r.uM+'</div></div>'
       +'<div class="result-item"><div class="ri-label">&phi;<sub>b</sub>M<sub>ny</sub></div><div class="ri-value">'+fmt(r.phiMny,1)+'</div><div class="ri-unit">'+r.uM+'</div></div>'
       +'<div class="result-item '+dc+'"><div class="ri-label">H ('+r.eq+')</div><div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div><div class="ri-unit">&le; 1.0 &nbsp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
       +'</div>';
     var slOk=r.lMax<=200;
-    h+='<div class="result-box" style="margin-bottom:8px">'
-      +'<div class="result-item '+(slOk?'ok':'warn')+'"><div class="ri-label">KL/r ('+r.govAx+')</div><div class="ri-value">'+fmt(r.lMax,1)+'</div><div class="ri-unit">limit 200 &nbsp;'+(slOk?'&#10003; OK':'&#9888;')+'</div></div>'
-      +'<div class="result-item"><div class="ri-label">LTB mode</div><div class="ri-value" style="font-size:.82rem">'+r.ltbMode+'</div><div class="ri-unit">'+(r.Cw===0?'&phi;M<sub>nx</sub>=&phi;M<sub>p</sub> (length-independent)':'L<sub>b</sub>='+fmt(r.Lb,2)+' / L<sub>p</sub>='+fmt(r.Lp,2)+' / L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL)+'</div></div>'
-      +'</div>';
+    if(!r.isTension){
+      h+='<div class="result-box" style="margin-bottom:8px">'
+        +'<div class="result-item '+(slOk?'ok':'warn')+'"><div class="ri-label">KL/r ('+r.govAx+')</div><div class="ri-value">'+fmt(r.lMax,1)+'</div><div class="ri-unit">limit 200 &nbsp;'+(slOk?'&#10003; OK':'&#9888;')+'</div></div>'
+        +'<div class="result-item"><div class="ri-label">LTB mode</div><div class="ri-value" style="font-size:.82rem">'+r.ltbMode+'</div><div class="ri-unit">'+(r.Cw===0?'&phi;M<sub>nx</sub>=&phi;M<sub>p</sub> (length-independent)':'L<sub>b</sub>='+fmt(r.Lb,2)+' / L<sub>p</sub>='+fmt(r.Lp,2)+' / L<sub>r</sub>='+fmt(r.Lr,2)+' '+r.uL)+'</div></div>'
+        +'</div>';
+    }
   }
 
   // Input Summary (common)
@@ -1793,99 +1842,159 @@ function bcRender(r){
 
   // Code-specific calculation sections
   if(r.code==='ec3'){
-    // §6.3.1 Axial
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Buckling Resistance — EN 1993-1-1 \xa76.3.1</div><table class="steps-table">';
-    h+=step(1,'N<sub>Rk</sub> = A \xd7 f<sub>y</sub>',fmt(r.A,0)+' mm\xb2 \xd7 '+r.Fy+' MPa / 1000','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
-    h+=step(2,'N<sub>cr,y</sub> (strong-axis, KL = '+fmt(r.KLy_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>x</sub> / (KL<sub>y</sub>)²','N<sub>cr,y</sub> = '+fmt(r.Ncr_y/1000,0)+' kN');
-    h+=step(3,'N<sub>cr,z</sub> (weak-axis, KL = '+fmt(r.KLz_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>y</sub> / (KL<sub>z</sub>)²','N<sub>cr,z</sub> = '+fmt(r.Ncr_z/1000,0)+' kN');
-    h+=step(4,'&lambda;&#772;<sub>y</sub> and &lambda;&#772;<sub>z</sub>','&radic;(N<sub>Rk</sub>/N<sub>cr</sub>)','&lambda;&#772;<sub>y</sub>='+fmt(r.lam_y,3)+'  |  &lambda;&#772;<sub>z</sub>='+fmt(r.lam_z,3));
-    h+=step(5,'Buckling curves (h/b='+fmt(r.hb,2)+', t<sub>f</sub>='+r.tf+' mm)','Table 6.2','y: curve '+r.curveY+'  |  z: curve '+r.curveZ);
-    h+=step(6,'&chi;<sub>y</sub> (strong axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4));
-    h+=step(7,'&chi;<sub>z</sub> (weak axis)','&phi;<sub>z</sub>='+fmt(r.phiz,4),'&chi;<sub>z</sub> = '+fmt(r.chiz,4));
-    h+=step(8,'N<sub>b,Rd,y</sub> = &chi;<sub>y</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdy,1)+' kN');
-    h+=step(9,'N<sub>b,Rd,z</sub> = &chi;<sub>z</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdz,1)+' kN');
-    h+='</table></div>';
-    // §6.3.2.3 LTB
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Lateral-Torsional Buckling — EN 1993-1-1 \xa76.3.2.3</div><table class="steps-table">';
-    h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>z</sub>GJ) \xd7 √(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
-    h+=step(2,'M<sub>Rk,y</sub> = Z<sub>pl,y</sub> \xd7 f<sub>y</sub>',fmt(r.Zx,0)+' \xd7 '+r.Fy+' / 10⁶','M<sub>Rk,y</sub> = '+fmt(r.MRky_kNm,1)+' kN\xb7m');
-    h+=step(3,'&lambda;&#772;<sub>LT</sub> = √(M<sub>Rk,y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
-    h+=step(4,'LTB curve (h/b='+fmt(r.hb,2)+')','h/b≤ 2 → curve b; h/b>2 → curve c',''+r.curveLT);
-    h+=step(5,'&chi;<sub>LT</sub> (λ&#772;<sub>LT,0</sub>=0.4, &beta;=0.75)','','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbEC3);
-    h+=step(6,'M<sub>b,Rd</sub> = &chi;<sub>LT</sub> \xd7 M<sub>Rk,y</sub> / &gamma;<sub>M1</sub>','','M<sub>b,Rd</sub> = '+fmt(r.MbRd,1)+' kN\xb7m');
-    h+=step(7,'M<sub>Rd,z</sub> = Z<sub>pl,z</sub> \xd7 f<sub>y</sub> / &gamma;<sub>M0</sub> (no LTB)','','M<sub>Rd,z</sub> = '+fmt(r.MRdz,1)+' kN\xb7m');
-    h+='</table></div>';
-    // Annex B k-factors
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction Factors — EN 1993-1-1 Annex B (C<sub>my</sub>=C<sub>mz</sub>=1.0)</div><table class="steps-table">';
-    h+=step(1,'n<sub>y</sub> = N<sub>Ed</sub> / (&chi;<sub>y</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiy,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>y</sub> = '+fmt(r.nEdy,4));
-    h+=step(2,'n<sub>z</sub> = N<sub>Ed</sub> / (&chi;<sub>z</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiz,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>z</sub> = '+fmt(r.nEdz,4));
-    h+=step(3,'k<sub>yy</sub> = 1 + min(&lambda;&#772;<sub>y</sub>−0.2, 0.8) \xd7 n<sub>y</sub>','','k<sub>yy</sub> = '+fmt(r.kyy,4));
-    h+=step(4,'k<sub>zz</sub> = 1 + min(2&lambda;&#772;<sub>z</sub>−0.6, 1.4) \xd7 n<sub>z</sub>','','k<sub>zz</sub> = '+fmt(r.kzz,4));
-    h+=step(5,'k<sub>yz</sub> = 0.6 \xd7 k<sub>zz</sub>','','k<sub>yz</sub> = '+fmt(r.kyz,4));
-    h+=step(6,'k<sub>zy</sub> = 1 − min(0.133&lambda;&#772;<sub>z</sub>, 0.133) \xd7 n<sub>z</sub>','','k<sub>zy</sub> = '+fmt(r.kzy,4));
-    h+='</table></div>';
-    // §6.3.3 Interaction
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — EN 1993-1-1 \xa76.3.3</div><table class="steps-table">';
-    var t61a=fmt(r.Pu/(r.chiy*r.NRk_kN),4),t61b=fmt(r.kyy*r.Mux/r.MbRd,4),t61c=fmt(r.kyz*r.Muy/(r.MRdz||1),4);
-    var t62a=fmt(r.Pu/(r.chiz*r.NRk_kN),4),t62b=fmt(r.kzy*r.Mux/r.MbRd,4),t62c=fmt(r.kzz*r.Muy/(r.MRdz||1),4);
-    h+=step(1,'Eq. 6.61: N/(&chi;<sub>y</sub>N<sub>Rk</sub>) + k<sub>yy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>yz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
-      t61a+' + '+t61b+' + '+t61c,'= <strong>'+fmt(r.eq661,4)+'</strong>');
-    h+=step(2,'Eq. 6.62: N/(&chi;<sub>z</sub>N<sub>Rk</sub>) + k<sub>zy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>zz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
-      t62a+' + '+t62b+' + '+t62c,'= <strong>'+fmt(r.eq662,4)+'</strong>');
-    h+=step(3,'DCR = max(Eq. 6.61, Eq. 6.62)','Governing: Eq. '+r.govEq,
-      'DCR = '+fmt(r.DCR,4)+'  '+(r.DCR<=1?'&#10003; OK':'&#10007; NG'),r.DCR<=1.0);
-    h+='</table></div>';
-    if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — M<sub>bRd</sub>=M<sub>Rky</sub>/&gamma;<sub>M1</sub> for any unbraced length. The interaction ratio changes with length only through &chi;<sub>y</sub>/&chi;<sub>z</sub> and the k-factors. D/C is therefore less sensitive to length changes than for open I-sections where M<sub>bRd</sub> also decreases with length via LTB.</div></div>';
-    h+='<div class="report-warn"><span>&#9432;</span><div>Class 1 cross-section assumed. &gamma;<sub>M0</sub>=&gamma;<sub>M1</sub>=1.0. Local buckling and shear not checked.</div></div>';
+    if(r.isTension){
+      // Tension path: §6.2.3 axial + LTB for bending + §6.2.1 interaction
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension Resistance — EN 1993-1-1 \xa76.2.3</div><table class="steps-table">';
+      h+=step(1,'N<sub>Ed</sub> (tension)','','N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+      h+=step(2,'N<sub>t,Rd</sub> = A \xd7 f<sub>y</sub> / (&gamma;<sub>M0</sub> \xd7 1000)',fmt(r.A,0)+' mm\xb2 \xd7 '+r.Fy+' MPa / (1.0 \xd7 1000)','N<sub>t,Rd</sub> = '+fmt(r.NtRd,1)+' kN');
+      h+=step(3,'N<sub>Ed</sub> / N<sub>t,Rd</sub>','Gross section yielding check','= '+fmt(r.Pu/r.NtRd,4),r.Pu/r.NtRd<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked only. Net-section fracture (\xa76.2.3, \xa7U<sub>net</sub>=f<sub>u</sub>A<sub>net</sub>/\xa7γ<sub>M2</sub>) requires net area A<sub>net</sub> and connection details.</div></div>';
+      // LTB for bending capacity
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Bending Resistance — EN 1993-1-1 \xa76.3.2.3</div><table class="steps-table">';
+      h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>z</sub>GJ) \xd7 √(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
+      h+=step(2,'M<sub>Rk,y</sub> = Z<sub>pl,y</sub> \xd7 f<sub>y</sub>',fmt(r.Zx,0)+' \xd7 '+r.Fy+' / 10⁶','M<sub>Rk,y</sub> = '+fmt(r.MRky_kNm,1)+' kN\xb7m');
+      h+=step(3,'&lambda;&#772;<sub>LT</sub>','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
+      h+=step(4,'&chi;<sub>LT</sub>',''+r.ltbEC3,'&chi;<sub>LT</sub> = '+fmt(r.chiLT,4));
+      h+=step(5,'M<sub>b,Rd</sub> = &chi;<sub>LT</sub> \xd7 M<sub>Rk,y</sub> / &gamma;<sub>M1</sub>','','M<sub>b,Rd</sub> = '+fmt(r.MbRd,1)+' kN\xb7m');
+      h+=step(6,'M<sub>Rd,z</sub> = Z<sub>pl,z</sub> \xd7 f<sub>y</sub> / &gamma;<sub>M0</sub>','','M<sub>Rd,z</sub> = '+fmt(r.MRdz,1)+' kN\xb7m');
+      h+='</table></div>';
+      // §6.2.1 Interaction
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — EN 1993-1-1 \xa76.2.1 (Tension + Bending)</div><table class="steps-table">';
+      var ti1=fmt(r.Pu/r.NtRd,4),ti2=r.MbRd>0?fmt(r.Mux/r.MbRd,4):'0',ti3=r.MRdz>0?fmt(r.Muy/r.MRdz,4):'0';
+      h+=step(1,'N<sub>Ed</sub>/N<sub>t,Rd</sub> + M<sub>y,Ed</sub>/M<sub>b,Rd</sub> + M<sub>z,Ed</sub>/M<sub>Rd,z</sub>',
+        ti1+' + '+ti2+' + '+ti3,'= <strong>'+fmt(r.DCR,4)+'</strong>');
+      h+=step(2,'DCR ≤ 1.0','',
+        'DCR = '+fmt(r.DCR,4)+'  '+(r.DCR<=1?'&#10003; OK':'&#10007; NG'),r.DCR<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Class 1 cross-section assumed. &gamma;<sub>M0</sub>=&gamma;<sub>M1</sub>=1.0. §6.3.3 (compression interaction) does not apply. Local buckling and shear not checked.</div></div>';
+    } else {
+      // §6.3.1 Axial
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Buckling Resistance — EN 1993-1-1 \xa76.3.1</div><table class="steps-table">';
+      h+=step(1,'N<sub>Rk</sub> = A \xd7 f<sub>y</sub>',fmt(r.A,0)+' mm\xb2 \xd7 '+r.Fy+' MPa / 1000','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
+      h+=step(2,'N<sub>cr,y</sub> (strong-axis, KL = '+fmt(r.KLy_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>x</sub> / (KL<sub>y</sub>)²','N<sub>cr,y</sub> = '+fmt(r.Ncr_y/1000,0)+' kN');
+      h+=step(3,'N<sub>cr,z</sub> (weak-axis, KL = '+fmt(r.KLz_mm/1000,2)+' m)','π² \xd7 210 000 \xd7 I<sub>y</sub> / (KL<sub>z</sub>)²','N<sub>cr,z</sub> = '+fmt(r.Ncr_z/1000,0)+' kN');
+      h+=step(4,'&lambda;&#772;<sub>y</sub> and &lambda;&#772;<sub>z</sub>','&radic;(N<sub>Rk</sub>/N<sub>cr</sub>)','&lambda;&#772;<sub>y</sub>='+fmt(r.lam_y,3)+'  |  &lambda;&#772;<sub>z</sub>='+fmt(r.lam_z,3));
+      h+=step(5,'Buckling curves (h/b='+fmt(r.hb,2)+', t<sub>f</sub>='+r.tf+' mm)','Table 6.2','y: curve '+r.curveY+'  |  z: curve '+r.curveZ);
+      h+=step(6,'&chi;<sub>y</sub> (strong axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4));
+      h+=step(7,'&chi;<sub>z</sub> (weak axis)','&phi;<sub>z</sub>='+fmt(r.phiz,4),'&chi;<sub>z</sub> = '+fmt(r.chiz,4));
+      h+=step(8,'N<sub>b,Rd,y</sub> = &chi;<sub>y</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdy,1)+' kN');
+      h+=step(9,'N<sub>b,Rd,z</sub> = &chi;<sub>z</sub> N<sub>Rk</sub> / &gamma;<sub>M1</sub>','',''+fmt(r.NbRdz,1)+' kN');
+      h+='</table></div>';
+      // §6.3.2.3 LTB
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Lateral-Torsional Buckling — EN 1993-1-1 \xa76.3.2.3</div><table class="steps-table">';
+      h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>z</sub>GJ) \xd7 √(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
+      h+=step(2,'M<sub>Rk,y</sub> = Z<sub>pl,y</sub> \xd7 f<sub>y</sub>',fmt(r.Zx,0)+' \xd7 '+r.Fy+' / 10⁶','M<sub>Rk,y</sub> = '+fmt(r.MRky_kNm,1)+' kN\xb7m');
+      h+=step(3,'&lambda;&#772;<sub>LT</sub> = √(M<sub>Rk,y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
+      h+=step(4,'LTB curve (h/b='+fmt(r.hb,2)+')','h/b≤ 2 → curve b; h/b>2 → curve c',''+r.curveLT);
+      h+=step(5,'&chi;<sub>LT</sub> (λ&#772;<sub>LT,0</sub>=0.4, &beta;=0.75)','','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbEC3);
+      h+=step(6,'M<sub>b,Rd</sub> = &chi;<sub>LT</sub> \xd7 M<sub>Rk,y</sub> / &gamma;<sub>M1</sub>','','M<sub>b,Rd</sub> = '+fmt(r.MbRd,1)+' kN\xb7m');
+      h+=step(7,'M<sub>Rd,z</sub> = Z<sub>pl,z</sub> \xd7 f<sub>y</sub> / &gamma;<sub>M0</sub> (no LTB)','','M<sub>Rd,z</sub> = '+fmt(r.MRdz,1)+' kN\xb7m');
+      h+='</table></div>';
+      // Annex B k-factors
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction Factors — EN 1993-1-1 Annex B (C<sub>my</sub>=C<sub>mz</sub>=1.0)</div><table class="steps-table">';
+      h+=step(1,'n<sub>y</sub> = N<sub>Ed</sub> / (&chi;<sub>y</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiy,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>y</sub> = '+fmt(r.nEdy,4));
+      h+=step(2,'n<sub>z</sub> = N<sub>Ed</sub> / (&chi;<sub>z</sub> N<sub>Rk</sub>)',fmt(r.Pu,1)+' / ('+fmt(r.chiz,4)+' \xd7 '+fmt(r.NRk_kN,1)+')','n<sub>z</sub> = '+fmt(r.nEdz,4));
+      h+=step(3,'k<sub>yy</sub> = 1 + min(&lambda;&#772;<sub>y</sub>−0.2, 0.8) \xd7 n<sub>y</sub>','','k<sub>yy</sub> = '+fmt(r.kyy,4));
+      h+=step(4,'k<sub>zz</sub> = 1 + min(2&lambda;&#772;<sub>z</sub>−0.6, 1.4) \xd7 n<sub>z</sub>','','k<sub>zz</sub> = '+fmt(r.kzz,4));
+      h+=step(5,'k<sub>yz</sub> = 0.6 \xd7 k<sub>zz</sub>','','k<sub>yz</sub> = '+fmt(r.kyz,4));
+      h+=step(6,'k<sub>zy</sub> = 1 − min(0.133&lambda;&#772;<sub>z</sub>, 0.133) \xd7 n<sub>z</sub>','','k<sub>zy</sub> = '+fmt(r.kzy,4));
+      h+='</table></div>';
+      // §6.3.3 Interaction
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — EN 1993-1-1 \xa76.3.3</div><table class="steps-table">';
+      var t61a=fmt(r.Pu/(r.chiy*r.NRk_kN),4),t61b=fmt(r.kyy*r.Mux/r.MbRd,4),t61c=fmt(r.kyz*r.Muy/(r.MRdz||1),4);
+      var t62a=fmt(r.Pu/(r.chiz*r.NRk_kN),4),t62b=fmt(r.kzy*r.Mux/r.MbRd,4),t62c=fmt(r.kzz*r.Muy/(r.MRdz||1),4);
+      h+=step(1,'Eq. 6.61: N/(&chi;<sub>y</sub>N<sub>Rk</sub>) + k<sub>yy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>yz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
+        t61a+' + '+t61b+' + '+t61c,'= <strong>'+fmt(r.eq661,4)+'</strong>');
+      h+=step(2,'Eq. 6.62: N/(&chi;<sub>z</sub>N<sub>Rk</sub>) + k<sub>zy</sub>M<sub>y</sub>/M<sub>b,Rd</sub> + k<sub>zz</sub>M<sub>z</sub>/M<sub>Rd,z</sub>',
+        t62a+' + '+t62b+' + '+t62c,'= <strong>'+fmt(r.eq662,4)+'</strong>');
+      h+=step(3,'DCR = max(Eq. 6.61, Eq. 6.62)','Governing: Eq. '+r.govEq,
+        'DCR = '+fmt(r.DCR,4)+'  '+(r.DCR<=1?'&#10003; OK':'&#10007; NG'),r.DCR<=1.0);
+      h+='</table></div>';
+      if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — M<sub>bRd</sub>=M<sub>Rky</sub>/&gamma;<sub>M1</sub> for any unbraced length. The interaction ratio changes with length only through &chi;<sub>y</sub>/&chi;<sub>z</sub> and the k-factors. D/C is therefore less sensitive to length changes than for open I-sections where M<sub>bRd</sub> also decreases with length via LTB.</div></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Class 1 cross-section assumed. &gamma;<sub>M0</sub>=&gamma;<sub>M1</sub>=1.0. Local buckling and shear not checked.</div></div>';
+    }
   } else if(r.code==='is800'){
-    // §7 Axial
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — IS 800:2007 \xa77</div><table class="steps-table">';
-    h+=step(1,'f<sub>y</sub> \xd7 A','','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
-    h+=step(2,'&lambda;&#772;<sub>x</sub> (strong axis, KL='+fmt(r.KLx_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,x</sub>)','&lambda;&#772;<sub>x</sub> = '+fmt(r.lamx,3));
-    h+=step(3,'&lambda;&#772;<sub>y</sub> (weak axis, KL='+fmt(r.KLy_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,y</sub>)','&lambda;&#772;<sub>y</sub> = '+fmt(r.lamy,3));
-    h+=step(4,'Buckling class (Table 7)','Strong axis: class b (&alpha;=0.34)  |  Weak axis: class c (&alpha;=0.49)','');
-    h+=step(5,'&chi;<sub>x</sub> (strong axis)','&phi;<sub>x</sub>='+fmt(r.phix,4),'&chi;<sub>x</sub> = '+fmt(r.chix,4)+'  → f<sub>cd,x</sub>='+fmt(r.fcdx,1)+' MPa');
-    h+=step(6,'&chi;<sub>y</sub> (weak axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4)+'  → f<sub>cd,y</sub>='+fmt(r.fcdy,1)+' MPa');
-    h+=step(7,'P<sub>d</sub> = A \xd7 f<sub>cd,gov</sub> / 1000','Governing axis: '+r.govAxis+' (f<sub>cd</sub>='+fmt(r.fcd_gov,1)+' MPa)','P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
-    h+='</table></div>';
-    // §8.2 Flexure
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Bending Capacity — IS 800:2007 \xa78.2</div><table class="steps-table">';
-    h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>y</sub>GJ)√(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
-    h+=step(2,'&lambda;&#772;<sub>LT</sub> = √(Z<sub>px</sub>f<sub>y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
-    h+=step(3,'LTB curve (Table 6b, h/b='+fmt(r.hb,2)+')','h/b ≤ 2 → curve a; h/b > 2 → curve b',''+r.curveLT);
-    h+=step(4,'&chi;<sub>LT</sub>','&phi;<sub>LT</sub> → &chi;<sub>LT</sub>','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbIS);
-    h+=step(5,'M<sub>dx</sub> = &chi;<sub>LT</sub> Z<sub>px</sub> f<sub>y</sub> / &gamma;<sub>m0</sub>','/ 1.10','M<sub>dx</sub> = '+fmt(r.Mdx,1)+' kN\xb7m');
-    h+=step(6,'M<sub>dz</sub> = Z<sub>pz</sub> f<sub>y</sub> / &gamma;<sub>m0</sub> (no LTB)','/ 1.10','M<sub>dz</sub> = '+fmt(r.Mdz,1)+' kN\xb7m');
-    h+='</table></div>';
-    // §9.3.2.2 Interaction
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — IS 800:2007 \xa79.3.2.2</div><table class="steps-table">';
-    h+=step(1,'P / P<sub>d</sub>',fmt(r.Pu,1)+' / '+fmt(r.Pd,1),'= '+fmt(r.rP,4));
-    h+=step(2,'M<sub>x</sub> / M<sub>dx</sub>',fmt(r.Mux,1)+' / '+fmt(r.Mdx,1),'= '+fmt(r.rMx,4));
-    h+=step(3,'M<sub>y</sub> / M<sub>dz</sub>',fmt(r.Muy,1)+' / '+fmt(r.Mdz,1),'= '+fmt(r.rMy,4));
-    h+=step(4,'P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> ≤ 1.0',
-      fmt(r.rP,4)+' + '+fmt(r.rMx,4)+' + '+fmt(r.rMy,4),
-      'H = '+fmt(r.H,4)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
-    h+='</table></div>';
-    h+='<div class="report-warn"><span>&#9432;</span><div>Plastic (class 1) section assumed. &gamma;<sub>m0</sub> = 1.10. Local buckling and shear not checked.</div></div>';
+    if(r.isTension){
+      // Tension path: §6.2 + §9.3.1.1
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension — IS 800:2007 \xa76.2</div><table class="steps-table">';
+      h+=step(1,'T<sub>u</sub> (tension)','','T<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+      h+=step(2,'T<sub>dg</sub> = A \xd7 f<sub>y</sub> / (&gamma;<sub>m0</sub> \xd7 1000)',fmt(r.A,0)+' mm\xb2 \xd7 '+r.Fy+' / (1.10 \xd7 1000)','T<sub>dg</sub> = '+fmt(r.Tdg,1)+' kN');
+      h+=step(3,'T<sub>u</sub> / T<sub>dg</sub>','Gross section yielding','= '+fmt(r.Pu/r.Tdg,4),r.Pu/r.Tdg<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked only. Net-section fracture (\xa76.3) and block shear (\xa76.4) require net area and connection details.</div></div>';
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Bending Capacity — IS 800:2007 \xa78.2 (Plastic, no LTB reduction for tension member)</div><table class="steps-table">';
+      h+=step(1,'M<sub>dx</sub> = Z<sub>px</sub> f<sub>y</sub> / &gamma;<sub>m0</sub>',fmt(r.Zx,0)+' \xd7 '+r.Fy+' / (1.10 \xd7 10⁶)','M<sub>dx</sub> = '+fmt(r.Mdx0,1)+' kN\xb7m');
+      h+=step(2,'M<sub>dz</sub> = Z<sub>pz</sub> f<sub>y</sub> / &gamma;<sub>m0</sub>',fmt(r.Zy,0)+' \xd7 '+r.Fy+' / (1.10 \xd7 10⁶)','M<sub>dz</sub> = '+fmt(r.Mdz,1)+' kN\xb7m');
+      h+='</table></div>';
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — IS 800:2007 \xa79.3.1.1 (Tension + Bending)</div><table class="steps-table">';
+      h+=step(1,'T<sub>u</sub> / T<sub>dg</sub>',fmt(r.Pu,1)+' / '+fmt(r.Tdg,1),'= '+fmt(r.rP,4));
+      h+=step(2,'M<sub>x</sub> / M<sub>dx</sub>',fmt(r.Mux,1)+' / '+fmt(r.Mdx0,1),'= '+fmt(r.rMx,4));
+      h+=step(3,'M<sub>y</sub> / M<sub>dz</sub>',fmt(r.Muy,1)+' / '+fmt(r.Mdz,1),'= '+fmt(r.rMy,4));
+      h+=step(4,'T/T<sub>dg</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> ≤ 1.0',
+        fmt(r.rP,4)+' + '+fmt(r.rMx,4)+' + '+fmt(r.rMy,4),
+        'H = '+fmt(r.H,4)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Plastic (class 1) section assumed. &gamma;<sub>m0</sub> = 1.10. LTB not applicable for tension member. Local buckling and shear not checked.</div></div>';
+    } else {
+      // §7 Axial
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — IS 800:2007 \xa77</div><table class="steps-table">';
+      h+=step(1,'f<sub>y</sub> \xd7 A','','N<sub>Rk</sub> = '+fmt(r.NRk_kN,1)+' kN');
+      h+=step(2,'&lambda;&#772;<sub>x</sub> (strong axis, KL='+fmt(r.KLx_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,x</sub>)','&lambda;&#772;<sub>x</sub> = '+fmt(r.lamx,3));
+      h+=step(3,'&lambda;&#772;<sub>y</sub> (weak axis, KL='+fmt(r.KLy_mm/1000,2)+' m)','&radic;(Af<sub>y</sub>/N<sub>cr,y</sub>)','&lambda;&#772;<sub>y</sub> = '+fmt(r.lamy,3));
+      h+=step(4,'Buckling class (Table 7)','Strong axis: class b (&alpha;=0.34)  |  Weak axis: class c (&alpha;=0.49)','');
+      h+=step(5,'&chi;<sub>x</sub> (strong axis)','&phi;<sub>x</sub>='+fmt(r.phix,4),'&chi;<sub>x</sub> = '+fmt(r.chix,4)+'  → f<sub>cd,x</sub>='+fmt(r.fcdx,1)+' MPa');
+      h+=step(6,'&chi;<sub>y</sub> (weak axis)','&phi;<sub>y</sub>='+fmt(r.phiy,4),'&chi;<sub>y</sub> = '+fmt(r.chiy,4)+'  → f<sub>cd,y</sub>='+fmt(r.fcdy,1)+' MPa');
+      h+=step(7,'P<sub>d</sub> = A \xd7 f<sub>cd,gov</sub> / 1000','Governing axis: '+r.govAxis+' (f<sub>cd</sub>='+fmt(r.fcd_gov,1)+' MPa)','P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
+      h+='</table></div>';
+      // §8.2 Flexure
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Bending Capacity — IS 800:2007 \xa78.2</div><table class="steps-table">';
+      h+=step(1,'M<sub>cr</sub> (L<sub>b</sub>='+fmt(r.Lb_mm/1000,2)+' m)','(π/L<sub>b</sub>)√(EI<sub>y</sub>GJ)√(1+π\xb2EI<sub>w</sub>/(GJL<sub>b</sub>\xb2))','M<sub>cr</sub> = '+fmt(r.Mcr_kNm,1)+' kN\xb7m');
+      h+=step(2,'&lambda;&#772;<sub>LT</sub> = √(Z<sub>px</sub>f<sub>y</sub>/M<sub>cr</sub>)','','&lambda;&#772;<sub>LT</sub> = '+fmt(r.lamLT,3));
+      h+=step(3,'LTB curve (Table 6b, h/b='+fmt(r.hb,2)+')','h/b ≤ 2 → curve a; h/b > 2 → curve b',''+r.curveLT);
+      h+=step(4,'&chi;<sub>LT</sub>','&phi;<sub>LT</sub> → &chi;<sub>LT</sub>','&chi;<sub>LT</sub> = '+fmt(r.chiLT,4)+'  →  '+r.ltbIS);
+      h+=step(5,'M<sub>dx</sub> = &chi;<sub>LT</sub> Z<sub>px</sub> f<sub>y</sub> / &gamma;<sub>m0</sub>','/ 1.10','M<sub>dx</sub> = '+fmt(r.Mdx,1)+' kN\xb7m');
+      h+=step(6,'M<sub>dz</sub> = Z<sub>pz</sub> f<sub>y</sub> / &gamma;<sub>m0</sub> (no LTB)','/ 1.10','M<sub>dz</sub> = '+fmt(r.Mdz,1)+' kN\xb7m');
+      h+='</table></div>';
+      // §9.3.2.2 Interaction
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Combined Forces — IS 800:2007 \xa79.3.2.2</div><table class="steps-table">';
+      h+=step(1,'P / P<sub>d</sub>',fmt(r.Pu,1)+' / '+fmt(r.Pd,1),'= '+fmt(r.rP,4));
+      h+=step(2,'M<sub>x</sub> / M<sub>dx</sub>',fmt(r.Mux,1)+' / '+fmt(r.Mdx,1),'= '+fmt(r.rMx,4));
+      h+=step(3,'M<sub>y</sub> / M<sub>dz</sub>',fmt(r.Muy,1)+' / '+fmt(r.Mdz,1),'= '+fmt(r.rMy,4));
+      h+=step(4,'P/P<sub>d</sub> + M<sub>x</sub>/M<sub>dx</sub> + M<sub>y</sub>/M<sub>dz</sub> ≤ 1.0',
+        fmt(r.rP,4)+' + '+fmt(r.rMx,4)+' + '+fmt(r.rMy,4),
+        'H = '+fmt(r.H,4)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Plastic (class 1) section assumed. &gamma;<sub>m0</sub> = 1.10. Local buckling and shear not checked.</div></div>';
+    }
   } else {
     // AISC / TSDS
     var codeStr=r.code==='tsds'?'TSDS 2016':'AISC 360';
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — '+codeStr+' Chapter E</div><table class="steps-table">';
-    h+=step(1,'A<sub>g</sub>','','A<sub>g</sub> = '+agD+' '+agLbl);
-    h+=step(2,'Effective lengths KL',
-      'x: '+r.KX.toFixed(2)+'\xd7'+fmt(r.Lbx,2)+r.uL+'\xd7'+r.lf+'  |  y: '+r.KY.toFixed(2)+'\xd7'+fmt(r.Lby,2)+r.uL+'\xd7'+r.lf,
-      'KL<sub>x</sub>='+fmt(r.KLx,0)+' '+r.uLen+'  |  KL<sub>y</sub>='+fmt(r.KLy,0)+' '+r.uLen);
-    var slOk2=r.lMax<=200;
-    h+=step(3,'Slenderness — governing: <strong>'+r.govAx+'</strong>',
-      'KL/r<sub>x</sub>='+fmt(r.lx,1)+'  |  KL/r<sub>y</sub>='+fmt(r.ly,1),
-      '&lambda;<sub>max</sub>='+fmt(r.lMax,1),slOk2);
-    h+=step(4,'4.71√(E/F<sub>y</sub>) — '+r.bMode,'','&lambda;<sub>lim</sub>='+fmt(r.lLim,1));
-    h+=step(5,'F<sub>e</sub> = π\xb2E/λ\xb2','','F<sub>e</sub>='+fmt(r.Fe,2)+' '+r.uSt);
-    h+=step(6,'F<sub>cr</sub>',
-      r.bMode==='Inelastic'?'0.658<sup>'+fmt(r.Fy/r.Fe,4)+'</sup>\xd7'+r.Fy:'0.877\xd7'+fmt(r.Fe,2),
-      'F<sub>cr</sub>='+fmt(r.Fcr,2)+' '+r.uSt);
-    h+=step(7,'&phi;<sub>c</sub>P<sub>n</sub> = 0.90 \xd7 F<sub>cr</sub> \xd7 A','',''+fmt(r.phiPn,1)+' '+r.uF);
-    h+='</table></div>';
+    if(r.isTension){
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension — '+codeStr+' Chapter D</div><table class="steps-table">';
+      h+=step(1,'T<sub>u</sub> (tension)','','T<sub>u</sub> = '+fmt(r.Pu,1)+' '+r.uF);
+      h+=step(2,'&phi;<sub>t</sub>T<sub>n</sub> = 0.90 \xd7 F<sub>y</sub> \xd7 A<sub>g</sub>',r.isUS?'0.90 \xd7 '+r.Fy+' ksi \xd7 '+agD+' in\xb2':'0.90 \xd7 '+r.Fy+' MPa \xd7 '+agD+' mm\xb2 / 1000','&phi;<sub>t</sub>T<sub>n</sub> = '+fmt(r.phiTn,1)+' '+r.uF);
+      h+=step(3,'T<sub>u</sub> / &phi;<sub>t</sub>T<sub>n</sub>','Gross section yielding \xa7D2(a)','= '+fmt(r.Pu/r.phiTn,4),r.Pu/r.phiTn<=1.0);
+      h+='</table></div>';
+      h+='<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding (\xa7D2a, &phi;<sub>t</sub>=0.90) checked only. Net-section fracture (\xa7D2b, &phi;<sub>t</sub>=0.75) requires net area A<sub>e</sub> and connection details.</div></div>';
+    } else {
+      h+='<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression — '+codeStr+' Chapter E</div><table class="steps-table">';
+      h+=step(1,'A<sub>g</sub>','','A<sub>g</sub> = '+agD+' '+agLbl);
+      h+=step(2,'Effective lengths KL',
+        'x: '+r.KX.toFixed(2)+'\xd7'+fmt(r.Lbx,2)+r.uL+'\xd7'+r.lf+'  |  y: '+r.KY.toFixed(2)+'\xd7'+fmt(r.Lby,2)+r.uL+'\xd7'+r.lf,
+        'KL<sub>x</sub>='+fmt(r.KLx,0)+' '+r.uLen+'  |  KL<sub>y</sub>='+fmt(r.KLy,0)+' '+r.uLen);
+      var slOk2=r.lMax<=200;
+      h+=step(3,'Slenderness — governing: <strong>'+r.govAx+'</strong>',
+        'KL/r<sub>x</sub>='+fmt(r.lx,1)+'  |  KL/r<sub>y</sub>='+fmt(r.ly,1),
+        '&lambda;<sub>max</sub>='+fmt(r.lMax,1),slOk2);
+      h+=step(4,'4.71√(E/F<sub>y</sub>) — '+r.bMode,'','&lambda;<sub>lim</sub>='+fmt(r.lLim,1));
+      h+=step(5,'F<sub>e</sub> = π\xb2E/λ\xb2','','F<sub>e</sub>='+fmt(r.Fe,2)+' '+r.uSt);
+      h+=step(6,'F<sub>cr</sub>',
+        r.bMode==='Inelastic'?'0.658<sup>'+fmt(r.Fy/r.Fe,4)+'</sup>\xd7'+r.Fy:'0.877\xd7'+fmt(r.Fe,2),
+        'F<sub>cr</sub>='+fmt(r.Fcr,2)+' '+r.uSt);
+      h+=step(7,'&phi;<sub>c</sub>P<sub>n</sub> = 0.90 \xd7 F<sub>cr</sub> \xd7 A','',''+fmt(r.phiPn,1)+' '+r.uF);
+      h+='</table></div>';
+    }
     if(r.Cw===0){
       var fCh=(r.name||'').toLowerCase().indexOf('chs')>=0?'§F8 (Round HSS/CHS)':'§F7 (Rect. HSS)';
       h+='<div class="rpt-sec"><div class="rpt-sec-title">Strong-Axis Flexure — '+codeStr+' '+fCh+'</div><table class="steps-table">';
@@ -1908,8 +2017,11 @@ function bcRender(r){
     h+=step(3,'M<sub>ny</sub>=min(M<sub>py</sub>, Cap)',wyGov,'M<sub>ny</sub>='+fmt(r.Mny,1)+' '+r.uM);
     h+=step(4,'&phi;<sub>b</sub>M<sub>ny</sub>=0.90\xd7M<sub>ny</sub>','No LTB for weak-axis bending',''+fmt(r.phiMny,1)+' '+r.uM);
     h+='</table></div>';
-    h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction — '+codeStr+' \xa7H1-1</div><table class="steps-table">';
-    h+=step(1,'P<sub>u</sub>/&phi;P<sub>n</sub>',fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),'= '+fmt(r.rP,4)+' → use '+r.eq);
+    var phiAxLbl=r.isTension?'&phi;<sub>t</sub>T<sub>n</sub>':'&phi;<sub>c</sub>P<sub>n</sub>';
+    var phiAxVal=r.isTension?r.phiTn:r.phiPn;
+    var puLbl=r.isTension?'T<sub>u</sub>':'P<sub>u</sub>';
+    h+='<div class="rpt-sec"><div class="rpt-sec-title">Interaction — '+codeStr+' \xa7H1-1 ('+(r.isTension?'Tension':'Compression')+')</div><table class="steps-table">';
+    h+=step(1,puLbl+'/'+phiAxLbl,fmt(r.Pu,1)+'/'+fmt(phiAxVal,1),'= '+fmt(r.rP,4)+' → use '+r.eq);
     h+=step(2,'M<sub>ux</sub>/&phi;M<sub>nx</sub>',fmt(r.Mux,1)+'/'+fmt(r.phiMnx,1),'= '+fmt(r.rMx,4));
     h+=step(3,'M<sub>uy</sub>/&phi;M<sub>ny</sub>',fmt(r.Muy,1)+'/'+fmt(r.phiMny,1),'= '+fmt(r.rMy,4));
     if(r.eq==='H1-1a'){
@@ -1921,8 +2033,11 @@ function bcRender(r){
     }
     h+=step(5,'D/C check H ≤ 1.0','','H='+fmt(r.H,3)+'  '+(r.H<=1?'&#10003; OK':'&#10007; NG'),r.H<=1.0);
     h+='</table></div>';
-    if(!slOk2)h+='<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds recommended limit of 200.</div></div>';
-    if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — &phi;<sub>b</sub>M<sub>nx</sub> and &phi;<sub>b</sub>M<sub>ny</sub> remain at their plastic values regardless of column length. Only the axial term P<sub>u</sub>/&phi;P<sub>n</sub> decreases with increasing length. D/C is therefore less sensitive to length changes than for open I-sections, where LTB also reduces M<sub>nx</sub> with length.</div></div>';
+    if(!r.isTension){
+      var slOk2=r.lMax<=200;
+      if(!slOk2)h+='<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds recommended limit of 200.</div></div>';
+      if(r.Cw===0)h+='<div class="report-warn"><span>&#9432;</span><div><strong>Closed section (C<sub>w</sub>=0):</strong> No lateral-torsional buckling — &phi;<sub>b</sub>M<sub>nx</sub> and &phi;<sub>b</sub>M<sub>ny</sub> remain at their plastic values regardless of column length. Only the axial term P<sub>u</sub>/&phi;P<sub>n</sub> decreases with increasing length. D/C is therefore less sensitive to length changes than for open I-sections, where LTB also reduces M<sub>nx</sub> with length.</div></div>';
+    }
     h+='<div class="report-warn"><span>&#9432;</span><div>Compact section assumed (AISC Table B4.1). Local buckling, shear, and connections not checked.</div></div>';
   }
 

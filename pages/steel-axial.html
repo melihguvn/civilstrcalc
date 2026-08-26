@@ -149,8 +149,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div id="ac-panel-direct" style="display:none">
         <div style="font-size:.73rem;color:var(--text-dim);font-family:var(--sans);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px 10px;margin-bottom:10px">Enter the pre-calculated factored axial force. Load combinations and self-weight are excluded from the report.</div>
         <div class="form-group">
-          <label>Factored axial P<sub>u</sub> <span id="ac-dm-pu-lbl" class="unit-lbl">[kip]</span></label>
-          <div class="iw"><input type="number" id="ac-dm-pu" value="50" step="5" min="0"><span class="us" id="ac-dm-pu-us">kip</span></div>
+          <label>Factored axial P<sub>u</sub> <span id="ac-dm-pu-lbl" class="unit-lbl">[kip]</span> <span style="font-size:.74rem;color:var(--text-dim)">(negative = tension)</span></label>
+          <div class="iw"><input type="number" id="ac-dm-pu" value="50" step="5"><span class="us" id="ac-dm-pu-us">kip</span></div>
         </div>
       </div><!-- /ac-panel-direct -->
 
@@ -827,10 +827,15 @@ function acCalc() {
     bMode = 'Elastic';
   }
 
+  var isTension = Pu < 0;
+  var Pu_abs = Math.abs(Pu);
   var phiC  = 0.90;
   var Pn    = isUS ? (Fcr * Ag) : (Fcr * Ag / 1000); // kip or kN
   var phiPn = phiC * Pn;
-  var DCR   = Pu / phiPn;
+  // §D2 tension yielding (net fracture not checked — assumes Ae=Ag)
+  var phiTn = isUS ? 0.90 * Fy * Ag : 0.90 * Fy * Ag / 1000;
+  var phiCap = isTension ? phiTn : phiPn;
+  var DCR   = Pu_abs / phiCap;
   var slOk  = lMax <= 200;
 
   var gn   = document.getElementById('ac-grade').options[document.getElementById('ac-grade').selectedIndex].text;
@@ -844,7 +849,7 @@ function acCalc() {
     combos:combos, gov:gov.n, govF:gov.f, Pu:Pu, isDirect:isDirect,
     KLx:KLx, KLy:KLy, lx:lx, ly:ly, lMax:lMax, govAx:govAx, lLim:lLim,
     slOk:slOk, Fe_x:Fe_x, Fe_y:Fe_y, Fe:Fe, Pe_x:Pe_x, Pe_y:Pe_y, Fcr:Fcr, bMode:bMode,
-    Pn:Pn, phiPn:phiPn, DCR:DCR,
+    Pn:Pn, phiPn:phiPn, phiTn:phiTn, isTension:isTension, Pu_abs:Pu_abs, DCR:DCR,
     uF:uF, uL:uL, uSt:uSt, isUS:isUS, date:date
   });
 }
@@ -852,7 +857,9 @@ function acCalc() {
 // ── RENDER ─────────────────────────────────────────────────────────────────────
 function acRender(r) {
   var dc   = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
-  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var dcLbl = r.isTension
+    ? (r.DCR < 0.85 ? 'Tension Member Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Tension Member Overstressed'))
+    : (r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed'));
   var slCls = r.slOk ? 'ok' : 'warn';
   var uF = r.uF, uSt = r.uSt, uL = r.uL;
   var agLbl = r.isUS ? 'in&sup2;' : 'mm&sup2;';
@@ -885,13 +892,15 @@ function acRender(r) {
 
   h += '<div class="result-box" style="margin-bottom:8px">'
      + '<div class="result-item '+dc+'">'
-     + '<div class="ri-label">P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub></div>'
-     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>'
+     + (r.isTension
+       ? '<div class="ri-label">T<sub>u</sub> / &phi;<sub>t</sub>T<sub>n</sub></div><div class="ri-value">'+fmt(r.Pu_abs,1)+' / '+fmt(r.phiTn,1)+'</div>'
+       : '<div class="ri-label">P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>')
      + '<div class="ri-unit">'+uF+' &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-     + '<div class="result-item '+slCls+'">'
-     + '<div class="ri-label">KL/r (axis-'+r.govAx+')</div>'
-     + '<div class="ri-value">'+fmt(r.lMax,1)+'</div>'
-     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + (r.isTension ? '' :
+       '<div class="result-item '+slCls+'">'
+       + '<div class="ri-label">KL/r (axis-'+r.govAx+')</div>'
+       + '<div class="ri-value">'+fmt(r.lMax,1)+'</div>'
+       + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>')
      + '<div class="result-item '+dc+'">'
      + '<div class="ri-label">D/C Ratio</div>'
      + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
@@ -934,73 +943,95 @@ function acRender(r) {
     h += '</table></div>';
   }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design &mdash; AISC 360 Chapter E</div>'
-     + '<table class="steps-table">';
-
-  var s0 = r.isDirect ? 2 : 0;
-
-  if (r.isDirect) {
-    h += step(1, 'Design force P<sub>u</sub> &mdash; user-defined (factored)',
-      'Entered directly &mdash; load combinations and self-weight excluded from report',
-      'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+  if (r.isTension) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension Design &mdash; AISC 360 Chapter D</div>'
+       + '<table class="steps-table">';
+    if (r.isDirect) {
+      h += step(1, 'Design force T<sub>u</sub> &mdash; user-defined (factored tension)',
+        'Negative axial input interpreted as tension',
+        'T<sub>u</sub> = '+fmt(r.Pu_abs,2)+' '+uF);
+    } else {
+      h += step(1, 'Governing T<sub>u</sub> &mdash; ASCE 7-22 Load Combinations',
+        r.govF, 'T<sub>u</sub> = '+fmt(r.Pu_abs,2)+' '+uF);
+    }
+    h += step(2, 'Gross section yield &mdash; AISC D2(a)',
+      r.isUS ? '0.90 &times; '+r.Fy+' ksi &times; '+fmt(r.Ag,2)+' in²'
+             : '0.90 &times; '+r.Fy+' MPa &times; '+fmt(r.Ag_calc,0)+' mm² / 1000',
+      '&phi;<sub>t</sub>T<sub>n</sub> = '+fmt(r.phiTn,1)+' '+uF);
+    h += step(3, 'Demand / Capacity check',
+      'T<sub>u</sub> / &phi;<sub>t</sub>T<sub>n</sub> = '+fmt(r.Pu_abs,2)+' / '+fmt(r.phiTn,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+    h += '</table>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked only (&phi;<sub>t</sub>T<sub>n</sub> = 0.90 F<sub>y</sub> A<sub>g</sub>). Net-section fracture (§D2b, &phi;<sub>t</sub>=0.75) requires net area A<sub>e</sub> — verify separately for bolted/welded connections.</div></div>';
   } else {
-    h += step(1, 'Total dead D = P<sub>D</sub> + self-weight',
-      fmt(r.PD,2)+' + '+fmt(r.sw,3)+' '+uF, 'D = '+fmt(r.D,2)+' '+uF);
-    h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
-      r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design &mdash; AISC 360 Chapter E</div>'
+       + '<table class="steps-table">';
+
+    var s0 = r.isDirect ? 2 : 0;
+
+    if (r.isDirect) {
+      h += step(1, 'Design force P<sub>u</sub> &mdash; user-defined (factored)',
+        'Entered directly &mdash; load combinations and self-weight excluded from report',
+        'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+    } else {
+      h += step(1, 'Total dead D = P<sub>D</sub> + self-weight',
+        fmt(r.PD,2)+' + '+fmt(r.sw,3)+' '+uF, 'D = '+fmt(r.D,2)+' '+uF);
+      h += step(2, 'Governing P<sub>u</sub> &mdash; ASCE 7-22 Combo '+r.gov,
+        r.govF, 'P<sub>u</sub> = '+fmt(r.Pu,2)+' '+uF);
+    }
+
+    h += step(3-s0, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
+      'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; L<sub>b,x</sub> = '+r.Kx.toFixed(2)+' &times; '+fmt(r.Lbx,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
+      +'<br>y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; L<sub>b,y</sub> = '+r.Ky.toFixed(2)+' &times; '+fmt(r.Lby,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
+      'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+'<br>KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
+
+    h += step(4-s0, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
+      'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
+      '&lambda;<sub>max</sub> = '+fmt(r.lMax,1), r.slOk);
+
+    h += step(5-s0, 'Euler elastic buckling load P<sub>e</sub> &mdash; AISC E3-4',
+      'P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2;',
+      'P<sub>e,x</sub> = '+fmt(r.Pe_x,1)+' '+uF+' &nbsp;|&nbsp; P<sub>e,y</sub> = '+fmt(r.Pe_y,1)+' '+uF);
+
+    h += step(6-s0, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
+      '4.71 &times; &radic;('+r.E+'/'+r.Fy+')',
+      '&lambda;<sub>lim</sub> = '+fmt(r.lLim,1));
+
+    h += step(7-s0, 'Governing elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
+      '&pi;&sup2; &times; '+r.E+' / '+fmt(r.lMax,1)+'&sup2;',
+      'F<sub>e</sub> = '+fmt(r.Fe,2)+' '+uSt);
+
+    if (r.bMode === 'Inelastic') {
+      h += step(8-s0, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
+        '0.658<sup>'+fmt(r.Fy/r.Fe,3)+'</sup> &times; '+r.Fy,
+        'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
+    } else {
+      h += step(8-s0, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
+        '0.877 &times; '+fmt(r.Fe,2),
+        'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
+    }
+
+    h += step(9-s0, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
+      r.isUS
+        ? fmt(r.Fcr,2)+' '+uSt+' &times; '+fmt(r.Ag,2)+' in&sup2;'
+        : fmt(r.Fcr,2)+' MPa &times; '+fmt(r.Ag_calc,0)+' mm&sup2; / 1000',
+      'P<sub>n</sub> = '+fmt(r.Pn,1)+' '+uF);
+
+    h += step(10-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
+      '0.90 &times; '+fmt(r.Pn,1)+' '+uF,
+      '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' '+uF);
+
+    h += step(11-s0, 'Demand / Capacity check',
+      'P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,2)+' / '+fmt(r.phiPn,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+    h += '</table>';
+
+    if (!r.slOk)
+      h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds AISC recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
+
+    h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional buckling and local buckling are not checked — verify per AISC Table B4.1a and §E4 for singly-symmetric and hollow sections.</div></div>';
   }
-
-  h += step(3-s0, 'Effective lengths per axis (KL = K &times; L<sub>b</sub>)',
-    'x&#x2011;x: K<sub>x</sub> = '+r.Kx.toFixed(2)+' &times; L<sub>b,x</sub> = '+r.Kx.toFixed(2)+' &times; '+fmt(r.Lbx,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000')
-    +'<br>y&#x2011;y: K<sub>y</sub> = '+r.Ky.toFixed(2)+' &times; L<sub>b,y</sub> = '+r.Ky.toFixed(2)+' &times; '+fmt(r.Lby,2)+' '+uL+(r.isUS?' &times; 12':' &times; 1000'),
-    'KL<sub>x</sub> = '+fmt(r.KLx,1)+' '+lenLbl+'<br>KL<sub>y</sub> = '+fmt(r.KLy,1)+' '+lenLbl);
-
-  h += step(4-s0, 'Slenderness ratios &mdash; governing axis: '+r.govAx,
-    'KL<sub>x</sub>/r<sub>x</sub> = '+fmt(r.KLx,1)+'/'+fmt(r.isUS?r.rx:r.rx*10,2)+' = '+fmt(r.lx,1)+' &nbsp;|&nbsp; KL<sub>y</sub>/r<sub>y</sub> = '+fmt(r.KLy,1)+'/'+fmt(r.isUS?r.ry:r.ry*10,2)+' = '+fmt(r.ly,1),
-    '&lambda;<sub>max</sub> = '+fmt(r.lMax,1), r.slOk);
-
-  h += step(5-s0, 'Euler elastic buckling load P<sub>e</sub> &mdash; AISC E3-4',
-    'P<sub>e</sub> = &pi;&sup2;EA<sub>g</sub> / (KL/r)&sup2;',
-    'P<sub>e,x</sub> = '+fmt(r.Pe_x,1)+' '+uF+' &nbsp;|&nbsp; P<sub>e,y</sub> = '+fmt(r.Pe_y,1)+' '+uF);
-
-  h += step(6-s0, 'Slenderness limit 4.71&radic;(E/F<sub>y</sub>) &mdash; '+r.bMode+' buckling',
-    '4.71 &times; &radic;('+r.E+'/'+r.Fy+')',
-    '&lambda;<sub>lim</sub> = '+fmt(r.lLim,1));
-
-  h += step(7-s0, 'Governing elastic buckling stress F<sub>e</sub> &mdash; AISC E3-4',
-    '&pi;&sup2; &times; '+r.E+' / '+fmt(r.lMax,1)+'&sup2;',
-    'F<sub>e</sub> = '+fmt(r.Fe,2)+' '+uSt);
-
-  if (r.bMode === 'Inelastic') {
-    h += step(8-s0, 'F<sub>cr</sub> &mdash; inelastic buckling (AISC E3-2)',
-      '0.658<sup>'+fmt(r.Fy/r.Fe,3)+'</sup> &times; '+r.Fy,
-      'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
-  } else {
-    h += step(8-s0, 'F<sub>cr</sub> &mdash; elastic buckling (AISC E3-3)',
-      '0.877 &times; '+fmt(r.Fe,2),
-      'F<sub>cr</sub> = '+fmt(r.Fcr,2)+' '+uSt);
-  }
-
-  h += step(9-s0, 'Nominal strength P<sub>n</sub> = F<sub>cr</sub> &times; A<sub>g</sub>',
-    r.isUS
-      ? fmt(r.Fcr,2)+' '+uSt+' &times; '+fmt(r.Ag,2)+' in&sup2;'
-      : fmt(r.Fcr,2)+' MPa &times; '+fmt(r.Ag_calc,0)+' mm&sup2; / 1000',
-    'P<sub>n</sub> = '+fmt(r.Pn,1)+' '+uF);
-
-  h += step(10-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub> &mdash; AISC E1',
-    '0.90 &times; '+fmt(r.Pn,1)+' '+uF,
-    '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' '+uF);
-
-  h += step(11-s0, 'Demand / Capacity check',
-    'P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,2)+' / '+fmt(r.phiPn,1),
-    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
-
-  h += '</table>';
-
-  if (!r.slOk)
-    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.lMax,1)+' exceeds AISC recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
-
-  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional buckling and local buckling are not checked — verify per AISC Table B4.1a and §E4 for singly-symmetric and hollow sections.</div></div>';
 
   h += '</div>';
   h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
@@ -1082,7 +1113,11 @@ function acCalcEC3() {
     Pu = govCombo.P;
   }
 
-  var DCR = NbRd > 0 ? Pu / NbRd : Infinity;
+  var isTension = Pu < 0;
+  var Pu_abs = Math.abs(Pu);
+  var NtRd = A_mm2 * fy / (gmM1 * 1000); // EC3 §6.2.3 gross section yielding (kN)
+  var cap  = isTension ? NtRd : NbRd;
+  var DCR  = cap > 0 ? Pu_abs / cap : Infinity;
   var curveName = {0.21:'a', 0.34:'b', 0.49:'c', 0.76:'d'};
   var bcLblX = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcX];
   var bcLblY = {pp:'Pin–Pin', pf:'Pin–Fixed', ff:'Fixed–Fixed'}[bcY];
@@ -1093,7 +1128,8 @@ function acCalcEC3() {
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
     alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, NbRd:NbRd,
-    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    NtRd:NtRd, isTension:isTension, Pu:Pu_abs,
+    DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
     slOk: KLr <= 200
   });
 }
@@ -1109,7 +1145,9 @@ function acRenderEC3(r) {
   }
   var s0  = r.isDirect ? 2 : 0;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
-  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var dcLbl = r.isTension
+    ? (r.DCR < 0.85 ? 'Tension Member Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Tension Member Overstressed'))
+    : (r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed'));
   var slCls = r.slOk ? 'ok' : 'warn';
   var date  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 
@@ -1127,13 +1165,15 @@ function acRenderEC3(r) {
 
   h += '<div class="result-box" style="margin-bottom:8px">'
      + '<div class="result-item '+dc+'">'
-     + '<div class="ri-label">N<sub>Ed</sub> / N<sub>b,Rd</sub></div>'
-     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1)+'</div>'
+     + (r.isTension
+       ? '<div class="ri-label">N<sub>Ed</sub> / N<sub>t,Rd</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.NtRd,1)+'</div>'
+       : '<div class="ri-label">N<sub>Ed</sub> / N<sub>b,Rd</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1)+'</div>')
      + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-     + '<div class="result-item '+slCls+'">'
-     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
-     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
-     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + (r.isTension ? '' :
+       '<div class="result-item '+slCls+'">'
+       + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+       + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+       + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>')
      + '<div class="result-item '+dc+'">'
      + '<div class="ri-label">D/C Ratio</div>'
      + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
@@ -1172,52 +1212,73 @@ function acRenderEC3(r) {
     h += '</table></div>';
   }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; EN 1993-1-1 &sect;6.3.1</div>'
-     + '<table class="steps-table">';
-
-  if (r.isDirect) {
-    h += step(1, 'Design axial N<sub>Ed</sub> &mdash; user-defined (factored)',
-      'Entered directly &mdash; load combinations and self-weight excluded from report',
-      'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+  if (r.isTension) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension &mdash; EN 1993-1-1 &sect;6.2.3</div>'
+       + '<table class="steps-table">';
+    if (r.isDirect) {
+      h += step(1, 'Design axial N<sub>Ed</sub> &mdash; user-defined (factored tension)',
+        'Negative axial input interpreted as tension',
+        'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Governing N<sub>Ed</sub> &mdash; EN 1990', r.govCombo.lbl,
+        'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+    h += step(2, 'Design resistance N<sub>t,Rd</sub> = A&times;f<sub>y</sub>/(&gamma;<sub>M0</sub>&times;1000)',
+      fmt(r.A_mm2,0)+' mm² &times; '+r.fy+' MPa / (1.0 &times; 1000)',
+      'N<sub>t,Rd</sub> = '+fmt(r.NtRd,1)+' kN');
+    h += step(3, 'Demand / Capacity check',
+      'N<sub>Ed</sub> / N<sub>t,Rd</sub> = '+fmt(r.Pu,1)+' / '+fmt(r.NtRd,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+    h += '</table></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked only. Net-section fracture (&sect;6.2.3, with A<sub>net</sub>) must be verified separately for bolted or welded connections.</div></div>';
   } else {
-    h += step(1, 'Total permanent action G = G<sub>applied</sub> + self-weight',
-      fmt((r.combos[0].P/1.35)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
-      'G = '+fmt(r.combos[0].P/1.35,2)+' kN');
-    h += step(2, 'Governing N<sub>Ed</sub> &mdash; EN 1990',
-      r.govCombo.lbl,
-      'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; EN 1993-1-1 &sect;6.3.1</div>'
+       + '<table class="steps-table">';
+
+    if (r.isDirect) {
+      h += step(1, 'Design axial N<sub>Ed</sub> &mdash; user-defined (factored)',
+        'Entered directly &mdash; load combinations and self-weight excluded from report',
+        'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Total permanent action G = G<sub>applied</sub> + self-weight',
+        fmt((r.combos[0].P/1.35)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+        'G = '+fmt(r.combos[0].P/1.35,2)+' kN');
+      h += step(2, 'Governing N<sub>Ed</sub> &mdash; EN 1990',
+        r.govCombo.lbl,
+        'N<sub>Ed</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+
+    h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
+      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+      fmt(r.KLrx,1));
+    h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
+      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+      fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
+    h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
+      'Section type ('+acSecType+') &rarr; curve '+r.curveName+' per EN 1993-1-1 Table 6.2',
+      '&alpha; = '+fmt(r.alpha,2));
+    h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
+      '(KL/r<sub>min</sub>) / (&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+' / (&pi;&radic;('+r.E+'/'+r.fy+'))',
+      '&lambda;&#773; = '+fmt(r.lam,4));
+    h += step(7-s0, 'Auxiliary value &Phi;',
+      '0.5[1 + &alpha;(&lambda;&#773;&minus;0.2) + &lambda;&#773;&sup2;] = 0.5[1 + '+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2) + '+fmt(r.lam*r.lam,4)+']',
+      '&Phi; = '+fmt(r.Phi,4));
+    h += step(8-s0, 'Reduction factor &chi; &mdash; &sect;6.3.1.2',
+      '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
+      '&chi; = '+fmt(r.chi,4));
+    h += step(9-s0, 'Design buckling resistance N<sub>b,Rd</sub>',
+      '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>M1</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM1.toFixed(1)+'&times;1000)',
+      'N<sub>b,Rd</sub> = '+fmt(r.NbRd,1)+' kN');
+    h += step(10-s0, 'Demand / Capacity check',
+      'N<sub>Ed</sub> / N<sub>b,Rd</sub> = '+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+    h += '</table></div>';
+
+    if (!r.slOk)
+      h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per EN 1993-1-1 §6.3.1 and Table 5.2.</div></div>';
   }
-
-  h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
-    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
-    fmt(r.KLrx,1));
-  h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
-    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
-    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
-  h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
-    'Section type ('+acSecType+') &rarr; curve '+r.curveName+' per EN 1993-1-1 Table 6.2',
-    '&alpha; = '+fmt(r.alpha,2));
-  h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
-    '(KL/r<sub>min</sub>) / (&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+' / (&pi;&radic;('+r.E+'/'+r.fy+'))',
-    '&lambda;&#773; = '+fmt(r.lam,4));
-  h += step(7-s0, 'Auxiliary value &Phi;',
-    '0.5[1 + &alpha;(&lambda;&#773;&minus;0.2) + &lambda;&#773;&sup2;] = 0.5[1 + '+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2) + '+fmt(r.lam*r.lam,4)+']',
-    '&Phi; = '+fmt(r.Phi,4));
-  h += step(8-s0, 'Reduction factor &chi; &mdash; &sect;6.3.1.2',
-    '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
-    '&chi; = '+fmt(r.chi,4));
-  h += step(9-s0, 'Design buckling resistance N<sub>b,Rd</sub>',
-    '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>M1</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM1.toFixed(1)+'&times;1000)',
-    'N<sub>b,Rd</sub> = '+fmt(r.NbRd,1)+' kN');
-  h += step(10-s0, 'Demand / Capacity check',
-    'N<sub>Ed</sub> / N<sub>b,Rd</sub> = '+fmt(r.Pu,1)+' / '+fmt(r.NbRd,1),
-    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
-
-  h += '</table></div>';
-
-  if (!r.slOk)
-    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds recommended limit of 200. Consider a larger section or shorter unbraced length.</div></div>';
-  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per EN 1993-1-1 §6.3.1 and Table 5.2.</div></div>';
   h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
   h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; EN 1993-1-1</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
 
@@ -1292,15 +1353,20 @@ function acCalcTSDS() {
     Pu = govCombo.P;
   }
 
-  var DCR = phiPn > 0 ? Pu / phiPn : Infinity;
+  var isTension = Pu < 0;
+  var Pu_abs = Math.abs(Pu);
+  var phiTn = 0.90 * fy * A_mm2 / 1000; // TSDS §D2 yielding (kN)
+  var cap   = isTension ? phiTn : phiPn;
+  var DCR   = cap > 0 ? Pu_abs / cap : Infinity;
 
   acRenderTSDS({
     name:name, fy:fy, E:E, phiC:phiC,
     Lval:Lval, Kx:Kx, Ky:Ky, lbRx:lbRx, lbRy:lbRy, bcLblX:bcLblX, bcLblY:bcLblY,
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
-    Fe:Fe, Fcr:Fcr, mode:mode, Pn:Pn, phiPn:phiPn,
-    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    Fe:Fe, Fcr:Fcr, mode:mode, Pn:Pn, phiPn:phiPn, phiTn:phiTn,
+    isTension:isTension, Pu:Pu_abs,
+    DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
     slOk: KLr <= 200
   });
 }
@@ -1316,7 +1382,9 @@ function acRenderTSDS(r) {
   }
   var s0  = r.isDirect ? 2 : 0;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
-  var dcLbl = r.DCR < 0.85 ? 'Column OK' : (r.DCR <= 1.0 ? 'OK — At Capacity Limit' : 'Column NG');
+  var dcLbl = r.isTension
+    ? (r.DCR < 0.85 ? 'Tension Member OK' : (r.DCR <= 1.0 ? 'OK — At Capacity Limit' : 'Tension Member NG'))
+    : (r.DCR < 0.85 ? 'Column OK' : (r.DCR <= 1.0 ? 'OK — At Capacity Limit' : 'Column NG'));
   var slCls = r.slOk ? 'ok' : 'warn';
   var date  = new Date().toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'});
 
@@ -1334,13 +1402,15 @@ function acRenderTSDS(r) {
 
   h += '<div class="result-box" style="margin-bottom:8px">'
      + '<div class="result-item '+dc+'">'
-     + '<div class="ri-label">N<sub>d</sub> / &phi;<sub>c</sub>P<sub>n</sub></div>'
-     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>'
+     + (r.isTension
+       ? '<div class="ri-label">T<sub>d</sub> / &phi;<sub>t</sub>T<sub>n</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiTn,1)+'</div>'
+       : '<div class="ri-label">N<sub>d</sub> / &phi;<sub>c</sub>P<sub>n</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.phiPn,1)+'</div>')
      + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-     + '<div class="result-item '+slCls+'">'
-     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
-     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
-     + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + (r.isTension ? '' :
+       '<div class="result-item '+slCls+'">'
+       + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+       + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+       + '<div class="ri-unit">limit 200 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>')
      + '<div class="result-item '+dc+'">'
      + '<div class="ri-label">D/C Ratio</div>'
      + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
@@ -1379,54 +1449,75 @@ function acRenderTSDS(r) {
     h += '</table></div>';
   }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design — TSDS 2016 §5</div>'
-     + '<table class="steps-table">';
-
-  if (r.isDirect) {
-    h += step(1, 'Design axial force N<sub>d</sub> — user input (factored)',
-      'Entered directly — load combinations &amp; self-weight excluded from report',
-      'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+  if (r.isTension) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension Design — TSDS 2016 §5 (Chapter D)</div>'
+       + '<table class="steps-table">';
+    if (r.isDirect) {
+      h += step(1, 'Design tension force T<sub>d</sub> — user input (factored)',
+        'Negative axial input interpreted as tension',
+        'T<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Governing T<sub>d</sub> — TSDS 2016', r.govCombo.lbl,
+        'T<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+    h += step(2, 'Gross section yield &mdash; 0.90 f<sub>y</sub> A',
+      '0.90 &times; '+r.fy+' MPa &times; '+fmt(r.A_mm2,0)+' mm² / 1000',
+      '&phi;<sub>t</sub>T<sub>n</sub> = '+fmt(r.phiTn,1)+' kN');
+    h += step(3, 'Demand / Capacity check',
+      'T<sub>d</sub> / &phi;<sub>t</sub>T<sub>n</sub> = '+fmt(r.Pu,1)+' / '+fmt(r.phiTn,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+    h += '</table></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked only. Net-section fracture must be verified separately for bolted or welded connections.</div></div>';
   } else {
-    h += step(1, 'Total dead load G = G<sub>app</sub> + self-weight',
-      fmt((r.combos[0].P/1.4)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
-      'G = '+fmt(r.combos[0].P/1.4,2)+' kN');
-    h += step(2, 'Governing N<sub>d</sub> — TSDS 2016',
-      r.govCombo.lbl,
-      'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression Design — TSDS 2016 §5</div>'
+       + '<table class="steps-table">';
+
+    if (r.isDirect) {
+      h += step(1, 'Design axial force N<sub>d</sub> — user input (factored)',
+        'Entered directly — load combinations &amp; self-weight excluded from report',
+        'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Total dead load G = G<sub>app</sub> + self-weight',
+        fmt((r.combos[0].P/1.4)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+        'G = '+fmt(r.combos[0].P/1.4,2)+' kN');
+      h += step(2, 'Governing N<sub>d</sub> — TSDS 2016',
+        r.govCombo.lbl,
+        'N<sub>d</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+
+    h += step(3-s0, 'Slenderness — strong axis (x&#x2011;x)',
+      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+      fmt(r.KLrx,1));
+    h += step(4-s0, 'Slenderness — weak axis (y&#x2011;y)',
+      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+      fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governing':' &larr; governing (x)'));
+    h += step(5-s0, 'Slenderness limit — inelastic / elastic buckling',
+      '4.71&radic;(E/f<sub>y</sub>) = 4.71&radic;('+r.E+'/'+r.fy+')',
+      fmt(4.71*Math.sqrt(r.E/r.fy),1)+' &rarr; '+r.mode);
+    h += step(6-s0, 'Elastic buckling stress F<sub>e</sub>',
+      '&pi;&sup2;E/(KL/r)<sup>2</sup> = &pi;&sup2;&times;'+r.E+'/'+fmt(r.KLr,2)+'&sup2;',
+      'F<sub>e</sub> = '+fmt(r.Fe,1)+' MPa');
+    h += step(7-s0, 'Critical stress F<sub>cr</sub> — TSDS 2016 §5.2',
+      r.mode==='inelastic'
+        ? '0.658<sup>f<sub>y</sub>/F<sub>e</sub></sup>&times;f<sub>y</sub> = 0.658<sup>'+fmt(r.fy/r.Fe,4)+'</sup>&times;'+r.fy
+        : '0.877&times;F<sub>e</sub> = 0.877&times;'+fmt(r.Fe,1),
+      'F<sub>cr</sub> = '+fmt(r.Fcr,1)+' MPa');
+    h += step(8-s0, 'Nominal strength P<sub>n</sub>',
+      'F<sub>cr</sub>&times;A/1000 = '+fmt(r.Fcr,1)+'&times;'+fmt(r.A_mm2,0)+'/1000',
+      'P<sub>n</sub> = '+fmt(r.Pn,1)+' kN');
+    h += step(9-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub>',
+      '0.90&times;'+fmt(r.Pn,1)+' kN',
+      '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' kN');
+    h += step(10-s0, 'Demand / Capacity check',
+      'N<sub>d</sub>/&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+    h += '</table></div>';
+
+    if (!r.slOk)
+      h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds the recommended limit of 200. Use a larger section or shorter unbraced length.</div></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Only flexural buckling has been checked. Lateral-torsional and local buckling are not verified — check per TSDS 2016 §5 and Table B4.1a.</div></div>';
   }
-
-  h += step(3-s0, 'Slenderness — strong axis (x&#x2011;x)',
-    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
-    fmt(r.KLrx,1));
-  h += step(4-s0, 'Slenderness — weak axis (y&#x2011;y)',
-    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
-    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governing':' &larr; governing (x)'));
-  h += step(5-s0, 'Slenderness limit — inelastic / elastic buckling',
-    '4.71&radic;(E/f<sub>y</sub>) = 4.71&radic;('+r.E+'/'+r.fy+')',
-    fmt(4.71*Math.sqrt(r.E/r.fy),1)+' &rarr; '+r.mode);
-  h += step(6-s0, 'Elastic buckling stress F<sub>e</sub>',
-    '&pi;&sup2;E/(KL/r)<sup>2</sup> = &pi;&sup2;&times;'+r.E+'/'+fmt(r.KLr,2)+'&sup2;',
-    'F<sub>e</sub> = '+fmt(r.Fe,1)+' MPa');
-  h += step(7-s0, 'Critical stress F<sub>cr</sub> — TSDS 2016 §5.2',
-    r.mode==='inelastic'
-      ? '0.658<sup>f<sub>y</sub>/F<sub>e</sub></sup>&times;f<sub>y</sub> = 0.658<sup>'+fmt(r.fy/r.Fe,4)+'</sup>&times;'+r.fy
-      : '0.877&times;F<sub>e</sub> = 0.877&times;'+fmt(r.Fe,1),
-    'F<sub>cr</sub> = '+fmt(r.Fcr,1)+' MPa');
-  h += step(8-s0, 'Nominal strength P<sub>n</sub>',
-    'F<sub>cr</sub>&times;A/1000 = '+fmt(r.Fcr,1)+'&times;'+fmt(r.A_mm2,0)+'/1000',
-    'P<sub>n</sub> = '+fmt(r.Pn,1)+' kN');
-  h += step(9-s0, 'Design strength &phi;<sub>c</sub>P<sub>n</sub>',
-    '0.90&times;'+fmt(r.Pn,1)+' kN',
-    '&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.phiPn,1)+' kN');
-  h += step(10-s0, 'Demand / Capacity check',
-    'N<sub>d</sub>/&phi;<sub>c</sub>P<sub>n</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.phiPn,1),
-    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
-
-  h += '</table></div>';
-
-  if (!r.slOk)
-    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds the recommended limit of 200. Use a larger section or shorter unbraced length.</div></div>';
-  h += '<div class="report-warn"><span>&#9432;</span><div>Only flexural buckling has been checked. Lateral-torsional and local buckling are not verified — check per TSDS 2016 §5 and Table B4.1a.</div></div>';
   h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
   h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; TSDS 2016</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
 
@@ -1505,7 +1596,11 @@ function acCalcIS800() {
     Pu = govCombo.P;
   }
 
-  var DCR = Pd > 0 ? Pu / Pd : Infinity;
+  var isTension = Pu < 0;
+  var Pu_abs = Math.abs(Pu);
+  var Tdg = A_mm2 * fy / (gmM0 * 1000); // IS 800 §6.2 gross section (kN)
+  var cap  = isTension ? Tdg : Pd;
+  var DCR  = cap > 0 ? Pu_abs / cap : Infinity;
   var curveName = {0.21:'a', 0.34:'b', 0.49:'c', 0.76:'d'};
 
   acRenderIS800({
@@ -1514,7 +1609,8 @@ function acCalcIS800() {
     A_mm2:A_mm2, rx_mm:rx_mm, ry_mm:ry_mm, wt:wt, sw:sw,
     KLrx:KLrx, KLry:KLry, KLr:KLr, govAxis:govAxis,
     alpha:alpha, curveName:curveName[alpha]||'b', lam:lam, Phi:Phi, chi:chi, Pd:Pd,
-    Pu:Pu, DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
+    Tdg:Tdg, isTension:isTension, Pu:Pu_abs,
+    DCR:DCR, isDirect:isDirect, combos:combos, govCombo:govCombo,
     slOk: KLr <= 180
   });
 }
@@ -1530,7 +1626,9 @@ function acRenderIS800(r) {
   }
   var s0  = r.isDirect ? 2 : 0;
   var dc  = r.DCR < 0.85 ? 'ok' : (r.DCR <= 1.0 ? 'warn' : 'err');
-  var dcLbl = r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed');
+  var dcLbl = r.isTension
+    ? (r.DCR < 0.85 ? 'Tension Member Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Tension Member Overstressed'))
+    : (r.DCR < 0.85 ? 'Column Adequate' : (r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Column Overstressed'));
   var slCls = r.slOk ? 'ok' : 'warn';
   var date  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 
@@ -1548,13 +1646,15 @@ function acRenderIS800(r) {
 
   h += '<div class="result-box" style="margin-bottom:8px">'
      + '<div class="result-item '+dc+'">'
-     + '<div class="ri-label">P<sub>u</sub> / P<sub>d</sub></div>'
-     + '<div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.Pd,1)+'</div>'
+     + (r.isTension
+       ? '<div class="ri-label">T<sub>u</sub> / T<sub>dg</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.Tdg,1)+'</div>'
+       : '<div class="ri-label">P<sub>u</sub> / P<sub>d</sub></div><div class="ri-value">'+fmt(r.Pu,1)+' / '+fmt(r.Pd,1)+'</div>')
      + '<div class="ri-unit">kN &ensp;'+(r.DCR<=1?'&#10003; OK':'&#10007; NG')+'</div></div>'
-     + '<div class="result-item '+slCls+'">'
-     + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
-     + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
-     + '<div class="ri-unit">limit 180 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>'
+     + (r.isTension ? '' :
+       '<div class="result-item '+slCls+'">'
+       + '<div class="ri-label">KL/r (axis-'+r.govAxis+')</div>'
+       + '<div class="ri-value">'+fmt(r.KLr,1)+'</div>'
+       + '<div class="ri-unit">limit 180 &ensp;'+(r.slOk?'&#10003; OK':'&#9888; warn')+'</div></div>')
      + '<div class="result-item '+dc+'">'
      + '<div class="ri-label">D/C Ratio</div>'
      + '<div class="ri-value" style="font-size:1.5rem">'+fmt(r.DCR,3)+'</div>'
@@ -1593,52 +1693,73 @@ function acRenderIS800(r) {
     h += '</table></div>';
   }
 
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; IS 800:2000 &sect;7.1.2</div>'
-     + '<table class="steps-table">';
-
-  if (r.isDirect) {
-    h += step(1, 'Design axial P<sub>u</sub> &mdash; user-defined (factored)',
-      'Entered directly &mdash; load combinations and self-weight excluded from report',
-      'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+  if (r.isTension) {
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Tension &mdash; IS 800:2000 &sect;6.2</div>'
+       + '<table class="steps-table">';
+    if (r.isDirect) {
+      h += step(1, 'Design tension T<sub>u</sub> &mdash; user-defined (factored)',
+        'Negative axial input interpreted as tension',
+        'T<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Governing T<sub>u</sub> &mdash; IS 875', r.govCombo.lbl,
+        'T<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+    h += step(2, 'T<sub>dg</sub> = A&times;f<sub>y</sub>/(&gamma;<sub>m0</sub>&times;1000)',
+      fmt(r.A_mm2,0)+' &times; '+r.fy+' / ('+r.gmM0.toFixed(2)+' &times; 1000)',
+      'T<sub>dg</sub> = '+fmt(r.Tdg,1)+' kN');
+    h += step(3, 'Demand / Capacity check',
+      'T<sub>u</sub>/T<sub>dg</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.Tdg,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+    h += '</table></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Gross-section yielding checked (T<sub>dg</sub>=Af<sub>y</sub>/&gamma;<sub>m0</sub>). Net-section rupture and block shear (&sect;6.3, &sect;6.4) must be verified separately.</div></div>';
   } else {
-    h += step(1, 'Total dead DL = DL<sub>applied</sub> + self-weight',
-      fmt((r.combos[0].P/1.5)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
-      'DL = '+fmt(r.combos[0].P/1.5,2)+' kN');
-    h += step(2, 'Governing P<sub>u</sub> &mdash; IS 875',
-      r.govCombo.lbl,
-      'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Axial Compression &mdash; IS 800:2000 &sect;7.1.2</div>'
+       + '<table class="steps-table">';
+
+    if (r.isDirect) {
+      h += step(1, 'Design axial P<sub>u</sub> &mdash; user-defined (factored)',
+        'Entered directly &mdash; load combinations and self-weight excluded from report',
+        'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+    } else {
+      h += step(1, 'Total dead DL = DL<sub>applied</sub> + self-weight',
+        fmt((r.combos[0].P/1.5)-r.sw,2)+' + '+fmt(r.sw,2)+' kN',
+        'DL = '+fmt(r.combos[0].P/1.5,2)+' kN');
+      h += step(2, 'Governing P<sub>u</sub> &mdash; IS 875',
+        r.govCombo.lbl,
+        'P<sub>u</sub> = '+fmt(r.Pu,1)+' kN');
+    }
+
+    h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
+      'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
+      fmt(r.KLrx,1));
+    h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
+      'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
+      fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
+    h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
+      'Section type ('+acSecType+') &rarr; curve '+r.curveName+' (IS 800:2000 Table 10)',
+      '&alpha; = '+fmt(r.alpha,2));
+    h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
+      '(KL/r<sub>min</sub>)/(&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+'/(&pi;&radic;('+r.E+'/'+r.fy+'))',
+      '&lambda;&#773; = '+fmt(r.lam,4));
+    h += step(7-s0, 'Auxiliary value &Phi;',
+      '0.5[1+&alpha;(&lambda;&#773;&minus;0.2)+&lambda;&#773;&sup2;] = 0.5[1+'+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2)+'+fmt(r.lam*r.lam,4)+']',
+      '&Phi; = '+fmt(r.Phi,4));
+    h += step(8-s0, 'Reduction factor &chi; &mdash; IS 800:2000 &sect;7.1.2',
+      '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
+      '&chi; = '+fmt(r.chi,4));
+    h += step(9-s0, 'Design compressive strength P<sub>d</sub>',
+      '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>m0</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM0.toFixed(2)+'&times;1000)',
+      'P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
+    h += step(10-s0, 'Demand / Capacity check',
+      'P<sub>u</sub>/P<sub>d</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.Pd,1),
+      'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
+
+    h += '</table></div>';
+
+    if (!r.slOk)
+      h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds IS 800:2000 recommended limit of 180. Consider a larger section or shorter unbraced length.</div></div>';
+    h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per IS 800:2000 §7 and Table 2.</div></div>';
   }
-
-  h += step(3-s0, 'Effective slenderness &mdash; strong axis (x&#x2011;x)',
-    'K<sub>x</sub>&times;L<sub>b,x</sub>/r<sub>x</sub> = '+fmt(r.Kx,2)+' &times; '+fmt(r.lbRx*r.Lval*1000,0)+' / '+fmt(r.rx_mm,2),
-    fmt(r.KLrx,1));
-  h += step(4-s0, 'Effective slenderness &mdash; weak axis (y&#x2011;y)',
-    'K<sub>y</sub>&times;L<sub>b,y</sub>/r<sub>y</sub> = '+fmt(r.Ky,2)+' &times; '+fmt(r.lbRy*r.Lval*1000,0)+' / '+fmt(r.ry_mm,2),
-    fmt(r.KLry,1)+(r.govAxis==='y'?' &larr; governs':' &larr; governs (x)'));
-  h += step(5-s0, 'Buckling curve &amp; imperfection factor &alpha;',
-    'Section type ('+acSecType+') &rarr; curve '+r.curveName+' (IS 800:2000 Table 10)',
-    '&alpha; = '+fmt(r.alpha,2));
-  h += step(6-s0, 'Non-dimensional slenderness &lambda;&#773;',
-    '(KL/r<sub>min</sub>)/(&pi;&radic;(E/f<sub>y</sub>)) = '+fmt(r.KLr,2)+'/(&pi;&radic;('+r.E+'/'+r.fy+'))',
-    '&lambda;&#773; = '+fmt(r.lam,4));
-  h += step(7-s0, 'Auxiliary value &Phi;',
-    '0.5[1+&alpha;(&lambda;&#773;&minus;0.2)+&lambda;&#773;&sup2;] = 0.5[1+'+fmt(r.alpha,2)+'('+fmt(r.lam,3)+'&minus;0.2)+'+fmt(r.lam*r.lam,4)+']',
-    '&Phi; = '+fmt(r.Phi,4));
-  h += step(8-s0, 'Reduction factor &chi; &mdash; IS 800:2000 &sect;7.1.2',
-    '1/(&Phi;+&radic;(&Phi;&sup2;&minus;&lambda;&#773;&sup2;)) = 1/('+fmt(r.Phi,4)+'+&radic;('+fmt(r.Phi*r.Phi,4)+'&minus;'+fmt(r.lam*r.lam,4)+'))',
-    '&chi; = '+fmt(r.chi,4));
-  h += step(9-s0, 'Design compressive strength P<sub>d</sub>',
-    '&chi;&times;A&times;f<sub>y</sub>/(&gamma;<sub>m0</sub>&times;1000) = '+fmt(r.chi,4)+'&times;'+fmt(r.A_mm2,0)+'&times;'+r.fy+'/('+r.gmM0.toFixed(2)+'&times;1000)',
-    'P<sub>d</sub> = '+fmt(r.Pd,1)+' kN');
-  h += step(10-s0, 'Demand / Capacity check',
-    'P<sub>u</sub>/P<sub>d</sub> = '+fmt(r.Pu,1)+'/'+fmt(r.Pd,1),
-    'D/C = '+fmt(r.DCR,3), r.DCR <= 1.0);
-
-  h += '</table></div>';
-
-  if (!r.slOk)
-    h += '<div class="report-warn"><span>&#9888;</span><div>KL/r = '+fmt(r.KLr,1)+' exceeds IS 800:2000 recommended limit of 180. Consider a larger section or shorter unbraced length.</div></div>';
-  h += '<div class="report-warn"><span>&#9432;</span><div>Flexural buckling check only. Flexural-torsional and local buckling are not checked — verify per IS 800:2000 §7 and Table 2.</div></div>';
   h += '<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. Verify all results with a licensed structural engineer.</div>';
   h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; IS 800:2000</span><span>&copy; '+new Date().getFullYear()+'</span></div>';
 
