@@ -654,6 +654,69 @@ var HD_DATA = [
   ['HD 400×1299',  600,476,140.0,100.0,165470,7546000000,25150000,33250000,213.5,2544000000,10690000,16670000,124.0,981400000, 1.346e14]
 ];
 
+// ── HOLLOW SECTION GENERATORS ────────────────────────────────────────────────
+// Format same as I-sections: [name,d,bf,tf,tw,A,Ix,Sx,Zx,rx,Iy,Sy,Zy,ry,J,Cw]
+// For hollow sections: Cw=0, d=h, bf=b, tf=tw=t (wall thickness)
+function _shs(b,t){var bi=b-2*t;var A=4*t*(b-t);var Ix=(Math.pow(b,4)-Math.pow(bi,4))/12;var Sx=2*Ix/b;var Zx=(Math.pow(b,3)-Math.pow(bi,3))/4;var rx=Math.sqrt(Ix/A);var J=Math.pow(b-t,3)*t;return['SHS '+b+'\xd7'+b+'\xd7'+t,b,b,t,t,A,Ix,Sx,Zx,rx,Ix,Sx,Zx,rx,J,0];}
+function _rhs(h,b,t){var hi=h-2*t,bi=b-2*t;var A=2*t*(h+b-2*t);var Ix=(b*Math.pow(h,3)-bi*Math.pow(hi,3))/12;var Sx=2*Ix/h;var Zx=(b*h*h-bi*hi*hi)/4;var rx=Math.sqrt(Ix/A);var Iy=(h*Math.pow(b,3)-hi*Math.pow(bi,3))/12;var Sy=2*Iy/b;var Zy=(h*b*b-hi*bi*bi)/4;var ry=Math.sqrt(Iy/A);var J=2*t*Math.pow(h-t,2)*Math.pow(b-t,2)/(h+b-2*t);return['RHS '+h+'\xd7'+b+'\xd7'+t,h,b,t,t,A,Ix,Sx,Zx,rx,Iy,Sy,Zy,ry,J,0];}
+function _chs(D,t){var di=D-2*t;var A=Math.PI/4*(D*D-di*di);var Ix=Math.PI/64*(Math.pow(D,4)-Math.pow(di,4));var Sx=2*Ix/D;var Zx=(Math.pow(D,3)-Math.pow(di,3))/6;var rx=Math.sqrt(Ix/A);var J=2*Ix;return['CHS '+D+'\xd7'+t,D,D,t,t,A,Ix,Sx,Zx,rx,Ix,Sx,Zx,rx,J,0];}
+// US HSS: design wall thickness = 0.93 × nominal (AISC convention)
+function _hssS(nm,b,t){return _hssR(nm,b,b,t);}
+function _hssR(nm,h,b,t){var hi=h-2*t,bi=b-2*t;var A=2*t*(h+b-2*t);var Ix=(b*Math.pow(h,3)-bi*Math.pow(hi,3))/12;var Sx=2*Ix/h;var Zx=(b*h*h-bi*hi*hi)/4;var rx=Math.sqrt(Ix/A);var Iy=(h*Math.pow(b,3)-hi*Math.pow(bi,3))/12;var Sy=2*Iy/b;var Zy=(h*b*b-hi*bi*bi)/4;var ry=Math.sqrt(Iy/A);var J=2*t*Math.pow(h-t,2)*Math.pow(b-t,2)/(h+b-2*t);return[nm,h,b,t,t,A,Ix,Sx,Zx,rx,Iy,Sy,Zy,ry,J,0];}
+function _chsUS(nm,D,t){var di=D-2*t;var A=Math.PI/4*(D*D-di*di);var Ix=Math.PI/64*(Math.pow(D,4)-Math.pow(di,4));var Sx=2*Ix/D;var Zx=(Math.pow(D,3)-Math.pow(di,3))/6;var rx=Math.sqrt(Ix/A);var J=2*Ix;return[nm,D,D,t,t,A,Ix,Sx,Zx,rx,Ix,Sx,Zx,rx,J,0];}
+
+var SHS_DATA = [
+  _shs(40,2.5),_shs(40,4),_shs(50,3.2),_shs(50,5),
+  _shs(60,4),_shs(60,6.3),_shs(70,4),_shs(70,6.3),
+  _shs(80,5),_shs(80,8),_shs(90,5),_shs(90,8),
+  _shs(100,5),_shs(100,8),_shs(100,10),
+  _shs(120,6.3),_shs(120,10),_shs(140,8),_shs(140,12.5),
+  _shs(150,8),_shs(150,12.5),_shs(160,8),_shs(160,12.5),
+  _shs(180,10),_shs(180,16),_shs(200,10),_shs(200,16),
+  _shs(250,10),_shs(250,16),_shs(300,12.5),_shs(300,16)
+];
+var RHS_DATA = [
+  _rhs(80,40,4),_rhs(80,40,5),_rhs(100,50,4),_rhs(100,50,5),
+  _rhs(100,60,5),_rhs(100,60,6.3),_rhs(120,60,5),_rhs(120,60,8),
+  _rhs(120,80,5),_rhs(120,80,8),_rhs(150,75,5),_rhs(150,75,8),
+  _rhs(150,100,6.3),_rhs(150,100,8),_rhs(160,80,6.3),_rhs(160,80,8),
+  _rhs(200,100,8),_rhs(200,100,10),_rhs(200,120,8),_rhs(200,120,10),
+  _rhs(200,150,8),_rhs(200,150,10),_rhs(250,150,8),_rhs(250,150,10),
+  _rhs(300,150,10),_rhs(300,150,12.5),_rhs(300,200,10),_rhs(300,200,12.5),
+  _rhs(400,200,12.5),_rhs(400,200,16),_rhs(500,300,12.5),_rhs(500,300,16)
+];
+var CHS_DATA = [
+  _chs(48.3,3.2),_chs(48.3,4),_chs(60.3,4),_chs(60.3,5),
+  _chs(76.1,4),_chs(76.1,5),_chs(88.9,5),_chs(88.9,6.3),
+  _chs(101.6,5),_chs(101.6,6.3),_chs(114.3,5),_chs(114.3,6.3),_chs(114.3,8),
+  _chs(139.7,6.3),_chs(139.7,8),_chs(168.3,6.3),_chs(168.3,8),_chs(168.3,10),
+  _chs(193.7,8),_chs(193.7,10),_chs(219.1,8),_chs(219.1,10),_chs(219.1,12.5),
+  _chs(244.5,10),_chs(244.5,12.5),_chs(273,10),_chs(273,12.5),
+  _chs(323.9,10),_chs(323.9,12.5),_chs(355.6,10),_chs(355.6,12.5),
+  _chs(406.4,12.5),_chs(406.4,16)
+];
+var HSS_SQ_DATA = [
+  _hssS('HSS4\xd74\xd71/4',4,0.233),_hssS('HSS4\xd74\xd73/8',4,0.349),
+  _hssS('HSS5\xd75\xd75/16',5,0.291),_hssS('HSS5\xd75\xd71/2',5,0.465),
+  _hssS('HSS6\xd76\xd73/8',6,0.349),_hssS('HSS6\xd76\xd71/2',6,0.465),
+  _hssS('HSS8\xd78\xd73/8',8,0.349),_hssS('HSS8\xd78\xd71/2',8,0.465),_hssS('HSS8\xd78\xd75/8',8,0.581),
+  _hssS('HSS10\xd710\xd73/8',10,0.349),_hssS('HSS10\xd710\xd71/2',10,0.465),
+  _hssS('HSS12\xd712\xd71/2',12,0.465),_hssS('HSS12\xd712\xd75/8',12,0.581)
+];
+var HSS_RECT_DATA = [
+  _hssR('HSS6\xd74\xd73/8',6,4,0.349),_hssR('HSS8\xd74\xd73/8',8,4,0.349),
+  _hssR('HSS8\xd76\xd73/8',8,6,0.349),_hssR('HSS10\xd76\xd73/8',10,6,0.349),
+  _hssR('HSS10\xd76\xd71/2',10,6,0.465),_hssR('HSS12\xd76\xd71/2',12,6,0.465),
+  _hssR('HSS12\xd78\xd71/2',12,8,0.465),_hssR('HSS14\xd710\xd71/2',14,10,0.465),
+  _hssR('HSS16\xd78\xd75/8',16,8,0.581),_hssR('HSS20\xd712\xd71/2',20,12,0.465)
+];
+var HSS_ROUND_DATA = [
+  _chsUS('HSS4.000\xd70.237',4.000,0.237),_chsUS('HSS5.563\xd70.258',5.563,0.258),
+  _chsUS('HSS6.625\xd70.280',6.625,0.280),_chsUS('HSS8.625\xd70.322',8.625,0.322),
+  _chsUS('HSS8.625\xd70.500',8.625,0.500),_chsUS('HSS10.750\xd70.365',10.750,0.365),
+  _chsUS('HSS12.750\xd70.375',12.750,0.375),_chsUS('HSS16.000\xd70.500',16.000,0.500)
+];
+
 // ── GRADE DEFINITIONS ────────────────────────────────────────────────────────
 var GRADES_US = [
   {label:'A992 Gr50', Fy:50, E:29000},
@@ -759,27 +822,41 @@ function ltbPopulateGrades() {
 }
 
 var TYPE_MAP = {
-  us: [{key:'W', label:'W Sections (AISC)', data: W_DATA}],
+  us: [
+    {key:'W',         type:'I',   label:'W Sections (AISC)',              data: W_DATA},
+    {key:'HSS_SQ',    type:'SHS', label:'HSS Square (AISC A500)',         data: HSS_SQ_DATA},
+    {key:'HSS_RECT',  type:'RHS', label:'HSS Rectangular (AISC A500)',    data: HSS_RECT_DATA},
+    {key:'HSS_ROUND', type:'CHS', label:'HSS Round / Pipe (AISC)',        data: HSS_ROUND_DATA}
+  ],
   si: [
-    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
-    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
-    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
-    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
+    {key:'IPE', type:'I',   label:'IPE Sections (EN 10365)',              data: IPE_DATA},
+    {key:'HEA', type:'I',   label:'HEA Sections (EN 10365)',              data: HEA_DATA},
+    {key:'HEB', type:'I',   label:'HEB Sections (EN 10365)',              data: HEB_DATA},
+    {key:'HEM', type:'I',   label:'HEM Sections (EN 10365)',              data: HEM_DATA},
+    {key:'HD',  type:'I',   label:'HD Sections (EN 10365)',               data: HD_DATA},
+    {key:'SHS', type:'SHS', label:'SHS — Square Hollow (EN 10210)',       data: SHS_DATA},
+    {key:'RHS', type:'RHS', label:'RHS — Rectangular Hollow (EN 10210)', data: RHS_DATA},
+    {key:'CHS', type:'CHS', label:'CHS — Circular Hollow (EN 10210)',    data: CHS_DATA}
   ],
   tsds: [
-    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
-    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
-    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
-    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
+    {key:'IPE', type:'I',   label:'IPE Sections (EN 10365)',              data: IPE_DATA},
+    {key:'HEA', type:'I',   label:'HEA Sections (EN 10365)',              data: HEA_DATA},
+    {key:'HEB', type:'I',   label:'HEB Sections (EN 10365)',              data: HEB_DATA},
+    {key:'HEM', type:'I',   label:'HEM Sections (EN 10365)',              data: HEM_DATA},
+    {key:'HD',  type:'I',   label:'HD Sections (EN 10365)',               data: HD_DATA},
+    {key:'SHS', type:'SHS', label:'SHS — Square Hollow (EN 10210)',       data: SHS_DATA},
+    {key:'RHS', type:'RHS', label:'RHS — Rectangular Hollow (EN 10210)', data: RHS_DATA},
+    {key:'CHS', type:'CHS', label:'CHS — Circular Hollow (EN 10210)',    data: CHS_DATA}
   ],
   ec3: [
-    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
-    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
-    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
-    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
+    {key:'IPE', type:'I',   label:'IPE Sections (EN 10365)',              data: IPE_DATA},
+    {key:'HEA', type:'I',   label:'HEA Sections (EN 10365)',              data: HEA_DATA},
+    {key:'HEB', type:'I',   label:'HEB Sections (EN 10365)',              data: HEB_DATA},
+    {key:'HEM', type:'I',   label:'HEM Sections (EN 10365)',              data: HEM_DATA},
+    {key:'HD',  type:'I',   label:'HD Sections (EN 10365)',               data: HD_DATA},
+    {key:'SHS', type:'SHS', label:'SHS — Square Hollow (EN 10210)',       data: SHS_DATA},
+    {key:'RHS', type:'RHS', label:'RHS — Rectangular Hollow (EN 10210)', data: RHS_DATA},
+    {key:'CHS', type:'CHS', label:'CHS — Circular Hollow (EN 10210)',    data: CHS_DATA}
   ]
 };
 
@@ -820,12 +897,20 @@ function ltbSecChange() {
   var secIdx  = document.getElementById('ltb-section').value;
   var info = document.getElementById('ltb-sec-info');
   if (secIdx === '') { info.style.display='none'; return; }
-  var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
-  // row: [name, d, bf, tf, tw, A, Ix, Sx, Zx, rx, Iy, Sy, Zy, ry, J, Cw]
+  var tm  = TYPE_MAP[ltbUnit][typeIdx];
+  var row = tm.data[+secIdx];
+  var t   = tm.type || 'I';
+  var d=row[1],bf=row[2],tf=row[3],A=row[5],Zx=row[8],ry=row[13],J=row[14];
   if (ltbUnit === 'us') {
-    info.innerHTML = 'd='+row[1]+'" &nbsp; b<sub>f</sub>='+row[2]+'" &nbsp; t<sub>f</sub>='+row[3]+'" &nbsp; t<sub>w</sub>='+row[4]+'" &nbsp; A='+row[5]+' in² &nbsp; Z<sub>x</sub>='+row[8]+' in³ &nbsp; r<sub>y</sub>='+row[13]+'" &nbsp; J='+row[14]+' in⁴';
+    if (t==='CHS') info.innerHTML = 'D='+d+'" &nbsp; t='+tf+'" &nbsp; A='+fmt(A,2)+' in² &nbsp; Z<sub>x</sub>='+fmt(Zx,2)+' in³ &nbsp; J='+fmt(J,2)+' in⁴';
+    else if (t==='SHS') info.innerHTML = 'b='+d+'" &nbsp; t='+tf+'" &nbsp; A='+fmt(A,2)+' in² &nbsp; Z<sub>x</sub>='+fmt(Zx,2)+' in³ &nbsp; J='+fmt(J,2)+' in⁴';
+    else if (t==='RHS') info.innerHTML = 'h='+d+'" b='+bf+'" &nbsp; t='+tf+'" &nbsp; A='+fmt(A,2)+' in² &nbsp; Z<sub>x</sub>='+fmt(Zx,2)+' in³ &nbsp; r<sub>y</sub>='+fmt(ry,3)+'"';
+    else info.innerHTML = 'd='+d+'" &nbsp; b<sub>f</sub>='+bf+'" &nbsp; t<sub>f</sub>='+tf+'" &nbsp; A='+fmt(A,2)+' in² &nbsp; Z<sub>x</sub>='+fmt(Zx,2)+' in³ &nbsp; r<sub>y</sub>='+fmt(ry,3)+'"';
   } else {
-    info.innerHTML = 'd='+row[1]+' mm &nbsp; b<sub>f</sub>='+row[2]+' mm &nbsp; t<sub>f</sub>='+row[3]+' mm &nbsp; A='+row[5]+' mm² &nbsp; Z<sub>x</sub>='+(row[8]/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+row[13]+' mm';
+    if (t==='CHS') info.innerHTML = 'D='+d+' mm &nbsp; t='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; J='+(J/1e4).toFixed(0)+' cm⁴';
+    else if (t==='SHS') info.innerHTML = 'b='+d+' mm &nbsp; t='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; J='+(J/1e4).toFixed(0)+' cm⁴';
+    else if (t==='RHS') info.innerHTML = 'h='+d+' b='+bf+' mm &nbsp; t='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+fmt(ry,1)+' mm';
+    else info.innerHTML = 'd='+d+' mm &nbsp; b<sub>f</sub>='+bf+' mm &nbsp; t<sub>f</sub>='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+fmt(ry,1)+' mm';
   }
   info.style.display = 'block';
   ltbAutoCalc();
@@ -858,16 +943,25 @@ function ltbCalc() {
   var Fy = grade.Fy, E = grade.E;
   var Lb_input = +document.getElementById('ltb-Lb').value || 0;
 
+  var secType = TYPE_MAP[ltbUnit][typeIdx].type || 'I'; // 'I' | 'SHS' | 'RHS' | 'CHS'
+  var gammaM1 = Math.max(0.8, +document.getElementById('ltb-gammaM1').value || 1.0);
+
   var result;
-  if (ltbUnit === 'us') {
-    result = ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
-  } else if (ltbUnit === 'ec3') {
-    var gammaM1 = Math.max(0.8, +document.getElementById('ltb-gammaM1').value || 1.0);
-    result = ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb, gammaM1);
+  if (secType === 'CHS') {
+    if (ltbUnit === 'us')       result = ltbCalcCHSUS(Fy, Sx, Zx);
+    else if (ltbUnit === 'ec3') result = ltbCalcCHSEC3(Fy, Sx, Zx, gammaM1);
+    else                        result = ltbCalcCHSSI(Fy, Sx, Zx);
+  } else if (secType === 'SHS' || secType === 'RHS') {
+    if (ltbUnit === 'us')       result = ltbCalcHSSUS(Fy, E, A, d, bf, Sx, Zx, ry, J, Lb_input, Cb);
+    else if (ltbUnit === 'ec3') { result = ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb, gammaM1); result.secShape='HSS'; }
+    else                        result = ltbCalcHSSSI(Fy, E, A, d, bf, Sx, Zx, ry, J, Lb_input, Cb);
   } else {
-    result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
+    if (ltbUnit === 'us')       result = ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
+    else if (ltbUnit === 'ec3') result = ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb, gammaM1);
+    else                        result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
   }
   result.codeSystem = ltbUnit;
+  result.secType = secType;
 
   result.Mu = Mu;
   result.DCR = result.phiMn > 0 ? Mu / result.phiMn : Infinity;
@@ -875,10 +969,9 @@ function ltbCalc() {
   result.grade = grade.label;
   result.Cb = Cb;
   result.Lb_input = Lb_input;
-  result.Fy = Fy;
-  result.E = E;
+  result.Fy = Fy; result.E = E;
   result.Sx = Sx; result.Zx = Zx; result.Iy = Iy; result.J = J; result.Cw = Cw;
-  result.ry = ry; result.d = d; result.tf = tf; result.bf = bf;
+  result.ry = ry; result.d = d; result.tf = tf; result.bf = bf; result.A = A;
 
   ltbRender(result);
 }
@@ -995,13 +1088,73 @@ function ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, C1, gammaM1) 
   };
 }
 
+// ── HOLLOW SECTION CALCULATIONS ──────────────────────────────────────────────
+// AISC 360-22 §F7 — HSS and Box Members
+function ltbCalcHSSUS(Fy, E, A, d, bf, Sx, Zx, ry, J, Lb_ft, Cb) {
+  var lf = 12;
+  var Mp_kipin = Fy * Zx; // kip·in
+  var Mp = Mp_kipin / lf; // kip·ft
+  var M07 = 0.7 * Fy * Sx / lf;
+  var sqJA = Math.sqrt(J * A); // in³
+  var Lp_in = 0.13 * E * ry * sqJA / Mp_kipin;
+  var Lr_in = 2.0  * E * ry * sqJA / (0.7 * Fy * Sx);
+  var Lp = Lp_in / lf; var Lr = Lr_in / lf;
+  var Lb = Lb_ft; var Mn, mode;
+  if (Lb <= Lp) { Mn = Mp; mode = 'Plastic (§F7)'; }
+  else {
+    var Mn_lin = Cb * (Mp - (Mp - M07) * (Lb - Lp) / (Lr - Lp));
+    if (Lb <= Lr) { Mn = Math.min(Mn_lin, Mp); mode = 'Inelastic LTB (§F7)'; }
+    else { Mn = Math.min(Math.max(Mn_lin, M07), Mp); mode = 'Inelastic LTB — extended (§F7)'; }
+  }
+  return {phiMn:0.9*Mn, Mn, Mp, M07, Lp, Lr, mode, sqJA,
+    unit_len:'ft', unit_mom:'kip\xb7ft', unit_force:'kip', unit_sec:'in', secShape:'HSS'};
+}
+function ltbCalcHSSSI(Fy, E, A, d, bf, Sx, Zx, ry, J, Lb_m, Cb) {
+  var lf = 1000;
+  var Mp_Nmm = Fy * Zx; // N·mm
+  var Mp = Mp_Nmm / 1e6; // kN·m
+  var M07 = 0.7 * Fy * Sx / 1e6;
+  var sqJA = Math.sqrt(J * A); // mm³
+  var Lp_mm = 0.13 * E * ry * sqJA / Mp_Nmm;
+  var Lr_mm = 2.0  * E * ry * sqJA / (0.7 * Fy * Sx);
+  var Lp = Lp_mm / lf; var Lr = Lr_mm / lf;
+  var Lb = Lb_m; var Mn, mode;
+  if (Lb <= Lp) { Mn = Mp; mode = 'Plastic (§F7)'; }
+  else {
+    var Mn_lin = Cb * (Mp - (Mp - M07) * (Lb - Lp) / (Lr - Lp));
+    if (Lb <= Lr) { Mn = Math.min(Mn_lin, Mp); mode = 'Inelastic LTB (§F7)'; }
+    else { Mn = Math.min(Math.max(Mn_lin, M07), Mp); mode = 'Inelastic LTB — extended (§F7)'; }
+  }
+  return {phiMn:0.9*Mn, Mn, Mp, M07, Lp, Lr, mode, sqJA,
+    unit_len:'m', unit_mom:'kN\xb7m', unit_force:'kN', unit_sec:'mm', secShape:'HSS'};
+}
+// CHS — not susceptible to LTB (circular symmetry)
+function ltbCalcCHSUS(Fy, Sx, Zx) {
+  var lf=12, Mp=Fy*Zx/lf;
+  return {phiMn:0.9*Mp, Mn:Mp, Mp, M07:0.7*Fy*Sx/lf, Lp:Infinity, Lr:Infinity,
+    mode:'No LTB — CHS', unit_len:'ft', unit_mom:'kip\xb7ft', unit_force:'kip', unit_sec:'in', secShape:'CHS'};
+}
+function ltbCalcCHSSI(Fy, Sx, Zx) {
+  var Mp=Fy*Zx/1e6;
+  return {phiMn:0.9*Mp, Mn:Mp, Mp, M07:0.7*Fy*Sx/1e6, Lp:Infinity, Lr:Infinity,
+    mode:'No LTB — CHS', unit_len:'m', unit_mom:'kN\xb7m', unit_force:'kN', unit_sec:'mm', secShape:'CHS'};
+}
+function ltbCalcCHSEC3(Fy, Sx, Zx, gammaM1) {
+  var Mp=Fy*Zx/1e6, MbRd=Fy*Zx/gammaM1/1e6;
+  return {phiMn:MbRd, MbRd, Mn:MbRd, Mp, M07:0.7*Fy*Sx/1e6, Lp:Infinity, Lr:Infinity,
+    mode:'No LTB — CHS', lambdaLT:0, chiLT:1.0, phiLT:null, gammaM1,
+    unit_len:'m', unit_mom:'kN\xb7m', unit_force:'kN', unit_sec:'mm', secShape:'CHS'};
+}
+
 // ── RENDER REPORT ────────────────────────────────────────────────────────────
 function fmt(v, d) { return (d === undefined ? 4 : d) === 0 ? Math.round(v).toString() : v.toFixed(d); }
 
 function ltbRender(r) {
   document.getElementById('ltb-empty').style.display = 'none';
   document.getElementById('ltb-card').style.display  = 'block';
+  if (r.secShape === 'CHS')   { ltbRenderCHS(r);  return; }
   if (r.codeSystem === 'ec3') { ltbRenderEC3(r); return; }
+  if (r.secShape === 'HSS')   { ltbRenderHSS(r);  return; }
 
   var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
   var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
@@ -1140,6 +1293,94 @@ function ltbRender(r) {
   h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; ' + codeRef + ' LTB Control</span><span>' + date + '</span></div>';
   h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
 
+  document.getElementById('ltb-body').innerHTML = h;
+}
+
+// ── CHS RENDER (no LTB) ──────────────────────────────────────────────────────
+function ltbRenderCHS(r) {
+  var dc = r.DCR<=0.85?'ok':r.DCR<=1.0?'warn':'err';
+  var dcLbl = r.DCR<=0.85?'Section Adequate':r.DCR<=1.0?'Adequate — Near Limit':'Section Overstressed';
+  var date = new Date().toLocaleDateString('en-CA');
+  var um=r.unit_mom,ulen=r.unit_len,ul=r.unit_sec;
+  var codeRef = r.codeSystem==='ec3'?'EC3 §F8':r.codeSystem==='us'?'AISC 360-22 §F8':'AISC/TSDS §F8';
+  function step(n,desc,fml,val,ok){
+    var chk=ok===undefined?'':`<span class="step-check ${ok?'chk-ok':'chk-err'}">${ok?'OK':'NG'}</span>`;
+    var vc=ok===true?'ok':ok===false?'err':'';
+    return `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">${n}</div></td><td><div class="step-desc">${desc}</div>${fml?`<div class="step-formula">${fml}</div>`:''}</td><td style="width:170px;text-align:right;vertical-align:middle"><span class="step-val ${vc}">${val}</span> ${chk}</td></tr>`;
+  }
+  var h='';
+  h+='<div class="print-only"><div><div class="ph-title">LTB Control — '+r.name+'</div><div class="ph-sub">'+codeRef+' · '+r.grade+'</div></div><div class="ph-date">'+date+'</div></div>';
+  h+='<div class="dcr-banner '+dc+'"><div class="dcr-text"><strong>D/C = '+fmt(r.DCR,3)+' — '+dcLbl+'</strong><span>'+r.name+' · '+r.grade+' · CHS — no LTB</span></div></div>';
+  h+='<div class="result-box" style="margin-bottom:8px">';
+  [{l:'M<sub>p</sub>',v:fmt(r.Mp,1),u:um},{l:'&phi;<sub>b</sub>M<sub>n</sub>',v:fmt(r.phiMn,1),u:um,cls:dc},{l:'M<sub>u</sub>',v:fmt(r.Mu,1),u:um}].forEach(function(it){
+    h+='<div class="result-item'+(it.cls?' '+it.cls:'')+'"><div class="ri-label">'+it.l+'</div><div class="ri-value">'+it.v+'</div><div class="ri-unit">'+it.u+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;font-size:.78rem;color:var(--text-dim);margin-bottom:8px">Circular hollow sections (CHS) are not susceptible to lateral-torsional buckling due to their biaxial symmetric cross-section. Flexural strength is governed by the plastic moment M<sub>p</sub> (compact section assumed).</div>';
+  h+='<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation</div><table class="steps-table">';
+  h+=step(1,'M<sub>p</sub> = F<sub>y</sub> × Z<sub>x</sub>','F<sub>y</sub>='+r.Fy+(r.codeSystem==='us'?' ksi':' MPa')+' × Z<sub>x</sub>='+fmt(r.Zx,0)+' '+ul+'<sup>3</sup>',fmt(r.Mp,2)+' '+um);
+  h+=step(2,'Circular symmetry — no LTB','CHS sections have equal stiffness about all axes; lateral-torsional buckling does not apply.','N/A');
+  h+=step(3,'M<sub>n</sub> = M<sub>p</sub> (no LTB reduction)','',fmt(r.Mp,2)+' '+um);
+  h+=step(4,'&phi;<sub>b</sub>M<sub>n</sub> = 0.90 × M<sub>n</sub>','0.90 × '+fmt(r.Mp,2)+' '+um,fmt(r.phiMn,2)+' '+um);
+  h+=step(5,'D/C = M<sub>u</sub> / &phi;<sub>b</sub>M<sub>n</sub>',fmt(r.Mu,2)+' / '+fmt(r.phiMn,2)+' '+um,fmt(r.DCR,3),r.DCR<=1.0);
+  h+='</table></div>';
+  h+='<div class="print-footer"><span>CivilStrCalc.com — '+codeRef+'</span><span>'+date+'</span></div>';
+  h+='<div class="print-disclaimer">For preliminary design only. Engineer of record is responsible for final verification.</div>';
+  document.getElementById('ltb-body').innerHTML = h;
+}
+
+// ── HSS (SHS/RHS) RENDER — §F7 ───────────────────────────────────────────────
+function ltbRenderHSS(r) {
+  var dc = r.DCR<=0.85?'ok':r.DCR<=1.0?'warn':'err';
+  var dcLbl = r.DCR<=0.85?'Section Adequate':r.DCR<=1.0?'Adequate — Near Limit':'Section Overstressed';
+  var date = new Date().toLocaleDateString('en-CA');
+  var um=r.unit_mom,ulen=r.unit_len,ul=r.unit_sec;
+  var isUS = r.codeSystem==='us';
+  var codeRef = isUS?'AISC 360-22 §F7':'AISC/TSDS §F7';
+  function step(n,desc,fml,val,ok){
+    var chk=ok===undefined?'':`<span class="step-check ${ok?'chk-ok':'chk-err'}">${ok?'OK':'NG'}</span>`;
+    var vc=ok===true?'ok':ok===false?'err':'';
+    return `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">${n}</div></td><td><div class="step-desc">${desc}</div>${fml?`<div class="step-formula">${fml}</div>`:''}</td><td style="width:170px;text-align:right;vertical-align:middle"><span class="step-val ${vc}">${val}</span> ${chk}</td></tr>`;
+  }
+  var h='';
+  h+='<div class="print-only"><div><div class="ph-title">LTB Control — '+r.name+'</div><div class="ph-sub">'+codeRef+' · '+r.grade+' · C<sub>b</sub>='+fmt(r.Cb,2)+' · L<sub>b</sub>='+fmt(r.Lb_input,2)+' '+ulen+'</div></div><div class="ph-date">'+date+'</div></div>';
+  h+='<div class="dcr-banner '+dc+'"><div class="dcr-text"><strong>D/C = '+fmt(r.DCR,3)+' — '+dcLbl+'</strong><span>'+r.name+' · '+r.grade+' · L<sub>b</sub>='+fmt(r.Lb_input,2)+' '+ulen+' · '+r.mode+'</span></div></div>';
+  h+='<div class="result-box" style="margin-bottom:8px">';
+  [{l:'M<sub>p</sub>',v:fmt(r.Mp,1),u:um},{l:'M<sub>n</sub>',v:fmt(r.Mn,1),u:um},{l:'&phi;<sub>b</sub>M<sub>n</sub>',v:fmt(r.phiMn,1),u:um,cls:dc},{l:'M<sub>u</sub>',v:fmt(r.Mu,1),u:um},{l:'L<sub>p</sub>',v:fmt(r.Lp,3),u:ulen},{l:'L<sub>r</sub>',v:fmt(r.Lr,3),u:ulen}].forEach(function(it){
+    h+='<div class="result-item'+(it.cls?' '+it.cls:'')+'"><div class="ri-label">'+it.l+'</div><div class="ri-value">'+it.v+'</div><div class="ri-unit">'+it.u+'</div></div>';
+  });
+  h+='</div>';
+  h+=ltbDiagramSVG(r);
+  h+='<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation (AISC 360-22 §F7 LTB)</div><table class="steps-table">';
+  h+=step(1,'M<sub>p</sub> = F<sub>y</sub> × Z<sub>x</sub>','F<sub>y</sub>='+r.Fy+(isUS?' ksi':' MPa')+' × Z<sub>x</sub>='+fmt(r.Zx,0)+' '+ul+'<sup>3</sup>',fmt(r.Mp,2)+' '+um);
+  h+=step(2,'&radic;(J · A<sub>g</sub>)',
+    'J='+r.J.toExponential(3)+' '+ul+'<sup>4</sup>, A='+fmt(r.A,isUS?2:0)+' '+ul+'<sup>2</sup>',
+    r.sqJA.toExponential(4)+' '+ul+'<sup>3</sup>');
+  h+=step(3,'L<sub>p</sub> = 0.13 · E · r<sub>y</sub> · &radic;(J·A) / M<sub>p</sub>',
+    '0.13 × '+r.E+' × '+fmt(r.ry,3)+' × '+r.sqJA.toExponential(3)+'/('+fmt(r.Mp,2)+'×'+(isUS?'12':'10<sup>6</sup>')+')',
+    fmt(r.Lp,3)+' '+ulen);
+  h+=step(4,'L<sub>r</sub> = 2.0 · E · r<sub>y</sub> · &radic;(J·A) / (0.7F<sub>y</sub>S<sub>x</sub>)',
+    '2.0 × '+r.E+' × '+fmt(r.ry,3)+' × '+r.sqJA.toExponential(3)+'/(0.7×'+r.Fy+'×'+fmt(r.Sx,isUS?2:0)+')',
+    fmt(r.Lr,3)+' '+ulen);
+  var zD,zF;
+  if(r.mode.startsWith('Plastic')){
+    zD='<b>Plastic zone</b> — L<sub>b</sub> ≤ L<sub>p</sub> → M<sub>n</sub>=M<sub>p</sub>';
+    zF='L<sub>b</sub>='+fmt(r.Lb_input,2)+' ≤ L<sub>p</sub>='+fmt(r.Lp,3)+' '+ulen;
+  } else {
+    zD='<b>Inelastic LTB (§F7)</b> — M<sub>n</sub>=C<sub>b</sub>[M<sub>p</sub>−(M<sub>p</sub>−0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>−L<sub>p</sub>)/(L<sub>r</sub>−L<sub>p</sub>)]';
+    zF='L<sub>p</sub>='+fmt(r.Lp,3)+' &lt; L<sub>b</sub>='+fmt(r.Lb_input,2)+', C<sub>b</sub>='+fmt(r.Cb,2);
+  }
+  h+=step(5,zD,zF,fmt(r.Mn,2)+' '+um);
+  h+=step(6,'&phi;<sub>b</sub>M<sub>n</sub> = 0.90 × M<sub>n</sub>','0.90 × '+fmt(r.Mn,2)+' '+um,fmt(r.phiMn,2)+' '+um);
+  h+=step(7,'D/C = M<sub>u</sub> / &phi;<sub>b</sub>M<sub>n</sub>',fmt(r.Mu,2)+' / '+fmt(r.phiMn,2)+' '+um,fmt(r.DCR,3),r.DCR<=1.0);
+  h+='</table></div>';
+  h+='<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div><table class="inp-tbl"><tbody>';
+  [[codeRef,''],['Grade',r.grade],['Section',r.name],['L<sub>b</sub>',fmt(r.Lb_input,2)+' '+ulen],['C<sub>b</sub>',fmt(r.Cb,2)],['M<sub>u</sub>',fmt(r.Mu,2)+' '+um]].forEach(function(row){
+    h+='<tr><td>'+row[0]+'</td><td>'+row[1]+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="print-footer"><span>CivilStrCalc.com — '+codeRef+'</span><span>'+date+'</span></div>';
+  h+='<div class="print-disclaimer">For preliminary design only. Engineer of record is responsible for final verification.</div>';
   document.getElementById('ltb-body').innerHTML = h;
 }
 
@@ -1398,10 +1639,15 @@ function ltbDiagramSVG(r) {
       Mn_i = Math.min(1.0 * (r.Mp - (r.Mp - r.M07) * (Lb - r.Lp) / (r.Lr - r.Lp)), r.Mp);
     } else {
       // Elastic (Cb=1 for diagram)
-      var LbPx = ltbUnit === 'us' ? Lb * 12 : Lb * 1000;
-      var Fcr = Math.PI * Math.PI * r.E / Math.pow(LbPx / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx / r.rts, 2));
-      var conv = ltbUnit === 'us' ? 12 : 1e6;
-      Mn_i = Math.min(Fcr * r.Sx / conv, r.Mp);
+      if (r.secShape === 'HSS') {
+        // §F7: linear formula extended below Lr, capped at M07
+        Mn_i = Math.max(r.Mp - (r.Mp - r.M07) * (Lb - r.Lp) / (r.Lr - r.Lp), r.M07);
+      } else {
+        var LbPx = ltbUnit === 'us' ? Lb * 12 : Lb * 1000;
+        var Fcr = Math.PI * Math.PI * r.E / Math.pow(LbPx / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx / r.rts, 2));
+        var conv = ltbUnit === 'us' ? 12 : 1e6;
+        Mn_i = Math.min(Fcr * r.Sx / conv, r.Mp);
+      }
     }
     phiMn_i = 0.9 * Mn_i;
     pts.push([sx(Lb), sy(phiMn_i)]);
@@ -1438,10 +1684,15 @@ function ltbDiagramSVG(r) {
   for (var i3 = 0; i3 <= nPts; i3++) {
     var LbE = (i3 / nPts) * xMax;
     if (LbE >= r.Lr) {
-      var LbPx2 = ltbUnit === 'us' ? LbE * 12 : LbE * 1000;
-      var Fcr2 = Math.PI * Math.PI * r.E / Math.pow(LbPx2 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx2 / r.rts, 2));
-      var conv2 = ltbUnit === 'us' ? 12 : 1e6;
-      var mn3 = Math.min(Fcr2 * r.Sx / conv2, r.Mp);
+      var mn3;
+      if (r.secShape === 'HSS') {
+        mn3 = Math.max(r.Mp - (r.Mp - r.M07) * (LbE - r.Lp) / (r.Lr - r.Lp), r.M07);
+      } else {
+        var LbPx2 = ltbUnit === 'us' ? LbE * 12 : LbE * 1000;
+        var Fcr2 = Math.PI * Math.PI * r.E / Math.pow(LbPx2 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx2 / r.rts, 2));
+        var conv2 = ltbUnit === 'us' ? 12 : 1e6;
+        mn3 = Math.min(Fcr2 * r.Sx / conv2, r.Mp);
+      }
       elasPts += sx(LbE)+','+sy(0.9*mn3)+' ';
     }
   }
@@ -1462,10 +1713,14 @@ function ltbDiagramSVG(r) {
     } else if (Lb4 <= r.Lr) {
       Mn4 = Math.min(r.Cb * (r.Mp - (r.Mp - r.M07) * (Lb4 - r.Lp) / (r.Lr - r.Lp)), r.Mp);
     } else {
-      var LbPx4 = ltbUnit === 'us' ? Lb4 * 12 : Lb4 * 1000;
-      var Fcr4 = Math.PI * Math.PI * r.E / Math.pow(LbPx4 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx4 / r.rts, 2));
-      var conv4 = ltbUnit === 'us' ? 12 : 1e6;
-      Mn4 = Math.min(r.Cb * Fcr4 * r.Sx / conv4, r.Mp);
+      if (r.secShape === 'HSS') {
+        Mn4 = Math.min(Math.max(r.Cb * (r.Mp - (r.Mp - r.M07) * (Lb4 - r.Lp) / (r.Lr - r.Lp)), r.M07), r.Mp);
+      } else {
+        var LbPx4 = ltbUnit === 'us' ? Lb4 * 12 : Lb4 * 1000;
+        var Fcr4 = Math.PI * Math.PI * r.E / Math.pow(LbPx4 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx4 / r.rts, 2));
+        var conv4 = ltbUnit === 'us' ? 12 : 1e6;
+        Mn4 = Math.min(r.Cb * Fcr4 * r.Sx / conv4, r.Mp);
+      }
     }
     ptsCb.push([sx(Lb4), sy(0.9*Mn4)]);
   }
