@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>LTB Control - AISC LRFD | CivilStrCalc</title>
+<meta name="description" content="AISC LRFD lateral torsional buckling (LTB) control for W, IPE, HEA, HEB sections. Computes Lp, Lr, LTB zone, φbMn and D/C ratio per AISC 360-22 §F2.">
+<meta name="robots" content="index, follow">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSansCondensed-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+.sec-info-bar{font-size:.74rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;margin-top:4px;margin-bottom:4px;line-height:1.8;font-family:var(--mono);display:none;}
+
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
+.ph-date{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans);}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5;}
+
+/* LTB zone diagram */
+.ltb-diagram{width:100%;height:200px;display:block;margin:12px 0 6px;}
+.ltb-zone-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--text-mid);font-family:var(--sans);margin-bottom:10px;}
+.ltb-legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle;}
+
+@media print{
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:7pt!important;padding:0!important;line-height:1.3!important;}
+  .no-print,.bg-section,.related-tools,.page-title,.unit-switcher,.sub-tabs,footer{display:none!important;}
+  .print-only{display:flex!important;}
+  .print-footer{display:flex!important;margin-top:4px!important;font-size:5pt!important;}
+  .print-disclaimer{display:block!important;font-size:4.5pt!important;margin-top:3px!important;padding:3px 7px!important;}
+  .calc-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important;border-radius:0!important;}
+  .report-hdr h4{font-size:7pt!important;}
+  .rh-code{font-size:5pt!important;}
+  .print-btn{display:none!important;}
+  .report-body{padding:4px 10px!important;}
+  .fl-rb{margin-bottom:4px!important;background:#f0f5fb!important;}
+  .fl-col{padding:4px 5px!important;}
+  .fl-lbl{font-size:.53rem!important;}
+  .fl-val{font-size:.82rem!important;}
+  .fl-unit{font-size:.53rem!important;}
+  .result-box{padding:5px 8px!important;gap:4px!important;margin-bottom:5px!important;background:#f0f5fb!important;}
+  .ri-value{font-size:.85rem!important;}
+  .ri-label{font-size:.53rem!important;}
+  .ri-unit{font-size:.5rem!important;}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important;border-radius:4px!important;}
+  .dcr-text strong{font-size:6.5pt!important;}
+  .dcr-text span{font-size:5.5pt!important;}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:4px!important;}
+  .rpt-sec-title{font-size:.52rem!important;padding:1.5px 6px!important;margin-bottom:3px!important;}
+  .steps-table td{padding:2px 3px!important;}
+  .step-num{width:14px!important;height:14px!important;font-size:.5rem!important;}
+  .step-desc{font-size:6.5pt!important;}
+  .step-formula{font-size:5.8pt!important;}
+  .step-val{font-size:6.5pt!important;}
+  .step-check{font-size:5pt!important;padding:1px 2px!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>LTB Control</h1>
+  <p>AISC 360-22 &sect;F2 lateral torsional buckling check for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>, L<sub>r</sub>, LTB zone, &phi;<sub>b</sub>M<sub>n</sub> and D/C ratio in US (kip&middot;ft) or SI (kN&middot;m) units.</p>
+</div>
+
+<div class="calc-layout">
+  <!-- LEFT CARD -->
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="ltb-unit-tag">kip &middot; ft &middot; in</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ltb-btn-us" onclick="ltbSetUnit('us',this)">US (kip&middot;ft, in)</button>
+          <button class="unit-btn"        id="ltb-btn-si" onclick="ltbSetUnit('si',this)">SI (kN&middot;m)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Steel Grade</label>
+        <select id="ltb-grade" onchange="ltbAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Selection</div></div>
+
+      <div class="form-group">
+        <label>Section Type</label>
+        <select id="ltb-sectype" onchange="ltbSetType()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+      <div class="form-group">
+        <label>Profile</label>
+        <select id="ltb-section" onchange="ltbSecChange()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;">
+          <option value="">&mdash; select profile &mdash;</option>
+        </select>
+      </div>
+      <div id="ltb-sec-info" class="sec-info-bar"></div>
+
+      <div class="form-div"><div class="form-div-lbl">LTB Parameters</div></div>
+
+      <div class="form-group">
+        <label>Unbraced Length L<sub>b</sub> <span id="ltb-Lb-lbl" class="unit-lbl">[ft]</span></label>
+        <div class="iw"><input type="number" id="ltb-Lb" value="15" step="0.5" min="0.1" oninput="ltbAutoCalc()"><span class="us" id="ltb-Lb-us">ft</span></div>
+      </div>
+      <div class="form-group">
+        <label>C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span></label>
+        <div class="iw"><input type="number" id="ltb-Cb" value="1.0" step="0.05" min="0.1" max="3.0" oninput="ltbAutoCalc()"><span class="us">&mdash;</span></div>
+        <div style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">Conservative: 1.0 (uniform moment). Use AISC Eq. F1-1 for actual loading.</div>
+      </div>
+      <div class="form-group">
+        <label>Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip·ft]</span></label>
+        <div class="iw"><input type="number" id="ltb-Mu" value="150" step="5" min="0" oninput="ltbAutoCalc()"><span class="us" id="ltb-Mu-us">kip·ft</span></div>
+      </div>
+
+      <button class="btn-calc" onclick="ltbCalc()">&#9654; Calculate</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="res-empty" id="ltb-empty"><div class="ri">&#128203;</div>Select a section, enter parameters, and click Calculate.</div>
+    <div class="report-card" id="ltb-card" style="display:none">
+      <div class="report-hdr">
+        <h4>Calculation Report</h4>
+        <span class="rh-code" id="ltb-rh-code">AISC 360-22 &sect;F2 &middot; kip &middot; ft &middot; in</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+      </div>
+      <div class="report-body" id="ltb-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Theory -->
+<div class="bg-section">
+  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 &mdash; Lateral Torsional Buckling Theory</h3></div>
+  <nav class="bg-toc">
+    <a href="#bg-ltb">LTB Zones</a>
+    <a href="#bg-params">Section Parameters</a>
+    <a href="#bg-cb">C<sub>b</sub> Factor</a>
+    <a href="#bg-limits">Limitations</a>
+  </nav>
+  <div class="bg-pane" id="bg-ltb">
+    <div class="bg-panel-hdr"><span>LTB Zones &mdash; AISC 360-22 §F2</span></div>
+    <div class="tb">
+      <h4>Limiting Unbraced Lengths</h4>
+      <div class="fml-blk"><span class="ft">Plastic limit L<sub>p</sub></span>
+        L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E/F<sub>y</sub>)
+      </div>
+      <div class="fml-blk"><span class="ft">Inelastic limit L<sub>r</sub></span>
+        L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E / 0.7F<sub>y</sub>) &middot; &radic;(X<sub>2</sub> + &radic;(X<sub>2</sub>&sup2; + 6.76(0.7F<sub>y</sub>/E)&sup2;))
+        where X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)
+      </div>
+      <div class="fml-blk"><span class="ft">Effective radius of gyration r<sub>ts</sub></span>
+        r<sub>ts</sub>&sup2; = &radic;(I<sub>y</sub> &middot; C<sub>w</sub>) / S<sub>x</sub>
+      </div>
+      <h4>Nominal Moment Capacity M<sub>n</sub></h4>
+      <table class="combo-ref-tbl" style="width:100%;max-width:620px">
+        <tr><th>Zone</th><th>Condition</th><th>M<sub>n</sub></th></tr>
+        <tr><td>Plastic</td><td>L<sub>b</sub> &le; L<sub>p</sub></td><td>M<sub>p</sub> = F<sub>y</sub> &middot; Z<sub>x</sub></td></tr>
+        <tr><td>Inelastic LTB</td><td>L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></td><td>C<sub>b</sub>[M<sub>p</sub> &minus; (M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>) &middot; (L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub></td></tr>
+        <tr><td>Elastic LTB</td><td>L<sub>b</sub> &gt; L<sub>r</sub></td><td>C<sub>b</sub> &middot; F<sub>cr</sub> &middot; S<sub>x</sub> &le; M<sub>p</sub> where F<sub>cr</sub> = &pi;&sup2;E/(L<sub>b</sub>/r<sub>ts</sub>)&sup2; &middot; &radic;(1 + 0.078 X<sub>2</sub>(L<sub>b</sub>/r<sub>ts</sub>)&sup2;)</td></tr>
+      </table>
+      <p style="margin-top:8px">Design capacity: &phi;<sub>b</sub>M<sub>n</sub> = 0.90 &middot; M<sub>n</sub></p>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-params">
+    <div class="bg-panel-hdr"><span>Section Parameters</span></div>
+    <div class="tb">
+      <h4>Key Torsional Properties</h4>
+      <div class="fml-blk"><span class="ft">Distance between flange centroids</span>h<sub>o</sub> = d &minus; t<sub>f</sub></div>
+      <div class="fml-blk"><span class="ft">Torsional parameter X<sub>2</sub></span>X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)</div>
+      <div class="fml-blk"><span class="ft">Warping constant C<sub>w</sub> (approximate for doubly-symmetric I-sections)</span>C<sub>w</sub> &asymp; I<sub>y</sub> &middot; h<sub>o</sub>&sup2; / 4</div>
+      <p>The exact C<sub>w</sub> is tabulated in the AISC Steel Construction Manual for W sections. This calculator uses tabulated values from AISC 15th Edition and Arcelor-Mittal for European sections.</p>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-cb">
+    <div class="bg-panel-hdr"><span>C<sub>b</sub> Moment Gradient Factor</span></div>
+    <div class="tb">
+      <h4>AISC 360-22 §F1 &mdash; Eq. F1-1</h4>
+      <div class="fml-blk"><span class="ft">Cb for non-uniform moment diagrams</span>
+        C<sub>b</sub> = 12.5M<sub>max</sub> / (2.5M<sub>max</sub> + 3M<sub>A</sub> + 4M<sub>B</sub> + 3M<sub>C</sub>) &le; 3.0
+      </div>
+      <p>where M<sub>max</sub> = absolute maximum moment in unbraced segment, M<sub>A</sub> = moment at 1/4 point, M<sub>B</sub> = moment at midspan, M<sub>C</sub> = moment at 3/4 point (all absolute values).</p>
+      <table class="combo-ref-tbl" style="width:100%;max-width:480px">
+        <tr><th>Loading</th><th>C<sub>b</sub></th></tr>
+        <tr><td>Uniform moment (most conservative)</td><td>1.00</td></tr>
+        <tr><td>UDL on simply-supported span</td><td>1.14</td></tr>
+        <tr><td>Single mid-span point load</td><td>1.32</td></tr>
+        <tr><td>Linear moment (single curvature)</td><td>1.67</td></tr>
+        <tr><td>Double curvature, equal end moments</td><td>2.27</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="bg-pane" id="bg-limits">
+    <div class="bg-panel-hdr"><span>Limitations</span></div>
+    <div class="tb">
+      <h4>Applicability</h4>
+      <ul>
+        <li>Compact sections only (flange and web satisfy compactness limits of AISC Table B4.1b).</li>
+        <li>Doubly-symmetric I-shaped members loaded in the plane of the web (AISC §F2).</li>
+        <li>Strong-axis bending only. Weak-axis bending is not subject to LTB (AISC §F6).</li>
+        <li>Loads applied at the shear center. If loads are applied at the top flange, C<sub>b</sub> should be reduced per Commentary §F1.</li>
+        <li>Bracing must satisfy stiffness and strength requirements of AISC Appendix 6.</li>
+        <li>This tool does not check shear capacity (AISC §G2).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:24px 16px 32px;font-size:.72rem;color:var(--text-dim);font-family:var(--sans);">
+  CivilStrCalc &mdash; AISC 360-22 LTB Control &mdash; For preliminary design use only. Engineer of record is responsible for final design verification.
+</footer>
+</main>
+
+<script>
+// ── SECTION DATABASES ────────────────────────────────────────────────────────
+// US: W sections — [name, d(in), bf(in), tf(in), tw(in), A(in²), Ix(in⁴), Sx(in³), Zx(in³), rx(in), Iy(in⁴), Sy(in³), Zy(in³), ry(in), J(in⁴), Cw(in⁶)]
+var W_DATA = [
+  ['W6x9',    5.90,5.000,0.215,0.170, 2.68,  16.4, 5.56, 6.23,2.47,  2.20,0.879,1.36,0.905,0.0276,  29.1],
+  ['W6x12',   6.03,4.000,0.280,0.230, 3.55,  22.1, 7.31, 8.30,2.49,  2.99,1.50, 2.32,0.918,0.0903,  49.8],
+  ['W6x15',   5.99,5.990,0.260,0.230, 4.43,  29.1, 9.72,10.8, 2.56,  9.32,3.11, 4.75,1.45, 0.101,  136],
+  ['W6x20',   6.20,6.020,0.365,0.260, 5.87,  41.4,13.4, 14.9, 2.66, 13.3, 4.41, 6.72,1.50, 0.329,  205],
+  ['W8x10',   7.89,3.940,0.205,0.170, 2.96,  30.8, 7.81, 8.87,3.22,  0.535,0.272,0.426,0.425,0.0285, 10.7],
+  ['W8x18',   8.14,5.250,0.330,0.230, 5.26,  61.9,15.2, 17.0,3.43,  7.97,3.04, 4.66,1.23, 0.171,  113],
+  ['W8x31',   8.00,7.995,0.435,0.285, 9.13,110.0, 27.5,30.4, 3.47, 37.1, 9.27,14.1, 2.02, 0.536,  530],
+  ['W8x35',   8.12,8.020,0.495,0.310,10.3, 127.0, 31.2,34.7, 3.51, 42.6,10.6, 16.1, 2.03, 0.769,  619],
+  ['W10x22',  9.87,5.750,0.360,0.240, 6.49,118.0, 23.2,26.0, 4.27, 11.4,3.97, 6.10,1.33, 0.239,  162],
+  ['W10x33', 9.73,7.960,0.435,0.290, 9.71,171.0, 35.0,38.8, 4.20, 36.6,9.20,14.0, 1.94, 0.583,  789],
+  ['W10x49', 9.98,10.000,0.560,0.340,14.4, 272.0, 54.6,60.4, 4.35,93.4,18.7,28.3, 2.54, 1.39, 2160],
+  ['W10x68',10.4,10.130,0.770,0.470,20.0, 394.0, 75.7,85.3, 4.44,134.0,26.4,40.1, 2.59, 4.64, 3160],
+  ['W12x26',12.2,6.490,0.380,0.230, 7.65,204.0, 33.4,37.2, 5.17, 17.3,5.34, 8.17,1.51, 0.300,  318],
+  ['W12x40',11.9,8.005,0.515,0.295,11.8, 307.0, 51.5,57.5, 5.13, 44.1,11.0,17.0, 1.94, 0.810,  933],
+  ['W12x50',12.2,8.080,0.640,0.370,14.7, 394.0, 64.7,72.4, 5.18, 56.3,13.9,21.4, 1.96, 1.71, 1230],
+  ['W12x65',12.1,12.000,0.605,0.390,19.1, 533.0, 87.9,96.8, 5.28,174.0,29.1,44.1, 3.02, 2.18, 41100],
+  ['W12x96',12.7,12.160,0.900,0.550,28.2, 833.0,131.0,147.0,5.44,270.0,44.4,67.5, 3.09, 8.26, 65800],
+  ['W14x22',13.7,5.000,0.335,0.230, 6.49,199.0, 29.0,33.2, 5.54,  7.00,2.80, 4.39,1.04, 0.208,  185],
+  ['W14x34',14.0,6.745,0.455,0.285,10.0, 340.0, 48.6,54.6, 5.83, 23.3,6.91,10.6, 1.53, 0.569,  567],
+  ['W14x48',13.8,8.031,0.595,0.340,14.1, 484.0, 70.2,78.4, 5.85, 51.4,12.8,19.6, 1.91, 1.45,  2170],
+  ['W14x82',14.3,10.130,0.855,0.510,24.0, 882.0,123.0,139.0,6.05,148.0,29.3,44.8, 2.48, 5.07, 12800],
+  ['W14x90',14.0,14.520,0.710,0.440,26.5, 999.0,143.0,157.0,6.14,362.0,49.9,75.6, 3.70, 4.06, 16000],
+  ['W14x132',14.7,14.725,1.030,0.645,38.8,1530.0,209.0,234.0,6.28,548.0,74.5,113.0,3.76, 12.3, 28200],
+  ['W16x26',15.7,5.500,0.345,0.250, 7.68,301.0, 38.4,44.2, 6.26,  9.59,3.49, 5.48,1.12, 0.262,  303],
+  ['W16x40',16.0,7.000,0.505,0.305,11.8, 518.0, 64.7,73.0, 6.63, 28.9,8.25,12.7, 1.57, 0.794,  865],
+  ['W16x57',16.4,7.120,0.715,0.430,16.8, 758.0, 92.2,105.0,6.72, 43.1,12.1,18.9, 1.60, 2.22, 1380],
+  ['W18x35',17.7,6.000,0.425,0.300,10.3, 510.0, 57.6,66.5, 7.04, 15.3,5.12, 8.06,1.22, 0.506,  846],
+  ['W18x50',18.0,7.495,0.570,0.355,14.7, 800.0, 88.9,101.0,7.38, 40.1,10.7,16.6, 1.65, 1.24, 3040],
+  ['W18x76',18.2,11.035,0.680,0.425,22.3,1330.0,146.0,163.0,7.73,152.0,27.6,42.2, 2.61, 2.83, 19400],
+  ['W21x44',20.7,6.500,0.530,0.350,13.0, 843.0, 81.6,95.4, 8.06, 20.7,6.37,10.2, 1.26, 0.770, 1550],
+  ['W21x48',20.6,8.140,0.430,0.350,14.1, 959.0, 93.0,107.0,8.24, 38.7,9.52,15.0, 1.66, 0.803, 3950],
+  ['W21x68',21.1,8.270,0.685,0.430,20.0,1480.0,140.0,160.0,8.60, 64.7,15.7,24.4, 1.80, 2.45, 6890],
+  ['W24x55',23.6,7.005,0.505,0.395,16.2,1350.0,114.0,131.0,9.11, 29.1,8.30,13.3, 1.34, 1.18, 3160],
+  ['W24x76',23.9,8.990,0.680,0.440,22.4,2100.0,176.0,200.0,9.69, 82.5,18.4,28.6, 1.92, 2.68,13700],
+  ['W27x84',26.7,9.960,0.640,0.460,24.8,2850.0,213.0,244.0,10.7, 106.0,21.2,32.8, 2.07, 2.81,22400],
+  ['W30x90',29.5,10.400,0.610,0.470,26.4,3610.0,245.0,283.0,11.7, 115.0,22.1,34.7, 2.09, 2.84,27600],
+  ['W33x118',32.9,11.480,0.740,0.550,34.7,5900.0,359.0,415.0,13.0, 187.0,32.6,51.3, 2.32, 5.37,64100],
+  ['W36x135',35.6,11.950,0.790,0.600,39.7,7800.0,439.0,509.0,14.0, 225.0,37.7,59.7, 2.38, 6.33,88800],
+  ['W40x149',38.2,11.810,0.830,0.630,43.8,9800.0,513.0,598.0,15.0, 229.0,38.8,61.4, 2.29, 7.90,97200]
+];
+
+// SI sections: IPE — [name, d(mm), bf(mm), tf(mm), tw(mm), A(mm²), Ix(mm⁴), Sx(mm³), Zx(mm³), rx(mm), Iy(mm⁴), Sy(mm³), Zy(mm³), ry(mm), J(mm⁴), Cw(mm⁶)]
+var IPE_DATA = [
+  ['IPE 140',140,73,6.9,4.7, 1640, 5.41e6,  77300,  88300, 57.2,  449000, 12300, 19200,16.5,   25800, 7.30e9],
+  ['IPE 160',160,82,7.4,5.0, 2010, 8.69e6, 109000, 124000, 65.8,  683000, 16600, 26100,18.4,   36200, 1.46e10],
+  ['IPE 180',180,91,8.0,5.3, 2390, 1.32e7, 146000, 166000, 74.4, 1010000, 22200, 34600,20.6,   55700, 2.67e10],
+  ['IPE 200',200,100,8.5,5.6,2850, 1.94e7, 194000, 221000, 82.5, 1420000, 28500, 44600,22.3,   72900, 4.48e10],
+  ['IPE 220',220,110,9.2,5.9,3340, 2.77e7, 252000, 285000, 91.1, 2050000, 37300, 58100,24.8,   99600, 7.43e10],
+  ['IPE 240',240,120,9.8,6.2,3910, 3.89e7, 324000, 367000, 99.7, 2840000, 47300, 73900,26.9,  127000, 1.20e11],
+  ['IPE 270',270,135,10.2,6.6,4590,5.79e7, 429000, 484000,112.0, 4200000, 62200, 96900,30.2,  159000, 2.09e11],
+  ['IPE 300',300,150,10.7,7.1,5380, 8.36e7, 557000, 628000,124.0, 6040000, 80500,125000,33.5,  201000, 3.38e11],
+  ['IPE 330',330,160,11.5,7.5,6260, 1.18e8, 713000, 804000,137.0, 7880000, 98500,154000,35.5,  280000, 5.09e11],
+  ['IPE 360',360,170,12.7,8.0,7270, 1.63e8, 904000,1020000,149.0,10400000,123000,191000,37.9,  373000, 7.96e11],
+  ['IPE 400',400,180,13.5,8.6,8450, 2.31e8,1160000,1310000,165.0,13200000,146000,229000,39.5,  511000, 1.26e12],
+  ['IPE 450',450,190,14.6,9.4,9880, 3.37e8,1500000,1702000,185.0,17200000,181000,276000,41.2,  667000, 2.04e12],
+  ['IPE 500',500,200,16.0,10.2,11600,4.82e8,1930000,2194000,204.0,21400000,214000,335000,43.1,  897000, 3.22e12],
+  ['IPE 550',550,210,17.2,11.1,13440,6.71e8,2440000,2787000,223.0,26700000,254000,400000,44.5, 1170000, 4.95e12],
+  ['IPE 600',600,220,19.0,12.0,15600,9.21e8,3070000,3512000,243.0,33900000,308000,483000,46.6, 1650000, 7.57e12]
+];
+
+// SI sections: HEA — same columns
+var HEA_DATA = [
+  ['HEA 100', 96,100, 8.0,5.0, 2120, 3.49e6,  72800,  83000, 40.5, 1340000, 26800, 41200,25.1,   51400, 9.40e9],
+  ['HEA 120',114,120, 8.0,5.0, 2530, 6.06e6, 106000, 120000, 48.9, 2310000, 38500, 58900,30.1,   54600, 2.01e10],
+  ['HEA 140',133,140, 8.5,5.5, 3140, 1.03e7, 155000, 173000, 57.2, 3890000, 55600, 84900,35.2,   73200, 3.96e10],
+  ['HEA 160',152,160, 9.0,6.0, 3880, 1.67e7, 220000, 245000, 65.6, 6160000, 77000,117000,39.8,   95700, 7.40e10],
+  ['HEA 180',171,180, 9.5,6.0, 4530, 2.61e7, 306000, 343000, 75.9, 9250000,103000,156000,45.1,  116000, 1.31e11],
+  ['HEA 200',190,200,10.0,6.5, 5380, 3.69e7, 389000, 429000, 82.7,13400000,134000,202000,49.9,  148000, 2.06e11],
+  ['HEA 220',210,220,11.0,7.0, 6430, 5.41e7, 515000, 568000, 91.7,19400000,176000,265000,54.9,  224000, 3.46e11],
+  ['HEA 240',230,240,12.0,7.5, 7680, 7.76e7, 675000, 745000,100.0,27700000,231000,347000,60.1,  352000, 5.66e11],
+  ['HEA 260',250,260,12.5,7.5, 8680, 1.05e8, 836000, 919000,110.0,36700000,282000,424000,65.0,  465000, 8.68e11],
+  ['HEA 280',270,280,13.0,8.0, 9730, 1.37e8,1010000,1110000,118.0,49000000,350000,524000,71.0,  621000, 1.31e12],
+  ['HEA 300',290,300,14.0,8.5,11250, 1.83e8,1260000,1380000,127.0,63100000,421000,630000,74.9,  856000, 1.93e12],
+  ['HEA 320',310,300,15.5,9.0,12440, 2.29e8,1480000,1628000,136.0,65400000,436000,659000,72.5, 1320000, 2.41e12],
+  ['HEA 340',330,300,16.5,9.5,13340, 2.77e8,1680000,1853000,144.0,66900000,446000,676000,70.8, 1750000, 2.86e12],
+  ['HEA 360',350,300,17.5,10.0,14270,3.31e8,1890000,2088000,152.0,68300000,455000,691000,69.3, 2240000, 3.35e12],
+  ['HEA 400',390,300,19.0,11.0,15960,4.51e8,2310000,2562000,168.0,71100000,474000,721000,66.8, 3450000, 4.24e12],
+  ['HEA 450',440,300,21.0,11.5,17800,6.32e8,2880000,3216000,188.0,73200000,488000,745000,64.1, 5410000, 5.25e12],
+  ['HEA 500',490,300,23.0,12.0,19800,8.69e8,3550000,3975000,210.0,75100000,501000,770000,61.6, 8370000, 6.60e12]
+];
+
+// SI sections: HEB — same columns
+var HEB_DATA = [
+  ['HEB 100',100,100,10.0, 6.0, 2600, 4.50e6,  89900, 104200, 41.6, 1670000, 33500, 51400,25.3,   99000, 1.25e10],
+  ['HEB 120',120,120,11.0, 6.5, 3400, 8.64e6, 144000, 165600, 50.4, 3180000, 53000, 81400,30.6,  176000, 2.85e10],
+  ['HEB 140',140,140,12.0, 7.0, 4300, 1.51e7, 215700, 245400, 59.4, 5500000, 78600,119800,35.8,  303000, 5.64e10],
+  ['HEB 160',160,160,13.0, 8.0, 5430, 2.49e7, 311000, 354000, 67.7, 8890000,111100,169800,40.5,  497000, 1.02e11],
+  ['HEB 180',180,180,14.0, 8.5, 6530, 3.83e7, 425400, 481000, 76.6,13600000,151000,231000,45.7,  760000, 1.72e11],
+  ['HEB 200',200,200,15.0, 9.0, 7810, 5.70e7, 570000, 642000, 85.5,20000000,200000,306000,50.6, 1140000, 2.84e11],
+  ['HEB 220',220,220,16.0, 9.5, 9100, 8.09e7, 736000, 827000, 94.3,28400000,258000,394000,55.9, 1640000, 4.43e11],
+  ['HEB 240',240,240,17.0,10.0,10600, 1.13e8, 938000,1053000,103.0,39200000,327000,499000,60.8, 2520000, 6.82e11],
+  ['HEB 260',260,260,17.5,10.0,11800, 1.49e8,1150000,1283000,112.0,51300000,395000,602000,65.9, 3390000, 1.00e12],
+  ['HEB 280',280,280,18.0,10.5,13100, 1.98e8,1410000,1534000,122.0,65900000,471000,717000,70.9, 4360000, 1.47e12],
+  ['HEB 300',300,300,19.0,11.0,14900, 2.51e8,1680000,1869000,130.0,85600000,571000,870000,75.8, 6990000, 2.19e12],
+  ['HEB 320',320,300,20.5,11.5,16100, 3.08e8,1930000,2149000,138.0,92400000,616000,939000,75.7,10400000, 2.68e12],
+  ['HEB 340',340,300,21.5,12.0,17100, 3.66e8,2160000,2408000,146.0,96200000,641000,979000,75.0,14300000, 3.09e12],
+  ['HEB 360',360,300,22.5,12.5,18100, 4.32e8,2400000,2683000,154.0,99400000,663000,1010000,74.1,19700000,3.51e12],
+  ['HEB 400',400,300,24.0,13.5,19800, 5.77e8,2880000,3232000,171.0,10400e4, 693000,1060000,72.5,35500000, 4.35e12]
+];
+
+// ── GRADE DEFINITIONS ────────────────────────────────────────────────────────
+var GRADES_US = [
+  {label:'A992 Gr50', Fy:50, E:29000},
+  {label:'A572 Gr50', Fy:50, E:29000},
+  {label:'A572 Gr60', Fy:60, E:29000},
+  {label:'A572 Gr65', Fy:65, E:29000},
+  {label:'A36',       Fy:36, E:29000}
+];
+var GRADES_SI = [
+  {label:'S235', Fy:235, E:200000},
+  {label:'S275', Fy:275, E:200000},
+  {label:'S355', Fy:355, E:200000},
+  {label:'S420', Fy:420, E:200000},
+  {label:'S460', Fy:460, E:200000},
+  {label:'A992 Gr50 (345 MPa)', Fy:345, E:200000}
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+var ltbUnit = 'us';
+
+function ltbSetUnit(u, btn) {
+  ltbUnit = u;
+  document.querySelectorAll('.unit-btn').forEach(function(b) {
+    if (b.id === 'ltb-btn-us' || b.id === 'ltb-btn-si') b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  document.getElementById('ltb-unit-tag').textContent = u === 'us' ? 'kip · ft · in' : 'kN · m';
+  document.getElementById('ltb-rh-code').textContent = 'AISC 360-22 §F2 · ' + (u === 'us' ? 'kip · ft · in' : 'kN · m');
+  var isUS = u === 'us';
+  document.getElementById('ltb-Lb-lbl').textContent = isUS ? '[ft]' : '[m]';
+  document.getElementById('ltb-Lb-us').textContent  = isUS ? 'ft' : 'm';
+  document.getElementById('ltb-Mu-lbl').textContent = isUS ? '[kip·ft]' : '[kN·m]';
+  document.getElementById('ltb-Mu-us').textContent  = isUS ? 'kip·ft' : 'kN·m';
+  ltbPopulateGrades();
+  ltbPopulateTypes();
+  ltbAutoCalc();
+}
+
+function ltbPopulateGrades() {
+  var sel = document.getElementById('ltb-grade');
+  var grades = ltbUnit === 'us' ? GRADES_US : GRADES_SI;
+  var prev = sel.value;
+  sel.innerHTML = '';
+  grades.forEach(function(g, i) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = g.label;
+    sel.appendChild(opt);
+  });
+  sel.value = 0;
+}
+
+var TYPE_MAP = {
+  us: [{key:'W', label:'W Sections (AISC)', data: W_DATA}],
+  si: [
+    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
+    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
+    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA}
+  ]
+};
+
+function ltbPopulateTypes() {
+  var sel = document.getElementById('ltb-sectype');
+  var types = TYPE_MAP[ltbUnit];
+  sel.innerHTML = '';
+  types.forEach(function(t, i) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.label;
+    sel.appendChild(opt);
+  });
+  sel.value = 0;
+  ltbPopulateProfiles();
+}
+
+function ltbSetType() { ltbPopulateProfiles(); ltbAutoCalc(); }
+
+function ltbPopulateProfiles() {
+  var typeIdx = +document.getElementById('ltb-sectype').value;
+  var types = TYPE_MAP[ltbUnit];
+  var data = types[typeIdx].data;
+  var sel = document.getElementById('ltb-section');
+  sel.innerHTML = '<option value="">— select profile —</option>';
+  data.forEach(function(row, i) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = row[0];
+    sel.appendChild(opt);
+  });
+  sel.value = '';
+  document.getElementById('ltb-sec-info').style.display = 'none';
+}
+
+function ltbSecChange() {
+  var typeIdx = +document.getElementById('ltb-sectype').value;
+  var secIdx  = document.getElementById('ltb-section').value;
+  var info = document.getElementById('ltb-sec-info');
+  if (secIdx === '') { info.style.display='none'; return; }
+  var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
+  // row: [name, d, bf, tf, tw, A, Ix, Sx, Zx, rx, Iy, Sy, Zy, ry, J, Cw]
+  if (ltbUnit === 'us') {
+    info.innerHTML = 'd='+row[1]+'" &nbsp; b<sub>f</sub>='+row[2]+'" &nbsp; t<sub>f</sub>='+row[3]+'" &nbsp; t<sub>w</sub>='+row[4]+'" &nbsp; A='+row[5]+' in² &nbsp; Z<sub>x</sub>='+row[8]+' in³ &nbsp; r<sub>y</sub>='+row[13]+'" &nbsp; J='+row[14]+' in⁴';
+  } else {
+    info.innerHTML = 'd='+row[1]+' mm &nbsp; b<sub>f</sub>='+row[2]+' mm &nbsp; t<sub>f</sub>='+row[3]+' mm &nbsp; A='+row[5]+' mm² &nbsp; Z<sub>x</sub>='+(row[8]/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+row[13]+' mm';
+  }
+  info.style.display = 'block';
+  ltbAutoCalc();
+}
+
+function ltbAutoCalc() {
+  if (document.getElementById('ltb-section').value !== '') ltbCalc();
+}
+
+// ── CORE CALCULATION ─────────────────────────────────────────────────────────
+function ltbCalc() {
+  var typeIdx = +document.getElementById('ltb-sectype').value;
+  var secIdx  = document.getElementById('ltb-section').value;
+  if (secIdx === '') { document.getElementById('ltb-empty').style.display=''; document.getElementById('ltb-card').style.display='none'; return; }
+  var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
+
+  var gradeIdx = +document.getElementById('ltb-grade').value;
+  var grade    = (ltbUnit === 'us' ? GRADES_US : GRADES_SI)[gradeIdx];
+  var Cb  = Math.max(0.1, +document.getElementById('ltb-Cb').value || 1.0);
+  var Mu  = +document.getElementById('ltb-Mu').value || 0;
+
+  var name = row[0];
+  // unpack: [name, d, bf, tf, tw, A, Ix, Sx, Zx, rx, Iy, Sy, Zy, ry, J, Cw]
+  var d=row[1], bf=row[2], tf=row[3], tw=row[4], A=row[5];
+  var Ix=row[6], Sx=row[7], Zx=row[8], rx=row[9];
+  var Iy=row[10], Sy=row[11], Zy=row[12], ry=row[13];
+  var J=row[14], Cw=row[15];
+
+  var Fy = grade.Fy, E = grade.E;
+  var Lb_input = +document.getElementById('ltb-Lb').value || 0;
+
+  var result;
+  if (ltbUnit === 'us') {
+    result = ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
+  } else {
+    result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
+  }
+
+  result.Mu = Mu;
+  result.DCR = result.phiMn > 0 ? Mu / result.phiMn : Infinity;
+  result.name = name;
+  result.grade = grade.label;
+  result.Cb = Cb;
+  result.Lb_input = Lb_input;
+  result.Fy = Fy;
+  result.E = E;
+  result.Sx = Sx; result.Zx = Zx; result.Iy = Iy; result.J = J; result.Cw = Cw;
+  result.ry = ry; result.d = d; result.tf = tf;
+
+  ltbRender(result);
+}
+
+function ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_ft, Cb) {
+  var lf = 12; // in per ft
+  var ho = d - tf;
+  var Mp = Fy * Zx / lf; // kip·ft
+  var M07 = 0.7 * Fy * Sx / lf;
+
+  // Lp
+  var Lp = 1.76 * ry * Math.sqrt(E / Fy) / lf; // ft
+
+  // rts and Lr
+  var tv = J / (Sx * ho);
+  var rts = Math.sqrt(Math.sqrt(Iy * Cw) / Sx); // in
+  var Lr = 1.95 * rts * (E / (0.7 * Fy)) * Math.sqrt(tv + Math.sqrt(tv * tv + 6.76 * Math.pow(0.7 * Fy / E, 2))) / lf; // ft
+
+  var Lb = Lb_ft;
+  var Mn, mode;
+  if (Lb <= Lp) {
+    Mn = Mp; mode = 'Plastic';
+  } else if (Lb <= Lr) {
+    Mn = Math.min(Cb * (Mp - (Mp - M07) * (Lb - Lp) / (Lr - Lp)), Mp);
+    mode = 'Inelastic LTB';
+  } else {
+    var LbIn = Lb * lf;
+    var Fcr = Math.PI * Math.PI * E / Math.pow(LbIn / rts, 2) * Math.sqrt(1 + 0.078 * tv * Math.pow(LbIn / rts, 2));
+    Mn = Math.min(Cb * Fcr * Sx / lf, Mp);
+    mode = 'Elastic LTB';
+  }
+
+  return {phiMn: 0.9 * Mn, Mn: Mn, Mp: Mp, M07: M07, Lp: Lp, Lr: Lr, mode: mode, rts: rts, tv: tv, ho: ho, unit_len: 'ft', unit_mom: 'kip·ft', unit_force: 'kip', unit_sec: 'in'};
+}
+
+function ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, Cb) {
+  var lf = 1000; // mm per m
+  var ho = d - tf; // mm
+  var Mp = Fy * Zx / 1e6; // kN·m  (Fy MPa * Zx mm³ / 1e6 = kN·m)
+  var M07 = 0.7 * Fy * Sx / 1e6;
+
+  var Lp = 1.76 * ry * Math.sqrt(E / Fy) / lf; // m
+
+  var tv = J / (Sx * ho);
+  var rts = Math.sqrt(Math.sqrt(Iy * Cw) / Sx); // mm
+  var Lr = 1.95 * rts * (E / (0.7 * Fy)) * Math.sqrt(tv + Math.sqrt(tv * tv + 6.76 * Math.pow(0.7 * Fy / E, 2))) / lf; // m
+
+  var Lb = Lb_m;
+  var Mn, mode;
+  if (Lb <= Lp) {
+    Mn = Mp; mode = 'Plastic';
+  } else if (Lb <= Lr) {
+    Mn = Math.min(Cb * (Mp - (Mp - M07) * (Lb - Lp) / (Lr - Lp)), Mp);
+    mode = 'Inelastic LTB';
+  } else {
+    var LbMm = Lb * lf;
+    var Fcr = Math.PI * Math.PI * E / Math.pow(LbMm / rts, 2) * Math.sqrt(1 + 0.078 * tv * Math.pow(LbMm / rts, 2)); // MPa
+    Mn = Math.min(Cb * Fcr * Sx / 1e6, Mp);
+    mode = 'Elastic LTB';
+  }
+
+  return {phiMn: 0.9 * Mn, Mn: Mn, Mp: Mp, M07: M07, Lp: Lp, Lr: Lr, mode: mode, rts: rts, tv: tv, ho: ho, unit_len: 'm', unit_mom: 'kN·m', unit_force: 'kN', unit_sec: 'mm'};
+}
+
+// ── RENDER REPORT ────────────────────────────────────────────────────────────
+function fmt(v, d) { return (d === undefined ? 4 : d) === 0 ? Math.round(v).toString() : v.toFixed(d); }
+
+function ltbRender(r) {
+  document.getElementById('ltb-empty').style.display = 'none';
+  document.getElementById('ltb-card').style.display  = 'block';
+
+  var ok    = r.DCR <= 1.0;
+  var dcrPct = (r.DCR * 100).toFixed(1);
+  var dcrColor = r.DCR <= 0.80 ? 'var(--green)' : r.DCR <= 1.0 ? 'var(--orange)' : 'var(--red)';
+  var dcrBg    = r.DCR <= 0.80 ? 'var(--green-bg)' : r.DCR <= 1.0 ? 'var(--orange-bg)' : 'var(--red-bg)';
+
+  var modeColor = r.mode === 'Plastic' ? 'var(--green)' : r.mode === 'Inelastic LTB' ? 'var(--orange)' : 'var(--red)';
+
+  var html = '';
+
+  // ── Print header (hidden on screen) ──
+  html += '<div class="print-only">';
+  html += '<div><div class="ph-title">LTB Control &mdash; ' + r.name + '</div>';
+  html += '<div class="ph-sub">AISC 360-22 &sect;F2 &middot; ' + r.grade + ' &middot; C<sub>b</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + r.unit_len + '</div></div>';
+  html += '<div class="ph-date">' + new Date().toLocaleDateString('en-CA') + '</div></div>';
+
+  // ── D/C Banner ──
+  html += '<div class="dcr-banner" style="background:'+dcrBg+';border:1.5px solid '+dcrColor+';border-radius:7px;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div class="dcr-text"><strong style="font-size:1.05rem;color:'+dcrColor+'">D/C = ' + fmt(r.DCR,3) + '</strong>';
+  html += ' <span style="font-size:.78rem;color:var(--text-mid);margin-left:8px;">' + dcrPct + '% — ' + (ok ? 'OK ✔' : 'EXCEEDS ✖') + '</span></div>';
+  html += '<span style="font-size:.78rem;color:'+modeColor+';font-weight:600;">' + r.mode + '</span></div>';
+
+  // ── Key Results ──
+  html += '<div class="result-box" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">';
+  var ris = [
+    {v: fmt(r.Mp,1), l:'M<sub>p</sub>', u:r.unit_mom},
+    {v: fmt(r.Mn,1), l:'M<sub>n</sub>', u:r.unit_mom},
+    {v: fmt(r.phiMn,1), l:'&phi;<sub>b</sub>M<sub>n</sub>', u:r.unit_mom},
+    {v: fmt(r.Mu,1), l:'M<sub>u</sub>', u:r.unit_mom},
+    {v: fmt(r.Lp,3), l:'L<sub>p</sub>', u:r.unit_len},
+    {v: fmt(r.Lr,3), l:'L<sub>r</sub>', u:r.unit_len}
+  ];
+  ris.forEach(function(ri) {
+    html += '<div class="fl-col" style="flex:1;min-width:90px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">';
+    html += '<div class="fl-lbl" style="font-size:.66rem;color:var(--text-dim);font-family:var(--sans);">' + ri.l + '</div>';
+    html += '<div class="fl-val" style="font-size:1.0rem;font-weight:700;font-family:var(--mono);color:var(--text);">' + ri.v + '</div>';
+    html += '<div class="fl-unit" style="font-size:.62rem;color:var(--text-dim);font-family:var(--sans);">' + ri.u + '</div></div>';
+  });
+  html += '</div>';
+
+  // ── LTB Diagram (SVG) ──
+  html += ltbDiagramSVG(r);
+
+  // ── Step-by-step ──
+  html += '<div class="rpt-sec" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">';
+  html += '<div class="rpt-sec-title" style="font-size:.60rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);font-family:var(--sans);font-weight:700;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px;">Step-by-Step Calculation</div>';
+  html += '<table class="steps-table" style="width:100%;border-collapse:collapse;">';
+
+  var ul = r.unit_sec, um = r.unit_mom, ulen = r.unit_len;
+
+  var steps = [];
+  steps.push({n:1, desc:'Plastic moment M<sub>p</sub>', formula:'F<sub>y</sub> &times; Z<sub>x</sub> / ' + (ltbUnit==='us'?'12':'10<sup>6</sup>'), val: fmt(r.Mp,2)+' '+um});
+  steps.push({n:2, desc:'h<sub>o</sub> = d &minus; t<sub>f</sub>', formula: fmt(r.d,3)+' &minus; '+fmt(r.tf,3)+'  ['+ul+']', val: fmt(r.ho,3)+' '+ul});
+  steps.push({n:3, desc:'Torsional parameter X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)', formula: ltbUnit==='us'? fmt(r.J,4)+' / ('+fmt(r.Sx,2)+' &times; '+fmt(r.ho,3)+')' : 'J·S⁻¹·hₒ⁻¹', val: r.tv.toExponential(4)});
+  steps.push({n:4, desc:'r<sub>ts</sub> = &radic;(&radic;(I<sub>y</sub>&middot;C<sub>w</sub>) / S<sub>x</sub>)', formula:'', val: fmt(r.rts,3)+' '+ul});
+  steps.push({n:5, desc:'L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E/F<sub>y</sub>)', formula:'1.76 &times; '+fmt(r.ry? r.ry:0,3)+' &times; &radic;('+r.E+'/'+r.Fy+')', val: fmt(r.Lp,3)+' '+ulen});
+  steps.push({n:6, desc:'L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E/0.7F<sub>y</sub>) &middot; &radic;(X<sub>2</sub>+&radic;(X<sub>2</sub>&sup2;+6.76(0.7F<sub>y</sub>/E)&sup2;))', formula:'', val: fmt(r.Lr,3)+' '+ulen});
+  var zoneStr;
+  if (r.mode === 'Plastic') {
+    zoneStr = 'L<sub>b</sub>='+fmt(r.Lb_input,2)+' &le; L<sub>p</sub>='+fmt(r.Lp,3)+' &rarr; M<sub>n</sub> = M<sub>p</sub>';
+  } else if (r.mode === 'Inelastic LTB') {
+    zoneStr = 'L<sub>p</sub>&lt;L<sub>b</sub>&le;L<sub>r</sub> &rarr; Inelastic. C<sub>b</sub>[M<sub>p</sub>&minus;(M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)]';
+  } else {
+    zoneStr = 'L<sub>b</sub>&gt;L<sub>r</sub> &rarr; Elastic. F<sub>cr</sub>&middot;S<sub>x</sub>&middot;C<sub>b</sub> &le; M<sub>p</sub>';
+  }
+  steps.push({n:7, desc:'Zone &amp; M<sub>n</sub>', formula:zoneStr, val: fmt(r.Mn,2)+' '+um});
+  steps.push({n:8, desc:'&phi;<sub>b</sub>M<sub>n</sub> = 0.90 &times; M<sub>n</sub>', formula:'0.90 &times; '+fmt(r.Mn,2), val: fmt(r.phiMn,2)+' '+um, highlight: true});
+  steps.push({n:9, desc:'D/C ratio = M<sub>u</sub> / &phi;<sub>b</sub>M<sub>n</sub>', formula:fmt(r.Mu,2)+' / '+fmt(r.phiMn,2), val: fmt(r.DCR,3), check: r.DCR<=1.0?'OK':'NG'});
+
+  steps.forEach(function(s) {
+    var bg = s.highlight ? 'background:var(--bg2);' : '';
+    html += '<tr style="'+bg+'">';
+    html += '<td style="vertical-align:top;padding:4px 5px;"><div class="step-num" style="width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.58rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">'+s.n+'</div></td>';
+    html += '<td style="padding:4px 5px;vertical-align:top;"><div class="step-desc" style="font-size:.78rem;color:var(--text);font-family:var(--sans);">'+s.desc+'</div>';
+    if (s.formula) html += '<div class="step-formula" style="font-size:.69rem;color:var(--text-mid);font-family:var(--mono);margin-top:1px;">'+s.formula+'</div>';
+    html += '</td>';
+    html += '<td style="padding:4px 5px;vertical-align:top;text-align:right;"><div class="step-val" style="font-size:.80rem;font-weight:700;font-family:var(--mono);color:var(--text);">'+s.val+'</div>';
+    if (s.check) {
+      var cc = s.check==='OK'?'var(--green)':'var(--red)';
+      var cb = s.check==='OK'?'var(--green-bg)':'var(--red-bg)';
+      html += '<div class="step-check" style="font-size:.65rem;font-weight:700;color:'+cc+';background:'+cb+';border-radius:3px;padding:1px 5px;display:inline-block;margin-top:2px;">'+s.check+'</div>';
+    }
+    html += '</td></tr>';
+  });
+  html += '</table></div>';
+
+  // ── Input summary ──
+  html += '<div class="rpt-sec">';
+  html += '<div class="rpt-sec-title" style="font-size:.60rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);font-family:var(--sans);font-weight:700;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px;">Input Summary</div>';
+  html += '<table class="inp-tbl" style="width:100%;border-collapse:collapse;font-size:.76rem;">';
+  var ins = [
+    ['Code','AISC 360-22 §F2'],
+    ['Units', ltbUnit==='us'?'US (kip·ft, in)':'SI (kN·m, mm)'],
+    ['Steel Grade', r.grade + ' &mdash; F<sub>y</sub>='+r.Fy+(ltbUnit==='us'?' ksi':' MPa')],
+    ['Section', r.name],
+    ['L<sub>b</sub>', fmt(r.Lb_input,2)+' '+ulen],
+    ['C<sub>b</sub>', fmt(r.Cb,2)],
+    ['M<sub>u</sub>', fmt(r.Mu,2)+' '+um]
+  ];
+  ins.forEach(function(row) {
+    html += '<tr><td style="padding:3px 6px;color:var(--text-mid);font-family:var(--sans);width:45%;border-bottom:1px solid var(--border);">'+row[0]+'</td>';
+    html += '<td style="padding:3px 6px;font-family:var(--mono);border-bottom:1px solid var(--border);">'+row[1]+'</td></tr>';
+  });
+  html += '</table></div>';
+
+  // ── Print footer ──
+  html += '<div class="print-footer"><span>CivilStrCalc.com &mdash; AISC 360-22 LTB Control</span><span>'+new Date().toLocaleDateString('en-CA')+'</span></div>';
+  html += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
+
+  document.getElementById('ltb-body').innerHTML = html;
+}
+
+// ── SVG DIAGRAM ──────────────────────────────────────────────────────────────
+function ltbDiagramSVG(r) {
+  var W = 480, H = 190;
+  var pad = {l:52, r:18, t:16, b:38};
+  var pw = W - pad.l - pad.r;
+  var ph = H - pad.t - pad.b;
+
+  // x-range: 0 to max(2*Lr, Lb*1.5)
+  var xMax = Math.max(r.Lr * 2.2, r.Lb_input * 1.5, r.Lp * 4);
+  // y-range: 0 to Mp (scaled 0..phiMp)
+  var phiMp = 0.9 * r.Mp;
+  var yMax = phiMp * 1.08;
+
+  function sx(v) { return pad.l + (v / xMax) * pw; }
+  function sy(v) { return pad.t + ph - (v / yMax) * ph; }
+
+  // Build the φMn vs Lb curve
+  var pts = [];
+  var nPts = 80;
+  for (var i = 0; i <= nPts; i++) {
+    var Lb = (i / nPts) * xMax;
+    var phiMn_i;
+    var Mn_i;
+    if (Lb <= r.Lp) {
+      Mn_i = r.Mp;
+    } else if (Lb <= r.Lr) {
+      Mn_i = Math.min(1.0 * (r.Mp - (r.Mp - r.M07) * (Lb - r.Lp) / (r.Lr - r.Lp)), r.Mp);
+    } else {
+      // Elastic (Cb=1 for diagram)
+      var LbPx = ltbUnit === 'us' ? Lb * 12 : Lb * 1000;
+      var Fcr = Math.PI * Math.PI * r.E / Math.pow(LbPx / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx / r.rts, 2));
+      var conv = ltbUnit === 'us' ? 12 : 1e6;
+      Mn_i = Math.min(Fcr * r.Sx / conv, r.Mp);
+    }
+    phiMn_i = 0.9 * Mn_i;
+    pts.push([sx(Lb), sy(phiMn_i)]);
+  }
+
+  var polyline = pts.map(function(p) { return p[0]+','+p[1]; }).join(' ');
+
+  // Zone fill polygons
+  // Plastic zone: x=[0..Lp], y=[phiMp..base]
+  var x0 = sx(0), xLp = sx(r.Lp), xLr = sx(r.Lr), xEnd = sx(xMax);
+  var yBase = pad.t + ph, yTop = sy(phiMp);
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" class="ltb-diagram" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--sans);">';
+
+  // Zone fills
+  svg += '<polygon points="'+x0+','+yBase+' '+xLp+','+yBase+' '+xLp+','+sy(0.9*r.Mp)+' '+x0+','+sy(0.9*r.Mp)+'" fill="rgba(34,197,94,0.12)"/>';
+
+  // inelastic: from Lp to Lr along curve
+  var inelPts = '';
+  var inelX = x0;
+  for (var i2 = 0; i2 <= nPts; i2++) {
+    var LbI = (i2 / nPts) * xMax;
+    if (LbI >= r.Lp && LbI <= r.Lr) {
+      var mn2 = Math.min(r.Mp - (r.Mp - r.M07) * (LbI - r.Lp) / (r.Lr - r.Lp), r.Mp);
+      inelPts += sx(LbI)+','+sy(0.9*mn2)+' ';
+    }
+  }
+  if (inelPts) {
+    svg += '<polygon points="'+xLp+','+yBase+' '+xLr+','+yBase+' '+inelPts+'" fill="rgba(251,146,60,0.12)"/>';
+  }
+
+  // elastic zone
+  var elasPts = '';
+  for (var i3 = 0; i3 <= nPts; i3++) {
+    var LbE = (i3 / nPts) * xMax;
+    if (LbE >= r.Lr) {
+      var LbPx2 = ltbUnit === 'us' ? LbE * 12 : LbE * 1000;
+      var Fcr2 = Math.PI * Math.PI * r.E / Math.pow(LbPx2 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx2 / r.rts, 2));
+      var conv2 = ltbUnit === 'us' ? 12 : 1e6;
+      var mn3 = Math.min(Fcr2 * r.Sx / conv2, r.Mp);
+      elasPts += sx(LbE)+','+sy(0.9*mn3)+' ';
+    }
+  }
+  if (elasPts) {
+    svg += '<polygon points="'+xLr+','+yBase+' '+xEnd+','+yBase+' '+elasPts+'" fill="rgba(239,68,68,0.10)"/>';
+  }
+
+  // Cb=1 curve
+  svg += '<polyline points="'+polyline+'" fill="none" stroke="var(--border)" stroke-width="1.2" stroke-dasharray="4,3"/>';
+
+  // Actual curve (with Cb)
+  var ptsCb = [];
+  for (var i4 = 0; i4 <= nPts; i4++) {
+    var Lb4 = (i4 / nPts) * xMax;
+    var Mn4;
+    if (Lb4 <= r.Lp) {
+      Mn4 = r.Mp;
+    } else if (Lb4 <= r.Lr) {
+      Mn4 = Math.min(r.Cb * (r.Mp - (r.Mp - r.M07) * (Lb4 - r.Lp) / (r.Lr - r.Lp)), r.Mp);
+    } else {
+      var LbPx4 = ltbUnit === 'us' ? Lb4 * 12 : Lb4 * 1000;
+      var Fcr4 = Math.PI * Math.PI * r.E / Math.pow(LbPx4 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx4 / r.rts, 2));
+      var conv4 = ltbUnit === 'us' ? 12 : 1e6;
+      Mn4 = Math.min(r.Cb * Fcr4 * r.Sx / conv4, r.Mp);
+    }
+    ptsCb.push([sx(Lb4), sy(0.9*Mn4)]);
+  }
+  var polyCb = ptsCb.map(function(p) { return p[0]+','+p[1]; }).join(' ');
+  svg += '<polyline points="'+polyCb+'" fill="none" stroke="#3b82f6" stroke-width="2"/>';
+
+  // Lp and Lr vertical lines
+  svg += '<line x1="'+xLp+'" y1="'+pad.t+'" x2="'+xLp+'" y2="'+yBase+'" stroke="rgba(34,197,94,0.6)" stroke-width="1" stroke-dasharray="3,2"/>';
+  svg += '<line x1="'+xLr+'" y1="'+pad.t+'" x2="'+xLr+'" y2="'+yBase+'" stroke="rgba(251,146,60,0.6)" stroke-width="1" stroke-dasharray="3,2"/>';
+
+  // Design point (Lb, phiMn at Lb_input with Cb)
+  var dPx = sx(r.Lb_input), dPy = sy(r.phiMn);
+  // Mu horizontal line
+  if (r.Mu > 0 && r.Mu < yMax) {
+    svg += '<line x1="'+pad.l+'" y1="'+sy(r.Mu)+'" x2="'+(W-pad.r)+'" y2="'+sy(r.Mu)+'" stroke="rgba(239,68,68,0.5)" stroke-width="1" stroke-dasharray="5,3"/>';
+    svg += '<text x="'+(pad.l+2)+'" y="'+(sy(r.Mu)-3)+'" font-size="8" fill="rgba(239,68,68,0.8)" font-family="var(--mono)">Mu</text>';
+  }
+  svg += '<circle cx="'+dPx+'" cy="'+dPy+'" r="5" fill="'+(r.DCR<=1?'#3b82f6':'#ef4444')+'" stroke="#fff" stroke-width="1.5"/>';
+
+  // Axes
+  svg += '<line x1="'+pad.l+'" y1="'+pad.t+'" x2="'+pad.l+'" y2="'+yBase+'" stroke="var(--border)" stroke-width="1.5"/>';
+  svg += '<line x1="'+pad.l+'" y1="'+yBase+'" x2="'+(W-pad.r)+'" y2="'+yBase+'" stroke="var(--border)" stroke-width="1.5"/>';
+
+  // Y ticks
+  var yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+  yTicks.forEach(function(t) {
+    var val = t * phiMp;
+    var yy = sy(val);
+    svg += '<line x1="'+(pad.l-4)+'" y1="'+yy+'" x2="'+pad.l+'" y2="'+yy+'" stroke="var(--border)" stroke-width="1"/>';
+    svg += '<text x="'+(pad.l-6)+'" y="'+(yy+3)+'" font-size="8" fill="var(--text-dim)" text-anchor="end" font-family="var(--mono)">'+fmt(val,0)+'</text>';
+  });
+
+  // X ticks: Lp, Lr, design Lb, xMax/2, xMax
+  var xTickVals = [0, r.Lp, r.Lr, xMax];
+  if (r.Lb_input > 0 && Math.abs(r.Lb_input - r.Lp) > xMax*0.05 && Math.abs(r.Lb_input - r.Lr) > xMax*0.05) xTickVals.push(r.Lb_input);
+  xTickVals.forEach(function(v) {
+    var xx = sx(v);
+    svg += '<line x1="'+xx+'" y1="'+yBase+'" x2="'+xx+'" y2="'+(yBase+4)+'" stroke="var(--border)" stroke-width="1"/>';
+    svg += '<text x="'+xx+'" y="'+(yBase+13)+'" font-size="8" fill="var(--text-dim)" text-anchor="middle" font-family="var(--mono)">'+fmt(v,1)+'</text>';
+  });
+
+  // Labels Lp, Lr
+  if (xLp > pad.l + 15) svg += '<text x="'+xLp+'" y="'+(pad.t+10)+'" font-size="8" fill="rgba(34,197,94,0.9)" text-anchor="middle" font-family="var(--sans)">Lp</text>';
+  if (xLr < W-pad.r-15) svg += '<text x="'+xLr+'" y="'+(pad.t+10)+'" font-size="8" fill="rgba(251,146,60,0.9)" text-anchor="middle" font-family="var(--sans)">Lr</text>';
+
+  // Axis labels
+  svg += '<text x="'+pad.l+'" y="'+(pad.t-4)+'" font-size="8" fill="var(--text-dim)" text-anchor="start" font-family="var(--sans)">&phi;M<tspan baseline-shift="sub" font-size="6">n</tspan> ('+r.unit_mom+')</text>';
+  svg += '<text x="'+(W-pad.r)+'" y="'+(yBase+26)+'" font-size="8" fill="var(--text-dim)" text-anchor="end" font-family="var(--sans)">Lb ('+r.unit_len+')</text>';
+
+  svg += '</svg>';
+
+  var legend = '<div class="ltb-zone-legend">';
+  legend += '<span><span class="ltb-legend-dot" style="background:rgba(34,197,94,0.5);"></span>Plastic (L<sub>b</sub>&le;L<sub>p</sub>)</span>';
+  legend += '<span><span class="ltb-legend-dot" style="background:rgba(251,146,60,0.5);"></span>Inelastic LTB (L<sub>p</sub>&lt;L<sub>b</sub>&le;L<sub>r</sub>)</span>';
+  legend += '<span><span class="ltb-legend-dot" style="background:rgba(239,68,68,0.4);"></span>Elastic LTB (L<sub>b</sub>&gt;L<sub>r</sub>)</span>';
+  legend += '<span><span style="display:inline-block;width:22px;height:2px;background:#3b82f6;vertical-align:middle;margin-right:4px;"></span>C<sub>b</sub>='+fmt(r.Cb,2)+'</span>';
+  legend += '<span><span style="display:inline-block;width:22px;height:0;border-top:2px dashed var(--border);vertical-align:middle;margin-right:4px;"></span>C<sub>b</sub>=1.0</span>';
+  legend += '</div>';
+
+  return svg + legend;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  ltbPopulateGrades();
+  ltbPopulateTypes();
+})();
+</script>
+</body>
+</html>
