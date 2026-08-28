@@ -162,70 +162,132 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-cb">C<sub>b</sub> Factor</a>
     <a href="#bg-limits">Limitations</a>
   </nav>
+
   <div class="bg-pane" id="bg-ltb">
-    <div class="bg-panel-hdr"><span>LTB Zones &mdash; AISC 360-22 §F2</span></div>
+    <div class="bg-panel-hdr"><span>LTB Zones &mdash; AISC 360-22 &sect;F2</span></div>
     <div class="tb">
-      <h4>Limiting Unbraced Lengths</h4>
-      <div class="fml-blk"><span class="ft">Plastic limit L<sub>p</sub></span>
-        L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E/F<sub>y</sub>)
+      <h4>Step 1 &mdash; Plastic Moment</h4>
+      <div class="fml-blk"><span class="ft">Plastic moment capacity (strong axis)</span>
+        M<sub>p</sub> = F<sub>y</sub> &middot; Z<sub>x</sub> &nbsp;&nbsp; [kip&middot;in or N&middot;mm]
       </div>
-      <div class="fml-blk"><span class="ft">Inelastic limit L<sub>r</sub></span>
-        L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E / 0.7F<sub>y</sub>) &middot; &radic;(X<sub>2</sub> + &radic;(X<sub>2</sub>&sup2; + 6.76(0.7F<sub>y</sub>/E)&sup2;))
-        where X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)
+      <p>Design value: &phi;<sub>b</sub>M<sub>n</sub> = 0.90 &middot; M<sub>n</sub> &nbsp;&nbsp; (LRFD, AISC &sect;F1)</p>
+
+      <h4>Step 2 &mdash; Limiting Unbraced Lengths</h4>
+      <div class="fml-blk"><span class="ft">Plastic limit L<sub>p</sub> &mdash; AISC Eq. F2-5</span>
+        L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E / F<sub>y</sub>)
       </div>
-      <div class="fml-blk"><span class="ft">Effective radius of gyration r<sub>ts</sub></span>
-        r<sub>ts</sub>&sup2; = &radic;(I<sub>y</sub> &middot; C<sub>w</sub>) / S<sub>x</sub>
+      <div class="fml-blk"><span class="ft">Inelastic limit L<sub>r</sub> &mdash; AISC Eq. F2-6</span>
+        L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E / 0.7F<sub>y</sub>) &middot; &radic;( X<sub>2</sub> + &radic;(X<sub>2</sub><sup>2</sup> + 6.76(0.7F<sub>y</sub>/E)<sup>2</sup>) )
+        <br><small>where &nbsp; X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>) &nbsp;&nbsp; and &nbsp;&nbsp; r<sub>ts</sub><sup>2</sup> = &radic;(I<sub>y</sub>&middot;C<sub>w</sub>) / S<sub>x</sub></small>
       </div>
-      <h4>Nominal Moment Capacity M<sub>n</sub></h4>
-      <table class="combo-ref-tbl" style="width:100%;max-width:620px">
-        <tr><th>Zone</th><th>Condition</th><th>M<sub>n</sub></th></tr>
-        <tr><td>Plastic</td><td>L<sub>b</sub> &le; L<sub>p</sub></td><td>M<sub>p</sub> = F<sub>y</sub> &middot; Z<sub>x</sub></td></tr>
-        <tr><td>Inelastic LTB</td><td>L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></td><td>C<sub>b</sub>[M<sub>p</sub> &minus; (M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>) &middot; (L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub></td></tr>
-        <tr><td>Elastic LTB</td><td>L<sub>b</sub> &gt; L<sub>r</sub></td><td>C<sub>b</sub> &middot; F<sub>cr</sub> &middot; S<sub>x</sub> &le; M<sub>p</sub> where F<sub>cr</sub> = &pi;&sup2;E/(L<sub>b</sub>/r<sub>ts</sub>)&sup2; &middot; &radic;(1 + 0.078 X<sub>2</sub>(L<sub>b</sub>/r<sub>ts</sub>)&sup2;)</td></tr>
+
+      <h4>Step 3 &mdash; Nominal Moment M<sub>n</sub></h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Zone</th><th>Condition</th><th>M<sub>n</sub> (AISC 360-22)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b style="color:var(--green)">Plastic</b></td>
+            <td>L<sub>b</sub> &le; L<sub>p</sub></td>
+            <td>M<sub>p</sub> = F<sub>y</sub> &middot; Z<sub>x</sub></td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--orange)">Inelastic LTB</b></td>
+            <td>L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></td>
+            <td>C<sub>b</sub>[M<sub>p</sub> &minus; (M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>)&middot;(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub> &nbsp;(Eq. F2-2)</td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--red)">Elastic LTB</b></td>
+            <td>L<sub>b</sub> &gt; L<sub>r</sub></td>
+            <td>C<sub>b</sub> &middot; F<sub>cr</sub> &middot; S<sub>x</sub> &le; M<sub>p</sub> &nbsp;(Eq. F2-3)</td>
+          </tr>
+        </tbody>
       </table>
-      <p style="margin-top:8px">Design capacity: &phi;<sub>b</sub>M<sub>n</sub> = 0.90 &middot; M<sub>n</sub></p>
+      <div class="fml-blk"><span class="ft">Elastic critical stress F<sub>cr</sub> &mdash; AISC Eq. F2-4</span>
+        F<sub>cr</sub> = &pi;<sup>2</sup>E / (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> &middot; &radic;( 1 + 0.078 &middot; X<sub>2</sub> &middot; (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> )
+      </div>
     </div>
   </div>
+
   <div class="bg-pane" id="bg-params">
     <div class="bg-panel-hdr"><span>Section Parameters</span></div>
     <div class="tb">
-      <h4>Key Torsional Properties</h4>
-      <div class="fml-blk"><span class="ft">Distance between flange centroids</span>h<sub>o</sub> = d &minus; t<sub>f</sub></div>
-      <div class="fml-blk"><span class="ft">Torsional parameter X<sub>2</sub></span>X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)</div>
-      <div class="fml-blk"><span class="ft">Warping constant C<sub>w</sub> (approximate for doubly-symmetric I-sections)</span>C<sub>w</sub> &asymp; I<sub>y</sub> &middot; h<sub>o</sub>&sup2; / 4</div>
-      <p>The exact C<sub>w</sub> is tabulated in the AISC Steel Construction Manual for W sections. This calculator uses tabulated values from AISC 15th Edition and Arcelor-Mittal for European sections.</p>
-    </div>
-  </div>
-  <div class="bg-pane" id="bg-cb">
-    <div class="bg-panel-hdr"><span>C<sub>b</sub> Moment Gradient Factor</span></div>
-    <div class="tb">
-      <h4>AISC 360-22 §F1 &mdash; Eq. F1-1</h4>
-      <div class="fml-blk"><span class="ft">Cb for non-uniform moment diagrams</span>
-        C<sub>b</sub> = 12.5M<sub>max</sub> / (2.5M<sub>max</sub> + 3M<sub>A</sub> + 4M<sub>B</sub> + 3M<sub>C</sub>) &le; 3.0
+      <h4>Geometric Properties Used in LTB</h4>
+      <div class="fml-blk"><span class="ft">Distance between flange centroids h<sub>o</sub></span>
+        h<sub>o</sub> = d &minus; t<sub>f</sub>
       </div>
-      <p>where M<sub>max</sub> = absolute maximum moment in unbraced segment, M<sub>A</sub> = moment at 1/4 point, M<sub>B</sub> = moment at midspan, M<sub>C</sub> = moment at 3/4 point (all absolute values).</p>
-      <table class="combo-ref-tbl" style="width:100%;max-width:480px">
-        <tr><th>Loading</th><th>C<sub>b</sub></th></tr>
-        <tr><td>Uniform moment (most conservative)</td><td>1.00</td></tr>
-        <tr><td>UDL on simply-supported span</td><td>1.14</td></tr>
-        <tr><td>Single mid-span point load</td><td>1.32</td></tr>
-        <tr><td>Linear moment (single curvature)</td><td>1.67</td></tr>
-        <tr><td>Double curvature, equal end moments</td><td>2.27</td></tr>
+      <div class="fml-blk"><span class="ft">Torsional parameter X<sub>2</sub></span>
+        X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)
+      </div>
+      <div class="fml-blk"><span class="ft">Effective radius of gyration r<sub>ts</sub></span>
+        r<sub>ts</sub><sup>2</sup> = &radic;(I<sub>y</sub> &middot; C<sub>w</sub>) / S<sub>x</sub>
+      </div>
+      <div class="fml-blk"><span class="ft">Warping constant C<sub>w</sub> &mdash; geometric approximation for doubly-symmetric I-sections</span>
+        C<sub>w</sub> &asymp; I<sub>y</sub> &middot; h<sub>o</sub><sup>2</sup> / 4
+      </div>
+      <p>Exact C<sub>w</sub> values are tabulated in AISC Steel Construction Manual (15th Ed.) for W sections and in Arcelor-Mittal EN 10365 tables for IPE/HEA/HEB. This calculator uses those tabulated values directly.</p>
+
+      <h4>Section Database Coverage</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Family</th><th>Range</th><th>Units</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>W sections</td><td>W6 to W40</td><td>US (in, kip&middot;ft)</td><td>AISC 15th Edition</td></tr>
+          <tr><td>IPE sections</td><td>IPE 80 to IPE 600</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
+          <tr><td>HEA sections</td><td>HEA 100 to HEA 700</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
+          <tr><td>HEB sections</td><td>HEB 100 to HEB 700</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
-  <div class="bg-pane" id="bg-limits">
-    <div class="bg-panel-hdr"><span>Limitations</span></div>
+
+  <div class="bg-pane" id="bg-cb">
+    <div class="bg-panel-hdr"><span>C<sub>b</sub> &mdash; Moment Gradient Factor</span></div>
     <div class="tb">
-      <h4>Applicability</h4>
+      <h4>AISC 360-22 &sect;F1 &mdash; Eq. F1-1</h4>
+      <p>C<sub>b</sub> accounts for the non-uniform moment distribution within the unbraced segment. Uniform moment (C<sub>b</sub>=1.0) is the most conservative case.</p>
+      <div class="fml-blk"><span class="ft">General formula &mdash; AISC Eq. F1-1</span>
+        C<sub>b</sub> = 12.5 M<sub>max</sub> / (2.5 M<sub>max</sub> + 3M<sub>A</sub> + 4M<sub>B</sub> + 3M<sub>C</sub>) &le; 3.0
+        <br><small>M<sub>max</sub> = max moment in segment &nbsp; M<sub>A</sub>, M<sub>C</sub> = moments at quarter-points &nbsp; M<sub>B</sub> = midpoint moment</small>
+      </div>
+      <h4>Common C<sub>b</sub> Values</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Loading &amp; Boundary Conditions</th><th>C<sub>b</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Uniform moment &mdash; single curvature (conservative baseline)</td><td>1.00</td></tr>
+          <tr><td>UDL on simply-supported span</td><td>1.14</td></tr>
+          <tr><td>Single concentrated load at mid-span (simply supported)</td><td>1.32</td></tr>
+          <tr><td>Linear moment diagram &mdash; single curvature</td><td>1.67</td></tr>
+          <tr><td>Double curvature &mdash; equal and opposite end moments</td><td>2.27</td></tr>
+          <tr><td>Cantilever (tip load, lateral brace at support only)</td><td>1.12</td></tr>
+        </tbody>
+      </table>
+      <p>Note: C<sub>b</sub> &gt; 1.0 is beneficial — it increases the computed M<sub>n</sub>, but the result is capped at M<sub>p</sub>. When loads are applied at the top flange rather than the shear center, an effective C<sub>b</sub> reduction should be applied per AISC Commentary to &sect;F1.</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-limits">
+    <div class="bg-panel-hdr"><span>Applicability &amp; Limitations</span></div>
+    <div class="tb">
+      <h4>Scope of AISC &sect;F2</h4>
       <ul>
-        <li>Compact sections only (flange and web satisfy compactness limits of AISC Table B4.1b).</li>
-        <li>Doubly-symmetric I-shaped members loaded in the plane of the web (AISC §F2).</li>
-        <li>Strong-axis bending only. Weak-axis bending is not subject to LTB (AISC §F6).</li>
-        <li>Loads applied at the shear center. If loads are applied at the top flange, C<sub>b</sub> should be reduced per Commentary §F1.</li>
-        <li>Bracing must satisfy stiffness and strength requirements of AISC Appendix 6.</li>
-        <li>This tool does not check shear capacity (AISC §G2).</li>
+        <li><b>Compact sections only</b> — flanges and web must satisfy compactness limits per AISC Table B4.1b. Non-compact sections require &sect;F3/F4.</li>
+        <li><b>Doubly-symmetric I-shaped members</b> loaded in the plane of the web. Singly-symmetric or other shapes require different provisions (&sect;F4&ndash;F10).</li>
+        <li><b>Strong-axis bending only.</b> Weak-axis bending of doubly-symmetric I-shapes is governed by &sect;F6 and is not subject to LTB.</li>
+        <li><b>Loads at shear center.</b> Top-flange loading destabilises the beam; bottom-flange loading stabilises it. Use effective C<sub>b</sub> for other load heights.</li>
+        <li><b>Bracing requirements</b> — braces must meet stiffness and strength requirements per AISC Appendix 6. Point braces must provide both lateral and torsional restraint to be effective against LTB.</li>
+        <li><b>Not checked:</b> Shear (&sect;G2), flange local buckling (&sect;F3/F4), web local buckling, connection strength, or deflection limits.</li>
       </ul>
+
+      <h4>Unit System Notes</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Quantity</th><th>US units</th><th>SI units</th></tr></thead>
+        <tbody>
+          <tr><td>Section dimensions</td><td>inches (in)</td><td>millimetres (mm)</td></tr>
+          <tr><td>Unbraced length L<sub>b</sub></td><td>feet (ft)</td><td>metres (m)</td></tr>
+          <tr><td>Moment M<sub>n</sub>, M<sub>u</sub></td><td>kip&middot;ft</td><td>kN&middot;m</td></tr>
+          <tr><td>Elastic modulus E</td><td>ksi (29 000)</td><td>MPa (200 000)</td></tr>
+          <tr><td>Yield stress F<sub>y</sub></td><td>ksi</td><td>MPa</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -581,115 +643,141 @@ function ltbRender(r) {
   document.getElementById('ltb-empty').style.display = 'none';
   document.getElementById('ltb-card').style.display  = 'block';
 
-  var ok    = r.DCR <= 1.0;
-  var dcrPct = (r.DCR * 100).toFixed(1);
-  var dcrColor = r.DCR <= 0.80 ? 'var(--green)' : r.DCR <= 1.0 ? 'var(--orange)' : 'var(--red)';
-  var dcrBg    = r.DCR <= 0.80 ? 'var(--green-bg)' : r.DCR <= 1.0 ? 'var(--orange-bg)' : 'var(--red-bg)';
-
-  var modeColor = r.mode === 'Plastic' ? 'var(--green)' : r.mode === 'Inelastic LTB' ? 'var(--orange)' : 'var(--red)';
-
-  var html = '';
-
-  // ── Print header (hidden on screen) ──
-  html += '<div class="print-only">';
-  html += '<div><div class="ph-title">LTB Control &mdash; ' + r.name + '</div>';
-  html += '<div class="ph-sub">AISC 360-22 &sect;F2 &middot; ' + r.grade + ' &middot; C<sub>b</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + r.unit_len + '</div></div>';
-  html += '<div class="ph-date">' + new Date().toLocaleDateString('en-CA') + '</div></div>';
-
-  // ── D/C Banner ──
-  html += '<div class="dcr-banner" style="background:'+dcrBg+';border:1.5px solid '+dcrColor+';border-radius:7px;padding:8px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">';
-  html += '<div class="dcr-text"><strong style="font-size:1.05rem;color:'+dcrColor+'">D/C = ' + fmt(r.DCR,3) + '</strong>';
-  html += ' <span style="font-size:.78rem;color:var(--text-mid);margin-left:8px;">' + dcrPct + '% — ' + (ok ? 'OK ✔' : 'EXCEEDS ✖') + '</span></div>';
-  html += '<span style="font-size:.78rem;color:'+modeColor+';font-weight:600;">' + r.mode + '</span></div>';
-
-  // ── Key Results ──
-  html += '<div class="result-box" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">';
-  var ris = [
-    {v: fmt(r.Mp,1), l:'M<sub>p</sub>', u:r.unit_mom},
-    {v: fmt(r.Mn,1), l:'M<sub>n</sub>', u:r.unit_mom},
-    {v: fmt(r.phiMn,1), l:'&phi;<sub>b</sub>M<sub>n</sub>', u:r.unit_mom},
-    {v: fmt(r.Mu,1), l:'M<sub>u</sub>', u:r.unit_mom},
-    {v: fmt(r.Lp,3), l:'L<sub>p</sub>', u:r.unit_len},
-    {v: fmt(r.Lr,3), l:'L<sub>r</sub>', u:r.unit_len}
-  ];
-  ris.forEach(function(ri) {
-    html += '<div class="fl-col" style="flex:1;min-width:90px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">';
-    html += '<div class="fl-lbl" style="font-size:.66rem;color:var(--text-dim);font-family:var(--sans);">' + ri.l + '</div>';
-    html += '<div class="fl-val" style="font-size:1.0rem;font-weight:700;font-family:var(--mono);color:var(--text);">' + ri.v + '</div>';
-    html += '<div class="fl-unit" style="font-size:.62rem;color:var(--text-dim);font-family:var(--sans);">' + ri.u + '</div></div>';
-  });
-  html += '</div>';
-
-  // ── LTB Diagram (SVG) ──
-  html += ltbDiagramSVG(r);
-
-  // ── Step-by-step ──
-  html += '<div class="rpt-sec" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">';
-  html += '<div class="rpt-sec-title" style="font-size:.60rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);font-family:var(--sans);font-weight:700;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px;">Step-by-Step Calculation</div>';
-  html += '<table class="steps-table" style="width:100%;border-collapse:collapse;">';
-
+  var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
+  var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
+  var date  = new Date().toLocaleDateString('en-CA');
   var ul = r.unit_sec, um = r.unit_mom, ulen = r.unit_len;
 
-  var steps = [];
-  steps.push({n:1, desc:'Plastic moment M<sub>p</sub>', formula:'F<sub>y</sub> &times; Z<sub>x</sub> / ' + (ltbUnit==='us'?'12':'10<sup>6</sup>'), val: fmt(r.Mp,2)+' '+um});
-  steps.push({n:2, desc:'h<sub>o</sub> = d &minus; t<sub>f</sub>', formula: fmt(r.d,3)+' &minus; '+fmt(r.tf,3)+'  ['+ul+']', val: fmt(r.ho,3)+' '+ul});
-  steps.push({n:3, desc:'Torsional parameter X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)', formula: ltbUnit==='us'? fmt(r.J,4)+' / ('+fmt(r.Sx,2)+' &times; '+fmt(r.ho,3)+')' : 'J·S⁻¹·hₒ⁻¹', val: r.tv.toExponential(4)});
-  steps.push({n:4, desc:'r<sub>ts</sub> = &radic;(&radic;(I<sub>y</sub>&middot;C<sub>w</sub>) / S<sub>x</sub>)', formula:'', val: fmt(r.rts,3)+' '+ul});
-  steps.push({n:5, desc:'L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E/F<sub>y</sub>)', formula:'1.76 &times; '+fmt(r.ry? r.ry:0,3)+' &times; &radic;('+r.E+'/'+r.Fy+')', val: fmt(r.Lp,3)+' '+ulen});
-  steps.push({n:6, desc:'L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E/0.7F<sub>y</sub>) &middot; &radic;(X<sub>2</sub>+&radic;(X<sub>2</sub>&sup2;+6.76(0.7F<sub>y</sub>/E)&sup2;))', formula:'', val: fmt(r.Lr,3)+' '+ulen});
-  var zoneStr;
-  if (r.mode === 'Plastic') {
-    zoneStr = 'L<sub>b</sub>='+fmt(r.Lb_input,2)+' &le; L<sub>p</sub>='+fmt(r.Lp,3)+' &rarr; M<sub>n</sub> = M<sub>p</sub>';
-  } else if (r.mode === 'Inelastic LTB') {
-    zoneStr = 'L<sub>p</sub>&lt;L<sub>b</sub>&le;L<sub>r</sub> &rarr; Inelastic. C<sub>b</sub>[M<sub>p</sub>&minus;(M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)]';
-  } else {
-    zoneStr = 'L<sub>b</sub>&gt;L<sub>r</sub> &rarr; Elastic. F<sub>cr</sub>&middot;S<sub>x</sub>&middot;C<sub>b</sub> &le; M<sub>p</sub>';
+  function step(n, desc, fml, val, ok) {
+    var chk = ok === undefined ? ''
+      : '<span class="step-check ' + (ok ? 'chk-ok' : 'chk-err') + '">' + (ok ? 'OK' : 'NG') + '</span>';
+    var vc = ok === true ? 'ok' : ok === false ? 'err' : '';
+    return '<tr>'
+      + '<td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">' + n + '</div></td>'
+      + '<td><div class="step-desc">' + desc + '</div>'
+      + (fml ? '<div class="step-formula">' + fml + '</div>' : '')
+      + '</td>'
+      + '<td style="width:170px;text-align:right;vertical-align:middle">'
+      + '<span class="step-val ' + vc + '">' + val + '</span> ' + chk
+      + '</td></tr>';
   }
-  steps.push({n:7, desc:'Zone &amp; M<sub>n</sub>', formula:zoneStr, val: fmt(r.Mn,2)+' '+um});
-  steps.push({n:8, desc:'&phi;<sub>b</sub>M<sub>n</sub> = 0.90 &times; M<sub>n</sub>', formula:'0.90 &times; '+fmt(r.Mn,2), val: fmt(r.phiMn,2)+' '+um, highlight: true});
-  steps.push({n:9, desc:'D/C ratio = M<sub>u</sub> / &phi;<sub>b</sub>M<sub>n</sub>', formula:fmt(r.Mu,2)+' / '+fmt(r.phiMn,2), val: fmt(r.DCR,3), check: r.DCR<=1.0?'OK':'NG'});
 
-  steps.forEach(function(s) {
-    var bg = s.highlight ? 'background:var(--bg2);' : '';
-    html += '<tr style="'+bg+'">';
-    html += '<td style="vertical-align:top;padding:4px 5px;"><div class="step-num" style="width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.58rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">'+s.n+'</div></td>';
-    html += '<td style="padding:4px 5px;vertical-align:top;"><div class="step-desc" style="font-size:.78rem;color:var(--text);font-family:var(--sans);">'+s.desc+'</div>';
-    if (s.formula) html += '<div class="step-formula" style="font-size:.69rem;color:var(--text-mid);font-family:var(--mono);margin-top:1px;">'+s.formula+'</div>';
-    html += '</td>';
-    html += '<td style="padding:4px 5px;vertical-align:top;text-align:right;"><div class="step-val" style="font-size:.80rem;font-weight:700;font-family:var(--mono);color:var(--text);">'+s.val+'</div>';
-    if (s.check) {
-      var cc = s.check==='OK'?'var(--green)':'var(--red)';
-      var cb = s.check==='OK'?'var(--green-bg)':'var(--red-bg)';
-      html += '<div class="step-check" style="font-size:.65rem;font-weight:700;color:'+cc+';background:'+cb+';border-radius:3px;padding:1px 5px;display:inline-block;margin-top:2px;">'+s.check+'</div>';
-    }
-    html += '</td></tr>';
+  var h = '';
+
+  // Print header
+  h += '<div class="print-only">'
+    + '<div><div class="ph-title">LTB Control &mdash; ' + r.name + '</div>'
+    + '<div class="ph-sub">AISC 360-22 &sect;F2 &middot; ' + r.grade + ' &middot; C<sub>b</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + ulen + '</div></div>'
+    + '<div class="ph-date">' + date + '</div></div>';
+
+  // DCR Banner
+  h += '<div class="dcr-banner ' + dc + '"><div class="dcr-text">'
+    + '<strong>D/C = ' + fmt(r.DCR,3) + ' &mdash; ' + dcLbl + '</strong>'
+    + '<span>' + r.name + ' &middot; ' + r.grade + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + ulen + ' &middot; ' + r.mode + '</span>'
+    + '</div></div>';
+
+  // Result box
+  h += '<div class="result-box" style="margin-bottom:8px;">';
+  [
+    {l:'M<sub>p</sub>',               v:fmt(r.Mp,1),    u:um},
+    {l:'M<sub>n</sub>',               v:fmt(r.Mn,1),    u:um},
+    {l:'&phi;<sub>b</sub>M<sub>n</sub>', v:fmt(r.phiMn,1), u:um, cls:dc},
+    {l:'M<sub>u</sub>',               v:fmt(r.Mu,1),    u:um},
+    {l:'L<sub>p</sub>',               v:fmt(r.Lp,3),    u:ulen},
+    {l:'L<sub>r</sub>',               v:fmt(r.Lr,3),    u:ulen}
+  ].forEach(function(item) {
+    h += '<div class="result-item' + (item.cls ? ' ' + item.cls : '') + '">'
+      + '<div class="ri-label">' + item.l + '</div>'
+      + '<div class="ri-value">' + item.v + '</div>'
+      + '<div class="ri-unit">'  + item.u + '</div>'
+      + '</div>';
   });
-  html += '</table></div>';
+  h += '</div>';
 
-  // ── Input summary ──
-  html += '<div class="rpt-sec">';
-  html += '<div class="rpt-sec-title" style="font-size:.60rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);font-family:var(--sans);font-weight:700;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px;">Input Summary</div>';
-  html += '<table class="inp-tbl" style="width:100%;border-collapse:collapse;font-size:.76rem;">';
-  var ins = [
-    ['Code','AISC 360-22 §F2'],
-    ['Units', ltbUnit==='us'?'US (kip·ft, in)':'SI (kN·m, mm)'],
-    ['Steel Grade', r.grade + ' &mdash; F<sub>y</sub>='+r.Fy+(ltbUnit==='us'?' ksi':' MPa')],
-    ['Section', r.name],
-    ['L<sub>b</sub>', fmt(r.Lb_input,2)+' '+ulen],
-    ['C<sub>b</sub>', fmt(r.Cb,2)],
-    ['M<sub>u</sub>', fmt(r.Mu,2)+' '+um]
-  ];
-  ins.forEach(function(row) {
-    html += '<tr><td style="padding:3px 6px;color:var(--text-mid);font-family:var(--sans);width:45%;border-bottom:1px solid var(--border);">'+row[0]+'</td>';
-    html += '<td style="padding:3px 6px;font-family:var(--mono);border-bottom:1px solid var(--border);">'+row[1]+'</td></tr>';
+  // SVG Diagram
+  h += ltbDiagramSVG(r);
+
+  // Step-by-step
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation</div>';
+  h += '<table class="steps-table">';
+
+  var tvFml = ltbUnit === 'us'
+    ? 'J=' + fmt(r.J,4) + ' / (S<sub>x</sub>=' + fmt(r.Sx,2) + ' &times; h<sub>o</sub>=' + fmt(r.ho,2) + ') [in]'
+    : 'J=' + r.J.toExponential(3) + ' / (S<sub>x</sub>=' + fmt(r.Sx,0) + ' &times; h<sub>o</sub>=' + fmt(r.ho,1) + ') [mm]';
+
+  var rtsFml = 'I<sub>y</sub>=' + (ltbUnit==='us' ? fmt(r.Iy,2) : r.Iy.toExponential(3))
+    + ', C<sub>w</sub>=' + r.Cw.toExponential(3) + ', S<sub>x</sub>=' + fmt(r.Sx,0) + ' [' + ul + ']';
+
+  var lrFml = 'r<sub>ts</sub>=' + fmt(r.rts,3) + ' ' + ul
+    + ', X<sub>2</sub>=' + r.tv.toExponential(3)
+    + ', E/0.7F<sub>y</sub>=' + fmt(r.E/(0.7*r.Fy),1);
+
+  var zoneDesc, zoneFml;
+  if (r.mode === 'Plastic') {
+    zoneDesc = '<b>Plastic zone</b> — L<sub>b</sub> &le; L<sub>p</sub> &rarr; M<sub>n</sub> = M<sub>p</sub>';
+    zoneFml  = 'L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' &le; L<sub>p</sub>=' + fmt(r.Lp,3) + ' ' + ulen;
+  } else if (r.mode === 'Inelastic LTB') {
+    zoneDesc = '<b>Inelastic LTB</b> — M<sub>n</sub> = C<sub>b</sub>[M<sub>p</sub>&minus;(M<sub>p</sub>&minus;0.7F<sub>y</sub>S<sub>x</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub>';
+    zoneFml  = 'L<sub>p</sub>=' + fmt(r.Lp,3) + ' &lt; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' &le; L<sub>r</sub>=' + fmt(r.Lr,3) + ' ' + ulen;
+  } else {
+    zoneDesc = '<b>Elastic LTB</b> — F<sub>cr</sub>=&pi;<sup>2</sup>E/(L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup>&middot;&radic;(1+0.078X<sub>2</sub>(L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup>), M<sub>n</sub>=C<sub>b</sub>F<sub>cr</sub>S<sub>x</sub>&le;M<sub>p</sub>';
+    zoneFml  = 'L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' &gt; L<sub>r</sub>=' + fmt(r.Lr,3) + ' ' + ulen;
+  }
+
+  h += step(1, 'Plastic moment M<sub>p</sub> = F<sub>y</sub> &times; Z<sub>x</sub>',
+    'F<sub>y</sub>=' + r.Fy + (ltbUnit==='us'?' ksi':' MPa') + ' &times; Z<sub>x</sub>=' + fmt(r.Zx,0) + ' ' + ul + '<sup>3</sup> &divide; ' + (ltbUnit==='us'?'12':'10<sup>6</sup>'),
+    fmt(r.Mp,2)+' '+um);
+
+  h += step(2, 'h<sub>o</sub> = d &minus; t<sub>f</sub>',
+    'd=' + fmt(r.d,2) + ' &minus; t<sub>f</sub>=' + fmt(r.tf,2) + ' [' + ul + ']',
+    fmt(r.ho,2)+' '+ul);
+
+  h += step(3, 'X<sub>2</sub> = J / (S<sub>x</sub> &middot; h<sub>o</sub>)',
+    tvFml, r.tv.toExponential(4));
+
+  h += step(4, 'r<sub>ts</sub> = (&radic;(I<sub>y</sub>&middot;C<sub>w</sub>) / S<sub>x</sub>)<sup>0.5</sup>',
+    rtsFml, fmt(r.rts,3)+' '+ul);
+
+  h += step(5, 'L<sub>p</sub> = 1.76 &middot; r<sub>y</sub> &middot; &radic;(E/F<sub>y</sub>)',
+    '1.76 &times; r<sub>y</sub>=' + fmt(r.ry||0,3) + ' ' + ul + ' &times; &radic;(' + r.E + '/' + r.Fy + ')',
+    fmt(r.Lp,3)+' '+ulen);
+
+  h += step(6, 'L<sub>r</sub> = 1.95&middot;r<sub>ts</sub>&middot;(E/0.7F<sub>y</sub>)&middot;&radic;(X<sub>2</sub>+&radic;(X<sub>2</sub><sup>2</sup>+6.76(0.7F<sub>y</sub>/E)<sup>2</sup>))',
+    lrFml, fmt(r.Lr,3)+' '+ulen);
+
+  h += step(7, zoneDesc, zoneFml, fmt(r.Mn,2)+' '+um);
+
+  h += step(8, '&phi;<sub>b</sub>M<sub>n</sub> = 0.90 &times; M<sub>n</sub>',
+    '0.90 &times; ' + fmt(r.Mn,2) + ' ' + um,
+    fmt(r.phiMn,2)+' '+um);
+
+  h += step(9, 'D/C = M<sub>u</sub> / &phi;<sub>b</sub>M<sub>n</sub>',
+    fmt(r.Mu,2) + ' / ' + fmt(r.phiMn,2) + ' ' + um,
+    fmt(r.DCR,3), r.DCR<=1.0);
+
+  h += '</table></div>';
+
+  // Input summary
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>';
+  h += '<table class="inp-tbl"><tbody>';
+  [
+    ['Code',                'AISC 360-22 &sect;F2'],
+    ['Units',               ltbUnit==='us'?'US &mdash; kip, ft, in':'SI &mdash; kN, m, mm'],
+    ['Steel Grade',         r.grade + ' &mdash; F<sub>y</sub>=' + r.Fy + (ltbUnit==='us'?' ksi':' MPa') + ', E=' + r.E + (ltbUnit==='us'?' ksi':' MPa')],
+    ['Section',             r.name],
+    ['L<sub>b</sub>',       fmt(r.Lb_input,2)+' '+ulen],
+    ['C<sub>b</sub>',       fmt(r.Cb,2)],
+    ['M<sub>u</sub>',       fmt(r.Mu,2)+' '+um]
+  ].forEach(function(row) {
+    h += '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td></tr>';
   });
-  html += '</table></div>';
+  h += '</tbody></table></div>';
 
-  // ── Print footer ──
-  html += '<div class="print-footer"><span>CivilStrCalc.com &mdash; AISC 360-22 LTB Control</span><span>'+new Date().toLocaleDateString('en-CA')+'</span></div>';
-  html += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
+  // Print footer
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; AISC 360-22 LTB Control</span><span>' + date + '</span></div>';
+  h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
 
-  document.getElementById('ltb-body').innerHTML = html;
+  document.getElementById('ltb-body').innerHTML = h;
 }
 
 // ── SVG DIAGRAM ──────────────────────────────────────────────────────────────
