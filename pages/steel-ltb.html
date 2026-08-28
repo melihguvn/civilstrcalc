@@ -4,8 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
-<title>LTB Control - AISC LRFD | CivilStrCalc</title>
-<meta name="description" content="AISC LRFD lateral torsional buckling (LTB) control for W, IPE, HEA, HEB sections. Computes Lp, Lr, LTB zone, φbMn and D/C ratio per AISC 360-22 §F2.">
+<title>LTB Control - AISC 360-22 / ÇYTHYE 2018 | CivilStrCalc</title>
+<meta name="description" content="Lateral torsional buckling (LTB) control for W, IPE, HEA, HEB sections per AISC 360-22 §F2 and ÇYTHYE 2018 §F2. Computes Lp, Lr, φbMn and D/C ratio in US or SI units.">
 <meta name="robots" content="index, follow">
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
@@ -83,7 +83,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>LTB Control</h1>
-  <p>AISC 360-22 &sect;F2 lateral torsional buckling check for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>, L<sub>r</sub>, LTB zone, &phi;<sub>b</sub>M<sub>n</sub> and D/C ratio in US (kip&middot;ft) or SI (kN&middot;m) units.</p>
+  <p>AISC 360-22 &sect;F2 and &#199;YTHYE 2018 &sect;F2 lateral torsional buckling check for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>, L<sub>r</sub>, LTB zone, &phi;<sub>b</sub>M<sub>n</sub> and D/C ratio in US (kip&middot;ft), SI (kN&middot;m) or &#199;YTHYE SI units.</p>
 </div>
 
 <div class="calc-layout">
@@ -95,8 +95,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="unit-switcher">
         <label>Units:</label>
         <div class="unit-btns">
-          <button class="unit-btn active" id="ltb-btn-us" onclick="ltbSetUnit('us',this)">US (kip&middot;ft, in)</button>
-          <button class="unit-btn"        id="ltb-btn-si" onclick="ltbSetUnit('si',this)">SI (kN&middot;m)</button>
+          <button class="unit-btn active" id="ltb-btn-us"     onclick="ltbSetUnit('us',this)">US (kip&middot;ft, in)</button>
+          <button class="unit-btn"        id="ltb-btn-si"     onclick="ltbSetUnit('si',this)">SI (kN&middot;m)</button>
+          <button class="unit-btn"        id="ltb-btn-cythye" onclick="ltbSetUnit('cythye',this)">&#199;YTHYE 2018 (SI)</button>
         </div>
       </div>
 
@@ -128,7 +129,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="form-group">
         <label>C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span></label>
         <div class="iw"><input type="number" id="ltb-Cb" value="1.0" step="0.05" min="0.1" max="3.0" oninput="ltbAutoCalc()"><span class="us">&mdash;</span></div>
-        <div style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">Conservative: 1.0 (uniform moment). Use AISC Eq. F1-1 for actual loading.</div>
+        <div style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.</div>
       </div>
       <div class="form-group">
         <label>Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip·ft]</span></label>
@@ -145,7 +146,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="report-card" id="ltb-card" style="display:none">
       <div class="report-hdr">
         <h4>Calculation Report</h4>
-        <span class="rh-code" id="ltb-rh-code">AISC 360-22 &sect;F2 &middot; kip &middot; ft &middot; in</span>
+        <span class="rh-code" id="ltb-rh-code">AISC 360-22 / &#199;YTHYE 2018 &sect;F2</span>
         <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
       </div>
       <div class="report-body" id="ltb-body"></div>
@@ -155,11 +156,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- Theory -->
 <div class="bg-section">
-  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 &mdash; Lateral Torsional Buckling Theory</h3></div>
+  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 / &#199;YTHYE 2018 &sect;F2 &mdash; Lateral Torsional Buckling Theory</h3></div>
   <nav class="bg-toc">
     <a href="#bg-ltb">LTB Zones</a>
     <a href="#bg-params">Section Parameters</a>
     <a href="#bg-cb">C<sub>b</sub> Factor</a>
+    <a href="#bg-cythye">ÇYTHYE 2018</a>
     <a href="#bg-limits">Limitations</a>
   </nav>
 
@@ -261,6 +263,75 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </tbody>
       </table>
       <p>Note: C<sub>b</sub> &gt; 1.0 is beneficial — it increases the computed M<sub>n</sub>, but the result is capped at M<sub>p</sub>. When loads are applied at the top flange rather than the shear center, an effective C<sub>b</sub> reduction should be applied per AISC Commentary to &sect;F1.</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-cythye">
+    <div class="bg-panel-hdr"><span>&#199;YTHYE 2018 &mdash; Türk Çelik Yapı Yönetmeliği</span></div>
+    <div class="tb">
+      <h4>Yönetmelik Hakkında</h4>
+      <p><b>ÇYTHYE</b> (Çelik Yapıların Tasarım, Hesap ve Yapım Esaslarına Dair Yönetmelik), 04 Şubat 2016 tarih ve 29614 sayılı Resmî Gazete'de yayımlanmış, 01 Eylül 2016'da yürürlüğe girmiştir. 2018 düzeltmesiyle güncellenmiştir. Yönetmelik teknik olarak <b>AISC 360-16</b> esas alınarak hazırlanmıştır; §F2 kapsamındaki yanal burulmalı burkulma formülleri AISC ile özdeştir.</p>
+
+      <h4>ÇYTHYE §F2 — Yanal Burulmalı Burkulma (YBB)</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Bölge</th><th>Koşul</th><th>M<sub>n</sub></th><th>Denklem</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b style="color:var(--green)">Plastik</b></td>
+            <td>L<sub>b</sub> &le; L<sub>p</sub></td>
+            <td>M<sub>p</sub> = f<sub>yk</sub> &middot; W<sub>px</sub></td>
+            <td>F2-1</td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--orange)">Elastik olmayan YBB</b></td>
+            <td>L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></td>
+            <td>C<sub>b</sub>[M<sub>p</sub>&minus;(M<sub>p</sub>&minus;0.7f<sub>yk</sub>W<sub>ex</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub></td>
+            <td>F2-2</td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--red)">Elastik YBB</b></td>
+            <td>L<sub>b</sub> &gt; L<sub>r</sub></td>
+            <td>C<sub>b</sub> &middot; F<sub>cr</sub> &middot; W<sub>ex</sub> &le; M<sub>p</sub></td>
+            <td>F2-3</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:.75rem;color:var(--text-dim)">ÇYTHYE notasyonu: f<sub>yk</sub> = akma dayanımı (MPa), W<sub>px</sub> = plastik kesit modülü (mm³), W<sub>ex</sub> = elastik kesit modülü (mm³) &mdash; AISC'deki F<sub>y</sub>, Z<sub>x</sub>, S<sub>x</sub> ile eşdeğerdir.</p>
+
+      <div class="fml-blk"><span class="ft">Plastik sınır uzunluğu L<sub>p</sub> — ÇYTHYE Denklem F2-5</span>
+        L<sub>p</sub> = 1.76 &middot; i<sub>y</sub> &middot; &radic;(E / f<sub>yk</sub>) &nbsp;&nbsp; [mm]
+      </div>
+      <div class="fml-blk"><span class="ft">Elastik sınır uzunluğu L<sub>r</sub> — ÇYTHYE Denklem F2-6</span>
+        L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E / 0.7f<sub>yk</sub>) &middot; &radic;( X<sub>2</sub> + &radic;(X<sub>2</sub><sup>2</sup> + 6.76(0.7f<sub>yk</sub>/E)<sup>2</sup>) )
+      </div>
+      <div class="fml-blk"><span class="ft">Elastik burkulma gerilmesi F<sub>cr</sub> — ÇYTHYE Denklem F2-4</span>
+        F<sub>cr</sub> = &pi;<sup>2</sup>E / (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> &middot; &radic;( 1 + 0.078 &middot; X<sub>2</sub> &middot; (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> )
+      </div>
+
+      <h4>Türk Çelik Sınıfları &mdash; TS EN 10025</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Sınıf</th><th>f<sub>yk</sub> (MPa)</th><th>E (MPa)</th><th>Uygulama</th></tr></thead>
+        <tbody>
+          <tr><td>S235</td><td>235</td><td>200 000</td><td>Genel yapısal çelik</td></tr>
+          <tr><td>S275</td><td>275</td><td>200 000</td><td>Genel yapısal çelik</td></tr>
+          <tr><td>S355</td><td>355</td><td>200 000</td><td>Yaygın yapısal çelik</td></tr>
+          <tr><td>S420</td><td>420</td><td>200 000</td><td>Yüksek dayanımlı çelik</td></tr>
+          <tr><td>S460</td><td>460</td><td>200 000</td><td>Yüksek dayanımlı çelik</td></tr>
+        </tbody>
+      </table>
+
+      <h4>AISC 360-22 ile Fark</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Konu</th><th>AISC 360-22</th><th>ÇYTHYE 2018</th></tr></thead>
+        <tbody>
+          <tr><td>YBB formülleri (§F2)</td><td>AISC 360-22 §F2</td><td>Özdeş (AISC 360-16 kaynaklı)</td></tr>
+          <tr><td>&phi;<sub>b</sub> direnç faktörü</td><td>0.90</td><td>0.90</td></tr>
+          <tr><td>Çelik sınıfları</td><td>A992, A572, A36 (ksi)</td><td>S235, S275, S355… (MPa)</td></tr>
+          <tr><td>Profil ailesi</td><td>W kesitler (AISC)</td><td>IPE, HEA, HEB (EN 10365)</td></tr>
+          <tr><td>Birim sistemi</td><td>ABD birim (kip, ft, in)</td><td>SI (kN, m, mm)</td></tr>
+          <tr><td>AISC 360-22 sonrası revizyonlar</td><td>Dahil</td><td>Dahil değil</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -436,6 +507,14 @@ var GRADES_SI = [
   {label:'S460', Fy:460, E:200000},
   {label:'A992 Gr50 (345 MPa)', Fy:345, E:200000}
 ];
+// ÇYTHYE 2018 — Turkish/European steel grades per TS EN 10025
+var GRADES_CYTHYE = [
+  {label:'S235 (Fʏy=235 MPa)', Fy:235, E:200000},
+  {label:'S275 (Fʏy=275 MPa)', Fy:275, E:200000},
+  {label:'S355 (Fʏy=355 MPa)', Fy:355, E:200000},
+  {label:'S420 (Fʏy=420 MPa)', Fy:420, E:200000},
+  {label:'S460 (Fʏy=460 MPa)', Fy:460, E:200000}
+];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 var ltbUnit = 'us';
@@ -443,16 +522,17 @@ var ltbUnit = 'us';
 function ltbSetUnit(u, btn) {
   ltbUnit = u;
   document.querySelectorAll('.unit-btn').forEach(function(b) {
-    if (b.id === 'ltb-btn-us' || b.id === 'ltb-btn-si') b.classList.remove('active');
+    b.classList.remove('active');
   });
   btn.classList.add('active');
-  document.getElementById('ltb-unit-tag').textContent = u === 'us' ? 'kip · ft · in' : 'kN · m';
-  document.getElementById('ltb-rh-code').textContent = 'AISC 360-22 §F2 · ' + (u === 'us' ? 'kip · ft · in' : 'kN · m');
-  var isUS = u === 'us';
-  document.getElementById('ltb-Lb-lbl').textContent = isUS ? '[ft]' : '[m]';
-  document.getElementById('ltb-Lb-us').textContent  = isUS ? 'ft' : 'm';
-  document.getElementById('ltb-Mu-lbl').textContent = isUS ? '[kip·ft]' : '[kN·m]';
-  document.getElementById('ltb-Mu-us').textContent  = isUS ? 'kip·ft' : 'kN·m';
+  var isSI = u === 'si' || u === 'cythye';
+  var codeLabel = u === 'cythye' ? 'ÇYTHYE 2018 §F2 · kN · m' : (u === 'us' ? 'AISC 360-22 §F2 · kip · ft · in' : 'AISC 360-22 §F2 · kN · m');
+  document.getElementById('ltb-unit-tag').textContent = u === 'us' ? 'kip · ft · in' : (u === 'cythye' ? 'kN · m | ÇYTHYE' : 'kN · m');
+  document.getElementById('ltb-rh-code').textContent = codeLabel;
+  document.getElementById('ltb-Lb-lbl').textContent = isSI ? '[m]'    : '[ft]';
+  document.getElementById('ltb-Lb-us').textContent  = isSI ? 'm'     : 'ft';
+  document.getElementById('ltb-Mu-lbl').textContent = isSI ? '[kN·m]' : '[kip·ft]';
+  document.getElementById('ltb-Mu-us').textContent  = isSI ? 'kN·m'  : 'kip·ft';
   ltbPopulateGrades();
   ltbPopulateTypes();
   ltbAutoCalc();
@@ -460,7 +540,7 @@ function ltbSetUnit(u, btn) {
 
 function ltbPopulateGrades() {
   var sel = document.getElementById('ltb-grade');
-  var grades = ltbUnit === 'us' ? GRADES_US : GRADES_SI;
+  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : GRADES_SI);
   var prev = sel.value;
   sel.innerHTML = '';
   grades.forEach(function(g, i) {
@@ -478,6 +558,11 @@ var TYPE_MAP = {
     {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
     {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
     {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA}
+  ],
+  cythye: [
+    {key:'IPE', label:'IPE Profilleri (EN 10365)', data: IPE_DATA},
+    {key:'HEA', label:'HEA Profilleri (EN 10365)', data: HEA_DATA},
+    {key:'HEB', label:'HEB Profilleri (EN 10365)', data: HEB_DATA}
   ]
 };
 
@@ -541,7 +626,8 @@ function ltbCalc() {
   var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
 
   var gradeIdx = +document.getElementById('ltb-grade').value;
-  var grade    = (ltbUnit === 'us' ? GRADES_US : GRADES_SI)[gradeIdx];
+  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : GRADES_SI);
+  var grade    = gradeArr[gradeIdx];
   var Cb  = Math.max(0.1, +document.getElementById('ltb-Cb').value || 1.0);
   var Mu  = +document.getElementById('ltb-Mu').value || 0;
 
@@ -561,6 +647,7 @@ function ltbCalc() {
   } else {
     result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
   }
+  result.codeSystem = ltbUnit;
 
   result.Mu = Mu;
   result.DCR = result.phiMn > 0 ? Mu / result.phiMn : Infinity;
@@ -647,6 +734,9 @@ function ltbRender(r) {
   var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
   var date  = new Date().toLocaleDateString('en-CA');
   var ul = r.unit_sec, um = r.unit_mom, ulen = r.unit_len;
+  var isCYTHYE = r.codeSystem === 'cythye';
+  var codeRef  = isCYTHYE ? 'ÇYTHYE 2018 §F2' : 'AISC 360-22 §F2';
+  var codeUnits = r.codeSystem === 'us' ? 'US — kip, ft, in' : 'SI — kN, m, mm';
 
   function step(n, desc, fml, val, ok) {
     var chk = ok === undefined ? ''
@@ -667,7 +757,7 @@ function ltbRender(r) {
   // Print header
   h += '<div class="print-only">'
     + '<div><div class="ph-title">LTB Control &mdash; ' + r.name + '</div>'
-    + '<div class="ph-sub">AISC 360-22 &sect;F2 &middot; ' + r.grade + ' &middot; C<sub>b</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + ulen + '</div></div>'
+    + '<div class="ph-sub">' + codeRef + ' &middot; ' + r.grade + ' &middot; C<sub>b</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>b</sub>=' + fmt(r.Lb_input,2) + ' ' + ulen + '</div></div>'
     + '<div class="ph-date">' + date + '</div></div>';
 
   // DCR Banner
@@ -701,11 +791,12 @@ function ltbRender(r) {
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation</div>';
   h += '<table class="steps-table">';
 
-  var tvFml = ltbUnit === 'us'
+  var isUS = r.codeSystem === 'us';
+  var tvFml = isUS
     ? 'J=' + fmt(r.J,4) + ' / (S<sub>x</sub>=' + fmt(r.Sx,2) + ' &times; h<sub>o</sub>=' + fmt(r.ho,2) + ') [in]'
     : 'J=' + r.J.toExponential(3) + ' / (S<sub>x</sub>=' + fmt(r.Sx,0) + ' &times; h<sub>o</sub>=' + fmt(r.ho,1) + ') [mm]';
 
-  var rtsFml = 'I<sub>y</sub>=' + (ltbUnit==='us' ? fmt(r.Iy,2) : r.Iy.toExponential(3))
+  var rtsFml = 'I<sub>y</sub>=' + (isUS ? fmt(r.Iy,2) : r.Iy.toExponential(3))
     + ', C<sub>w</sub>=' + r.Cw.toExponential(3) + ', S<sub>x</sub>=' + fmt(r.Sx,0) + ' [' + ul + ']';
 
   var lrFml = 'r<sub>ts</sub>=' + fmt(r.rts,3) + ' ' + ul
@@ -725,7 +816,7 @@ function ltbRender(r) {
   }
 
   h += step(1, 'Plastic moment M<sub>p</sub> = F<sub>y</sub> &times; Z<sub>x</sub>',
-    'F<sub>y</sub>=' + r.Fy + (ltbUnit==='us'?' ksi':' MPa') + ' &times; Z<sub>x</sub>=' + fmt(r.Zx,0) + ' ' + ul + '<sup>3</sup> &divide; ' + (ltbUnit==='us'?'12':'10<sup>6</sup>'),
+    'F<sub>y</sub>=' + r.Fy + (r.codeSystem==='us'?' ksi':' MPa') + ' &times; Z<sub>x</sub>=' + fmt(r.Zx,0) + ' ' + ul + '<sup>3</sup> &divide; ' + (r.codeSystem==='us'?'12':'10<sup>6</sup>'),
     fmt(r.Mp,2)+' '+um);
 
   h += step(2, 'h<sub>o</sub> = d &minus; t<sub>f</sub>',
@@ -761,9 +852,9 @@ function ltbRender(r) {
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>';
   h += '<table class="inp-tbl"><tbody>';
   [
-    ['Code',                'AISC 360-22 &sect;F2'],
-    ['Units',               ltbUnit==='us'?'US &mdash; kip, ft, in':'SI &mdash; kN, m, mm'],
-    ['Steel Grade',         r.grade + ' &mdash; F<sub>y</sub>=' + r.Fy + (ltbUnit==='us'?' ksi':' MPa') + ', E=' + r.E + (ltbUnit==='us'?' ksi':' MPa')],
+    ['Code',                codeRef],
+    ['Units',               codeUnits],
+    ['Steel Grade',         r.grade + ' &mdash; F<sub>y</sub>=' + r.Fy + (r.codeSystem==='us'?' ksi':' MPa') + ', E=' + r.E + (r.codeSystem==='us'?' ksi':' MPa')],
     ['Section',             r.name],
     ['L<sub>b</sub>',       fmt(r.Lb_input,2)+' '+ulen],
     ['C<sub>b</sub>',       fmt(r.Cb,2)],
@@ -774,7 +865,7 @@ function ltbRender(r) {
   h += '</tbody></table></div>';
 
   // Print footer
-  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; AISC 360-22 LTB Control</span><span>' + date + '</span></div>';
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; ' + codeRef + ' LTB Control</span><span>' + date + '</span></div>';
   h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
 
   document.getElementById('ltb-body').innerHTML = h;
