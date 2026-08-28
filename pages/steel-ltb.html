@@ -4,8 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
-<title>LTB Control - AISC 360-22 / ÇYTHYE 2018 | CivilStrCalc</title>
-<meta name="description" content="Lateral torsional buckling (LTB) control for W, IPE, HEA, HEB sections per AISC 360-22 §F2 and ÇYTHYE 2018 §F2. Computes Lp, Lr, φbMn and D/C ratio in US or SI units.">
+<title>LTB Control - AISC / EC3 / ÇYTHYE | CivilStrCalc</title>
+<meta name="description" content="Lateral torsional buckling (LTB) check for W, IPE, HEA, HEB sections per AISC 360-22 §F2, EC3 EN 1993-1-1 §6.3.2 and ÇYTHYE 2018. Computes Lp, Lr, χLT, Mb,Rd and D/C ratio.">
 <meta name="robots" content="index, follow">
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
@@ -83,7 +83,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>LTB Control</h1>
-  <p>AISC 360-22 &sect;F2 and &#199;YTHYE 2018 &sect;F2 lateral torsional buckling check for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>, L<sub>r</sub>, LTB zone, &phi;<sub>b</sub>M<sub>n</sub> and D/C ratio in US (kip&middot;ft), SI (kN&middot;m) or &#199;YTHYE SI units.</p>
+  <p>Lateral torsional buckling check per <b>AISC 360-22 &sect;F2</b>, <b>EC3 EN 1993-1-1 &sect;6.3.2</b> and <b>&#199;YTHYE 2018 &sect;F2</b> for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>/L<sub>r</sub>/&phi;<sub>b</sub>M<sub>n</sub> (AISC/&#199;YTHYE) or M<sub>cr</sub>/&chi;<sub>LT</sub>/M<sub>b,Rd</sub> (EC3) with D/C ratio.</p>
 </div>
 
 <div class="calc-layout">
@@ -98,6 +98,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <button class="unit-btn active" id="ltb-btn-us"     onclick="ltbSetUnit('us',this)">US (kip&middot;ft, in)</button>
           <button class="unit-btn"        id="ltb-btn-si"     onclick="ltbSetUnit('si',this)">SI (kN&middot;m)</button>
           <button class="unit-btn"        id="ltb-btn-cythye" onclick="ltbSetUnit('cythye',this)">&#199;YTHYE 2018 (SI)</button>
+          <button class="unit-btn"        id="ltb-btn-ec3"    onclick="ltbSetUnit('ec3',this)">EC3 EN 1993-1-1</button>
         </div>
       </div>
 
@@ -127,12 +128,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="iw"><input type="number" id="ltb-Lb" value="15" step="0.5" min="0.1" oninput="ltbAutoCalc()"><span class="us" id="ltb-Lb-us">ft</span></div>
       </div>
       <div class="form-group">
-        <label>C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span></label>
+        <label id="ltb-Cb-lbl">C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span></label>
         <div class="iw"><input type="number" id="ltb-Cb" value="1.0" step="0.05" min="0.1" max="3.0" oninput="ltbAutoCalc()"><span class="us">&mdash;</span></div>
-        <div style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.</div>
+        <div id="ltb-Cb-hint" style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.</div>
+      </div>
+      <div class="form-group" id="ltb-gammaM1-row" style="display:none;">
+        <label>&gamma;<sub>M1</sub> &mdash; Partial Safety Factor <span class="unit-lbl">[&mdash;]</span></label>
+        <div class="iw"><input type="number" id="ltb-gammaM1" value="1.0" step="0.05" min="0.8" max="1.5" oninput="ltbAutoCalc()"><span class="us">&mdash;</span></div>
+        <div style="font-size:.70rem;color:var(--text-dim);margin-top:3px;">National Annex. Turkey/UK: 1.0 &nbsp; Germany/Belgium: 1.1</div>
       </div>
       <div class="form-group">
-        <label>Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip·ft]</span></label>
+        <label id="ltb-Mu-lbl-txt">Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip·ft]</span></label>
         <div class="iw"><input type="number" id="ltb-Mu" value="150" step="5" min="0" oninput="ltbAutoCalc()"><span class="us" id="ltb-Mu-us">kip·ft</span></div>
       </div>
 
@@ -156,11 +162,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- Theory -->
 <div class="bg-section">
-  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 / &#199;YTHYE 2018 &sect;F2 &mdash; Lateral Torsional Buckling Theory</h3></div>
+  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 / &#199;YTHYE 2018 / EC3 EN 1993-1-1 &sect;6.3.2 &mdash; Lateral Torsional Buckling</h3></div>
   <nav class="bg-toc">
-    <a href="#bg-ltb">LTB Zones</a>
+    <a href="#bg-ltb">AISC Zones</a>
     <a href="#bg-params">Section Parameters</a>
-    <a href="#bg-cb">C<sub>b</sub> Factor</a>
+    <a href="#bg-cb">C<sub>b</sub> / C<sub>1</sub> Factor</a>
+    <a href="#bg-ec3">EC3 Method</a>
     <a href="#bg-cythye">ÇYTHYE 2018</a>
     <a href="#bg-limits">Limitations</a>
   </nav>
@@ -263,6 +270,74 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </tbody>
       </table>
       <p>Note: C<sub>b</sub> &gt; 1.0 is beneficial — it increases the computed M<sub>n</sub>, but the result is capped at M<sub>p</sub>. When loads are applied at the top flange rather than the shear center, an effective C<sub>b</sub> reduction should be applied per AISC Commentary to &sect;F1.</p>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-ec3">
+    <div class="bg-panel-hdr"><span>EC3 &mdash; EN 1993-1-1 &sect;6.3.2 Lateral Torsional Buckling</span></div>
+    <div class="tb">
+      <h4>Overview: &chi;<sub>LT</sub> Reduction Factor Approach</h4>
+      <p>Unlike AISC (zone-based, M<sub>n</sub> directly), EC3 computes a <b>reduction factor &chi;<sub>LT</sub></b> via European buckling curves. Design resistance M<sub>b,Rd</sub> = &chi;<sub>LT</sub>&middot;W<sub>y</sub>&middot;f<sub>y</sub>/&gamma;<sub>M1</sub>.</p>
+
+      <h4>Step 1 &mdash; Elastic Critical Moment M<sub>cr</sub></h4>
+      <div class="fml-blk"><span class="ft">General formula — EN 1993-1-1 Annex F / NCCI SN003 (fork supports, uniform moment basis)</span>
+        M<sub>cr</sub> = C<sub>1</sub> &middot; &pi;<sup>2</sup>EI<sub>z</sub>/L<sub>cr</sub><sup>2</sup> &middot; &radic;(I<sub>w</sub>/I<sub>z</sub> + L<sub>cr</sub><sup>2</sup>&middot;G&middot;I<sub>T</sub>/(&pi;<sup>2</sup>&middot;E&middot;I<sub>z</sub>))
+        <br><small>I<sub>w</sub> = C<sub>w</sub> (warping constant), I<sub>z</sub> = I<sub>y</sub> (weak axis), I<sub>T</sub> = J (torsion), G = 81 000 MPa</small>
+      </div>
+
+      <h4>Step 2 &mdash; Non-Dimensional Slenderness</h4>
+      <div class="fml-blk"><span class="ft">Non-dimensional LTB slenderness — Eq. 6.55</span>
+        &lambda;&#773;<sub>LT</sub> = &radic;(W<sub>y</sub>&middot;f<sub>y</sub> / M<sub>cr</sub>)
+        <br><small>W<sub>y</sub> = Z<sub>x</sub> for Class 1 and 2 sections</small>
+      </div>
+
+      <h4>Step 3 &mdash; Buckling Curve (Specific Method §6.3.2.3)</h4>
+      <p>The <b>specific method</b> for rolled I-sections (&sect;6.3.2.3) uses &lambda;&#773;<sub>LT,0</sub>=0.4 and &beta;=0.75 (vs 0.2/1.0 for the general method). Buckling curve from Table 6.5:</p>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Section</th><th>h/b &le; 2</th><th>h/b &gt; 2</th></tr></thead>
+        <tbody>
+          <tr><td>Rolled I-sections</td><td>Curve b &nbsp; (&alpha;<sub>LT</sub>=0.34)</td><td>Curve c &nbsp; (&alpha;<sub>LT</sub>=0.49)</td></tr>
+          <tr><td>Welded I-sections</td><td>Curve c &nbsp; (&alpha;<sub>LT</sub>=0.49)</td><td>Curve d &nbsp; (&alpha;<sub>LT</sub>=0.76)</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Step 4 &mdash; Reduction Factor &chi;<sub>LT</sub></h4>
+      <div class="fml-blk"><span class="ft">Specific method — Eqs. 6.56 and 6.57</span>
+        &phi;<sub>LT</sub> = 0.5[1 + &alpha;<sub>LT</sub>(&lambda;&#773;<sub>LT</sub> &minus; 0.4) + 0.75&lambda;&#773;<sub>LT</sub><sup>2</sup>]
+        <br>
+        &chi;<sub>LT</sub> = 1 / (&phi;<sub>LT</sub> + &radic;(&phi;<sub>LT</sub><sup>2</sup> &minus; 0.75&lambda;&#773;<sub>LT</sub><sup>2</sup>)) &le; 1 &nbsp;&nbsp; and &nbsp;&nbsp; &le; 1/&lambda;&#773;<sub>LT</sub><sup>2</sup>
+        <br><small>When &lambda;&#773;<sub>LT</sub> &le; 0.4: &chi;<sub>LT</sub> = 1.0 (no LTB reduction required)</small>
+      </div>
+
+      <h4>Step 5 &mdash; Design Buckling Resistance</h4>
+      <div class="fml-blk"><span class="ft">M<sub>b,Rd</sub> — Eq. 6.55</span>
+        M<sub>b,Rd</sub> = &chi;<sub>LT</sub> &middot; W<sub>y</sub> &middot; f<sub>y</sub> / &gamma;<sub>M1</sub>
+        <br><small>&gamma;<sub>M1</sub> = partial safety factor; National Annex value (Turkey/UK: 1.0, Germany/Belgium: 1.1)</small>
+      </div>
+
+      <h4>C<sub>1</sub> Factor — Moment Shape (NCCI SN003)</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Loading / Boundary Conditions</th><th>C<sub>1</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Uniform moment (conservative baseline)</td><td>1.00</td></tr>
+          <tr><td>UDL on simply-supported beam</td><td>1.132</td></tr>
+          <tr><td>Single concentrated load at mid-span</td><td>1.285</td></tr>
+          <tr><td>Linear moment gradient (&psi;=0)</td><td>1.77</td></tr>
+          <tr><td>Double curvature, equal end moments (&psi;=&minus;1)</td><td>2.578</td></tr>
+        </tbody>
+      </table>
+
+      <h4>AISC vs EC3 Comparison</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Aspect</th><th>AISC 360-22 §F2</th><th>EC3 §6.3.2</th></tr></thead>
+        <tbody>
+          <tr><td>Approach</td><td>Zone-based (Plastic / Inelastic / Elastic)</td><td>Reduction factor &chi;<sub>LT</sub> via buckling curves</td></tr>
+          <tr><td>Key parameter</td><td>L<sub>p</sub>, L<sub>r</sub> limiting lengths</td><td>&lambda;&#773;<sub>LT</sub>, M<sub>cr</sub></td></tr>
+          <tr><td>Moment gradient</td><td>C<sub>b</sub> (multiplies M<sub>n</sub>)</td><td>C<sub>1</sub> (scales M<sub>cr</sub>)</td></tr>
+          <tr><td>Resistance factor</td><td>&phi;<sub>b</sub> = 0.90 (LRFD)</td><td>&gamma;<sub>M1</sub> = 1.0–1.1 (NA)</td></tr>
+          <tr><td>Material</td><td>ASTM A992, A572 (ksi)</td><td>EN 10025 S235–S460 (MPa)</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -515,24 +590,46 @@ var GRADES_CYTHYE = [
   {label:'S420 (Fʏy=420 MPa)', Fy:420, E:200000},
   {label:'S460 (Fʏy=460 MPa)', Fy:460, E:200000}
 ];
+// EC3 — EN 10025 grades (same as ÇYTHYE; listed separately for clarity)
+var GRADES_EC3 = [
+  {label:'S235 — fy=235 MPa', Fy:235, E:200000},
+  {label:'S275 — fy=275 MPa', Fy:275, E:200000},
+  {label:'S355 — fy=355 MPa', Fy:355, E:200000},
+  {label:'S420 — fy=420 MPa', Fy:420, E:200000},
+  {label:'S460 — fy=460 MPa', Fy:460, E:200000}
+];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 var ltbUnit = 'us';
 
 function ltbSetUnit(u, btn) {
   ltbUnit = u;
-  document.querySelectorAll('.unit-btn').forEach(function(b) {
-    b.classList.remove('active');
-  });
+  document.querySelectorAll('.unit-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-  var isSI = u === 'si' || u === 'cythye';
-  var codeLabel = u === 'cythye' ? 'ÇYTHYE 2018 §F2 · kN · m' : (u === 'us' ? 'AISC 360-22 §F2 · kip · ft · in' : 'AISC 360-22 §F2 · kN · m');
-  document.getElementById('ltb-unit-tag').textContent = u === 'us' ? 'kip · ft · in' : (u === 'cythye' ? 'kN · m | ÇYTHYE' : 'kN · m');
-  document.getElementById('ltb-rh-code').textContent = codeLabel;
-  document.getElementById('ltb-Lb-lbl').textContent = isSI ? '[m]'    : '[ft]';
-  document.getElementById('ltb-Lb-us').textContent  = isSI ? 'm'     : 'ft';
-  document.getElementById('ltb-Mu-lbl').textContent = isSI ? '[kN·m]' : '[kip·ft]';
-  document.getElementById('ltb-Mu-us').textContent  = isSI ? 'kN·m'  : 'kip·ft';
+  var isSI = u !== 'us';
+  var tagMap  = {us:'kip · ft · in', si:'kN · m', cythye:'kN · m | ÇYTHYE', ec3:'kN · m | EC3'};
+  var codeMap = {us:'AISC 360-22 §F2 · kip · ft · in', si:'AISC 360-22 §F2 · kN · m',
+                 cythye:'ÇYTHYE 2018 §F2 · kN · m', ec3:'EN 1993-1-1 §6.3.2 · kN · m'};
+  document.getElementById('ltb-unit-tag').textContent = tagMap[u];
+  document.getElementById('ltb-rh-code').textContent  = codeMap[u];
+  document.getElementById('ltb-Lb-lbl').textContent   = isSI ? '[m]'    : '[ft]';
+  document.getElementById('ltb-Lb-us').textContent    = isSI ? 'm'      : 'ft';
+  document.getElementById('ltb-Mu-lbl').textContent   = isSI ? '[kN·m]' : '[kip·ft]';
+  document.getElementById('ltb-Mu-us').textContent    = isSI ? 'kN·m'   : 'kip·ft';
+  // EC3-specific label changes
+  var isEC3 = u === 'ec3';
+  document.getElementById('ltb-Cb-lbl').innerHTML = isEC3
+    ? 'C<sub>1</sub> &mdash; Moment Distribution Factor <span class="unit-lbl">[&mdash;]</span>'
+    : 'C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span>';
+  document.getElementById('ltb-Cb-hint').textContent = isEC3
+    ? 'Conservative: 1.0 (uniform moment). See EN 1993-1-1 Annex F / NCCI SN003.'
+    : 'Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.';
+  document.getElementById('ltb-Mu-lbl-txt').innerHTML = isEC3
+    ? 'Design Moment M<sub>Ed</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>'
+    : (u === 'us'
+      ? 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip&middot;ft]</span>'
+      : 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>');
+  document.getElementById('ltb-gammaM1-row').style.display = isEC3 ? '' : 'none';
   ltbPopulateGrades();
   ltbPopulateTypes();
   ltbAutoCalc();
@@ -540,7 +637,7 @@ function ltbSetUnit(u, btn) {
 
 function ltbPopulateGrades() {
   var sel = document.getElementById('ltb-grade');
-  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : GRADES_SI);
+  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
   var prev = sel.value;
   sel.innerHTML = '';
   grades.forEach(function(g, i) {
@@ -563,6 +660,11 @@ var TYPE_MAP = {
     {key:'IPE', label:'IPE Profilleri (EN 10365)', data: IPE_DATA},
     {key:'HEA', label:'HEA Profilleri (EN 10365)', data: HEA_DATA},
     {key:'HEB', label:'HEB Profilleri (EN 10365)', data: HEB_DATA}
+  ],
+  ec3: [
+    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
+    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
+    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA}
   ]
 };
 
@@ -626,7 +728,7 @@ function ltbCalc() {
   var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
 
   var gradeIdx = +document.getElementById('ltb-grade').value;
-  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : GRADES_SI);
+  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
   var grade    = gradeArr[gradeIdx];
   var Cb  = Math.max(0.1, +document.getElementById('ltb-Cb').value || 1.0);
   var Mu  = +document.getElementById('ltb-Mu').value || 0;
@@ -644,6 +746,9 @@ function ltbCalc() {
   var result;
   if (ltbUnit === 'us') {
     result = ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
+  } else if (ltbUnit === 'ec3') {
+    var gammaM1 = Math.max(0.8, +document.getElementById('ltb-gammaM1').value || 1.0);
+    result = ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb, gammaM1);
   } else {
     result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
   }
@@ -658,7 +763,7 @@ function ltbCalc() {
   result.Fy = Fy;
   result.E = E;
   result.Sx = Sx; result.Zx = Zx; result.Iy = Iy; result.J = J; result.Cw = Cw;
-  result.ry = ry; result.d = d; result.tf = tf;
+  result.ry = ry; result.d = d; result.tf = tf; result.bf = bf;
 
   ltbRender(result);
 }
@@ -723,12 +828,65 @@ function ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, Cb) {
   return {phiMn: 0.9 * Mn, Mn: Mn, Mp: Mp, M07: M07, Lp: Lp, Lr: Lr, mode: mode, rts: rts, tv: tv, ho: ho, unit_len: 'm', unit_mom: 'kN·m', unit_force: 'kN', unit_sec: 'mm'};
 }
 
+function ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, C1, gammaM1) {
+  var G   = 81000; // MPa — steel shear modulus
+  var Lcr = Lb_m * 1000; // mm (k=1.0 fork-end conditions)
+
+  // Elastic critical moment — EN 1993-1-1 Annex F / NCCI SN003 (uniform moment baseline, C1 scales it)
+  // Mcr = C1 · (π²·E·Iz/Lcr²) · √(Iw/Iz + Lcr²·G·IT/(π²·E·Iz))
+  var pi2EIy_Lcr2 = Math.PI * Math.PI * E * Iy / (Lcr * Lcr); // N  [N/mm²·mm⁴/mm²]
+  var termW = Cw / Iy;                                          // mm²  [mm⁶/mm⁴]
+  var termT = Lcr * Lcr * G * J / (Math.PI * Math.PI * E * Iy);// mm²
+  var Mcr_Nmm = C1 * pi2EIy_Lcr2 * Math.sqrt(termW + termT);   // N·mm
+  var Mcr     = Mcr_Nmm / 1e6;                                  // kN·m
+
+  // Class 1/2 section: Wy = Zx (plastic section modulus)
+  var Wy  = Zx; // mm³
+  var Mp  = Wy * Fy / 1e6; // kN·m (fully plastic, χLT=1)
+
+  // Non-dimensional slenderness (Eq. 6.55)
+  var lambdaLT = Math.sqrt(Wy * Fy / Mcr_Nmm);
+
+  // Buckling curve — rolled I-sections, specific method §6.3.2.3 Table 6.5
+  var hb = d / bf;
+  var alphaLT, curveName;
+  if (hb <= 2) { alphaLT = 0.34; curveName = 'b'; }
+  else          { alphaLT = 0.49; curveName = 'c'; }
+
+  // Specific method parameters: λ̄LT,0 = 0.4, β = 0.75 (§6.3.2.3)
+  var lambdaLT0 = 0.4;
+  var beta = 0.75;
+
+  var phiLT, chiLT, mode;
+  if (lambdaLT <= lambdaLT0) {
+    chiLT = 1.0; phiLT = null;
+    mode  = 'No LTB (λ̄LT ≤ 0.4)';
+  } else {
+    phiLT = 0.5 * (1 + alphaLT * (lambdaLT - lambdaLT0) + beta * lambdaLT * lambdaLT);
+    chiLT = 1 / (phiLT + Math.sqrt(phiLT * phiLT - beta * lambdaLT * lambdaLT));
+    chiLT = Math.min(chiLT, 1.0, 1 / (lambdaLT * lambdaLT)); // EC3 upper limits
+    mode  = lambdaLT <= 0.6 ? 'Low slenderness LTB' : 'LTB governs';
+  }
+
+  var MbRd = chiLT * Wy * Fy / gammaM1 / 1e6; // kN·m
+
+  return {
+    phiMn: MbRd, MbRd: MbRd, Mcr: Mcr, Mp: Mp,
+    lambdaLT: lambdaLT, phiLT: phiLT, chiLT: chiLT,
+    alphaLT: alphaLT, curveName: curveName, beta: beta, lambdaLT0: lambdaLT0,
+    hb: hb, mode: mode, gammaM1: gammaM1, C1: C1,
+    Wy: Wy, Iy: Iy, Cw: Cw, J: J, d: d, bf: bf, tf: tf,
+    unit_len: 'm', unit_mom: 'kN·m', unit_force: 'kN', unit_sec: 'mm'
+  };
+}
+
 // ── RENDER REPORT ────────────────────────────────────────────────────────────
 function fmt(v, d) { return (d === undefined ? 4 : d) === 0 ? Math.round(v).toString() : v.toFixed(d); }
 
 function ltbRender(r) {
   document.getElementById('ltb-empty').style.display = 'none';
   document.getElementById('ltb-card').style.display  = 'block';
+  if (r.codeSystem === 'ec3') { ltbRenderEC3(r); return; }
 
   var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
   var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
@@ -869,6 +1027,232 @@ function ltbRender(r) {
   h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
 
   document.getElementById('ltb-body').innerHTML = h;
+}
+
+// ── EC3 RENDER ───────────────────────────────────────────────────────────────
+function ltbRenderEC3(r) {
+  var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
+  var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
+  var date  = new Date().toLocaleDateString('en-CA');
+  var um = 'kN·m', ul = 'mm', ulen = 'm';
+
+  function step(n, desc, fml, val, ok) {
+    var chk = ok === undefined ? ''
+      : '<span class="step-check ' + (ok ? 'chk-ok' : 'chk-err') + '">' + (ok ? 'OK' : 'NG') + '</span>';
+    var vc = ok === true ? 'ok' : ok === false ? 'err' : '';
+    return '<tr>'
+      + '<td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">' + n + '</div></td>'
+      + '<td><div class="step-desc">' + desc + '</div>'
+      + (fml ? '<div class="step-formula">' + fml + '</div>' : '')
+      + '</td>'
+      + '<td style="width:170px;text-align:right;vertical-align:middle">'
+      + '<span class="step-val ' + vc + '">' + val + '</span> ' + chk
+      + '</td></tr>';
+  }
+
+  var h = '';
+
+  // Print header
+  h += '<div class="print-only">'
+    + '<div><div class="ph-title">LTB Control &mdash; ' + r.name + '</div>'
+    + '<div class="ph-sub">EN 1993-1-1 &sect;6.3.2 &middot; ' + r.grade + ' &middot; C<sub>1</sub>=' + fmt(r.Cb,2) + ' &middot; L<sub>cr</sub>=' + fmt(r.Lb_input,2) + ' m</div></div>'
+    + '<div class="ph-date">' + date + '</div></div>';
+
+  // DCR Banner
+  h += '<div class="dcr-banner ' + dc + '"><div class="dcr-text">'
+    + '<strong>D/C = ' + fmt(r.DCR,3) + ' &mdash; ' + dcLbl + '</strong>'
+    + '<span>' + r.name + ' &middot; ' + r.grade + ' &middot; L<sub>cr</sub>=' + fmt(r.Lb_input,2) + ' m &middot; ' + r.mode + ' &middot; Curve ' + r.curveName + '</span>'
+    + '</div></div>';
+
+  // Result box
+  h += '<div class="result-box" style="margin-bottom:8px;">';
+  [
+    {l:'M<sub>cr</sub>',               v:fmt(r.Mcr,1),        u:um},
+    {l:'M<sub>b,Rd</sub>',             v:fmt(r.MbRd,1),       u:um, cls:dc},
+    {l:'M<sub>Ed</sub>',               v:fmt(r.Mu,1),         u:um},
+    {l:'&lambda;&#773;<sub>LT</sub>',  v:fmt(r.lambdaLT,3),   u:''},
+    {l:'&chi;<sub>LT</sub>',           v:fmt(r.chiLT,3),      u:''},
+    {l:'Curve',                         v:r.curveName,         u:'&alpha;<sub>LT</sub>=' + fmt(r.alphaLT,2)}
+  ].forEach(function(item) {
+    h += '<div class="result-item' + (item.cls ? ' ' + item.cls : '') + '">'
+      + '<div class="ri-label">' + item.l + '</div>'
+      + '<div class="ri-value">' + item.v + '</div>'
+      + '<div class="ri-unit">'  + item.u + '</div>'
+      + '</div>';
+  });
+  h += '</div>';
+
+  // EC3 buckling curve diagram
+  h += ltbDiagramEC3SVG(r);
+
+  // Steps
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation</div>';
+  h += '<table class="steps-table">';
+
+  var pi2 = (Math.PI * Math.PI).toFixed(3);
+  var Lcr_mm = (r.Lb_input * 1000).toFixed(0);
+
+  h += step(1,
+    'Elastic critical moment M<sub>cr</sub> (uniform moment basis &times; C<sub>1</sub>)',
+    'M<sub>cr</sub> = C<sub>1</sub>&middot;&pi;<sup>2</sup>E&middot;I<sub>z</sub>/L<sub>cr</sub><sup>2</sup>&middot;&radic;(I<sub>w</sub>/I<sub>z</sub> + L<sub>cr</sub><sup>2</sup>&middot;G&middot;I<sub>T</sub>/(&pi;<sup>2</sup>E&middot;I<sub>z</sub>))'
+    + '<br>C<sub>1</sub>=' + fmt(r.Cb,2) + ' &middot; &pi;<sup>2</sup>&times;200000&times;' + r.Iy.toExponential(3) + '/' + Lcr_mm + '<sup>2</sup> &middot; &radic;(I<sub>w</sub>/I<sub>z</sub>+G&middot;I<sub>T</sub>&middot;term)',
+    fmt(r.Mcr,2) + ' kN&middot;m');
+
+  h += step(2,
+    'h/b ratio &rarr; buckling curve (EN 1993-1-1 Table 6.5, rolled I-sections)',
+    'h=' + r.d + ' mm, b=' + r.bf + ' mm &rarr; h/b=' + fmt(r.hb,2) + (r.hb <= 2 ? ' &le; 2 &rarr; Curve b (&alpha;<sub>LT</sub>=0.34)' : ' &gt; 2 &rarr; Curve c (&alpha;<sub>LT</sub>=0.49)'),
+    'Curve ' + r.curveName + ', &alpha;<sub>LT</sub>=' + fmt(r.alphaLT,2));
+
+  h += step(3,
+    '&lambda;&#773;<sub>LT</sub> = &radic;(W<sub>y</sub>&middot;f<sub>y</sub> / M<sub>cr</sub>) &nbsp; (Eq. 6.55)',
+    'W<sub>y</sub>=' + fmt(r.Wy,0) + ' mm<sup>3</sup>, f<sub>y</sub>=' + r.Fy + ' MPa, M<sub>cr</sub>=' + fmt(r.Mcr,2) + ' kN&middot;m',
+    fmt(r.lambdaLT,4));
+
+  if (r.lambdaLT <= r.lambdaLT0) {
+    h += step(4,
+      '&lambda;&#773;<sub>LT</sub> &le; &lambda;&#773;<sub>LT,0</sub>=0.4 &rarr; &chi;<sub>LT</sub>=1.0 (no LTB reduction)',
+      '&lambda;&#773;<sub>LT</sub>=' + fmt(r.lambdaLT,4) + ' &le; 0.4', '&chi;<sub>LT</sub>=1.000');
+  } else {
+    h += step(4,
+      '&phi;<sub>LT</sub> = 0.5[1 + &alpha;<sub>LT</sub>(&lambda;&#773;<sub>LT</sub>&minus;&lambda;&#773;<sub>LT,0</sub>) + &beta;&lambda;&#773;<sub>LT</sub><sup>2</sup>] &nbsp; (Eq. 6.57, specific method)',
+      '0.5[1 + ' + fmt(r.alphaLT,2) + '(' + fmt(r.lambdaLT,4) + '&minus;0.4) + 0.75&times;' + fmt(r.lambdaLT,4) + '<sup>2</sup>]',
+      fmt(r.phiLT,4));
+
+    h += step(5,
+      '&chi;<sub>LT</sub> = 1/(&phi;<sub>LT</sub>+&radic;(&phi;<sub>LT</sub><sup>2</sup>&minus;&beta;&lambda;&#773;<sub>LT</sub><sup>2</sup>)) &le; 1 and &le; 1/&lambda;&#773;<sub>LT</sub><sup>2</sup> &nbsp; (Eq. 6.56)',
+      '1/(' + fmt(r.phiLT,4) + '+&radic;(' + fmt(r.phiLT,4) + '<sup>2</sup>&minus;0.75&times;' + fmt(r.lambdaLT,4) + '<sup>2</sup>))',
+      fmt(r.chiLT,4));
+  }
+
+  var stepN = r.lambdaLT <= r.lambdaLT0 ? 5 : 6;
+  h += step(stepN,
+    'M<sub>b,Rd</sub> = &chi;<sub>LT</sub>&middot;W<sub>y</sub>&middot;f<sub>y</sub> / &gamma;<sub>M1</sub> &nbsp; (Eq. 6.55)',
+    fmt(r.chiLT,4) + ' &times; ' + fmt(r.Wy,0) + ' &times; ' + r.Fy + ' / (' + fmt(r.gammaM1,2) + ' &times; 10<sup>6</sup>)',
+    fmt(r.MbRd,2) + ' kN&middot;m');
+
+  h += step(stepN+1,
+    'D/C = M<sub>Ed</sub> / M<sub>b,Rd</sub>',
+    fmt(r.Mu,2) + ' / ' + fmt(r.MbRd,2) + ' kN&middot;m',
+    fmt(r.DCR,3), r.DCR <= 1.0);
+
+  h += '</table></div>';
+
+  // Input summary
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>';
+  h += '<table class="inp-tbl"><tbody>';
+  [
+    ['Code',                 'EN 1993-1-1 &sect;6.3.2 (EC3)'],
+    ['Method',               'Specific method &sect;6.3.2.3, rolled I-sections'],
+    ['Units',                'SI &mdash; kN, m, mm'],
+    ['Steel Grade',          r.grade + ' &mdash; f<sub>y</sub>=' + r.Fy + ' MPa, E=200 000 MPa'],
+    ['Section',              r.name + ' &nbsp; (h/b=' + fmt(r.hb,2) + ' &rarr; Curve ' + r.curveName + ')'],
+    ['L<sub>cr</sub>',       fmt(r.Lb_input,2) + ' m'],
+    ['C<sub>1</sub>',        fmt(r.Cb,2)],
+    ['&gamma;<sub>M1</sub>', fmt(r.gammaM1,2)],
+    ['M<sub>Ed</sub>',       fmt(r.Mu,2) + ' kN&middot;m']
+  ].forEach(function(row) {
+    h += '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+
+  h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; EN 1993-1-1 §6.3.2 LTB Control</span><span>' + date + '</span></div>';
+  h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
+
+  document.getElementById('ltb-body').innerHTML = h;
+}
+
+function ltbDiagramEC3SVG(r) {
+  var W = 480, H = 190;
+  var pad = {l:52, r:18, t:16, b:38};
+  var pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  var xMax = 3.0; // λ̄LT axis
+  function sx(v) { return pad.l + (v / xMax) * pw; }
+  function sy(v) { return pad.t + ph - (v / 1.0) * ph; }
+
+  // Compute chiLT curve for this buckling curve
+  var pts = [];
+  var nPts = 200;
+  for (var i = 0; i <= nPts; i++) {
+    var lam = (i / nPts) * xMax;
+    var chi;
+    if (lam <= r.lambdaLT0) {
+      chi = 1.0;
+    } else {
+      var phi = 0.5 * (1 + r.alphaLT * (lam - r.lambdaLT0) + r.beta * lam * lam);
+      chi = 1 / (phi + Math.sqrt(phi * phi - r.beta * lam * lam));
+      chi = Math.min(chi, 1.0, 1 / (lam * lam));
+    }
+    pts.push([sx(lam), sy(chi)]);
+  }
+  var polyline = pts.map(function(p) { return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' ');
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !document.documentElement.getAttribute('data-theme'));
+  var col = isDark ? '#5ba4f5' : '#1a5fa8';
+  var colPt = r.DCR <= 1.0 ? '#22a06b' : '#e34935';
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" class="ltb-diagram" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--sans);">';
+
+  // λ̄LT,0 = 0.4 threshold line
+  svg += '<line x1="'+sx(r.lambdaLT0)+'" y1="'+(pad.t)+'" x2="'+sx(r.lambdaLT0)+'" y2="'+(pad.t+ph)+'"'
+    + ' stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>';
+
+  // χLT = 1/λ̄² reference
+  var refPts = [];
+  for (var j = 20; j <= nPts; j++) {
+    var lj = (j / nPts) * xMax;
+    if (lj < 0.4) continue;
+    refPts.push([sx(lj), sy(Math.min(1, 1/(lj*lj)))]);
+  }
+  svg += '<polyline points="'+refPts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'"'
+    + ' fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="2,3"/>';
+
+  // Buckling curve fill
+  var fillPts = pts.slice();
+  fillPts.push([sx(xMax), pad.t+ph], [sx(0), pad.t+ph]);
+  svg += '<polygon points="'+fillPts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'"'
+    + ' fill="'+col+'" fill-opacity="0.08"/>';
+
+  // Buckling curve line
+  svg += '<polyline points="'+polyline+'" fill="none" stroke="'+col+'" stroke-width="2.2"/>';
+
+  // Current point
+  var px = sx(r.lambdaLT), py = sy(r.chiLT);
+  svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="5" fill="'+colPt+'" stroke="white" stroke-width="1.5"/>';
+  svg += '<line x1="'+px.toFixed(1)+'" y1="'+(pad.t)+'" x2="'+px.toFixed(1)+'" y2="'+py.toFixed(1)+'"'
+    + ' stroke="'+colPt+'" stroke-width="1" stroke-dasharray="3,2"/>';
+
+  // Axes
+  svg += '<line x1="'+pad.l+'" y1="'+(pad.t+ph)+'" x2="'+(pad.l+pw)+'" y2="'+(pad.t+ph)+'" stroke="var(--text-dim)" stroke-width="1.2"/>';
+  svg += '<line x1="'+pad.l+'" y1="'+pad.t+'" x2="'+pad.l+'" y2="'+(pad.t+ph)+'" stroke="var(--text-dim)" stroke-width="1.2"/>';
+
+  // X axis labels
+  [0, 0.4, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0].forEach(function(v) {
+    var x = sx(v);
+    svg += '<text x="'+x+'" y="'+(pad.t+ph+14)+'" text-anchor="middle" font-size="9" fill="var(--text-dim)">'+v+'</text>';
+    svg += '<line x1="'+x+'" y1="'+(pad.t+ph)+'" x2="'+x+'" y2="'+(pad.t+ph+3)+'" stroke="var(--text-dim)" stroke-width="1"/>';
+  });
+  svg += '<text x="'+(pad.l+pw/2)+'" y="'+(H-2)+'" text-anchor="middle" font-size="9" fill="var(--text-dim)">λ̅₀ᴸᵀ (non-dimensional slenderness)</text>';
+
+  // Y axis labels
+  [0, 0.25, 0.5, 0.75, 1.0].forEach(function(v) {
+    var y = sy(v);
+    svg += '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="9" fill="var(--text-dim)">'+v+'</text>';
+    svg += '<line x1="'+(pad.l-3)+'" y1="'+y+'" x2="'+pad.l+'" y2="'+y+'" stroke="var(--text-dim)" stroke-width="1"/>';
+  });
+  svg += '<text x="12" y="'+(pad.t+ph/2)+'" text-anchor="middle" font-size="9" fill="var(--text-dim)" transform="rotate(-90 12,'+(pad.t+ph/2)+')">χ₀ᴸᵀ</text>';
+
+  // Curve label
+  svg += '<text x="'+(sx(0.8))+'" y="'+(sy(0.9)-6)+'" font-size="9" fill="'+col+'">Curve '+r.curveName+' (αLT='+r.alphaLT+')</text>';
+
+  // Point label
+  var ptLabelY = py - 8;
+  if (ptLabelY < pad.t + 10) ptLabelY = py + 16;
+  svg += '<text x="'+(px+6)+'" y="'+ptLabelY.toFixed(0)+'" font-size="8.5" fill="'+colPt+'">'+r.name+'</text>';
+  svg += '<text x="'+(px+6)+'" y="'+(ptLabelY+10).toFixed(0)+'" font-size="8" fill="'+colPt+'">χLT='+fmt(r.chiLT,3)+'</text>';
+
+  svg += '</svg>';
+  return svg;
 }
 
 // ── SVG DIAGRAM ──────────────────────────────────────────────────────────────
