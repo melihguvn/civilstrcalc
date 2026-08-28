@@ -4,8 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
-<title>LTB Control - AISC / EC3 / ÇYTHYE | CivilStrCalc</title>
-<meta name="description" content="Lateral torsional buckling (LTB) check for W, IPE, HEA, HEB sections per AISC 360-22 §F2, EC3 EN 1993-1-1 §6.3.2 and ÇYTHYE 2018. Computes Lp, Lr, χLT, Mb,Rd and D/C ratio.">
+<title>LTB Control - AISC / EC3 / TSDS | CivilStrCalc</title>
+<meta name="description" content="Lateral torsional buckling (LTB) check for W, IPE, HEA, HEB, HEM, HD sections per AISC 360-22 §F2, EC3 EN 1993-1-1 §6.3.2, and TSDS 2016. Computes Lp, Lr, χLT, Mb,Rd and D/C ratio.">
 <meta name="robots" content="index, follow">
 <link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
@@ -83,7 +83,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>LTB Control</h1>
-  <p>Lateral torsional buckling check per <b>AISC 360-22 &sect;F2</b>, <b>EC3 EN 1993-1-1 &sect;6.3.2</b> and <b>&#199;YTHYE 2018 &sect;F2</b> for compact W, IPE, HEA and HEB sections. Computes L<sub>p</sub>/L<sub>r</sub>/&phi;<sub>b</sub>M<sub>n</sub> (AISC/&#199;YTHYE) or M<sub>cr</sub>/&chi;<sub>LT</sub>/M<sub>b,Rd</sub> (EC3) with D/C ratio.</p>
+  <p>Lateral torsional buckling check per <b>AISC 360-22 &sect;F2</b>, <b>EC3 EN 1993-1-1 &sect;6.3.2</b> and <b>TSDS 2016 &sect;F2</b> for compact W, IPE, HEA, HEB, HEM and HD sections. Computes L<sub>p</sub>/L<sub>r</sub>/&phi;<sub>b</sub>M<sub>n</sub> (AISC/TSDS) or M<sub>cr</sub>/&chi;<sub>LT</sub>/M<sub>b,Rd</sub> (EC3) with D/C ratio.</p>
 </div>
 
 <div class="calc-layout">
@@ -93,12 +93,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="card-body">
 
       <div class="unit-switcher">
+        <label>Design Code:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ltb-btn-aisc" onclick="ltbSetCode('aisc')">AISC 360-22</button>
+          <button class="unit-btn"        id="ltb-btn-tsds" onclick="ltbSetCode('tsds')">TSDS 2016</button>
+          <button class="unit-btn"        id="ltb-btn-ec3"  onclick="ltbSetCode('ec3')">EC3 EN 1993-1-1</button>
+        </div>
+      </div>
+      <div class="unit-switcher" id="ltb-unit-sw">
         <label>Units:</label>
         <div class="unit-btns">
-          <button class="unit-btn active" id="ltb-btn-us"     onclick="ltbSetUnit('us',this)">US (kip&middot;ft, in)</button>
-          <button class="unit-btn"        id="ltb-btn-si"     onclick="ltbSetUnit('si',this)">SI (kN&middot;m)</button>
-          <button class="unit-btn"        id="ltb-btn-cythye" onclick="ltbSetUnit('cythye',this)">&#199;YTHYE 2018 (SI)</button>
-          <button class="unit-btn"        id="ltb-btn-ec3"    onclick="ltbSetUnit('ec3',this)">EC3 EN 1993-1-1</button>
+          <button class="unit-btn active" id="ltb-btn-us" onclick="ltbSetSubUnit('us')">US (kip&middot;ft, in)</button>
+          <button class="unit-btn"        id="ltb-btn-si" onclick="ltbSetSubUnit('si')">SI (kN&middot;m)</button>
         </div>
       </div>
 
@@ -152,7 +158,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="report-card" id="ltb-card" style="display:none">
       <div class="report-hdr">
         <h4>Calculation Report</h4>
-        <span class="rh-code" id="ltb-rh-code">AISC 360-22 / &#199;YTHYE 2018 &sect;F2</span>
+        <span class="rh-code" id="ltb-rh-code">AISC 360-22 / TSDS 2016 / EC3 &sect;F2</span>
         <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
       </div>
       <div class="report-body" id="ltb-body"></div>
@@ -162,13 +168,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- Theory -->
 <div class="bg-section">
-  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 / &#199;YTHYE 2018 / EC3 EN 1993-1-1 &sect;6.3.2 &mdash; Lateral Torsional Buckling</h3></div>
+  <div class="bg-hdr"><h3>&#128218; AISC 360-22 &sect;F2 / TSDS 2016 / EC3 EN 1993-1-1 &sect;6.3.2 &mdash; Lateral Torsional Buckling</h3></div>
   <nav class="bg-toc">
     <a href="#bg-ltb">AISC Zones</a>
     <a href="#bg-params">Section Parameters</a>
     <a href="#bg-cb">C<sub>b</sub> / C<sub>1</sub> Factor</a>
     <a href="#bg-ec3">EC3 Method</a>
-    <a href="#bg-cythye">ÇYTHYE 2018</a>
+    <a href="#bg-tsds">TSDS 2016</a>
     <a href="#bg-limits">Limitations</a>
   </nav>
 
@@ -243,6 +249,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <tr><td>IPE sections</td><td>IPE 80 to IPE 600</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
           <tr><td>HEA sections</td><td>HEA 100 to HEA 700</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
           <tr><td>HEB sections</td><td>HEB 100 to HEB 700</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
+          <tr><td>HEM sections</td><td>HEM 100 to HEM 700</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
+          <tr><td>HD sections</td><td>HD 260 to HD 400</td><td>SI (mm, kN&middot;m)</td><td>EN 10365 / Arcelor-Mittal</td></tr>
         </tbody>
       </table>
     </div>
@@ -341,70 +349,70 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div>
   </div>
 
-  <div class="bg-pane" id="bg-cythye">
-    <div class="bg-panel-hdr"><span>&#199;YTHYE 2018 &mdash; Türk Çelik Yapı Yönetmeliği</span></div>
+  <div class="bg-pane" id="bg-tsds">
+    <div class="bg-panel-hdr"><span>TSDS 2016 &mdash; Turkish Steel Design Specification</span></div>
     <div class="tb">
-      <h4>Yönetmelik Hakkında</h4>
-      <p><b>ÇYTHYE</b> (Çelik Yapıların Tasarım, Hesap ve Yapım Esaslarına Dair Yönetmelik), 04 Şubat 2016 tarih ve 29614 sayılı Resmî Gazete'de yayımlanmış, 01 Eylül 2016'da yürürlüğe girmiştir. 2018 düzeltmesiyle güncellenmiştir. Yönetmelik teknik olarak <b>AISC 360-16</b> esas alınarak hazırlanmıştır; §F2 kapsamındaki yanal burulmalı burkulma formülleri AISC ile özdeştir.</p>
+      <h4>About the Specification</h4>
+      <p><b>TSDS 2016</b> (Turkish Steel Design Specification — formally ÇYTHYE) was published in the Official Gazette No. 29614 on 04 February 2016 and entered into force on 01 September 2016, with a corrective revision in 2018. The specification is technically based on <b>AISC 360-16</b>; the lateral torsional buckling provisions of §F2 are formula-identical to AISC.</p>
 
-      <h4>ÇYTHYE §F2 — Yanal Burulmalı Burkulma (YBB)</h4>
+      <h4>TSDS 2016 §F2 — Lateral Torsional Buckling</h4>
       <table class="combo-ref-tbl">
-        <thead><tr><th>Bölge</th><th>Koşul</th><th>M<sub>n</sub></th><th>Denklem</th></tr></thead>
+        <thead><tr><th>Zone</th><th>Condition</th><th>M<sub>n</sub></th><th>Equation</th></tr></thead>
         <tbody>
           <tr>
-            <td><b style="color:var(--green)">Plastik</b></td>
+            <td><b style="color:var(--green)">Plastic</b></td>
             <td>L<sub>b</sub> &le; L<sub>p</sub></td>
             <td>M<sub>p</sub> = f<sub>yk</sub> &middot; W<sub>px</sub></td>
             <td>F2-1</td>
           </tr>
           <tr>
-            <td><b style="color:var(--orange)">Elastik olmayan YBB</b></td>
+            <td><b style="color:var(--orange)">Inelastic LTB</b></td>
             <td>L<sub>p</sub> &lt; L<sub>b</sub> &le; L<sub>r</sub></td>
             <td>C<sub>b</sub>[M<sub>p</sub>&minus;(M<sub>p</sub>&minus;0.7f<sub>yk</sub>W<sub>ex</sub>)(L<sub>b</sub>&minus;L<sub>p</sub>)/(L<sub>r</sub>&minus;L<sub>p</sub>)] &le; M<sub>p</sub></td>
             <td>F2-2</td>
           </tr>
           <tr>
-            <td><b style="color:var(--red)">Elastik YBB</b></td>
+            <td><b style="color:var(--red)">Elastic LTB</b></td>
             <td>L<sub>b</sub> &gt; L<sub>r</sub></td>
             <td>C<sub>b</sub> &middot; F<sub>cr</sub> &middot; W<sub>ex</sub> &le; M<sub>p</sub></td>
             <td>F2-3</td>
           </tr>
         </tbody>
       </table>
-      <p style="font-size:.75rem;color:var(--text-dim)">ÇYTHYE notasyonu: f<sub>yk</sub> = akma dayanımı (MPa), W<sub>px</sub> = plastik kesit modülü (mm³), W<sub>ex</sub> = elastik kesit modülü (mm³) &mdash; AISC'deki F<sub>y</sub>, Z<sub>x</sub>, S<sub>x</sub> ile eşdeğerdir.</p>
+      <p style="font-size:.75rem;color:var(--text-dim)">TSDS notation: f<sub>yk</sub> = yield strength (MPa), W<sub>px</sub> = plastic section modulus (mm³), W<sub>ex</sub> = elastic section modulus (mm³) — equivalent to F<sub>y</sub>, Z<sub>x</sub>, S<sub>x</sub> in AISC.</p>
 
-      <div class="fml-blk"><span class="ft">Plastik sınır uzunluğu L<sub>p</sub> — ÇYTHYE Denklem F2-5</span>
+      <div class="fml-blk"><span class="ft">Plastic limit L<sub>p</sub> — TSDS Eq. F2-5</span>
         L<sub>p</sub> = 1.76 &middot; i<sub>y</sub> &middot; &radic;(E / f<sub>yk</sub>) &nbsp;&nbsp; [mm]
       </div>
-      <div class="fml-blk"><span class="ft">Elastik sınır uzunluğu L<sub>r</sub> — ÇYTHYE Denklem F2-6</span>
+      <div class="fml-blk"><span class="ft">Inelastic/elastic limit L<sub>r</sub> — TSDS Eq. F2-6</span>
         L<sub>r</sub> = 1.95 &middot; r<sub>ts</sub> &middot; (E / 0.7f<sub>yk</sub>) &middot; &radic;( X<sub>2</sub> + &radic;(X<sub>2</sub><sup>2</sup> + 6.76(0.7f<sub>yk</sub>/E)<sup>2</sup>) )
       </div>
-      <div class="fml-blk"><span class="ft">Elastik burkulma gerilmesi F<sub>cr</sub> — ÇYTHYE Denklem F2-4</span>
+      <div class="fml-blk"><span class="ft">Elastic critical stress F<sub>cr</sub> — TSDS Eq. F2-4</span>
         F<sub>cr</sub> = &pi;<sup>2</sup>E / (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> &middot; &radic;( 1 + 0.078 &middot; X<sub>2</sub> &middot; (L<sub>b</sub>/r<sub>ts</sub>)<sup>2</sup> )
       </div>
 
-      <h4>Türk Çelik Sınıfları &mdash; TS EN 10025</h4>
+      <h4>Steel Grades — TS EN 10025</h4>
       <table class="combo-ref-tbl">
-        <thead><tr><th>Sınıf</th><th>f<sub>yk</sub> (MPa)</th><th>E (MPa)</th><th>Uygulama</th></tr></thead>
+        <thead><tr><th>Grade</th><th>f<sub>yk</sub> (MPa)</th><th>E (MPa)</th><th>Application</th></tr></thead>
         <tbody>
-          <tr><td>S235</td><td>235</td><td>200 000</td><td>Genel yapısal çelik</td></tr>
-          <tr><td>S275</td><td>275</td><td>200 000</td><td>Genel yapısal çelik</td></tr>
-          <tr><td>S355</td><td>355</td><td>200 000</td><td>Yaygın yapısal çelik</td></tr>
-          <tr><td>S420</td><td>420</td><td>200 000</td><td>Yüksek dayanımlı çelik</td></tr>
-          <tr><td>S460</td><td>460</td><td>200 000</td><td>Yüksek dayanımlı çelik</td></tr>
+          <tr><td>S235</td><td>235</td><td>200 000</td><td>General structural steel</td></tr>
+          <tr><td>S275</td><td>275</td><td>200 000</td><td>General structural steel</td></tr>
+          <tr><td>S355</td><td>355</td><td>200 000</td><td>Most common structural grade</td></tr>
+          <tr><td>S420</td><td>420</td><td>200 000</td><td>High-strength structural steel</td></tr>
+          <tr><td>S460</td><td>460</td><td>200 000</td><td>High-strength structural steel</td></tr>
         </tbody>
       </table>
 
-      <h4>AISC 360-22 ile Fark</h4>
+      <h4>Comparison with AISC 360-22</h4>
       <table class="combo-ref-tbl">
-        <thead><tr><th>Konu</th><th>AISC 360-22</th><th>ÇYTHYE 2018</th></tr></thead>
+        <thead><tr><th>Aspect</th><th>AISC 360-22</th><th>TSDS 2016</th></tr></thead>
         <tbody>
-          <tr><td>YBB formülleri (§F2)</td><td>AISC 360-22 §F2</td><td>Özdeş (AISC 360-16 kaynaklı)</td></tr>
-          <tr><td>&phi;<sub>b</sub> direnç faktörü</td><td>0.90</td><td>0.90</td></tr>
-          <tr><td>Çelik sınıfları</td><td>A992, A572, A36 (ksi)</td><td>S235, S275, S355… (MPa)</td></tr>
-          <tr><td>Profil ailesi</td><td>W kesitler (AISC)</td><td>IPE, HEA, HEB (EN 10365)</td></tr>
-          <tr><td>Birim sistemi</td><td>ABD birim (kip, ft, in)</td><td>SI (kN, m, mm)</td></tr>
-          <tr><td>AISC 360-22 sonrası revizyonlar</td><td>Dahil</td><td>Dahil değil</td></tr>
+          <tr><td>LTB formulas (§F2)</td><td>AISC 360-22 §F2</td><td>Identical (based on AISC 360-16)</td></tr>
+          <tr><td>&phi;<sub>b</sub> resistance factor</td><td>0.90</td><td>0.90</td></tr>
+          <tr><td>Steel grades</td><td>A992, A572, A36 (ksi)</td><td>S235, S275, S355… (MPa)</td></tr>
+          <tr><td>Section families</td><td>W sections (AISC)</td><td>IPE, HEA, HEB, HEM, HD (EN 10365)</td></tr>
+          <tr><td>Unit system</td><td>US customary (kip, ft, in)</td><td>SI (kN, m, mm)</td></tr>
+          <tr><td>Post-AISC 360-22 revisions</td><td>Included</td><td>Not included</td></tr>
         </tbody>
       </table>
     </div>
@@ -566,6 +574,67 @@ var HEB_DATA = [
   ['HEB 700', 700,300,32.0,17.0,30640,2510000000,7171000,8132000,286.0,109000000,727000,1440000,59.7,131000000,1.22e13]
 ];
 
+// SI sections: HEM — [name, d(mm), bf(mm), tf(mm), tw(mm), A(mm²), Ix(mm⁴), Sx(mm³), Zx(mm³), rx(mm), Iy(mm⁴), Sy(mm³), Zy(mm³), ry(mm), J(mm⁴), Cw(mm⁶)]
+var HEM_DATA = [
+  // Cw = Iy*(d-tf)²/4  (EN 10365 / Arcelor-Mittal)
+  ['HEM 100', 120,106,20.0,12.0, 5200, 11250000, 187700, 231200, 46.5,  3982000,  75100, 115200,27.7,  612700, 9.95e9],
+  ['HEM 120', 140,126,21.0,12.5, 6517, 19910000, 284400, 345200, 55.3,  7017000, 111400, 170500,32.8,  841700, 2.48e10],
+  ['HEM 140', 160,146,22.0,13.0, 7932, 32530000, 406700, 487000, 64.0, 11430000, 156600, 239200,37.9, 1120000, 5.44e10],
+  ['HEM 160', 180,166,23.0,14.0, 9680, 51020000, 566900, 673000, 72.6, 17080000, 205800, 314700,42.0, 1500000, 1.05e11],
+  ['HEM 180', 200,186,24.0,14.5,11250, 75880000, 758800, 896900, 82.2, 24360000, 262000, 400800,46.5, 1910000, 1.86e11],
+  ['HEM 200', 220,206,25.0,15.0,13200,108300000, 984500,1153000, 90.6, 33400000, 324300, 496600,50.3, 2480000, 3.18e11],
+  ['HEM 220', 240,226,26.0,15.5,15300,149500000,1246000,1452000, 98.8, 44780000, 396300, 607000,54.1, 3180000, 5.20e11],
+  ['HEM 240', 270,248,32.0,18.0,19960,240000000,1778000,2100000,110.0, 80810000, 652000,1002000,63.6, 7330000, 1.36e12],
+  ['HEM 260', 290,268,32.5,18.0,21990,313300000,2161000,2530000,119.4,103500000, 772900,1185000,68.6, 8350000, 2.00e12],
+  ['HEM 280', 310,288,33.0,18.5,24020,404800000,2611000,3050000,129.8,130900000, 909700,1396000,73.8, 9740000, 2.93e12],
+  ['HEM 300', 340,310,39.0,21.0,30340,593400000,3491000,4078000,139.8,203600000,1314000,2018000,81.9,19650000, 6.01e12],
+  ['HEM 320', 359,309,40.0,21.0,31210,739200000,4119000,4799000,153.9,212300000,1374000,2108000,82.5,22020000, 7.56e12],
+  ['HEM 340', 377,309,40.0,21.0,31630,876900000,4652000,5408000,166.4,213200000,1381000,2119000,82.1,23430000, 8.89e12],
+  ['HEM 360', 395,308,40.0,21.0,32100,1020000000,5165000,5978000,178.4,211900000,1376000,2108000,81.2,24600000, 1.03e13],
+  ['HEM 400', 432,307,40.0,21.0,32760,1320000000,6111000,7031000,200.7,208700000,1360000,2081000,79.8,25450000, 1.27e13],
+  ['HEM 450', 478,307,40.0,21.0,33280,1740000000,7279000,8380000,228.6,208800000,1361000,2088000,79.2,25830000, 1.69e13],
+  ['HEM 500', 524,306,40.0,21.0,34180,2180000000,8320000,9544000,252.4,205700000,1344000,2055000,77.6,25360000, 2.07e13],
+  ['HEM 550', 572,306,40.0,21.0,34640,2740000000,9579000,10990000,281.2,207700000,1358000,2078000,77.5,26060000, 2.68e13],
+  ['HEM 600', 620,305,40.0,21.0,35350,3390000000,10940000,12540000,309.7,204600000,1341000,2051000,76.0,26010000, 3.25e13],
+  ['HEM 650', 668,305,40.0,21.0,36010,4150000000,12430000,14250000,339.3,205900000,1350000,2065000,75.6,26770000, 4.00e13],
+  ['HEM 700', 716,304,40.0,21.0,36600,4970000000,13880000,15970000,368.4,202900000,1335000,2039000,74.4,26560000, 4.72e13]
+];
+
+// SI sections: HD — heavy-duty column wide-flange (EN 10365)
+// [name, d(mm), bf(mm), tf(mm), tw(mm), A(mm²), Ix(mm⁴), Sx(mm³), Zx(mm³), rx(mm), Iy(mm⁴), Sy(mm³), Zy(mm³), ry(mm), J(mm⁴), Cw(mm⁶)]
+var HD_DATA = [
+  // Cw = Iy*(d-tf)²/4
+  ['HD 260×54.1',  250,260,10.0, 6.4, 6891,  107100000, 856500, 954700,124.6, 22870000, 176000, 271800, 57.6,  194000, 3.38e11],
+  ['HD 260×68.2',  254,260,12.5, 7.5, 8682,  138200000,1088000,1214000,126.1, 28740000, 211800, 325800, 57.5,  376000, 4.24e11],
+  ['HD 260×89.3',  260,260,17.5, 9.4,11390,  184800000,1422000,1595000,127.4, 39540000, 304200, 468000, 58.9,  893700, 5.92e11],
+  ['HD 260×114',   266,261,22.0,11.6,14530,  245500000,1845000,2071000,129.9, 51240000, 392800, 604300, 59.4, 1834000, 7.82e11],
+  ['HD 260×142',   272,262,27.0,13.5,18100,  318700000,2343000,2638000,132.6, 65380000, 499200, 768900, 60.1, 3481000, 1.01e12],
+  ['HD 320×74.2',  310,308, 9.9, 6.1, 9450,  241100000,1556000,1730000,159.7, 48820000, 317000, 487000, 71.8,  178500, 8.66e11],
+  ['HD 320×97.6',  314,308,12.8, 7.8,12440,  320800000,2042000,2272000,160.6, 63680000, 413500, 636000, 71.5,  387300, 1.13e12],
+  ['HD 320×127',   320,309,17.0, 9.5,16200,  427600000,2673000,2980000,162.4, 86540000, 560300, 862500, 73.1,  862600, 1.55e12],
+  ['HD 320×158',   326,310,21.0,11.5,20130,  544100000,3337000,3730000,164.3,110700000, 714500,1100000, 74.2, 1683000, 2.00e12],
+  ['HD 320×198',   334,311,26.5,13.6,25230,  704200000,4217000,4726000,167.2,143400000, 922000,1423000, 75.4, 3371000, 2.62e12],
+  ['HD 320×245',   344,313,33.0,16.3,31250,  905200000,5264000,5917000,170.2,189600000,1212000,1874000, 77.9, 6631000, 3.53e12],
+  ['HD 320×300',   354,315,40.0,19.1,38220, 1143000000,6458000,7295000,172.9,244400000,1552000,2406000, 80.0,12130000, 4.62e12],
+  ['HD 360×134',   356,369,13.4, 8.0,17100,  419600000,2358000,2647000,156.7,186400000,1011000,1554000,104.4,  571800, 3.47e12],
+  ['HD 360×147',   358,369,15.0, 8.5,18740,  462300000,2583000,2901000,157.1,208900000,1133000,1740000,105.6,  796200, 3.89e12],
+  ['HD 360×162',   360,370,17.0, 9.0,20650,  517900000,2877000,3233000,158.4,236500000,1278000,1962000,106.9, 1113000, 4.42e12],
+  ['HD 360×179',   362,371,19.0, 9.5,22820,  574600000,3174000,3568000,158.6,264700000,1426000,2190000,107.7, 1530000, 4.97e12],
+  ['HD 360×196',   364,372,21.0,10.5,25010,  634700000,3487000,3919000,159.4,294600000,1584000,2433000,108.5, 2061000, 5.55e12],
+  ['HD 360×216',   366,373,23.0,11.5,27540,  702700000,3839000,4319000,159.7,325500000,1745000,2681000,108.7, 2760000, 6.13e12],
+  ['HD 360×237',   368,374,25.0,12.5,30160,  773700000,4205000,4729000,160.1,360800000,1929000,2963000,109.4, 3619000, 6.82e12],
+  ['HD 360×262',   370,375,27.5,13.5,33420,  862700000,4663000,5249000,160.7,401300000,2140000,3288000,109.7, 4867000, 7.61e12],
+  ['HD 400×187',   380,400,17.5, 9.7,23840,  697400000,3671000,4146000,171.1,428700000,2143000,3299000,134.1, 1232000, 9.16e12],
+  ['HD 400×216',   384,401,20.0,11.0,27540,  815800000,4249000,4810000,172.0,497100000,2479000,3821000,134.4, 1880000, 1.07e13],
+  ['HD 400×287',   393,399,27.0,14.5,36580, 1101000000,5601000,6375000,173.5,661700000,3317000,5118000,134.4, 4289000, 1.41e13],
+  ['HD 400×347',   399,400,33.0,17.0,44200, 1362000000,6832000,7813000,175.5,822700000,4114000,6358000,136.4, 7676000, 1.77e13],
+  ['HD 400×421',   406,401,40.0,20.0,53660, 1680000000,8276000,9498000,176.8,995500000,4965000,7682000,136.2,13720000, 2.16e13],
+  ['HD 400×509',   415,403,49.0,24.0,64900, 2150000000,10350000,11950000,182.1,1254000000,6228000,9660000,139.0,25570000, 2.76e13],
+  ['HD 400×634',   428,407,62.0,29.0,80780, 2840000000,13270000,15420000,187.5,1695000000,8328000,12970000,144.8,50540000, 3.80e13],
+  ['HD 400×744',   440,410,73.0,34.0,94810, 3560000000,16180000,18940000,193.7,2101000000,10250000,16000000,148.9,81910000, 4.77e13],
+  ['HD 400×900',   456,414,89.0,40.0,114700, 4700000000,20610000,24360000,202.5,2748000000,13270000,20860000,154.9,146800000, 6.38e13]
+];
+
 // ── GRADE DEFINITIONS ────────────────────────────────────────────────────────
 var GRADES_US = [
   {label:'A992 Gr50', Fy:50, E:29000},
@@ -582,15 +651,15 @@ var GRADES_SI = [
   {label:'S460', Fy:460, E:200000},
   {label:'A992 Gr50 (345 MPa)', Fy:345, E:200000}
 ];
-// ÇYTHYE 2018 — Turkish/European steel grades per TS EN 10025
-var GRADES_CYTHYE = [
-  {label:'S235 (Fʏy=235 MPa)', Fy:235, E:200000},
-  {label:'S275 (Fʏy=275 MPa)', Fy:275, E:200000},
-  {label:'S355 (Fʏy=355 MPa)', Fy:355, E:200000},
-  {label:'S420 (Fʏy=420 MPa)', Fy:420, E:200000},
-  {label:'S460 (Fʏy=460 MPa)', Fy:460, E:200000}
+// TSDS 2016 — Turkish/European steel grades per EN 10025
+var GRADES_TSDS = [
+  {label:'S235 — fy=235 MPa', Fy:235, E:200000},
+  {label:'S275 — fy=275 MPa', Fy:275, E:200000},
+  {label:'S355 — fy=355 MPa', Fy:355, E:200000},
+  {label:'S420 — fy=420 MPa', Fy:420, E:200000},
+  {label:'S460 — fy=460 MPa', Fy:460, E:200000}
 ];
-// EC3 — EN 10025 grades (same as ÇYTHYE; listed separately for clarity)
+// EC3 — EN 10025 grades (same as TSDS; listed separately for clarity)
 var GRADES_EC3 = [
   {label:'S235 — fy=235 MPa', Fy:235, E:200000},
   {label:'S275 — fy=275 MPa', Fy:275, E:200000},
@@ -600,23 +669,44 @@ var GRADES_EC3 = [
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-var ltbUnit = 'us';
+var ltbUnit = 'us'; // us | si | tsds | ec3
 
-function ltbSetUnit(u, btn) {
+function ltbSetCode(code) {
+  ['aisc','tsds','ec3'].forEach(function(c) {
+    document.getElementById('ltb-btn-'+c).classList.toggle('active', c === code);
+  });
+  var unitSw = document.getElementById('ltb-unit-sw');
+  unitSw.style.display = code === 'aisc' ? '' : 'none';
+  var u;
+  if (code === 'aisc') {
+    u = document.getElementById('ltb-btn-us').classList.contains('active') ? 'us' : 'si';
+  } else if (code === 'tsds') {
+    u = 'tsds';
+  } else {
+    u = 'ec3';
+  }
+  ltbApplyUnit(u);
+}
+
+function ltbSetSubUnit(u) {
+  ['us','si'].forEach(function(x) {
+    document.getElementById('ltb-btn-'+x).classList.toggle('active', x === u);
+  });
+  ltbApplyUnit(u);
+}
+
+function ltbApplyUnit(u) {
   ltbUnit = u;
-  document.querySelectorAll('.unit-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
   var isSI = u !== 'us';
-  var tagMap  = {us:'kip · ft · in', si:'kN · m', cythye:'kN · m | ÇYTHYE', ec3:'kN · m | EC3'};
+  var tagMap  = {us:'kip · ft · in', si:'kN · m', tsds:'kN · m | TSDS', ec3:'kN · m | EC3'};
   var codeMap = {us:'AISC 360-22 §F2 · kip · ft · in', si:'AISC 360-22 §F2 · kN · m',
-                 cythye:'ÇYTHYE 2018 §F2 · kN · m', ec3:'EN 1993-1-1 §6.3.2 · kN · m'};
+                 tsds:'TSDS 2016 §F2 · kN · m', ec3:'EN 1993-1-1 §6.3.2 · kN · m'};
   document.getElementById('ltb-unit-tag').textContent = tagMap[u];
   document.getElementById('ltb-rh-code').textContent  = codeMap[u];
   document.getElementById('ltb-Lb-lbl').textContent   = isSI ? '[m]'    : '[ft]';
   document.getElementById('ltb-Lb-us').textContent    = isSI ? 'm'      : 'ft';
   document.getElementById('ltb-Mu-lbl').textContent   = isSI ? '[kN·m]' : '[kip·ft]';
   document.getElementById('ltb-Mu-us').textContent    = isSI ? 'kN·m'   : 'kip·ft';
-  // EC3-specific label changes
   var isEC3 = u === 'ec3';
   document.getElementById('ltb-Cb-lbl').innerHTML = isEC3
     ? 'C<sub>1</sub> &mdash; Moment Distribution Factor <span class="unit-lbl">[&mdash;]</span>'
@@ -637,7 +727,7 @@ function ltbSetUnit(u, btn) {
 
 function ltbPopulateGrades() {
   var sel = document.getElementById('ltb-grade');
-  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
+  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
   var prev = sel.value;
   sel.innerHTML = '';
   grades.forEach(function(g, i) {
@@ -654,17 +744,23 @@ var TYPE_MAP = {
   si: [
     {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
     {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA}
+    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
+    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
+    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
   ],
-  cythye: [
-    {key:'IPE', label:'IPE Profilleri (EN 10365)', data: IPE_DATA},
-    {key:'HEA', label:'HEA Profilleri (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Profilleri (EN 10365)', data: HEB_DATA}
+  tsds: [
+    {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
+    {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
+    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
+    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
+    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
   ],
   ec3: [
     {key:'IPE', label:'IPE Sections (EN 10365)', data: IPE_DATA},
     {key:'HEA', label:'HEA Sections (EN 10365)', data: HEA_DATA},
-    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA}
+    {key:'HEB', label:'HEB Sections (EN 10365)', data: HEB_DATA},
+    {key:'HEM', label:'HEM Sections (EN 10365)', data: HEM_DATA},
+    {key:'HD',  label:'HD Sections (EN 10365)',  data: HD_DATA}
   ]
 };
 
@@ -728,7 +824,7 @@ function ltbCalc() {
   var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
 
   var gradeIdx = +document.getElementById('ltb-grade').value;
-  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'cythye' ? GRADES_CYTHYE : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
+  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
   var grade    = gradeArr[gradeIdx];
   var Cb  = Math.max(0.1, +document.getElementById('ltb-Cb').value || 1.0);
   var Mu  = +document.getElementById('ltb-Mu').value || 0;
@@ -892,8 +988,7 @@ function ltbRender(r) {
   var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
   var date  = new Date().toLocaleDateString('en-CA');
   var ul = r.unit_sec, um = r.unit_mom, ulen = r.unit_len;
-  var isCYTHYE = r.codeSystem === 'cythye';
-  var codeRef  = isCYTHYE ? 'ÇYTHYE 2018 §F2' : 'AISC 360-22 §F2';
+  var codeRef  = r.codeSystem === 'tsds' ? 'TSDS 2016 §F2' : 'AISC 360-22 §F2';
   var codeUnits = r.codeSystem === 'us' ? 'US — kip, ft, in' : 'SI — kN, m, mm';
 
   function step(n, desc, fml, val, ok) {
