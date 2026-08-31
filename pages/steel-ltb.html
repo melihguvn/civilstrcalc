@@ -53,7 +53,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .fl-lbl{font-size:.53rem!important;}
   .fl-val{font-size:.82rem!important;}
   .fl-unit{font-size:.53rem!important;}
-  .result-box{padding:5px 8px!important;gap:4px!important;margin-bottom:5px!important;background:#f0f5fb!important;}
+  .result-box{padding:5px 8px!important;gap:4px!important;margin-bottom:5px!important;background:#f0f5fb!important;grid-template-columns:repeat(5,1fr)!important;}
   .ri-value{font-size:.85rem!important;}
   .ri-label{font-size:.53rem!important;}
   .ri-unit{font-size:.5rem!important;}
@@ -918,7 +918,6 @@ function ltbSecChange() {
     else if (t==='RHS') info.innerHTML = 'h='+d+' b='+bf+' mm &nbsp; t='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+fmt(ry,1)+' mm';
     else info.innerHTML = 'd='+d+' mm &nbsp; b<sub>f</sub>='+bf+' mm &nbsp; t<sub>f</sub>='+tf+' mm &nbsp; A='+(A/100).toFixed(1)+' cm² &nbsp; Z<sub>x</sub>='+(Zx/1000).toFixed(0)+' cm³ &nbsp; r<sub>y</sub>='+fmt(ry,1)+' mm';
   }
-  info.style.display = 'block';
   ltbAutoCalc();
 }
 
@@ -1200,7 +1199,6 @@ function ltbRender(r) {
   // Result box
   h += '<div class="result-box" style="margin-bottom:8px;">';
   [
-    {l:'M<sub>p</sub>',               v:fmt(r.Mp,1),    u:um},
     {l:'M<sub>n</sub>',               v:fmt(r.Mn,1),    u:um},
     {l:'&phi;<sub>b</sub>M<sub>n</sub>', v:fmt(r.phiMn,1), u:um, cls:dc},
     {l:'M<sub>u</sub>',               v:fmt(r.Mu,1),    u:um},
@@ -1668,43 +1666,13 @@ function ltbDiagramSVG(r) {
 
   var svg = '<svg viewBox="0 0 '+W+' '+H+'" class="ltb-diagram" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--sans);">';
 
-  // Zone fills
-  svg += '<polygon points="'+x0+','+yBase+' '+xLp+','+yBase+' '+xLp+','+sy(0.9*r.Mp)+' '+x0+','+sy(0.9*r.Mp)+'" fill="rgba(34,197,94,0.12)"/>';
-
-  // inelastic: from Lp to Lr along curve
-  var inelPts = '';
-  var inelX = x0;
-  for (var i2 = 0; i2 <= nPts; i2++) {
-    var LbI = (i2 / nPts) * xMax;
-    if (LbI >= r.Lp && LbI <= r.Lr) {
-      var mn2 = Math.min(r.Mp - (r.Mp - r.M07) * (LbI - r.Lp) / (r.Lr - r.Lp), r.Mp);
-      inelPts += sx(LbI)+','+sy(0.9*mn2)+' ';
-    }
-  }
-  if (inelPts) {
-    svg += '<polygon points="'+xLp+','+yBase+' '+xLr+','+yBase+' '+inelPts+'" fill="rgba(251,146,60,0.12)"/>';
-  }
-
-  // elastic zone
-  var elasPts = '';
-  for (var i3 = 0; i3 <= nPts; i3++) {
-    var LbE = (i3 / nPts) * xMax;
-    if (LbE >= r.Lr) {
-      var mn3;
-      if (r.secShape === 'HSS') {
-        mn3 = Math.max(r.Mp - (r.Mp - r.M07) * (LbE - r.Lp) / (r.Lr - r.Lp), r.M07);
-      } else {
-        var LbPx2 = ltbUnit === 'us' ? LbE * 12 : LbE * 1000;
-        var Fcr2 = Math.PI * Math.PI * r.E / Math.pow(LbPx2 / r.rts, 2) * Math.sqrt(1 + 0.078 * r.tv * Math.pow(LbPx2 / r.rts, 2));
-        var conv2 = ltbUnit === 'us' ? 12 : 1e6;
-        mn3 = Math.min(Fcr2 * r.Sx / conv2, r.Mp);
-      }
-      elasPts += sx(LbE)+','+sy(0.9*mn3)+' ';
-    }
-  }
-  if (elasPts) {
-    svg += '<polygon points="'+xLr+','+yBase+' '+xEnd+','+yBase+' '+elasPts+'" fill="rgba(239,68,68,0.10)"/>';
-  }
+  // Zone background bands (full-height rectangles for clear zone identification)
+  svg += '<rect x="'+x0+'" y="'+pad.t+'" width="'+(xLp-x0)+'" height="'+ph+'" fill="rgba(34,197,94,0.13)"/>';
+  if (xLr > xLp) svg += '<rect x="'+xLp+'" y="'+pad.t+'" width="'+(xLr-xLp)+'" height="'+ph+'" fill="rgba(251,146,60,0.13)"/>';
+  if (xEnd > xLr) svg += '<rect x="'+xLr+'" y="'+pad.t+'" width="'+(xEnd-xLr)+'" height="'+ph+'" fill="rgba(239,68,68,0.10)"/>';
+  // Zone boundary lines
+  if (xLp > x0) svg += '<line x1="'+xLp+'" y1="'+pad.t+'" x2="'+xLp+'" y2="'+yBase+'" stroke="rgba(34,197,94,0.5)" stroke-width="1" stroke-dasharray="3,2"/>';
+  if (xLr < xEnd) svg += '<line x1="'+xLr+'" y1="'+pad.t+'" x2="'+xLr+'" y2="'+yBase+'" stroke="rgba(251,146,60,0.5)" stroke-width="1" stroke-dasharray="3,2"/>';
 
   // Cb=1 curve
   svg += '<polyline points="'+polyline+'" fill="none" stroke="var(--border)" stroke-width="1.2" stroke-dasharray="4,3"/>';
