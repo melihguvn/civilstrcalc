@@ -49,6 +49,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 /* note below table */
 .td-note{font-size:.70rem;color:var(--text-dim);margin:3px 0 8px;line-height:1.55;font-family:var(--sans);}
 
+/* load-combination table (matches flexural module) */
+.combo-tbl{width:100%;border-collapse:collapse;font-size:.76rem;}
+.combo-tbl th{padding:5px 8px;text-align:left;font-family:var(--sans);font-weight:600;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.combo-tbl tr:last-child td{border-bottom:none;}
+.combo-tbl tr.gov-row td{background:var(--green-bg);font-weight:700;color:var(--green);}
+.combo-lbl{font-family:var(--sans);color:var(--text-mid);}
+
 @media print{
   @page{margin:7mm 9mm;size:A4;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
@@ -139,29 +147,47 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div>
 
     <!-- Loads -->
-    <div class="form-div"><div class="form-div-lbl" id="td-load-div-lbl">Applied Loads (k/ft along span)</div></div>
+    <div class="form-div"><div class="form-div-lbl" id="td-load-div-lbl">Loads &mdash; ASCE 7-22</div></div>
+    <div class="sub-tabs" style="margin-bottom:12px;">
+      <button class="sub-tab active" id="td-mode-udl"    onclick="tdSetLoadMode('udl',this)">UDL</button>
+      <button class="sub-tab"        id="td-mode-direct" onclick="tdSetLoadMode('direct',this)">Design Load</button>
+    </div>
 
-    <div class="form-row-2">
-      <div class="form-group">
-        <label>Dead, w<sub>D</sub> <span class="lu" id="td-wD-lu">[k/ft]</span></label>
-        <div class="iw"><input type="number" id="td-wD" value="0.5" min="0" step="0.05"><span class="us" id="td-wD-u">k/ft</span></div>
+    <!-- UDL panel -->
+    <div id="td-panel-udl">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Dead, w<sub>D</sub> <span class="lu" id="td-wD-lu">[k/ft]</span></label>
+          <div class="iw"><input type="number" id="td-wD" value="0.5" min="0" step="0.05"><span class="us" id="td-wD-u">k/ft</span></div>
+        </div>
+        <div class="form-group">
+          <label>Live, w<sub>L</sub> <span class="lu" id="td-wL-lu">[k/ft]</span></label>
+          <div class="iw"><input type="number" id="td-wL" value="1.0" min="0" step="0.05"><span class="us" id="td-wL-u">k/ft</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Snow, w<sub>S</sub> <span class="lu" id="td-wS-lu">[k/ft]</span></label>
+          <div class="iw"><input type="number" id="td-wS" value="0.5" min="0" step="0.05"><span class="us" id="td-wS-u">k/ft</span></div>
+        </div>
+        <div class="form-group">
+          <label>Wind, w<sub>W</sub> <span class="lu" id="td-wW-lu">[k/ft]</span></label>
+          <div class="iw"><input type="number" id="td-wW" value="0" step="0.05"><span class="us" id="td-wW-u">k/ft</span></div>
+        </div>
+      </div>
+      <p style="font-size:.70rem;color:var(--text-dim);margin:-4px 0 10px;">w<sub>W</sub>: positive = downward, negative = uplift. Self-weight auto-added to D.</p>
+    </div>
+
+    <!-- Design Load panel -->
+    <div id="td-panel-direct" style="display:none">
+      <div style="font-size:.73rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;margin-bottom:10px;font-family:var(--sans);line-height:1.5">
+        Enter a pre-factored UDL. Load combinations and self-weight are skipped.
       </div>
       <div class="form-group">
-        <label>Live, w<sub>L</sub> <span class="lu" id="td-wL-lu">[k/ft]</span></label>
-        <div class="iw"><input type="number" id="td-wL" value="1.0" min="0" step="0.05"><span class="us" id="td-wL-u">k/ft</span></div>
+        <label>Factored load w<sub>u</sub> <span class="lu" id="td-wu-lu">[k/ft]</span></label>
+        <div class="iw"><input type="number" id="td-wu" value="3.0" min="0" step="0.1"><span class="us" id="td-wu-u">k/ft</span></div>
       </div>
     </div>
-    <div class="form-row-2">
-      <div class="form-group">
-        <label>Snow, w<sub>S</sub> <span class="lu" id="td-wS-lu">[k/ft]</span></label>
-        <div class="iw"><input type="number" id="td-wS" value="0.5" min="0" step="0.05"><span class="us" id="td-wS-u">k/ft</span></div>
-      </div>
-      <div class="form-group">
-        <label>Wind, w<sub>W</sub> <span class="lu" id="td-wW-lu">[k/ft]</span></label>
-        <div class="iw"><input type="number" id="td-wW" value="0" step="0.05"><span class="us" id="td-wW-u">k/ft</span></div>
-      </div>
-    </div>
-    <p style="font-size:.70rem;color:var(--text-dim);margin:-6px 0 10px;">w<sub>W</sub>: positive = downward, negative = uplift</p>
 
     <!-- Steel -->
     <div class="form-div"><div class="form-div-lbl">Steel</div></div>
@@ -253,6 +279,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <script>
 'use strict';
 var tdUnit = 'us';
+var tdLoadMode = 'udl';
 
 // ── European section data ─────────────────────────────────────────────────
 // 18-col: [name,h,b,tw,tf,r,A_cm2,G_kgm,Iy_cm4,Wely_cm3,Wply_cm3,iy_cm,Iz_cm4,Welz_cm3,Wplz_cm3,iz_cm,It_cm4,Iw_cm6]
@@ -585,7 +612,10 @@ function tdSetUnit(u, btn) {
   ['td-L-lu','td-H-lu','td-heel-lu','td-Lb-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uL+']';});
   ['td-wD-lu','td-wL-lu','td-wS-lu','td-wW-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uW+']';});
   var ldiv=document.getElementById('td-load-div-lbl');
-  if(ldiv) ldiv.textContent='Applied Loads ('+(si?'kN/m':'k/ft')+' along span)';
+  if(ldiv) ldiv.textContent='Loads — ASCE 7-22';
+  var wuLu=document.getElementById('td-wu-lu'); if(wuLu) wuLu.textContent='['+uW+']';
+  var wuU=document.getElementById('td-wu-u'); if(wuU) wuU.textContent=uW;
+  if(si){el('td-wu').value='40';} else {el('td-wu').value='3.0';}
   // Fy
   var fysel=document.getElementById('td-fy');
   if(si){
@@ -633,6 +663,15 @@ function tdSetUnit(u, btn) {
   }
   tdPopChord(); tdPopDiag(); tdPopVert();
   tdDraw();
+}
+
+// ── Load mode switcher ────────────────────────────────────────────────────
+function tdSetLoadMode(m, btn) {
+  tdLoadMode = m;
+  document.querySelectorAll('.sub-tab').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  el('td-panel-udl').style.display    = m==='udl'    ? '' : 'none';
+  el('td-panel-direct').style.display = m==='direct' ? '' : 'none';
 }
 
 // Init dropdowns
@@ -749,10 +788,12 @@ function tdCalc(){
   var heel_u=parseFloat(el('td-heel').value)||(si?0.6:2);
   var Fy_u =parseFloat(el('td-fy').value)  ||(si?275:50);
   var Lb_u =parseFloat(el('td-Lb').value)  ||(si?3:10);
-  var wD_u =parseFloat(el('td-wD').value)  ||0;
-  var wL_u =parseFloat(el('td-wL').value)  ||0;
-  var wS_u =parseFloat(el('td-wS').value)  ||0;
-  var wW_u =parseFloat(el('td-wW').value)  ||0;
+  var direct = tdLoadMode==='direct';
+  var wD_u =direct?0:(parseFloat(el('td-wD').value)||0);
+  var wL_u =direct?0:(parseFloat(el('td-wL').value)||0);
+  var wS_u =direct?0:(parseFloat(el('td-wS').value)||0);
+  var wW_u =direct?0:(parseFloat(el('td-wW').value)||0);
+  var wu_dir_u = direct?(parseFloat(el('td-wu').value)||(si?40:3)):0;
 
   // Convert inputs → unified (mm, N/mm, MPa)
   var fL=si?1000:304.8, fW=si?1.0:14.5939;
@@ -771,22 +812,27 @@ function tdCalc(){
 
   var dp=L/N; // panel length mm
 
-  // Self-weight (N/mm = kN/m)
+  // Self-weight (N/mm = kN/m) — skipped in direct mode
   var G2n=0.009810; // kg/m → N/mm
   var diagLen=(type==='flat')?Math.sqrt(dp*dp+H*H):Math.sqrt(dp*dp+Math.pow(H-heel,2));
-  var SW=(2*L*(c.Gkgm*G2n)+N*diagLen*(d.Gkgm*G2n)+(N-1)*H*(v.Gkgm*G2n))/L;
+  var SW=direct?0:(2*L*(c.Gkgm*G2n)+N*diagLen*(d.Gkgm*G2n)+(N-1)*H*(v.Gkgm*G2n))/L;
   var wDeff=wD+SW;
 
-  // ASCE 7-22 load combos (N/mm)
-  var combos=[
-    {lbl:'1.4D',                    w:1.4*wDeff},
-    {lbl:'1.2D+1.6L+0.5S',          w:1.2*wDeff+1.6*wL+0.5*wS},
-    {lbl:'1.2D+1.6S+1.0L',          w:1.2*wDeff+1.6*wS+1.0*wL},
-    {lbl:'1.2D+1.0W+1.0L+0.5S',     w:1.2*wDeff+1.0*wW+1.0*wL+0.5*wS},
-    {lbl:'0.9D+1.0W',                w:0.9*wDeff+1.0*wW}
-  ];
-  var gov=combos.reduce(function(a,b){return b.w>a.w?b:a;});
-  var wu=gov.w; // N/mm
+  // ASCE 7-22 load combos (N/mm) — or use direct wu
+  var wu, gov=null, combos=[];
+  if(direct){
+    wu = wu_dir_u * fW; // N/mm
+  } else {
+    combos=[
+      {lbl:'1.4D',                    w:1.4*wDeff},
+      {lbl:'1.2D+1.6L+0.5S',          w:1.2*wDeff+1.6*wL+0.5*wS},
+      {lbl:'1.2D+1.6S+1.0L',          w:1.2*wDeff+1.6*wS+1.0*wL},
+      {lbl:'1.2D+1.0W+1.0L+0.5S',     w:1.2*wDeff+1.0*wW+1.0*wL+0.5*wS},
+      {lbl:'0.9D+1.0W',                w:0.9*wDeff+1.0*wW}
+    ];
+    gov=combos.reduce(function(a,b){return b.w>a.w?b:a;});
+    wu=gov.w;
+  }
 
   // Member forces (N, N·mm)
   var R=wu*L/2;
@@ -912,20 +958,28 @@ function tdCalc(){
     +'<div class="fl-col"><div class="fl-lbl">Max D/C</div><div class="fl-val '+overallCls+'">'+fmt(maxDC,3)+'</div><div class="fl-unit">&le; 1.0 required</div></div>'
     +'</div>';
 
-  // Load combinations
-  h+='<div class="rpt-sec">'
-    +'<div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
-    +'<table class="combo-tbl"><thead><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> ('+uW+')</th></tr></thead><tbody>';
-  combos.forEach(function(cb,i){
-    var g=(cb===gov);
-    h+='<tr'+(g?' class="gov-row"':'')+'><td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+(i+1)+'</td>'
-      +'<td class="combo-lbl">'+cb.lbl+'</td>'
-      +'<td style="text-align:right">'+fmt(cb.w*dFw,3)+'</td></tr>';
-  });
-  h+='</tbody></table>'
-    +'<p style="font-size:.70rem;color:var(--text-dim);margin-top:5px;">'
-    +'Self-weight &Delta;w<sub>SW</sub> = '+fmt(SW_d,3)+' '+uW+' added to D &nbsp;&mdash;&nbsp; effective w<sub>D</sub> = '+fmt(wDeff*dFw,3)+' '+uW
-    +'</p></div>';
+  // Load combinations (or direct)
+  h+='<div class="rpt-sec">';
+  if(direct){
+    h+='<div class="rpt-sec-title">Design Load &mdash; Direct Input</div>'
+      +'<p style="font-size:.78rem;color:var(--text-mid);margin:0 0 6px;font-family:var(--sans);">'
+      +'Pre-factored w<sub>u</sub> = <strong>'+fmt(wu_d,2)+'</strong> '+uW+'. Load combinations and self-weight skipped.'
+      +'</p>';
+  } else {
+    h+='<div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
+      +'<table class="combo-tbl"><thead><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> ('+uW+')</th></tr></thead><tbody>';
+    combos.forEach(function(cb,i){
+      var g=(cb===gov);
+      h+='<tr'+(g?' class="gov-row"':'')+'><td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+(i+1)+'</td>'
+        +'<td class="combo-lbl">'+cb.lbl+'</td>'
+        +'<td style="text-align:right">'+fmt(cb.w*dFw,3)+'</td></tr>';
+    });
+    h+='</tbody></table>'
+      +'<p style="font-size:.70rem;color:var(--text-dim);margin-top:5px;">'
+      +'Self-weight &Delta;w<sub>SW</sub> = '+fmt(SW_d,3)+' '+uW+' added to D &nbsp;&mdash;&nbsp; effective w<sub>D</sub> = '+fmt(wDeff*dFw,3)+' '+uW
+      +'</p>';
+  }
+  h+='</div>';
 
   // Member forces
   h+='<div class="rpt-sec">'

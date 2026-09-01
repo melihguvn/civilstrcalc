@@ -13,6 +13,7 @@
     if (/\/column\.html/.test(P))   return 'column';
     if (/\/rebar\.html/.test(P))    return 'rebar';
     if (/\/steel-flexural\.html/.test(P))  return 'steelfd';
+    if (/\/steel-axial\.html/.test(P))    return 'steelaxi';
     if (/\/steel-combined\.html/.test(P)) return 'steelbc';
     if (/\/steel-ltb\.html/.test(P))      return 'steelltb';
     if (/\/truss-design\.html/.test(P))   return 'steeltruss';
@@ -145,8 +146,9 @@
     item('/pages/foundation.html',               ic.fnd,   'Foundation Design',    'foundation') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Steel Design</div>' +
-    grp(ic.st, 'Steel Design', ['steelfd','steelbc','steelltb','steeltruss'],
+    grp(ic.st, 'Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
       sub('/pages/steel-flexural.html',  'Flexural Design',       'steelfd') +
+      sub('/pages/steel-axial.html',     'Axial Design',          'steelaxi') +
       sub('/pages/steel-combined.html',  'Column Strength Design', 'steelbc') +
       sub('/pages/steel-ltb.html',       'LTB Control',           'steelltb') +
       sub('/pages/truss-design.html',    'Truss Design',          'steeltruss')) +
