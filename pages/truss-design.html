@@ -182,7 +182,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </svg>
   </div>
 
-  <div id="td-results" class="report-card" style="display:none;padding:20px;">
+  <div id="td-results" class="report-card" style="display:none;padding:18px 20px;">
     <div id="td-results-inner"></div>
     <p style="font-size:.64rem;color:var(--text-dim);margin-top:18px;line-height:1.6;border-top:1px solid var(--border);padding-top:10px;">
       <strong>Disclaimer:</strong> Preliminary estimates only. Pin-jointed elastic analysis. Self-weight is approximate.
@@ -487,77 +487,138 @@ function tdCalc(){
   var dDL =5*((wDeff+wL)/12)*Math.pow(Lin,4)/(384*Es*Ieq);
 
   // ── Build HTML ────────────────────────────────────────────────────────
-  function tag(dc){
-    return(isFinite(dc)&&dc<=1.0)
-      ?'<span class="tag-ok">OK</span>'
-      :'<span class="tag-fail">FAIL</span>';
+  var allDC=[DC_top,DC_bot,DC_diag,DC_vert];
+  var maxDC=Math.max.apply(null,allDC.filter(isFinite));
+  var overallCls=maxDC<=1.0?'ok':'err';
+  var overallLbl=maxDC<=1.0?'All Members Adequate':'One or More Members Overstressed';
+
+  function chk(dc){
+    var ok=isFinite(dc)&&dc<=1.0;
+    return '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
   }
-  function tagD(v,lim){
-    return v<=lim?'<span class="tag-ok">OK</span>':'<span class="tag-fail">FAIL</span>';
+  function chkD(v,lim){
+    var ok=v<=lim;
+    return '<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+  }
+  function sv(v,cls){ return '<span class="step-val '+(cls||'')+'">'+v+'</span>'; }
+
+  function stepRow(n,desc,fml,val,ok){
+    var ck=ok===undefined?'':'<span class="step-check '+(ok?'chk-ok':'chk-err')+'">'+(ok?'PASS':'FAIL')+'</span>';
+    var vc=ok===true?'ok':ok===false?'err':'';
+    return '<tr>'
+      +'<td style="width:28px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">'+n+'</div></td>'
+      +'<td><div class="step-desc">'+desc+'</div><div class="step-formula">'+fml+'</div></td>'
+      +'<td style="width:190px;text-align:right;vertical-align:middle"><span class="step-val '+vc+'">'+val+'</span> '+ck+'</td>'
+      +'</tr>';
   }
 
   var h='';
 
-  // Load combos
-  h+='<p class="td-sec-hdr">ASCE 7-22 Load Combinations</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Combination</th><th>w<sub>u</sub> (k/ft)</th></tr></thead><tbody>';
-  combos.forEach(function(c){
+  // ── Overall banner ─────────────────────────────────────────────────────
+  h+='<div class="dcr-banner '+overallCls+'">'
+    +'<div class="dcr-text"><strong>'+overallLbl+'</strong>'
+    +'<span>'+type[0].toUpperCase()+type.slice(1)+' Pratt &nbsp;&middot;&nbsp; L = '+L+' ft &nbsp;&middot;&nbsp; H = '+H+' ft &nbsp;&middot;&nbsp; N = '+N+' panels &nbsp;&middot;&nbsp; F<sub>y</sub> = '+Fy+' ksi</span>'
+    +'</div></div>';
+
+  // ── Key results grid ──────────────────────────────────────────────────
+  h+='<div class="result-box">'
+    +'<div class="result-item"><div class="ri-label">w<sub>u</sub></div><div class="ri-value">'+fmt(wu,2)+'</div><div class="ri-unit">k/ft (factored)</div></div>'
+    +'<div class="result-item"><div class="ri-label">M<sub>u,max</sub></div><div class="ri-value">'+fmt(Mmax,1)+'</div><div class="ri-unit">kip-ft (midspan)</div></div>'
+    +'<div class="result-item '+overallCls+'"><div class="ri-label">Max D/C</div><div class="ri-value">'+fmt(maxDC,3)+'</div><div class="ri-unit">&le; 1.0 required</div></div>'
+    +'</div>';
+
+  // ── ASCE 7-22 Load Combinations ───────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">ASCE 7-22 &sect;2.3.1 &mdash; ULS Load Combinations</div>'
+    +'<table class="combo-tbl"><thead><tr><th>#</th><th>Combination</th><th style="text-align:right">w<sub>u</sub> (k/ft)</th></tr></thead><tbody>';
+  combos.forEach(function(c,i){
     var g=(c===gov);
-    h+='<tr'+(g?' class="gov-row"':'')+'><td class="td-lbl">'+c.lbl+'</td><td>'+fmt(c.w,3)+(g?' &#8592; governs':'')+'</td></tr>';
+    h+='<tr'+(g?' class="gov-row"':'')+'>'
+      +'<td class="combo-lbl">'+(g?'&#9654;&nbsp;':'')+(i+1)+'</td>'
+      +'<td class="combo-lbl">'+c.lbl+'</td>'
+      +'<td style="text-align:right">'+fmt(c.w,3)+'</td>'
+      +'</tr>';
   });
-  h+='</tbody></table>';
-  h+='<p class="td-note">Self-weight added to D: &Delta;w<sub>SW</sub> = '+fmt(SW*1000,1)+' lb/ft &nbsp;&mdash;&nbsp; effective w<sub>D</sub> = '+fmt(wDeff,3)+' k/ft</p>';
+  h+='</tbody></table>'
+    +'<p style="font-size:.70rem;color:var(--text-dim);margin-top:5px;">'
+    +'Self-weight &Delta;w<sub>SW</sub> = '+fmt(SW*1000,1)+' lb/ft added to D &nbsp;&mdash;&nbsp; effective w<sub>D</sub> = '+fmt(wDeff,3)+' k/ft'
+    +'</p></div>';
 
-  // Forces
-  h+='<p class="td-sec-hdr">Governing Factored Member Forces</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Member</th><th>Type</th><th>Force</th><th>Note</th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">Top Chord</td><td>Compression</td><td>'+fmt(Pr_top,1)+' kip</td><td>at midspan, M/H</td></tr>';
-  h+='<tr><td class="td-lbl">Top Chord (local)</td><td>Bending</td><td>'+fmt(Mloc,2)+' kip-ft</td><td>between panel pts</td></tr>';
-  h+='<tr><td class="td-lbl">Bottom Chord</td><td>Tension</td><td>'+fmt(Pr_bot,1)+' kip</td><td>at midspan, M/H</td></tr>';
-  h+='<tr><td class="td-lbl">Diagonal (1st panel)</td><td>Tension</td><td>'+fmt(Pr_diag,1)+' kip</td><td>&theta; = '+fmt(theta*180/Math.PI,1)+'&deg;</td></tr>';
-  h+='<tr><td class="td-lbl">Vertical (interior)</td><td>Compression</td><td>'+fmt(Pr_vert,1)+' kip</td><td>= w<sub>u</sub>&times;d</td></tr>';
-  h+='</tbody></table>';
+  // ── Member Forces ─────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Governing Factored Member Forces</div>'
+    +'<table class="res-tbl">'
+    +'<tr><td>Top Chord (compression)</td><td>'+fmt(Pr_top,1)+' kip &nbsp;<span style="font-size:.72rem;color:var(--text-dim);">at midspan, M<sub>u</sub>/H</span></td></tr>'
+    +'<tr><td>Top Chord (local bending)</td><td>'+fmt(Mloc,2)+' kip-ft &nbsp;<span style="font-size:.72rem;color:var(--text-dim);">w<sub>u</sub>d&sup2;/8 between panel pts</span></td></tr>'
+    +'<tr><td>Bottom Chord (tension)</td><td>'+fmt(Pr_bot,1)+' kip &nbsp;<span style="font-size:.72rem;color:var(--text-dim);">at midspan, M<sub>u</sub>/H</span></td></tr>'
+    +'<tr><td>Diagonal &mdash; 1st panel (tension)</td><td>'+fmt(Pr_diag,1)+' kip &nbsp;<span style="font-size:.72rem;color:var(--text-dim);">&theta; = '+fmt(theta*180/Math.PI,1)+'&deg;, R/sin&theta;</span></td></tr>'
+    +'<tr><td>Vertical &mdash; interior (compression)</td><td>'+fmt(Pr_vert,1)+' kip &nbsp;<span style="font-size:.72rem;color:var(--text-dim);">= w<sub>u</sub> &times; d</span></td></tr>'
+    +'</table></div>';
 
-  // Top chord
-  h+='<p class="td-sec-hdr">Top Chord &mdash; '+CR[0]+'  (Compression + Local Bending, AISC Ch.E + F2 + H1-1)</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">&phi;P<sub>n</sub> compression — Ch.E</td><td>'+fmt(Pr_top,1)+' k</td><td>'+fmt(phiPnc,1)+' k</td><td>'+fmt(Pr_top/phiPnc,3)+'</td><td>'+tag(Pr_top/phiPnc)+'</td></tr>';
-  h+='<tr><td class="td-lbl">LTB zone (L<sub>b</sub> / L<sub>p</sub> / L<sub>r</sub>)</td><td>'+fmt(Lb_in,1)+'″</td><td>'+fmt(Lp,1)+'" / '+fmt(Lr,1)+'"</td><td colspan="2" style="font-family:var(--sans);color:var(--text-dim);font-size:.72rem;">'+ltbZone()+'</td></tr>';
-  h+='<tr><td class="td-lbl">&phi;M<sub>n</sub> flexure — Ch.F2 (local)</td><td>'+fmt(Mloc,2)+' k-ft</td><td>'+fmt(phiMn/12,2)+' k-ft</td><td>'+fmt(Mr_in/phiMn,3)+'</td><td>'+tag(Mr_in/phiMn)+'</td></tr>';
-  h+='<tr><td class="td-lbl"><strong>Combined — H1-1</strong></td><td colspan="2">&mdash;</td><td><strong>'+fmt(DC_top,3)+'</strong></td><td>'+tag(DC_top)+'</td></tr>';
-  h+='</tbody></table>';
-  h+='<p class="td-note">KL = d = '+fmt(dp,1)+' ft &nbsp;|&nbsp; KL/r = '+fmt(KLr_c,1)+' &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_c,2)+' ksi &nbsp;|&nbsp; r<sub>ts</sub> = '+fmt(rts,3)+' in</p>';
+  // ── Top Chord ─────────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Top Chord &mdash; '+CR[0]+' &nbsp;(Compression + Local Bending)</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +stepRow(1,'&phi;<sub>c</sub>P<sub>n</sub> — Compression (Ch.E)',
+      'KL/r = '+fmt(KLr_c,1)+' &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_c,2)+' ksi &nbsp;|&nbsp; &phi;<sub>c</sub>P<sub>n</sub> = 0.9&times;'+fmt(Fcr_c,2)+'&times;'+fmt(Ag_c,2),
+      fmt(Pr_top,1)+' / '+fmt(phiPnc,1)+' k', Pr_top<=phiPnc)
+    +stepRow(2,'LTB Zone — §F2',
+      'L<sub>b</sub> = '+fmt(Lb_in,1)+'" &nbsp;|&nbsp; L<sub>p</sub> = '+fmt(Lp,1)+'" &nbsp;|&nbsp; L<sub>r</sub> = '+fmt(Lr,1)+'" &nbsp;|&nbsp; r<sub>ts</sub> = '+fmt(rts,3)+'"',
+      ltbZone())
+    +stepRow(3,'&phi;<sub>b</sub>M<sub>n</sub> — Local Bending (Ch.F2)',
+      'M<sub>u,local</sub> = w<sub>u</sub>d&sup2;/8 &nbsp;|&nbsp; &phi;<sub>b</sub>M<sub>n</sub> = '+fmt(phiMn/12,2)+' k-ft',
+      fmt(Mloc,2)+' / '+fmt(phiMn/12,2)+' k-ft', Mr_in<=phiMn)
+    +stepRow(4,'<strong>Combined — H1-1a/b</strong>',
+      Pr_top/phiPnc>=0.2
+        ?'P<sub>r</sub>/P<sub>c</sub> = '+fmt(Pr_top/phiPnc,3)+' &ge; 0.2 &rarr; P<sub>r</sub>/P<sub>c</sub> + (8/9)M<sub>r</sub>/M<sub>c</sub>'
+        :'P<sub>r</sub>/P<sub>c</sub> = '+fmt(Pr_top/phiPnc,3)+' &lt; 0.2 &rarr; P<sub>r</sub>/(2P<sub>c</sub>) + M<sub>r</sub>/M<sub>c</sub>',
+      '<strong>'+fmt(DC_top,3)+'</strong>', DC_top<=1.0)
+    +'</table></div>';
 
-  // Bottom chord
-  h+='<p class="td-sec-hdr">Bottom Chord &mdash; '+CR[0]+'  (Tension, AISC §D2)</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">&phi;P<sub>n</sub> tension (yielding on A<sub>g</sub>)</td><td>'+fmt(Pr_bot,1)+' k</td><td>'+fmt(phiPnt_c,1)+' k</td><td>'+fmt(DC_bot,3)+'</td><td>'+tag(DC_bot)+'</td></tr>';
-  h+='</tbody></table>';
-  h+='<p class="td-note">Net section rupture (§D2b) not checked — verify A<sub>e</sub>/A<sub>g</sub> ratio at connections.</p>';
+  // ── Bottom Chord ──────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Bottom Chord &mdash; '+CR[0]+' &nbsp;(Tension)</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +stepRow(1,'&phi;<sub>t</sub>P<sub>n</sub> — Tension Yielding (§D2)',
+      '&phi;<sub>t</sub>P<sub>n</sub> = 0.9 &times; F<sub>y</sub> &times; A<sub>g</sub> = 0.9&times;'+Fy+'&times;'+fmt(Ag_c,2),
+      fmt(Pr_bot,1)+' / '+fmt(phiPnt_c,1)+' k', DC_bot<=1.0)
+    +'</table>'
+    +'<p style="font-size:.70rem;color:var(--text-dim);margin-top:6px;">Net section rupture (§D2b) not checked — verify U and A<sub>e</sub>/A<sub>g</sub> at connections.</p>'
+    +'</div>';
 
-  // Diagonal
-  h+='<p class="td-sec-hdr">Diagonal Members &mdash; '+DR[0]+'  (Tension, AISC §D2)</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">&phi;P<sub>n</sub> tension (yielding on A<sub>g</sub>)</td><td>'+fmt(Pr_diag,1)+' k</td><td>'+fmt(phiPnt_d,1)+' k</td><td>'+fmt(DC_diag,3)+'</td><td>'+tag(DC_diag)+'</td></tr>';
-  h+='</tbody></table>';
-  h+='<p class="td-note">Length = '+fmt(Math.sqrt(dp*dp+h1*h1),2)+' ft &nbsp;|&nbsp; &theta; = '+fmt(theta*180/Math.PI,1)+'&deg; from horizontal &nbsp;|&nbsp; Horizontal comp. = '+fmt(Pr_diag*cosT,1)+' kip</p>';
+  // ── Diagonal ──────────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Diagonal Members &mdash; '+DR[0]+' &nbsp;(Tension)</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +stepRow(1,'&phi;<sub>t</sub>P<sub>n</sub> — Tension Yielding (§D2)',
+      'L<sub>diag</sub> = '+fmt(Math.sqrt(dp*dp+h1*h1),2)+' ft &nbsp;|&nbsp; &theta; = '+fmt(theta*180/Math.PI,1)+'&deg; &nbsp;|&nbsp; P<sub>u</sub> = R/sin&theta;',
+      fmt(Pr_diag,1)+' / '+fmt(phiPnt_d,1)+' k', DC_diag<=1.0)
+    +'</table></div>';
 
-  // Vertical
-  h+='<p class="td-sec-hdr">Vertical Members &mdash; '+VR[0]+'  (Compression, AISC Ch.E)</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">&phi;P<sub>n</sub> compression</td><td>'+fmt(Pr_vert,1)+' k</td><td>'+fmt(phiPnc_v,1)+' k</td><td>'+fmt(DC_vert,3)+'</td><td>'+tag(DC_vert)+'</td></tr>';
-  h+='</tbody></table>';
-  h+='<p class="td-note">KL = H = '+fmt(H,1)+' ft &nbsp;|&nbsp; KL/r = '+fmt(KLr_v,1)+' &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_v,2)+' ksi</p>';
+  // ── Vertical ──────────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Vertical Members &mdash; '+VR[0]+' &nbsp;(Compression)</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +stepRow(1,'&phi;<sub>c</sub>P<sub>n</sub> — Compression (Ch.E)',
+      'KL = H = '+fmt(H,1)+' ft &nbsp;|&nbsp; KL/r = '+fmt(KLr_v,1)+' &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_v,2)+' ksi',
+      fmt(Pr_vert,1)+' / '+fmt(phiPnc_v,1)+' k', DC_vert<=1.0)
+    +'</table></div>';
 
-  // Deflection
-  h+='<p class="td-sec-hdr">Deflection — Equivalent Chord-Area Method</p>';
-  h+='<p class="td-note">I<sub>eq</sub> = A<sub>chord</sub> &times; (H&times;12)&sup2; / 2 = '+fmt(Ag_c,2)+' &times; '+fmt(Math.pow(H*12,2),0)+' / 2 = '+fmt(Ieq,0)+' in&sup4;</p>';
-  h+='<table class="td-tbl"><thead><tr><th>Condition</th><th>&delta; (in)</th><th>Limit (in)</th><th></th></tr></thead><tbody>';
-  h+='<tr><td class="td-lbl">Live load — L/360</td><td>'+fmt(dL,3)+'</td><td>'+fmt(Lin/360,3)+'</td><td>'+tagD(dL,Lin/360)+'</td></tr>';
-  h+='<tr><td class="td-lbl">Live load — L/240</td><td>'+fmt(dL,3)+'</td><td>'+fmt(Lin/240,3)+'</td><td>'+tagD(dL,Lin/240)+'</td></tr>';
-  h+='<tr><td class="td-lbl">Total (D+L) — L/180</td><td>'+fmt(dDL,3)+'</td><td>'+fmt(Lin/180,3)+'</td><td>'+tagD(dDL,Lin/180)+'</td></tr>';
-  h+='</tbody></table>';
-  h+='<p class="td-note">Camber = 3/4 &times; dead-load deflection is typically specified.</p>';
+  // ── Deflection ────────────────────────────────────────────────────────
+  h+='<div class="rpt-sec">'
+    +'<div class="rpt-sec-title">Deflection &mdash; Equivalent Chord-Area Method</div>'
+    +'<table class="res-tbl">'
+    +'<tr><td>I<sub>eq</sub> = A<sub>chord</sub>&times;(H&times;12)&sup2;/2</td><td>'+fmt(Ag_c,2)+' &times; '+fmt(Math.pow(H*12,2),0)+' / 2 = '+fmt(Ieq,0)+' in&sup4;</td></tr>'
+    +'<tr><td>Live load deflection &delta;<sub>L</sub></td><td>'+fmt(dL,3)+' in</td></tr>'
+    +'<tr><td>Total (D+L) deflection &delta;<sub>DL</sub></td><td>'+fmt(dDL,3)+' in</td></tr>'
+    +'</table>'
+    +'<table class="combo-tbl" style="margin-top:8px"><thead><tr><th>Limit</th><th>Allow (in)</th><th style="text-align:right">&delta; (in)</th><th></th></tr></thead><tbody>'
+    +'<tr><td class="combo-lbl">Live &mdash; L/360</td><td>'+fmt(Lin/360,3)+'</td><td style="text-align:right">'+fmt(dL,3)+'</td><td>'+chkD(dL,Lin/360)+'</td></tr>'
+    +'<tr><td class="combo-lbl">Live &mdash; L/240</td><td>'+fmt(Lin/240,3)+'</td><td style="text-align:right">'+fmt(dL,3)+'</td><td>'+chkD(dL,Lin/240)+'</td></tr>'
+    +'<tr><td class="combo-lbl">Total &mdash; L/180</td><td>'+fmt(Lin/180,3)+'</td><td style="text-align:right">'+fmt(dDL,3)+'</td><td>'+chkD(dDL,Lin/180)+'</td></tr>'
+    +'</tbody></table>'
+    +'<p style="font-size:.70rem;color:var(--text-dim);margin-top:5px;">Camber = 3/4 &times; dead-load deflection is typically specified for trusses.</p>'
+    +'</div>';
 
   el('td-results-inner').innerHTML=h;
   el('td-results').style.display='block';
