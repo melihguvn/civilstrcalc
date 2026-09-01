@@ -15,6 +15,7 @@
     if (/\/steel-flexural\.html/.test(P))  return 'steelfd';
     if (/\/steel-combined\.html/.test(P)) return 'steelbc';
     if (/\/steel-ltb\.html/.test(P))      return 'steelltb';
+    if (/\/truss-design\.html/.test(P))   return 'steeltruss';
     if (/\/steel\.html/.test(P))    return 'steel';
     if (/\/concrete\.html/.test(P)) return 'concrete';
     if (/\/development-length\.html/.test(P)) return 'devlen';
@@ -144,10 +145,11 @@
     item('/pages/foundation.html',               ic.fnd,   'Foundation Design',    'foundation') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Steel Design</div>' +
-    grp(ic.st, 'Steel Design', ['steelfd','steelbc','steelltb'],
+    grp(ic.st, 'Steel Design', ['steelfd','steelbc','steelltb','steeltruss'],
       sub('/pages/steel-flexural.html',  'Flexural Design',       'steelfd') +
       sub('/pages/steel-combined.html',  'Column Strength Design', 'steelbc') +
-      sub('/pages/steel-ltb.html',       'LTB Control',           'steelltb')) +
+      sub('/pages/steel-ltb.html',       'LTB Control',           'steelltb') +
+      sub('/pages/truss-design.html',    'Truss Design',          'steeltruss')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel.html',    ic.st, 'Steel Sections',    'steel') +

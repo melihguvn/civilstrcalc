@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>Steel Truss Design - AISC 360-22 LRFD | CivilStrCalc</title>
+<meta name="description" content="AISC 360-22 LRFD steel truss design calculator for Flat and Pitched Pratt trusses. W section selection for chords, diagonals, and verticals. ASCE 7-22 load combinations.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/truss-design">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSansCondensed-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+.combo-tbl{width:100%;border-collapse:collapse;font-size:.76rem;}
+.combo-tbl th{padding:5px 8px;text-align:left;font-family:var(--sans);font-weight:600;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.combo-tbl tr:last-child td{border-bottom:none;}
+.combo-tbl tr.gov-row td{background:var(--green-bg);font-weight:700;color:var(--green);}
+.combo-lbl{font-family:var(--sans);color:var(--text-mid);}
+.radio-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.radio-group label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:var(--text-mid);}
+.radio-group input[type=radio]{accent-color:var(--accent);}
+#truss-svg-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 14px 8px;margin-bottom:16px;overflow-x:auto;}
+#truss-svg{width:100%;height:auto;display:block;}
+.res-hdr{font-family:var(--sans);font-size:.78rem;font-weight:600;color:var(--text-mid);letter-spacing:.06em;text-transform:uppercase;padding:12px 0 5px;border-top:1px solid var(--border);margin-top:8px;}
+.res-hdr:first-child{border-top:none;margin-top:0;padding-top:0;}
+.tag-ok{display:inline-block;background:var(--green-bg);color:var(--green);border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:700;letter-spacing:.03em;}
+.tag-fail{display:inline-block;background:#fff0f0;color:#c0392b;border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:700;letter-spacing:.03em;}
+.tag-na{display:inline-block;background:var(--bg2,#f0f2f5);color:var(--text-dim);border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:700;}
+.note-line{font-size:.71rem;color:var(--text-dim);margin:3px 0 6px;line-height:1.55;}
+@media(prefers-color-scheme:dark){.tag-fail{background:#3a0000;color:#ff6b6b;}}
+[data-theme=dark] .tag-fail{background:#3a0000;color:#ff6b6b;}
+@media print{
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;padding:0!important;}
+  .no-print,.page-title,footer{display:none!important;}
+  .calc-layout{display:block!important;}
+  .card{display:none!important;}
+  .report-card{box-shadow:none!important;border:none!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="manifest" href="../manifest.json">
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Steel Truss Design</h1>
+  <p>Preliminary LRFD design of Flat and Pitched Pratt trusses per AISC 360-22. Chord, diagonal, and vertical member checks. ASCE 7-22 load combinations.</p>
+</div>
+
+<div class="calc-layout">
+<!-- ── LEFT CARD ── -->
+<div class="card no-print">
+  <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">kip &middot; ft &middot; in &middot; ksi</span></div>
+  <div class="card-body">
+
+    <div class="inp-group">
+      <label class="inp-label">Truss Type</label>
+      <div class="radio-group">
+        <label><input type="radio" name="td-type" value="flat" checked onchange="tdDraw()"> Flat Pratt</label>
+        <label><input type="radio" name="td-type" value="pitched" onchange="tdDraw()"> Pitched Pratt</label>
+      </div>
+    </div>
+
+    <div class="inp-group">
+      <label class="inp-label">Span, L (ft)</label>
+      <input class="inp" id="td-L" type="number" value="60" min="10" max="400" step="1" oninput="tdDraw()">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label" id="td-H-lbl">Truss Height, H (ft)</label>
+      <input class="inp" id="td-H" type="number" value="6" min="1" max="80" step="0.5" oninput="tdDraw()">
+    </div>
+    <div class="inp-group" id="td-heel-grp" style="display:none;">
+      <label class="inp-label">Heel Height, h<sub>heel</sub> (ft)</label>
+      <input class="inp" id="td-heel" type="number" value="2" min="0.5" max="20" step="0.5" oninput="tdDraw()">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Number of Panels, N (even)</label>
+      <select class="inp" id="td-N" onchange="tdDraw()">
+        <option value="4">4</option>
+        <option value="6" selected>6</option>
+        <option value="8">8</option>
+        <option value="10">10</option>
+        <option value="12">12</option>
+      </select>
+    </div>
+
+    <div style="margin:14px 0 10px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Applied Loads (k/ft along span)</div>
+
+    <div class="inp-group">
+      <label class="inp-label">Dead Load, w<sub>D</sub> (k/ft)</label>
+      <input class="inp" id="td-wD" type="number" value="0.5" min="0" step="0.05">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Floor Live Load, w<sub>L</sub> (k/ft)</label>
+      <input class="inp" id="td-wL" type="number" value="1.0" min="0" step="0.05">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Roof Live / Snow, w<sub>S</sub> (k/ft)</label>
+      <input class="inp" id="td-wS" type="number" value="0.5" min="0" step="0.05">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Wind, w<sub>W</sub> (k/ft) <span style="font-weight:400;font-size:.75rem;color:var(--text-dim);">(+ down / &minus; uplift)</span></label>
+      <input class="inp" id="td-wW" type="number" value="0" step="0.05">
+    </div>
+
+    <div style="margin:14px 0 10px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Steel &amp; Unbraced Length</div>
+
+    <div class="inp-group">
+      <label class="inp-label">Yield Strength, F<sub>y</sub> (ksi)</label>
+      <select class="inp" id="td-fy">
+        <option value="50" selected>50 — A992 / A572 Gr.50</option>
+        <option value="36">36 — A36</option>
+        <option value="65">65 — A572 Gr.65</option>
+      </select>
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Top Chord Unbraced L<sub>b</sub> (ft) <span style="font-weight:400;font-size:.75rem;color:var(--text-dim);">(= panel length if braced at each panel)</span></label>
+      <input class="inp" id="td-Lb" type="number" value="10" min="0" step="0.5">
+    </div>
+
+    <div style="margin:14px 0 10px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Section Selection (W Shapes)</div>
+
+    <div class="inp-group">
+      <label class="inp-label">Chord (Top &amp; Bottom)</label>
+      <select class="inp" id="td-chord"></select>
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Diagonal Members</label>
+      <select class="inp" id="td-diag"></select>
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Vertical Members</label>
+      <select class="inp" id="td-vert"></select>
+    </div>
+
+    <button class="btn-primary" onclick="tdCalc()" style="margin-top:18px;width:100%;">Design / Check</button>
+  </div>
+</div>
+
+<!-- ── RIGHT ── -->
+<div>
+  <div id="truss-svg-wrap" class="no-print">
+    <svg id="truss-svg" viewBox="0 0 820 190" xmlns="http://www.w3.org/2000/svg" style="color:var(--text-mid,#555);">
+      <text x="410" y="98" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="currentColor" opacity="0.5">Configure inputs and click Design / Check</text>
+    </svg>
+  </div>
+
+  <div id="td-results" class="report-card" style="display:none;">
+    <div id="td-results-inner"></div>
+    <p style="font-size:.64rem;color:var(--text-dim);margin-top:18px;line-height:1.6;border-top:1px solid var(--border);padding-top:10px;">
+      <strong>Disclaimer:</strong> This tool provides <em>preliminary</em> design estimates for simple Pratt trusses only. Pin-jointed, elastic analysis assumed. Self-weight is approximate. LTB uses AISC 360-22 §F2 for doubly-symmetric I-shapes. Results are not a substitute for professional engineering judgment or full structural analysis. Verify all designs before use in construction.
+    </p>
+  </div>
+  <div id="td-empty" class="res-empty">
+    <p>Enter parameters above and click <strong>Design / Check</strong> to run the AISC 360-22 LRFD checks.</p>
+  </div>
+</div>
+</div><!-- end calc-layout -->
+</main>
+
+<script>
+'use strict';
+// W section DB
+// [name, d, bf, tf, tw, Ag, W_lbft, Ix, Sx, Zx, rx, Iy, Sy, Zy, ry, J, Cw]
+// idx:   0   1   2   3   4   5      6    7   8   9  10  11  12  13  14  15  16
+var WDB=[
+  ['W6×9',  5.90,3.94,0.215,0.170,2.68, 9,  16.4, 5.56, 6.23,2.47, 2.19,1.11,1.72,0.905,0.0156,10.3],
+  ['W6×12', 6.03,4.00,0.280,0.230,3.55,12,  22.1, 7.31, 8.30,2.49, 2.99,1.50,2.32,0.918,0.0424,15.1],
+  ['W6×15', 5.99,5.99,0.260,0.230,4.43,15,  29.1, 9.72,10.8, 2.56, 9.32,3.11,4.75,1.45, 0.101, 61.4],
+  ['W6×20', 6.20,6.02,0.365,0.260,5.87,20,  41.4,13.4, 14.9, 2.66,13.3, 4.41,6.72,1.50, 0.259, 96.0],
+  ['W8×10', 7.89,3.94,0.205,0.170,2.96,10,  30.8, 7.81, 8.87,3.22, 2.09,1.06,1.66,0.841,0.0148,12.3],
+  ['W8×18', 8.14,5.25,0.330,0.230,5.26,18,  61.9,15.2, 17.0, 3.43, 7.97,3.04,4.66,1.23, 0.172,116],
+  ['W8×24', 7.93,6.50,0.400,0.245,7.08,24,  82.8,20.9, 23.1, 3.42,18.3, 5.63,8.57,1.61, 0.346,215],
+  ['W8×31', 8.00,8.00,0.435,0.285,9.13,31, 110,  27.5, 30.4, 3.47,37.1, 9.27,14.1,2.02, 0.536,530],
+  ['W8×35', 8.12,8.02,0.495,0.310,10.3,35, 127,  31.2, 34.7, 3.51,42.6,10.6, 16.1,2.03, 0.769,619],
+  ['W8×40', 8.25,8.07,0.560,0.360,11.7,40, 146,  35.5, 39.8, 3.53,49.1,12.2, 18.5,2.04, 1.12, 722],
+  ['W10×12',9.87,3.96,0.210,0.190,3.54,12,  53.8,10.9, 12.6, 3.90, 2.18,1.10,1.74,0.785,0.0163,16.0],
+  ['W10×19',10.2,4.02,0.395,0.250,5.62,19,  96.3,18.8, 21.6, 4.14, 4.29,2.14,3.35,0.874,0.195, 48.3],
+  ['W10×22',10.2,5.75,0.360,0.240,6.49,22, 118,  23.2, 26.0, 4.27,11.4, 3.97,6.10,1.33, 0.239,199],
+  ['W10×30',10.5,5.81,0.510,0.300,8.84,30, 170,  32.4, 36.6, 4.38,16.7, 5.75,8.84,1.37, 0.622,303],
+  ['W10×33', 9.73,7.96,0.435,0.290,9.71,33, 171, 35.0, 38.8, 4.19,36.6, 9.20,14.0,1.94, 0.583,754],
+  ['W10×45',10.1,8.02,0.620,0.350,13.3,45, 248,  49.1, 54.9, 4.32,53.4,13.3, 20.3,2.01, 1.51,1130],
+  ['W10×60',10.2,10.08,0.680,0.420,17.6,60, 341, 66.7, 74.6, 4.39,116, 23.0, 34.8,2.57, 2.48,3160],
+  ['W12×16',12.0,3.99,0.265,0.220,4.71,16, 103,  17.1, 20.1, 4.67, 2.82,1.41,2.26,0.773,0.0384,24.5],
+  ['W12×26',12.2,6.49,0.380,0.230,7.65,26, 204,  33.4, 37.2, 5.17,17.3, 5.34,8.17,1.51, 0.300,582],
+  ['W12×35',12.5,6.56,0.520,0.300,10.3,35, 285,  45.6, 51.2, 5.25,24.5, 7.47,11.5,1.54, 0.741,852],
+  ['W12×50',12.2,8.08,0.640,0.370,14.7,50, 394,  64.7, 72.4, 5.18,56.3,13.9, 21.4,1.96, 1.71,1880],
+  ['W12×65',12.1,12.0,0.605,0.390,19.1,65, 533,  87.9, 96.8, 5.28,174, 29.1, 44.1,3.02, 2.18,5780],
+  ['W12×72',12.3,12.0,0.670,0.430,21.1,72, 597,  97.4,108,   5.31,195, 32.4, 49.2,3.04, 2.93,6540],
+  ['W14×22',13.7,5.00,0.335,0.230,6.49,22, 199,  29.0, 33.2, 5.54, 7.00,2.80,4.39,1.04, 0.208,314],
+  ['W14×30',13.8,6.73,0.385,0.270,8.85,30, 291,  42.0, 47.3, 5.73,19.6, 5.82,8.99,1.49, 0.380,887],
+  ['W14×48',13.8,8.03,0.595,0.340,14.1,48, 485,  70.3, 78.4, 5.85,51.4,12.8, 19.6,1.91, 1.45,2040],
+  ['W14×53',13.9,8.06,0.660,0.370,15.6,53, 541,  77.8, 87.1, 5.89,57.7,14.3, 21.9,1.92, 1.94,2280],
+  ['W14×68',14.0,10.04,0.720,0.415,20.0,68, 723, 103,  115,  6.01,121, 24.2, 36.9,2.46, 3.86,5380],
+  ['W16×26',15.7,5.50,0.345,0.250,7.68,26, 301,  38.4, 44.2, 6.26, 9.59,3.49,5.48,1.12, 0.262,565],
+  ['W16×36',15.9,6.99,0.430,0.295,10.6,36, 448,  56.5, 64.0, 6.51,24.5, 7.00,10.8,1.52, 0.545,1300],
+  ['W16×50',16.3,7.07,0.630,0.380,14.7,50, 659,  81.0, 92.0, 6.68,37.2,10.5, 16.3,1.59, 1.52,1990],
+  ['W16×67',16.3,10.24,0.665,0.395,19.7,67, 954, 117,  130,  6.96,119, 23.2, 35.5,2.46, 2.39,5620],
+  ['W18×35',17.7,6.00,0.425,0.300,10.3,35, 510,  57.6, 66.5, 7.04,15.3, 5.12,8.06,1.22, 0.506,1140],
+  ['W18×50',18.0,7.50,0.570,0.355,14.7,50, 800,  88.9,101,   7.38,40.1,10.7, 16.6,1.65, 1.14,3270],
+  ['W18×71',18.5,7.64,0.810,0.495,20.8,71,1170, 127,  145,   7.50,60.3,15.8, 24.7,1.70, 3.49,4990],
+  ['W18×86',18.4,11.09,0.770,0.480,25.3,86,1530, 166,  186,  7.77,175, 31.6, 48.4,2.63, 4.10,12700],
+  ['W21×44',20.7,6.50,0.470,0.350,13.0,44, 843,  81.6, 95.4, 8.06,20.7, 6.36,9.97,1.26, 0.770,2110],
+  ['W21×57',21.1,6.56,0.650,0.405,16.7,57,1170, 111,  129,   8.36,30.6, 9.35,14.8,1.35, 1.77,3190],
+  ['W21×68',21.1,8.27,0.685,0.430,20.0,68,1480, 140,  160,   8.60,70.6,17.0, 26.4,1.88, 2.45,6760],
+  ['W21×93',21.6,8.42,0.930,0.580,27.3,93,2070, 192,  221,   8.70,92.9,22.1, 34.7,1.84, 5.98,9560],
+  ['W24×55',23.6,7.01,0.505,0.395,16.2,55,1350, 114,  131,   9.11,29.1, 8.30,13.0,1.34, 1.18,3830],
+  ['W24×76',23.9,8.99,0.680,0.440,22.4,76,2100, 176,  200,   9.69,82.5,18.4, 28.6,1.92, 2.68,9430],
+  ['W24×104',24.1,12.75,0.750,0.500,30.6,104,3100,258, 289,  10.1,259, 40.7, 62.4,2.91, 5.62,25700],
+  ['W27×84', 26.7,9.96,0.640,0.460,24.8,84,2850, 213,  244,  10.7,106, 21.2, 32.8,2.07, 3.40,14900],
+  ['W30×90', 29.5,10.40,0.610,0.470,26.3,90,3610, 245, 283,  11.7,115, 22.1, 34.4,2.09, 3.52,18100],
+  ['W33×118',32.9,11.48,0.740,0.550,34.7,118,5900,359, 415,  13.0,187, 32.6, 50.8,2.32, 6.27,37600],
+  ['W36×135',35.6,11.95,0.790,0.600,39.7,135,7800,439, 509,  14.0,225, 37.7, 58.8,2.38, 7.79,48700]
+];
+
+// Populate dropdowns
+(function(){
+  var ids=['td-chord','td-diag','td-vert'];
+  var defs=[20,6,4]; // W12×50, W8×18, W8×10 defaults
+  ids.forEach(function(id,si){
+    var sel=document.getElementById(id);
+    WDB.forEach(function(r,i){
+      var o=document.createElement('option');
+      o.value=i;
+      o.textContent=r[0]+'   (Ag='+r[5].toFixed(2)+' in², '+r[6]+' lb/ft)';
+      if(i===defs[si]) o.selected=true;
+      sel.appendChild(o);
+    });
+  });
+})();
+
+function el(id){return document.getElementById(id);}
+function fmt(v,d){return(isFinite(v)&&v!==null)?v.toFixed(d):'—';}
+function radio(n){var r=document.querySelector('input[name="'+n+'"]:checked');return r?r.value:'';}
+
+// ── SVG Diagram ───────────────────────────────────────────────────────────
+function tdDraw(){
+  var type=radio('td-type');
+  var L=parseFloat(el('td-L').value)||60;
+  var H=parseFloat(el('td-H').value)||6;
+  var N=parseInt(el('td-N').value)||6;
+  var heel=parseFloat(el('td-heel').value)||2;
+
+  el('td-heel-grp').style.display=(type==='pitched')?'':'none';
+  el('td-H-lbl').textContent=(type==='pitched')?'Apex Height, H (ft)':'Truss Height, H (ft)';
+
+  var svg=el('truss-svg');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+
+  var VW=820,VH=190,mx=68,mt=28,mb=42,mend=20;
+  var W=VW-mx-mend, TH=VH-mt-mb;
+
+  function ns(tag,at){
+    var e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    for(var k in at)e.setAttribute(k,at[k]);
+    return e;
+  }
+  function ln(x1,y1,x2,y2,sw,op){
+    svg.appendChild(ns('line',{x1:x1,y1:y1,x2:x2,y2:y2,
+      stroke:'currentColor','stroke-width':sw||2,opacity:op||1}));
+  }
+  function circ(x,y){
+    svg.appendChild(ns('circle',{cx:x,cy:y,r:3.5,fill:'currentColor'}));
+  }
+  function txt(x,y,s,anchor,sz,op){
+    var t=ns('text',{x:x,y:y,'text-anchor':anchor||'middle',
+      'font-family':'IBM Plex Mono,monospace','font-size':sz||10,
+      fill:'currentColor',opacity:op||0.65});
+    t.textContent=s;svg.appendChild(t);
+  }
+
+  // Joint pixel positions
+  var panW=W/N;
+  var bot=[], top=[];
+  var botY=mt+TH;
+  for(var i=0;i<=N;i++){
+    var px=mx+i*panW;
+    bot.push({x:px,y:botY});
+    var py;
+    if(type==='flat'){
+      py=mt;
+    } else {
+      var frac=i/N;
+      var hFrac=(frac<=0.5)?(2*frac):(2-2*frac);
+      var hRel=heel/H;
+      py=botY-TH*(hRel+(1-hRel)*hFrac);
+    }
+    top.push({x:px,y:py});
+  }
+
+  // Chords
+  for(var i=0;i<N;i++){
+    ln(bot[i].x,bot[i].y,bot[i+1].x,bot[i+1].y,2.5);
+    ln(top[i].x,top[i].y,top[i+1].x,top[i+1].y,2.5);
+  }
+  // Verticals & diagonals (Pratt: diagonals in tension → point toward midspan)
+  for(var i=0;i<=N;i++){
+    ln(top[i].x,top[i].y,bot[i].x,bot[i].y,1.8,0.75);
+  }
+  for(var i=0;i<N;i++){
+    if(i<N/2){
+      ln(bot[i].x,bot[i].y,top[i+1].x,top[i+1].y,1.8,0.85);
+    } else {
+      ln(bot[i+1].x,bot[i+1].y,top[i].x,top[i].y,1.8,0.85);
+    }
+  }
+  // Joints
+  for(var i=0;i<=N;i++){circ(bot[i].x,bot[i].y);circ(top[i].x,top[i].y);}
+
+  // Dimension & labels
+  txt(mx+W/2,VH-4,'L = '+L+' ft | N = '+N+' panels | d = '+fmt(L/N,1)+' ft per panel','middle',10);
+  txt(mx-10,mt+TH/2,'H='+H+"'",'end',10);
+
+  // Support triangles
+  function supp(x,y){
+    svg.appendChild(ns('polygon',{
+      points:(x-9)+','+(y+3)+' '+(x+9)+','+(y+3)+' '+x+','+(y-9),
+      fill:'none',stroke:'currentColor','stroke-width':1.5,opacity:0.7}));
+    ln(x-12,y+3,x+12,y+3,1.5,0.7);
+  }
+  supp(bot[0].x,bot[0].y+3);
+  supp(bot[N].x,bot[N].y+3);
+
+  // Load arrows on top chord
+  var arrowY=top[0].y-16;
+  for(var i=1;i<N;i++){
+    var ax=top[i].x;
+    var ay=(type==='flat')?top[i].y:(top[i].y);
+    svg.appendChild(ns('line',{x1:ax,y1:ay-14,x2:ax,y2:ay-2,
+      stroke:'currentColor','stroke-width':1.5,opacity:0.45,
+      'marker-end':'url(#arr)'}));
+  }
+  var defs=ns('defs',{});
+  var marker=ns('marker',{id:'arr',markerWidth:'6',markerHeight:'6',
+    refX:'3',refY:'3',orient:'auto'});
+  var path=ns('path',{d:'M0,0 L0,6 L6,3 z',fill:'currentColor',opacity:'0.45'});
+  marker.appendChild(path);defs.appendChild(marker);svg.appendChild(defs);
+}
+
+// ── AISC 360-22 Calculation ───────────────────────────────────────────────
+function tdCalc(){
+  var Es=29000, G=11200;
+  var type=radio('td-type');
+  var L   =parseFloat(el('td-L').value)||60;
+  var H   =parseFloat(el('td-H').value)||6;
+  var N   =parseInt(el('td-N').value)||6;
+  var heel=parseFloat(el('td-heel').value)||2;
+  var Fy  =parseFloat(el('td-fy').value)||50;
+  var Lb_top=parseFloat(el('td-Lb').value)||(L/N);
+  var wD  =parseFloat(el('td-wD').value)||0;
+  var wL  =parseFloat(el('td-wL').value)||0;
+  var wS  =parseFloat(el('td-wS').value)||0;
+  var wW  =parseFloat(el('td-wW').value)||0;
+
+  var CR=WDB[parseInt(el('td-chord').value)]; // chord row
+  var DR=WDB[parseInt(el('td-diag').value)];  // diagonal row
+  var VR=WDB[parseInt(el('td-vert').value)];  // vertical row
+
+  var dp=L/N; // panel length, ft
+
+  // Self-weight (approximate, added to dead)
+  var diagLen=(type==='flat')
+    ? Math.sqrt(dp*dp+H*H)
+    : Math.sqrt(dp*dp+Math.pow((H-heel)/1,2));
+  var nDiag=N, nVert=N-1;
+  var totalSW_klf=(2*L*(CR[6]/1000) + nDiag*diagLen*(DR[6]/1000) + nVert*H*(VR[6]/1000))/L;
+  var wD_eff=wD+totalSW_klf;
+
+  // ASCE 7-22 factored UDL combos (k/ft)
+  var combos=[
+    {lbl:'1.4D',           w:1.4*wD_eff},
+    {lbl:'1.2D+1.6L+0.5S', w:1.2*wD_eff+1.6*wL+0.5*wS},
+    {lbl:'1.2D+1.6S+1.0L', w:1.2*wD_eff+1.6*wS+1.0*wL},
+    {lbl:'1.2D+1.0W+1.0L+0.5S',w:1.2*wD_eff+1.0*wW+1.0*wL+0.5*wS},
+    {lbl:'0.9D+1.0W',      w:0.9*wD_eff+1.0*wW}
+  ];
+  var govCombo=combos.reduce(function(a,b){return b.w>a.w?b:a;});
+  var wu=govCombo.w;
+
+  // ── Geometry ─────────────────────────────────────────────────────────────
+  var R=wu*L/2;           // reaction, kip
+  var M_max=wu*L*L/8;     // kip-ft, at midspan
+
+  // Diagonal geometry (first panel)
+  var h1_diag;
+  if(type==='flat'){
+    h1_diag=H;
+  } else {
+    // height of top chord at node 1 above bottom chord at node 1
+    var frac1=1/N;
+    h1_diag=heel+(H-heel)*(2*frac1); // linear ramp
+  }
+  var theta_diag=Math.atan2(h1_diag, dp); // rad
+  var sinT=Math.sin(theta_diag), cosT=Math.cos(theta_diag);
+
+  // ── Member forces (method of sections / joints) ───────────────────────
+  // Top chord (compression, governing at midspan)
+  // Moment arm at midspan = H (apex for pitched, constant for flat)
+  var Pr_top=M_max/H;     // kip
+
+  // Bottom chord (tension, governing at midspan)
+  var Pr_bot=M_max/H;     // kip
+
+  // Diagonal – first panel, Pratt: tension diagonal carries vertical shear
+  // V at first panel cut = R (all shear at support carried by diagonal)
+  var Pr_diag=R/sinT;     // kip (tension)
+
+  // Vertical members – Pratt interior verticals carry applied load per panel
+  var Pr_vert=wu*dp;      // kip (compression)
+
+  // Local bending in top chord (continuous beam, approx. fixed-pin ≈ wu*dp²/10, or simply use wu*dp²/8)
+  var M_local_kftin=wu*dp*dp/8; // kip-ft (conservative, simply-supported)
+
+  // ── Chord compression (Chapter E) ────────────────────────────────────
+  var Ag_c=CR[5], ry_c=CR[14], rx_c=CR[10];
+  var KLr_c=(1.0*dp*12)/ry_c;
+  var Fe_c=Math.PI*Math.PI*Es/(KLr_c*KLr_c);
+  var lim_c=4.71*Math.sqrt(Es/Fy);
+  var Fcr_c=(KLr_c<=lim_c)?Math.pow(0.658,Fy/Fe_c)*Fy:0.877*Fe_c;
+  var phiPnc_c=0.9*Fcr_c*Ag_c;
+
+  // ── Chord tension (Chapter D) ─────────────────────────────────────────
+  var phiPnt_c=0.9*Fy*Ag_c;
+
+  // ── Top chord flexure – LTB (Chapter F2) ────────────────────────────
+  var d_c=CR[1],tf_c=CR[3],Sx_c=CR[8],Zx_c=CR[9];
+  var Iy_c=CR[11],J_c=CR[15],Cw_c=CR[16];
+  var Mp_c=Fy*Zx_c; // kip-in
+  var Lb_in=Lb_top*12;
+  var rts_c=Math.pow(Iy_c*Cw_c,0.25)/Math.sqrt(Sx_c);
+  var ho_c=d_c-tf_c;
+  var Lp_c=1.76*ry_c*Math.sqrt(Es/Fy);
+  var X1=J_c/(Sx_c*ho_c);
+  var Lr_c=1.95*rts_c*(Es/(0.7*Fy))*Math.sqrt(X1+Math.sqrt(X1*X1+6.76*Math.pow(0.7*Fy/Es,2)));
+  var Mn_c;
+  if(Lb_in<=Lp_c){
+    Mn_c=Mp_c;
+  } else if(Lb_in<=Lr_c){
+    Mn_c=Math.max(Mp_c-(Mp_c-0.7*Fy*Sx_c)*((Lb_in-Lp_c)/(Lr_c-Lp_c)),0);
+    Mn_c=Math.min(Mn_c,Mp_c);
+  } else {
+    var Fcr_f=(Math.PI*Math.PI*Es/Math.pow(Lb_in/rts_c,2))*
+              Math.sqrt(1+0.0078*(J_c/(Sx_c*ho_c))*Math.pow(Lb_in/rts_c,2));
+    Mn_c=Math.min(Fcr_f*Sx_c,Mp_c);
+  }
+  var phiMn_c=0.9*Mn_c; // kip-in
+  var Mr_top=M_local_kftin*12; // kip-in
+
+  // ── Combined H1-1 for top chord ──────────────────────────────────────
+  var DC_top;
+  if(Pr_top/phiPnc_c>=0.2){
+    DC_top=Pr_top/phiPnc_c+(8/9)*(Mr_top/phiMn_c);
+  } else {
+    DC_top=Pr_top/(2*phiPnc_c)+Mr_top/phiMn_c;
+  }
+
+  // ── Bottom chord tension ─────────────────────────────────────────────
+  var DC_bot=Pr_bot/phiPnt_c;
+
+  // ── Diagonal tension ─────────────────────────────────────────────────
+  var Ag_d=DR[5];
+  var phiPnt_d=0.9*Fy*Ag_d;
+  var DC_diag=Pr_diag/phiPnt_d;
+
+  // ── Vertical compression ─────────────────────────────────────────────
+  var Ag_v=VR[5],ry_v=VR[14];
+  var KL_v=1.0*H*12;
+  var KLr_v=KL_v/ry_v;
+  var Fe_v=Math.PI*Math.PI*Es/(KLr_v*KLr_v);
+  var lim_v=4.71*Math.sqrt(Es/Fy);
+  var Fcr_v=(KLr_v<=lim_v)?Math.pow(0.658,Fy/Fe_v)*Fy:0.877*Fe_v;
+  var phiPnc_v=0.9*Fcr_v*Ag_v;
+  var DC_vert=Pr_vert/phiPnc_v;
+
+  // ── Deflection (equivalent Warren/chord-area method) ─────────────────
+  // I_eq = A_chord * (H*12)^2 / 2 (two chord centroids at ±H/2)
+  var I_eq=Ag_c*Math.pow(H*12,2)/2; // in⁴
+  var L_in=L*12;
+  var wL_svc=wL/12, wDL_svc=(wD_eff+wL)/12; // k/in
+  var dL=5*wL_svc*Math.pow(L_in,4)/(384*Es*I_eq);
+  var dDL=5*wDL_svc*Math.pow(L_in,4)/(384*Es*I_eq);
+  var lim360=L_in/360, lim240=L_in/240, lim180=L_in/180;
+
+  // ── Build report ─────────────────────────────────────────────────────
+  function tag(dc){
+    if(!isFinite(dc))return '<span class="tag-na">N/A</span>';
+    return dc<=1.0?'<span class="tag-ok">OK</span>':'<span class="tag-fail">FAIL</span>';
+  }
+  function tagD(v,lim){
+    return v<=lim?'<span class="tag-ok">OK</span>':'<span class="tag-fail">FAIL</span>';
+  }
+  function ltbZone(){
+    if(Lb_in<=Lp_c)return 'Plastic (no LTB)';
+    if(Lb_in<=Lr_c)return 'Inelastic LTB';
+    return 'Elastic LTB';
+  }
+
+  var h='';
+
+  // Load combos
+  h+='<p class="res-hdr">ASCE 7-22 Load Combinations</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Combination</th><th>w<sub>u</sub> (k/ft)</th></tr></thead><tbody>';
+  combos.forEach(function(c){
+    var gov=(c===govCombo);
+    h+='<tr'+(gov?' class="gov-row"':'')+'><td class="combo-lbl">'+c.lbl+'</td><td>'+fmt(c.w,3)+(gov?' &larr; governs':'')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  h+='<p class="note-line">Self-weight added to D: &Delta;w<sub>SW</sub> = '+fmt(totalSW_klf*1000,1)+' lb/ft &nbsp;|&nbsp; Effective w<sub>D</sub> = '+fmt(wD_eff,3)+' k/ft</p>';
+
+  // Member forces summary
+  h+='<p class="res-hdr">Governing Factored Member Forces (w<sub>u</sub> = '+fmt(wu,3)+' k/ft)</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Member</th><th>Type</th><th>P<sub>u</sub> or M<sub>u</sub></th><th>Note</th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">Top Chord</td><td>Compression</td><td>'+fmt(Pr_top,1)+' kip</td><td>at midspan</td></tr>';
+  h+='<tr><td class="combo-lbl">Top Chord (local)</td><td>Bending</td><td>'+fmt(M_local_kftin,2)+' kip-ft</td><td>between panel pts</td></tr>';
+  h+='<tr><td class="combo-lbl">Bottom Chord</td><td>Tension</td><td>'+fmt(Pr_bot,1)+' kip</td><td>at midspan</td></tr>';
+  h+='<tr><td class="combo-lbl">Diagonal (1st panel)</td><td>Tension</td><td>'+fmt(Pr_diag,1)+' kip</td><td>&theta; = '+fmt(theta_diag*180/Math.PI,1)+'&deg;</td></tr>';
+  h+='<tr><td class="combo-lbl">Vertical (interior)</td><td>Compression</td><td>'+fmt(Pr_vert,1)+' kip</td><td>= w<sub>u</sub> &times; d</td></tr>';
+  h+='</tbody></table>';
+
+  // Top chord
+  h+='<p class="res-hdr">Top Chord &mdash; '+CR[0]+' &nbsp;(Compression + Local Bending)</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">&phi;P<sub>n</sub> Compression (Ch.E)</td><td>'+fmt(Pr_top,1)+' k</td><td>'+fmt(phiPnc_c,1)+' k</td><td>'+fmt(Pr_top/phiPnc_c,3)+'</td><td>'+tag(Pr_top/phiPnc_c)+'</td></tr>';
+  h+='<tr><td class="combo-lbl">LTB zone (L<sub>b</sub>/L<sub>p</sub>/L<sub>r</sub>)</td><td>'+fmt(Lb_in,1)+' in</td><td>'+fmt(Lp_c,1)+' / '+fmt(Lr_c,1)+' in</td><td colspan="2" style="font-family:var(--sans);color:var(--text-dim);">'+ltbZone()+'</td></tr>';
+  h+='<tr><td class="combo-lbl">&phi;M<sub>n</sub> Flexure — Ch.F2</td><td>'+fmt(Mr_top/12,2)+' k-ft</td><td>'+fmt(phiMn_c/12,2)+' k-ft</td><td>'+fmt(Mr_top/phiMn_c,3)+'</td><td>'+tag(Mr_top/phiMn_c)+'</td></tr>';
+  h+='<tr><td class="combo-lbl"><strong>Combined H1-1</strong></td><td colspan="2">&mdash;</td><td><strong>'+fmt(DC_top,3)+'</strong></td><td>'+tag(DC_top)+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<p class="note-line">KL/r = '+fmt(KLr_c,1)+' (≤ 200) &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_c,2)+' ksi &nbsp;|&nbsp; r<sub>ts</sub> = '+fmt(rts_c,3)+' in &nbsp;|&nbsp; &phi;M<sub>p</sub> = '+fmt(0.9*Mp_c/12,1)+' k-ft</p>';
+
+  // Bottom chord
+  h+='<p class="res-hdr">Bottom Chord &mdash; '+CR[0]+' &nbsp;(Tension)</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">&phi;P<sub>n</sub> Tension — §D2 (yielding)</td><td>'+fmt(Pr_bot,1)+' k</td><td>'+fmt(phiPnt_c,1)+' k</td><td>'+fmt(DC_bot,3)+'</td><td>'+tag(DC_bot)+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<p class="note-line">Net section rupture (§D2b) not checked — assumes A<sub>e</sub> = A<sub>g</sub> (complete joint penetration or bolted with U correction to be verified by engineer).</p>';
+
+  // Diagonal
+  h+='<p class="res-hdr">Diagonal Members &mdash; '+DR[0]+' &nbsp;(Tension)</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">&phi;P<sub>n</sub> Tension — §D2</td><td>'+fmt(Pr_diag,1)+' k</td><td>'+fmt(phiPnt_d,1)+' k</td><td>'+fmt(DC_diag,3)+'</td><td>'+tag(DC_diag)+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<p class="note-line">Diagonal length = '+fmt(Math.sqrt(dp*dp+h1_diag*h1_diag),2)+' ft &nbsp;|&nbsp; &theta; = '+fmt(theta_diag*180/Math.PI,1)+'&deg; from horizontal</p>';
+
+  // Vertical
+  h+='<p class="res-hdr">Vertical Members &mdash; '+VR[0]+' &nbsp;(Compression)</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th></th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">&phi;P<sub>n</sub> Compression (Ch.E)</td><td>'+fmt(Pr_vert,1)+' k</td><td>'+fmt(phiPnc_v,1)+' k</td><td>'+fmt(DC_vert,3)+'</td><td>'+tag(DC_vert)+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<p class="note-line">KL = H = '+fmt(H,1)+' ft &nbsp;|&nbsp; KL/r = '+fmt(KLr_v,1)+' &nbsp;|&nbsp; F<sub>cr</sub> = '+fmt(Fcr_v,2)+' ksi</p>';
+
+  // Deflection
+  h+='<p class="res-hdr">Deflection — Equivalent Chord-Area Method</p>';
+  h+='<p class="note-line">I<sub>eq</sub> = A<sub>chord</sub> &times; (H&times;12)&sup2; / 2 = '+fmt(Ag_c,2)+' &times; '+fmt(Math.pow(H*12,2),0)+' / 2 = '+fmt(I_eq,0)+' in&sup4;</p>';
+  h+='<table class="combo-tbl"><thead><tr><th>Check</th><th>&delta; (in)</th><th>Limit (in)</th><th></th></tr></thead><tbody>';
+  h+='<tr><td class="combo-lbl">Live load — L/360</td><td>'+fmt(dL,3)+'</td><td>'+fmt(lim360,3)+' (L/360)</td><td>'+tagD(dL,lim360)+'</td></tr>';
+  h+='<tr><td class="combo-lbl">Live load — L/240</td><td>'+fmt(dL,3)+'</td><td>'+fmt(lim240,3)+' (L/240)</td><td>'+tagD(dL,lim240)+'</td></tr>';
+  h+='<tr><td class="combo-lbl">Total (D+L) — L/180</td><td>'+fmt(dDL,3)+'</td><td>'+fmt(lim180,3)+' (L/180)</td><td>'+tagD(dDL,lim180)+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<p class="note-line">Note: Equivalent-I deflection is an approximation. Camber = 3/4 &times; dead-load deflection is typically specified.</p>';
+
+  el('td-results-inner').innerHTML=h;
+  el('td-results').style.display='block';
+  el('td-empty').style.display='none';
+}
+
+// Init
+window.addEventListener('DOMContentLoaded',function(){tdDraw();});
+</script>
+</body>
+</html>
