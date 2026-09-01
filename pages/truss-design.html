@@ -150,6 +150,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="form-div"><div class="form-div-lbl" id="td-load-div-lbl">Loads &mdash; ASCE 7-22</div></div>
     <div class="sub-tabs" style="margin-bottom:12px;">
       <button class="sub-tab active" id="td-mode-udl"    onclick="tdSetLoadMode('udl',this)">UDL</button>
+      <button class="sub-tab"        id="td-mode-area"   onclick="tdSetLoadMode('area',this)">Area Loads</button>
       <button class="sub-tab"        id="td-mode-direct" onclick="tdSetLoadMode('direct',this)">Design Load</button>
     </div>
 
@@ -157,25 +158,62 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div id="td-panel-udl">
       <div class="form-row-2">
         <div class="form-group">
-          <label>Dead, w<sub>D</sub> <span class="lu" id="td-wD-lu">[k/ft]</span></label>
+          <label>Cover Loads D <span class="lu" id="td-wD-lu">[k/ft]</span></label>
           <div class="iw"><input type="number" id="td-wD" value="0.5" min="0" step="0.05"><span class="us" id="td-wD-u">k/ft</span></div>
         </div>
         <div class="form-group">
-          <label>Live, w<sub>L</sub> <span class="lu" id="td-wL-lu">[k/ft]</span></label>
+          <label>Live Load L <span class="lu" id="td-wL-lu">[k/ft]</span></label>
           <div class="iw"><input type="number" id="td-wL" value="1.0" min="0" step="0.05"><span class="us" id="td-wL-u">k/ft</span></div>
         </div>
       </div>
       <div class="form-row-2">
         <div class="form-group">
-          <label>Snow, w<sub>S</sub> <span class="lu" id="td-wS-lu">[k/ft]</span></label>
+          <label>Snow Load S <span class="lu" id="td-wS-lu">[k/ft]</span></label>
           <div class="iw"><input type="number" id="td-wS" value="0.5" min="0" step="0.05"><span class="us" id="td-wS-u">k/ft</span></div>
         </div>
         <div class="form-group">
-          <label>Wind, w<sub>W</sub> <span class="lu" id="td-wW-lu">[k/ft]</span></label>
-          <div class="iw"><input type="number" id="td-wW" value="0" step="0.05"><span class="us" id="td-wW-u">k/ft</span></div>
+          <label>Roof Live L<sub>r</sub> <span class="lu" id="td-wLr-lu">[k/ft]</span></label>
+          <div class="iw"><input type="number" id="td-wLr" value="0" min="0" step="0.05"><span class="us" id="td-wLr-u">k/ft</span></div>
         </div>
       </div>
-      <p style="font-size:.70rem;color:var(--text-dim);margin:-4px 0 10px;">w<sub>W</sub>: positive = downward, negative = uplift. Self-weight auto-added to D.</p>
+      <div class="form-group">
+        <label>Wind Load W <span class="lu" id="td-wW-lu">[k/ft]</span></label>
+        <div class="iw"><input type="number" id="td-wW" value="0" step="0.05"><span class="us" id="td-wW-u">k/ft</span></div>
+      </div>
+      <div id="td-sw-note" style="font-size:.72rem;color:var(--text-dim);margin:-4px 0 10px;padding:5px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);display:none;"></div>
+    </div>
+
+    <!-- Area Loads panel -->
+    <div id="td-panel-area" style="display:none">
+      <div class="form-group">
+        <label>Tributary Width <span class="lu" id="td-tw-lu">[ft]</span></label>
+        <div class="iw"><input type="number" id="td-tw" value="20" min="0.1" step="1"><span class="us" id="td-tw-u">ft</span></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Dead D <span class="lu" id="td-aD-lu">[psf]</span></label>
+          <div class="iw"><input type="number" id="td-aD" value="20" min="0" step="1"><span class="us" id="td-aD-u">psf</span></div>
+        </div>
+        <div class="form-group">
+          <label>Live L <span class="lu" id="td-aL-lu">[psf]</span></label>
+          <div class="iw"><input type="number" id="td-aL" value="40" min="0" step="1"><span class="us" id="td-aL-u">psf</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Snow S <span class="lu" id="td-aS-lu">[psf]</span></label>
+          <div class="iw"><input type="number" id="td-aS" value="0" min="0" step="1"><span class="us" id="td-aS-u">psf</span></div>
+        </div>
+        <div class="form-group">
+          <label>Roof Live L<sub>r</sub> <span class="lu" id="td-aLr-lu">[psf]</span></label>
+          <div class="iw"><input type="number" id="td-aLr" value="0" min="0" step="1"><span class="us" id="td-aLr-u">psf</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Wind W <span class="lu" id="td-aW-lu">[psf]</span></label>
+        <div class="iw"><input type="number" id="td-aW" value="0" step="1"><span class="us" id="td-aW-u">psf</span></div>
+      </div>
+      <div id="td-sw-note-area" style="font-size:.72rem;color:var(--text-dim);margin:-4px 0 10px;padding:5px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);display:none;"></div>
     </div>
 
     <!-- Design Load panel -->
@@ -606,23 +644,28 @@ function tdSetUnit(u, btn) {
   var rhc = document.getElementById('td-rh-code');
   if (rhc) rhc.textContent = si ? 'AISC 360-22 \xb7 kN \xb7 m \xb7 mm' : 'AISC 360-22 LRFD \xb7 kip \xb7 ft \xb7 in';
   // Unit span labels
-  var uL=si?'m':'ft', uW=si?'kN/m':'k/ft';
+  var uL=si?'m':'ft', uW=si?'kN/m':'k/ft', uA=si?'kN/m\xb2':'psf', uTw=si?'m':'ft';
   ['td-L-u','td-H-u','td-heel-u','td-Lb-u'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=uL;});
-  ['td-wD-u','td-wL-u','td-wS-u','td-wW-u'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=uW;});
+  ['td-wD-u','td-wL-u','td-wS-u','td-wLr-u','td-wW-u'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=uW;});
   ['td-L-lu','td-H-lu','td-heel-lu','td-Lb-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uL+']';});
-  ['td-wD-lu','td-wL-lu','td-wS-lu','td-wW-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uW+']';});
+  ['td-wD-lu','td-wL-lu','td-wS-lu','td-wLr-lu','td-wW-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uW+']';});
+  ['td-aD-u','td-aL-u','td-aS-u','td-aLr-u','td-aW-u'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=uA;});
+  ['td-aD-lu','td-aL-lu','td-aS-lu','td-aLr-lu','td-aW-lu'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='['+uA+']';});
+  var twU=document.getElementById('td-tw-u');if(twU)twU.textContent=uTw;
+  var twLu=document.getElementById('td-tw-lu');if(twLu)twLu.textContent='['+uTw+']';
   var ldiv=document.getElementById('td-load-div-lbl');
   if(ldiv) ldiv.textContent='Loads — ASCE 7-22';
   var wuLu=document.getElementById('td-wu-lu'); if(wuLu) wuLu.textContent='['+uW+']';
   var wuU=document.getElementById('td-wu-u'); if(wuU) wuU.textContent=uW;
   if(si){el('td-wu').value='40';} else {el('td-wu').value='3.0';}
+  if(si){el('td-tw').value='6';el('td-aD').value='1.5';el('td-aL').value='3.5';el('td-aS').value='0';el('td-aLr').value='0';el('td-aW').value='0';}
+  else  {el('td-tw').value='20';el('td-aD').value='20';el('td-aL').value='40';el('td-aS').value='0';el('td-aLr').value='0';el('td-aW').value='0';}
   // Fy
   var fysel=document.getElementById('td-fy');
   if(si){
-    fysel.innerHTML='<option value="235">S235 — 235 MPa</option>'
-      +'<option value="275" selected>S275 — 275 MPa</option>'
-      +'<option value="355">S355 — 355 MPa</option>'
-      +'<option value="420">S420 — 420 MPa</option>';
+    fysel.innerHTML='<option value="235">S235</option>'
+      +'<option value="275" selected>S275</option>'
+      +'<option value="355">S355</option>';
   } else {
     fysel.innerHTML='<option value="50" selected>50 ksi — A992 / A572 Gr.50</option>'
       +'<option value="36">36 ksi — A36</option>'
@@ -632,11 +675,11 @@ function tdSetUnit(u, btn) {
   if(si){
     el('td-L').value='18'; el('td-H').value='2'; el('td-heel').value='0.6';
     el('td-Lb').value='3'; el('td-wD').value='7'; el('td-wL').value='14';
-    el('td-wS').value='7'; el('td-wW').value='0';
+    el('td-wS').value='7'; el('td-wLr').value='0'; el('td-wW').value='0';
   } else {
     el('td-L').value='60'; el('td-H').value='6'; el('td-heel').value='2';
     el('td-Lb').value='10'; el('td-wD').value='0.5'; el('td-wL').value='1.0';
-    el('td-wS').value='0.5'; el('td-wW').value='0';
+    el('td-wS').value='0.5'; el('td-wLr').value='0'; el('td-wW').value='0';
   }
   // Section type options
   var chSel=document.getElementById('td-chord-type');
@@ -671,6 +714,7 @@ function tdSetLoadMode(m, btn) {
   document.querySelectorAll('.sub-tab').forEach(function(b){b.classList.remove('active');});
   if(btn) btn.classList.add('active');
   el('td-panel-udl').style.display    = m==='udl'    ? '' : 'none';
+  el('td-panel-area').style.display   = m==='area'   ? '' : 'none';
   el('td-panel-direct').style.display = m==='direct' ? '' : 'none';
 }
 
@@ -713,7 +757,7 @@ function tdDraw(){
   function txt(x,y,s,anchor,sz,op){
     var t=ns('text',{x:x,y:y,'text-anchor':anchor||'middle',
       'font-family':'IBM Plex Mono,monospace','font-size':sz||10,
-      fill:'currentColor',opacity:op||0.65});
+      fill:'currentColor',opacity:op||0.85});
     t.textContent=s;svg.appendChild(t);
   }
 
@@ -758,8 +802,8 @@ function tdDraw(){
   function supp(x,y){
     svg.appendChild(ns('polygon',{
       points:(x-9)+','+(y+3)+' '+(x+9)+','+(y+3)+' '+x+','+(y-9),
-      fill:'none',stroke:'currentColor','stroke-width':1.5,opacity:0.65}));
-    ln(x-12,y+3,x+12,y+3,1.5,0.65);
+      fill:'none',stroke:'currentColor','stroke-width':1.5,opacity:0.82}));
+    ln(x-12,y+3,x+12,y+3,1.5,0.82);
   }
   supp(bot[0].x,bot[0].y+3);
   supp(bot[N].x,bot[N].y+3);
@@ -767,12 +811,12 @@ function tdDraw(){
   // load arrows on top chord joints
   var defs_el=ns('defs',{});
   var mk=ns('marker',{id:'td-arr',markerWidth:'5',markerHeight:'5',refX:'2.5',refY:'2.5',orient:'auto'});
-  mk.appendChild(ns('path',{d:'M0,0 L0,5 L5,2.5 z',fill:'currentColor',opacity:'0.4'}));
+  mk.appendChild(ns('path',{d:'M0,0 L0,5 L5,2.5 z',fill:'currentColor',opacity:'0.6'}));
   defs_el.appendChild(mk);svg.appendChild(defs_el);
   for(var i=1;i<N;i++){
     var ax=top[i].x, ay=top[i].y;
     svg.appendChild(ns('line',{x1:ax,y1:ay-16,x2:ax,y2:ay-1,
-      stroke:'currentColor','stroke-width':1.4,opacity:0.4,
+      stroke:'currentColor','stroke-width':1.4,opacity:0.6,
       'marker-end':'url(#td-arr)'}));
   }
 }
@@ -789,17 +833,34 @@ function tdCalc(){
   var Fy_u =parseFloat(el('td-fy').value)  ||(si?275:50);
   var Lb_u =parseFloat(el('td-Lb').value)  ||(si?3:10);
   var direct = tdLoadMode==='direct';
-  var wD_u =direct?0:(parseFloat(el('td-wD').value)||0);
-  var wL_u =direct?0:(parseFloat(el('td-wL').value)||0);
-  var wS_u =direct?0:(parseFloat(el('td-wS').value)||0);
-  var wW_u =direct?0:(parseFloat(el('td-wW').value)||0);
-  var wu_dir_u = direct?(parseFloat(el('td-wu').value)||(si?40:3)):0;
+  var area   = tdLoadMode==='area';
+  var wD_u,wL_u,wS_u,wLr_u,wW_u,wu_dir_u;
+  if(direct){
+    wD_u=0;wL_u=0;wS_u=0;wLr_u=0;wW_u=0;
+    wu_dir_u=parseFloat(el('td-wu').value)||(si?40:3);
+  } else if(area){
+    var tw_u=parseFloat(el('td-tw').value)||1;
+    var fa=si?tw_u:tw_u*0.001; // kN/m²×m=kN/m ; psf×ft/1000=k/ft
+    wD_u=(parseFloat(el('td-aD').value)||0)*fa;
+    wL_u=(parseFloat(el('td-aL').value)||0)*fa;
+    wS_u=(parseFloat(el('td-aS').value)||0)*fa;
+    wLr_u=(parseFloat(el('td-aLr').value)||0)*fa;
+    wW_u=(parseFloat(el('td-aW').value)||0)*fa;
+    wu_dir_u=0;
+  } else {
+    wD_u=parseFloat(el('td-wD').value)||0;
+    wL_u=parseFloat(el('td-wL').value)||0;
+    wS_u=parseFloat(el('td-wS').value)||0;
+    wLr_u=parseFloat(el('td-wLr').value)||0;
+    wW_u=parseFloat(el('td-wW').value)||0;
+    wu_dir_u=0;
+  }
 
   // Convert inputs → unified (mm, N/mm, MPa)
   var fL=si?1000:304.8, fW=si?1.0:14.5939;
   var Fy=si?Fy_u:Fy_u*6.89476;
   var L=L_u*fL, H=H_u*fL, heel=heel_u*fL, Lb=Lb_u*fL;
-  var wD=wD_u*fW, wL=wL_u*fW, wS=wS_u*fW, wW=wW_u*fW;
+  var wD=wD_u*fW, wL=wL_u*fW, wS=wS_u*fW, wLr=wLr_u*fW, wW=wW_u*fW;
 
   // Section rows → mm-based objects
   var chordType=el('td-chord-type').value;
@@ -824,11 +885,11 @@ function tdCalc(){
     wu = wu_dir_u * fW; // N/mm
   } else {
     combos=[
-      {lbl:'1.4D',                    w:1.4*wDeff},
-      {lbl:'1.2D+1.6L+0.5S',          w:1.2*wDeff+1.6*wL+0.5*wS},
-      {lbl:'1.2D+1.6S+1.0L',          w:1.2*wDeff+1.6*wS+1.0*wL},
-      {lbl:'1.2D+1.0W+1.0L+0.5S',     w:1.2*wDeff+1.0*wW+1.0*wL+0.5*wS},
-      {lbl:'0.9D+1.0W',                w:0.9*wDeff+1.0*wW}
+      {lbl:'1.4D',                                          w:1.4*wDeff},
+      {lbl:'1.2D+1.6L+0.5max(L<sub>r</sub>,S)',            w:1.2*wDeff+1.6*wL+0.5*Math.max(wLr,wS)},
+      {lbl:'1.2D+1.6max(L<sub>r</sub>,S)+max(L,0.5W)',     w:1.2*wDeff+1.6*Math.max(wLr,wS)+Math.max(wL,0.5*wW)},
+      {lbl:'1.2D+1.0W+L+0.5max(L<sub>r</sub>,S)',          w:1.2*wDeff+1.0*wW+wL+0.5*Math.max(wLr,wS)},
+      {lbl:'0.9D+1.0W',                                     w:0.9*wDeff+1.0*wW}
     ];
     gov=combos.reduce(function(a,b){return b.w>a.w?b:a;});
     wu=gov.w;
@@ -918,6 +979,11 @@ function tdCalc(){
   var dL_d=dL_mm*dFl, dDL_d=dDL_mm*dFl;
   var dLim360=L*dFl/360, dLim240=L*dFl/240, dLim180=L*dFl/180;
   var SW_d=SW*dFw;
+  // Update self-weight badge in input card
+  var swNoteA=el(area?'td-sw-note-area':'td-sw-note');
+  var swNoteB=el(area?'td-sw-note':'td-sw-note-area');
+  if(swNoteA&&!direct){swNoteA.style.display='block';swNoteA.innerHTML='&#128696; Self-weight <strong>'+fmt(SW_d,3)+'</strong> '+uW+' auto-added to D';}
+  if(swNoteB) swNoteB.style.display='none';
   var diagLen_d=diagLen*dFL;
   var h1_d=h1*dFL;
 
