@@ -476,6 +476,39 @@ var RHS_CHORD_DB=[
   ['RHS 500×200×10',500,200,10,136.0,106.8,42445.3,1697.8,2132.0,17.67,10005.3,1000.5,8.58],
   ['RHS 500×200×12',500,200,12,162.2,127.4,50153.1,2006.1,2530.7,17.58,11707.9,1170.8,8.50]
 ];
+// SHS chord 13-col: [name,h,b,t,A_cm2,G_kgm,Iy_cm4,Wely_cm3,Wply_cm3,iy_cm,Iz_cm4,Welz_cm3,iz_cm] (h=b for square)
+var SHS_CHORD_DB=[
+  ['SHS 120×8', 120,120,8, 35.84,28.13,753.1,125.5,150.8,4.58,753.1,125.5,4.58],
+  ['SHS 120×10',120,120,10,44.0, 34.54,894.7,149.1,182.0,4.51,894.7,149.1,4.51],
+  ['SHS 150×8', 150,150,8, 45.44,35.67,1531.9,204.3,242.2,5.81,1531.9,204.3,5.81],
+  ['SHS 150×10',150,150,10,56.0, 43.96,1838.7,245.2,294.5,5.73,1838.7,245.2,5.73],
+  ['SHS 150×12.5',150,150,12.5,68.75,53.97,2184.2,291.2,355.5,5.64,2184.2,291.2,5.64],
+  ['SHS 180×8', 180,180,8, 55.04,43.21,2719.7,302.2,355.3,7.03,2719.7,302.2,7.03],
+  ['SHS 180×10',180,180,10,68.0, 53.38,3286.7,365.2,434.0,6.95,3286.7,365.2,6.95],
+  ['SHS 200×8', 200,200,8, 61.44,48.23,3781.4,378.1,442.6,7.85,3781.4,378.1,7.85],
+  ['SHS 200×10',200,200,10,76.0, 59.66,4585.3,458.5,542.0,7.77,4585.3,458.5,7.77],
+  ['SHS 200×12.5',200,200,12.5,93.75,73.59,5517.6,551.8,660.2,7.67,5517.6,551.8,7.67],
+  ['SHS 250×8', 250,250,8, 77.44,60.79,7566.9,605.4,703.0,9.89,7566.9,605.4,9.89],
+  ['SHS 250×10',250,250,10,96.0, 75.36,9232.0,738.6,864.5,9.81,9232.0,738.6,9.81],
+  ['SHS 250×12.5',250,250,12.5,118.75,93.22,11194.7,895.6,1058.6,9.71,11194.7,895.6,9.71]
+];
+// L equal-leg angles EN 10056 — 5-col: [name,A_cm2,G_kgm,i1_cm,imin_cm]
+var L_SI_DB=[
+  ['L 60×60×6', 6.91,5.42,1.83,1.17],['L 60×60×8', 9.03,7.09,1.80,1.16],
+  ['L 70×70×6', 8.13,6.38,2.14,1.37],['L 70×70×7', 9.40,7.38,2.13,1.36],['L 70×70×8',10.6,8.36,2.12,1.36],
+  ['L 80×80×6', 9.35,7.34,2.46,1.57],['L 80×80×8',12.3,9.67,2.43,1.56],['L 80×80×10',15.1,11.9,2.41,1.55],
+  ['L 90×90×7',12.2,9.61,2.77,1.77],['L 90×90×9',15.5,12.2,2.75,1.76],
+  ['L 100×100×8',15.5,12.2,3.08,1.97],['L 100×100×10',19.2,15.1,3.06,1.97],['L 100×100×12',22.7,17.8,3.04,1.96],
+  ['L 120×120×10',23.2,18.2,3.68,2.36],['L 120×120×12',27.5,21.6,3.66,2.35],['L 120×120×15',33.9,26.6,3.62,2.34],
+  ['L 150×150×12',34.8,27.3,4.60,2.95],['L 150×150×15',43.0,33.8,4.57,2.94],['L 150×150×18',51.0,40.0,4.54,2.92],
+  ['L 180×180×16',55.6,43.6,5.52,3.54],['L 180×180×18',62.2,48.9,5.49,3.53],
+  ['L 200×200×16',61.8,48.5,6.15,3.94],['L 200×200×20',76.6,60.1,6.10,3.92],['L 200×200×24',91.0,71.4,6.06,3.90]
+];
+// 2L double angles — derived: A×2, G×2, i1 same, iz=√((i1²+imin²)/2)
+var DL_SI_DB=L_SI_DB.map(function(r){
+  var i1=r[3],im=r[4];
+  return ['2'+r[0],r[1]*2,r[2]*2,i1,Math.sqrt((i1*i1+im*im)/2)];
+});
 // SHS 5-col SI: [name, A_cm2, G_kgm, iy_cm, iz_cm]
 var SHS5DB=[
   ['SHS 60×3.2', 7.27,5.71,2.32,2.32],['SHS 60×4', 8.96,7.03,2.29,2.29],
@@ -524,12 +557,17 @@ var DB_CHORD_SI = {
   HEB:{label:'HEB — Wide Flange H, Medium',  data:HEB_DATA},
   HEM:{label:'HEM — Wide Flange H, Heavy',   data:HEM_DATA},
   HD: {label:'HD — Heavy Wide Flange Column', data:HD_DATA},
-  RHS:{label:'RHS — Rectangular Hollow',     data:RHS_CHORD_DB}
+  RHS:{label:'RHS — Rectangular Hollow',     data:RHS_CHORD_DB},
+  SHS:{label:'SHS — Square Hollow Section',  data:SHS_CHORD_DB}
 };
 var DB_WEB_SI = {
   IPE:{label:'IPE — I-Beam',         data:IPE_DATA.map(function(r){return [r[0],r[6],r[7],r[11],r[15]];})},
-  HEA:{label:'HEA — H Section',      data:HEA_DATA.map(function(r){return [r[0],r[6],r[7],r[11],r[15]];})},
+  HEA:{label:'HEA — H Section, Light',data:HEA_DATA.map(function(r){return [r[0],r[6],r[7],r[11],r[15]];})},
+  HEB:{label:'HEB — H Section, Medium',data:HEB_DATA.map(function(r){return [r[0],r[6],r[7],r[11],r[15]];})},
+  L:  {label:'L — Equal Leg Angle',  data:L_SI_DB},
+  DL: {label:'2L — Double Angle',    data:DL_SI_DB},
   SHS:{label:'SHS — Square Hollow',  data:SHS5DB},
+  RHS:{label:'RHS — Rectangular Hollow',data:RHS_CHORD_DB.map(function(r){return [r[0],r[4],r[5],r[9],r[12]];})},
   CHS:{label:'CHS — Circular Hollow',data:CHS5DB}
 };
 
@@ -656,35 +694,94 @@ var HSS_R_DB=[
   ['HSS12.000×0.500',18.4, 62.7, 4.09, 4.09]
 ];
 
+// L equal-leg angles (AISC) — 5-col: [name,A_in2,W_lbft,rx_in(=i1),ry_in(=imin)]
+var L_US_DB=[
+  ['L3×3×1/4',  1.44,4.9, 0.930,0.592],['L3×3×3/8',  2.11,7.2, 0.911,0.584],['L3×3×1/2',  2.75,9.4, 0.897,0.579],
+  ['L3½×3½×1/4',1.69,5.8, 1.09, 0.694],['L3½×3½×3/8',2.48,8.5, 1.07, 0.688],['L3½×3½×1/2',3.25,11.1,1.06, 0.683],
+  ['L4×4×1/4',  1.94,6.6, 1.25, 0.795],['L4×4×3/8',  2.86,9.8, 1.23, 0.789],['L4×4×1/2',  3.75,12.8,1.22, 0.783],
+  ['L4×4×3/4',  5.44,18.5,1.19, 0.774],
+  ['L5×5×5/16', 3.03,10.3,1.57, 0.993],['L5×5×3/8',  3.61,12.3,1.56, 0.990],['L5×5×1/2',  4.75,16.2,1.55, 0.983],['L5×5×3/4',  6.94,23.6,1.52, 0.972],
+  ['L6×6×3/8',  4.36,14.9,1.88, 1.19], ['L6×6×1/2',  5.75,19.6,1.86, 1.18], ['L6×6×5/8',  7.11,24.2,1.85, 1.17], ['L6×6×3/4',  8.44,28.7,1.84, 1.17],
+  ['L8×8×1/2',  7.75,26.4,2.49, 1.57], ['L8×8×5/8',  9.61,32.7,2.47, 1.57], ['L8×8×3/4',  11.4,38.9,2.46, 1.56], ['L8×8×1',    15.0,51.0,2.44, 1.56]
+];
+// 2L double angles US — derived
+var DL_US_DB=L_US_DB.map(function(r){
+  var i1=r[3],im=r[4];
+  return ['2'+r[0],r[1]*2,r[2]*2,i1,Math.sqrt((i1*i1+im*im)/2)];
+});
+// HSS Rectangular (non-square) — 5-col for web use: [name,A_in2,W_lbft,rx_in,ry_in]
+var HSS_RECT_DB=[
+  ['HSS6×4×1/4', 4.34,14.8,2.23,1.67],['HSS6×4×3/8', 6.32,21.5,2.17,1.63],['HSS6×4×1/2', 8.10,27.6,2.11,1.58],
+  ['HSS8×4×1/4', 5.34,18.2,3.01,1.65],['HSS8×4×3/8', 7.82,26.6,2.94,1.61],['HSS8×4×1/2', 10.2,34.7,2.88,1.57],
+  ['HSS8×6×1/4', 6.34,21.6,3.03,2.33],['HSS8×6×3/8', 9.32,31.7,2.97,2.29],['HSS8×6×1/2', 12.2,41.5,2.91,2.24],
+  ['HSS10×4×1/4',6.34,21.6,3.81,1.63],['HSS10×4×3/8',9.32,31.7,3.74,1.59],
+  ['HSS10×6×1/4',7.34,25.0,3.81,2.31],['HSS10×6×3/8',10.8,36.8,3.75,2.26],['HSS10×6×1/2',14.1,48.1,3.68,2.22],
+  ['HSS12×6×1/4',8.34,28.4,4.59,2.29],['HSS12×6×3/8',12.3,41.9,4.53,2.25],['HSS12×6×1/2',16.1,54.9,4.46,2.20],
+  ['HSS12×8×1/4',9.34,31.8,4.61,3.07],['HSS12×8×3/8',13.8,47.0,4.55,3.02],['HSS12×8×1/2',18.1,61.7,4.48,2.98],
+  ['HSS14×6×3/8',14.0,47.9,5.32,2.23],['HSS14×10×3/8',17.0,57.7,5.38,3.82]
+];
+// HSS Square chord — 9-col: [name,H_in,t_in,A_in2,W_lbft,I_in4,S_in3,Z_in3,r_in]
+var HSS_SQ_CHORD_DB=[
+  ['HSS4×4×1/4', 4,0.233,3.59,12.2,10.7,5.37,6.45, 1.73],
+  ['HSS4×4×3/8', 4,0.349,5.24,17.9,15.0,7.50,9.28, 1.69],
+  ['HSS5×5×1/4', 5,0.233,4.59,15.6,22.3,8.93,10.7, 2.20],
+  ['HSS5×5×3/8', 5,0.349,6.74,22.9,31.4,12.6,15.3, 2.16],
+  ['HSS6×6×1/4', 6,0.233,5.59,19.0,40.8,13.6,16.3, 2.70],
+  ['HSS6×6×3/8', 6,0.349,8.24,28.0,58.1,19.4,23.5, 2.66],
+  ['HSS6×6×1/2', 6,0.465,10.8,36.7,72.8,24.3,29.9, 2.59],
+  ['HSS7×7×1/4', 7,0.233,6.59,22.4,66.5,19.0,22.7, 3.18],
+  ['HSS7×7×3/8', 7,0.349,9.74,33.1,95.6,27.3,33.0, 3.13],
+  ['HSS8×8×1/4', 8,0.233,7.59,25.8,102, 25.6,30.6, 3.67],
+  ['HSS8×8×3/8', 8,0.349,11.2,38.2,148, 37.0,44.7, 3.63],
+  ['HSS8×8×1/2', 8,0.465,14.8,50.3,188, 47.0,57.5, 3.57],
+  ['HSS10×10×1/4',10,0.233,9.59,32.6,202,40.4,48.4, 4.59],
+  ['HSS10×10×3/8',10,0.349,14.2,48.3,292,58.4,70.6, 4.54],
+  ['HSS10×10×1/2',10,0.465,18.8,64.0,373,74.6,91.2, 4.46],
+  ['HSS12×12×1/4',12,0.233,11.6,39.4,349,58.2,69.8, 5.50],
+  ['HSS12×12×3/8',12,0.349,17.2,58.5,509,84.8,102,  5.44],
+  ['HSS12×12×1/2',12,0.465,22.8,77.7,655,109, 133,  5.36]
+];
 // Keyed databases
 var DB_CHORD = {
-  W:  {label:'W — Wide Flange',   data: WDB},
-  HP: {label:'HP — Bearing Pile', data: HPDB}
+  W:      {label:'W — Wide Flange',       data: WDB},
+  HP:     {label:'HP — Bearing Pile',     data: HPDB},
+  HSS_SQ:{label:'HSS Square Hollow',     data: HSS_SQ_CHORD_DB}
 };
 var DB_WEB = {
-  W:      {label:'W — Wide Flange',   data: WDB.map(function(r){return [r[0],r[5],r[6],r[10],r[14]];})},
-  HP:     {label:'HP — Bearing Pile', data: HPDB.map(function(r){return [r[0],r[5],r[6],r[10],r[14]];})},
-  HSS_SQ: {label:'HSS Square',        data: HSS_SQ_DB},
-  HSS_R:  {label:'HSS Round',         data: HSS_R_DB}
+  W:        {label:'W — Wide Flange',     data: WDB.map(function(r){return [r[0],r[5],r[6],r[10],r[14]];})},
+  HP:       {label:'HP — Bearing Pile',   data: HPDB.map(function(r){return [r[0],r[5],r[6],r[10],r[14]];})},
+  L:        {label:'L — Equal Leg Angle', data: L_US_DB},
+  DL:       {label:'2L — Double Angle',   data: DL_US_DB},
+  HSS_SQ:   {label:'HSS Square',          data: HSS_SQ_DB},
+  HSS_RECT: {label:'HSS Rectangular',     data: HSS_RECT_DB},
+  HSS_R:    {label:'HSS Round',           data: HSS_R_DB}
 };
 
 // ── Section property extraction (unified N/mm/MPa) ───────────────────────
 function tdGetChordMM(CR) {
+  var key=document.getElementById('td-chord-type').value;
   if (tdUnit==='us') {
-    // WDB 17-col: tf=col[3], ry=col[14], J=col[15], Cw=col[16] (in⁶)
+    if(key==='HSS_SQ'){
+      // HSS_SQ_CHORD_DB 9-col: [name,H_in,t_in,A_in2,W_lbft,I_in4,S_in3,Z_in3,r_in]
+      var H=CR[1],t=CR[2];
+      var Jsq=Math.pow(H-t,3)*t*416231; // Bredt for square, converted in⁴→mm⁴
+      return {name:CR[0],Ag:CR[3]*645.16,Gkgm:CR[4]*1.48816,d:H*25.4,tf:t*25.4,
+              Sx:CR[6]*16387.1,Zx:CR[7]*16387.1,rx:CR[8]*25.4,
+              Iy:CR[5]*416231,ry:CR[8]*25.4,J:Jsq,Cw:1e15,
+              closedSection:true};
+    }
+    // WDB/HPDB 17-col: tf=col[3], ry=col[14], J=col[15], Cw=col[16] (in⁶)
     return {name:CR[0],Ag:CR[5]*645.16,Gkgm:CR[6]*1.48816,d:CR[1]*25.4,tf:CR[3]*25.4,
             Sx:CR[8]*16387.1,Zx:CR[9]*16387.1,rx:CR[10]*25.4,
             Iy:CR[11]*416231,ry:CR[14]*25.4,J:CR[15]*416231,Cw:CR[16]*2.68536e8};
   } else {
-    var key=document.getElementById('td-chord-type').value;
-    if(key==='RHS'){
-      // RHS 13-col: [name,h,b,t,A_cm2,G_kgm,Iy_cm4,Wely_cm3,Wply_cm3,iy_cm,Iz_cm4,Welz_cm3,iz_cm]
+    if(key==='RHS'||key==='SHS'){
+      // 13-col: [name,h,b,t,A_cm2,G_kgm,Iy_cm4,Wely_cm3,Wply_cm3,iy_cm,Iz_cm4,Welz_cm3,iz_cm]
       var h=CR[1],b=CR[2],t=CR[3];
-      // Bredt formula for J of thin-walled closed section (mm⁴)
-      var Jrhs=2*Math.pow((h-t)*(b-t),2)/(h+b-2*t)*t;
+      var Jcl=2*Math.pow((h-t)*(b-t),2)/(h+b-2*t)*t; // Bredt mm⁴
       return {name:CR[0],Ag:CR[4]*100,Gkgm:CR[5],d:h,tf:t,
               Sx:CR[7]*1000,Zx:CR[8]*1000,rx:CR[9]*10,
-              Iy:CR[10]*10000,ry:CR[12]*10,J:Jrhs,Cw:1e15,
+              Iy:CR[10]*10000,ry:CR[12]*10,J:Jcl,Cw:1e15,
               closedSection:true};
     }
     // IPE/HEA/HEB/HEM/HD 18-col: tw=col[3], tf=col[4]; all in mm/cm
@@ -714,21 +811,21 @@ function tdPopSel(selId, db, defIdx) {
 function tdPopChord(noCalc) {
   var key = document.getElementById('td-chord-type').value;
   var db = tdUnit==='si' ? DB_CHORD_SI[key].data : DB_CHORD[key].data;
-  var def = tdUnit==='si' ? (key==='IPE'?9:key==='RHS'?7:5) : (key==='W'?20:3);
+  var def = tdUnit==='si' ? (key==='IPE'?9:key==='RHS'?7:key==='SHS'?5:5) : (key==='W'?20:key==='HSS_SQ'?9:3);
   tdPopSel('td-chord', db, def);
   if(!noCalc) tdCalc();
 }
 function tdPopDiag(noCalc) {
   var key = document.getElementById('td-diag-type').value;
   var db = tdUnit==='si' ? DB_WEB_SI[key].data : DB_WEB[key].data;
-  var def = tdUnit==='si' ? (key==='SHS'?12:5) : (key==='W'?5:0);
+  var def = tdUnit==='si' ? (key==='SHS'?12:key==='L'?10:key==='DL'?10:5) : (key==='W'?5:key==='L'?10:key==='DL'?10:0);
   tdPopSel('td-diag', db, def);
   if(!noCalc) tdCalc();
 }
 function tdPopVert(noCalc) {
   var key = document.getElementById('td-vert-type').value;
   var db = tdUnit==='si' ? DB_WEB_SI[key].data : DB_WEB[key].data;
-  var def = tdUnit==='si' ? (key==='SHS'?8:3) : (key==='W'?4:0);
+  var def = tdUnit==='si' ? (key==='SHS'?8:key==='L'?8:key==='DL'?8:3) : (key==='W'?4:key==='L'?8:key==='DL'?8:0);
   tdPopSel('td-vert', db, def);
   if(!noCalc) tdCalc();
 }
@@ -791,19 +888,28 @@ function tdSetUnit(u, btn) {
       +'<option value="HEB">HEB — Wide Flange H, Medium</option>'
       +'<option value="HEM">HEM — Wide Flange H, Heavy</option>'
       +'<option value="HD">HD — Heavy Wide Flange Column</option>'
-      +'<option value="RHS">RHS — Rectangular Hollow Section</option>';
+      +'<option value="RHS">RHS — Rectangular Hollow Section</option>'
+      +'<option value="SHS">SHS — Square Hollow Section</option>';
     var wOpts='<option value="IPE">IPE — I-Beam</option>'
       +'<option value="HEA">HEA — H Section, Light</option>'
+      +'<option value="HEB">HEB — H Section, Medium</option>'
+      +'<option value="L">L — Equal Leg Angle</option>'
+      +'<option value="DL">2L — Double Angle</option>'
       +'<option value="SHS">SHS — Square Hollow</option>'
+      +'<option value="RHS">RHS — Rectangular Hollow</option>'
       +'<option value="CHS">CHS — Circular Hollow</option>';
     dSel.innerHTML=wOpts; vSel.innerHTML=wOpts;
     dSel.value='SHS'; vSel.value='SHS';
   } else {
     chSel.innerHTML='<option value="W">W — Wide Flange</option>'
-      +'<option value="HP">HP — Bearing Pile</option>';
+      +'<option value="HP">HP — Bearing Pile</option>'
+      +'<option value="HSS_SQ">HSS Square Hollow</option>';
     var wOptsUS='<option value="W">W — Wide Flange</option>'
       +'<option value="HP">HP — Bearing Pile</option>'
+      +'<option value="L">L — Equal Leg Angle</option>'
+      +'<option value="DL">2L — Double Angle</option>'
       +'<option value="HSS_SQ">HSS Square</option>'
+      +'<option value="HSS_RECT">HSS Rectangular</option>'
       +'<option value="HSS_R">HSS Round</option>';
     dSel.innerHTML=wOptsUS; vSel.innerHTML=wOptsUS;
   }
