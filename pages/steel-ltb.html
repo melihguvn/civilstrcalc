@@ -177,6 +177,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-ec3">EC3 Method</a>
     <a href="#bg-tsds">TSDS 2016</a>
     <a href="#bg-limits">Limitations</a>
+    <a href="#bg-ex">Worked Example</a>
   </nav>
 
   <div class="bg-pane" id="bg-ltb">
@@ -443,6 +444,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <tr><td>Yield stress F<sub>y</sub></td><td>ksi</td><td>MPa</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-ex">
+    <div class="bg-panel-hdr"><span>Worked Example</span></div>
+    <div class="tb">
+      <h4>Example — AISC 360-22 §F2 LTB Check (Inelastic LTB Zone)</h4>
+      <p><strong>Given:</strong> W18×55, Grade A992 (F<sub>y</sub> = 345 MPa / 50 ksi). Unbraced length L<sub>b</sub> = 3.6 m (11.8 ft). Moment gradient C<sub>b</sub> = 1.30 (moment varies linearly — one end pinned, mid-span load). Factored moment M<sub>u</sub> = 310 kN·m.<br>
+      W18×55 properties (SI): Z<sub>x</sub> = 1,090 cm³, S<sub>x</sub> = 980 cm³, r<sub>y</sub> = 42.2 mm, r<sub>ts</sub> = 47.7 mm, J = 6.86 cm⁴, C<sub>w</sub> = 27,000 cm⁶, h<sub>0</sub> = 532 mm, c = 1.0.</p>
+      <ol style="font-size:.82rem;line-height:1.9;color:var(--text-mid);">
+        <li><strong>Plastic moment M<sub>p</sub></strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            M<sub>p</sub> = F<sub>y</sub>·Z<sub>x</sub> = 345×1,090×10³/10⁶ = <strong>376.1 kN·m</strong>
+          </div>
+        </li>
+        <li><strong>Limiting unbraced lengths L<sub>p</sub> and L<sub>r</sub> — §F2</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            L<sub>p</sub> = 1.76·r<sub>y</sub>·√(E/F<sub>y</sub>) = 1.76×42.2×√(200,000/345)/1,000 = 1.76×42.2×24.08/1,000 = <strong>1.789 m</strong><br>
+            X = J/(S<sub>x</sub>·h<sub>0</sub>) = 6.86×10⁴/(980×10³×532) = 1.315×10⁻⁴ mm⁻¹<br>
+            Y = 6.76×(0.7F<sub>y</sub>/E)² = 6.76×(0.7×345/200,000)² = 6.76×(1.2075×10⁻³)² = 9.866×10⁻⁶<br>
+            L<sub>r</sub> = 1.95·r<sub>ts</sub>·(E/(0.7F<sub>y</sub>))·√(X + √(X² + Y))<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;= 1.95×47.7×(200,000/241.5)×√(1.315×10⁻⁴ + √((1.315×10⁻⁴)² + 9.866×10⁻⁶))/1,000<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;≈ <strong>5.21 m</strong>
+          </div>
+          Zone check: L<sub>p</sub>=1.79 m &lt; L<sub>b</sub>=3.6 m &lt; L<sub>r</sub>=5.21 m → <strong>Inelastic LTB</strong></li>
+        <li><strong>Nominal LTB capacity M<sub>n</sub> — §F2-2</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            M<sub>r</sub> = 0.7·F<sub>y</sub>·S<sub>x</sub> = 0.7×345×980×10³/10⁶ = <strong>236.3 kN·m</strong><br>
+            M<sub>n</sub> = C<sub>b</sub>·[M<sub>p</sub> − (M<sub>p</sub> − M<sub>r</sub>)·(L<sub>b</sub>−L<sub>p</sub>)/(L<sub>r</sub>−L<sub>p</sub>)] ≤ M<sub>p</sub><br>
+            = 1.30×[376.1 − (376.1 − 236.3)×(3.6−1.789)/(5.21−1.789)]<br>
+            = 1.30×[376.1 − 139.8×0.529]<br>
+            = 1.30×[376.1 − 73.9] = 1.30×302.2 = 392.9 kN·m &gt; M<sub>p</sub> → use M<sub>n</sub> = M<sub>p</sub> = <strong>376.1 kN·m</strong>
+          </div>
+          (C<sub>b</sub> boost hit the M<sub>p</sub> cap — this is correct AISC behaviour)
+        </li>
+        <li><strong>Design capacity φ<sub>b</sub>M<sub>n</sub></strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            φ<sub>b</sub>M<sub>n</sub> = 0.90×376.1 = <strong>338.5 kN·m</strong><br>
+            DCR = M<sub>u</sub>/φ<sub>b</sub>M<sub>n</sub> = 310/338.5 = <strong>0.916 &lt; 1.0 ✓</strong>
+          </div>
+        </li>
+      </ol>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:10px;line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> W18×55 at L<sub>b</sub>=3.6 m with C<sub>b</sub>=1.30 — inelastic LTB zone. C<sub>b</sub> boost raises M<sub>n</sub> to M<sub>p</sub>=376 kN·m cap. φ<sub>b</sub>M<sub>n</sub>=338.5 kN·m &gt; M<sub>u</sub>=310 kN·m ✓. DCR = 0.92. Without C<sub>b</sub> (=1.0): M<sub>n</sub>=302 kN·m → φM<sub>n</sub>=272 kN·m → DCR=1.14 (fails) — the moment gradient factor is critical here.
+      </div>
     </div>
   </div>
 </div>

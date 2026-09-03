@@ -320,6 +320,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-is800">IS 800:2000</a>
     <a href="#bg-cythye">TSDS 2016</a>
     <a href="#bg-limits">Limitations</a>
+    <a href="#bg-ex">Worked Example</a>
   </nav>
   <div class="bg-pane" id="bg-theory">
     <div class="bg-panel-hdr"><span>Design Method</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
@@ -572,6 +573,50 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <li><strong>Wind as UDL:</strong> W is treated as a vertical UDL adding to gravity (e.g., roof wind pressure). For lateral-only wind on columns, set W = 0.</li>
         <li><strong>Self-weight:</strong> Taken from the selected section&rsquo;s tabulated weight and added to D automatically.</li>
       </ol>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-ex">
+    <div class="bg-panel-hdr"><span>Worked Example</span><a class="bg-top-btn" href="#" onclick="this.closest('.bg-section').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Example — AISC 360-22 LRFD Steel Beam Flexural Design (Fully Braced, Compact Section)</h4>
+      <p><strong>Given:</strong> Simply-supported floor beam, span L = 7.5 m (24.6 ft). Dead load D = 9 kN/m (incl. self-weight), Live load L = 14 kN/m. Full lateral bracing at every 1.5 m (L<sub>b</sub> ≤ L<sub>p</sub>). Steel Grade A992: F<sub>y</sub> = 345 MPa (50 ksi), E = 200,000 MPa. Try <strong>W18×50</strong> (SI properties: Z<sub>x</sub> = 922 cm³, S<sub>x</sub> = 800 cm³, I<sub>x</sub> = 76,400 cm⁴, self-weight = 0.73 kN/m).</p>
+      <ol style="font-size:.82rem;line-height:1.9;color:var(--text-mid);">
+        <li><strong>Factored load — ASCE 7-22 §2.3.1 Combo 2</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            w<sub>u</sub> = 1.2×D + 1.6×L = 1.2×9.0 + 1.6×14.0 = 10.8 + 22.4 = <strong>33.2 kN/m</strong>
+          </div>
+        </li>
+        <li><strong>Factored moment</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            M<sub>u</sub> = w<sub>u</sub>·L²/8 = 33.2×7.5²/8 = 33.2×56.25/8 = <strong>233.4 kN·m</strong>
+          </div>
+        </li>
+        <li><strong>Section compactness — AISC Table B4.1b</strong><br>
+          W18×50: b<sub>f</sub>/2t<sub>f</sub> = 5.57 &lt; 0.38√(E/F<sub>y</sub>) = 0.38√580 = 9.15 ✓ (compact flange)<br>
+          h/t<sub>w</sub> = 45.2 &lt; 3.76√(E/F<sub>y</sub>) = 90.6 ✓ (compact web)</li>
+        <li><strong>Plastic moment M<sub>p</sub> — §F2</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            M<sub>p</sub> = F<sub>y</sub>·Z<sub>x</sub> = 345×922×10³/10⁶ = <strong>318.1 kN·m</strong>
+          </div>
+        </li>
+        <li><strong>LTB zone check</strong><br>
+          L<sub>p</sub> = 1.76·r<sub>y</sub>·√(E/F<sub>y</sub>) = 1.76×40.6×10⁻¹·√(200,000/345) = 1.76×40.6×24.08/1000 = <strong>1.72 m</strong><br>
+          L<sub>b</sub> = 1.5 m &lt; L<sub>p</sub> = 1.72 m → <strong>No LTB</strong> → M<sub>n</sub> = M<sub>p</sub></li>
+        <li><strong>Design moment capacity φ<sub>b</sub>M<sub>n</sub></strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            φ<sub>b</sub>M<sub>n</sub> = 0.90×318.1 = <strong>286.3 kN·m</strong><br>
+            DCR = M<sub>u</sub>/φ<sub>b</sub>M<sub>n</sub> = 233.4/286.3 = <strong>0.815 &lt; 1.0 ✓</strong>
+          </div>
+        </li>
+        <li><strong>Deflection check (serviceability, unfactored)</strong><br>
+          w<sub>L</sub> = 14.0 kN/m (live load only)<br>
+          δ<sub>L</sub> = 5w<sub>L</sub>L⁴/(384EI) = 5×14×7,500⁴/(384×200,000×76,400×10⁴) = <strong>11.4 mm</strong><br>
+          Limit L/360 = 7,500/360 = 20.8 mm > 11.4 mm ✓</li>
+      </ol>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:10px;line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> <strong>W18×50 Grade A992</strong> satisfies AISC 360-22 LRFD flexure (DCR = 0.82) and L/360 live-load deflection (δ<sub>L</sub>/L = 1/658). Section is compact and fully braced — plastic moment capacity applies. No LTB reduction.
+      </div>
     </div>
   </div>
 </div>

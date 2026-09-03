@@ -468,6 +468,7 @@ table.dt { font-family: 'Open Sans',sans-serif !important; }
     <button class="bg-tab" onclick="bgTab(this,'ss-SHS')">Square Hollow (SHS)</button>
     <button class="bg-tab" onclick="bgTab(this,'ss-RHS')">Rect. Hollow (RHS)</button>
     <button class="bg-tab" onclick="bgTab(this,'ss-CHS')">Circular Hollow (CHS)</button>
+    <button class="bg-tab" onclick="bgTab(this,'ss-app')">Design Application</button>
   </div>
 
   <!-- ── I / H Section ── -->
@@ -846,6 +847,54 @@ table.dt { font-family: 'Open Sans',sans-serif !important; }
     </div>
   </div>
 
+  <!-- ── Design Application ── -->
+  <div class="bg-pane" id="ss-app">
+    <div class="tb">
+      <h4>How Section Properties Drive Design</h4>
+      <p>The properties tabulated in this database appear directly in the AISC 360-22, EC3, and IS 800 code equations. Understanding which property does what prevents confusion when selecting sections.</p>
+      <table class="lim-tbl">
+        <thead><tr><th>Property</th><th>Symbol</th><th>Used in</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td>Gross area</td><td>A (cm²)</td><td>Axial: φP<sub>n</sub>=φF<sub>cr</sub>·A</td><td>More area → more compression capacity</td></tr>
+          <tr><td>Plastic section modulus</td><td>W<sub>pl,y</sub> / Z<sub>x</sub> (cm³)</td><td>Flexure: M<sub>p</sub>=F<sub>y</sub>·Z<sub>x</sub></td><td>Governs compact beams (no LTB)</td></tr>
+          <tr><td>Elastic section modulus</td><td>W<sub>el,y</sub> / S<sub>x</sub> (cm³)</td><td>LTB: M<sub>r</sub>=0.7F<sub>y</sub>·S<sub>x</sub>; stress: σ=M/S</td><td>Governs non-compact or LTB-reduced moment</td></tr>
+          <tr><td>Second moment of area</td><td>I<sub>y</sub> (cm⁴)</td><td>Deflection: δ=5wL⁴/384EI; stiffness EI</td><td>Stiff beams deflect less under service loads</td></tr>
+          <tr><td>Radius of gyration</td><td>i<sub>y</sub>, i<sub>z</sub> (cm)</td><td>Buckling: KL/r<sub>min</sub> governs column F<sub>cr</sub></td><td>Higher r → lower slenderness → more capacity</td></tr>
+          <tr><td>Torsional constant</td><td>I<sub>T</sub> / J (cm⁴)</td><td>LTB: L<sub>r</sub> formula; torsional stiffness</td><td>Higher J → longer L<sub>r</sub> → less LTB sensitivity</td></tr>
+          <tr><td>Warping constant</td><td>I<sub>w</sub> / C<sub>w</sub> (cm⁶)</td><td>LTB: r<sub>ts</sub>, L<sub>r</sub>; EC3 χ<sub>LT</sub> factor</td><td>Larger C<sub>w</sub> → better warping resistance → higher LTB capacity</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Shape Factor — Plastic vs Elastic Efficiency</h4>
+      <p>The shape factor f = W<sub>pl</sub>/W<sub>el</sub> (or Z<sub>x</sub>/S<sub>x</sub>) measures how much additional moment capacity a compact section can develop beyond first-yield. For I-sections f ≈ 1.12–1.18. For solid rectangles f = 1.5. For CHS f ≈ 1.27. A higher shape factor means more reserve capacity in the plastic range — but only compact sections can reach it.</p>
+      <div class="fml-blk">
+        <div class="ft">Example: IPE 300 (f'c irrelevant — steel only)</div>
+        W<sub>pl,y</sub> = 628 cm³ &nbsp;·&nbsp; W<sub>el,y</sub> = 557 cm³<br>
+        Shape factor = 628/557 = <strong>1.128</strong> → compact IPE 300 develops 12.8% more moment than a purely elastic analysis predicts
+      </div>
+
+      <h4>Section Selection Strategy</h4>
+      <ul>
+        <li><strong>Beam (bending governs):</strong> Maximise Z<sub>x</sub>/weight (W<sub>pl</sub>/G). Wide-flange I-shapes (W, IPE, HEA) are most efficient. The deeper the section, the larger Z<sub>x</sub> per kg.</li>
+        <li><strong>Column (compression governs):</strong> Maximise r<sub>min</sub>/area. Square HSS and wide-flange (H/W) sections with equal flange and web dimensions give similar r<sub>x</sub> and r<sub>y</sub> — avoiding one axis governing by a wide margin.</li>
+        <li><strong>Column with bending (beam-column):</strong> Need both good Z<sub>x</sub> and r<sub>y</sub>. Heavy W-shapes (W14, HEB) with wide flanges balance both.</li>
+        <li><strong>Truss chord (compression):</strong> HSS SHS/RHS or double angles — closed sections prevent torsional buckling; double angles allow bolted connections to gusset plates.</li>
+        <li><strong>Truss diagonal (tension):</strong> Single or double angles, flat plates, or round bars (no buckling concern). Net section fracture and connection geometry govern.</li>
+      </ul>
+
+      <h4>Quick Compactness Check (AISC Table B4.1b, F<sub>y</sub> = 345 MPa)</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>Element</th><th>Compact limit λ<sub>p</sub></th><th>Non-compact limit λ<sub>r</sub></th></tr></thead>
+        <tbody>
+          <tr><td>I-section flange b<sub>f</sub>/(2t<sub>f</sub>)</td><td>9.15</td><td>24.1</td></tr>
+          <tr><td>I-section web h/t<sub>w</sub></td><td>90.6</td><td>137</td></tr>
+          <tr><td>SHS/RHS b/t</td><td>35.2</td><td>39.7</td></tr>
+          <tr><td>CHS D/t</td><td>50.6</td><td>141</td></tr>
+        </tbody>
+      </table>
+      <p>If both flange and web are compact, the section can reach M<sub>p</sub>=F<sub>y</sub>·Z<sub>x</sub>. If one or both are non-compact, the moment capacity is reduced per §F4/F5. Most standard hot-rolled W-shapes and IPE/HEA/HEB sections with F<sub>y</sub> ≤ 355 MPa are compact.</p>
+    </div>
+  </div>
 </div><!-- /bg-section -->
 
   <section class="page-intro">

@@ -103,6 +103,21 @@
 .rt-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .rt-link{display:inline-block;padding:6px 13px;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;font-size:.77rem;color:var(--text);text-decoration:none;transition:all .15s;}
 .rt-link:hover{border-color:var(--accent);color:var(--accent);}
+/* Background section */
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden;}
+.bg-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 20px;}
+.bg-hdr h3{font-family:var(--cond);font-weight:700;font-size:.9rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text);margin:0;}
+.rtag{display:inline-block;font-family:var(--mono);font-size:.62rem;background:var(--accent-lt);color:var(--accent);border:1px solid #b8d0eb;border-radius:3px;padding:1px 6px;margin-right:4px;vertical-align:middle;}
+.lim-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:8px 0;}
+.lim-tbl th{background:var(--bg2);padding:7px 10px;font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);text-align:left;border-bottom:2px solid var(--border2);}
+.lim-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-mid);font-size:.75rem;}
+.lim-tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--text);}
+.lim-tbl tr:last-child td{border-bottom:none;}
+.ref-list{list-style:none;margin-top:5px;}
+.ref-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;color:var(--text-mid);display:flex;gap:9px;line-height:1.6;}
+.ref-list li:last-child{border-bottom:none;}
+.ref-num{font-family:var(--mono);font-size:.69rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
+.fml-blk .fn{font-size:.71rem;color:var(--text-dim);margin-top:5px;font-family:var(--sans);font-style:italic;}
 </style>
 <!-- Google Funding Choices (Cookie Consent) -->
 <script async src="https://fundingchoicesmessages.google.com/i/pub-7519835488454582?ers=1"></script>
@@ -208,6 +223,201 @@
     <li><strong>IS 456:2000 Mix Table:</strong> Evaluates standard concrete mixes M20 to M60 based on 28-day characteristic cube compressive strength (f<sub>ck</sub> in MPa). Establishes the short-term static modulus of elasticity E<sub>c</sub>&nbsp;=&nbsp;5000&radic;f<sub>ck</sub> (MPa) per IS&nbsp;456:2000 Clause&nbsp;6.2.3.1, for use in structural deflection limits and crack width calculations.</li>
   </ul>
 </section>
+
+<!-- ═══════════════ CONCRETE BACKGROUND ═══════════════ -->
+<div class="bg-section no-print">
+<section class="design-background">
+  <div class="bg-hdr"><h3>&#128218; Concrete Material Properties — Background &amp; Code References</h3></div>
+  <nav class="bg-toc">
+    <a href="#con-bg-strength">Compressive Strength</a>
+    <a href="#con-bg-modulus">Elastic Modulus</a>
+    <a href="#con-bg-tension">Tensile Strength</a>
+    <a href="#con-bg-codes">Code Comparison</a>
+    <a href="#con-bg-example">Worked Example</a>
+    <a href="#con-bg-refs">References</a>
+  </nav>
+
+  <section id="con-bg-strength">
+    <div class="bg-panel-hdr"><span>Compressive Strength</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Cube vs Cylinder Strength — The Critical Distinction</h4>
+      <p>Concrete compressive strength is measured on standard specimens, but the world uses two different specimen shapes:</p>
+      <ul>
+        <li><strong>150 mm cube</strong> (EN 1992, IS 456, most of Asia/Europe): The cube test gives a higher apparent strength because the loading platens restrain the ends of the specimen through friction. Reported as f<sub>ck,cube</sub>.</li>
+        <li><strong>150&times;300 mm cylinder</strong> (ACI 318, Canada, South America): Less end restraint relative to height → lower measured strength. Reported as f'<sub>c</sub>.</li>
+      </ul>
+      <div class="fml-blk">
+        <div class="ft">Approximate conversion — normal-strength concrete</div>
+        f'<sub>c</sub> (cylinder) &asymp; 0.80 &times; f<sub>ck,cube</sub> &nbsp;&nbsp;[range 0.78–0.82]<br>
+        EC2 notation: C25/30 means f<sub>ck</sub>=25 MPa (cylinder) / f<sub>ck,cube</sub>=30 MPa (cube)<br>
+        ACI notation: f'<sub>c</sub>=25 MPa refers to the cylinder strength directly
+        <div class="fn">Never mix cylinder and cube strengths in one calculation. EC2 C30/37 (f<sub>ck</sub>=30 MPa cylinder) is NOT the same as ACI f'<sub>c</sub>=30 MPa — the latter is equivalent to ≈37.5 MPa in cube terms.</div>
+      </div>
+      <h4>Characteristic vs Mean vs Design Strength</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>Symbol</th><th>Code</th><th>Description</th><th>Relationship</th></tr></thead>
+        <tbody>
+          <tr><td>f<sub>ck</sub></td><td>EC2</td><td>Characteristic cylinder strength (5th percentile)</td><td>Specified strength class</td></tr>
+          <tr><td>f<sub>cm</sub></td><td>EC2</td><td>Mean compressive strength</td><td>f<sub>cm</sub> = f<sub>ck</sub> + 8 MPa</td></tr>
+          <tr><td>f<sub>cd</sub></td><td>EC2</td><td>Design compressive strength</td><td>f<sub>cd</sub> = &alpha;<sub>cc</sub>&middot;f<sub>ck</sub>/&gamma;<sub>c</sub> (&alpha;<sub>cc</sub>=0.85, &gamma;<sub>c</sub>=1.5)</td></tr>
+          <tr><td>f'<sub>c</sub></td><td>ACI</td><td>Specified compressive strength</td><td>Cylinder, 28-day</td></tr>
+          <tr><td>0.85f'<sub>c</sub></td><td>ACI</td><td>Uniform stress in Whitney block</td><td>ACI 318-25 §22.2.2.4.1</td></tr>
+          <tr><td>f<sub>ck</sub> (cube)</td><td>IS 456</td><td>Characteristic cube strength at 28 days</td><td>Used directly in mix designation M20, M25 …</td></tr>
+          <tr><td>f<sub>cd</sub></td><td>IS 456</td><td>Design compressive strength</td><td>f<sub>cd</sub> = 0.447&middot;f<sub>ck</sub> (= 0.67f<sub>ck</sub>/1.5)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="con-bg-modulus">
+    <div class="bg-panel-hdr"><span>Elastic Modulus</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Secant Modulus E<sub>c</sub> — Three Code Formulas</h4>
+      <p>All three codes derive E<sub>c</sub> empirically from compressive strength. The formulas differ because they were calibrated against different datasets and specimen conventions.</p>
+      <div class="fml-blk">
+        <div class="ft">ACI 318-25 §19.2.2 — Normal-weight concrete (w<sub>c</sub> = 2,300 kg/m³)</div>
+        E<sub>c</sub> = 4,700&radic;f'<sub>c</sub> &nbsp;(MPa, cylinder strength)<br>
+        Example: f'<sub>c</sub>=28 MPa &rarr; E<sub>c</sub>=4,700&times;&radic;28=<strong>24,870 MPa</strong>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">EN 1992-1-1 §3.1.3 — Secant modulus at &sigma;=0.4f<sub>cm</sub></div>
+        E<sub>cm</sub> = 22&middot;(f<sub>cm</sub>/10)<sup>0.3</sup> &nbsp;(GPa, f<sub>cm</sub> in MPa)<br>
+        Example: C25/30 &rarr; f<sub>cm</sub>=33 MPa &rarr; E<sub>cm</sub>=22&times;(3.3)<sup>0.3</sup>=<strong>32.5 GPa</strong>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">IS 456:2000 §6.2.3.1 — Short-term static modulus</div>
+        E<sub>c</sub> = 5,000&radic;f<sub>ck</sub> &nbsp;(MPa, cube characteristic strength)<br>
+        Example: M25 &rarr; f<sub>ck</sub>=25 MPa &rarr; E<sub>c</sub>=5,000&times;5=<strong>25,000 MPa</strong>
+      </div>
+      <p>EC2 consistently gives the highest E<sub>c</sub> values because f<sub>cm</sub> (mean strength) is ≥8 MPa above f<sub>ck</sub>. ACI gives lower values partly because the cylinder strength is ~20% lower than the equivalent cube strength.</p>
+      <h4>Long-Term Effective Modulus — Creep</h4>
+      <p>Under sustained load, concrete creeps — strains continue to grow beyond the initial elastic deformation. The long-term effective modulus is:</p>
+      <div class="fml-blk">
+        E<sub>c,eff</sub> = E<sub>c</sub> / (1 + &phi;)<br>
+        &phi; = creep coefficient (typically 1.5–3.0; depends on age at loading, ambient humidity, member thickness)<br>
+        Typical interior column at 70% RH: &phi; &asymp; 2.0 &rarr; E<sub>c,eff</sub> &approx; E<sub>c</sub>/3
+      </div>
+    </div>
+  </section>
+
+  <section id="con-bg-tension">
+    <div class="bg-panel-hdr"><span>Tensile Strength</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Why Concrete Tensile Strength Matters Despite Being "Ignored"</h4>
+      <p>In RC flexural design the tensile zone is cracked and the steel carries the tension. However, concrete tensile strength governs three critical phenomena:</p>
+      <ul>
+        <li><strong>Shear capacity V<sub>c</sub>:</strong> ACI V<sub>c</sub>=0.66&lambda;&rho;<sup>1/3</sup>&radic;f'<sub>c</sub>&middot;b<sub>w</sub>d — the &radic;f'<sub>c</sub> term reflects diagonal tension cracking.</li>
+        <li><strong>Crack control:</strong> The cracking moment M<sub>cr</sub>=f<sub>r</sub>&middot;I<sub>g</sub>/y<sub>t</sub> determines when cracks form; crack widths are limited by bar spacing.</li>
+        <li><strong>Punching shear:</strong> All punching shear equations in ACI and EC2 are a function of &radic;f'<sub>c</sub> or f<sub>ctd</sub> — the failure mode is tensile splitting around the perimeter.</li>
+      </ul>
+      <table class="lim-tbl">
+        <thead><tr><th>Property</th><th>ACI 318-25</th><th>EC2</th><th>IS 456:2000</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Modulus of rupture (flexural tensile strength)</td>
+            <td>f<sub>r</sub> = 0.62&lambda;&radic;f'<sub>c</sub>&nbsp;(MPa)</td>
+            <td>f<sub>ctm</sub> = 0.30&middot;f<sub>ck</sub><sup>2/3</sup> (f<sub>ck</sub>&le;50 MPa)</td>
+            <td>f<sub>cr</sub> &asymp; 0.7&radic;f<sub>ck</sub>&nbsp;(MPa, cube)</td>
+          </tr>
+          <tr>
+            <td>Typical value at f'<sub>c</sub>=25 MPa (ACI) / C20/25 (EC2) / M25 (IS)</td>
+            <td>f<sub>r</sub>=3.10 MPa</td>
+            <td>f<sub>ctm</sub>=2.21 MPa</td>
+            <td>f<sub>cr</sub>=3.50 MPa</td>
+          </tr>
+          <tr>
+            <td>Used in shear design?</td>
+            <td>Implicitly via &radic;f'<sub>c</sub></td>
+            <td>Explicitly: f<sub>ctd</sub>=f<sub>ctk,0.05</sub>/&gamma;<sub>c</sub></td>
+            <td>Not in main shear formula</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="con-bg-codes">
+    <div class="bg-panel-hdr"><span>Code Comparison</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Strength Class Equivalence — ACI / EC2 / IS 456</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>ACI f'<sub>c</sub> (MPa, cyl.)</th><th>EC2 class</th><th>f<sub>ck</sub> (MPa, cyl.)</th><th>IS 456 mix</th><th>f<sub>ck</sub> (MPa, cube)</th><th>E<sub>c</sub> — ACI (MPa)</th><th>E<sub>cm</sub> — EC2 (GPa)</th></tr></thead>
+        <tbody>
+          <tr><td>20</td><td>C16/20</td><td>16</td><td>M20</td><td>20</td><td>21,000</td><td>29.0</td></tr>
+          <tr><td>25</td><td>C20/25</td><td>20</td><td>M25</td><td>25</td><td>23,500</td><td>30.0</td></tr>
+          <tr><td>30</td><td>C25/30</td><td>25</td><td>M30</td><td>30</td><td>25,740</td><td>31.5</td></tr>
+          <tr><td>35</td><td>C28/35</td><td>28</td><td>M35</td><td>35</td><td>27,800</td><td>32.4</td></tr>
+          <tr><td>40</td><td>C32/40</td><td>32</td><td>M40</td><td>40</td><td>29,730</td><td>33.6</td></tr>
+          <tr><td>50</td><td>C40/50</td><td>40</td><td>M50</td><td>50</td><td>33,230</td><td>35.2</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:var(--text-mid);margin-top:6px;">The cylinder:cube ratio is approximately 0.80 for normal-strength concrete. An EC2 C30/37 (f<sub>ck</sub>=30 MPa cylinder) is NOT equivalent to ACI f'<sub>c</sub>=30 MPa — the ACI concrete is ~25% stronger in cube terms.</p>
+      <h4>Design Coefficients — Quick Reference</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>Coefficient</th><th>ACI 318-25</th><th>EC2</th><th>IS 456:2000</th></tr></thead>
+        <tbody>
+          <tr><td>Compressive stress block factor</td><td>0.85f'<sub>c</sub> (Whitney block)</td><td>&alpha;<sub>cc</sub>=0.85, &gamma;<sub>c</sub>=1.5 &rarr; f<sub>cd</sub>=0.567f<sub>ck</sub></td><td>0.67f<sub>ck</sub>/1.5=0.447f<sub>ck</sub></td></tr>
+          <tr><td>Flexural strength reduction &phi;</td><td>0.90 (tension-ctrl.), 0.65 (compr.-ctrl.)</td><td>1/&gamma;<sub>c</sub>=0.667 (built into f<sub>cd</sub>)</td><td>&gamma;<sub>m</sub>=1.5 (built into f<sub>cd</sub>)</td></tr>
+          <tr><td>Shear strength reduction &phi;</td><td>0.75</td><td>1/&gamma;<sub>c</sub>=0.667</td><td>1/&gamma;<sub>m</sub>=0.667</td></tr>
+          <tr><td>Max usable compressive strain &epsilon;<sub>cu</sub></td><td>0.003</td><td>0.0035 (C&le;50)</td><td>0.0035</td></tr>
+          <tr><td>Depth factor &beta;<sub>1</sub> / &lambda;</td><td>&beta;<sub>1</sub>=0.85–0.65</td><td>Parabola-rectangle (n, &epsilon;<sub>c2</sub>, &epsilon;<sub>cu2</sub>)</td><td>Parabola-rectangle</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="con-bg-example">
+    <div class="bg-panel-hdr"><span>Worked Example</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Comparing E<sub>c</sub> and f<sub>r</sub> Across Three Codes — Same Structural Concrete</h4>
+      <p><strong>Given:</strong> A reinforced concrete beam uses C25/30 concrete per EC2, which corresponds approximately to ACI f'<sub>c</sub>=25 MPa and IS 456 M30 (all representing roughly the same compressive strength in their native test specimen). Compute the elastic modulus and tensile (flexural) strength for each code.</p>
+      <div class="fml-blk">
+        <div class="ft">Step 1 — Identify strength parameters</div>
+        EC2 C25/30: f<sub>ck</sub>=25 MPa (cylinder), f<sub>cm</sub>=25+8=<strong>33 MPa</strong><br>
+        ACI f'<sub>c</sub>=25 MPa (cylinder) &nbsp;&nbsp;[&asymp; 25/0.80=31 MPa cube — close to C25/30 cube of 30 MPa]<br>
+        IS 456 M30: f<sub>ck</sub>=30 MPa (cube) &nbsp;&nbsp;[cylinder equivalent &asymp; 0.80&times;30=24 MPa &asymp; f'<sub>c</sub>=25 MPa]
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Step 2 — Elastic Modulus</div>
+        ACI: E<sub>c</sub> = 4,700&radic;25 = 4,700&times;5 = <strong>23,500 MPa</strong><br>
+        EC2: E<sub>cm</sub> = 22&times;(33/10)<sup>0.3</sup> = 22&times;(3.3)<sup>0.3</sup> = 22&times;1.477 = <strong>32,500 MPa</strong><br>
+        IS 456: E<sub>c</sub> = 5,000&radic;30 = 5,000&times;5.477 = <strong>27,390 MPa</strong>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Step 3 — Tensile / Flexural Strength</div>
+        ACI (modulus of rupture): f<sub>r</sub> = 0.62&times;1.0&times;&radic;25 = 0.62&times;5 = <strong>3.10 MPa</strong><br>
+        EC2 (mean tensile strength): f<sub>ctm</sub> = 0.30&times;25<sup>2/3</sup> = 0.30&times;8.55 = <strong>2.56 MPa</strong><br>
+        IS 456 (flexural tensile): f<sub>cr</sub> = 0.7&radic;30 = 0.7&times;5.477 = <strong>3.83 MPa</strong>
+        <div class="fn">The IS 456 value is based on cube strength so it appears higher. The ACI modulus of rupture (flexural test) exceeds the EC2 mean tensile strength because ACI f<sub>r</sub> is a modulus of rupture from a beam bending test — higher than direct tension by the strain-gradient effect.</div>
+      </div>
+      <h4>Summary Table</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>Property</th><th>ACI (f'<sub>c</sub>=25 MPa)</th><th>EC2 (C25/30)</th><th>IS 456 (M30)</th></tr></thead>
+        <tbody>
+          <tr><td>Elastic modulus E<sub>c</sub></td><td>23,500 MPa</td><td>32,500 MPa</td><td>27,390 MPa</td></tr>
+          <tr><td>Tensile / flexural strength</td><td>f<sub>r</sub>=3.10 MPa</td><td>f<sub>ctm</sub>=2.56 MPa</td><td>f<sub>cr</sub>=3.83 MPa</td></tr>
+          <tr><td>Design compressive stress</td><td>0.85&times;25=21.25 MPa</td><td>0.85&times;25/1.5=14.17 MPa</td><td>0.447&times;30=13.41 MPa</td></tr>
+          <tr><td>Ultimate comp. strain</td><td>0.003</td><td>0.0035</td><td>0.0035</td></tr>
+        </tbody>
+      </table>
+      <p>The 38% spread in E<sub>c</sub> values (23,500–32,500 MPa) has direct consequences for computed deflections and natural frequencies of the structure. When working on international projects, always confirm which code's stiffness assumptions are required in the project specification.</p>
+    </div>
+  </section>
+
+  <section id="con-bg-refs">
+    <div class="bg-panel-hdr"><span>References</span><a class="bg-top-btn" href="#con-bg-strength">&#8593; Top</a></div>
+    <div class="tb">
+      <ul class="ref-list">
+        <li><span class="ref-num">[1]</span><div><strong>ACI 318-25</strong> — Chapter 19 (Concrete: Design and Durability Requirements). §19.2.2 (E<sub>c</sub> formula), §19.2.3 (modulus of rupture f<sub>r</sub>). ACI, 2025.</div></li>
+        <li><span class="ref-num">[2]</span><div><strong>EN 1992-1-1:2004 (EC2)</strong> — §3.1 (Properties of concrete). Table 3.1 (Strength and deformation characteristics). CEN, Brussels.</div></li>
+        <li><span class="ref-num">[3]</span><div><strong>IS 456:2000</strong> — Clause 6.2 (Modulus of elasticity, E<sub>c</sub>=5000&radic;f<sub>ck</sub>), Clause 6.2.1 (Flexural tensile strength), Table 2 (Grades of concrete). BIS, New Delhi.</div></li>
+        <li><span class="ref-num">[4]</span><div><strong>fib Model Code 2010</strong> — §5.1 (Mechanical properties of concrete: strength, stiffness, creep, and shrinkage). Fédération internationale du béton.</div></li>
+        <li><span class="ref-num">[5]</span><div><strong>Neville, A.M.</strong> — Properties of Concrete, 5th Ed. Pearson, 2011. Chapter 6 (Elasticity, creep, shrinkage), Chapter 14 (Strength of concrete). Definitive treatment of cube-vs-cylinder relationships.</div></li>
+      </ul>
+    </div>
+  </section>
+</section>
+</div>
 
 </main>
 
