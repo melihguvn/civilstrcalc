@@ -210,6 +210,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-ec3"  onclick="acBgTab('bg-ec3',this);return false;">EC3</a>
     <a href="#bg-tsds" onclick="acBgTab('bg-tsds',this);return false;">TSDS 2016</a>
     <a href="#bg-is800" onclick="acBgTab('bg-is800',this);return false;">IS 800</a>
+    <a href="#bg-ex"   onclick="acBgTab('bg-ex',this);return false;">Worked Example</a>
   </nav>
 
   <!-- ── AISC 360 ── -->
@@ -348,6 +349,64 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>DL = Dead Load &nbsp;|&nbsp; LL = Imposed Load &nbsp;|&nbsp; SL = Snow Load &nbsp;|&nbsp; WL = Wind Load. &gamma;<sub>f</sub> from IS 875 (Part 5).</p>
     </div>
   </div>
+
+  <!-- ── WORKED EXAMPLE ── -->
+  <div class="bg-pane" id="bg-ex">
+    <div class="tb">
+      <h4>Example — AISC 360-22 LRFD Axial Compression Design</h4>
+      <p><strong>Given:</strong> Interior column, storey height L = 4.0 m (13.1 ft). Effective length factors K<sub>x</sub> = K<sub>y</sub> = 1.0 (pinned–pinned, both axes). Design code: AISC 360-22, Grade A992 steel (F<sub>y</sub> = 345 MPa, E = 200,000 MPa).<br>
+      Factored axial load (governing ASCE 7-22 combo): P<sub>u</sub> = 1,650 kN. Select and verify a W-shape column.</p>
+
+      <h4>Step 1 — Required strength and trial section</h4>
+      <p>Target φ<sub>c</sub>P<sub>n</sub> ≥ 1,650 kN. Try <strong>W10×60</strong>: A<sub>g</sub> = 11,400 mm², r<sub>x</sub> = 112 mm, r<sub>y</sub> = 65.8 mm, self-weight ≈ 0.89 kN/m (included in P<sub>u</sub>).</p>
+
+      <h4>Step 2 — Slenderness</h4>
+      <div class="fml-blk">
+        KL/r<sub>x</sub> = 1.0×4,000/112 = <strong>35.7</strong><br>
+        KL/r<sub>y</sub> = 1.0×4,000/65.8 = <strong>60.8</strong> ← governs (weak axis)<br>
+        Limit: 4.71√(E/F<sub>y</sub>) = 4.71√(200,000/345) = <strong>113.4</strong> > 60.8 → <strong>Inelastic buckling</strong>
+      </div>
+
+      <h4>Step 3 — Critical stress F<sub>cr</sub> — §E3</h4>
+      <div class="fml-blk">
+        <div class="ft">Euler stress</div>
+        F<sub>e</sub> = π²E/(KL/r)² = π²×200,000/60.8² = 1,973,921/3,697 = <strong>534 MPa</strong>
+        <div class="ft" style="margin-top:8px;">Inelastic buckling</div>
+        F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> × F<sub>y</sub> = 0.658<sup>345/534</sup> × 345 = 0.658<sup>0.6461</sup> × 345<br>
+        = 0.7944 × 345 = <strong>274 MPa</strong>
+      </div>
+
+      <h4>Step 4 — Design compressive strength φ<sub>c</sub>P<sub>n</sub></h4>
+      <div class="fml-blk">
+        φ<sub>c</sub>P<sub>n</sub> = 0.90 × F<sub>cr</sub> × A<sub>g</sub> = 0.90 × 274 × 11,400 / 1,000 = <strong>2,812 kN</strong><br>
+        DCR = P<sub>u</sub> / φ<sub>c</sub>P<sub>n</sub> = 1,650 / 2,812 = <strong>0.587 &lt; 1.0 ✓</strong>
+      </div>
+
+      <h4>Step 5 — Check slenderness limit</h4>
+      <div class="fml-blk">
+        KL/r<sub>y</sub> = 60.8 &lt; 200 (AISC Chapter E user note maximum) ✓
+      </div>
+
+      <h4>Optimise — Try W10×49 (lighter section)</h4>
+      <p>W10×49: A<sub>g</sub> = 9,290 mm², r<sub>y</sub> = 64.8 mm</p>
+      <div class="fml-blk">
+        KL/r<sub>y</sub> = 4,000/64.8 = 61.7 → F<sub>e</sub> = π²×200,000/61.7² = <strong>518 MPa</strong><br>
+        F<sub>cr</sub> = 0.658<sup>345/518</sup>×345 = 0.658<sup>0.666</sup>×345 = 0.7874×345 = <strong>272 MPa</strong><br>
+        φ<sub>c</sub>P<sub>n</sub> = 0.90×272×9,290/1,000 = <strong>2,272 kN</strong><br>
+        DCR = 1,650/2,272 = <strong>0.726 &lt; 1.0 ✓</strong>
+      </div>
+
+      <table class="combo-ref-tbl" style="max-width:560px;margin-top:12px;">
+        <tr><th>Section</th><th>A (mm²)</th><th>r<sub>y</sub> (mm)</th><th>KL/r<sub>y</sub></th><th>F<sub>cr</sub> (MPa)</th><th>φ<sub>c</sub>P<sub>n</sub> (kN)</th><th>DCR</th></tr>
+        <tr><td>W10×60</td><td>11,400</td><td>65.8</td><td>60.8</td><td>274</td><td>2,812</td><td>0.587</td></tr>
+        <tr class="gov-row"><td>W10×49</td><td>9,290</td><td>64.8</td><td>61.7</td><td>272</td><td>2,272</td><td>0.726</td></tr>
+        <tr><td>W10×45</td><td>8,520</td><td>65.0</td><td>61.5</td><td>272</td><td>2,083</td><td>0.792</td></tr>
+      </table>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:12px;line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> <strong>W10×49 Grade A992</strong> selected. φ<sub>c</sub>P<sub>n</sub> = 2,272 kN &gt; P<sub>u</sub> = 1,650 kN ✓. DCR = 0.73. Weak-axis buckling governs (KL/r<sub>y</sub>=61.7 vs KL/r<sub>x</sub>=35.7). Inelastic buckling regime — F<sub>cr</sub>=272 MPa vs F<sub>y</sub>=345 MPa — confirming residual-stress sensitivity. W10×45 would give DCR=0.79 (also acceptable if no combined bending).
+      </div>
+    </div>
+  </div><!-- /bg-ex -->
 </div>
 
 </main>

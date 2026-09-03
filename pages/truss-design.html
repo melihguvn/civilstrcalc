@@ -86,6 +86,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .step-val{font-size:6.5pt!important;}
   .step-check{font-size:5pt!important;padding:1px 2px!important;}
 }
+/* Background section shared styles */
+.rtag{display:inline-block;font-family:var(--mono);font-size:.62rem;background:var(--accent-lt);color:var(--accent);border:1px solid #b8d0eb;border-radius:3px;padding:1px 6px;margin-right:4px;vertical-align:middle;}
+.lim-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:8px 0;}
+.lim-tbl th{background:var(--bg2);padding:7px 10px;font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);text-align:left;border-bottom:2px solid var(--border2);}
+.lim-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-mid);font-size:.75rem;}
+.lim-tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--text);}
+.lim-tbl tr:last-child td{border-bottom:none;}
+.ref-list{list-style:none;margin-top:5px;}
+.ref-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;color:var(--text-mid);display:flex;gap:9px;line-height:1.6;}
+.ref-list li:last-child{border-bottom:none;}
+.ref-num{font-family:var(--mono);font-size:.69rem;background:#1a2332;color:white;border-radius:3px;padding:1px 7px;height:fit-content;flex-shrink:0;margin-top:2px;}
 </style>
 <link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
 <link rel="manifest" href="../manifest.json">
@@ -314,6 +325,198 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   </div>
 </div>
 </div><!-- end calc-layout -->
+
+<!-- ═══════════════ TRUSS DESIGN BACKGROUND ═══════════════ -->
+<div class="bg-section no-print">
+<section class="design-background">
+  <div class="bg-hdr"><h3>&#128218; Design Background &amp; Code References — Steel Truss</h3></div>
+  <nav class="bg-toc">
+    <a href="#td-bg-theory">Theory</a>
+    <a href="#td-bg-aisc">AISC 360-22</a>
+    <a href="#td-bg-example">Worked Example</a>
+    <a href="#td-bg-refs">References</a>
+  </nav>
+
+  <section id="td-bg-theory">
+    <div class="bg-panel-hdr"><span>Theory</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>What Is a Steel Truss?</h4>
+      <p>A truss is a structural assembly of straight members connected at their endpoints (joints). Under ideal conditions — pinned joints, loads applied only at joints, members that are straight and prismatic — each member carries only <strong>axial force</strong>: either tension or compression. The absence of bending is the truss's fundamental efficiency advantage over solid beams.</p>
+      <p>In practice, joints are welded or bolted with some rotational stiffness, and self-weight is distributed rather than point-loaded. Secondary bending moments arise but are typically small relative to axial forces and are often neglected in preliminary design. For long-span or heavy-loaded trusses, a frame (finite-element) analysis captures both effects.</p>
+
+      <h4>Common Truss Configurations</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>Type</th><th>Chord geometry</th><th>Diagonal pattern</th><th>Typical application</th></tr></thead>
+        <tbody>
+          <tr><td>Pratt (Flat)</td><td>Parallel top &amp; bottom</td><td>Diagonals in tension under gravity; verticals in compression</td><td>Floor beams, bridge decks, industrial roofs</td></tr>
+          <tr><td>Howe (Flat)</td><td>Parallel top &amp; bottom</td><td>Diagonals in compression; verticals in tension</td><td>Timber bridges (diagonals can be bolted rods in tension in Pratt arrangement)</td></tr>
+          <tr><td>Warren</td><td>Parallel</td><td>Alternating diagonals, no verticals (or with verticals)</td><td>Bridges, long-span roofs</td></tr>
+          <tr><td>Pitched Pratt</td><td>Top chord slopes to ridge</td><td>Inner diagonals in tension</td><td>Gable-end roofs, portal frames</td></tr>
+          <tr><td>Vierendeel</td><td>Parallel</td><td>No diagonals — rigid joints transfer moment</td><td>Architectural openings, HVAC transfer beams</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Method of Joints</h4>
+      <p>The classical <strong>Method of Joints</strong> analyses each joint as a free body in equilibrium under its applied load and the member forces meeting at that joint. Starting from a joint with at most two unknown forces (a support or a free end), the equations ΣF<sub>x</sub> = 0 and ΣF<sub>y</sub> = 0 give two equations per joint. For a statically determinate truss with <em>m</em> members and <em>j</em> joints:</p>
+      <div class="fml-blk">
+        <div class="ft">Determinacy Condition</div>
+        m = 2j − 3 &nbsp; (statically determinate, internally stable)<br>
+        m &lt; 2j − 3 → mechanism (unstable) &nbsp;|&nbsp; m &gt; 2j − 3 → statically indeterminate
+      </div>
+      <p>For larger trusses, matrix stiffness (direct-stiffness) methods and finite-element software solve the full system simultaneously. This calculator uses the stiffness method to determine member forces from the applied loads and geometry.</p>
+
+      <h4>Sign Convention and Member Forces</h4>
+      <ul>
+        <li><strong>Tension (+):</strong> member elongates; force pulls the joint toward the member. Section design uses AISC Chapter D.</li>
+        <li><strong>Compression (−):</strong> member shortens; force pushes the joint away. Section design uses AISC Chapter E (buckling governs).</li>
+        <li><strong>Zero-force members:</strong> some members carry no load under a specific loading condition. They are retained for stability against out-of-plane loads and to reduce the unbraced length of adjacent compression members.</li>
+      </ul>
+
+      <h4>Load Path — Flat Pratt Truss under Gravity</h4>
+      <p>Under uniformly distributed gravity load applied at the top chord panel points:</p>
+      <ul>
+        <li><strong>Top chord:</strong> compression — maximum at mid-span (for simply-supported truss)</li>
+        <li><strong>Bottom chord:</strong> tension — maximum at mid-span</li>
+        <li><strong>Diagonals:</strong> tension (Pratt configuration) — maximum near the supports where shear is highest</li>
+        <li><strong>Verticals:</strong> compression (Pratt) — maximum near mid-span where the diagonal force change is largest</li>
+      </ul>
+      <p>This pattern reverses for uplift loading, which is critical for roof trusses: previously tensile diagonals become compressive, and a compression-designed diagonal may be inadequate for the reversed load case.</p>
+
+      <h4>Unbraced Length and Out-of-Plane Stability</h4>
+      <p>Compression members in a truss are prone to flexural or flexural-torsional buckling out of the plane of the truss. The unbraced length L<sub>b</sub> in the out-of-plane direction is determined by the location of lateral bracing (roof purlins, cross-bracing, or girts). In practice:</p>
+      <ul>
+        <li>Top chord: braced at each purlin point — effective length = purlin spacing</li>
+        <li>Bottom chord: braced at each bridging or diagonal connection — effective length = panel length or bridging spacing</li>
+        <li>Verticals and diagonals: effective length = member length (K = 1.0, pinned–pinned) unless continuous connections indicate otherwise</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="td-bg-aisc">
+    <div class="bg-panel-hdr"><span>AISC 360-22</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4><span class="rtag">AISC 360-22 Chapter D</span> Tension Members</h4>
+      <p>The design tensile strength φ<sub>t</sub>T<sub>n</sub> is the lesser of:</p>
+      <div class="fml-blk">
+        <div class="ft">Yielding of gross section — §D2(a)</div>
+        φ<sub>t</sub>T<sub>n</sub> = φ<sub>t</sub> × F<sub>y</sub> × A<sub>g</sub> &nbsp; (φ<sub>t</sub> = 0.90)
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Fracture of net section — §D2(b)</div>
+        φ<sub>t</sub>T<sub>n</sub> = φ<sub>t</sub> × F<sub>u</sub> × A<sub>e</sub> &nbsp; (φ<sub>t</sub> = 0.75)<br>
+        A<sub>e</sub> = U × A<sub>n</sub> &nbsp; (shear lag factor U from Table D3.1)
+        <div class="fn">For members connected through all elements (wide-flange with all components bolted/welded): U = 1.0. For hollow sections and angles connected through one leg, U is reduced to account for shear lag. For truss members designed as axial-force-only (no net section reduction needed for welded), A<sub>e</sub> = A<sub>g</sub> typically.</div>
+      </div>
+
+      <h4><span class="rtag">AISC 360-22 Chapter E</span> Compression Members</h4>
+      <p>All truss compression members are designed per Chapter E using the column buckling equations. The governing slenderness ratio KL/r determines whether buckling is inelastic (F<sub>cr</sub> from inelastic formula) or elastic (Euler buckling).</p>
+      <div class="fml-blk">
+        <div class="ft">Flexural buckling — §E3 (most compression members)</div>
+        If KL/r ≤ 4.71√(E/F<sub>y</sub>): &nbsp; F<sub>cr</sub> = 0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup> × F<sub>y</sub> &nbsp; (inelastic)<br>
+        If KL/r &gt; 4.71√(E/F<sub>y</sub>): &nbsp; F<sub>cr</sub> = 0.877 × F<sub>e</sub> &nbsp; (elastic / Euler)<br>
+        F<sub>e</sub> = π²E/(KL/r)² &nbsp;; &nbsp; φ<sub>c</sub>P<sub>n</sub> = 0.90 × F<sub>cr</sub> × A<sub>g</sub>
+      </div>
+      <div class="fml-blk">
+        <div class="ft">Biaxial slenderness — truss members</div>
+        KL/r = max(KL<sub>x</sub>/r<sub>x</sub>, KL<sub>y</sub>/r<sub>y</sub>)<br>
+        For symmetric sections (W, HSS): equal both directions if same K and L<br>
+        For L-angles: r<sub>min</sub> (minimum radius of gyration) governs — watch for flexural-torsional buckling (§E4)
+      </div>
+
+      <h4><span class="rtag">AISC 360-22 §B4</span> Section Classification</h4>
+      <p>Before computing strength, confirm the section is not slender for compression:</p>
+      <table class="lim-tbl">
+        <thead><tr><th>Element</th><th>Compact / Non-slender λ<sub>r</sub></th></tr></thead>
+        <tbody>
+          <tr><td>W-shape flange (b/t)</td><td>0.56√(E/F<sub>y</sub>) = 15.9 (F<sub>y</sub>=345 MPa)</td></tr>
+          <tr><td>W-shape web (h/t<sub>w</sub>)</td><td>1.49√(E/F<sub>y</sub>) = 42.3 (F<sub>y</sub>=345 MPa)</td></tr>
+          <tr><td>HSS (b/t)</td><td>1.40√(E/F<sub>y</sub>) = 39.7 (F<sub>y</sub>=345 MPa)</td></tr>
+          <tr><td>L-shape (b/t)</td><td>0.45√(E/F<sub>y</sub>) = 12.8 (F<sub>y</sub>=345 MPa)</td></tr>
+        </tbody>
+      </table>
+      <p>Slender sections require reduced effective area Q × A<sub>g</sub> per §E7 — most standard hot-rolled sections are non-slender for common grades.</p>
+
+      <h4><span class="rtag">ASCE 7-22 §2.3</span> LRFD Load Combinations for Roof Trusses</h4>
+      <table class="lim-tbl">
+        <thead><tr><th>#</th><th>Combination</th><th>Typical governing case</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1.4D</td><td>Heavy dead load only</td></tr>
+          <tr><td>2</td><td>1.2D + 1.6L + 0.5S</td><td>Office/storage live load</td></tr>
+          <tr><td>3</td><td>1.2D + 1.6S + L</td><td>High snow regions</td></tr>
+          <tr><td>4</td><td>1.2D + 1.0W + L + 0.5S</td><td>Wind + live + snow</td></tr>
+          <tr><td>5</td><td>0.9D + 1.0W</td><td><strong>Uplift check</strong> — reverses chord/diagonal forces</td></tr>
+        </tbody>
+      </table>
+      <p>Combination 5 (uplift) frequently governs the design of roof truss diagonals and bottom chord. A member sized for tension under gravity may need to be resized to resist compression under uplift.</p>
+
+      <h4><span class="rtag">AISC 360-22 Chapter H</span> Combined Axial + Bending (Secondary Effects)</h4>
+      <p>In trusses with rigid or semi-rigid joints, or where members have intermediate loads (self-weight), secondary bending exists. If the moment is significant, apply the beam-column interaction equations of §H1-1. For joints assumed fully pinned and loads applied only at panel points, P/(φP<sub>c</sub>) alone is checked.</p>
+    </div>
+  </section>
+
+  <section id="td-bg-example">
+    <div class="bg-panel-hdr"><span>Worked Example</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Example — AISC 360-22 LRFD Flat Pratt Truss (8-Panel)</h4>
+      <p><strong>Given:</strong> Flat Pratt roof truss, span L = 20 m, 8 equal panels (panel width = 2.5 m), truss depth h = 2.0 m. Gravity loads at top chord panel points: dead P<sub>D</sub> = 18 kN/panel, live P<sub>L</sub> = 22 kN/panel. Steel Grade A992: F<sub>y</sub> = 345 MPa, F<sub>u</sub> = 450 MPa, E = 200,000 MPa. φ<sub>c</sub> = 0.90, φ<sub>t</sub> = 0.90 (gross section).</p>
+
+      <ol style="font-size:.82rem;line-height:1.9;color:var(--text-mid);">
+        <li><strong>Factored panel point load (governing ASCE 7-22 Combo 2)</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            P<sub>u</sub> = 1.2×18 + 1.6×22 = 21.6 + 35.2 = <strong>56.8 kN/panel</strong><br>
+            Total factored load = 8×56.8 = 454.4 kN · Support reaction R = 454.4/2 = <strong>227.2 kN</strong>
+          </div>
+        </li>
+        <li><strong>Maximum chord forces (mid-span, panel 4–5)</strong><br>
+          Mid-span moment: M = R×L/2 − P<sub>u</sub>×(2.5+5.0+7.5+10.0) = 227.2×10 − 56.8×25<br>
+          = 2,272 − 1,420 = <strong>852 kN·m</strong><br>
+          Top chord (compression): F<sub>TC</sub> = −M/h = −852/2.0 = <strong>−426 kN</strong><br>
+          Bottom chord (tension): F<sub>BC</sub> = +M/h = +852/2.0 = <strong>+426 kN</strong></li>
+        <li><strong>Maximum diagonal force (first panel, near support)</strong><br>
+          Shear at left support: V₁ = R − 0 = 227.2 kN (half-panel loads not shown for brevity)<br>
+          Diagonal angle: θ = arctan(h/d) = arctan(2.0/2.5) = 38.66°<br>
+          F<sub>diag,1</sub> = V₁/sin θ = 227.2/sin(38.66°) = 227.2/0.625 = <strong>+364 kN (tension)</strong></li>
+        <li><strong>Design top chord — compression — W8×31 trial</strong><br>
+          W8×31: A<sub>g</sub>=5,870mm², r<sub>x</sub>=89.4mm, r<sub>y</sub>=40.6mm. Unbraced length both axes L<sub>b</sub>=2,500mm (purlins at each panel point).<br>
+          KL/r<sub>y</sub> = 1.0×2,500/40.6 = <strong>61.6</strong> (governs)<br>
+          F<sub>e</sub> = π²×200,000/61.6² = <strong>521 MPa</strong><br>
+          4.71√(200,000/345) = 113.4 &gt; 61.6 → inelastic: F<sub>cr</sub> = 0.658<sup>345/521</sup>×345 = 0.658<sup>0.662</sup>×345 = 0.789×345 = <strong>272 MPa</strong><br>
+          φ<sub>c</sub>P<sub>n</sub> = 0.90×272×5,870/1,000 = <strong>1,437 kN</strong> &gt; 426 kN ✓ (DCR = 0.30)
+          <div style="font-size:.79rem;color:var(--text-dim);margin-top:4px;">Note: Top chord DCR is low because compression is not maximum at mid-span for panel-point loads; it builds up to the full value over the central panels. In practice self-weight also adds to the chord force. Try W8×18 for optimisation.</div></li>
+        <li><strong>Design bottom chord — tension — 2L3½×3½×¼ (double angle)</strong><br>
+          2L3½×3½×¼: A<sub>g</sub> = 2×1,680 = 3,360 mm²<br>
+          φ<sub>t</sub>T<sub>n</sub> = 0.90×345×3,360/1,000 = <strong>1,043 kN</strong> &gt; 426 kN ✓ (DCR = 0.41)<br>
+          Select <strong>2L3½×3½×¼</strong> (or equivalent W or HSS section for fabrication preference)</li>
+        <li><strong>Design diagonal (tension) — 2L3×3×¼</strong><br>
+          F<sub>diag</sub> = 364 kN. 2L3×3×¼: A<sub>g</sub> = 2×1,420 = 2,840 mm²<br>
+          φ<sub>t</sub>T<sub>n</sub> = 0.90×345×2,840/1,000 = <strong>881 kN</strong> &gt; 364 kN ✓ (DCR = 0.41)</li>
+      </ol>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:10px;line-height:1.65;">
+        <strong style="color:var(--green);">Summary:</strong> Flat Pratt, 8 panels, 20 m span. Governing factored panel load 56.8 kN. Maximum chord force 426 kN (tension/compression at mid-span). Maximum diagonal tension 364 kN (at support). Preliminary selections: Top chord <strong>W8×31</strong>, Bottom chord <strong>2L3½×3½×¼</strong>, Diagonal <strong>2L3×3×¼</strong>. All AISC 360-22 LRFD checks pass. Uplift combination (0.9D+1.0W) must be checked separately — diagonals may reverse to compression, requiring a compression capacity check.
+      </div>
+    </div>
+  </section>
+
+  <section id="td-bg-refs">
+    <div class="bg-panel-hdr"><span>References</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>References</h4>
+      <ul class="ref-list">
+        <li><span class="ref-num">[1]</span><div><strong>AISC 360-22</strong> — Specification for Structural Steel Buildings. American Institute of Steel Construction, 2022. Chapter D (Tension members), Chapter E (Compression members / buckling), Chapter H (Combined loading).</div></li>
+        <li><span class="ref-num">[2]</span><div><strong>ASCE 7-22</strong> — Minimum Design Loads and Associated Criteria for Buildings and Other Structures. ASCE, 2022. §2.3 (LRFD load combinations), Chapter 7 (Snow loads), Chapter 26–30 (Wind loads).</div></li>
+        <li><span class="ref-num">[3]</span><div><strong>AISC Steel Construction Manual, 16th Ed.</strong> — American Institute of Steel Construction, 2022. Part 2 (Section properties), Part 4 (Design of compression members), Part 5 (Design of tension members).</div></li>
+        <li><span class="ref-num">[4]</span><div><strong>Leet, K., Uang, C-M. &amp; Gilbert, A.</strong> — Fundamentals of Structural Analysis, 5th Ed. McGraw-Hill, 2018. Chapter 11 (Truss analysis — method of joints and sections).</div></li>
+        <li><span class="ref-num">[5]</span><div><strong>Salmon, C.G., Johnson, J.E. &amp; Malhas, F.A.</strong> — Steel Structures: Design and Behavior, 5th Ed. Pearson, 2009. Chapter 3 (Tension members), Chapter 6 (Compression members), Chapter 16 (Trusses).</div></li>
+        <li><span class="ref-num">[6]</span><div><strong>Segui, W.T.</strong> — Steel Design, 6th Ed. Cengage Learning, 2018. Chapter 4 (Compression) Chapter 3 (Tension).</div></li>
+      </ul>
+      <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:10px 13px;font-size:.78rem;color:var(--text-mid);margin-top:14px;line-height:1.7;">
+        <strong>Disclaimer:</strong> For educational and preliminary design only. Verify all results with a licensed structural engineer. Always consult the applicable local code edition.
+      </div>
+    </div>
+  </section>
+</section>
+</div>
+
 </main>
 
 <script src="../js/steel-profiles.js"></script>
