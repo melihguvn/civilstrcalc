@@ -251,4 +251,6 @@
 
   // ── Inject into body ─────────────────────────────────────────────────────────
   document.body.prepend(ham, ov, hdr, side);
+  // Hide article-page standalone topbar — shell header replaces it
+  document.querySelectorAll('.sg-topbar').forEach(function(el){ el.style.display='none'; });
 })();
