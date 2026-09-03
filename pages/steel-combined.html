@@ -199,6 +199,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-is8"  onclick="bcBgTab('bg-is8',this);return false;">IS 800:2007</a>
     <a href="#bg-tsds" onclick="bcBgTab('bg-tsds',this);return false;">TSDS 2016</a>
     <a href="#bg-ck"   onclick="bcBgTab('bg-ck',this);return false;">K Factors</a>
+    <a href="#bg-ex"   onclick="bcBgTab('bg-ex',this);return false;">Worked Example</a>
   </nav>
 
   <!-- ══ AISC 360-22 ══ -->
@@ -750,6 +751,72 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
     </div>
   </div><!-- /bg-ck -->
+
+  <!-- ── WORKED EXAMPLE ── -->
+  <div class="bg-pane" id="bg-ex">
+    <div class="tb">
+      <h4>Example — AISC 360-22 LRFD Steel Column under Combined Axial + Biaxial Bending</h4>
+      <p><strong>Given:</strong> W10×49 (Grade 50, F<sub>y</sub> = 345 MPa / 50 ksi). Storey height L = 4.0 m (13.1 ft). Effective length factors K<sub>x</sub> = 1.0, K<sub>y</sub> = 1.0. Lateral bracing at top and bottom. Unbraced length for LTB: L<sub>b</sub> = 4.0 m.<br>
+      W10×49 properties (SI): A = 9,290 mm², Z<sub>x</sub> = 889 cm³, Z<sub>y</sub> = 427 cm³, S<sub>x</sub> = 800 cm³, r<sub>x</sub> = 106 mm, r<sub>y</sub> = 64.8 mm, J = 63.3 cm⁴, C<sub>w</sub> = 5,260 cm⁶, L<sub>p</sub> = 1.59 m, L<sub>r</sub> = 4.95 m.<br>
+      Factored loads: P<sub>u</sub> = 890 kN, M<sub>ux</sub> = 95 kN·m (strong axis), M<sub>uy</sub> = 30 kN·m (weak axis).</p>
+
+      <h4>Step 1 — Axial Compressive Strength φ<sub>c</sub>P<sub>n</sub></h4>
+      <p>Governing KL/r = max(K<sub>x</sub>L/r<sub>x</sub>, K<sub>y</sub>L/r<sub>y</sub>) = max(4000/106, 4000/64.8) = max(37.7, 61.7) = <strong>61.7</strong> (weak axis governs)</p>
+      <div class="fml-blk">
+        <div class="ft">Euler stress F<sub>e</sub> — §E3</div>
+        F<sub>e</sub> = π²×200,000/61.7² = 1,972,000/3,807 = <strong>518 MPa</strong><br>
+        4.71√(E/F<sub>y</sub>) = 4.71√(200,000/345) = <strong>113.4</strong> > 61.7 → inelastic buckling<br>
+        F<sub>cr</sub> = 0.658<sup>Fy/Fe</sup>×F<sub>y</sub> = 0.658<sup>345/518</sup>×345 = 0.658<sup>0.666</sup>×345 = 0.7874×345 = <strong>272 MPa</strong><br>
+        φ<sub>c</sub>P<sub>n</sub> = 0.90×272×9,290/1,000 = <strong>2,272 kN</strong>
+      </div>
+
+      <h4>Step 2 — Strong-Axis Flexural Strength φ<sub>b</sub>M<sub>nx</sub></h4>
+      <div class="fml-blk">
+        <div class="ft">LTB zone check — §F2</div>
+        L<sub>p</sub> = 1.59 m &lt; L<sub>b</sub> = 4.0 m &lt; L<sub>r</sub> = 4.95 m → <strong>Inelastic LTB</strong><br>
+        M<sub>p</sub> = F<sub>y</sub>×Z<sub>x</sub> = 345×889×10³/10⁶ = <strong>307 kN·m</strong><br>
+        M<sub>r</sub> = 0.7×F<sub>y</sub>×S<sub>x</sub> = 0.7×345×800×10³/10⁶ = <strong>193 kN·m</strong><br>
+        M<sub>nx</sub> = M<sub>p</sub>−(M<sub>p</sub>−M<sub>r</sub>)×(L<sub>b</sub>−L<sub>p</sub>)/(L<sub>r</sub>−L<sub>p</sub>)<br>
+        = 307−(307−193)×(4.0−1.59)/(4.95−1.59) = 307−114×0.717 = 307−82 = <strong>225 kN·m</strong><br>
+        φ<sub>b</sub>M<sub>nx</sub> = 0.90×225 = <strong>202 kN·m</strong>
+      </div>
+
+      <h4>Step 3 — Weak-Axis Flexural Strength φ<sub>b</sub>M<sub>ny</sub></h4>
+      <div class="fml-blk">
+        M<sub>py</sub> = F<sub>y</sub>×Z<sub>y</sub> = 345×427×10³/10⁶ = <strong>147 kN·m</strong><br>
+        No LTB for weak-axis bending → M<sub>ny</sub> = M<sub>py</sub> = 147 kN·m<br>
+        φ<sub>b</sub>M<sub>ny</sub> = 0.90×147 = <strong>133 kN·m</strong>
+      </div>
+
+      <h4>Step 4 — Interaction Check — §H1-1</h4>
+      <div class="fml-blk">
+        <div class="ft">Load ratio</div>
+        P<sub>r</sub>/P<sub>c</sub> = P<sub>u</sub>/(φ<sub>c</sub>P<sub>n</sub>) = 890/2,272 = <strong>0.392</strong><br>
+        Since 0.392 ≥ 0.20 → use <strong>Equation H1-1a</strong>:<br>
+        P<sub>r</sub>/P<sub>c</sub> + (8/9)×[M<sub>rx</sub>/M<sub>cx</sub> + M<sub>ry</sub>/M<sub>cy</sub>] ≤ 1.0<br>
+        = 0.392 + (8/9)×[95/202 + 30/133]<br>
+        = 0.392 + 0.889×[0.470 + 0.226]<br>
+        = 0.392 + 0.889×0.696<br>
+        = 0.392 + 0.619 = <strong>1.011</strong>
+      </div>
+      <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:9px 13px;font-size:.80rem;color:var(--text-mid);margin:8px 0;line-height:1.65;">
+        <strong>1.011 &gt; 1.0</strong> — Interaction ratio marginally exceeds 1.0 (1.1% overstress). <strong>Increase section to W10×54 or W12×53</strong> to achieve compliance.
+      </div>
+
+      <h4>Revised: W10×54 (same grade)</h4>
+      <p>W10×54: A = 10,200 mm², Z<sub>x</sub> = 980 cm³, Z<sub>y</sub> = 475 cm³, r<sub>y</sub> = 65.0 mm, L<sub>p</sub> = 1.60 m, L<sub>r</sub> = 5.14 m.</p>
+      <div class="fml-blk">
+        KL/r<sub>y</sub> = 4000/65.0 = 61.5 → F<sub>cr</sub> = 272 MPa (virtually unchanged)<br>
+        φ<sub>c</sub>P<sub>n</sub> = 0.90×272×10,200/1,000 = <strong>2,498 kN</strong><br>
+        M<sub>nx</sub> = 345×980×10³/10⁶ − inelastic LTB correction ≈ <strong>249 kN·m</strong> → φ<sub>b</sub>M<sub>nx</sub> = <strong>224 kN·m</strong><br>
+        φ<sub>b</sub>M<sub>ny</sub> = 0.90×345×475×10³/10⁶ = <strong>148 kN·m</strong><br>
+        Interaction: 890/2,498 + (8/9)×[95/224 + 30/148] = 0.356 + 0.889×[0.424+0.203] = 0.356+0.557 = <strong>0.913 &lt; 1.0 ✓</strong>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:10px;line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> <strong>W10×54 Grade 50</strong> satisfies H1-1a with interaction ratio = 0.91 under P<sub>u</sub>=890 kN, M<sub>ux</sub>=95 kN·m, M<sub>uy</sub>=30 kN·m. Weak-axis buckling governs KL/r. Inelastic LTB reduces strong-axis moment capacity from M<sub>p</sub>=338 kN·m to φ<sub>b</sub>M<sub>nx</sub>=224 kN·m.
+      </div>
+    </div>
+  </div><!-- /bg-ex -->
 
 </div><!-- bg-section -->
 

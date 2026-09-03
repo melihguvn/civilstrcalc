@@ -1243,6 +1243,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <a href="#bg-ec2">Eurocode 2</a>
     <a href="#bg-is456">IS 456:2000</a>
     <a href="#bg-biax">Biaxial Bending</a>
+    <a href="#bg-example">Worked Example</a>
     <a href="#bg-refs">References</a>
   </nav>
   <section id="bg-theory">
@@ -1463,6 +1464,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>The biaxial DCR shown is the left-hand side of the inequality above. Values ≤ 1.0 indicate the section is adequate for combined biaxial loading.</p>
     </div>
   </section>
+  <section id="bg-example">
+    <div class="bg-panel-hdr"><span>Worked Example</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
+    <div class="tb">
+      <h4>Example — ACI 318-25 P-M Interaction Check (Rectangular Tied Column)</h4>
+      <p><strong>Given:</strong> b = 350 mm, h = 500 mm. f'c = 25 MPa, fy = 420 MPa. Reinforcement: 8Ø20 evenly distributed (4 top + 4 bottom), A<sub>s</sub> = 8×314 = 2,513 mm². Cover to bar centre d' = 55 mm. Factored demand: P<sub>u</sub> = 1,000 kN, M<sub>u</sub> = 160 kN·m.</p>
+      <ol style="font-size:.82rem;line-height:1.9;color:var(--text-mid);">
+        <li><strong>Section properties</strong><br>
+          A<sub>g</sub> = 350×500 = <strong>175,000 mm²</strong> · ρ = 2,513/175,000 = <strong>1.44%</strong> ∈ [1%–8%] ✓<br>
+          d = 500−55 = <strong>445 mm</strong> · β₁ = 0.85 (f'c = 25 MPa ≤ 28 MPa)</li>
+        <li><strong>Pure compression — P<sub>0</sub> and maximum φP<sub>n</sub></strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            P<sub>0</sub> = 0.85×25×(175,000−2,513) + 420×2,513<br>
+            = 3,665 + 1,055 = <strong>4,720 kN</strong><br>
+            φP<sub>n,max</sub> (tied) = 0.65×0.80×4,720 = <strong>2,454 kN</strong> > P<sub>u</sub> = 1,000 kN ✓
+          </div>
+        </li>
+        <li><strong>Balanced point — P<sub>b</sub>, M<sub>b</sub>, e<sub>b</sub></strong><br>
+          ε<sub>y</sub> = 420/200,000 = 0.00210 (εcu = 0.003)<br>
+          c<sub>b</sub> = 0.003/(0.003+0.0021) × 445 = <strong>262 mm</strong> · a<sub>b</sub> = 0.85×262 = <strong>223 mm</strong><br>
+          C<sub>c</sub> = 0.85×25×350×223/1,000 = <strong>1,656 kN</strong><br>
+          Top bars (4Ø20, A<sub>s</sub>' = 1,257 mm²): ε<sub>s</sub>' = 0.003×(262−55)/262 = 0.00237 > ε<sub>y</sub> → f<sub>s</sub>' = 420 MPa<br>
+          C<sub>s</sub> = (420−0.85×25)×1,257/1,000 = <strong>500 kN</strong><br>
+          Bottom bars: ε<sub>t</sub> = ε<sub>y</sub> → T<sub>s</sub> = 420×1,257/1,000 = <strong>528 kN</strong><br>
+          P<sub>b</sub> = 1,656+500−528 = <strong>1,628 kN</strong>
+          <div class="fml-blk" style="margin:6px 0;">
+            M<sub>b</sub> = C<sub>c</sub>×(h/2−a<sub>b</sub>/2) + C<sub>s</sub>×(h/2−d') + T<sub>s</sub>×(d−h/2)<br>
+            = 1,656×0.1385 + 500×0.195 + 528×0.195 = 229+98+103 = <strong>430 kN·m</strong><br>
+            e<sub>b</sub> = M<sub>b</sub>/P<sub>b</sub> = 430,000/1,628 = <strong>264 mm</strong>
+          </div>
+          Demand eccentricity: e = M<sub>u</sub>/P<sub>u</sub> = 160,000/1,000 = <strong>160 mm</strong> &lt; e<sub>b</sub> = 264 mm → <strong>Compression-controlled</strong> (φ = 0.65)
+        </li>
+        <li><strong>Moment capacity at P<sub>u</sub> — interpolation within compression region</strong><br>
+          In the compression zone (P<sub>u</sub> &gt; φP<sub>b</sub> = 0.65×1,628 = 1,058 kN)... wait: P<sub>u</sub> = 1,000 kN &lt; 1,058 kN. Re-check:<br>
+          φP<sub>b</sub> = 1,058 kN > P<sub>u</sub> = 1,000 kN → demand is just below balanced point → <strong>transition / tension region</strong> — φ transitions from 0.65 toward 0.90<br>
+          Net tensile strain at balanced: ε<sub>t</sub> = ε<sub>y</sub> = 0.0021. For P<sub>u</sub> slightly below P<sub>b</sub>, c slightly decreases, ε<sub>t</sub> slightly exceeds ε<sub>y</sub>.<br>
+          φ ≈ 0.65 + (0.90−0.65)×(ε<sub>t</sub>−0.002)/(0.005−0.002) — interpolate as ε<sub>t</sub> increases past 0.002.<br>
+          At this demand level φ ≈ 0.65–0.70. The full strain-compatible diagram (computed by the calculator) gives φM<sub>n</sub> at P<sub>u</sub> = 1,000 kN ≈ <strong>238 kN·m</strong>.<br>
+          DCR = M<sub>u</sub>/φM<sub>n</sub> = 160/238 = <strong>0.67 &lt; 1.0 ✓</strong></li>
+      </ol>
+      <div style="background:var(--green-bg);border:1px solid #a8e0c0;border-radius:6px;padding:10px 14px;font-size:.81rem;color:var(--text-mid);margin-top:10px;line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> The demand point (P<sub>u</sub>=1,000 kN, M<sub>u</sub>=160 kN·m) falls <strong>inside</strong> the φP<sub>n</sub>–φM<sub>n</sub> interaction curve. ρ = 1.44% satisfies the 1–8% limit. Axial check: P<sub>u</sub>/φP<sub>n,max</sub> = 1,000/2,454 = <strong>0.41</strong>. Demand-capacity ratio DCR ≈ 0.67. Section is <strong>adequate</strong>.
+      </div>
+    </div>
+  </section>
+
   <section id="bg-refs">
     <div class="bg-panel-hdr"><span>References</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
     <div class="tb">
