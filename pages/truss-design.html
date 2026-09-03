@@ -1018,7 +1018,14 @@ function tdDraw(){
 
   // labels
   var uSvg=tdUnit==='si'?'m':'ft';
-  txt(mx+W/2, VH-6, 'L = '+L+' '+uSvg+'  |  N = '+N+' panels  |  d = '+fmt(L/N,1)+' '+uSvg);
+  var cd_u=0;
+  try{
+    var _ct=el('td-chord-type').value,_ci=parseInt(el('td-chord').value)||0;
+    var _cdb=(tdUnit==='si'?DB_CHORD_SI:DB_CHORD)[_ct];
+    if(_cdb&&_cdb.data[_ci])cd_u=tdGetChordMM(_cdb.data[_ci]).d/(tdUnit==='si'?1000:304.8);
+  }catch(e){}
+  var Htot=H+cd_u;
+  txt(mx+W/2, VH-6, 'L = '+L+' '+uSvg+'  |  N = '+N+' panels  |  d = '+fmt(L/N,1)+' '+uSvg+'  |  Hₜₒₜ = '+fmt(Htot,2)+' '+uSvg);
   txt(mx-8, mt+TH/2, 'H='+H+(tdUnit==='si'?'m':"'"), 'end');
 
   // supports
