@@ -8,20 +8,30 @@
 
   var P = window.location.pathname;
   function _ap() {
-    if (/\/beam\.html/.test(P))     return 'beam';
-    if (/\/slab\.html/.test(P))     return 'slab';
-    if (/\/column\.html/.test(P))   return 'column';
-    if (/\/rebar\.html/.test(P))    return 'rebar';
-    if (/\/steel-flexural\.html/.test(P))  return 'steelfd';
-    if (/\/steel-axial\.html/.test(P))    return 'steelaxi';
-    if (/\/steel-combined\.html/.test(P)) return 'steelbc';
-    if (/\/steel-ltb\.html/.test(P))      return 'steelltb';
-    if (/\/truss-design\.html/.test(P))   return 'steeltruss';
-    if (/\/steel\.html/.test(P))    return 'steel';
-    if (/\/concrete\.html/.test(P)) return 'concrete';
-    if (/\/development-length\.html/.test(P)) return 'devlen';
-    if (/\/crack-width\.html/.test(P))       return 'crackwidth';
-    if (/\/retaining-wall\.html/.test(P))    return 'retwall';
+    if (/\/beam(\.html)?$/.test(P))                    return 'beam';
+    if (/\/slab(\.html)?$/.test(P))                    return 'slab';
+    if (/\/column(\.html)?$/.test(P))                  return 'column';
+    if (/\/development-length(\.html)?$/.test(P))      return 'devlen';
+    if (/\/crack-width(\.html)?$/.test(P))             return 'crackwidth';
+    if (/\/foundation(\.html)?$/.test(P))              return 'foundation';
+    if (/\/retaining-wall-aci-si(\.html)?$/.test(P))   return 'retwall-si';
+    if (/\/retaining-wall-aci-us(\.html)?$/.test(P))   return 'retwall-us';
+    if (/\/retaining-wall-ec2(\.html)?$/.test(P))      return 'retwall-ec2';
+    if (/\/retaining-wall-tsc(\.html)?$/.test(P))      return 'retwall-tsc';
+    if (/\/steel-flexural(\.html)?$/.test(P))          return 'steelfd';
+    if (/\/steel-axial(\.html)?$/.test(P))             return 'steelaxi';
+    if (/\/steel-combined(\.html)?$/.test(P))          return 'steelbc';
+    if (/\/steel-ltb(\.html)?$/.test(P))               return 'steelltb';
+    if (/\/truss-design(\.html)?$/.test(P))            return 'steeltruss';
+    if (/\/steel(\.html)?$/.test(P))                   return 'steel';
+    if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
+    if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
+    if (/\/unit-converter(\.html)?$/.test(P))          return 'unitconv';
+    if (/\/aci-design-guide(\.html)?$/.test(P))        return 'guide-aci';
+    if (/\/ec2-design-guide(\.html)?$/.test(P))        return 'guide-ec2';
+    if (/\/is456-design-guide(\.html)?$/.test(P))      return 'guide-is456';
+    if (/\/ts500-design-guide(\.html)?$/.test(P))      return 'guide-ts500';
+    if (/\/aisc360-design-guide(\.html)?$/.test(P))    return 'guide-aisc';
     return '';
   }
   var ap = _ap();
@@ -31,9 +41,8 @@
   // ── CSS ─────────────────────────────────────────────────────────────────────
   var styleEl = document.createElement('style');
   styleEl.textContent = [
-    ':root{--sh-h:60px;--sh-w:220px}',
+    ':root{--sh-h:60px;--sh-w:230px}',
     '@media(max-width:768px){:root{--sh-h:52px}}',
-    /* offset body so content isn't hidden behind fixed header/sidebar */
     'body{padding-top:var(--sh-h)!important;padding-left:var(--sh-w)!important;',
     '     padding-bottom:env(safe-area-inset-bottom,0px)!important;',
     '     overflow:auto!important;height:auto!important;min-height:100vh!important;min-height:100dvh!important}',
@@ -98,16 +107,18 @@
 
   // ── SVG icons ───────────────────────────────────────────────────────────────
   var ic = {
-    beam: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c12 6 12 6 24 0M4 20c12 6 12 6 24 0"/><path d="M4 12v8M28 12v8" opacity=".5"/></svg>',
+    beam:   '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c12 6 12 6 24 0M4 20c12 6 12 6 24 0"/><path d="M4 12v8M28 12v8" opacity=".5"/></svg>',
     devlen: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="16" x2="29" y2="16"/><circle cx="3" cy="16" r="2.5" fill="currentColor" stroke="none"/><circle cx="29" cy="16" r="2.5" fill="currentColor" stroke="none"/><path d="M9 11v10M16 11v10M23 11v10" stroke-width="1.5" opacity=".5"/></svg>',
-    slab: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="24" height="12" rx="1.5"/><path d="M4 16h24" opacity=".5"/></svg>',
-    col:  '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="20" height="20" rx="1.5"/><circle cx="10" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="22" r="1.5" fill="currentColor" stroke="none"/></svg>',
-    st:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 3v18"/></svg>',
-    rb:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18"/><path d="M7 6l10-2M7 11l10-2M7 16l10-2M7 21l10-2"/></svg>',
-    cn:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>',
-    rw:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="4" height="14" rx="0.5"/><rect x="3" y="17" width="16" height="4" rx="0.5"/><line x1="9" y1="5" x2="19" y2="5" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="10" x2="19" y2="10" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="15" x2="19" y2="15" stroke-width="1.3" opacity="0.55"/></svg>',
-    fnd:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="15" width="18" height="6" rx="1"/><rect x="8" y="9" width="8" height="6" rx="0.5"/><rect x="10" y="4" width="4" height="5" rx="0.5"/></svg>',
-    cw:   '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="24" height="16" rx="1.5"/><path d="M13 8v5l3 3 3-3V8" stroke-width="1.6" opacity="0.8"/><path d="M4 20h24" stroke-width="1" opacity="0.4"/></svg>'
+    slab:   '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="24" height="12" rx="1.5"/><path d="M4 16h24" opacity=".5"/></svg>',
+    col:    '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="20" height="20" rx="1.5"/><circle cx="10" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="22" r="1.5" fill="currentColor" stroke="none"/></svg>',
+    st:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 3v18"/></svg>',
+    rb:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18"/><path d="M7 6l10-2M7 11l10-2M7 16l10-2M7 21l10-2"/></svg>',
+    cn:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>',
+    rw:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="4" height="14" rx="0.5"/><rect x="3" y="17" width="16" height="4" rx="0.5"/><line x1="9" y1="5" x2="19" y2="5" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="10" x2="19" y2="10" stroke-width="1.3" opacity="0.55"/><line x1="9" y1="15" x2="19" y2="15" stroke-width="1.3" opacity="0.55"/></svg>',
+    fnd:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="15" width="18" height="6" rx="1"/><rect x="8" y="9" width="8" height="6" rx="0.5"/><rect x="10" y="4" width="4" height="5" rx="0.5"/></svg>',
+    cw:     '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="24" height="16" rx="1.5"/><path d="M13 8v5l3 3 3-3V8" stroke-width="1.6" opacity="0.8"/><path d="M4 20h24" stroke-width="1" opacity="0.4"/></svg>',
+    uc:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3"/><path d="M12 8v8M9 11l3-3 3 3"/></svg>',
+    guide:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -129,40 +140,52 @@
   var sideHTML =
     '<div class="sh-sec">Concrete Design</div>' +
     grp(ic.beam, 'Beam Design', ['beam'],
-      sub('/pages/beam.html#flexdesign', 'Flexural Design', 'beam') +
-      sub('/pages/beam.html#flexcap',    'Flexural Capacity', '') +
-      sub('/pages/beam.html#shear',      'Shear Design', '') +
-      sub('/pages/beam.html#torsion',    'Torsion Design', '')) +
+      sub('/pages/beam#flexdesign', 'Flexural Design', 'beam') +
+      sub('/pages/beam#flexcap',    'Flexural Capacity', '') +
+      sub('/pages/beam#shear',      'Shear Design', '') +
+      sub('/pages/beam#torsion',    'Torsion Design', '')) +
     grp(ic.slab, 'Slab Design', ['slab'],
-      sub('/pages/slab.html#flexdesign',  'Flexural Design', 'slab') +
-      sub('/pages/slab.html#flexcap',     'Flexural Capacity', '') +
-      sub('/pages/slab.html#punchshear',  'Punching Design', '')) +
-    grp(ic.col, 'Column Strength Design', ['column'],
-      sub('/pages/column.html#pmm',      'PMM Design', 'column') +
-      sub('/pages/column.html#colshear', 'Shear Design', '')) +
-    item('/pages/development-length.html', ic.devlen, 'Dev. & Splice Length', 'devlen') +
-    item('/pages/crack-width.html',        ic.cw,     'Crack Width',           'crackwidth') +
-    item('/pages/retaining-wall-aci-si.html',    ic.rw,    'Retaining Wall',       'retwall') +
-    item('/pages/foundation.html',               ic.fnd,   'Foundation Design',    'foundation') +
+      sub('/pages/slab#flexdesign',  'Flexural Design', 'slab') +
+      sub('/pages/slab#flexcap',     'Flexural Capacity', '') +
+      sub('/pages/slab#punchshear',  'Punching Design', '')) +
+    grp(ic.col, 'Column Design', ['column'],
+      sub('/pages/column#pmm',      'PMM Interaction', 'column') +
+      sub('/pages/column#colshear', 'Shear Design', '')) +
+    item('/pages/development-length', ic.devlen, 'Dev. & Splice Length', 'devlen') +
+    item('/pages/crack-width',        ic.cw,     'Crack Width',          'crackwidth') +
+    item('/pages/foundation',         ic.fnd,    'Foundation Design',    'foundation') +
+    grp(ic.rw, 'Retaining Wall', ['retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
+      sub('/pages/retaining-wall-aci-si', 'ACI 318 — SI units',   'retwall-si') +
+      sub('/pages/retaining-wall-aci-us', 'ACI 318 — US units',   'retwall-us') +
+      sub('/pages/retaining-wall-ec2',    'Eurocode 2',            'retwall-ec2') +
+      sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',   'retwall-tsc')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Steel Design</div>' +
     grp(ic.st, 'Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
-      sub('/pages/steel-flexural.html',  'Flexural Design',       'steelfd') +
-      sub('/pages/steel-axial.html',     'Axial Design',          'steelaxi') +
-      sub('/pages/steel-combined.html',  'Column Strength Design', 'steelbc') +
-      sub('/pages/steel-ltb.html',       'LTB Control',           'steelltb') +
-      sub('/pages/truss-design.html',    'Truss Design',          'steeltruss')) +
+      sub('/pages/steel-flexural',  'Flexural Design',        'steelfd') +
+      sub('/pages/steel-axial',     'Axial (Column) Design',  'steelaxi') +
+      sub('/pages/steel-combined',  'Combined (Beam-Column)', 'steelbc') +
+      sub('/pages/steel-ltb',       'LTB Check',              'steelltb') +
+      sub('/pages/truss-design',    'Truss Design',           'steeltruss')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
-    item('/pages/steel.html',    ic.st, 'Steel Sections',    'steel') +
-    item('/pages/rebar.html',    ic.rb, 'Rebar Properties', 'rebar') +
-    item('/pages/concrete.html', ic.cn, 'Concrete Classes', 'concrete') +
-    '<div class="sh-foot">ACI 318 · Eurocode 2 · IS 456<br>AISC · EN 10365 · IS 808' +
+    item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +
+    item('/pages/rebar',          ic.rb,    'Rebar Properties',  'rebar') +
+    item('/pages/concrete',       ic.cn,    'Concrete Classes',  'concrete') +
+    item('/pages/unit-converter', ic.uc,    'Unit Converter',    'unitconv') +
+    '<div class="sh-div"></div>' +
+    '<div class="sh-sec">Design Guides</div>' +
+    item('/pages/aci-design-guide',   ic.guide, 'ACI 318-25 Guide',   'guide-aci') +
+    item('/pages/ec2-design-guide',   ic.guide, 'Eurocode 2 Guide',   'guide-ec2') +
+    item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',       'guide-is456') +
+    item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',       'guide-ts500') +
+    item('/pages/aisc360-design-guide', ic.guide, 'AISC 360 Guide',   'guide-aisc') +
+    '<div class="sh-foot">ACI 318-25 · Eurocode 2 · IS 456<br>AISC 360-22 · TS 500 · TBDY 2018' +
       '<div style="margin-top:8px">' +
-        '<a href="/about.html">About</a>' +
-        '<a href="/contact.html">Contact</a>' +
-        '<a href="/privacy.html">Privacy</a>' +
-        '<a href="/terms.html">Terms</a>' +
+        '<a href="/about">About</a>' +
+        '<a href="/contact">Contact</a>' +
+        '<a href="/privacy">Privacy</a>' +
+        '<a href="/terms">Terms</a>' +
       '</div>' +
     '</div>';
 
@@ -203,6 +226,5 @@
   });
 
   // ── Inject into body ─────────────────────────────────────────────────────────
-  // prepend inserts all nodes before the first existing child, in given order
   document.body.prepend(ham, ov, hdr, side);
 })();
