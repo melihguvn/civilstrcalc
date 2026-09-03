@@ -32,6 +32,16 @@
     if (/\/is456-design-guide(\.html)?$/.test(P))      return 'guide-is456';
     if (/\/ts500-design-guide(\.html)?$/.test(P))      return 'guide-ts500';
     if (/\/aisc360-design-guide(\.html)?$/.test(P))    return 'guide-aisc';
+    if (/\/aci-318-vs-eurocode-2(\.html)?$/.test(P))          return 'art-aci-ec2';
+    if (/\/one-way-vs-two-way-slabs(\.html)?$/.test(P))       return 'art-slabs';
+    if (/\/lateral-torsional-buckling-guide(\.html)?$/.test(P)) return 'art-ltb';
+    if (/\/rc-beam-design-guide(\.html)?$/.test(P))           return 'art-beam';
+    if (/\/development-length-guide(\.html)?$/.test(P))       return 'art-devlen';
+    if (/\/load-combinations-guide(\.html)?$/.test(P))        return 'art-loadcomb';
+    if (/\/how-to-size-a-steel-column(\.html)?$/.test(P))     return 'art-steelcol';
+    if (/\/punching-shear-guide(\.html)?$/.test(P))           return 'art-punch';
+    if (/\/concrete-cover-durability(\.html)?$/.test(P))      return 'art-cover';
+    if (/\/seismic-design-basics(\.html)?$/.test(P))          return 'art-seismic';
     return '';
   }
   var ap = _ap();
@@ -180,6 +190,20 @@
     item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',       'guide-is456') +
     item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',       'guide-ts500') +
     item('/pages/aisc360-design-guide', ic.guide, 'AISC 360 Guide',   'guide-aisc') +
+    '<div class="sh-div"></div>' +
+    '<div class="sh-sec">Articles</div>' +
+    grp(ic.guide, 'Concrete', ['art-aci-ec2','art-slabs','art-beam','art-devlen','art-loadcomb','art-punch','art-cover'],
+      sub('/pages/aci-318-vs-eurocode-2',     'ACI 318 vs Eurocode 2',       'art-aci-ec2') +
+      sub('/pages/one-way-vs-two-way-slabs',  'One-Way vs Two-Way Slabs',    'art-slabs') +
+      sub('/pages/rc-beam-design-guide',      'RC Beam Design Guide',        'art-beam') +
+      sub('/pages/punching-shear-guide',      'Punching Shear Guide',        'art-punch') +
+      sub('/pages/development-length-guide',  'Development Length Guide',    'art-devlen') +
+      sub('/pages/load-combinations-guide',   'Load Combinations Guide',     'art-loadcomb') +
+      sub('/pages/concrete-cover-durability', 'Concrete Cover & Durability', 'art-cover')) +
+    grp(ic.st, 'Steel', ['art-ltb','art-steelcol'],
+      sub('/pages/lateral-torsional-buckling-guide', 'Lateral-Torsional Buckling', 'art-ltb') +
+      sub('/pages/how-to-size-a-steel-column',       'How to Size a Steel Column', 'art-steelcol')) +
+    item('/pages/seismic-design-basics', ic.guide, 'Seismic Design Basics', 'art-seismic') +
     '<div class="sh-foot">ACI 318-25 · Eurocode 2 · IS 456<br>AISC 360-22 · TS 500 · TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
