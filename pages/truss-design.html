@@ -133,7 +133,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div>
     <div class="form-group" id="td-heel-grp" style="display:none;">
       <label>Heel Height, h<sub>heel</sub> <span class="lu" id="td-heel-lu">[ft]</span></label>
-      <div class="iw"><input type="number" id="td-heel" value="2" min="0.5" max="20" step="0.5" oninput="tdDraw();tdCalc()"><span class="us" id="td-heel-u">ft</span></div>
+      <div class="iw"><input type="number" id="td-heel" value="2" min="0" max="20" step="0.5" oninput="tdDraw();tdCalc()"><span class="us" id="td-heel-u">ft</span></div>
     </div>
     <div class="form-group">
       <label>Number of Panels, N (even)</label>
@@ -951,7 +951,9 @@ function tdDraw(){
   var L=parseFloat(el('td-L').value)||60;
   var H=parseFloat(el('td-H').value)||6;
   var N=parseInt(el('td-N').value)||6;
-  var heel=parseFloat(el('td-heel').value)||2;
+  var _hr=parseFloat(el('td-heel').value);
+  var heel=isNaN(_hr)?2:_hr;
+  if(type==='pitched') heel=Math.max(0,Math.min(heel,H*0.999));
 
   el('td-heel-grp').style.display=(type==='pitched')?'':'none';
   el('td-H-lbl').textContent=(type==='pitched')?'Apex Height, H':'Truss Height, H';
@@ -1006,12 +1008,18 @@ function tdDraw(){
   for(var i=0;i<N;i++) ln(bot[i].x,bot[i].y,bot[i+1].x,bot[i+1].y,2.5);
   // top chord
   for(var i=0;i<N;i++) ln(top[i].x,top[i].y,top[i+1].x,top[i+1].y,2.5);
-  // verticals
-  for(var i=0;i<=N;i++) ln(top[i].x,top[i].y,bot[i].x,bot[i].y,1.8,0.7);
+  // verticals — skip zero-length (heel=0 at supports)
+  for(var i=0;i<=N;i++){
+    if(Math.abs(top[i].y-bot[i].y)>0.5) ln(top[i].x,top[i].y,bot[i].x,bot[i].y,1.8,0.7);
+  }
   // diagonals (Pratt: tension = from bot toward midspan top)
+  // skip end diagonals when top[i]=bot[i] (heel=0): top chord already covers them
   for(var i=0;i<N;i++){
-    if(i<N/2) ln(bot[i].x,bot[i].y,top[i+1].x,top[i+1].y,1.8,0.85);
-    else       ln(bot[i+1].x,bot[i+1].y,top[i].x,top[i].y,1.8,0.85);
+    if(i<N/2){
+      if(Math.abs(top[i].y-bot[i].y)>0.5) ln(bot[i].x,bot[i].y,top[i+1].x,top[i+1].y,1.8,0.85);
+    } else {
+      if(Math.abs(top[i+1].y-bot[i+1].y)>0.5) ln(bot[i+1].x,bot[i+1].y,top[i].x,top[i].y,1.8,0.85);
+    }
   }
   // joints
   for(var i=0;i<=N;i++){circ(bot[i].x,bot[i].y);circ(top[i].x,top[i].y);}
@@ -1059,7 +1067,9 @@ function tdCalc(){
   var L_u  =parseFloat(el('td-L').value)   ||(si?18:60);
   var H_u  =parseFloat(el('td-H').value)   ||(si?2:6);
   var N    =parseInt(el('td-N').value)     ||6;
-  var heel_u=parseFloat(el('td-heel').value)||(si?0.6:2);
+  var _hru=parseFloat(el('td-heel').value);
+  var heel_u=isNaN(_hru)?(si?0.6:2):_hru;
+  if(type==='pitched') heel_u=Math.max(0,Math.min(heel_u,H_u*0.999));
   var Fy_u =parseFloat(el('td-fy').value)  ||(si?275:50);
   var Lb_u =parseFloat(el('td-Lb').value)  ||(si?3:10);
   var direct = tdLoadMode==='direct';
