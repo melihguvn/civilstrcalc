@@ -916,6 +916,30 @@ function cbCalc() {
     h += '<div class="report-warn" style="background:var(--bg2);border-color:var(--border);color:var(--text-mid)"><span>&#9432;</span><div>Non-composite analysis: &phi;M<sub>n</sub> based on steel section only. No stud layout computed.</div></div>';
   }
 
+  // ── Composite Section Properties (beginning of report, like other modules) ─
+  var uI = isUS ? ' in&#x2074;' : ' cm&#x2074;';
+  var uF = isUS ? ' kip' : ' kN';
+  var uL = isUS ? ' in' : ' mm';
+  function row2(lbl, val) { return '<tr><td>' + lbl + '</td><td>' + val + '</td></tr>'; }
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Composite Section Properties</div>'
+     + '<table class="inp-tbl"><tbody>'
+     + row2('Effective slab width b<sub>eff</sub>', fmt(beff, isUS?1:0) + uL)
+     + row2('Concrete modulus E<sub>c</sub>', fmt(Ec,0) + (isUS?' ksi':' MPa'))
+     + row2('Modular ratio n = E<sub>s</sub>/E<sub>c</sub>', fmt(n_ratio,1))
+     + row2('&Sigma;Q<sub>n,full</sub> (' + full_case + ' governs)', fmt(SQn_full,1) + uF)
+     + row2('Stud (fixed) d<sub>s</sub> / h<sub>s</sub> / F<sub>u</sub>',
+        fmt(ds,isUS?3:0) + uL + ' / ' + fmt(hs_stud,0) + uL + ' / ' + fmt(Fu_stud,0) + (isUS?' ksi':' MPa'))
+     + row2('Stud area A<sub>sa</sub>', fmt(Asa, isUS?4:1) + (isUS?' in&sup2;':' mm&sup2;'))
+     + row2('Q<sub>n</sub> (' + (Qn_governs==='formula'?'0.5A&radic;(f\'E<sub>c</sub>)':'R<sub>g</sub>R<sub>p</sub>AF<sub>u</sub>') + ' governs)', fmt(Qn,1) + uF)
+     + row2('R<sub>g</sub> / R<sub>p</sub>', fmt(Rg,2) + ' / ' + fmt(Rp,2))
+     + row2('&eta; input / &eta; actual', fmt(eta_in*100,0) + '% / ' + fmt(eta_actual*100,1) + '%')
+     + row2('Studs per half-span &nbsp; required / max', N_half + ' / ' + N_max + ' &nbsp;<span class="' + (stud_ok?'td-ok':'td-err') + '">' + (stud_ok?'&#10003; OK':'&#10007; FAIL') + '</span>')
+     + row2('I<sub>s</sub> (steel alone)', fmt(isUS?Is:Is/1e4, 0) + uI)
+     + row2('I<sub>t</sub> (full composite)', fmt(isUS?It:It/1e4, 0) + uI)
+     + row2('I<sub>eff</sub> (lower bound &sect;C-I3)', fmt(isUS?Ieff:Ieff/1e4, 0) + uI)
+     + row2('I<sub>eff</sub> / I<sub>s</sub>', fmt(Ieff/Is, 2))
+     + '</tbody></table></div>';
+
   // Cross-section SVG
   h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual) + '</div>';
 
@@ -970,32 +994,6 @@ function cbCalc() {
      + '<div class="ri-value">' + fmt(phi_Vn,1) + '</div>'
      + '<div class="ri-unit">' + (isUS ? 'kip' : 'kN') + '</div></div>'
      + '</div>';
-
-  // ── Composite Properties table (2 columns, no Unit column) ──────────────
-  var uI = isUS ? ' in&#x2074;' : ' cm&#x2074;';
-  var uF = isUS ? ' kip' : ' kN';
-  var uL = isUS ? ' in' : ' mm';
-  function row2(lbl, val) {
-    return '<tr><td>' + lbl + '</td><td>' + val + '</td></tr>';
-  }
-  h += '<div class="rpt-sec"><div class="rpt-sec-title">Composite Properties &amp; Stud Design</div>'
-     + '<table class="inp-tbl"><tbody>'
-     + row2('Effective slab width b<sub>eff</sub>', fmt(beff, isUS?1:0) + uL)
-     + row2('Concrete modulus E<sub>c</sub>', fmt(Ec,0) + (isUS?' ksi':' MPa'))
-     + row2('Modular ratio n = E<sub>s</sub>/E<sub>c</sub>', fmt(n_ratio,1))
-     + row2('&Sigma;Q<sub>n,full</sub> (' + full_case + ' governs)', fmt(SQn_full,1) + uF)
-     + row2('Stud (fixed) d<sub>s</sub> / h<sub>s</sub> / F<sub>u</sub>',
-        fmt(ds,isUS?3:0) + uL + ' / ' + fmt(hs_stud,0) + uL + ' / ' + fmt(Fu_stud,0) + (isUS?' ksi':' MPa'))
-     + row2('Stud area A<sub>sa</sub>', fmt(Asa, isUS?4:1) + (isUS?' in&sup2;':' mm&sup2;'))
-     + row2('Q<sub>n</sub> (' + (Qn_governs==='formula'?'0.5A&radic;(f\'E<sub>c</sub>)':'R<sub>g</sub>R<sub>p</sub>AF<sub>u</sub>') + ' governs)', fmt(Qn,1) + uF)
-     + row2('R<sub>g</sub> / R<sub>p</sub>', fmt(Rg,2) + ' / ' + fmt(Rp,2))
-     + row2('&eta; input / &eta; actual', fmt(eta_in*100,0) + '% / ' + fmt(eta_actual*100,1) + '%')
-     + row2('Studs per half-span &nbsp; required / max', N_half + ' / ' + N_max + ' &nbsp;<span class="' + (stud_ok?'td-ok':'td-err') + '">' + (stud_ok?'&#10003; OK':'&#10007; FAIL') + '</span>')
-     + row2('I<sub>s</sub> (steel)', fmt(isUS?Is:Is/1e4, 0) + uI)
-     + row2('I<sub>t</sub> (full composite)', fmt(isUS?It:It/1e4, 0) + uI)
-     + row2('I<sub>eff</sub> (lower bound)', fmt(isUS?Ieff:Ieff/1e4, 0) + uI)
-     + row2('I<sub>eff</sub> / I<sub>s</sub>', fmt(Ieff/Is, 2))
-     + '</tbody></table></div>';
 
   // ── Design checks table ──────────────────────────────────────────────────
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Design Checks &mdash; Service Stage &mdash; AISC 360-22</div>'
