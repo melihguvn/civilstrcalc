@@ -851,12 +851,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">TS 500:2000</span></div>
     <div class="card-body">
-      <div class="form-div"><div class="form-div-lbl">Section Geometry (Rectangular)</div></div>
-      <div class="form-row-2">
-        <div class="form-group"><label>Width b [m]</label><div class="iw"><input type="number" id="ts500-b" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
-        <div class="form-group"><label>Depth h [m]</label><div class="iw"><input type="number" id="ts500-h" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+      <!-- COLUMN SHAPE TOGGLE -->
+      <div class="unit-switcher" style="margin-bottom:12px;">
+        <label>Column:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ts500-shape-rect" onclick="setColShape('rect','ts500')">Rectangular</button>
+          <button class="unit-btn" id="ts500-shape-circ" onclick="setColShape('circ','ts500')">Circular</button>
+        </div>
       </div>
-      <div class="form-group"><label>Clear Cover to main bar [m]</label><div class="iw"><input type="number" id="ts500-cv" value="0.040" step="0.005"><span class="us">m</span></div></div>
+      <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:9px;">Section Geometry</p>
+      <div id="ts500-rect-geom">
+        <div class="form-row-2">
+          <div class="form-group"><label>Width b [m]</label><div class="iw"><input type="number" id="ts500-b" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+          <div class="form-group"><label>Depth h [m]</label><div class="iw"><input type="number" id="ts500-h" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+        </div>
+      </div>
+      <div id="ts500-circ-geom" style="display:none;">
+        <div class="form-row-2">
+          <div class="form-group"><label>Diameter D [m]</label><div class="iw"><input type="number" id="ts500-D" value="0.50" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+          <div class="form-group"><label>Clear Cover [m]</label><div class="iw"><input type="number" id="ts500-cv-c" value="0.040" step="0.005" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+        </div>
+      </div>
+      <div id="ts500-rect-cv-wrap" class="form-group"><label>Clear Cover to main bar [m]</label><div class="iw"><input type="number" id="ts500-cv" value="0.040" step="0.005"><span class="us">m</span></div></div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group"><label>f<sub>ck</sub> [MPa]</label>
@@ -883,10 +899,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
       <div class="form-group"><label>Bar Diameter [mm]</label><div class="iw"><input type="number" id="ts500-dbar" value="20" oninput="updatePreview('ts500')"><span class="us">mm</span></div></div>
-      <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n<sub>b</sub> = bars along b (top &amp; bottom rows) &middot; n<sub>h</sub> = bars along h (left &amp; right, incl. corners)</p>
-      <div class="form-row-2">
-        <div class="form-group"><label>n<sub>b</sub> (along b)</label><div class="iw"><input type="number" id="ts500-nb" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
-        <div class="form-group"><label>n<sub>h</sub> (along h)</label><div class="iw"><input type="number" id="ts500-nh" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
+      <div id="ts500-rect-rebar">
+        <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n<sub>b</sub> = bars along b (top &amp; bottom rows) &middot; n<sub>h</sub> = bars along h (left &amp; right, incl. corners)</p>
+        <div class="form-row-2">
+          <div class="form-group"><label>n<sub>b</sub> (along b)</label><div class="iw"><input type="number" id="ts500-nb" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
+          <div class="form-group"><label>n<sub>h</sub> (along h)</label><div class="iw"><input type="number" id="ts500-nh" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
+        </div>
+      </div>
+      <div id="ts500-circ-rebar" style="display:none;">
+        <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n = toplam donatı sayısı (çevre boyunca eşit aralıklı)</p>
+        <div class="form-group">
+          <label>n (toplam donatı)</label>
+          <div class="iw"><input type="number" id="ts500-n" value="8" min="6" max="20" oninput="updatePreview('ts500')"></div>
+        </div>
       </div>
       <div style="font-size:.71rem;color:var(--text-mid);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:6px 10px;margin-bottom:10px;" id="ts500-rebar-info">—</div>
       <div class="section-preview" style="margin-bottom:14px;"><canvas id="ts500-sect-canvas" width="230" height="240"></canvas></div>
@@ -3205,7 +3230,7 @@ function validateCol(code){
 
   _valClear(ids);
 
-  if(isCirc&&!isTS500){
+  if(isCirc){
     const D=g(p+'D')*U.lenS;
     if(!D||D<150||D>3000){e.push("Diameter D: 150–3000 mm");_valMark(p+'D');}
   } else {
