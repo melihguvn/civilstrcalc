@@ -4005,7 +4005,7 @@ function calcShColTS500() {
   const dcr_y = (!isCirc && Vdy > 0) ? Vdy / Vr_y : 0;
   const dcr   = Math.max(dcr_x, dcr_y);
 
-  // Section crush limit — TS 500 §8.2: τd ≤ 0.22·fcd
+  // Section crush limit — TSC 2018 §7.4.5.2: τd ≤ 0.22·fcd
   const tau_lim   = 0.22 * fcd;
   const tau_dx    = Vdx / (bw * d_x);
   const tau_dy    = (!isCirc && Vdy > 0) ? Vdy / (h * d_y) : 0;
@@ -4013,27 +4013,19 @@ function calcShColTS500() {
   const crushOK_y = isCirc || Vdy <= 0 || tau_dy <= tau_lim;
   const crushOK   = crushOK_x && crushOK_y;
 
-  // TS 500 §8.2.4 minimum stirrup ratio
+  // TSC 2018 §7.4.5.3 — confinement minimum (Denklem 7.1 rect / 7.2 circ)
+  // Always applies; 2/3 reduction factor when Nd ≤ 0.20·Ac·fck
   const Nd_kN = parseFloat(document.getElementById('shc-ts500-Nd').value) || 0;
   const Nd    = Nd_kN * 1000;  // kN → N
   const Ag    = isCirc ? Math.PI / 4 * bw * bw : bw * h;
-  const rhoMin    = 0.3 * fctd / fywd;
-  const rhoSW_x   = (Asv_x / sv) / bw;
-  const rhoSW_y   = isCirc ? rhoSW_x : (Asv_y / sv) / h;
-  const ts500OK_x = rhoSW_x >= rhoMin;
-  const ts500OK_y = isCirc ? ts500OK_x : rhoSW_y >= rhoMin;
-
-  // TSC 2018 §7.4.5.3 — confinement minimum (Denklem 7.1 rect / 7.2 circ)
-  // Always applies; 2/3 reduction factor when Nd ≤ 0.20·Ac·fck
-  const highAxial  = Nd > 0.20 * Ag * fck;
-  const tscFactor  = highAxial ? 1.0 : 2/3;
+  const highAxial = Nd > 0.20 * Ag * fck;
+  const tscFactor = highAxial ? 1.0 : 2/3;
   let tscOK_x = true, tscOK_y = true;
   let Ash_req_x = 0, Ash_req_y = 0, rhoS_req = 0, rhoS_prov = 0;
-  const bkx = Math.max(bw - 2 * cv - ds, 1);   // core dim, centre-to-centre of hoops
+  const bkx = Math.max(bw - 2 * cv - ds, 1);
   const bky = isCirc ? bkx : Math.max(h  - 2 * cv - ds, 1);
   const Ack = isCirc ? Math.PI / 4 * bkx * bkx : bkx * bky;
   if (!isCirc) {
-    // Denklem 7.1 — uses characteristic strengths fck/fywk (= fyv)
     Ash_req_x = tscFactor * Math.max(0.30 * sv * bkx * (Ag/Ack - 1) * (fck/fyv),
                                       0.075 * sv * bkx * (fck/fyv));
     Ash_req_y = tscFactor * Math.max(0.30 * sv * bky * (Ag/Ack - 1) * (fck/fyv),
@@ -4041,15 +4033,14 @@ function calcShColTS500() {
     tscOK_x = Asv_x >= Ash_req_x;
     tscOK_y = Asv_y >= Ash_req_y;
   } else {
-    // Denklem 7.2 — volumetric spiral ratio ρs = 4·Ab/(Dk·sv)
     rhoS_prov = 4 * Ab / (bkx * sv);
     rhoS_req  = tscFactor * Math.max(0.45 * (Ag/Ack - 1) * (fck/fyv), 0.12 * (fck/fyv));
     tscOK_x   = rhoS_prov >= rhoS_req;
     tscOK_y   = tscOK_x;
   }
 
-  const minOK_x = ts500OK_x && tscOK_x;
-  const minOK_y = isCirc ? minOK_x : ts500OK_y && tscOK_y;
+  const minOK_x = tscOK_x;
+  const minOK_y = isCirc ? tscOK_x : tscOK_y;
 
   // Max spacing — TS 500 §8.2.5: sv ≤ min(h/2, 300 mm)
   const svMax = Math.min(h / 2, 300);
@@ -4067,13 +4058,11 @@ function calcShColTS500() {
   const fmtR = v => (v * 1000).toFixed(4) + '‰';
 
   const warns = [];
-  if (!crushOK_x)             warns.push(`<b>Section crushing (X):</b> τ<sub>d,x</sub>=${tau_dx.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2). Increase section size or concrete grade.`);
-  if (!crushOK_y)             warns.push(`<b>Section crushing (Y):</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2).`);
-  if (!ts500OK_x)              warns.push(`<b>Min. stirrup ratio not satisfied (X, TS 500 §8.2.4):</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)}.`);
-  if (!isCirc && !ts500OK_y)   warns.push(`<b>Min. stirrup ratio not satisfied (Y, TS 500 §8.2.4):</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)}.`);
-  if (highAxial && !isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (X, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sh,x</sub>=${fmtA(Asv_x)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_x)}.`);
-  if (highAxial && !isCirc && !tscOK_y) warns.push(`<b>Confinement insufficient (Y, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sh,y</sub>=${fmtA(Asv_y)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_y)}.`);
-  if (highAxial &&  isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (TSC 2018 §7.4.5.3 Denklem 7.2):</b> ρ<sub>s,prov</sub>=${fmtR(rhoS_prov)} &lt; ρ<sub>s,req</sub>=${fmtR(rhoS_req)}.`);
+  if (!crushOK_x)  warns.push(`<b>Section crushing (X):</b> τ<sub>d,x</sub>=${tau_dx.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TSC 2018 §7.4.5.2). Increase section size or concrete grade.`);
+  if (!crushOK_y)  warns.push(`<b>Section crushing (Y):</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TSC 2018 §7.4.5.2).`);
+  if (!isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (X, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sv,x</sub>=${fmtA(Asv_x)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_x)}${!highAxial?' (×2/3)':''}.`);
+  if (!isCirc && !tscOK_y) warns.push(`<b>Confinement insufficient (Y, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sv,y</sub>=${fmtA(Asv_y)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_y)}${!highAxial?' (×2/3)':''}.`);
+  if ( isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (TSC 2018 §7.4.5.3 Denklem 7.2):</b> ρ<sub>s,prov</sub>=${fmtR(rhoS_prov)} &lt; ρ<sub>s,req</sub>=${fmtR(rhoS_req)}${!highAxial?' (×2/3)':''}.`);
   if (!spOK)                   warns.push(`<b>Spacing exceeds limit:</b> s<sub>v</sub>=${fmtM(sv)} &gt; s<sub>max</sub>=${fmtM(svMax)} (TS 500 §8.2.5).`);
 
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -4125,25 +4114,25 @@ function calcShColTS500() {
         <div class="fl-unit">${dcr_y<=1?'OK':'NG'}</div>
       </div>`}
       <div class="fl-col">
-        <div class="fl-lbl">Min. ρ<sub>sw</sub>${isCirc ? '' : ' — X'}</div>
-        <div class="fl-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</div>
-        <div class="fl-unit">A<sub>sh,req</sub>=${fmtA(Ash_req_x)}${!highAxial?' (×⅔)':''} &nbsp; TS500 min ${fmtR(rhoMin)} &nbsp; ${minOK_x?'✓':'✗'}</div>
+        <div class="fl-lbl">A<sub>sv,x</sub> vs A<sub>sh,req</sub></div>
+        <div class="fl-val ${minOK_x?'ok':'err'}">${fmtA(Asv_x)}</div>
+        <div class="fl-unit">req ${fmtA(Ash_req_x)}${!highAxial?' (×2/3)':''} (TSC Dk.7.1) &nbsp; ${minOK_x?'✓':'✗'}</div>
       </div>
       ${isCirc ? `
       <div class="fl-col">
-        <div class="fl-lbl">Confinement ρ<sub>s</sub></div>
+        <div class="fl-lbl">ρ<sub>s,prov</sub> vs ρ<sub>s,req</sub></div>
         <div class="fl-val ${tscOK_x?'ok':'err'}">${fmtR(rhoS_prov)}</div>
-        <div class="fl-unit">req ${fmtR(rhoS_req)}${!highAxial?' (×⅔)':''} TSC Dk.7.2 &nbsp; ${tscOK_x?'✓':'✗'}</div>
+        <div class="fl-unit">req ${fmtR(rhoS_req)}${!highAxial?' (×2/3)':''} (TSC Dk.7.2) &nbsp; ${tscOK_x?'✓':'✗'}</div>
       </div>` : `
       <div class="fl-col">
-        <div class="fl-lbl">Min. ρ<sub>sw</sub> — Y</div>
-        <div class="fl-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</div>
-        <div class="fl-unit">A<sub>sh,req</sub>=${fmtA(Ash_req_y)}${!highAxial?' (×⅔)':''} &nbsp; TS500 min ${fmtR(rhoMin)} &nbsp; ${minOK_y?'✓':'✗'}</div>
+        <div class="fl-lbl">A<sub>sv,y</sub> vs A<sub>sh,req</sub></div>
+        <div class="fl-val ${minOK_y?'ok':'err'}">${fmtA(Asv_y)}</div>
+        <div class="fl-unit">req ${fmtA(Ash_req_y)}${!highAxial?' (×2/3)':''} (TSC Dk.7.1) &nbsp; ${minOK_y?'✓':'✗'}</div>
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">Section crush</div>
         <div class="fl-val ${crushOK?'ok':'err'}">${crushOK?'OK':'NG'}</div>
-        <div class="fl-unit">τ<sub>d</sub> ≤ 0.22f<sub>cd</sub> ${crushOK?'✓':'✗'}</div>
+        <div class="fl-unit">τ<sub>d</sub> ≤ 0.22f<sub>cd</sub> (TSC §7.4.5.2) ${crushOK?'✓':'✗'}</div>
       </div>
       <div class="fl-col">
         <div class="fl-lbl">s ≤ s<sub>max</sub></div>
@@ -4160,7 +4149,7 @@ function calcShColTS500() {
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">V<sub>cr,x</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·b<sub>w</sub>·d<sub>x</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(bw)+'×'+fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_x)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">3</div></td><td><div class="step-desc">A<sub>sv,x</sub> = n<sub>x</sub>·π/4·d<sub>s</sub>² &nbsp; V<sub>w,x</sub> = (A<sub>sv,x</sub>/s)·f<sub>ywd</sub>·d<sub>x</sub></div><div class="step-formula">${nlx}×π/4×${ds}²=${fmtA(Asv_x)} &nbsp;·&nbsp; (${fmtA(Asv_x)}/${sv})×${fywd.toFixed(1)}×${fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vw_x)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">V<sub>r,x</sub> = V<sub>cr,x</sub> + V<sub>w,x</sub> &nbsp;·&nbsp; D/C<sub>x</sub> = V<sub>d,x</sub>/V<sub>r,x</sub></div></td><td style="text-align:right"><span class="step-val hl">${fmtV(Vr_x)}</span> <span class="step-check ${dcr_x<=1?'chk-ok':'chk-err'}">${dcr_x.toFixed(3)} ${dcr_x<=1?'✓':'✗'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">5</div></td><td><div class="step-desc">Crushing check — TS 500 §8.2: τ<sub>d,x</sub> = V<sub>d,x</sub>/(b<sub>w</sub>·d<sub>x</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdx)}×1000/(${fmtD(bw)}×${fmtD(d_x)}) = ${tau_dx.toFixed(2)} MPa &nbsp; ≤ &nbsp; 0.22×${fcd.toFixed(2)}=${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_x?'ok':'err'}">${tau_dx.toFixed(2)} MPa</span> <span class="step-check ${crushOK_x?'chk-ok':'chk-err'}">${crushOK_x?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">5</div></td><td><div class="step-desc">Crushing check — TSC 2018 §7.4.5.2: τ<sub>d,x</sub> = V<sub>d,x</sub>/(b<sub>w</sub>·d<sub>x</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdx)}×1000/(${fmtD(bw)}×${fmtD(d_x)}) = ${tau_dx.toFixed(2)} MPa &nbsp; ≤ &nbsp; 0.22×${fcd.toFixed(2)}=${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_x?'ok':'err'}">${tau_dx.toFixed(2)} MPa</span> <span class="step-check ${crushOK_x?'chk-ok':'chk-err'}">${crushOK_x?'OK':'NG'}</span></td></tr>
     </table>
   </div>
 
@@ -4171,16 +4160,13 @@ function calcShColTS500() {
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">V<sub>cr,y</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·h·d<sub>y</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(h)+'×'+fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_y)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">A<sub>sv,y</sub> = n<sub>y</sub>·π/4·d<sub>s</sub>² &nbsp; V<sub>w,y</sub> = (A<sub>sv,y</sub>/s)·f<sub>ywd</sub>·d<sub>y</sub></div><div class="step-formula">${nly}×π/4×${ds}²=${fmtA(Asv_y)} &nbsp;·&nbsp; (${fmtA(Asv_y)}/${sv})×${fywd.toFixed(1)}×${fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vw_y)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">3</div></td><td><div class="step-desc">V<sub>r,y</sub> = V<sub>cr,y</sub> + V<sub>w,y</sub> &nbsp;·&nbsp; D/C<sub>y</sub> = V<sub>d,y</sub>/V<sub>r,y</sub></div></td><td style="text-align:right"><span class="step-val hl">${fmtV(Vr_y)}</span> <span class="step-check ${dcr_y<=1?'chk-ok':'chk-err'}">${dcr_y.toFixed(3)} ${dcr_y<=1?'✓':'✗'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">Crushing check — TS 500 §8.2: τ<sub>d,y</sub> = V<sub>d,y</sub>/(h·d<sub>y</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdy)}×1000/(${fmtD(h)}×${fmtD(d_y)}) = ${tau_dy.toFixed(2)} MPa ≤ ${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_y?'ok':'err'}">${tau_dy.toFixed(2)} MPa</span> <span class="step-check ${crushOK_y?'chk-ok':'chk-err'}">${crushOK_y?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">Crushing check — TSC 2018 §7.4.5.2: τ<sub>d,y</sub> = V<sub>d,y</sub>/(h·d<sub>y</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdy)}×1000/(${fmtD(h)}×${fmtD(d_y)}) = ${tau_dy.toFixed(2)} MPa ≤ ${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_y?'ok':'err'}">${tau_dy.toFixed(2)} MPa</span> <span class="step-check ${crushOK_y?'chk-ok':'chk-err'}">${crushOK_y?'OK':'NG'}</span></td></tr>
     </table>
   </div>` : ''}
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Stirrup Checks — TS 500 §8.2.4-5 / TSC 2018 §7.4.5.3 (gov. dir: ${govDir})</div>
+    <div class="rpt-sec-title">Stirrup Checks — TSC 2018 §7.4.5.2-3 (gov. dir: ${govDir})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">TS 500 §8.2.4 — min. stirrup ratio &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub></div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">TS 500 check — X: ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>)</div><div class="step-formula">${fmtA(Asv_x)} / (${sv} × ${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${ts500OK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${ts500OK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${ts500OK_x?'chk-ok':'chk-err'}">${ts500OK_x?'OK':'NG'}</span></td></tr>
-      ${!isCirc ? `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">TS 500 check — Y: ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h)</div><div class="step-formula">${fmtA(Asv_y)} / (${sv} × ${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${ts500OK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${ts500OK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${ts500OK_y?'chk-ok':'chk-err'}">${ts500OK_y?'OK':'NG'}</span></td></tr>` : ''}
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C</div></td><td><div class="step-desc">TSC 2018 §7.4.5.3 — N<sub>d</sub> vs 0.20·A<sub>c</sub>·f<sub>ck</sub> threshold → reduction factor</div><div class="step-formula">N<sub>d</sub> = ${fmtV(Nd)} &nbsp; 0.20·${isCirc?`π/4·(${fmtD(bw)})²`:`${fmtD(bw)}×${fmtD(h)}`}·${fck} = ${fmtV(0.20*Ag*fck)} &nbsp; ${highAxial?'→ factor = 1.00 (full confinement)':'→ factor = 2/3 (reduced confinement)'}</div></td><td style="text-align:right"><span class="step-val">${highAxial?'×1.00':'×⅔'}</span></td></tr>
       ${!isCirc ? `
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>1</sub></div></td><td><div class="step-desc">Core dims (c-to-c of hoops) &nbsp; b<sub>kx</sub> = b<sub>w</sub>−2c<sub>v</sub>−d<sub>s</sub> &nbsp;·&nbsp; b<sub>ky</sub> = h−2c<sub>v</sub>−d<sub>s</sub> &nbsp;·&nbsp; A<sub>ck</sub> = b<sub>kx</sub>×b<sub>ky</sub></div><div class="step-formula">${fmtD(bkx)} × ${fmtD(bky)} = ${fmtA(Ack)} &nbsp;·&nbsp; A<sub>c</sub>/A<sub>ck</sub> = ${(Ag/Ack).toFixed(3)}</div></td><td style="text-align:right"><span class="step-val">${fmtA(Ack)}</span></td></tr>
@@ -4193,7 +4179,7 @@ function calcShColTS500() {
     </table>
   </div>
   <div class="print-disclaimer">⚠ For preliminary design and educational purposes only. Must be verified by a licensed structural engineer.</div>
-  <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>TS 500:2000${seismic?' / TSC 2018':''} Column Shear &nbsp;·&nbsp; kN–m</span></div>`;
+  <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>TSC 2018${seismic?'':' / TS 500:2000'} Column Shear &nbsp;·&nbsp; kN–m</span></div>`;
 
   document.getElementById('shc-ts500-report-body').innerHTML = html;
   document.getElementById('shc-ts500-empty').style.display = 'none';
