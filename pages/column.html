@@ -3379,6 +3379,17 @@ function toggleEC2Seismic() {
   const checked = document.getElementById('shc-ec2-seismic').checked;
   document.getElementById('shc-ec2-seismic-opts').style.display = checked ? '' : 'none';
 }
+// Auto-recalculate on any input/change inside the ACI and EC2 shear panels
+(function() {
+  function wire(panelId, fn) {
+    const el = document.getElementById(panelId);
+    if (!el) return;
+    el.addEventListener('input', fn);
+    el.addEventListener('change', fn);
+  }
+  wire('sh-aci', calcShCol_aci);
+  wire('sh-ec2', calcShCol_ec2);
+})();
 
 // ── Unit switching for shear module ──────────────────────────────────────────
 function setShColUnit(unit, btn, code) {
@@ -3745,10 +3756,10 @@ function calcShCol_aci() {
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:6px"><div class="step-num">A</div></td>
         <td>
           <div class="step-desc">A<sub>v,min,x</sub> — X-Direction &nbsp;<span style="font-weight:400;font-size:.85em">(n<sub>x</sub>=${nlx})</span></div>
-          <div class="step-formula" style="line-height:2">
-            §26.6.3.2 &nbsp; max(0.062√f'c, 0.35)·b<sub>w</sub>·s/f<sub>yt</sub> = ${fmtA(Av_min_x)}<br>
-            ${!isCirc_aci&&isSeismic&&sdc==='def'?`§18.7.5.4 &nbsp; max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,x</sub> = ${fmtA(Ash_req_x_s)}<br>`:''}
-            <b>Governing (${govSrc_aci_x}): A<sub>v,min,x</sub> = ${fmtA(Av_gov_x)}</b> &nbsp;·&nbsp; Provided: n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Av_x)}
+          <div class="step-formula" style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0">§26.6.3.2 &nbsp; max(0.062√f'c, 0.35)·b<sub>w</sub>·s/f<sub>yt</sub></span><span style="white-space:nowrap">${fmtA(Av_min_x)}</span></div>
+            ${!isCirc_aci&&isSeismic&&sdc==='def'?`<div style="display:flex;gap:8px"><span style="flex:1;min-width:0">§18.7.5.4 &nbsp; max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,x</sub></span><span style="white-space:nowrap">${fmtA(Ash_req_x_s)}</span></div>`:''}
+            <div><b>Governing (${govSrc_aci_x}): A<sub>v,min,x</sub> = ${fmtA(Av_gov_x)}</b> &nbsp;·&nbsp; Provided: n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Av_x)}</div>
           </div>
         </td>
         <td style="width:170px;text-align:right;vertical-align:top;padding-top:6px"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Av_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td>
@@ -3756,15 +3767,27 @@ function calcShCol_aci() {
       ${!isCirc_aci?`<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:6px"><div class="step-num">A'</div></td>
         <td>
           <div class="step-desc">A<sub>v,min,y</sub> — Y-Direction &nbsp;<span style="font-weight:400;font-size:.85em">(n<sub>y</sub>=${nly})</span></div>
-          <div class="step-formula" style="line-height:2">
-            §26.6.3.2 &nbsp; max(0.062√f'c, 0.35)·h·s/f<sub>yt</sub> = ${fmtA(Av_min_y)}<br>
-            ${isSeismic&&sdc==='def'?`§18.7.5.4 &nbsp; max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,y</sub> = ${fmtA(Ash_req_y_s)}<br>`:''}
-            <b>Governing (${govSrc_aci_y}): A<sub>v,min,y</sub> = ${fmtA(Av_gov_y)}</b> &nbsp;·&nbsp; Provided: n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Av_y)}
+          <div class="step-formula" style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0">§26.6.3.2 &nbsp; max(0.062√f'c, 0.35)·h·s/f<sub>yt</sub></span><span style="white-space:nowrap">${fmtA(Av_min_y)}</span></div>
+            ${isSeismic&&sdc==='def'?`<div style="display:flex;gap:8px"><span style="flex:1;min-width:0">§18.7.5.4 &nbsp; max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,y</sub></span><span style="white-space:nowrap">${fmtA(Ash_req_y_s)}</span></div>`:''}
+            <div><b>Governing (${govSrc_aci_y}): A<sub>v,min,y</sub> = ${fmtA(Av_gov_y)}</b> &nbsp;·&nbsp; Provided: n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Av_y)}</div>
           </div>
         </td>
         <td style="text-align:right;vertical-align:top;padding-top:6px"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Av_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td>
       </tr>`:''}
-      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Spacing limits — §10.7.6.2${isSeismic&&sdc!=='ab'?' + Ch.18':''}</div><div class="step-formula">min(16d<sub>bl</sub>=${fmtD(s_lim_long)}, 48d<sub>t</sub>=${fmtD(s_lim_tie)}, min(b,h)=${fmtD(s_lim_sec)}, shear=${fmtD(s_shear_lim)}${isSeismic&&sdc!=='ab'?`, seismic=${fmtD(s_seis_lim)}`:''})</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_max_ctrl)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
+      <tr><td style="vertical-align:top;padding-top:4px"><div class="step-num">B</div></td><td style="vertical-align:top">
+        <div class="step-desc">Spacing limits — §10.7.6.2${isSeismic&&sdc!=='ab'?' + Ch.18':''}</div>
+        <div class="step-formula" style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;flex-wrap:wrap;gap:2px 14px">
+            <span>16d<sub>bl</sub> = ${fmtD(s_lim_long)}</span>
+            <span>48d<sub>t</sub> = ${fmtD(s_lim_tie)}</span>
+            <span>min(b,h) = ${fmtD(s_lim_sec)}</span>
+            <span>shear = ${fmtD(s_shear_lim)}</span>
+            ${isSeismic&&sdc!=='ab'?`<span>seismic = ${fmtD(s_seis_lim)}</span>`:''}
+          </div>
+          <div><b>s<sub>max</sub> = min(…) = ${fmtD(s_max_ctrl)}</b></div>
+        </div>
+      </td><td style="text-align:right;vertical-align:top;padding-top:4px"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_max_ctrl)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
       ${(Vs_req_x>0||Vs_req_y>0)?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>v</sub>/s per direction</div><div class="step-formula">${Vs_req_x>0?`X: V<sub>s,req</sub>=${fmtV(Vs_req_x)}, A<sub>v,req,x</sub>@s=${fmtA(Av_req_x)} (prov ${fmtA(Av_x)} ${Av_x>=Av_req_x?'✓':'✗'})`:``}${!isCirc_aci&&Vs_req_y>0?`${Vs_req_x>0?' &nbsp;·&nbsp; ':''}Y: V<sub>s,req</sub>=${fmtV(Vs_req_y)}, A<sub>v,req,y</sub>@s=${fmtA(Av_req_y)} (prov ${fmtA(Av_y)} ${Av_y>=Av_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
   </div>
@@ -3777,7 +3800,7 @@ function calcShCol_aci() {
         <td><div class="step-desc">Max spacing — §18.${sdc==='c'?'4.3.2a':'7.5.3'} (confinement zone assumed)</div>
           ${sdc==='c'
             ?`<div class="step-formula" style="line-height:2">min(8d<sub>bl</sub>=${fmtD(8*dbl)}, 24d<sub>t</sub>=${fmtD(24*dt)}, b<sub>min</sub>/2=${fmtD(Math.min(bw,h)/2)}, 300 mm) = <b>${fmtD(s_seis_lim)}</b></div>`
-            :`<div class="step-formula" style="line-height:2">h<sub>x</sub> = max(b<sub>c,x</sub>/(n<sub>x</sub>−1), b<sub>c,y</sub>/(n<sub>y</sub>−1)) = ${fmtD(hx_in)}<br>s<sub>o</sub> = 100 + (350 − h<sub>x</sub>)/3 = ${so_mm.toFixed(0)} mm<br>s<sub>seis</sub> = min(b<sub>c,min</sub>/4 = ${fmtD(Math.min(bc_x,bc_y)/4)}, &nbsp; 6d<sub>bl</sub> = ${fmtD(6*dbl)}, &nbsp; s<sub>o</sub> = ${so_mm.toFixed(0)} mm) = <b>${fmtD(s_seis_lim)}</b></div>`
+            :`<div class="step-formula" style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;gap:8px"><span style="flex:1;min-width:0">h<sub>x</sub> = max(b<sub>c,x</sub>/(n<sub>x</sub>−1), b<sub>c,y</sub>/(n<sub>y</sub>−1))</span><span style="white-space:nowrap">${fmtD(hx_in)}</span></div><div style="display:flex;gap:8px"><span style="flex:1;min-width:0">s<sub>o</sub> = 100 + (350 − h<sub>x</sub>)/3</span><span style="white-space:nowrap">${so_mm.toFixed(0)} mm</span></div><div style="display:flex;gap:8px"><span style="flex:1;min-width:0">s<sub>seis</sub> = min(b<sub>c,min</sub>/4=${fmtD(Math.min(bc_x,bc_y)/4)}, 6d<sub>bl</sub>=${fmtD(6*dbl)}, s<sub>o</sub>=${so_mm.toFixed(0)} mm)</span><span style="white-space:nowrap"><b>${fmtD(s_seis_lim)}</b></span></div></div>`
           }
         </td><td style="text-align:right;vertical-align:top;padding-top:6px"><span class="step-val ${s<=s_seis_lim?'ok':'err'}">${fmtD(s)}</span> <span class="step-check ${s<=s_seis_lim?'chk-ok':'chk-err'}">${s<=s_seis_lim?'OK':'NG'}</span></td></tr>
       ${sdc==='def'?(!isCirc_aci?`
