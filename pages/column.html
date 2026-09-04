@@ -3588,7 +3588,7 @@ function calcShCol_aci() {
   const labels= {ok:'ADEQUATE',err:'INADEQUATE'};
 
   const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
-  const fmtD = v => isUS ? (v/25.4).toFixed(3)+' in' : v.toFixed(0)+' mm';
+  const fmtD = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtV = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
@@ -3611,7 +3611,7 @@ function calcShCol_aci() {
       <tr><td>f'<sub>c</sub> &nbsp;·&nbsp; f<sub>yt</sub></td><td>${fmtS(fc)} · ${fmtS(fyt)}</td></tr>
       <tr><td>λ &nbsp;·&nbsp; λ<sub>s</sub></td><td>${lam.toFixed(2)} · ${lam_s.toFixed(3)}</td></tr>
       <tr><td>Longitudinal ρ<sub>l</sub></td><td>${(rho_l*100).toFixed(2)}%</td></tr>
-      <tr><td>Stirrups: Ø${fmtD(dt)} @ s = ${fmtD(s)}</td><td>n<sub>x</sub> = ${nlx}, n<sub>y</sub> = ${isCirc_aci?'—':nly}</td></tr>
+      <tr><td>Stirrups: Ø${dt.toFixed(0)} mm @ s = ${fmtD(s)}</td><td>n<sub>x</sub> = ${nlx}, n<sub>y</sub> = ${isCirc_aci?'—':nly}</td></tr>
       <tr><td>A<sub>v,x</sub> = n<sub>x</sub>·A<sub>b</sub>${isCirc_aci?'':` &nbsp;·&nbsp; A<sub>v,y</sub> = n<sub>y</sub>·A<sub>b</sub>`}</td><td>${fmtA(Av_x)}${isCirc_aci?'':` · ${fmtA(Av_y)}`}</td></tr>
       ${isCirc_aci?`<tr><td>V<sub>u</sub> &nbsp;·&nbsp; N<sub>u</sub></td><td>${fmtV(Vu_x)} · ${fmtV(Nu)}</td></tr>`:`<tr><td>V<sub>u,x</sub> (→h) &nbsp;·&nbsp; V<sub>u,y</sub> (→b)</td><td>${fmtV(Vu_x)} · ${fmtV(Vu_y)}</td></tr><tr><td>N<sub>u</sub></td><td>${fmtV(Nu)}</td></tr>`}
     </table>
@@ -3828,7 +3828,7 @@ function calcShCol_ec2() {
   const icons = {ok:'✅',err:'❌'};
   const labels = {ok:'ADEQUATE',err:'INADEQUATE'};
   const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
-  const fmtD = v => isUS ? (v/25.4).toFixed(3)+' in' : v.toFixed(0)+' mm';
+  const fmtD = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
   const fmtS = v => isUS ? (v/0.006895).toFixed(0)+' psi' : v.toFixed(2)+' MPa';
@@ -3863,7 +3863,7 @@ function calcShCol_ec2() {
       <tr><td><div class="step-num">E2</div></td><td><div class="step-desc">ε<sub>yd</sub> = f<sub>yd</sub>/E<sub>s</sub> &nbsp;·&nbsp; ω<sub>v</sub> = ρ<sub>l</sub>·f<sub>yd</sub>/f<sub>cd</sub></div><div class="step-formula">f<sub>yd</sub> = ${fmtS(fyd)} · ε<sub>yd</sub> = ${eps_yd.toFixed(5)} &nbsp;·&nbsp; ω<sub>v</sub> = ${(rho_l*100).toFixed(2)}% × ${fmtS(fyd)} / ${fmtS(fcd)} = ${omega_v.toFixed(4)}</div></td><td style="text-align:right"><span class="step-val">${eps_yd.toFixed(5)} · ${omega_v.toFixed(4)}</span></td></tr>
       <tr><td><div class="step-num">E3</div></td><td><div class="step-desc">ω<sub>wd,req</sub> = 30μ<sub>φ</sub> · ε<sub>yd</sub> · (b<sub>c</sub>/b<sub>o</sub>) · (ν<sub>d</sub> + ω<sub>v</sub>) − 0.035 ≥ ${omegawd_min.toFixed(2)} — per direction</div><div class="step-formula">b<sub>w</sub>-dir: 30×${muphi}×${eps_yd.toFixed(5)}×${bcbo_x.toFixed(3)}×(${nud.toFixed(3)}+${omega_v.toFixed(4)})−0.035 = ${omegawd_req_f_x.toFixed(4)} → <b>${omegawd_req_x.toFixed(4)}</b>${isCirc_ec2 ? '' : ` &nbsp;·&nbsp; h-dir: 30×${muphi}×${eps_yd.toFixed(5)}×${bcbo_y.toFixed(3)}×(${nud.toFixed(3)}+${omega_v.toFixed(4)})−0.035 = ${omegawd_req_f_y.toFixed(4)} → <b>${omegawd_req_y.toFixed(4)}</b>`}</div></td><td style="text-align:right"><span class="step-val">${omegawd_req_x.toFixed(4)}${isCirc_ec2 ? '' : ` · ${omegawd_req_y.toFixed(4)}`}</span></td></tr>
       <tr><td><div class="step-num">E4</div></td><td><div class="step-desc">ω<sub>wd,prov</sub> = ρ<sub>wd</sub> · f<sub>ywd</sub>/f<sub>cd</sub> — per direction (n<sub>x</sub> legs across b<sub>w</sub>, n<sub>y</sub> legs across h)</div><div class="step-formula">b<sub>w</sub>-dir: ρ<sub>wd,x</sub> = ${nlx}×${Ab.toFixed(1)}/(${fmtD(bo_x)}×s) = ${rwd_x.toFixed(6)} → ω<sub>wd,x</sub> = <b>${omegawd_prov_x.toFixed(4)}</b> ${ec8Ok_x?'✓':'✗'}${isCirc_ec2 ? '' : ` &nbsp;·&nbsp; h-dir: ρ<sub>wd,y</sub> = ${nly}×${Ab.toFixed(1)}/(${fmtD(bo_y)}×s) = ${rwd_y.toFixed(6)} → ω<sub>wd,y</sub> = <b>${omegawd_prov_y.toFixed(4)}</b> ${ec8Ok_y?'✓':'✗'}`}</div></td><td style="text-align:right"><span class="step-val ${ec8Ok?'ok':'err'}">${omegawd_prov_x.toFixed(4)}${isCirc_ec2 ? '' : ` · ${omegawd_prov_y.toFixed(4)}`}</span> <span class="step-check ${ec8Ok?'chk-ok':'chk-err'}">${ec8Ok?'OK':'NG'}</span></td></tr>
-      <tr><td><div class="step-num">E5</div></td><td><div class="step-desc">Seismic spacing limit — critical region${dc==='dch'?' (DCH)':' (DCM)'}</div><div class="step-formula">s ≤ min(b<sub>o,min</sub>/${dc==='dch'?3:2}=${fmtD(dc==='dch'?bo_min/3:bo_min/2)}, ${dc==='dch'?6:8}d<sub>bl</sub>=${fmtD(dc==='dch'?6*dbl:8*dbl)}, ${dc==='dch'?125:175} mm) = ${fmtD(s_ec8_lim)}</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_ec2)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
+      <tr><td><div class="step-num">E5</div></td><td><div class="step-desc">Seismic spacing limit — critical region${dc==='dch'?' (DCH)':' (DCM)'}</div><div class="step-formula">s ≤ min(b<sub>o,min</sub>/${dc==='dch'?3:2}=${fmtD(dc==='dch'?bo_min/3:bo_min/2)}, ${dc==='dch'?6:8}d<sub>bl</sub>=${fmtD(dc==='dch'?6*dbl:8*dbl)}, ${fmtD(dc==='dch'?125:175)}) = ${fmtD(s_ec8_lim)}</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_ec2)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
     </table>
   </div>`;
 
@@ -3885,7 +3885,7 @@ function calcShCol_ec2() {
       <tr><td>f<sub>ck</sub> · f<sub>cd</sub></td><td>${fmtS(fck)} · ${fmtS(fcd)}</td></tr>
       <tr><td>f<sub>yk</sub> · f<sub>ywd</sub></td><td>${fmtS(fyk)} · ${fmtS(fywd)}</td></tr>
       <tr><td>ρ<sub>l</sub> &nbsp;·&nbsp; cot θ</td><td>${(rho_l*100).toFixed(2)}% · ${cotT.toFixed(1)} (θ=${(Math.atan(1/cotT)*180/Math.PI).toFixed(1)}°)</td></tr>
-      <tr><td>Links: Ø${fmtD(dt)} @ s = ${fmtD(s)}</td><td>n<sub>x</sub> = ${nlx}, n<sub>y</sub> = ${isCirc_ec2?'—':nly}</td></tr>
+      <tr><td>Links: Ø${dt.toFixed(0)} mm @ s = ${fmtD(s)}</td><td>n<sub>x</sub> = ${nlx}, n<sub>y</sub> = ${isCirc_ec2?'—':nly}</td></tr>
       <tr><td>A<sub>sw,x</sub> = n<sub>x</sub>·A<sub>b</sub>${isCirc_ec2?'':` &nbsp;·&nbsp; A<sub>sw,y</sub> = n<sub>y</sub>·A<sub>b</sub>`}</td><td>${fmtA(Asw_x)}${isCirc_ec2?'':` · ${fmtA(Asw_y)}`}</td></tr>
       ${isCirc_ec2?`<tr><td>V<sub>Ed</sub> &nbsp;·&nbsp; N<sub>Ed</sub></td><td>${fmtF(VEd_x)} · ${fmtF(NEd)}</td></tr>`:`<tr><td>V<sub>Ed,x</sub> (→h) &nbsp;·&nbsp; V<sub>Ed,y</sub> (→b)</td><td>${fmtF(VEd_x)} · ${fmtF(VEd_y)}</td></tr><tr><td>N<sub>Ed</sub> &nbsp;·&nbsp; σ<sub>cp</sub></td><td>${fmtF(NEd)} · ${fmtS(NEd/Ac)}</td></tr>`}
     </table>
@@ -4028,6 +4028,7 @@ function calcShColTS500() {
   const fmtS = v => v.toFixed(2) + ' MPa';
   const fmtA = v => v.toFixed(0) + ' mm²';
   const fmtD = v => v.toFixed(0) + ' mm';
+  const fmtM = v => (v / 1000).toFixed(3) + ' m';
   const fmtR = v => (v * 1000).toFixed(4) + '‰';
 
   const warns = [];
@@ -4035,10 +4036,10 @@ function calcShColTS500() {
   if (!crushOK_y)             warns.push(`<b>Section crushing (Y):</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2).`);
   if (!minOK_x)               warns.push(`<b>Min. stirrup ratio not satisfied (X):</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
   if (!isCirc && !minOK_y)    warns.push(`<b>Min. stirrup ratio not satisfied (Y):</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
-  if (!spOK)                   warns.push(`<b>Spacing exceeds limit:</b> s<sub>v</sub>=${sv.toFixed(0)} mm &gt; s<sub>max</sub>=${svMax.toFixed(0)} mm (TS 500 §8.2.5).`);
+  if (!spOK)                   warns.push(`<b>Spacing exceeds limit:</b> s<sub>v</sub>=${fmtM(sv)} &gt; s<sub>max</sub>=${fmtM(svMax)} (TS 500 §8.2.5).`);
 
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-  const secLbl = isCirc ? `D = ${fmtD(bw)}` : `b<sub>w</sub>×h = ${fmtD(bw)}×${fmtD(h)}`;
+  const secLbl = isCirc ? `D = ${fmtM(bw)}` : `b<sub>w</sub>×h = ${fmtM(bw)}×${fmtM(h)}`;
 
   const html = `
   <div class="print-only">
@@ -4054,14 +4055,14 @@ function calcShColTS500() {
       ${isCirc
         ? `<tr><td>Diameter D</td><td>${(bw/1000).toFixed(3)} m</td></tr>`
         : `<tr><td>Section b<sub>w</sub> × h</td><td>${(bw/1000).toFixed(3)} m × ${(h/1000).toFixed(3)} m</td></tr>`}
-      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
+      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtM(cv)}</td></tr>
       ${isCirc
-        ? `<tr><td>d = D − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_x)}</td></tr>`
-        : `<tr><td>d<sub>x</sub> = h − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_x)}</td></tr><tr><td>d<sub>y</sub> = b<sub>w</sub> − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_y)}</td></tr>`}
+        ? `<tr><td>d = D − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtM(d_x)}</td></tr>`
+        : `<tr><td>d<sub>x</sub> = h − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtM(d_x)}</td></tr><tr><td>d<sub>y</sub> = b<sub>w</sub> − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtM(d_y)}</td></tr>`}
       <tr><td>f<sub>ck</sub> &nbsp;·&nbsp; f<sub>cd</sub></td><td>${fck} MPa &nbsp;·&nbsp; ${fcd.toFixed(2)} MPa</td></tr>
       <tr><td>f<sub>ctk</sub> &nbsp;·&nbsp; f<sub>ctd</sub></td><td>${fctk.toFixed(3)} MPa &nbsp;·&nbsp; ${fctd.toFixed(3)} MPa</td></tr>
       <tr><td>f<sub>yv</sub> &nbsp;·&nbsp; f<sub>ywd</sub></td><td>${fyv} MPa &nbsp;·&nbsp; ${fywd.toFixed(1)} MPa</td></tr>
-      <tr><td>Stirrups: Ø${ds} @ s<sub>v</sub> = ${sv} mm</td><td>n<sub>x</sub> = ${nlx}${isCirc ? '' : `, n<sub>y</sub> = ${nly}`}</td></tr>
+      <tr><td>Stirrups: Ø${ds} mm @ s<sub>v</sub> = ${fmtM(sv)}</td><td>n<sub>x</sub> = ${nlx}${isCirc ? '' : `, n<sub>y</sub> = ${nly}`}</td></tr>
       <tr><td>A<sub>sv,x</sub>${isCirc ? '' : ` &nbsp;·&nbsp; A<sub>sv,y</sub>`}</td><td>${fmtA(Asv_x)}${isCirc ? '' : ` &nbsp;·&nbsp; ${fmtA(Asv_y)}`}</td></tr>
       ${isCirc
         ? `<tr><td>V<sub>d</sub></td><td>${fmtV(Vdx)}</td></tr>`
@@ -4102,14 +4103,14 @@ function calcShColTS500() {
       </div>
       <div class="fl-col">
         <div class="fl-lbl">s ≤ s<sub>max</sub></div>
-        <div class="fl-val ${spOK?'ok':'err'}">${fmtD(sv)}</div>
-        <div class="fl-unit">max ${fmtD(svMax)} &nbsp; ${spOK?'✓':'✗'}</div>
+        <div class="fl-val ${spOK?'ok':'err'}">${fmtM(sv)}</div>
+        <div class="fl-unit">max ${fmtM(svMax)} &nbsp; ${spOK?'✓':'✗'}</div>
       </div>
     </div>
   </div>
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Calculation Steps — X Direction (${secLbl}, d<sub>x</sub> = ${fmtD(d_x)})</div>
+    <div class="rpt-sec-title">Calculation Steps — X Direction (${secLbl}, d<sub>x</sub> = ${fmtM(d_x)})</div>
     <table class="steps-table">
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">f<sub>ctd</sub> = f<sub>ctk</sub>/γ<sub>c</sub> &nbsp;·&nbsp; f<sub>ywd</sub> = f<sub>yv</sub>/γ<sub>s</sub></div><div class="step-formula">f<sub>ctk</sub>=0.35√${fck}=${fctk.toFixed(3)} MPa / 1.50 &nbsp;·&nbsp; ${fyv}/1.15</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtS(fctd)} &nbsp;·&nbsp; ${fywd.toFixed(1)} MPa</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">V<sub>cr,x</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·b<sub>w</sub>·d<sub>x</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(bw)+'×'+fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_x)}</span></td></tr>
@@ -4121,7 +4122,7 @@ function calcShColTS500() {
 
   ${!isCirc ? `
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Calculation Steps — Y Direction (h×d<sub>y</sub> = ${fmtD(h)}×${fmtD(d_y)})</div>
+    <div class="rpt-sec-title">Calculation Steps — Y Direction (h×d<sub>y</sub> = ${fmtM(h)}×${fmtM(d_y)})</div>
     <table class="steps-table">
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">V<sub>cr,y</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·h·d<sub>y</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(h)+'×'+fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_y)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">A<sub>sv,y</sub> = n<sub>y</sub>·π/4·d<sub>s</sub>² &nbsp; V<sub>w,y</sub> = (A<sub>sv,y</sub>/s)·f<sub>ywd</sub>·d<sub>y</sub></div><div class="step-formula">${nly}×π/4×${ds}²=${fmtA(Asv_y)} &nbsp;·&nbsp; (${fmtA(Asv_y)}/${sv})×${fywd.toFixed(1)}×${fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vw_y)}</span></td></tr>
@@ -4136,7 +4137,7 @@ function calcShColTS500() {
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">Min. stirrup ratio &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub> — TS 500 §8.2.4 / TSC 2018 §7.4.5</div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>) — X direction</div><div class="step-formula">${fmtA(Asv_x)} / (${sv}×${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${minOK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${minOK_x?'chk-ok':'chk-err'}">${minOK_x?'OK':'NG'}</span></td></tr>
       ${!isCirc ? `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h) — Y direction</div><div class="step-formula">${fmtA(Asv_y)} / (${sv}×${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${minOK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${minOK_y?'chk-ok':'chk-err'}">${minOK_y?'OK':'NG'}</span></td></tr>` : ''}
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">B</div></td><td><div class="step-desc">Max. spacing — TS 500 §8.2.5: s ≤ min(h/2, 300 mm)</div><div class="step-formula">min(${fmtD(h/2)}, 300 mm) = ${fmtD(svMax)}</div></td><td style="text-align:right"><span class="step-val ${spOK?'ok':'err'}">${fmtD(svMax)}</span> <span class="step-check ${spOK?'chk-ok':'chk-err'}">${spOK?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">B</div></td><td><div class="step-desc">Max. spacing — TS 500 §8.2.5: s ≤ min(h/2, 300 mm)</div><div class="step-formula">min(${fmtM(h/2)}, ${fmtM(300)}) = ${fmtM(svMax)}</div></td><td style="text-align:right"><span class="step-val ${spOK?'ok':'err'}">${fmtM(svMax)}</span> <span class="step-check ${spOK?'chk-ok':'chk-err'}">${spOK?'OK':'NG'}</span></td></tr>
     </table>
   </div>
   <div class="print-disclaimer">⚠ For preliminary design and educational purposes only. Must be verified by a licensed structural engineer.</div>
@@ -4208,7 +4209,7 @@ function calcShCol_is456() {
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => v.toFixed(1)+' mm²';
   const fmtTs= v => v.toFixed(3)+' N/mm²';
-  const fmtD = v => v.toFixed(0)+' mm';
+  const fmtD = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
 
   // biaxial: x-dir uses bw,d; y-dir uses h as bw, bw as depth
   const dx = d; // already computed: h-cv-dt-dbl/2
@@ -4245,7 +4246,7 @@ function calcShCol_is456() {
     <table class="inp-tbl">
       ${isCirc_is456?`<tr><td>Diameter D</td><td>${fmtL(bw)}</td></tr>`:`<tr><td>Section b × h</td><td>${fmtL(bw)} × ${fmtL(h)}</td></tr>`}
       <tr><td>Gross area A<sub>g</sub></td><td>${fmtA(Ag)}</td></tr>
-      <tr><td>Clear cover c<sub>v</sub></td><td>${cv.toFixed(0)} mm</td></tr>
+      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
       ${isCirc_is456?`<tr><td>Effective depth d</td><td>${fmtD(dx)}</td></tr>`:`<tr><td>d<sub>x</sub> = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(dx)}</td></tr><tr><td>d<sub>y</sub> = b−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(dy)}</td></tr>`}
       <tr><td>f<sub>ck</sub> &nbsp;·&nbsp; f<sub>y</sub></td><td>${fck.toFixed(0)} MPa · ${fy.toFixed(0)} MPa</td></tr>
       <tr><td>Longitudinal ρ<sub>l</sub></td><td>${pt.toFixed(2)}%</td></tr>
@@ -4277,8 +4278,8 @@ function calcShCol_is456() {
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">d<sub>t</sub> ≥ d<sub>t,min</sub> &nbsp;·&nbsp; s<sub>v</sub> ≤ s<sub>v,max</sub></div>
-        <div class="fl-val ${dtOk&&svOk?'ok':'err'}">${fmtD(dt)} · ${fmtD(sv)}</div>
-        <div class="fl-unit">min Ø${fmtD(dt_min)} · max ${fmtD(sv_max)} &nbsp; ${dtOk&&svOk?'✓ OK':'✗ NG'}</div>
+        <div class="fl-val ${dtOk&&svOk?'ok':'err'}">${dt.toFixed(0)} mm · ${fmtD(sv)}</div>
+        <div class="fl-unit">min Ø${dt_min.toFixed(0)} mm · max ${fmtD(sv_max)} &nbsp; ${dtOk&&svOk?'✓ OK':'✗ NG'}</div>
       </div>
     </div>
   </div>
@@ -4293,8 +4294,8 @@ function calcShCol_is456() {
   <div class="rpt-sec">
     <div class="rpt-sec-title">${isCirc_is456?'Spiral':'Tie'} Reinforcement — Cl 26.5.3.2</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">Tie diameter: d<sub>t</sub> ≥ max(d<sub>bl</sub>/4, 6 mm)</div><div class="step-formula">d<sub>t,min</sub> = max(${(dbl/4).toFixed(0)} mm, 6 mm) = ${fmtD(dt_min)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${dtOk?'ok':'err'}">${fmtD(dt)}</span> <span class="step-check ${dtOk?'chk-ok':'chk-err'}">${dtOk?'OK':'NG'}</span></td></tr>
-      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Max tie spacing — Cl 26.5.3.2(c)</div><div class="step-formula">min(min(b,D)=${fmtD(sv_lim1)}, 16d<sub>bl</sub>=${fmtD(sv_lim2)}, 300mm)</div></td><td style="text-align:right"><span class="step-val ${svOk?'ok':'err'}">${fmtD(sv_max)}</span> <span class="step-check ${svOk?'chk-ok':'chk-err'}">${svOk?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">Tie diameter: d<sub>t</sub> ≥ max(d<sub>bl</sub>/4, 6 mm)</div><div class="step-formula">d<sub>t,min</sub> = max(${(dbl/4).toFixed(0)} mm, 6 mm) = ${dt_min.toFixed(0)} mm</div></td><td style="width:170px;text-align:right"><span class="step-val ${dtOk?'ok':'err'}">${dt.toFixed(0)} mm</span> <span class="step-check ${dtOk?'chk-ok':'chk-err'}">${dtOk?'OK':'NG'}</span></td></tr>
+      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Max tie spacing — Cl 26.5.3.2(c)</div><div class="step-formula">min(min(b,D)=${fmtD(sv_lim1)}, 16d<sub>bl</sub>=${fmtD(sv_lim2)}, ${fmtD(sv_lim3)})</div></td><td style="text-align:right"><span class="step-val ${svOk?'ok':'err'}">${fmtD(sv_max)}</span> <span class="step-check ${svOk?'chk-ok':'chk-err'}">${svOk?'OK':'NG'}</span></td></tr>
       ${needsReinf?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>sv</sub>/s<sub>v</sub> = (τ<sub>v</sub>−τ<sub>c</sub>)·b<sub>w</sub>/(0.87f<sub>y</sub>) per direction</div><div class="step-formula">${needsReinf_x?`X: ${Asv_sv_req_x.toFixed(4)} mm²/mm → A<sub>sv,req,x</sub>@s<sub>v</sub> = ${fmtA(Asv_req_x)} (prov n<sub>x</sub>=${nlx}: ${fmtA(Asv_x)} ${Asv_x>=Asv_req_x?'✓':'✗'})`:``}${needsReinf_y?`${needsReinf_x?' &nbsp;·&nbsp; ':''}Y: ${Asv_sv_req_y.toFixed(4)} mm²/mm → A<sub>sv,req,y</sub>@s<sub>v</sub> = ${fmtA(Asv_req_y)} (prov n<sub>y</sub>=${nly}: ${fmtA(Asv_y)} ${Asv_y>=Asv_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
   </div>
