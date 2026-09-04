@@ -329,6 +329,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <button class="sub-tab active" onclick="stab(this,'col','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'col','ec2')">Eurocode 2 (EN 1992-1-1)</button>
   <button class="sub-tab" onclick="stab(this,'col','is456')">IS 456:2000</button>
+  <button class="sub-tab" onclick="stab(this,'col','ts500')">TS 500:2000</button>
 </div>
 
 <!-- ═══════ ACI 318-25 ═══════ -->
@@ -843,6 +844,78 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 </div>
 
+
+<!-- ═══════ TS 500:2000 Column PMM ═══════ -->
+<div class="sub-pane" id="col-ts500">
+<div class="calc-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">TS 500:2000</span></div>
+    <div class="card-body">
+      <div class="form-div"><div class="form-div-lbl">Section Geometry (Rectangular)</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Width b [m]</label><div class="iw"><input type="number" id="ts500-b" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+        <div class="form-group"><label>Depth h [m]</label><div class="iw"><input type="number" id="ts500-h" value="0.40" step="0.01" oninput="updatePreview('ts500')"><span class="us">m</span></div></div>
+      </div>
+      <div class="form-group"><label>Clear Cover to main bar [m]</label><div class="iw"><input type="number" id="ts500-cv" value="0.040" step="0.005"><span class="us">m</span></div></div>
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>f<sub>ck</sub> [MPa]</label>
+          <select id="ts500-fck" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+            <option value="16">C16 &mdash; 16 MPa</option><option value="18">C18 &mdash; 18 MPa</option>
+            <option value="20" selected>C20 &mdash; 20 MPa</option><option value="25">C25 &mdash; 25 MPa</option>
+            <option value="30">C30 &mdash; 30 MPa</option><option value="35">C35 &mdash; 35 MPa</option>
+            <option value="40">C40 &mdash; 40 MPa</option><option value="45">C45 &mdash; 45 MPa</option>
+          </select></div>
+        <div class="form-group"><label>f<sub>yk</sub> [MPa]</label>
+          <select id="ts500-fyk" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+            <option value="220">B220C &mdash; 220 MPa</option>
+            <option value="420" selected>B420C &mdash; 420 MPa</option>
+            <option value="500">B500C &mdash; 500 MPa</option>
+          </select></div>
+      </div>
+      <div class="form-group"><label>E<sub>s</sub> [MPa]</label><div class="iw"><input type="number" id="ts500-Es" value="200000"><span class="us">MPa</span></div></div>
+      <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:10px;">&gamma;<sub>c</sub>=1.5 &middot; &gamma;<sub>s</sub>=1.15 (TS 500 Tablo 6.3) &middot; &epsilon;<sub>cu</sub>=0.003</div>
+      <div class="form-div"><div class="form-div-lbl">Factored Loads (ULS)</div></div>
+      <div class="form-group"><label>Axial N<sub>d</sub> [kN] <span style="font-size:.65rem;color:var(--text-dim);">(compression +)</span></label><div class="iw"><input type="number" id="ts500-Pu" value="1500"><span class="us">kN</span></div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>M<sub>dx</sub> [kN&middot;m]</label><div class="iw"><input type="number" id="ts500-Mx" value="120"><span class="us">kN&middot;m</span></div></div>
+        <div class="form-group"><label>M<sub>dy</sub> [kN&middot;m]</label><div class="iw"><input type="number" id="ts500-My" value="80"><span class="us">kN&middot;m</span></div></div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
+      <div class="form-group"><label>Bar Diameter [mm]</label><div class="iw"><input type="number" id="ts500-dbar" value="20" oninput="updatePreview('ts500')"><span class="us">mm</span></div></div>
+      <p style="font-size:.71rem;color:var(--text-dim);margin-bottom:9px;">n<sub>b</sub> = bars along b (top &amp; bottom rows) &middot; n<sub>h</sub> = bars along h (left &amp; right, incl. corners)</p>
+      <div class="form-row-2">
+        <div class="form-group"><label>n<sub>b</sub> (along b)</label><div class="iw"><input type="number" id="ts500-nb" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
+        <div class="form-group"><label>n<sub>h</sub> (along h)</label><div class="iw"><input type="number" id="ts500-nh" value="3" min="2" max="12" oninput="updatePreview('ts500')"></div></div>
+      </div>
+      <div style="font-size:.71rem;color:var(--text-mid);background:var(--white);border:1px solid var(--border);border-radius:4px;padding:6px 10px;margin-bottom:10px;" id="ts500-rebar-info">—</div>
+      <div class="section-preview" style="margin-bottom:14px;"><canvas id="ts500-sect-canvas" width="230" height="240"></canvas></div>
+      <button class="btn-calc" onclick="calcCol('ts500')">&#9658; Calculate PMM Diagram</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="ts500-empty"><div class="ri">&#128202;</div>Configure inputs and click Calculate.</div>
+    <div id="ts500-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr"><h4>Calculation Report</h4><span class="rh-code" id="ts500-rh-lbl">TS 500:2000 &middot; kN-m</span><button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button></div>
+        <div class="report-body" id="ts500-report-body"></div>
+      </div>
+    </div>
+    <div id="ts500-pmm-outer" style="display:none;">
+      <div class="pmm-wrap">
+        <div class="pmm-hdr"><h4>&#128200; P-M Interaction Diagram</h4></div>
+        <div class="pmm-axis-tabs">
+          <button class="pmm-tab active" onclick="switchPmm('ts500','x',this)">P &ndash; M<sub>dx</sub></button>
+          <button class="pmm-tab" onclick="switchPmm('ts500','y',this)">P &ndash; M<sub>dy</sub></button>
+          <button class="pmm-tab" onclick="switchPmm('ts500','bi',this)">Biaxial Check</button>
+        </div>
+        <div class="pmm-canvas-wrap"><canvas id="ts500-pmm" width="520" height="400"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 </div><!-- /mod-pmm -->
 
 <!-- ═══════ SHEAR DESIGN MODULE ═══════ -->
@@ -851,6 +924,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <button class="sub-tab active" onclick="stab(this,'sh','aci')">ACI 318-25</button>
   <button class="sub-tab" onclick="stab(this,'sh','ec2')">Eurocode 2 (EN 1992-1-1)</button>
   <button class="sub-tab" onclick="stab(this,'sh','is456')">IS 456:2000</button>
+  <button class="sub-tab" onclick="stab(this,'sh','ts500')">TS 500:2000</button>
 </div>
 
 <!-- ── ACI 318-25 Shear ── -->
@@ -1234,6 +1308,58 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
         </div>
         <div class="report-body" id="shc-is456-report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- ── TS 500:2000 Shear ── -->
+<div class="sub-pane" id="sh-ts500">
+<div class="col-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">TS 500:2000</span></div>
+    <div class="card-body">
+      <div class="form-div"><div class="form-div-lbl">Section</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Width b<sub>w</sub> [m]</label><div class="iw"><input type="number" id="shc-ts500-bw" value="0.40" step="0.01"><span class="us">m</span></div></div>
+        <div class="form-group"><label>Total Depth h [m]</label><div class="iw"><input type="number" id="shc-ts500-h" value="0.50" step="0.01"><span class="us">m</span></div></div>
+      </div>
+      <div class="form-group"><label>Clear Cover [m]</label><div class="iw"><input type="number" id="shc-ts500-cv" value="0.040" step="0.005"><span class="us">m</span></div></div>
+      <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>f<sub>ck</sub> [MPa]</label>
+          <select id="shc-ts500-fck" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+            <option value="16">C16</option><option value="18">C18</option>
+            <option value="20" selected>C20</option><option value="25">C25</option>
+            <option value="30">C30</option><option value="35">C35</option>
+            <option value="40">C40</option>
+          </select></div>
+        <div class="form-group"><label>f<sub>yv</sub> [MPa] (stirrup)</label>
+          <select id="shc-ts500-fyv" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+            <option value="220">B220C &mdash; 220 MPa</option>
+            <option value="420" selected>B420C &mdash; 420 MPa</option>
+            <option value="500">B500C &mdash; 500 MPa</option>
+          </select></div>
+      </div>
+      <div class="form-div"><div class="form-div-lbl">Loads</div></div>
+      <div class="form-group"><label>Design Shear V<sub>d</sub> [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vd" value="300"><span class="us">kN</span></div></div>
+      <div class="form-div"><div class="form-div-lbl">Stirrup Configuration</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Stirrup Dia. d<sub>s</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-ds" value="10" min="6"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>Legs n</label><div class="iw"><input type="number" id="shc-ts500-legs" value="2" min="1" max="8"><span class="us">—</span></div></div>
+      </div>
+      <div class="form-group"><label>Spacing s<sub>v</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-sv" value="150" step="5" min="25"><span class="us">mm</span></div></div>
+      <button class="btn-calc" onclick="calcShColTS500()">&#9658; Calculate Shear Design</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="shc-ts500-empty"><div class="ri">&#128297;</div>Configure inputs and click Calculate.</div>
+    <div id="shc-ts500-report-wrap" style="display:none;">
+      <div class="report-card">
+        <div class="report-hdr"><h4>Shear Design Report</h4><span class="rh-code">TS 500:2000 &middot; kN-m</span><button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button></div>
+        <div class="report-body" id="shc-ts500-report-body"></div>
       </div>
     </div>
   </div>
@@ -1719,9 +1845,9 @@ const UNITS = {
   nmm:{ lenU:'mm', forceU:'N',   momU:'N·mm',  stressU:'MPa', lenS:1,    forceS:1,     momS:1,      fcScale:1,       dbScale:1,   dbU:'mm', bV:400,  hV:400,  cvV:50,  DV:500,  PV:1.5e6, MV:120e6,  tag:'N-mm' },
   us:{  lenU:'in', forceU:'kip', momU:'kip·ft',stressU:'psi', lenS:25.4, forceS:4448.2,momS:1.356e6,fcScale:0.006895,dbScale:25.4,dbU:'in', bV:16,   hV:16,   cvV:2,   DV:20,   PV:337,   MV:88.5,   tag:'US' }
 };
-let curU = {aci:'knm', ec2:'knm', is456:'knm', sh_aci:'knm', sh_ec2:'knm', sh_is456:'knm'};
-let pmmStore = {aci:null, ec2:null, is456:null};
-let colShape = {aci:'rect', ec2:'rect', is456:'rect'};
+let curU = {aci:'knm', ec2:'knm', is456:'knm', ts500:'knm', sh_aci:'knm', sh_ec2:'knm', sh_is456:'knm'};
+let pmmStore = {aci:null, ec2:null, is456:null, ts500:null};
+let colShape = {aci:'rect', ec2:'rect', is456:'rect', ts500:'rect'};
 let circTie  = {aci:'tied'}; // 'tied' | 'spiral' (ACI only)
 
 function g(id){ return parseFloat(document.getElementById(id)?.value)||0; }
@@ -1923,8 +2049,9 @@ function getBarsCirc(D, cover, dbar, n) {
 function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, spiral=false) {
   const isEC2   = code === 'ec2';
   const isIS456 = code === 'is456';
+  const isTS500 = code === 'ts500';
   const ecu = (isEC2 || isIS456) ? 0.0035 : 0.003;
-  const fy_use = (isEC2 || isIS456) ? fyd : fy;
+  const fy_use = (isEC2 || isIS456 || isTS500) ? fyd : fy;
   const R = D/2;
   let lam, fc_eff;
   if(isIS456){
@@ -1936,6 +2063,9 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, 
     lam = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
     const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
     fc_eff = eta*fcd;
+  } else if(isTS500){
+    lam = Math.max(0.70, 0.85 - 0.006*Math.max(fc-30, 0));
+    fc_eff = 0.85 * fcd;
   } else {
     lam = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
     fc_eff = 0.85*fc;
@@ -1947,7 +2077,7 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, 
   if(isIS456){
     // IS 456 Cl 39.3: Pu,max = 0.4*fck*Ac + 0.67*fy*Asc
     P0_cap = 0.4*fc*(Ag-Ast) + 0.67*fy*Ast;
-  } else if(isEC2){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
+  } else if(isEC2 || isTS500){ P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast; }
   else {
     const phi0 = spiral ? 0.75 : phi_min;
     const kfac = spiral ? 0.85 : 0.80;
@@ -2177,8 +2307,9 @@ function _doUpdatePreview(code){
 function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis){
   const isEC2   = code === 'ec2';
   const isIS456 = code === 'is456';
+  const isTS500 = code === 'ts500';
   const ecu    = (isEC2 || isIS456) ? 0.0035 : 0.003;
-  const fy_use = (isEC2 || isIS456) ? fyd : fy;
+  const fy_use = (isEC2 || isIS456 || isTS500) ? fyd : fy;
 
   // Stress block
   let lam, fc_eff;
@@ -2191,6 +2322,9 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis)
     lam    = fc<=50 ? 0.80 : Math.max(0.40, 0.80-(fc-50)/400);
     const eta = fc<=50 ? 1.00 : Math.max(0.60, 1.00-(fc-50)/200);
     fc_eff = eta * fcd;
+  } else if(isTS500){
+    lam    = Math.max(0.70, 0.85 - 0.006*Math.max(fc-30, 0));
+    fc_eff = 0.85 * fcd;
   } else {
     lam    = fc<=28 ? 0.85 : Math.max(0.65, 0.85-0.05*(fc-28)/7);
     fc_eff = 0.85 * fc;
@@ -2215,7 +2349,7 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis)
   if(isIS456){
     // IS 456 Cl 39.3: Pu,max = 0.4*fck*(Ag-Ast) + 0.67*fy*Ast
     P0_cap = 0.4*fc*(Ag-Ast) + 0.67*fy*Ast;
-  } else if(isEC2){
+  } else if(isEC2 || isTS500){
     P0_cap = fc_eff*(Ag-Ast) + fy_use*Ast;
   } else {
     P0_cap = phi_min * 0.80 * (0.85*fc*(Ag-Ast) + fy*Ast);
@@ -2301,6 +2435,7 @@ function calcCol(code){
   const p=code+'-';
   const isEC2   = code==='ec2';
   const isIS456 = code==='is456';
+  const isTS500 = code==='ts500';
   const U=UNITS[curU[code]];
   const isCirc=colShape[code]==='circ';
 
@@ -2313,6 +2448,9 @@ function calcCol(code){
   } else if(isIS456){
     fc=g('is456-fck')*U.fcScale; fy=g('is456-fy')*U.fcScale;
     fcd=0.447*fc; fyd=fy/1.15; phi_min=1;
+  } else if(isTS500){
+    fc=g('ts500-fck')*U.fcScale; fy=g('ts500-fyk')*U.fcScale;
+    fcd=fc/1.5; fyd=fy/1.15; phi_min=1;
   } else {
     fc=g('aci-fc')*U.fcScale; fy=g('aci-fy')*U.fcScale;
     phi_min=g('aci-phi'); fcd=fc; fyd=fy;
@@ -2347,7 +2485,7 @@ function calcCol(code){
     if(code==='is456'&&fc&&(fc<15||fc>55)) warns.push(`<b>Material limit:</b> fck = ${g('is456-fck')} ${U.stressU} outside IS 456 range (M15–M55).`);
     if(code==='is456'&&fy&&(fy<250||fy>550)) warns.push(`<b>Material limit:</b> fy = ${g('is456-fy')} ${U.stressU} outside IS 456 range.`);
     const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
-    const codeLbl = isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
+    const codeLbl = isTS500 ? 'TS 500:2000' : isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
     const isNmm=curU[code]==='nmm';
     const isUS_circ=curU[code]==='us';
     const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
@@ -2493,7 +2631,7 @@ function calcCol(code){
   if(Pu>P0) warns.push(`<b>Axial overload:</b> Demand P = ${(Pu/U.forceS).toFixed(0)} ${U.forceU} exceeds max capacity P<sub>0</sub> = ${(P0/U.forceS).toFixed(0)} ${U.forceU}.`);
 
   const icons={ok:'✅',warn:'⚠️',err:'❌'}, labels={ok:'ADEQUATE',warn:'MARGINAL — CHECK CAREFULLY',err:'INADEQUATE'};
-  const codeLbl = isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
+  const codeLbl = isTS500 ? 'TS 500:2000' : isIS456 ? 'IS 456:2000' : isEC2 ? 'EN 1992-1-1 (Eurocode 2)' : 'ACI 318-25';
   const isNmm = curU[code]==='nmm';
   const isUS_rect=curU[code]==='us';
   const fmtF=v=>(v/U.forceS).toFixed(isNmm?0:1)+' '+U.forceU;
@@ -2963,17 +3101,17 @@ function drawBiaxialContour(ctx,d,U,W,H){
 
 // INIT
 window.addEventListener('load',()=>{
-  ['aci','ec2','is456'].forEach(code=>{
+  ['aci','ec2','is456','ts500'].forEach(code=>{
     const p=code+'-';
     const fmt=(id,dec)=>{const e=document.getElementById(p+id);if(e&&e.value)e.value=parseFloat(e.value).toFixed(dec);};
     fmt('b',2); fmt('h',2); fmt('cv',3); fmt('cv-c',3); fmt('D',2);
   });
-  updatePreview('aci'); updatePreview('ec2'); updatePreview('is456');
+  updatePreview('aci'); updatePreview('ec2'); updatePreview('is456'); updatePreview('ts500');
 });
 
 // ══ PRINT: redraw canvases before print dialog ══
 window.addEventListener('beforeprint', () => {
-  ['aci','ec2','is456'].forEach(code => {
+  ['aci','ec2','is456','ts500'].forEach(code => {
     if(!pmmStore[code]) return;
     const U = UNITS[curU[code]];
     if(colShape[code]==='circ') {
@@ -3001,6 +3139,9 @@ document.querySelectorAll('#col-ec2 input[type="number"], #col-ec2 select').forE
 });
 document.querySelectorAll('#col-is456 input[type="number"], #col-is456 select').forEach(el => {
   el.addEventListener('input', () => debounceCalc(() => calcCol('is456')));
+});
+document.querySelectorAll('#col-ts500 input[type="number"], #col-ts500 select').forEach(el => {
+  el.addEventListener('input', () => debounceCalc(() => calcCol('ts500')));
 });
 </script>
 
@@ -3036,6 +3177,9 @@ function _rhoWarns(rho,code){
   } else if(isIS456){
     if(rho<0.008) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below IS 456:2000 minimum (ρ<sub>min</sub> = 0.8%, IS 456 Cl 26.5.3.1). Increase reinforcement to meet code requirements.`);
     if(rho>0.06) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds IS 456:2000 maximum (ρ<sub>max</sub> = 6.0%, IS 456 Cl 26.5.3.1). Consider increasing column size or reducing reinforcement.`);
+  } else if(code==='ts500'){
+    if(rho<0.01) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below TS 500 minimum for columns (ρ<sub>min</sub> = 1.0%, TS 500 §7.1.2).`);
+    if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds TS 500 maximum (ρ<sub>max</sub> = 4.0%, TS 500 §7.1.3). Consider increasing column size or reducing reinforcement.`);
   } else {
     if(rho<0.01) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% is below ACI 318 minimum (ρ<sub>min</sub> = 1.0%, ACI 10.6.1.1). Increase reinforcement to meet code requirements.`);
     if(rho>0.04) w.push(`<b>Reinforcement ratio:</b> ρ<sub>g</sub> = ${(rho*100).toFixed(2)}% exceeds ACI 318 practical maximum (ρ<sub>max</sub> = 4.0%, ACI 18.7.5.1). This limit accounts for lap splice congestion in connection regions. Consider increasing column size.`);
@@ -3048,19 +3192,20 @@ function _rhoWarns(rho,code){
 function validateCol(code){
   const isEC2  =code==='ec2';
   const isIS456=code==='is456';
+  const isTS500=code==='ts500';
   const U=UNITS[curU[code]];
   const isCirc=colShape[code]==='circ';
   const p=code+'-';
   const e=[];
 
-  const fcId=isEC2?p+'fck':isIS456?p+'fck':p+'fc';
-  const fyId=isEC2?p+'fyk':isIS456?p+'fy':p+'fy';
+  const fcId=(isEC2||isIS456||isTS500)?p+'fck':p+'fc';
+  const fyId=(isEC2||isTS500)?p+'fyk':p+'fy';
   const PuId=isEC2?p+'NEd':p+'Pu';
   const ids=isCirc?[p+'D',fcId,fyId,PuId]:[p+'b',p+'h',fcId,fyId,PuId];
 
   _valClear(ids);
 
-  if(isCirc){
+  if(isCirc&&!isTS500){
     const D=g(p+'D')*U.lenS;
     if(!D||D<150||D>3000){e.push("Diameter D: 150–3000 mm");_valMark(p+'D');}
   } else {
@@ -3069,8 +3214,8 @@ function validateCol(code){
     if(!h||h<150||h>3000){e.push("Height h: 150–3000 mm");_valMark(p+'h');}
   }
 
-  const fc_mpa=(isEC2?g(p+'fck'):isIS456?g(p+'fck'):g(p+'fc'))*U.fcScale;
-  const fy_mpa=(isEC2?g(p+'fyk'):g(p+'fy'))*U.fcScale;
+  const fc_mpa=g(fcId)*U.fcScale;
+  const fy_mpa=g(fyId)*U.fcScale;
   const isUS=curU[code]==='us';
   if(isEC2){
     if(!fc_mpa||fc_mpa<12||fc_mpa>90){e.push("fck: 12–90 MPa (EC2)");_valMark(fcId);}
@@ -3078,6 +3223,9 @@ function validateCol(code){
   } else if(isIS456){
     if(!fc_mpa||fc_mpa<15||fc_mpa>55){e.push("fck: 15–55 MPa (IS 456 M15–M55)");_valMark(fcId);}
     if(!fy_mpa||fy_mpa<250||fy_mpa>600){e.push("fy: 250–600 MPa (IS 456)");_valMark(fyId);}
+  } else if(isTS500){
+    if(!fc_mpa||fc_mpa<16||fc_mpa>50){e.push("fck: 16–50 MPa (TS 500 C16–C50)");_valMark(fcId);}
+    if(!fy_mpa||fy_mpa<220||fy_mpa>500){e.push("fyk: 220–500 MPa (TS 500)");_valMark(fyId);}
   } else {
     if(!fc_mpa||fc_mpa<17||fc_mpa>100){e.push(isUS?"f'c: 2500–14500 psi (ACI)":"f'c: 17–100 MPa (ACI)");_valMark(fcId);}
     if(!fy_mpa||fy_mpa<240||fy_mpa>600){e.push(isUS?"fy: 35000–87000 psi":"fy: 240–600 MPa");_valMark(fyId);}
@@ -3745,6 +3893,78 @@ function calcShCol_ec2() {
 }
 
 // ── IS 456:2000 Column Shear ──────────────────────────────────────────────────
+// ── TS 500:2000 Column Shear ──────────────────────
+function calcShColTS500() {
+  const bw = parseFloat(document.getElementById('shc-ts500-bw').value) * 1000; // mm
+  const h  = parseFloat(document.getElementById('shc-ts500-h').value)  * 1000;
+  const cv = parseFloat(document.getElementById('shc-ts500-cv').value) * 1000;
+  const fck = parseFloat(document.getElementById('shc-ts500-fck').value);
+  const fyv = parseFloat(document.getElementById('shc-ts500-fyv').value);
+  const Vd  = parseFloat(document.getElementById('shc-ts500-Vd').value) * 1000; // N
+  const ds  = parseFloat(document.getElementById('shc-ts500-ds').value);
+  const legs= parseFloat(document.getElementById('shc-ts500-legs').value);
+  const sv  = parseFloat(document.getElementById('shc-ts500-sv').value);
+  if(!bw||!h||!cv||!fck||!fyv||!Vd||!ds||!legs||!sv){
+    alert('Please fill all input fields.'); return;
+  }
+  const d = h - cv - ds/2;
+  const fcd  = fck/1.5;
+  const fctk = 0.35*Math.sqrt(fck);
+  const fctd = fctk/1.5;
+  const fywd = fyv/1.15;
+  // Concrete shear capacity (TS 500 §8.1.3)
+  const Vcr  = 0.65*fctd*bw*d; // N
+  // Stirrup contribution
+  const Asv  = legs * Math.PI/4 * ds*ds;
+  const Vw   = (Asv/sv)*fywd*d; // N
+  const Vr   = Vcr + Vw;
+  // Section shear limit TS 500 §8.2: Vd/(bw*d) <= 0.22*fcd
+  const tau_d = Vd/(bw*d);
+  const tau_lim = 0.22*fcd;
+  const crushOK = tau_d <= tau_lim;
+  // Min stirrup: ρsw,min = 0.3*fctd/fywd (TS 500 §8.2.4)
+  const rhoMin = 0.3*fctd/fywd;
+  const rhoSW  = (Asv/sv)/bw;
+  const minOK  = rhoSW >= rhoMin;
+  // Max spacing TS 500 §8.2.5: s <= min(h/2, 300mm)
+  const svMax = Math.min(h/2, 300);
+  const spOK  = sv <= svMax;
+  const dcr   = Vd/Vr;
+  const ok    = dcr<=1 && crushOK;
+  const body  = document.getElementById('shc-ts500-report-body');
+  const warns = [];
+  if(!crushOK) warns.push(`<b>Section crushing failure:</b> τ<sub>d</sub>=${tau_d.toFixed(2)} MPa > 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2). Increase section size or concrete grade.`);
+  if(!minOK)   warns.push(`<b>Min. stirrup ratio not met:</b> ρ<sub>sw</sub>=${(rhoSW*1000).toFixed(3)}‰ &lt; 0.3·f<sub>ctd</sub>/f<sub>ywd</sub>=${(rhoMin*1000).toFixed(3)}‰ (TS 500 §8.2.4).`);
+  if(!spOK)    warns.push(`<b>Spacing exceeds limit:</b> s=${sv.toFixed(0)} mm &gt; s<sub>max</sub>=${svMax.toFixed(0)} mm (TS 500 §8.2.5).`);
+  const dcrCls = dcr<=1?'ok':dcr<=1.05?'warn':'err';
+  body.innerHTML = warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')
+    +`<div class="rpt-sec"><div class="rpt-sec-title">Material Factors</div>
+      <table class="res-tbl">
+        <tr><td>f<sub>ck</sub></td><td>${fck} MPa</td></tr>
+        <tr><td>f<sub>cd</sub>=f<sub>ck</sub>/1.5</td><td>${fcd.toFixed(2)} MPa</td></tr>
+        <tr><td>f<sub>ctk</sub>=0.35√f<sub>ck</sub></td><td>${fctk.toFixed(3)} MPa</td></tr>
+        <tr><td>f<sub>ctd</sub>=f<sub>ctk</sub>/1.5</td><td>${fctd.toFixed(3)} MPa</td></tr>
+        <tr><td>f<sub>ywd</sub>=f<sub>yv</sub>/1.15</td><td>${fywd.toFixed(1)} MPa</td></tr>
+      </table></div>
+     <div class="rpt-sec"><div class="rpt-sec-title">Shear Capacity (TS 500 §8)</div>
+      <table class="res-tbl">
+        <tr><td>d=h−c−Ø<sub>s</sub>/2</td><td>${d.toFixed(0)} mm</td></tr>
+        <tr><td>V<sub>cr</sub>=0.65·f<sub>ctd</sub>·b<sub>w</sub>·d</td><td>${(Vcr/1000).toFixed(1)} kN</td></tr>
+        <tr><td>A<sub>sv</sub> per spacing</td><td>${Asv.toFixed(0)} mm²</td></tr>
+        <tr><td>V<sub>w</sub>=(A<sub>sv</sub>/s)·f<sub>ywd</sub>·d</td><td>${(Vw/1000).toFixed(1)} kN</td></tr>
+        <tr><td>V<sub>r</sub>=V<sub>cr</sub>+V<sub>w</sub></td><td class="vhl">${(Vr/1000).toFixed(1)} kN</td></tr>
+        <tr><td>τ<sub>d</sub>=V<sub>d</sub>/(b<sub>w</sub>·d)</td><td class="${crushOK?'vok':'verr'}">${tau_d.toFixed(2)} MPa ${crushOK?'✓':'✗'} (lim: ${tau_lim.toFixed(2)} MPa)</td></tr>
+        <tr><td>ρ<sub>sw</sub>=A<sub>sv</sub>/(s·b<sub>w</sub>)</td><td class="${minOK?'vok':'vwarn'}">${(rhoSW*1000).toFixed(3)}‰ (min: ${(rhoMin*1000).toFixed(3)}‰)</td></tr>
+        <tr><td>Spacing check</td><td class="${spOK?'vok':'vwarn'}">${sv.toFixed(0)} mm ≤ ${svMax.toFixed(0)} mm ${spOK?'✓':'⚠'}</td></tr>
+      </table></div>
+     <div class="result-box">
+       <div class="result-item ${dcrCls}"><div class="ri-label">D/C = V<sub>d</sub>/V<sub>r</sub></div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+       <div class="result-item ${ok?'ok':'err'}"><div class="ri-label">Section Crush</div><div class="ri-value">${crushOK?'OK':'FAIL'}</div><div class="ri-unit">${crushOK?'✓':'✗'}</div></div>
+     </div>`;
+  document.getElementById('shc-ts500-empty').style.display='none';
+  document.getElementById('shc-ts500-report-wrap').style.display='block';
+}
+
 function calcShCol_is456() {
   const unit = curU.sh_is456 || 'knm';
   const U = UNITS[unit];
