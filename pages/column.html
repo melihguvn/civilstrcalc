@@ -1348,16 +1348,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="card no-print">
     <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">TS 500:2000</span></div>
     <div class="card-body">
-      <div class="form-div"><div class="form-div-lbl">Section</div></div>
-      <div class="form-row-2">
-        <div class="form-group"><label>Width b<sub>w</sub> [m]</label><div class="iw"><input type="number" id="shc-ts500-bw" value="0.40" step="0.01"><span class="us">m</span></div></div>
-        <div class="form-group"><label>Total Depth h [m]</label><div class="iw"><input type="number" id="shc-ts500-h" value="0.50" step="0.01"><span class="us">m</span></div></div>
+      <div class="unit-switcher" style="margin-bottom:12px;">
+        <label>Column:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="shc-ts500-shape-rect" onclick="setShColShape('ts500','rect',this)">Rectangular</button>
+          <button class="unit-btn" id="shc-ts500-shape-circ" onclick="setShColShape('ts500','circ',this)">Circular</button>
+        </div>
       </div>
-      <div class="form-group"><label>Clear Cover [m]</label><div class="iw"><input type="number" id="shc-ts500-cv" value="0.040" step="0.005"><span class="us">m</span></div></div>
+      <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
+      <div id="shc-ts500-rect-geo">
+        <div class="form-row-2">
+          <div class="form-group"><label>Width b<sub>w</sub> [m]</label><div class="iw"><input type="number" id="shc-ts500-bw" value="0.40" step="0.01" oninput="calcShColTS500()"><span class="us">m</span></div></div>
+          <div class="form-group"><label>Total depth h [m]</label><div class="iw"><input type="number" id="shc-ts500-h" value="0.50" step="0.01" oninput="calcShColTS500()"><span class="us">m</span></div></div>
+        </div>
+      </div>
+      <div id="shc-ts500-circ-geo" style="display:none">
+        <div class="form-group"><label>Diameter D [m]</label><div class="iw"><input type="number" id="shc-ts500-D" value="0.50" step="0.01" oninput="calcShColTS500()"><span class="us">m</span></div></div>
+      </div>
+      <div class="form-group"><label>Clear cover c<sub>v</sub> [m]</label><div class="iw"><input type="number" id="shc-ts500-cv" value="0.040" step="0.005" oninput="calcShColTS500()"><span class="us">m</span></div></div>
       <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
       <div class="form-row-2">
         <div class="form-group"><label>f<sub>ck</sub> [MPa]</label>
-          <select id="shc-ts500-fck" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+          <select id="shc-ts500-fck" onchange="calcShColTS500()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
             <option value="20">C20</option><option value="25">C25</option>
             <option value="30" selected>C30</option><option value="35">C35</option>
             <option value="40">C40</option><option value="45">C45</option>
@@ -1365,40 +1377,39 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <option value="60">C60</option><option value="70">C70</option>
             <option value="80">C80</option>
           </select></div>
-        <div class="form-group"><label>f<sub>yv</sub> [MPa] (etriye)</label>
-          <select id="shc-ts500-fyv" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+        <div class="form-group"><label>f<sub>yv</sub> — Ties [MPa]</label>
+          <select id="shc-ts500-fyv" onchange="calcShColTS500()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
             <option value="220">S220 &mdash; 220 MPa</option>
             <option value="420" selected>B420C &mdash; 420 MPa</option>
             <option value="500">B500C &mdash; 500 MPa</option>
           </select></div>
       </div>
-      <div class="form-div"><div class="form-div-lbl">Tasarım Kesme Kuvvetleri</div></div>
+      <div class="form-div"><div class="form-div-lbl">Design Shear Forces</div></div>
       <div class="form-row-2">
-        <div class="form-group"><label>V<sub>d,x</sub> (→h) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdx" value="300" min="0"><span class="us">kN</span></div></div>
-        <div class="form-group"><label>V<sub>d,y</sub> (→b<sub>w</sub>) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdy" value="0" min="0"><span class="us">kN</span></div></div>
+        <div class="form-group"><label>V<sub>d,x</sub> (→h) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdx" value="300" min="0" oninput="calcShColTS500()"><span class="us">kN</span></div></div>
+        <div class="form-group" id="shc-ts500-vdy-grp"><label>V<sub>d,y</sub> (→b<sub>w</sub>) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdy" value="200" min="0" oninput="calcShColTS500()"><span class="us">kN</span></div></div>
       </div>
       <div style="margin:4px 0 6px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:flex-start;gap:9px;">
-        <input type="checkbox" id="shc-ts500-seismic" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:2px;">
+        <input type="checkbox" id="shc-ts500-seismic" onchange="calcShColTS500()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:2px;">
         <label for="shc-ts500-seismic" style="cursor:pointer;font-size:.79rem;color:var(--text);margin:0;line-height:1.4;">
-          Beton katkısı V<sub>cr</sub> = 0 (Deprem etkisi &gt; %50)
-          <span class="tip" data-tip="TSC 2018 §7.4.5.2: Herhangi bir kesitte, tasarım kesme kuvvetinin yarısından fazlası deprem etkilerinden kaynaklanıyorsa, beton kesme katkısı hesaba katılmaz (V_cr = 0 alınır). Bu kural depreme maruz bölgelerdeki tüm kolon kritik bölgeleri için geçerlidir.">?</span>
+          V<sub>cr</sub> = 0 — Seismic load &gt; 50% of V<sub>d</sub>
+          <span class="tip" data-tip="TSC 2018 §7.4.5.2: When more than 50% of the design shear force at a section originates from seismic effects, the concrete shear contribution is ignored (V_cr = 0). Applies to all column critical zones in seismic regions.">?</span>
         </label>
       </div>
-      <div class="form-div"><div class="form-div-lbl">Etriye Konfigürasyonu</div></div>
+      <div class="form-div"><div class="form-div-lbl">Stirrup Configuration</div></div>
       <div class="form-row-2">
-        <div class="form-group"><label>Etriye çapı d<sub>s</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-ds" value="10" min="6"><span class="us">mm</span></div></div>
-        <div class="form-group"><label>Aralık s<sub>v</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-sv" value="150" step="5" min="25"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>Bar diameter d<sub>s</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-ds" value="10" min="6" oninput="calcShColTS500()"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>Spacing s<sub>v</sub> [mm]</label><div class="iw"><input type="number" id="shc-ts500-sv" value="150" step="5" min="25" oninput="calcShColTS500()"><span class="us">mm</span></div></div>
       </div>
       <div class="form-row-2">
-        <div class="form-group"><label>Kol n<sub>x</sub> <span style="font-size:.63rem;color:var(--text-dim)">(b<sub>w</sub> boyunca)</span></label><div class="iw"><input type="number" id="shc-ts500-nlx" value="2" min="1" max="8"><span class="us">—</span></div></div>
-        <div class="form-group"><label>Kol n<sub>y</sub> <span style="font-size:.63rem;color:var(--text-dim)">(h boyunca)</span></label><div class="iw"><input type="number" id="shc-ts500-nly" value="2" min="1" max="8"><span class="us">—</span></div></div>
+        <div class="form-group"><label>Legs n<sub>x</sub> <span style="font-size:.63rem;color:var(--text-dim)">(across b<sub>w</sub>)</span></label><div class="iw"><input type="number" id="shc-ts500-nlx" value="2" min="1" max="8" oninput="calcShColTS500()"><span class="us">—</span></div></div>
+        <div class="form-group" id="shc-ts500-nly-grp"><label>Legs n<sub>y</sub> <span style="font-size:.63rem;color:var(--text-dim)">(across h)</span></label><div class="iw"><input type="number" id="shc-ts500-nly" value="2" min="1" max="8" oninput="calcShColTS500()"><span class="us">—</span></div></div>
       </div>
-      <button class="btn-calc" onclick="calcShColTS500()">&#9658; Calculate Shear Design</button>
     </div>
   </div>
   <div class="results-col">
-    <div class="res-empty" id="shc-ts500-empty"><div class="ri">&#128297;</div>Configure inputs and click Calculate.</div>
-    <div id="shc-ts500-report-wrap" style="display:none;">
+    <div class="res-empty" id="shc-ts500-empty" style="display:none;"><div class="ri">&#128297;</div>Enter inputs above.</div>
+    <div id="shc-ts500-report-wrap">
       <div class="report-card">
         <div class="report-hdr"><h4>Shear Design Report</h4><span class="rh-code">TS 500:2000 &middot; kN-m</span><button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button></div>
         <div class="report-body" id="shc-ts500-report-body"></div>
@@ -3314,7 +3325,7 @@ function shTab(btn, id) {
 }
 
 // ── Shape selector for shear module ──────────────────────────────────────────
-const shColShape = {aci:'rect', ec2:'rect', is456:'rect'};
+const shColShape = {aci:'rect', ec2:'rect', is456:'rect', ts500:'rect'};
 function setShColShape(code, shape, btn) {
   shColShape[code] = shape;
   btn.closest('.unit-btns').querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
@@ -3327,8 +3338,10 @@ function setShColShape(code, shape, btn) {
   if (hint) hint.innerHTML = shape==='circ'
     ? 'd = D − c<sub>v</sub> − d<sub>t</sub> − d<sub>bl</sub>/2 (computed internally)'
     : 'd = h − c<sub>v</sub> − d<sub>t</sub> − d<sub>bl</sub>/2 (computed internally)';
-  const vuyGrp = document.getElementById('shc-'+code+'-vuy-grp') || document.getElementById('shc-'+code+'-vedy-grp');
+  const vuyGrp = document.getElementById('shc-'+code+'-vuy-grp') || document.getElementById('shc-'+code+'-vedy-grp') || document.getElementById('shc-'+code+'-vdy-grp');
   if (vuyGrp) vuyGrp.style.display = shape==='circ' ? 'none' : '';
+  const nlyGrp = document.getElementById('shc-'+code+'-nly-grp');
+  if (nlyGrp) nlyGrp.style.display = shape==='circ' ? 'none' : '';
   const reinfLbl = document.getElementById('shc-'+code+'-reinf-lbl');
   const dtLbl    = document.getElementById('shc-'+code+'-dt-lbl');
   if (reinfLbl) reinfLbl.textContent = shape==='circ'
@@ -3340,6 +3353,7 @@ function setShColShape(code, shape, btn) {
   const wrap = document.getElementById('shc-'+code+'-report-wrap');
   if (emp) emp.style.display = '';
   if (wrap) wrap.style.display = 'none';
+  if (code === 'ts500') calcShColTS500();
 }
 
 function toggleEC2Seismic() {
@@ -3937,26 +3951,28 @@ function calcShCol_ec2() {
 // ── IS 456:2000 Column Shear ──────────────────────────────────────────────────
 // ── TS 500:2000 Column Shear ──────────────────────
 function calcShColTS500() {
-  const bw  = parseFloat(document.getElementById('shc-ts500-bw').value)  * 1000; // mm
-  const h   = parseFloat(document.getElementById('shc-ts500-h').value)   * 1000;
-  const cv  = parseFloat(document.getElementById('shc-ts500-cv').value)  * 1000;
-  const fck = parseFloat(document.getElementById('shc-ts500-fck').value);
-  const fyv = parseFloat(document.getElementById('shc-ts500-fyv').value);
-  const Vdx = parseFloat(document.getElementById('shc-ts500-Vdx').value) * 1000; // N
-  const Vdy = (parseFloat(document.getElementById('shc-ts500-Vdy').value) || 0) * 1000;
-  const ds  = parseFloat(document.getElementById('shc-ts500-ds').value);
-  const nlx = parseFloat(document.getElementById('shc-ts500-nlx').value);
-  const nly = parseFloat(document.getElementById('shc-ts500-nly').value);
-  const sv  = parseFloat(document.getElementById('shc-ts500-sv').value);
+  const isCirc = shColShape.ts500 === 'circ';
+
+  const bw  = isCirc
+    ? (parseFloat(document.getElementById('shc-ts500-D').value) || 0) * 1000
+    : (parseFloat(document.getElementById('shc-ts500-bw').value) || 0) * 1000;
+  const h   = isCirc ? bw : (parseFloat(document.getElementById('shc-ts500-h').value) || 0) * 1000;
+  const cv  = (parseFloat(document.getElementById('shc-ts500-cv').value) || 0) * 1000;
+  const fck = parseFloat(document.getElementById('shc-ts500-fck').value) || 0;
+  const fyv = parseFloat(document.getElementById('shc-ts500-fyv').value) || 0;
+  const Vdx = (parseFloat(document.getElementById('shc-ts500-Vdx').value) || 0) * 1000;
+  const Vdy = isCirc ? 0 : (parseFloat(document.getElementById('shc-ts500-Vdy').value) || 0) * 1000;
+  const ds  = parseFloat(document.getElementById('shc-ts500-ds').value) || 0;
+  const nlx = parseFloat(document.getElementById('shc-ts500-nlx').value) || 0;
+  const nly = isCirc ? nlx : (parseFloat(document.getElementById('shc-ts500-nly').value) || 0);
+  const sv  = parseFloat(document.getElementById('shc-ts500-sv').value) || 0;
   const seismic = document.getElementById('shc-ts500-seismic').checked;
 
-  if(!bw||!h||!cv||!fck||!fyv||!Vdx||!ds||!nlx||!nly||!sv){
-    alert('Lütfen tüm zorunlu alanları doldurun.'); return;
-  }
+  if (!bw || !cv || !fck || !fyv || !Vdx || !ds || !nlx || !sv) return;
 
   // Effective depths
-  const d_x = h  - cv - ds/2;   // X-dir: section bw × d_x
-  const d_y = bw - cv - ds/2;   // Y-dir: section h × d_y
+  const d_x = h  - cv - ds / 2;   // X-dir: bw (or D) × d_x
+  const d_y = isCirc ? d_x : bw - cv - ds / 2;   // Y-dir: h × d_y
 
   // Material design values — TS 500 §3.2, §3.3
   const fcd  = fck / 1.5;
@@ -3966,47 +3982,46 @@ function calcShColTS500() {
 
   // Stirrup areas per spacing interval
   const Ab    = Math.PI / 4 * ds * ds;
-  const Asv_x = nlx * Ab;   // mm² per spacing (X-dir: nlx legs cross bw)
-  const Asv_y = nly * Ab;   // mm² per spacing (Y-dir: nly legs cross h)
+  const Asv_x = nlx * Ab;
+  const Asv_y = isCirc ? Asv_x : nly * Ab;
 
   // Concrete contribution — TS 500 §8.1.3; = 0 when seismic >50% (TSC 2018 §7.4.5.2)
   const Vcr_x = seismic ? 0 : 0.65 * fctd * bw * d_x;
   const Vcr_y = seismic ? 0 : 0.65 * fctd * h  * d_y;
 
-  // Steel (stirrup) contribution — TS 500 §8.1.3
+  // Steel (stirrup) contribution
   const Vw_x = (Asv_x / sv) * fywd * d_x;
   const Vw_y = (Asv_y / sv) * fywd * d_y;
 
-  // Total design shear strength
+  // Total shear strength
   const Vr_x = Vcr_x + Vw_x;
   const Vr_y = Vcr_y + Vw_y;
 
   // D/C ratios
   const dcr_x = Vdx > 0 ? Vdx / Vr_x : 0;
-  const dcr_y = Vdy > 0 ? Vdy / Vr_y : 0;
+  const dcr_y = (!isCirc && Vdy > 0) ? Vdy / Vr_y : 0;
   const dcr   = Math.max(dcr_x, dcr_y);
 
   // Section crush limit — TS 500 §8.2: τd ≤ 0.22·fcd
-  const tau_lim  = 0.22 * fcd;
-  const tau_dx   = Vdx / (bw * d_x);
-  const tau_dy   = Vdy > 0 ? Vdy / (h * d_y) : 0;
+  const tau_lim   = 0.22 * fcd;
+  const tau_dx    = Vdx / (bw * d_x);
+  const tau_dy    = (!isCirc && Vdy > 0) ? Vdy / (h * d_y) : 0;
   const crushOK_x = tau_dx <= tau_lim;
-  const crushOK_y = Vdy > 0 ? tau_dy <= tau_lim : true;
+  const crushOK_y = isCirc || Vdy <= 0 || tau_dy <= tau_lim;
   const crushOK   = crushOK_x && crushOK_y;
 
   // Min stirrup ratio — TS 500 §8.2.4 / TSC 2018 §7.4.5: ρsw,min = 0.3·fctd/fywd
   const rhoMin  = 0.3 * fctd / fywd;
   const rhoSW_x = (Asv_x / sv) / bw;
-  const rhoSW_y = (Asv_y / sv) / h;
+  const rhoSW_y = isCirc ? rhoSW_x : (Asv_y / sv) / h;
   const minOK_x = rhoSW_x >= rhoMin;
-  const minOK_y = rhoSW_y >= rhoMin;
+  const minOK_y = isCirc ? minOK_x : rhoSW_y >= rhoMin;
 
   // Max spacing — TS 500 §8.2.5: sv ≤ min(h/2, 300 mm)
   const svMax = Math.min(h / 2, 300);
   const spOK  = sv <= svMax;
 
-  const overallOK = dcr <= 1 && crushOK && minOK_x && minOK_y && spOK;
-  const govDir    = dcr_x >= dcr_y ? 'X' : 'Y';
+  const govDir = (!isCirc && dcr_y >= dcr_x) ? 'Y' : 'X';
 
   // ── Build report ─────────────────────────────────────────────────────────────
   const fmtV = v => (v / 1000).toFixed(1) + ' kN';
@@ -4016,113 +4031,122 @@ function calcShColTS500() {
   const fmtR = v => (v * 1000).toFixed(4) + '‰';
 
   const warns = [];
-  if(!crushOK_x) warns.push(`<b>X-yönü ezilme:</b> τ<sub>d,x</sub>=${tau_dx.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2). Kesit boyutlarını veya beton sınıfını artırın.`);
-  if(!crushOK_y) warns.push(`<b>Y-yönü ezilme:</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2).`);
-  if(!minOK_x)   warns.push(`<b>X-yönü min. donatı sağlanmıyor:</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
-  if(!minOK_y)   warns.push(`<b>Y-yönü min. donatı sağlanmıyor:</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
-  if(!spOK)       warns.push(`<b>Aralık limiti aşılıyor:</b> s<sub>v</sub>=${sv.toFixed(0)} mm &gt; s<sub>max</sub>=${svMax.toFixed(0)} mm (TS 500 §8.2.5).`);
+  if (!crushOK_x)             warns.push(`<b>Section crushing (X):</b> τ<sub>d,x</sub>=${tau_dx.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2). Increase section size or concrete grade.`);
+  if (!crushOK_y)             warns.push(`<b>Section crushing (Y):</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2).`);
+  if (!minOK_x)               warns.push(`<b>Min. stirrup ratio not satisfied (X):</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
+  if (!isCirc && !minOK_y)    warns.push(`<b>Min. stirrup ratio not satisfied (Y):</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
+  if (!spOK)                   warns.push(`<b>Spacing exceeds limit:</b> s<sub>v</sub>=${sv.toFixed(0)} mm &gt; s<sub>max</sub>=${svMax.toFixed(0)} mm (TS 500 §8.2.5).`);
 
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const secLbl = isCirc ? `D = ${fmtD(bw)}` : `b<sub>w</sub>×h = ${fmtD(bw)}×${fmtD(h)}`;
 
   const html = `
   <div class="print-only">
-    <div><div class="ph-title">Kolon Kesme Tasarımı</div><div class="ph-sub">TS 500:2000${seismic?' / TSC 2018 §7.4.5.2':''} &nbsp;·&nbsp; kN–m</div></div>
+    <div><div class="ph-title">Column Shear Design</div><div class="ph-sub">TS 500:2000${seismic?' / TSC 2018 §7.4.5.2':''} &nbsp;·&nbsp; kN–m &nbsp;·&nbsp; ${isCirc?'Circular':'Rectangular'}</div></div>
     <div class="ph-date">${date}<br><span style="font-size:.55rem;color:#aab;">CivilStrCalc.com</span></div>
   </div>
   ${warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')}
-  ${seismic?`<div class="report-warn" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.35);"><span>ℹ️</span><div><b>Deprem modu aktif — V<sub>cr</sub> = 0</b> &nbsp; (TSC 2018 §7.4.5.2: tasarım kesme kuvvetinin &gt;%50'si depremden kaynaklanıyor)</div></div>`:''}
+  ${seismic?`<div class="report-warn" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.35);"><span>ℹ️</span><div><b>Seismic mode active — V<sub>cr</sub> = 0</b> &nbsp; (TSC 2018 §7.4.5.2: seismic load &gt;50% of design shear)</div></div>`:''}
 
   <div class="rpt-sec">
     <div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">
-      <tr><td>Kesit b<sub>w</sub> × h</td><td>${(bw/1000).toFixed(3)} m × ${(h/1000).toFixed(3)} m</td></tr>
-      <tr><td>Paspayı c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
-      <tr><td>d<sub>x</sub> = h − c<sub>v</sub> − Ø<sub>s</sub>/2</td><td>${fmtD(d_x)}</td></tr>
-      <tr><td>d<sub>y</sub> = b<sub>w</sub> − c<sub>v</sub> − Ø<sub>s</sub>/2</td><td>${fmtD(d_y)}</td></tr>
+      ${isCirc
+        ? `<tr><td>Diameter D</td><td>${(bw/1000).toFixed(3)} m</td></tr>`
+        : `<tr><td>Section b<sub>w</sub> × h</td><td>${(bw/1000).toFixed(3)} m × ${(h/1000).toFixed(3)} m</td></tr>`}
+      <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
+      ${isCirc
+        ? `<tr><td>d = D − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_x)}</td></tr>`
+        : `<tr><td>d<sub>x</sub> = h − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_x)}</td></tr><tr><td>d<sub>y</sub> = b<sub>w</sub> − c<sub>v</sub> − d<sub>s</sub>/2</td><td>${fmtD(d_y)}</td></tr>`}
       <tr><td>f<sub>ck</sub> &nbsp;·&nbsp; f<sub>cd</sub></td><td>${fck} MPa &nbsp;·&nbsp; ${fcd.toFixed(2)} MPa</td></tr>
       <tr><td>f<sub>ctk</sub> &nbsp;·&nbsp; f<sub>ctd</sub></td><td>${fctk.toFixed(3)} MPa &nbsp;·&nbsp; ${fctd.toFixed(3)} MPa</td></tr>
       <tr><td>f<sub>yv</sub> &nbsp;·&nbsp; f<sub>ywd</sub></td><td>${fyv} MPa &nbsp;·&nbsp; ${fywd.toFixed(1)} MPa</td></tr>
-      <tr><td>Etriye Ø${ds}@s=${sv} mm</td><td>n<sub>x</sub>=${nlx}, n<sub>y</sub>=${nly}</td></tr>
-      <tr><td>A<sub>sv,x</sub> (n<sub>x</sub>·A<sub>b</sub>) &nbsp;·&nbsp; A<sub>sv,y</sub> (n<sub>y</sub>·A<sub>b</sub>)</td><td>${fmtA(Asv_x)} &nbsp;·&nbsp; ${fmtA(Asv_y)}</td></tr>
-      <tr><td>V<sub>d,x</sub> (→h) &nbsp;·&nbsp; V<sub>d,y</sub> (→b<sub>w</sub>)</td><td>${fmtV(Vdx)} &nbsp;·&nbsp; ${Vdy>0?fmtV(Vdy):'—'}</td></tr>
-      <tr><td>Beton katkısı V<sub>cr</sub></td><td>${seismic?'<b>0 (Deprem §7.4.5.2)</b>':'0.65·f<sub>ctd</sub>·b·d'}</td></tr>
+      <tr><td>Stirrups: Ø${ds} @ s<sub>v</sub> = ${sv} mm</td><td>n<sub>x</sub> = ${nlx}${isCirc ? '' : `, n<sub>y</sub> = ${nly}`}</td></tr>
+      <tr><td>A<sub>sv,x</sub>${isCirc ? '' : ` &nbsp;·&nbsp; A<sub>sv,y</sub>`}</td><td>${fmtA(Asv_x)}${isCirc ? '' : ` &nbsp;·&nbsp; ${fmtA(Asv_y)}`}</td></tr>
+      ${isCirc
+        ? `<tr><td>V<sub>d</sub></td><td>${fmtV(Vdx)}</td></tr>`
+        : `<tr><td>V<sub>d,x</sub> (→h) &nbsp;·&nbsp; V<sub>d,y</sub> (→b<sub>w</sub>)</td><td>${fmtV(Vdx)} &nbsp;·&nbsp; ${fmtV(Vdy)}</td></tr>`}
+      <tr><td>Concrete contribution V<sub>cr</sub></td><td>${seismic?'<b>0 (TSC 2018 §7.4.5.2)</b>':'0.65·f<sub>ctd</sub>·b·d'}</td></tr>
     </table>
   </div>
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Design Results — Both Directions</div>
-    <div class="fl-rb" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
+    <div class="rpt-sec-title">Design Result${isCirc?'':'s — Both Directions'}</div>
+    <div class="fl-rb" style="grid-template-columns:${isCirc ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr 1fr 1fr 1fr'}">
       <div class="fl-col">
-        <div class="fl-lbl">D/C — X yönü (→h)</div>
+        <div class="fl-lbl">D/C${isCirc ? '' : ' — X (→h)'}</div>
         <div class="fl-val ${dcr_x<=1?'ok':'err'}">${dcr_x.toFixed(3)}</div>
         <div class="fl-unit">${dcr_x<=1?'OK':'NG'}</div>
       </div>
+      ${isCirc ? '' : `
       <div class="fl-col">
-        <div class="fl-lbl">D/C — Y yönü (→b<sub>w</sub>)</div>
-        <div class="fl-val ${Vdy>0?(dcr_y<=1?'ok':'err'):'ok'}">${Vdy>0?dcr_y.toFixed(3):'—'}</div>
-        <div class="fl-unit">${Vdy>0?(dcr_y<=1?'OK':'NG'):'N/A'}</div>
-      </div>
+        <div class="fl-lbl">D/C — Y (→b<sub>w</sub>)</div>
+        <div class="fl-val ${dcr_y<=1?'ok':'err'}">${dcr_y.toFixed(3)}</div>
+        <div class="fl-unit">${dcr_y<=1?'OK':'NG'}</div>
+      </div>`}
       <div class="fl-col">
-        <div class="fl-lbl">Min. ρ<sub>sw,x</sub></div>
+        <div class="fl-lbl">Min. ρ<sub>sw</sub>${isCirc ? '' : ' — X'}</div>
         <div class="fl-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</div>
-        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_x?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_x?'✓':'✗'}</div>
       </div>
+      ${isCirc ? '' : `
       <div class="fl-col">
-        <div class="fl-lbl">Min. ρ<sub>sw,y</sub></div>
+        <div class="fl-lbl">Min. ρ<sub>sw</sub> — Y</div>
         <div class="fl-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</div>
-        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_y?'✓ OK':'✗ NG'}</div>
-      </div>
+        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_y?'✓':'✗'}</div>
+      </div>`}
       <div class="fl-col">
-        <div class="fl-lbl">Ezilme kontrolü</div>
+        <div class="fl-lbl">Section crush</div>
         <div class="fl-val ${crushOK?'ok':'err'}">${crushOK?'OK':'NG'}</div>
         <div class="fl-unit">τ<sub>d</sub> ≤ 0.22f<sub>cd</sub> ${crushOK?'✓':'✗'}</div>
       </div>
       <div class="fl-col">
         <div class="fl-lbl">s ≤ s<sub>max</sub></div>
         <div class="fl-val ${spOK?'ok':'err'}">${fmtD(sv)}</div>
-        <div class="fl-unit">max ${fmtD(svMax)} &nbsp; ${spOK?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">max ${fmtD(svMax)} &nbsp; ${spOK?'✓':'✗'}</div>
       </div>
     </div>
   </div>
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Hesap Adımları — X Yönü (b<sub>w</sub>×d<sub>x</sub> = ${fmtD(bw)}×${fmtD(d_x)})</div>
+    <div class="rpt-sec-title">Calculation Steps — X Direction (${secLbl}, d<sub>x</sub> = ${fmtD(d_x)})</div>
     <table class="steps-table">
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">f<sub>ctd</sub> = f<sub>ctk</sub>/γ<sub>c</sub> &nbsp;·&nbsp; f<sub>ywd</sub> = f<sub>yv</sub>/γ<sub>s</sub></div><div class="step-formula">f<sub>ctk</sub>=0.35√${fck}=${fctk.toFixed(3)} MPa / 1.50 &nbsp;·&nbsp; ${fyv}/1.15</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtS(fctd)} &nbsp;·&nbsp; ${fywd.toFixed(1)} MPa</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">V<sub>cr,x</sub> = ${seismic?'<b>0</b> (deprem &gt;%50)':'0.65·f<sub>ctd</sub>·b<sub>w</sub>·d<sub>x</sub>'} &nbsp; — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Deprem etkisi &gt;%50 → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(bw)+'×'+fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_x)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">V<sub>cr,x</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·b<sub>w</sub>·d<sub>x</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(bw)+'×'+fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_x)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">3</div></td><td><div class="step-desc">A<sub>sv,x</sub> = n<sub>x</sub>·π/4·d<sub>s</sub>² &nbsp; V<sub>w,x</sub> = (A<sub>sv,x</sub>/s)·f<sub>ywd</sub>·d<sub>x</sub></div><div class="step-formula">${nlx}×π/4×${ds}²=${fmtA(Asv_x)} &nbsp;·&nbsp; (${fmtA(Asv_x)}/${sv})×${fywd.toFixed(1)}×${fmtD(d_x)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vw_x)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">V<sub>r,x</sub> = V<sub>cr,x</sub> + V<sub>w,x</sub> &nbsp;·&nbsp; D/C<sub>x</sub> = V<sub>d,x</sub>/V<sub>r,x</sub></div></td><td style="text-align:right"><span class="step-val hl">${fmtV(Vr_x)}</span> <span class="step-check ${dcr_x<=1?'chk-ok':'chk-err'}">${dcr_x.toFixed(3)} ${dcr_x<=1?'✓':'✗'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">5</div></td><td><div class="step-desc">Ezilme kontrolü — TS 500 §8.2: τ<sub>d,x</sub> = V<sub>d,x</sub>/(b<sub>w</sub>·d<sub>x</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdx)}×1000/(${fmtD(bw)}×${fmtD(d_x)}) = ${tau_dx.toFixed(2)} MPa &nbsp; ≤ &nbsp; 0.22×${fcd.toFixed(2)}=${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_x?'ok':'err'}">${tau_dx.toFixed(2)} MPa</span> <span class="step-check ${crushOK_x?'chk-ok':'chk-err'}">${crushOK_x?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">5</div></td><td><div class="step-desc">Crushing check — TS 500 §8.2: τ<sub>d,x</sub> = V<sub>d,x</sub>/(b<sub>w</sub>·d<sub>x</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdx)}×1000/(${fmtD(bw)}×${fmtD(d_x)}) = ${tau_dx.toFixed(2)} MPa &nbsp; ≤ &nbsp; 0.22×${fcd.toFixed(2)}=${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_x?'ok':'err'}">${tau_dx.toFixed(2)} MPa</span> <span class="step-check ${crushOK_x?'chk-ok':'chk-err'}">${crushOK_x?'OK':'NG'}</span></td></tr>
     </table>
   </div>
 
-  ${Vdy > 0 ? `
+  ${!isCirc ? `
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Hesap Adımları — Y Yönü (h×d<sub>y</sub> = ${fmtD(h)}×${fmtD(d_y)})</div>
+    <div class="rpt-sec-title">Calculation Steps — Y Direction (h×d<sub>y</sub> = ${fmtD(h)}×${fmtD(d_y)})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">V<sub>cr,y</sub> = ${seismic?'<b>0</b> (deprem &gt;%50)':'0.65·f<sub>ctd</sub>·h·d<sub>y</sub>'}</div><div class="step-formula">${seismic?'TSC 2018 §7.4.5.2':'0.65×'+fctd.toFixed(3)+'×'+fmtD(h)+'×'+fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_y)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">1</div></td><td><div class="step-desc">V<sub>cr,y</sub> = ${seismic?'<b>0</b> (seismic &gt;50%)':'0.65·f<sub>ctd</sub>·h·d<sub>y</sub>'} — TS 500 §8.1.3${seismic?' / TSC 2018 §7.4.5.2':''}</div><div class="step-formula">${seismic?'Seismic load >50% → V_cr = 0':'0.65×'+fctd.toFixed(3)+'×'+fmtD(h)+'×'+fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vcr_y)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">2</div></td><td><div class="step-desc">A<sub>sv,y</sub> = n<sub>y</sub>·π/4·d<sub>s</sub>² &nbsp; V<sub>w,y</sub> = (A<sub>sv,y</sub>/s)·f<sub>ywd</sub>·d<sub>y</sub></div><div class="step-formula">${nly}×π/4×${ds}²=${fmtA(Asv_y)} &nbsp;·&nbsp; (${fmtA(Asv_y)}/${sv})×${fywd.toFixed(1)}×${fmtD(d_y)}</div></td><td style="text-align:right"><span class="step-val">${fmtV(Vw_y)}</span></td></tr>
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">3</div></td><td><div class="step-desc">V<sub>r,y</sub> = V<sub>cr,y</sub> + V<sub>w,y</sub> &nbsp;·&nbsp; D/C<sub>y</sub> = V<sub>d,y</sub>/V<sub>r,y</sub></div></td><td style="text-align:right"><span class="step-val hl">${fmtV(Vr_y)}</span> <span class="step-check ${dcr_y<=1?'chk-ok':'chk-err'}">${dcr_y.toFixed(3)} ${dcr_y<=1?'✓':'✗'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">Ezilme: τ<sub>d,y</sub> = V<sub>d,y</sub>/(h·d<sub>y</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdy)}×1000/(${fmtD(h)}×${fmtD(d_y)}) = ${tau_dy.toFixed(2)} MPa ≤ ${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_y?'ok':'err'}">${tau_dy.toFixed(2)} MPa</span> <span class="step-check ${crushOK_y?'chk-ok':'chk-err'}">${crushOK_y?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">4</div></td><td><div class="step-desc">Crushing check — TS 500 §8.2: τ<sub>d,y</sub> = V<sub>d,y</sub>/(h·d<sub>y</sub>) ≤ 0.22·f<sub>cd</sub></div><div class="step-formula">${fmtV(Vdy)}×1000/(${fmtD(h)}×${fmtD(d_y)}) = ${tau_dy.toFixed(2)} MPa ≤ ${tau_lim.toFixed(2)} MPa</div></td><td style="text-align:right"><span class="step-val ${crushOK_y?'ok':'err'}">${tau_dy.toFixed(2)} MPa</span> <span class="step-check ${crushOK_y?'chk-ok':'chk-err'}">${crushOK_y?'OK':'NG'}</span></td></tr>
     </table>
   </div>` : ''}
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Etriye Kontrolleri — TS 500 §8.2.4-5 / TSC 2018 §7.4.5 (Yönetici yön: ${govDir})</div>
+    <div class="rpt-sec-title">Stirrup Checks — TS 500 §8.2.4-5 / TSC 2018 §7.4.5 (gov. dir: ${govDir})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">Minimum etriye oranı &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub> &nbsp; — TS 500 §8.2.4 / TSC 2018 §7.4.5</div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>) — X yönü</div><div class="step-formula">${fmtA(Asv_x)} / (${sv}×${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${minOK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${minOK_x?'chk-ok':'chk-err'}">${minOK_x?'OK':'NG'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h) — Y yönü</div><div class="step-formula">${fmtA(Asv_y)} / (${sv}×${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${minOK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${minOK_y?'chk-ok':'chk-err'}">${minOK_y?'OK':'NG'}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">B</div></td><td><div class="step-desc">Maksimum etriye aralığı — TS 500 §8.2.5: s ≤ min(h/2, 300 mm)</div><div class="step-formula">min(${fmtD(h/2)}, 300 mm) = ${fmtD(svMax)}</div></td><td style="text-align:right"><span class="step-val ${spOK?'ok':'err'}">${fmtD(svMax)}</span> <span class="step-check ${spOK?'chk-ok':'chk-err'}">${spOK?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">Min. stirrup ratio &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub> — TS 500 §8.2.4 / TSC 2018 §7.4.5</div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>) — X direction</div><div class="step-formula">${fmtA(Asv_x)} / (${sv}×${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${minOK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${minOK_x?'chk-ok':'chk-err'}">${minOK_x?'OK':'NG'}</span></td></tr>
+      ${!isCirc ? `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h) — Y direction</div><div class="step-formula">${fmtA(Asv_y)} / (${sv}×${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${minOK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${minOK_y?'chk-ok':'chk-err'}">${minOK_y?'OK':'NG'}</span></td></tr>` : ''}
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">B</div></td><td><div class="step-desc">Max. spacing — TS 500 §8.2.5: s ≤ min(h/2, 300 mm)</div><div class="step-formula">min(${fmtD(h/2)}, 300 mm) = ${fmtD(svMax)}</div></td><td style="text-align:right"><span class="step-val ${spOK?'ok':'err'}">${fmtD(svMax)}</span> <span class="step-check ${spOK?'chk-ok':'chk-err'}">${spOK?'OK':'NG'}</span></td></tr>
     </table>
   </div>
-  <div class="print-disclaimer">⚠ Yalnızca ön tasarım ve eğitim amaçlıdır. Sorumlu inşaat mühendisi tarafından doğrulanmalıdır.</div>
-  <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>TS 500:2000${seismic?' / TSC 2018':''} Kolon Kesme &nbsp;·&nbsp; kN–m</span></div>`;
+  <div class="print-disclaimer">⚠ For preliminary design and educational purposes only. Must be verified by a licensed structural engineer.</div>
+  <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>TS 500:2000${seismic?' / TSC 2018':''} Column Shear &nbsp;·&nbsp; kN–m</span></div>`;
 
   document.getElementById('shc-ts500-report-body').innerHTML = html;
   document.getElementById('shc-ts500-empty').style.display = 'none';
   document.getElementById('shc-ts500-report-wrap').style.display = 'block';
 }
+setTimeout(calcShColTS500, 0);
 
 function calcShCol_is456() {
   const unit = curU.sh_is456 || 'knm';
