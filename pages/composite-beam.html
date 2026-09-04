@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+<title>Composite Beam Design - AISC 360-22 Chapter I | CivilStrCalc</title>
+<meta name="description" content="Composite beam design calculator per AISC 360-22 Chapter I. W sections (US) and IPE/HEA/HEB/HEM (SI). Shear stud design, partial composite ratio, flexure, shear, and deflection checks.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/composite-beam">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/composite-beam">
+<meta property="og:title" content="Composite Beam Design - AISC 360-22 Chapter I | CivilStrCalc">
+<meta property="og:description" content="Composite beam design per AISC 360-22 Chapter I — shear studs, partial composite, flexure, shear, deflection. W sections (US), IPE/HEA/HEB/HEM (SI).">
+<meta property="og:site_name" content="CivilStrCalc">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Composite Beam Design Calculator - AISC 360-22",
+  "description": "Composite beam design per AISC 360-22 Chapter I with metal deck",
+  "applicationCategory": "UtilityApplication",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "CivilStrCalc", "item": "https://civilstrcalc.com"},
+    {"@type": "ListItem", "position": 2, "name": "Composite Beam Design", "item": "https://civilstrcalc.com/pages/composite-beam"}
+  ]
+}
+</script>
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSansCondensed-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+input[type=range]{width:100%;accent-color:var(--accent);}
+
+.sec-info-bar{font-size:.74rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;margin-top:4px;margin-bottom:4px;line-height:1.8;font-family:var(--mono);display:none;}
+
+.eta-row{display:flex;gap:8px;align-items:center;}
+.eta-row input[type=range]{flex:1;}
+.eta-row input[type=number]{width:62px;padding:6px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--mono);text-align:center;}
+.eta-warn{font-size:.74rem;color:#c07800;background:#fffbeb;border:1px solid #f4c97a;border-radius:4px;padding:4px 8px;margin-top:4px;display:none;}
+
+.comp-props-tbl,.checks-tbl,.stud-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin:6px 0;}
+.comp-props-tbl th,.checks-tbl th,.stud-tbl th{padding:5px 8px;text-align:left;font-weight:600;font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.comp-props-tbl td,.checks-tbl td,.stud-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.comp-props-tbl tr:last-child td,.checks-tbl tr:last-child td,.stud-tbl tr:last-child td{border-bottom:none;}
+.comp-props-tbl td:first-child,.checks-tbl td:first-child,.stud-tbl td:first-child{font-family:var(--sans);color:var(--text-mid);}
+.td-ok{color:var(--green);font-weight:700;}
+.td-err{color:var(--red);font-weight:700;}
+.td-warn{color:#c07800;font-weight:700;}
+
+.checks-tbl td:nth-child(4){font-weight:700;}
+.checks-dcr-ok{color:var(--green);}
+.checks-dcr-warn{color:#c07800;}
+.checks-dcr-err{color:var(--red);}
+
+.cb-svg-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;text-align:center;}
+
+.combo-tbl{width:100%;border-collapse:collapse;font-size:.76rem;}
+.combo-tbl th{padding:5px 8px;text-align:left;font-weight:600;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);border-bottom:2px solid var(--border);}
+.combo-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.combo-tbl tr:last-child td{border-bottom:none;}
+.combo-tbl tr.gov-row td{background:var(--green-bg);font-weight:700;color:var(--green);}
+.combo-lbl{font-family:var(--sans);color:var(--text-mid);}
+.inp-tbl td:last-child{font-family:var(--sans);}
+
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans);}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px;}
+.ph-date{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans);}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5;}
+
+@media print{
+  @page{margin:7mm 9mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:7pt!important;padding:0!important;line-height:1.3!important;}
+  .no-print,.page-title,.unit-switcher,footer{display:none!important;}
+  .print-only{display:flex!important;}
+  .print-footer{display:flex!important;margin-top:4px!important;font-size:5pt!important;}
+  .print-disclaimer{display:block!important;font-size:4.5pt!important;margin-top:3px!important;padding:3px 7px!important;}
+  .calc-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:none!important;border-radius:0!important;}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important;border-radius:0!important;}
+  .report-hdr h4{font-size:7pt!important;}
+  .rh-code{font-size:5pt!important;}
+  .print-btn{display:none!important;}
+  .report-body{padding:4px 10px!important;}
+  .fl-rb{margin-bottom:4px!important;background:#f0f5fb!important;}
+  .fl-col{padding:4px 5px!important;}
+  .fl-lbl{font-size:.53rem!important;}
+  .fl-val{font-size:.82rem!important;}
+  .fl-unit{font-size:.53rem!important;}
+  .result-box{padding:5px 8px!important;gap:4px!important;margin-bottom:5px!important;background:#f0f5fb!important;}
+  .ri-value{font-size:.85rem!important;}
+  .ri-label{font-size:.53rem!important;}
+  .ri-unit{font-size:.5rem!important;}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important;border-radius:4px!important;}
+  .dcr-text strong{font-size:6.5pt!important;}
+  .dcr-text span{font-size:5.5pt!important;}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:4px!important;}
+  .rpt-sec-title{font-size:.52rem!important;padding:1.5px 6px!important;margin-bottom:3px!important;}
+  .inp-tbl td{padding:1.5px 5px!important;font-size:6.5pt!important;}
+  .comp-props-tbl td,.comp-props-tbl th,.checks-tbl td,.checks-tbl th,.stud-tbl td,.stud-tbl th{padding:2px 5px!important;font-size:6.5pt!important;}
+  .combo-tbl td,.combo-tbl th{padding:2px 5px!important;font-size:6.5pt!important;}
+  .report-warn{padding:3px 7px!important;font-size:.6rem!important;margin-bottom:4px!important;line-height:1.3!important;}
+  .cb-svg-wrap{padding:4px!important;}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<script src="../js/steel-profiles.js"></script>
+<script src="../shell.js" defer></script>
+</head>
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Composite Beam Design</h1>
+  <p>AISC 360-22 Chapter I &mdash; steel beam with concrete slab on metal deck. Shear stud design, partial composite ratio, flexure, shear, and deflection checks. Pin&ndash;Pin span. ASCE 7-22 load combinations.</p>
+</div>
+
+<div class="calc-layout">
+  <!-- LEFT CARD -->
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="cb-unit-tag">kip &middot; ft &middot; in</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher">
+        <label>Units:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="cb-btn-us" onclick="cbSetUnit('us',this)">US (kip&middot;ft, in)</button>
+          <button class="unit-btn"        id="cb-btn-si" onclick="cbSetUnit('si',this)">SI (kN&middot;m, mm)</button>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Section Selection</div></div>
+
+      <div class="form-group">
+        <label>Steel Grade</label>
+        <select id="cb-grade" onchange="cbAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+      <div class="form-group">
+        <label>Section Type</label>
+        <select id="cb-sectype" onchange="cbSetSectionType()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+      </div>
+      <div class="form-group">
+        <label>Profile</label>
+        <select id="cb-section" onchange="cbSecChange()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;">
+          <option value="">&mdash; select profile &mdash;</option>
+        </select>
+      </div>
+      <div id="cb-sec-info" class="sec-info-bar"></div>
+
+      <div class="form-div"><div class="form-div-lbl">Span &amp; Geometry</div></div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Span L <span id="cb-L-lbl" class="unit-lbl">[ft]</span></label>
+          <div class="iw"><input type="number" id="cb-span" value="30" step="1" min="4" oninput="cbAutoCalc()"><span id="cb-L-us" class="us">ft</span></div>
+        </div>
+        <div class="form-group">
+          <label>Beam Spacing s <span id="cb-s-lbl" class="unit-lbl">[ft]</span></label>
+          <div class="iw"><input type="number" id="cb-spacing" value="10" step="0.5" min="1" oninput="cbAutoCalc()"><span id="cb-s-us" class="us">ft</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Slab Thickness Above Deck t<sub>c</sub> <span id="cb-tc-lbl" class="unit-lbl">[in]</span></label>
+        <div class="iw"><input type="number" id="cb-tc" value="3.5" step="0.25" min="2" oninput="cbAutoCalc()"><span id="cb-tc-us" class="us">in</span></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Metal Deck</div></div>
+
+      <div class="form-group">
+        <label>Deck Rib Height h<sub>r</sub> <span id="cb-hr-lbl" class="unit-lbl">[in]</span></label>
+        <div class="iw"><input type="number" id="cb-hr" value="3" step="0.25" min="1" oninput="cbAutoCalc()"><span id="cb-hr-us" class="us">in</span></div>
+      </div>
+      <div style="font-size:.73rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:5px 8px;margin-bottom:8px;font-family:var(--sans);line-height:1.5;">
+        <span id="cb-wr-note">Typical rib width w<sub>r</sub> = 6 in assumed (deck perpendicular to beam)</span>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Concrete</div></div>
+
+      <div class="form-group">
+        <label>Concrete Strength f'<sub>c</sub> <span id="cb-fpc-lbl" class="unit-lbl">[ksi]</span></label>
+        <div class="iw"><input type="number" id="cb-fpc" value="4" step="0.5" min="2" oninput="cbAutoCalc()"><span id="cb-fpc-us" class="us">ksi</span></div>
+      </div>
+      <div id="cb-ec-note" style="font-size:.72rem;color:var(--text-dim);margin-top:-8px;margin-bottom:8px;padding:4px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);">
+        E<sub>c</sub> = &mdash;
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Composite Ratio</div></div>
+
+      <div class="form-group">
+        <label>&eta; Composite Ratio &mdash; <span id="cb-eta-desc">Full (100%)</span></label>
+        <div class="eta-row">
+          <input type="range" id="cb-eta-slider" min="0" max="100" value="100" step="5" oninput="cbEtaSync('slider')">
+          <input type="number" id="cb-eta" value="100" min="0" max="100" step="5" oninput="cbEtaSync('num')">
+          <span style="font-family:var(--mono);color:var(--text-mid);font-size:.82rem;">%</span>
+        </div>
+        <div id="cb-eta-warn" class="eta-warn">&#9888; AISC minimum composite ratio is 25% per §I3.2d. Non-composite (0%) is permitted for analysis only.</div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Shear Stud</div></div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Stud Dia. d<sub>s</sub> <span id="cb-ds-lbl" class="unit-lbl">[in]</span></label>
+          <div class="iw"><input type="number" id="cb-ds" value="0.75" step="0.0625" min="0.5" oninput="cbAutoCalc()"><span id="cb-ds-us" class="us">in</span></div>
+        </div>
+        <div class="form-group">
+          <label>Stud Height h<sub>s</sub> <span id="cb-hsstud-lbl" class="unit-lbl">[in]</span></label>
+          <div class="iw"><input type="number" id="cb-hs-stud" value="3" step="0.25" min="1.5" oninput="cbAutoCalc()"><span id="cb-hsstud-us" class="us">in</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Stud Tensile Strength F<sub>u</sub> <span id="cb-fu-lbl" class="unit-lbl">[ksi]</span></label>
+        <div class="iw"><input type="number" id="cb-fu-stud" value="65" step="1" min="50" oninput="cbAutoCalc()"><span id="cb-fu-us" class="us">ksi</span></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl" id="cb-loads-title">Loads &mdash; ASCE 7-22</div></div>
+      <div class="sub-tabs" style="margin-bottom:12px;">
+        <button class="sub-tab active" id="cb-mode-udl"  onclick="cbSetLoadMode('udl')">UDL</button>
+        <button class="sub-tab"        id="cb-mode-area" onclick="cbSetLoadMode('area')">Area Loads</button>
+      </div>
+
+      <!-- UDL panel -->
+      <div id="cb-panel-udl">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Dead Load D <span id="cb-wD-lbl" class="unit-lbl">[kip/ft]</span></label>
+            <div class="iw"><input type="number" id="cb-dL" value="1.5" step="0.1" min="0" oninput="cbAutoCalc()"><span id="cb-wD-us" class="us">kip/ft</span></div>
+          </div>
+          <div class="form-group">
+            <label>Live Load L <span id="cb-wL-lbl" class="unit-lbl">[kip/ft]</span></label>
+            <div class="iw"><input type="number" id="cb-lL" value="2" step="0.1" min="0" oninput="cbAutoCalc()"><span id="cb-wL-us" class="us">kip/ft</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Area loads panel -->
+      <div id="cb-panel-area" style="display:none">
+        <div style="font-size:.73rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 9px;margin-bottom:8px;line-height:1.5;">
+          Beam spacing s above is used as tributary width.
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Dead Load D <span id="cb-aD-lbl" class="unit-lbl">[psf]</span></label>
+            <div class="iw"><input type="number" id="cb-aD" value="20" step="1" min="0" oninput="cbAutoCalc()"><span id="cb-aD-us" class="us">psf</span></div>
+          </div>
+          <div class="form-group">
+            <label>Live Load L <span id="cb-aL-lbl" class="unit-lbl">[psf]</span></label>
+            <div class="iw"><input type="number" id="cb-aL" value="50" step="5" min="0" oninput="cbAutoCalc()"><span id="cb-aL-us" class="us">psf</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cb-sw-note" style="font-size:.72rem;color:var(--text-dim);margin-top:-4px;margin-bottom:10px;padding:5px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);display:none;">
+        &#128696; Self-weight <span id="cb-sw-val">—</span> auto-added to D
+      </div>
+
+      <button class="btn-calc" onclick="cbCalc()">&#9654; Calculate</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="res-empty" id="cb-empty"><div class="ri">&#128203;</div>Select a section, enter loads, and click Calculate.</div>
+    <div class="report-card" id="cb-card" style="display:none">
+      <div class="report-hdr">
+        <h4>Calculation Report</h4>
+        <span class="rh-code" id="cb-rh-code">AISC 360-22 &middot; kip &middot; ft &middot; in</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+      </div>
+      <div class="report-body" id="cb-body"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+'use strict';
+
+var cbUnit = 'us';
+var cbLoadMode = 'udl';
+var cbSP = window.SteelProfiles;
+
+var CB_GRADES_US = [
+  {name:'A36',   Fy:36},
+  {name:'A572 Gr.50', Fy:50},
+  {name:'A992',  Fy:50}
+];
+var CB_GRADES_SI = [
+  {name:'S235',  Fy:235},
+  {name:'S275',  Fy:275},
+  {name:'S355',  Fy:355}
+];
+
+function fmt(v, d) {
+  if (!isFinite(v)) return '—';
+  return (+v).toFixed(d !== undefined ? d : 2);
+}
+
+// ── Unit switch ───────────────────────────────────────────────────────────────
+function cbSetUnit(u, btn) {
+  cbUnit = u;
+  document.querySelectorAll('.unit-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  cbApplyUnit();
+  cbBuildGrades();
+  cbBuildSectionTypes();
+  cbAutoCalc();
+}
+
+function cbApplyUnit() {
+  var isUS = cbUnit === 'us';
+  document.getElementById('cb-unit-tag').textContent = isUS ? 'kip · ft · in' : 'kN · m · mm';
+  document.getElementById('cb-rh-code').textContent = (isUS ? 'AISC 360-22 · kip · ft · in' : 'AISC 360-22 · kN · m · mm');
+  document.getElementById('cb-L-lbl').textContent  = isUS ? '[ft]' : '[m]';
+  document.getElementById('cb-L-us').textContent   = isUS ? 'ft' : 'm';
+  document.getElementById('cb-s-lbl').textContent  = isUS ? '[ft]' : '[m]';
+  document.getElementById('cb-s-us').textContent   = isUS ? 'ft' : 'm';
+  document.getElementById('cb-tc-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-tc-us').textContent  = isUS ? 'in' : 'mm';
+  document.getElementById('cb-hr-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-hr-us').textContent  = isUS ? 'in' : 'mm';
+  document.getElementById('cb-fpc-lbl').textContent= isUS ? '[ksi]' : '[MPa]';
+  document.getElementById('cb-fpc-us').textContent = isUS ? 'ksi' : 'MPa';
+  document.getElementById('cb-ds-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-ds-us').textContent  = isUS ? 'in' : 'mm';
+  document.getElementById('cb-hsstud-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-hsstud-us').textContent  = isUS ? 'in' : 'mm';
+  document.getElementById('cb-fu-lbl').textContent = isUS ? '[ksi]' : '[MPa]';
+  document.getElementById('cb-fu-us').textContent  = isUS ? 'ksi' : 'MPa';
+  document.getElementById('cb-wD-lbl').textContent = isUS ? '[kip/ft]' : '[kN/m]';
+  document.getElementById('cb-wD-us').textContent  = isUS ? 'kip/ft' : 'kN/m';
+  document.getElementById('cb-wL-lbl').textContent = isUS ? '[kip/ft]' : '[kN/m]';
+  document.getElementById('cb-wL-us').textContent  = isUS ? 'kip/ft' : 'kN/m';
+  document.getElementById('cb-aD-lbl').textContent = isUS ? '[psf]' : '[kN/m²]';
+  document.getElementById('cb-aD-us').textContent  = isUS ? 'psf' : 'kN/m²';
+  document.getElementById('cb-aL-lbl').textContent = isUS ? '[psf]' : '[kN/m²]';
+  document.getElementById('cb-aL-us').textContent  = isUS ? 'psf' : 'kN/m²';
+  document.getElementById('cb-wr-note').innerHTML  = isUS
+    ? 'Typical rib width w<sub>r</sub> = 6 in assumed (deck perpendicular to beam)'
+    : 'Typical rib width w<sub>r</sub> = 152 mm assumed (deck perpendicular to beam)';
+
+  if (isUS) {
+    document.getElementById('cb-span').value    = '30';
+    document.getElementById('cb-spacing').value = '10';
+    document.getElementById('cb-tc').value      = '3.5';
+    document.getElementById('cb-hr').value      = '3';
+    document.getElementById('cb-fpc').value     = '4';
+    document.getElementById('cb-ds').value      = '0.75';
+    document.getElementById('cb-hs-stud').value = '3';
+    document.getElementById('cb-fu-stud').value = '65';
+    document.getElementById('cb-dL').value      = '1.5';
+    document.getElementById('cb-lL').value      = '2';
+    document.getElementById('cb-aD').value      = '20';
+    document.getElementById('cb-aL').value      = '50';
+  } else {
+    document.getElementById('cb-span').value    = '9';
+    document.getElementById('cb-spacing').value = '3';
+    document.getElementById('cb-tc').value      = '90';
+    document.getElementById('cb-hr').value      = '76';
+    document.getElementById('cb-fpc').value     = '25';
+    document.getElementById('cb-ds').value      = '19';
+    document.getElementById('cb-hs-stud').value = '76';
+    document.getElementById('cb-fu-stud').value = '448';
+    document.getElementById('cb-dL').value      = '8';
+    document.getElementById('cb-lL').value      = '15';
+    document.getElementById('cb-aD').value      = '1.5';
+    document.getElementById('cb-aL').value      = '5';
+  }
+}
+
+// ── Grade selectors ───────────────────────────────────────────────────────────
+function cbBuildGrades() {
+  var grades = cbUnit === 'us' ? CB_GRADES_US : CB_GRADES_SI;
+  var sel = document.getElementById('cb-grade');
+  var cur = sel.value;
+  sel.innerHTML = grades.map(function(g) {
+    return '<option value="' + g.name + '">' + g.name + ' (Fᵧ = ' + g.Fy + (cbUnit === 'us' ? ' ksi' : ' MPa') + ')</option>';
+  }).join('');
+  var curOk = grades.some(function(g){ return g.name === cur; });
+  if (curOk) sel.value = cur;
+}
+
+function cbGetFy() {
+  var grades = cbUnit === 'us' ? CB_GRADES_US : CB_GRADES_SI;
+  var name = document.getElementById('cb-grade').value;
+  var g = grades.find(function(x){ return x.name === name; });
+  return g ? g.Fy : (cbUnit === 'us' ? 50 : 355);
+}
+
+// ── Section type / profile ────────────────────────────────────────────────────
+function cbBuildSectionTypes() {
+  var sel = document.getElementById('cb-sectype');
+  sel.innerHTML = cbUnit === 'us'
+    ? '<option value="W">W — Wide Flange</option>'
+    : '<option value="IPE">IPE</option><option value="HEA">HEA</option><option value="HEB">HEB</option><option value="HEM">HEM</option>';
+  cbFillProfiles(sel.value);
+}
+
+function cbSetSectionType() {
+  var type = document.getElementById('cb-sectype').value;
+  cbFillProfiles(type);
+  cbAutoCalc();
+}
+
+function cbFillProfiles(type) {
+  var dd = cbSP.getProfileDropdown(type);
+  var sel = document.getElementById('cb-section');
+  sel.innerHTML = '<option value="">— select profile —</option>'
+    + dd.names.map(function(n){ return '<option value="' + n + '">' + n + '</option>'; }).join('');
+  // default selection
+  var defMap = { W:'W18×35', IPE:'IPE 240', HEA:'HEA 200', HEB:'HEB 200', HEM:'HEM 200' };
+  if (defMap[type] && dd.names.indexOf(defMap[type]) >= 0) sel.value = defMap[type];
+  cbSecChange();
+}
+
+function cbSecChange() {
+  var type = document.getElementById('cb-sectype').value;
+  var name = document.getElementById('cb-section').value;
+  var bar = document.getElementById('cb-sec-info');
+  if (!name) { bar.style.display = 'none'; return; }
+  var row = cbSP.getProfileProperties(type, name);
+  if (!row) { bar.style.display = 'none'; return; }
+
+  var info;
+  if (cbUnit === 'us') {
+    // W: [name,d,bf,tf,tw,Ag,W_plf,Ix,Sx,Zx,rx,Iy,Sy,Zy,ry,J,Cw]
+    info = 'd = ' + row[1] + ' in &nbsp;|&nbsp; b<sub>f</sub> = ' + row[2] + ' in &nbsp;|&nbsp; t<sub>f</sub> = ' + row[3] + ' in &nbsp;|&nbsp; t<sub>w</sub> = ' + row[4] + ' in'
+         + '<br>A = ' + row[5] + ' in&sup2; &nbsp;|&nbsp; I<sub>x</sub> = ' + row[7] + ' in&#x2074; &nbsp;|&nbsp; Z<sub>x</sub> = ' + row[9] + ' in&sup3; &nbsp;|&nbsp; W = ' + row[6] + ' lb/ft';
+  } else {
+    // EC3: [name,h,b,tw,tf,r,A_cm2,G_kgm,Iy_cm4,Wely,Wply,iy,Iz,Welz,Wplz,iz,It,Iw]
+    info = 'h = ' + row[1] + ' mm &nbsp;|&nbsp; b = ' + row[2] + ' mm &nbsp;|&nbsp; t<sub>f</sub> = ' + row[4] + ' mm &nbsp;|&nbsp; t<sub>w</sub> = ' + row[3] + ' mm'
+         + '<br>A = ' + row[6] + ' cm&sup2; &nbsp;|&nbsp; I<sub>y</sub> = ' + row[8] + ' cm&#x2074; &nbsp;|&nbsp; W<sub>pl,y</sub> = ' + row[10] + ' cm&sup3; &nbsp;|&nbsp; G = ' + row[7] + ' kg/m';
+  }
+  bar.innerHTML = info;
+  bar.style.display = 'block';
+  cbAutoCalc();
+}
+
+// ── Load mode tabs ────────────────────────────────────────────────────────────
+function cbSetLoadMode(m) {
+  cbLoadMode = m;
+  ['udl','area'].forEach(function(x) {
+    document.getElementById('cb-mode-' + x).classList.toggle('active', x === m);
+    document.getElementById('cb-panel-' + x).style.display = x === m ? '' : 'none';
+  });
+  cbAutoCalc();
+}
+
+// ── Eta sync ──────────────────────────────────────────────────────────────────
+function cbEtaSync(src) {
+  var v = src === 'slider'
+    ? +document.getElementById('cb-eta-slider').value
+    : Math.max(0, Math.min(100, +document.getElementById('cb-eta').value || 0));
+  document.getElementById('cb-eta-slider').value = v;
+  document.getElementById('cb-eta').value = v;
+  var desc = v === 0 ? 'Non-composite' : v === 100 ? 'Full (100%)' : 'Partial (' + v + '%)';
+  document.getElementById('cb-eta-desc').textContent = desc;
+  var warn = document.getElementById('cb-eta-warn');
+  warn.style.display = (v > 0 && v < 25) ? 'block' : 'none';
+  cbAutoCalc();
+}
+
+// ── Auto-calculate on any change ──────────────────────────────────────────────
+function cbAutoCalc() {
+  var name = document.getElementById('cb-section').value;
+  if (!name) return;
+  cbCalc();
+}
+
+// ── Main calculation ──────────────────────────────────────────────────────────
+function cbCalc() {
+  var isUS = cbUnit === 'us';
+  var type = document.getElementById('cb-sectype').value;
+  var name = document.getElementById('cb-section').value;
+  if (!name) { alert('Please select a profile.'); return; }
+
+  var row = cbSP.getProfileProperties(type, name);
+  if (!row) { alert('Profile data not found.'); return; }
+
+  // Section properties
+  var d, bf, tf, tw, Ag, Ix, Zx, sw_beam;
+  var Es = isUS ? 29000 : 200000; // ksi or MPa
+  if (isUS) {
+    d  = row[1]; bf = row[2]; tf = row[3]; tw = row[4];
+    Ag = row[5]; Ix = row[7]; Zx = row[9];
+    sw_beam = row[6] / 1000; // lb/ft → kip/ft
+  } else {
+    d  = row[1]; bf = row[2]; tw = row[3]; tf = row[4];
+    Ag = row[6] * 100;    // cm² → mm²
+    Ix = row[8] * 1e4;    // cm⁴ → mm⁴
+    Zx = row[10] * 1000;  // cm³ → mm³  (Wpl,y)
+    sw_beam = row[7] * 9.81 / 1000; // kg/m → kN/m
+  }
+
+  var Fy = cbGetFy();
+  var L  = +document.getElementById('cb-span').value;
+  var s  = +document.getElementById('cb-spacing').value;
+  var tc = +document.getElementById('cb-tc').value;
+  var hr = +document.getElementById('cb-hr').value;
+  var wr = isUS ? 6 : 152;
+  var fpc   = +document.getElementById('cb-fpc').value;
+  var eta_in = +document.getElementById('cb-eta').value / 100;
+  var ds    = +document.getElementById('cb-ds').value;
+  var hs_stud = +document.getElementById('cb-hs-stud').value;
+  var Fu_stud = +document.getElementById('cb-fu-stud').value;
+
+  // Input validation
+  if (!L || !s || !tc || !hr || !fpc || !ds || !hs_stud || !Fu_stud) {
+    alert('Please fill in all input fields.'); return;
+  }
+
+  // Concrete modulus
+  var Ec;
+  if (isUS) {
+    var wc = 145; // pcf
+    Ec = 33 * Math.pow(wc, 1.5) * Math.sqrt(fpc * 1000) / 1000; // ksi
+  } else {
+    Ec = 4700 * Math.sqrt(fpc); // MPa
+  }
+  var n_ratio = Es / Ec;
+
+  // Update Ec note
+  document.getElementById('cb-ec-note').innerHTML = 'E<sub>c</sub> = '
+    + fmt(Ec, 0) + (isUS ? ' ksi' : ' MPa')
+    + ' &nbsp;|&nbsp; n = E<sub>s</sub>/E<sub>c</sub> = ' + fmt(n_ratio, 1);
+
+  // Self-weight
+  var hs = hr + tc;
+  var sw, sw_deck, sw_slab;
+  if (isUS) {
+    sw_deck = 2 * s / 1000;                      // 2 psf × s ft / 1000 = kip/ft
+    sw_slab = 145 * (tc / 12) * s / 1000;        // wc × tc_ft × s / 1000 = kip/ft
+    sw = sw_beam + sw_deck + sw_slab;
+  } else {
+    sw_deck = 0.1 * s;                            // 0.1 kPa × s m = kN/m
+    sw_slab = 23.6 * (tc / 1000) * s;            // kN/m³ × tc_m × s_m = kN/m
+    sw = sw_beam + sw_deck + sw_slab;
+  }
+
+  // Show self-weight note
+  var swNote = document.getElementById('cb-sw-note');
+  swNote.style.display = 'block';
+  document.getElementById('cb-sw-val').textContent = fmt(sw, 3) + (isUS ? ' kip/ft' : ' kN/m');
+
+  // Applied loads (cover dead + live)
+  var wD_cover, wL;
+  if (cbLoadMode === 'udl') {
+    wD_cover = +document.getElementById('cb-dL').value;
+    wL       = +document.getElementById('cb-lL').value;
+  } else { // area
+    var sDead = +document.getElementById('cb-aD').value;
+    var sLive = +document.getElementById('cb-aL').value;
+    wD_cover = isUS ? sDead * s / 1000 : sDead * s;
+    wL       = isUS ? sLive * s / 1000 : sLive * s;
+  }
+
+  var wD_total = wD_cover + sw;
+
+  // ASCE 7 load combinations
+  var wu1 = 1.4 * wD_total;
+  var wu2 = 1.2 * wD_total + 1.6 * wL;
+  var wu  = Math.max(wu1, wu2);
+  var govCombo = wu1 >= wu2 ? '1.4D' : '1.2D + 1.6L';
+
+  // Demands
+  var Mu = wu * L * L / 8;    // kip·ft or kN·m
+  var Vu = wu * L / 2;         // kip or kN
+
+  // Effective slab width §I3.1a
+  var beff;
+  if (isUS) {
+    beff = Math.min(L * 12 / 4, s * 12); // in  (each side = L/8; total = L/4)
+  } else {
+    beff = Math.min(L * 1000 / 4, s * 1000); // mm
+  }
+
+  // Concrete slab area above deck
+  var Ac = beff * tc; // in² or mm²
+
+  // Full composite capacity
+  var Cc, Cs, SQn_full;
+  if (isUS) {
+    Cc = 0.85 * fpc * Ac;          // kip (ksi × in²)
+    Cs = Fy * Ag;                   // kip (ksi × in²)
+  } else {
+    Cc = 0.85 * fpc * Ac / 1000;   // kN (MPa × mm² = N → /1000)
+    Cs = Fy * Ag / 1000;            // kN
+  }
+  SQn_full = Math.min(Cc, Cs);
+  var full_case = (Cc <= Cs) ? 'concrete' : 'steel';
+
+  // Shear stud capacity §I8.2a
+  var Asa = Math.PI / 4 * ds * ds; // in² or mm²
+  var wr_hr_ratio = wr / hr;
+  var Rg = 0.85; // single stud, deck perpendicular
+  var emid = hs_stud - hr; // extension above deck
+  var Rp = (isUS ? emid >= 3 : emid >= 76) ? 0.75 : 0.60;
+
+  var Qn_basic, Qn_limit, Qn;
+  if (isUS) {
+    Qn_basic = 0.5 * Asa * Math.sqrt(fpc * Ec);       // kip
+    Qn_limit = Rg * Rp * Asa * Fu_stud;               // kip
+  } else {
+    Qn_basic = 0.5 * Asa * Math.sqrt(fpc * Ec) / 1000; // kN
+    Qn_limit = Rg * Rp * Asa * Fu_stud / 1000;          // kN
+  }
+  Qn = Math.min(Qn_basic, Qn_limit);
+  var Qn_governs = Qn_basic <= Qn_limit ? 'formula' : 'limit';
+
+  // Required stud count
+  var SQn_req = eta_in * SQn_full;
+  var N_half = (eta_in === 0) ? 0 : Math.ceil(SQn_req / Qn);
+
+  // Max stud limit §I8.2d
+  var max_per_rib = (wr_hr_ratio < 1.5) ? 1 : 2;
+  var deck_pitch = isUS ? 12 : 305; // in or mm (1 rib per ft assumed)
+  var half_span = isUS ? (L * 12 / 2) : (L * 1000 / 2);
+  var N_ribs_half = Math.floor(half_span / deck_pitch);
+  var N_max = N_ribs_half * max_per_rib;
+  var stud_ok = (eta_in === 0) || (N_half <= N_max);
+
+  // Actual composite ratio
+  var eta_actual = (eta_in === 0) ? 0 : Math.min((N_half * Qn) / SQn_full, 1.0);
+
+  // Stud spacing in each half span
+  var stud_spacing_val = (N_half > 0) ? (half_span / N_half) : 0;
+  var stud_spacing_str = N_half > 0
+    ? fmt(stud_spacing_val, 1) + (isUS ? ' in' : ' mm')
+    : '—';
+
+  // Flexural capacity
+  var phi = 0.9;
+  var Mn_steel = isUS
+    ? Fy * Zx / 12          // kip·ft
+    : Fy * Zx / 1e6;        // kN·m
+
+  // Full composite moment
+  var a_full, arm_full, Mn_full, pna_in_slab;
+  if (isUS) {
+    a_full = SQn_full / (0.85 * fpc * beff); // in
+    pna_in_slab = a_full <= tc;
+    arm_full = pna_in_slab
+      ? (d / 2 + hr + tc - a_full / 2)
+      : (d / 2 + hr + tc / 2);
+    Mn_full = SQn_full * arm_full / 12; // kip·ft
+  } else {
+    a_full = SQn_full * 1000 / (0.85 * fpc * beff); // mm
+    pna_in_slab = a_full <= tc;
+    arm_full = pna_in_slab
+      ? (d / 2 + hr + tc - a_full / 2)
+      : (d / 2 + hr + tc / 2);
+    Mn_full = SQn_full * 1000 * arm_full / 1e6; // kN·m
+  }
+
+  // Partial composite moment: φMn = φ·Mp_s + √η·(φ·Mn_full − φ·Mp_s)
+  var phi_Mp_s = phi * Mn_steel;
+  var phi_Mn_full = phi * Mn_full;
+  var phi_Mn = (eta_in === 0)
+    ? phi_Mp_s
+    : phi_Mp_s + Math.sqrt(eta_actual) * (phi_Mn_full - phi_Mp_s);
+
+  var DCR_flex = Mu / phi_Mn;
+  var flex_ok = DCR_flex <= 1.0;
+
+  // Shear capacity §I4.2 → §G2.1
+  var h_tw = (d - 2 * tf) / tw;
+  var lim_htw = 2.24 * Math.sqrt(Es / Fy);
+  var Cv1 = (h_tw <= lim_htw) ? 1.0 : (lim_htw / h_tw); // simplified
+  var phi_v = 1.0;
+  var Aw = d * tw;
+  var Vn, phi_Vn;
+  if (isUS) {
+    Vn    = 0.6 * Fy * Aw * Cv1;       // kip
+    phi_Vn = phi_v * Vn;
+  } else {
+    Vn    = 0.6 * Fy * Aw * Cv1 / 1000; // kN
+    phi_Vn = phi_v * Vn;
+  }
+  var DCR_shear = Vu / phi_Vn;
+  var shear_ok = DCR_shear <= 1.0;
+
+  // Deflection — lower-bound Ieff §C-I3
+  var Is = Ix; // mm⁴ or in⁴
+
+  // Full composite transformed I
+  var y_steel = d / 2;              // centroid of steel from bottom
+  var y_conc  = d + hr + tc / 2;   // centroid of slab from bottom
+  var At      = Ag + Ac / n_ratio;
+  var ybar    = (Ag * y_steel + (Ac / n_ratio) * y_conc) / At;
+  var I_slab  = beff * Math.pow(tc, 3) / (12 * n_ratio);
+  var It      = Is
+    + Ag * Math.pow(ybar - y_steel, 2)
+    + I_slab + (Ac / n_ratio) * Math.pow(y_conc - ybar, 2);
+  var Ieff    = Is + Math.sqrt(eta_actual) * (It - Is);
+
+  // Stiffness increase ratio
+  var Ieff_Is_ratio = Ieff / Is;
+
+  // Service deflections (simply supported, 5wL⁴/384EI)
+  var E = Es;
+  var dL_val, dL_lim, dT_val, dT_lim;
+  if (isUS) {
+    var L_in   = L * 12;
+    var wL_i   = wL / 12;                   // kip/in
+    var wD_i   = wD_total / 12;             // kip/in
+    dL_val = 5 * wL_i * Math.pow(L_in, 4) / (384 * E * Ieff);  // in
+    var dT_dead = 5 * wD_i * Math.pow(L_in, 4) / (384 * E * Is); // dead on steel
+    dT_val = dT_dead + dL_val;              // total
+    dL_lim = L_in / 360;
+    dT_lim = L_in / 240;
+  } else {
+    var L_mm = L * 1000;
+    var wL_N  = wL;                          // kN/m = 1 N/mm
+    var wD_N  = wD_total;                    // kN/m = 1 N/mm
+    dL_val = 5 * wL_N * Math.pow(L_mm, 4) / (384 * E * Ieff);    // mm
+    var dT_dead = 5 * wD_N * Math.pow(L_mm, 4) / (384 * E * Is);  // mm
+    dT_val = dT_dead + dL_val;
+    dL_lim = L_mm / 360;
+    dT_lim = L_mm / 240;
+  }
+  var dL_ok = dL_val <= dL_lim;
+  var dT_ok = dT_val <= dT_lim;
+
+  // ── Render report ──────────────────────────────────────────────────────────
+  var overallOk = flex_ok && shear_ok && dL_ok && dT_ok && stud_ok;
+  var overallWarn = !overallOk;
+  var dcCls = overallOk ? 'ok' : (DCR_flex <= 1.0 && DCR_shear <= 1.0 ? 'warn' : 'err');
+  var dcLbl = overallOk ? 'Design Adequate'
+    : (DCR_flex > 1.0 || DCR_shear > 1.0 ? 'Strength Exceeded' : 'Serviceability Issue');
+
+  var gradeStr = document.getElementById('cb-grade').value;
+  var unitStr  = isUS ? 'kip·ft·in' : 'kN·m·mm';
+  var date     = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
+  var h = '';
+
+  // Print header
+  h += '<div class="print-only">'
+     + '<div><div class="ph-title">Composite Beam Design</div>'
+     + '<div class="ph-sub">civilstrcalc.com &nbsp;&middot;&nbsp; AISC 360-22 Ch.I &nbsp;&middot;&nbsp; ' + unitStr + '</div></div>'
+     + '<div class="ph-date">' + date + '</div></div>';
+
+  // DCR banner
+  h += '<div class="dcr-banner ' + dcCls + '">'
+     + '<div class="dcr-text">'
+     + '<strong>' + dcLbl + '</strong>'
+     + '<span>' + name + ' &nbsp;&middot;&nbsp; ' + gradeStr + ' &nbsp;&middot;&nbsp; L = ' + L + (isUS ? ' ft' : ' m') + ' &nbsp;&middot;&nbsp; &eta; = ' + fmt(eta_actual * 100, 1) + '%</span>'
+     + '</div></div>';
+
+  // Eta warning
+  if (eta_in > 0 && eta_in < 0.25) {
+    h += '<div class="report-warn"><span>&#9888;</span><div>Composite ratio &eta; = ' + fmt(eta_in * 100, 0) + '% is below AISC minimum of 25% (&sect;I3.2d). Increase stud count or check non-composite (0%).</div></div>';
+  }
+  if (eta_in === 0) {
+    h += '<div class="report-warn" style="background:var(--bg2);border-color:var(--border);color:var(--text-mid)"><span>&#9432;</span><div>Non-composite analysis: &phi;M<sub>n</sub> based on steel section only. No stud layout computed.</div></div>';
+  }
+
+  // Cross-section SVG
+  h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual) + '</div>';
+
+  // Summary result boxes
+  h += '<div class="result-box" style="margin-bottom:8px">';
+  var flex_cls = DCR_flex <= 0.85 ? 'ok' : (DCR_flex <= 1.0 ? 'warn' : 'err');
+  h += '<div class="result-item ' + flex_cls + '">'
+     + '<div class="ri-label">&phi;M<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(phi_Mn, 1) + '</div>'
+     + '<div class="ri-unit">' + (isUS ? 'kip&middot;ft' : 'kN&middot;m') + '</div></div>';
+  h += '<div class="result-item ' + flex_cls + '">'
+     + '<div class="ri-label">M<sub>u</sub> / &phi;M<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(DCR_flex, 3) + '</div>'
+     + '<div class="ri-unit">' + (flex_ok ? '&#10003; OK' : '&#10007; NG') + '</div></div>';
+  var shear_cls = DCR_shear <= 0.85 ? 'ok' : (DCR_shear <= 1.0 ? 'warn' : 'err');
+  h += '<div class="result-item ' + shear_cls + '">'
+     + '<div class="ri-label">&phi;V<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(phi_Vn, 1) + '</div>'
+     + '<div class="ri-unit">' + (isUS ? 'kip' : 'kN') + '</div></div>';
+  h += '</div>';
+
+  // Composite Properties table
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Composite Properties &amp; Stud Design</div>'
+     + '<table class="comp-props-tbl">'
+     + '<thead><tr><th>Parameter</th><th>Value</th><th>Unit</th></tr></thead><tbody>'
+     + '<tr><td>Effective slab width b<sub>eff</sub></td><td>' + fmt(beff, isUS ? 1 : 0) + '</td><td>' + (isUS ? 'in' : 'mm') + '</td></tr>'
+     + '<tr><td>Concrete modulus E<sub>c</sub></td><td>' + fmt(Ec, 0) + '</td><td>' + (isUS ? 'ksi' : 'MPa') + '</td></tr>'
+     + '<tr><td>Modular ratio n = E<sub>s</sub>/E<sub>c</sub></td><td>' + fmt(n_ratio, 1) + '</td><td>&mdash;</td></tr>'
+     + '<tr><td>&Sigma;Q<sub>n,full</sub> (' + full_case + ' governs)</td><td>' + fmt(SQn_full, 1) + '</td><td>' + (isUS ? 'kip' : 'kN') + '</td></tr>'
+     + '<tr><td>Stud area A<sub>sa</sub></td><td>' + fmt(Asa, isUS ? 4 : 1) + '</td><td>' + (isUS ? 'in&sup2;' : 'mm&sup2;') + '</td></tr>'
+     + '<tr><td>Q<sub>n</sub> stud capacity (' + (Qn_governs === 'formula' ? '0.5A&radic;(f\'cEc)' : 'RgRpAFu') + ' governs)</td><td>' + fmt(Qn, 1) + '</td><td>' + (isUS ? 'kip' : 'kN') + '</td></tr>'
+     + '<tr><td>R<sub>g</sub> / R<sub>p</sub></td><td>' + fmt(Rg, 2) + ' / ' + fmt(Rp, 2) + '</td><td>&mdash;</td></tr>'
+     + '<tr><td>&eta; input / &eta; actual</td><td>' + fmt(eta_in * 100, 0) + '% / ' + fmt(eta_actual * 100, 1) + '%</td><td>&mdash;</td></tr>'
+     + '<tr><td>Studs per half-span required</td><td>' + N_half + '</td><td>&mdash;</td></tr>'
+     + '<tr><td>Studs per half-span maximum</td><td>' + N_max + '</td><td>&mdash;</td></tr>'
+     + '<tr><td>Stud check</td><td class="' + (stud_ok ? 'td-ok' : 'td-err') + '">' + (stud_ok ? '&#10003; PASS' : '&#10007; FAIL') + '</td><td>&mdash;</td></tr>'
+     + '<tr><td>I<sub>s</sub> (steel only)</td><td>' + fmt(isUS ? Is : Is / 1e4, isUS ? 0 : 0) + '</td><td>' + (isUS ? 'in&#x2074;' : 'cm&#x2074;') + '</td></tr>'
+     + '<tr><td>I<sub>t</sub> (full composite)</td><td>' + fmt(isUS ? It : It / 1e4, isUS ? 0 : 0) + '</td><td>' + (isUS ? 'in&#x2074;' : 'cm&#x2074;') + '</td></tr>'
+     + '<tr><td>I<sub>eff</sub> (lower bound)</td><td>' + fmt(isUS ? Ieff : Ieff / 1e4, isUS ? 0 : 0) + '</td><td>' + (isUS ? 'in&#x2074;' : 'cm&#x2074;') + '</td></tr>'
+     + '<tr><td>Stiffness ratio I<sub>eff</sub> / I<sub>s</sub></td><td>' + fmt(Ieff_Is_ratio, 2) + '</td><td>&mdash;</td></tr>'
+     + '</tbody></table></div>';
+
+  // Design checks table
+  var dcr_cls_fn = function(dcr) { return dcr <= 0.85 ? 'checks-dcr-ok' : (dcr <= 1.0 ? 'checks-dcr-warn' : 'checks-dcr-err'); };
+  var st_fn = function(ok) { return ok ? '<span class="td-ok">&#10003; PASS</span>' : '<span class="td-err">&#10007; FAIL</span>'; };
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Design Checks &mdash; AISC 360-22</div>'
+     + '<table class="checks-tbl">'
+     + '<thead><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>D/C</th><th>Status</th></tr></thead><tbody>'
+     + '<tr><td>Flexure &sect;I3.2</td><td>' + fmt(Mu, 1) + (isUS ? ' kip&middot;ft' : ' kN&middot;m') + '</td><td>' + fmt(phi_Mn, 1) + (isUS ? ' kip&middot;ft' : ' kN&middot;m') + '</td><td class="' + dcr_cls_fn(DCR_flex) + '">' + fmt(DCR_flex, 3) + '</td><td>' + st_fn(flex_ok) + '</td></tr>'
+     + '<tr><td>Shear &sect;I4.2+G2</td><td>' + fmt(Vu, 1) + (isUS ? ' kip' : ' kN') + '</td><td>' + fmt(phi_Vn, 1) + (isUS ? ' kip' : ' kN') + '</td><td class="' + dcr_cls_fn(DCR_shear) + '">' + fmt(DCR_shear, 3) + '</td><td>' + st_fn(shear_ok) + '</td></tr>'
+     + '<tr><td>Deflection &delta;<sub>L</sub> (L/360)</td><td>' + fmt(dL_val, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + '</td><td>' + fmt(dL_lim, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + '</td><td class="' + dcr_cls_fn(dL_val / dL_lim) + '">' + fmt(dL_val / dL_lim, 3) + '</td><td>' + st_fn(dL_ok) + '</td></tr>'
+     + '<tr><td>Deflection &delta;<sub>T</sub> (L/240)</td><td>' + fmt(dT_val, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + '</td><td>' + fmt(dT_lim, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + '</td><td class="' + dcr_cls_fn(dT_val / dT_lim) + '">' + fmt(dT_val / dT_lim, 3) + '</td><td>' + st_fn(dT_ok) + '</td></tr>'
+     + '</tbody></table>'
+     + (!stud_ok ? '<div class="report-warn" style="margin-top:4px"><span>&#9888;</span><div>Stud count exceeds rib limit. Increase composite ratio or use smaller stud spacing.</div></div>' : '')
+     + '</div>';
+
+  // Stud layout
+  if (eta_in > 0) {
+    var stud_sp_disp = N_half > 0 ? fmt(stud_spacing_val, isUS ? 1 : 0) + (isUS ? ' in' : ' mm') + ' c/c (uniform)' : '—';
+    h += '<div class="rpt-sec"><div class="rpt-sec-title">Shear Stud Layout</div>'
+       + '<table class="stud-tbl">'
+       + '<thead><tr><th>Zone</th><th>Count</th><th>Spacing</th></tr></thead><tbody>'
+       + '<tr><td>Each half-span (0 to L/2)</td><td>' + N_half + '</td><td>' + stud_sp_disp + '</td></tr>'
+       + '<tr><td>Total full span</td><td>' + (N_half * 2) + '</td><td>&mdash;</td></tr>'
+       + '</tbody></table>'
+       + '<div style="font-size:.72rem;color:var(--text-dim);padding:4px 0;font-family:var(--sans);">Uniform layout assumed. Ribs/half-span: ' + N_ribs_half + ' &nbsp;&middot;&nbsp; Max studs/rib: ' + max_per_rib + ' (w<sub>r</sub>/h<sub>r</sub> = ' + fmt(wr_hr_ratio, 2) + ')</div>'
+       + '</div>';
+  }
+
+  // Calculation steps
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Calculation Steps</div>'
+     + '<table class="steps-table"><colgroup><col style="width:32px"><col><col style="width:220px"></colgroup><tbody>';
+
+  function step(n, desc, fml, val) {
+    return '<tr>'
+      + '<td style="width:32px;padding-right:8px;vertical-align:top;padding-top:10px"><div class="step-num">' + n + '</div></td>'
+      + '<td><div class="step-desc">' + desc + '</div><div class="step-formula">' + fml + '</div></td>'
+      + '<td style="text-align:right;vertical-align:middle"><span class="step-val">' + val + '</span></td>'
+      + '</tr>';
+  }
+
+  // Step A: beff
+  var beff_L8 = isUS ? fmt(L * 12 / 8, 1) + ' in' : fmt(L * 1000 / 8, 0) + ' mm';
+  var beff_s  = isUS ? fmt(s * 12 / 2, 1) + ' in' : fmt(s * 1000 / 2, 0) + ' mm';
+  h += step('A', 'Effective Slab Width &sect;I3.1a',
+    'b<sub>eff</sub> = min(2&times;L/8, s) = min(' + beff_L8 + ' + ' + beff_L8 + ', ' + fmt(beff, isUS ? 1 : 0) + (isUS ? ' in' : ' mm') + ')',
+    fmt(beff, isUS ? 1 : 0) + (isUS ? ' in' : ' mm'));
+
+  // Step B: loads
+  h += step('B', 'Factored Load &mdash; ASCE 7-22',
+    'w<sub>D</sub> = ' + fmt(wD_cover, 2) + ' + sw ' + fmt(sw, 3) + ' = ' + fmt(wD_total, 3) + (isUS ? ' kip/ft' : ' kN/m')
+    + '<br>w<sub>u</sub> = max(1.4D, 1.2D+1.6L) = ' + govCombo,
+    fmt(wu, 3) + (isUS ? ' kip/ft' : ' kN/m'));
+
+  // Step C: Mu, Vu
+  h += step('C', 'Design Demands (Pin&ndash;Pin)',
+    'M<sub>u</sub> = w<sub>u</sub>L&sup2;/8 &nbsp;|&nbsp; V<sub>u</sub> = w<sub>u</sub>L/2',
+    'M<sub>u</sub> = ' + fmt(Mu, 1) + (isUS ? ' kip&middot;ft' : ' kN&middot;m') + '<br>V<sub>u</sub> = ' + fmt(Vu, 1) + (isUS ? ' kip' : ' kN'));
+
+  // Step D: SQn_full
+  h += step('D', 'Full Composite Shear Demand &sect;I3.2d',
+    '&Sigma;Q<sub>n,full</sub> = min(0.85f\'<sub>c</sub>A<sub>c</sub>, F<sub>y</sub>A<sub>g</sub>)<br>'
+    + '= min(' + fmt(Cc, 1) + ', ' + fmt(Cs, 1) + ') &nbsp;[' + (isUS ? 'kip' : 'kN') + ']',
+    fmt(SQn_full, 1) + (isUS ? ' kip' : ' kN'));
+
+  // Step E: Qn
+  h += step('E', 'Stud Capacity &sect;I8.2a',
+    'Q<sub>n,basic</sub> = 0.5A<sub>sa</sub>&radic;(f\'<sub>c</sub>E<sub>c</sub>) = ' + fmt(Qn_basic, 1) + (isUS ? ' kip' : ' kN')
+    + '<br>Q<sub>n,limit</sub> = R<sub>g</sub>R<sub>p</sub>A<sub>sa</sub>F<sub>u</sub> = ' + fmt(Qn_limit, 1) + (isUS ? ' kip' : ' kN'),
+    fmt(Qn, 1) + (isUS ? ' kip' : ' kN'));
+
+  // Step F: stud count
+  if (eta_in > 0) {
+    h += step('F', 'Required Stud Count per Half-Span',
+      '&eta; = ' + fmt(eta_in * 100, 0) + '% &rarr; &Sigma;Q<sub>n,req</sub> = ' + fmt(SQn_req, 1) + (isUS ? ' kip' : ' kN')
+      + '<br>N = &lceil;&Sigma;Q<sub>n,req</sub>/Q<sub>n</sub>&rceil; = &lceil;' + fmt(SQn_req / Qn, 2) + '&rceil;',
+      N_half + ' studs');
+  }
+
+  // Step G: flexure
+  var pnaStr = pna_in_slab
+    ? 'a = ' + fmt(a_full, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + ' &le; t<sub>c</sub> (PNA in slab)'
+    : 'a = ' + fmt(a_full, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + ' &gt; t<sub>c</sub> (PNA in steel, approx.)';
+  h += step('G', 'Flexural Capacity &sect;I3.2',
+    pnaStr + '<br>&phi;M<sub>p,s</sub> = ' + fmt(phi_Mp_s, 1) + (isUS ? ' kip&middot;ft' : ' kN&middot;m')
+    + '<br>&phi;M<sub>n</sub> = &phi;M<sub>p,s</sub> + &radic;&eta;&middot;(&phi;M<sub>n,full</sub> &minus; &phi;M<sub>p,s</sub>)',
+    fmt(phi_Mn, 1) + (isUS ? ' kip&middot;ft' : ' kN&middot;m'));
+
+  // Step H: shear
+  h += step('H', 'Shear Capacity &sect;I4.2 + &sect;G2.1',
+    'h/t<sub>w</sub> = ' + fmt(h_tw, 1) + (h_tw <= lim_htw ? ' &le; ' : ' &gt; ') + fmt(lim_htw, 1) + ' &rarr; C<sub>v1</sub> = ' + fmt(Cv1, 2)
+    + '<br>&phi;V<sub>n</sub> = 1.0 &times; 0.6F<sub>y</sub>A<sub>w</sub>C<sub>v1</sub>',
+    fmt(phi_Vn, 1) + (isUS ? ' kip' : ' kN'));
+
+  // Step I: deflection
+  h += step('I', 'Lower-Bound Moment of Inertia &sect;C-I3',
+    'I<sub>eff</sub> = I<sub>s</sub> + &radic;&eta; &middot; (I<sub>t</sub> &minus; I<sub>s</sub>)<br>'
+    + '= ' + fmt(isUS ? Is : Is / 1e4, 0) + ' + ' + fmt(Math.sqrt(eta_actual), 3) + ' &times; (' + fmt(isUS ? It : It / 1e4, 0) + ' &minus; ' + fmt(isUS ? Is : Is / 1e4, 0) + ')',
+    fmt(isUS ? Ieff : Ieff / 1e4, 0) + (isUS ? ' in&#x2074;' : ' cm&#x2074;'));
+
+  h += step('J', 'Deflection Checks',
+    '&delta;<sub>L</sub> = 5w<sub>L</sub>L&#x2074;/(384EI<sub>eff</sub>) &nbsp;(live on composite)<br>'
+    + '&delta;<sub>T</sub> = &delta;<sub>D,steel</sub> + &delta;<sub>L,composite</sub> &nbsp;(total)',
+    '&delta;<sub>L</sub> = ' + fmt(dL_val, isUS ? 3 : 1) + (isUS ? ' in' : ' mm') + '<br>&delta;<sub>T</sub> = ' + fmt(dT_val, isUS ? 3 : 1) + (isUS ? ' in' : ' mm'));
+
+  h += '</tbody></table></div>';
+
+  // Input summary
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>'
+     + '<table class="inp-tbl">'
+     + '<tr><td>Section</td><td>' + name + '</td></tr>'
+     + '<tr><td>Steel grade</td><td>' + gradeStr + ' &mdash; F<sub>y</sub> = ' + Fy + (isUS ? ' ksi' : ' MPa') + '</td></tr>'
+     + '<tr><td>Span L</td><td>' + L + (isUS ? ' ft' : ' m') + '</td></tr>'
+     + '<tr><td>Beam spacing s</td><td>' + s + (isUS ? ' ft' : ' m') + '</td></tr>'
+     + '<tr><td>t<sub>c</sub> (slab above deck)</td><td>' + tc + (isUS ? ' in' : ' mm') + '</td></tr>'
+     + '<tr><td>h<sub>r</sub> (deck rib height)</td><td>' + hr + (isUS ? ' in' : ' mm') + '</td></tr>'
+     + '<tr><td>w<sub>r</sub> (rib width, assumed)</td><td>' + wr + (isUS ? ' in' : ' mm') + '</td></tr>'
+     + '<tr><td>f\'<sub>c</sub></td><td>' + fpc + (isUS ? ' ksi' : ' MPa') + '</td></tr>'
+     + '<tr><td>&eta; input</td><td>' + fmt(eta_in * 100, 0) + '%</td></tr>'
+     + '<tr><td>Stud: d<sub>s</sub> / h<sub>s</sub> / F<sub>u</sub></td><td>' + ds + (isUS ? ' in' : ' mm') + ' / ' + hs_stud + (isUS ? ' in' : ' mm') + ' / ' + Fu_stud + (isUS ? ' ksi' : ' MPa') + '</td></tr>'
+     + '<tr><td>Dead (cover) w<sub>D</sub></td><td>' + fmt(wD_cover, 3) + (isUS ? ' kip/ft' : ' kN/m') + '</td></tr>'
+     + '<tr><td>Self-weight (auto)</td><td>' + fmt(sw, 3) + (isUS ? ' kip/ft' : ' kN/m') + '</td></tr>'
+     + '<tr><td>Live load w<sub>L</sub></td><td>' + fmt(wL, 3) + (isUS ? ' kip/ft' : ' kN/m') + '</td></tr>'
+     + '</table></div>';
+
+  // Print disclaimer
+  h += '<div class="print-disclaimer">&#9888; <b>Preliminary design only.</b> This calculator assumes a simply-supported span, uniform load, full lateral bracing, and typical deck geometry. Verify all results with a licensed structural engineer before use in construction documents. AISC 360-22 Chapter I governs.</div>';
+  h += '<div class="print-footer"><span>civilstrcalc.com</span><span>AISC 360-22 &middot; Chapter I</span><span>' + date + '</span></div>';
+
+  document.getElementById('cb-body').innerHTML = h;
+  document.getElementById('cb-empty').style.display = 'none';
+  document.getElementById('cb-card').style.display  = 'block';
+}
+
+// ── SVG cross-section diagram ─────────────────────────────────────────────────
+function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual) {
+  var W = 300, H = 220;
+  var pad = 16, labW = 40;
+
+  // Drawing zone
+  var drawW = W - labW - pad;
+  var drawH = H - 30; // leave bottom for dimension
+
+  // Section total engineering height
+  var H_eng = d_sec + hr + tc;
+  var W_eng = beff;
+
+  // Scale: fit section in drawing zone
+  var scaleH = drawH / H_eng;
+  // Cap beff display at 2.5 × bf to avoid steel section being tiny
+  var beff_disp = Math.min(beff, bf * 2.5);
+  var scaleW    = drawW / beff_disp;
+  var sc = Math.min(scaleH, scaleW) * 0.88;
+
+  // Pixel heights
+  var d_px  = d_sec * sc;
+  var hr_px = hr * sc;
+  var tc_px = tc * sc;
+  var bf_px = bf * sc;
+  var tw_px = Math.max(tw * sc, 2);
+  var tf_px = Math.max(tf * sc, 1.5);
+  var wr_px = Math.min((isUS ? 6 : 152) * sc, hr_px * 1.2);
+  var beff_px = beff_disp * sc;
+
+  // Layout: center horizontally, anchor top at y0
+  var cx   = pad + beff_px / 2;
+  var y0   = 10; // top of slab
+  var y_bot_slab  = y0 + tc_px;
+  var y_bot_deck  = y_bot_slab + hr_px;
+  var y_bot_steel = y_bot_deck + d_px;
+
+  var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-height:220px;" aria-label="Composite beam cross-section">';
+
+  // ---- Slab (concrete) ----
+  svg += '<rect x="' + fmt(cx - beff_px / 2, 1) + '" y="' + fmt(y0, 1) + '"'
+       + ' width="' + fmt(beff_px, 1) + '" height="' + fmt(tc_px, 1) + '"'
+       + ' fill="#bcd5e6" stroke="#6a9ab8" stroke-width="1" rx="1"/>';
+
+  // Hatch for concrete
+  svg += '<defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
+       + '<line x1="0" y1="0" x2="0" y2="6" stroke="#6a9ab8" stroke-width="0.8" opacity="0.45"/>'
+       + '</pattern></defs>';
+  svg += '<rect x="' + fmt(cx - beff_px / 2, 1) + '" y="' + fmt(y0, 1) + '"'
+       + ' width="' + fmt(beff_px, 1) + '" height="' + fmt(tc_px, 1) + '"'
+       + ' fill="url(#hatch)" opacity="0.5"/>';
+
+  // ---- Metal deck ribs ----
+  var n_ribs = Math.min(6, Math.max(2, Math.round(beff_px / 30)));
+  var rib_pitch = beff_px / n_ribs;
+  var rib_w  = rib_pitch * 0.55;
+  var rib_bot = rib_pitch * 0.25;
+  for (var i = 0; i < n_ribs; i++) {
+    var rx = cx - beff_px / 2 + i * rib_pitch;
+    var p1x = rx + (rib_pitch - rib_w) / 2;
+    var p2x = p1x + rib_w;
+    var p3x = p1x + (rib_w - rib_bot) / 2 + rib_bot;
+    var p4x = p1x + (rib_w - rib_bot) / 2;
+    svg += '<polygon points="'
+         + fmt(p1x, 1) + ',' + fmt(y_bot_slab, 1) + ' '
+         + fmt(p2x, 1) + ',' + fmt(y_bot_slab, 1) + ' '
+         + fmt(p3x, 1) + ',' + fmt(y_bot_deck, 1) + ' '
+         + fmt(p4x, 1) + ',' + fmt(y_bot_deck, 1)
+         + '" fill="#a0a8b0" stroke="#6a7080" stroke-width="0.7"/>';
+  }
+  // Deck top plate
+  svg += '<line x1="' + fmt(cx - beff_px / 2, 1) + '" y1="' + fmt(y_bot_slab, 1) + '"'
+       + ' x2="' + fmt(cx + beff_px / 2, 1) + '" y2="' + fmt(y_bot_slab, 1) + '"'
+       + ' stroke="#5a6070" stroke-width="1.5"/>';
+
+  // ---- Steel I-section ----
+  var sx0 = cx - bf_px / 2;
+  // Top flange
+  svg += '<rect x="' + fmt(sx0, 1) + '" y="' + fmt(y_bot_deck, 1) + '"'
+       + ' width="' + fmt(bf_px, 1) + '" height="' + fmt(tf_px, 1) + '"'
+       + ' fill="#4a6e96" stroke="#1a2a42" stroke-width="0.8"/>';
+  // Web
+  svg += '<rect x="' + fmt(cx - tw_px / 2, 1) + '" y="' + fmt(y_bot_deck + tf_px, 1) + '"'
+       + ' width="' + fmt(tw_px, 1) + '" height="' + fmt(d_px - 2 * tf_px, 1) + '"'
+       + ' fill="#5a80aa" stroke="#1a2a42" stroke-width="0.6"/>';
+  // Bottom flange
+  svg += '<rect x="' + fmt(sx0, 1) + '" y="' + fmt(y_bot_steel - tf_px, 1) + '"'
+       + ' width="' + fmt(bf_px, 1) + '" height="' + fmt(tf_px, 1) + '"'
+       + ' fill="#4a6e96" stroke="#1a2a42" stroke-width="0.8"/>';
+
+  // ---- PNA dashed line ----
+  if (eta_actual > 0) {
+    var a_fr = (eta_actual <= 1) ? Math.sqrt(eta_actual) : 1;
+    var pna_y = y_bot_deck + d_px * 0.08; // approximate PNA near top of steel
+    svg += '<line x1="' + fmt(cx - beff_px / 2, 1) + '" y1="' + fmt(pna_y, 1) + '"'
+         + ' x2="' + fmt(cx + beff_px / 2, 1) + '" y2="' + fmt(pna_y, 1) + '"'
+         + ' stroke="#d04020" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
+    svg += '<text x="' + fmt(cx + beff_px / 2 + 3, 1) + '" y="' + fmt(pna_y + 4, 1) + '"'
+         + ' font-size="7" fill="#d04020" font-family="monospace">PNA</text>';
+  }
+
+  // ---- Dimension labels (right side) ----
+  var lx = cx + beff_px / 2 + 5;
+  var font = 'font-size="9" fill="currentColor" font-family="monospace"';
+
+  function dimLine(y1, y2, label, lxx) {
+    var mid = (y1 + y2) / 2;
+    return '<line x1="' + fmt(lxx, 1) + '" y1="' + fmt(y1, 1) + '" x2="' + fmt(lxx, 1) + '" y2="' + fmt(y2, 1)
+         + '" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
+         + '<line x1="' + fmt(lxx - 3, 1) + '" y1="' + fmt(y1, 1) + '" x2="' + fmt(lxx + 3, 1) + '" y2="' + fmt(y1, 1)
+         + '" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
+         + '<line x1="' + fmt(lxx - 3, 1) + '" y1="' + fmt(y2, 1) + '" x2="' + fmt(lxx + 3, 1) + '" y2="' + fmt(y2, 1)
+         + '" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
+         + '<text x="' + fmt(lxx + 6, 1) + '" y="' + fmt(mid + 3, 1) + '" ' + font + '>' + label + '</text>';
+  }
+
+  if (lx + 48 <= W) {
+    svg += dimLine(y0, y_bot_slab, 'tᶜ', lx);
+    svg += dimLine(y_bot_slab, y_bot_deck, 'hᵣ', lx);
+    svg += dimLine(y_bot_deck, y_bot_steel, 'd', lx);
+  }
+
+  // beff arrow at top
+  var beff_label = isUS ? fmt(beff, 0) + '"' : fmt(beff, 0) + '';
+  var arr_y = y0 - 6;
+  if (arr_y > 0) {
+    svg += '<line x1="' + fmt(cx - beff_px / 2, 1) + '" y1="' + fmt(arr_y, 1) + '"'
+         + ' x2="' + fmt(cx + beff_px / 2, 1) + '" y2="' + fmt(arr_y, 1) + '"'
+         + ' stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+    svg += '<text x="' + fmt(cx, 1) + '" y="' + fmt(arr_y - 2, 1) + '"'
+         + ' ' + font + ' text-anchor="middle">bᵉᶠᶠ</text>';
+  }
+
+  // Labels
+  var ly = y_bot_steel + 16;
+  svg += '<text x="' + fmt(cx - bf_px / 2, 1) + '" y="' + fmt(ly, 1) + '"'
+       + ' ' + font + ' fill="#4a6e96">Steel</text>';
+  svg += '<text x="' + fmt(cx - beff_px / 2 + 4, 1) + '" y="' + fmt(y0 + tc_px / 2 + 4, 1) + '"'
+       + ' ' + font + ' fill="#2a5070">Concrete slab</text>';
+
+  svg += '</svg>';
+  return svg;
+}
+
+// ── Initialize ────────────────────────────────────────────────────────────────
+(function() {
+  cbBuildGrades();
+  cbBuildSectionTypes();
+  cbEtaSync('slider');
+
+  // Wire auto-calc on all inputs
+  document.getElementById('cb-span').addEventListener('input', cbAutoCalc);
+  document.getElementById('cb-spacing').addEventListener('input', cbAutoCalc);
+  document.getElementById('cb-grade').addEventListener('change', cbAutoCalc);
+
+  // Initial calc after short delay to let DOM settle
+  setTimeout(function() { cbAutoCalc(); }, 100);
+})();
+</script>
+</body>
+</html>
