@@ -87,7 +87,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .inp-tbl td{padding:1.5px 5px!important;font-size:6pt!important;}
   .steps-table td{padding:2px 3px!important;}
   .step-desc{font-size:6pt!important;}
-  .step-formula{font-size:5.5pt!important;}
+  .step-formula{font-size:5.5pt!important;gap:1px!important;}
+  .step-formula>div{gap:3px!important;}
   .step-val{font-size:6pt!important;}
   .step-num{width:13px!important;height:13px!important;font-size:.45rem!important;}
   .step-check{font-size:5pt!important;padding:1px 3px!important;}
@@ -1334,6 +1335,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="form-group">
         <label>Spacing s<sub>v</sub> <span class="lu" id="lu-shc-is456-sv">[mm]</span></label>
         <div class="iw"><input type="number" id="shc-is456-sv" value="200" step="5" min="25"><span class="us" id="u-shc-is456-sv">mm</span></div>
+      </div>
+      <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;">
+          <input type="checkbox" id="shc-is456-seismic" onchange="toggleIs456Seismic()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+          <label for="shc-is456-seismic" style="cursor:pointer;font-weight:600;font-size:.79rem;color:var(--text);margin:0;">Seismic Design — IS 13920:2016</label>
+        </div>
       </div>
       <button class="btn-calc" onclick="calcShCol_is456()">▶ Calculate Shear Design</button>
     </div>
@@ -3379,7 +3386,8 @@ function toggleEC2Seismic() {
   const checked = document.getElementById('shc-ec2-seismic').checked;
   document.getElementById('shc-ec2-seismic-opts').style.display = checked ? '' : 'none';
 }
-// Auto-recalculate on any input/change inside the ACI and EC2 shear panels
+function toggleIs456Seismic() { /* checkbox only, no sub-panel */ }
+// Auto-recalculate on any input/change inside the ACI, EC2, and IS 456 shear panels
 (function() {
   function wire(panelId, fn) {
     const el = document.getElementById(panelId);
@@ -3389,6 +3397,7 @@ function toggleEC2Seismic() {
   }
   wire('sh-aci', calcShCol_aci);
   wire('sh-ec2', calcShCol_ec2);
+  wire('sh-is456', calcShCol_is456);
 })();
 
 // ── Unit switching for shear module ──────────────────────────────────────────
@@ -4427,6 +4436,31 @@ function calcShCol_is456() {
   const dt_min  = Math.max(dbl / 4, 6);
   const dtOk    = dt >= dt_min;
 
+  // IS 13920:2016 — Seismic provisions
+  const isSeismic_is456 = !!(document.getElementById('shc-is456-seismic')?.checked);
+  let bc_seis, dc_seis, Ach_seis, hp_seis;
+  let s_c1_seis, s_c2_seis, s_conf_seis;
+  let Ash_req_a_seis, Ash_req_b_seis, Ash_req_seis;
+  let AbOk_seis = true, svOk_seis = true;
+  let dt_min_seis = dt_min;
+  if (isSeismic_is456) {
+    bc_seis  = bw - 2*cv + dt;
+    dc_seis  = isCirc_is456 ? bc_seis : (h - 2*cv + dt);
+    Ach_seis = isCirc_is456 ? Math.PI*bc_seis*bc_seis/4 : bc_seis * dc_seis;
+    hp_seis  = isCirc_is456 ? bc_seis : Math.max(bc_seis, dc_seis);
+    s_c1_seis = (isCirc_is456 ? bw : Math.min(bw, h)) / 4;
+    s_c2_seis = 6 * dbl;
+    s_conf_seis = Math.min(s_c1_seis, s_c2_seis, 100);
+    Ash_req_a_seis = 0.18 * sv * hp_seis * (fck/fy) * (Ag/Ach_seis - 1);
+    Ash_req_b_seis = 0.09 * sv * hp_seis * (fck/fy);
+    Ash_req_seis   = Math.max(Ash_req_a_seis, Ash_req_b_seis);
+    AbOk_seis  = Ab >= Ash_req_seis;
+    svOk_seis  = sv <= s_conf_seis;
+    dt_min_seis = Math.max(dt_min, 8);
+  }
+  const svOk_all = isSeismic_is456 ? (svOk && svOk_seis) : svOk;
+  const dtOk_all = dt >= dt_min_seis;
+
   const icons = {ok:'✅',err:'❌'};
   const labels = {ok:'ADEQUATE',err:'INADEQUATE'};
 
@@ -4504,8 +4538,8 @@ function calcShCol_is456() {
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">d<sub>t</sub> ≥ d<sub>t,min</sub> &nbsp;·&nbsp; s<sub>v</sub> ≤ s<sub>v,max</sub></div>
-        <div class="fl-val ${dtOk&&svOk?'ok':'err'}">${dt.toFixed(0)} mm · ${fmtD(sv)}</div>
-        <div class="fl-unit">min Ø${dt_min.toFixed(0)} mm · max ${fmtD(sv_max)} &nbsp; ${dtOk&&svOk?'✓ OK':'✗ NG'}</div>
+        <div class="fl-val ${dtOk_all&&svOk_all?'ok':'err'}">${dt.toFixed(0)} mm · ${fmtD(sv)}</div>
+        <div class="fl-unit">min Ø${dt_min_seis.toFixed(0)} mm · max ${fmtD(isSeismic_is456?Math.min(sv_max,s_conf_seis):sv_max)} &nbsp; ${dtOk_all&&svOk_all?'✓ OK':'✗ NG'}</div>
       </div>
     </div>
   </div>
@@ -4521,10 +4555,35 @@ function calcShCol_is456() {
     <div class="rpt-sec-title">${isCirc_is456?'Spiral':'Tie'} Reinforcement — Cl 26.5.3.2</div>
     <table class="steps-table">
       <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">Tie diameter: d<sub>t</sub> ≥ max(d<sub>bl</sub>/4, 6 mm)</div><div class="step-formula">d<sub>t,min</sub> = max(${(dbl/4).toFixed(0)} mm, 6 mm) = ${dt_min.toFixed(0)} mm</div></td><td style="width:170px;text-align:right"><span class="step-val ${dtOk?'ok':'err'}">${dt.toFixed(0)} mm</span> <span class="step-check ${dtOk?'chk-ok':'chk-err'}">${dtOk?'OK':'NG'}</span></td></tr>
-      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Max tie spacing — Cl 26.5.3.2(c)</div><div class="step-formula">min(min(b,D)=${fmtD(sv_lim1)}, 16d<sub>bl</sub>=${fmtD(sv_lim2)}, ${fmtD(sv_lim3)})</div></td><td style="text-align:right"><span class="step-val ${svOk?'ok':'err'}">${fmtD(sv_max)}</span> <span class="step-check ${svOk?'chk-ok':'chk-err'}">${svOk?'OK':'NG'}</span></td></tr>
+      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Max tie spacing — Cl 26.5.3.2(c)${isSeismic_is456?' + IS 13920 §7.3.3':''}</div><div class="step-formula" style="display:flex;flex-direction:column;gap:4px"><div>Cl 26.5.3.2(c): min(min(b,D)=${fmtD(sv_lim1)}, 16d<sub>bl</sub>=${fmtD(sv_lim2)}, ${fmtD(sv_lim3)}) = ${fmtD(sv_max)}</div>${isSeismic_is456?`<div>IS 13920 §7.3.3: min(D<sub>min</sub>/4=${fmtD(s_c1_seis)}, 6d<sub>bl</sub>=${fmtD(s_c2_seis)}, 100 mm) = ${fmtD(s_conf_seis)}</div>`:''}<div><b>s<sub>v,max</sub> = ${fmtD(isSeismic_is456?Math.min(sv_max,s_conf_seis):sv_max)}</b></div></div></td><td style="text-align:right"><span class="step-val ${svOk_all?'ok':'err'}">${fmtD(sv)}</span> <span class="step-check ${svOk_all?'chk-ok':'chk-err'}">${svOk_all?'OK':'NG'}</span></td></tr>
       ${needsReinf?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>sv</sub>/s<sub>v</sub> = (τ<sub>v</sub>−τ<sub>c</sub>)·b<sub>w</sub>/(0.87f<sub>y</sub>) per direction</div><div class="step-formula">${needsReinf_x?`X: ${Asv_sv_req_x.toFixed(4)} mm²/mm → A<sub>sv,req,x</sub>@s<sub>v</sub> = ${fmtA(Asv_req_x)} (prov n<sub>x</sub>=${nlx}: ${fmtA(Asv_x)} ${Asv_x>=Asv_req_x?'✓':'✗'})`:``}${needsReinf_y?`${needsReinf_x?' &nbsp;·&nbsp; ':''}Y: ${Asv_sv_req_y.toFixed(4)} mm²/mm → A<sub>sv,req,y</sub>@s<sub>v</sub> = ${fmtA(Asv_req_y)} (prov n<sub>y</sub>=${nly}: ${fmtA(Asv_y)} ${Asv_y>=Asv_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
   </div>
+  ${isSeismic_is456?`
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">IS 13920:2016 — Special Confining Reinforcement</div>
+    <table class="steps-table">
+      <tr><td style="width:32px;padding-right:8px"><div class="step-num">I</div></td>
+        <td><div class="step-desc">Confinement zone length — §7.3.1</div>
+          <div class="step-formula">l<sub>0</sub> ≥ max(max(b,h) = ${fmtD(Math.max(bw,h))}, 450 mm)</div></td>
+        <td style="width:170px;text-align:right"><span class="step-val hl">${fmtD(Math.max(Math.max(bw,h),450))}</span></td></tr>
+      <tr><td><div class="step-num">II</div></td>
+        <td><div class="step-desc">Hoop spacing in confinement zone — §7.3.3</div>
+          <div class="step-formula" style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0">D<sub>min</sub>/4 = ${fmtD(s_c1_seis)} &nbsp;·&nbsp; 6d<sub>bl</sub> = ${fmtD(s_c2_seis)} &nbsp;·&nbsp; 100 mm</span><span style="white-space:nowrap"><b>s<sub>conf</sub> = ${fmtD(s_conf_seis)}</b></span></div>
+          </div></td>
+        <td style="text-align:right"><span class="step-val ${svOk_seis?'ok':'err'}">${fmtD(sv)}</span> <span class="step-check ${svOk_seis?'chk-ok':'chk-err'}">${svOk_seis?'OK':'NG'}</span></td></tr>
+      <tr><td><div class="step-num">III</div></td>
+        <td><div class="step-desc">Min hoop bar area — §7.4.1 &nbsp;·&nbsp; §7.4.2: d<sub>t</sub> ≥ 8 mm</div>
+          <div class="step-formula" style="display:flex;flex-direction:column;gap:4px">
+            <div>b<sub>c</sub> = ${fmtD(bc_seis)}, ${isCirc_is456?'':` d<sub>c</sub> = ${fmtD(dc_seis)},`} h' = ${fmtD(hp_seis)}, A<sub>ch</sub> = ${fmtSecA(Ach_seis)}</div>
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0">0.18·s·h'·f<sub>ck</sub>/f<sub>y</sub>·(A<sub>g</sub>/A<sub>ch</sub>−1) = ${fmtA(Ash_req_a_seis)}</span></div>
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0">0.09·s·h'·f<sub>ck</sub>/f<sub>y</sub> = ${fmtA(Ash_req_b_seis)}</span></div>
+            <div style="display:flex;gap:8px"><span style="flex:1;min-width:0"><b>A<sub>sh,req</sub> = max(…) = ${fmtA(Ash_req_seis)}</b></span><span style="white-space:nowrap">prov A<sub>b</sub> = ${fmtA(Ab)}</span></div>
+          </div></td>
+        <td style="text-align:right"><span class="step-val ${AbOk_seis&&dt>=8?'ok':'err'}">${fmtA(Ab)}</span> <span class="step-check ${AbOk_seis&&dt>=8?'chk-ok':'chk-err'}">${AbOk_seis&&dt>=8?'OK':'NG'}</span></td></tr>
+    </table>
+  </div>`:''}
   <div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Verify with a licensed structural engineer.</div>
   <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>IS 456:2000 Column Shear &nbsp;·&nbsp; ${U.tag}</span></div>`;
 
