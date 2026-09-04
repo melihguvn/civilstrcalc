@@ -56,7 +56,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 /* custom section panel */
 .custom-sec-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 10px 6px;margin-top:6px;margin-bottom:4px;}
-.cust-compact{font-size:.73rem;padding:5px 8px;border-radius:4px;margin-top:6px;line-height:1.55;font-family:var(--mono);}
+.cust-compact{font-size:.73rem;padding:6px 9px;border-radius:4px;margin-top:6px;line-height:1.7;font-family:var(--mono);white-space:normal;}
 .cust-compact.cls-compact{background:var(--green-bg);border:1px solid var(--green);color:var(--green);}
 .cust-compact.cls-noncompact{background:#fffbeb;border:1px solid #f4c97a;color:#c07800;}
 .cust-compact.cls-slender{background:var(--red-bg);border:1px solid var(--red);color:var(--red);}
@@ -258,7 +258,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
       <div id="cb-panel-udl">
         <div class="form-row-2">
           <div class="form-group">
-            <label>Dead Load D <span id="cb-wD-lbl" class="unit-lbl">[kip/ft]</span></label>
+            <label>Cover Dead Load D <span id="cb-wD-lbl" class="unit-lbl">[kip/ft]</span></label>
             <div class="iw"><input type="number" id="cb-dL" value="1.5" step="0.1" min="0" oninput="cbAutoCalc()"><span id="cb-wD-us" class="us">kip/ft</span></div>
           </div>
           <div class="form-group">
@@ -275,7 +275,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label>Dead Load D <span id="cb-aD-lbl" class="unit-lbl">[psf]</span></label>
+            <label>Cover Dead Load D <span id="cb-aD-lbl" class="unit-lbl">[psf]</span></label>
             <div class="iw"><input type="number" id="cb-aD" value="20" step="1" min="0" oninput="cbAutoCalc()"><span id="cb-aD-us" class="us">psf</span></div>
           </div>
           <div class="form-group">
@@ -514,10 +514,10 @@ function cbUpdateCompactBar() {
   var cls   = Math.max(cls_f, cls_w);
   var clsName = ['Compact','Non-compact','Slender'][cls - 1];
   var clsCss  = ['cls-compact','cls-noncompact','cls-slender'][cls - 1];
-  var info = 'Section Class: <b>' + clsName + '</b>'
-    + ' &nbsp;|&nbsp; &lambda;<sub>f</sub> = ' + fmt(lf, 2) + ' (lim ' + fmt(lf_p, 2) + ' / ' + fmt(lf_r, 2) + ')'
-    + ' &nbsp;|&nbsp; &lambda;<sub>w</sub> = ' + fmt(lw, 2) + ' (lim ' + fmt(lw_p, 2) + ' / ' + fmt(lw_r, 2) + ')';
-  if (cls > 1) info += ' &nbsp;&#9888; This calculator assumes a compact section.';
+  var warn = cls > 1 ? ' &nbsp;&#9888; Calculator assumes compact section.' : '';
+  var info = 'Section Class: <b>' + clsName + '</b>' + warn
+    + '<br>&lambda;<sub>f</sub> = ' + fmt(lf, 2) + ' &nbsp;(lim&nbsp;' + fmt(lf_p, 2) + ' / ' + fmt(lf_r, 2) + ')&ensp;' + (cls_f === 1 ? '&#10003;' : cls_f === 2 ? '&#9888;' : '&#10007;')
+    + '<br>&lambda;<sub>w</sub> = ' + fmt(lw, 2) + ' &nbsp;(lim&nbsp;' + fmt(lw_p, 2) + ' / ' + fmt(lw_r, 2) + ')&ensp;' + (cls_w === 1 ? '&#10003;' : cls_w === 2 ? '&#9888;' : '&#10007;');
   bar.className = 'cust-compact ' + clsCss;
   bar.innerHTML = info;
 }
@@ -964,7 +964,7 @@ function cbCalc() {
      + '<tr><td>t<sub>c</sub> / h<sub>r</sub></td><td>'+tc+' / '+hr+uL+'</td></tr>'
      + '<tr><td>f\'<sub>c</sub></td><td>'+fpc+(isUS?' ksi':' MPa')+'</td></tr>'
      + '<tr><td>&eta; input</td><td>'+fmt(eta_in*100,0)+'%</td></tr>'
-     + '<tr><td>Dead (cover)</td><td>'+fmt(wD_cover,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
+     + '<tr><td>Cover dead load</td><td>'+fmt(wD_cover,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '<tr><td>Self-weight (auto)</td><td>'+fmt(sw,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '<tr><td>Live load</td><td>'+fmt(wL,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '</table></div>';
