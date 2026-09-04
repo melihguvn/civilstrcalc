@@ -794,6 +794,12 @@ function cbCalc() {
   var deck_pitch   = isUS ? 12 : 305;
   var half_span    = isUS ? L * 12 / 2 : L * 1000 / 2;
   var N_ribs_half  = Math.floor(half_span / deck_pitch);
+  // AISC §I8.2c: max stud spacing → sets a minimum stud count
+  var max_stud_spc    = isUS ? Math.min(8*(tc+hr), 36) : Math.min(8*(tc+hr), 900);
+  var N_half_str      = N_half;   // strength-governed count
+  var N_half_spc      = eta_in > 0 ? Math.ceil(half_span / max_stud_spc) : 0;
+  var spacing_governs = eta_in > 0 && N_half_spc > N_half_str;
+  if (spacing_governs) N_half = N_half_spc;
   var N_max        = N_ribs_half * max_per_rib;
   var stud_ok      = eta_in === 0 || N_half <= N_max;
   var ribs_with_2  = (double_row && N_half > N_ribs_half) ? Math.min(N_half - N_ribs_half, N_ribs_half) : 0;
@@ -1028,7 +1034,8 @@ function cbCalc() {
        + '<table class="stud-tbl"><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>'
        + '<tr><td>Layout</td><td>' + layout_str + layout_badge + '</td></tr>'
        + '<tr><td>Total studs (full span)</td><td>' + (N_half*2) + ' &nbsp;<span style="color:var(--text-dim);font-size:.70rem">(' + N_half + ' per half)</span></td></tr>'
-       + '<tr><td>Avg. longitudinal spacing</td><td>' + (N_half>0 ? fmt(stud_spacing_val,isUS?1:0)+uL+' c/c' : '&mdash;') + '</td></tr>'
+       + '<tr><td>Avg. longitudinal spacing</td><td>' + (N_half>0 ? fmt(stud_spacing_val,isUS?1:0)+uL+' c/c' : '&mdash;') + (spacing_governs ? ' &nbsp;<span style="font-size:.70rem;color:var(--accent);font-weight:600;">&sect;I8.2c governs</span>' : '') + '</td></tr>'
+       + '<tr><td>Max spacing §I8.2c</td><td>' + fmt(max_stud_spc,isUS?1:0)+uL + ' = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'900 mm')+')</td></tr>'
        + '<tr><td>Ribs per half-span</td><td>' + N_ribs_half + '</td></tr>'
        + '<tr><td>Max studs per rib</td><td>' + max_per_rib + ' &nbsp;<span style="font-size:.70rem;color:var(--text-dim)">(' + (double_row ? 'double-row permitted: w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&ge;1.5, b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&ge;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm') : 'single-row only: ' + (!rib_allows2 ? 'w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&lt;1.5' : 'b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&lt;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm'))) + ')</span></td></tr>'
        + '</tbody></table>'
@@ -1100,10 +1107,13 @@ function cbCalc() {
     fmt(Qn,1)+uF);
 
   if (eta_in > 0) {
-    h += step('J','Required Stud Count per Half-Span',
-      '&eta; = '+fmt(eta_in*100,0)+'% &rarr; &Sigma;Q<sub>n,req</sub> = '+fmt(SQn_req,1)+uF
-      +'<br>N = &lceil;&Sigma;Q<sub>n,req</sub>/Q<sub>n</sub>&rceil; = &lceil;'+fmt(SQn_req/Qn,2)+'&rceil;',
-      N_half+' studs');
+    var stepJ_fml = '&eta; = '+fmt(eta_in*100,0)+'% &rarr; &Sigma;Q<sub>n,req</sub> = '+fmt(SQn_req,1)+uF
+      + '<br>N<sub>str</sub> = &lceil;&Sigma;Q<sub>n,req</sub>/Q<sub>n</sub>&rceil; = &lceil;'+fmt(SQn_req/Qn,2)+'&rceil; = '+N_half_str+' (strength)';
+    if (spacing_governs) {
+      stepJ_fml += '<br>s<sub>max</sub> = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'900 mm')+') = '+fmt(max_stud_spc,isUS?1:0)+uL
+               + '<br>N<sub>spc</sub> = &lceil;L/2 / s<sub>max</sub>&rceil; = &lceil;'+fmt(half_span/max_stud_spc,2)+'&rceil; = '+N_half_spc+' <strong>(&sect;I8.2c governs)</strong>';
+    }
+    h += step('J','Required Stud Count per Half-Span', stepJ_fml, N_half+' studs');
   }
 
   var pnaStr = pna_in_slab
@@ -1319,7 +1329,7 @@ function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ri
   var cy = 38;                  // centre y of beam
   var fy1 = cy - flg_h/2, fy2 = cy + flg_h/2;
   var pitch_px = half_px / N_half;
-  var stud_r = Math.min(3.8, Math.max(1.6, pitch_px * 0.19));
+  var stud_r = Math.min(3.2, Math.max(1.5, flg_h * 0.115));
   var f = function(v){ return (+v).toFixed(1); };
 
   var svg = '<svg viewBox="0 0 '+VW+' '+VH+'" xmlns="http://www.w3.org/2000/svg"'
