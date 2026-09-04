@@ -247,6 +247,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <button class="sub-tab active" onclick="fndSetCode('aci',this)">ACI 318-25</button>
   <button class="sub-tab" onclick="fndSetCode('ec2',this)">Eurocode 2 (EN 1992-1-1)</button>
   <button class="sub-tab" onclick="fndSetCode('is456',this)">IS 456:2000</button>
+  <button class="sub-tab" onclick="fndSetCode('ts500',this)">TS 500:2000</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -893,6 +894,78 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div><!-- /is456 pane -->
 
 <!-- ═══════════════════════════════════════════════════════════
+     TS 500:2000
+     ═══════════════════════════════════════════════════════════ -->
+<div class="sub-pane" id="fnd-pane-ts500">
+<div class="calc-layout">
+  <div class="card no-print">
+    <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">TS 500:2000 · kN-m</span></div>
+    <div class="card-body">
+
+      <div class="unit-switcher" style="margin-bottom:8px;">
+        <label>Foundation Type:</label>
+        <div class="unit-btns">
+          <button class="unit-btn active" id="ts500-iso-btn" onclick="ts500SetType('isolated',this)">Isolated Footing</button>
+          <button class="unit-btn" id="ts500-raft-btn" onclick="ts500SetType('raft',this)">Raft Foundation</button>
+        </div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Slab / Footing Properties</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Total Thickness h [mm]</label>
+          <div class="iw"><input type="number" id="ts500f-h" value="500" step="25" oninput="ts500UpdateD()"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>f<sub>ck</sub> [MPa]</label>
+          <select id="ts500f-fck" oninput="ts500UpdateD()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.82rem;background:var(--white);color:var(--text);">
+            <option value="16">C16</option><option value="18">C18</option>
+            <option value="20" selected>C20</option><option value="25">C25</option>
+            <option value="30">C30</option><option value="35">C35</option><option value="40">C40</option>
+          </select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Cover c<sub>v</sub> [mm]</label>
+          <div class="iw"><input type="number" id="ts500f-cv" value="40" step="5" min="10" oninput="ts500UpdateD()"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>Bar &empty; d<sub>b</sub> [mm]</label>
+          <div class="iw"><input type="number" id="ts500f-db" value="16" step="2" min="6" max="40" oninput="ts500UpdateD()"><span class="us">mm</span></div></div>
+      </div>
+      <div style="background:var(--bg-alt);border-radius:5px;padding:5px 10px;font-size:.76rem;color:var(--text-dim);margin-bottom:8px;">
+        d = h &minus; c<sub>v</sub> &minus; d<sub>b</sub> = <strong id="ts500f-d-disp">444</strong> mm
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Column (Rectangular, Interior)</div></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>c<sub>1</sub> [mm]</label><div class="iw"><input type="number" id="ts500f-c1" value="500" step="25"><span class="us">mm</span></div></div>
+        <div class="form-group"><label>c<sub>2</sub> [mm]</label><div class="iw"><input type="number" id="ts500f-c2" value="500" step="25"><span class="us">mm</span></div></div>
+      </div>
+
+      <div class="form-div"><div class="form-div-lbl">Loading</div></div>
+      <div class="form-group"><label>Design Axial Force V<sub>d</sub> [kN]</label>
+        <div class="iw"><input type="number" id="ts500f-Vd" value="2000"><span class="us">kN</span></div></div>
+      <div id="ts500-iso-inputs">
+        <div class="form-row-2">
+          <div class="form-group"><label>Footing Length L [m]</label><div class="iw"><input type="number" id="ts500f-L" value="2.50" step="0.1"><span class="us">m</span></div></div>
+          <div class="form-group"><label>Footing Width B [m]</label><div class="iw"><input type="number" id="ts500f-B" value="2.50" step="0.1"><span class="us">m</span></div></div>
+        </div>
+        <div style="font-size:.69rem;color:var(--text-dim);margin-bottom:8px;">Net punching force: V<sub>d,net</sub>=V<sub>d</sub>&minus;q<sub>u</sub>·A<sub>crit</sub>  (TS 500 §12.2)</div>
+      </div>
+
+      <button class="btn-calc" onclick="calcTS500_fnd()">&#9658; Calculate</button>
+    </div>
+  </div>
+  <div class="results-col">
+    <div class="res-empty" id="ts500f-empty"><div class="ri">&#128203;</div>Enter values and click Calculate.</div>
+    <div class="report-card" id="ts500f-card" style="display:none">
+      <div class="report-hdr">
+        <h4>Punching Shear Report</h4>
+        <span class="rh-code">TS 500:2000 · kN-m</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+      </div>
+      <div class="report-body" id="ts500f-body"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /ts500 pane -->
+
+<!-- ═══════════════════════════════════════════════════════════
      DESIGN BACKGROUND
      ═══════════════════════════════════════════════════════════ -->
 <div class="bg-section">
@@ -1088,7 +1161,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 function fndSetCode(code,btn){
   document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  ['aci','ec2','is456'].forEach(c=>{const p=document.getElementById('fnd-pane-'+c);if(p)p.classList.toggle('active',c===code);});
+  ['aci','ec2','is456','ts500'].forEach(c=>{const p=document.getElementById('fnd-pane-'+c);if(p)p.classList.toggle('active',c===code);});
 }
 function bgTab(btn, id) {
   var bg = btn.closest('.design-background');
@@ -2128,6 +2201,92 @@ function is456SetHasReinf(on){
 function is456SetHasDrop(on){is456HasDrop=on;document.getElementById('is456-drop-inputs').style.display=on?'':'none';}
 function is456UpdateAv(){const nl=parseInt(document.getElementById('is456-nlegs')?.value)||2;const db=parseFloat(document.getElementById('is456-rdb')?.value)||12;const nF=is456ColType==='int'?4:is456ColType==='edge'?3:2;document.getElementById('is456-av-calc').textContent=(nF*nl*Math.PI/4*db*db).toFixed(0);}
 
+// ════════════════════════════════════════════════════════════
+// TS 500:2000 — Foundation Punching Shear
+// ════════════════════════════════════════════════════════════
+let ts500_foundType = 'isolated';
+function ts500SetType(type, btn){
+  ts500_foundType = type;
+  document.querySelectorAll('#ts500-iso-btn,#ts500-raft-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ts500-iso-inputs').style.display = type==='isolated' ? '' : 'none';
+}
+function ts500UpdateD(){
+  const h  = parseFloat(document.getElementById('ts500f-h').value)||0;
+  const cv = parseFloat(document.getElementById('ts500f-cv').value)||0;
+  const db = parseFloat(document.getElementById('ts500f-db').value)||0;
+  const d  = h - cv - db;
+  document.getElementById('ts500f-d-disp').textContent = d.toFixed(0);
+}
+function calcTS500_fnd(){
+  const h  = parseFloat(document.getElementById('ts500f-h').value);
+  const fck= parseFloat(document.getElementById('ts500f-fck').value);
+  const cv = parseFloat(document.getElementById('ts500f-cv').value);
+  const db = parseFloat(document.getElementById('ts500f-db').value);
+  const c1 = parseFloat(document.getElementById('ts500f-c1').value);
+  const c2 = parseFloat(document.getElementById('ts500f-c2').value);
+  const Vd = parseFloat(document.getElementById('ts500f-Vd').value)*1000; // N
+  if(!h||!fck||!cv||!db||!c1||!c2||!Vd){alert('Please fill all fields.');return;}
+  const d = h - cv - db; // mm
+  if(d<=0){alert('Effective depth <= 0. Check cover vs thickness.');return;}
+  const fcd  = fck/1.5;
+  const fctk = 0.35*Math.sqrt(fck);
+  const fctd = fctk/1.5;
+  // Critical perimeter at d/2 from column face (TS 500 §12.2)
+  const u0 = 2*(c1+d) + 2*(c2+d);     // mm
+  const A_crit = (c1+d)*(c2+d);       // mm²
+
+  let Vd_net = Vd;
+  let isoNote = '';
+  if(ts500_foundType==='isolated'){
+    const L = parseFloat(document.getElementById('ts500f-L').value)*1000; // mm
+    const B = parseFloat(document.getElementById('ts500f-B').value)*1000;
+    if(!L||!B){alert('Enter footing dimensions.');return;}
+    const A_fnd = L*B;
+    const qu = Vd/A_fnd;     // N/mm²
+    Vd_net = Math.max(0, Vd - qu*A_crit);
+    isoNote = `q<sub>u</sub>=V<sub>d</sub>/(L×B)=${(qu*1e3).toFixed(4)} kN/mm², A<sub>crit</sub>=${(A_crit/1e6).toFixed(4)} m²`;
+  }
+  // Nominal punching stress
+  const tau_s = Vd_net / (u0 * d);     // MPa
+  // Capacity (TS 500 §12.2.1)
+  const tau_c = 0.65 * fctd;
+  // Section limit (TS 500 §12.2.2)
+  const tau_lim = 0.22 * fcd;
+  const ok_sec  = tau_s <= tau_lim;
+  const ok_conc = tau_s <= tau_c;
+  const dcr = tau_c > 0 ? tau_s/tau_c : 999;
+  const st  = tau_s <= tau_c ? 'ok' : tau_s <= tau_lim ? 'warn' : 'err';
+  const warns = [];
+  if(!ok_sec)  warns.push(`<b>Section crush failure:</b> τ<sub>s</sub>=${tau_s.toFixed(3)} MPa > 0.22·f<sub>cd</sub>=${tau_lim.toFixed(3)} MPa (TS 500 §12.2.2). Increase slab thickness or concrete grade.`);
+  else if(!ok_conc) warns.push(`<b>Shear reinforcement required:</b> τ<sub>s</sub>=${tau_s.toFixed(3)} MPa > τ<sub>c</sub>=${tau_c.toFixed(3)} MPa. Add stirrups or headed studs (TS 500 §12.2.3).`);
+  const body = document.getElementById('ts500f-body');
+  body.innerHTML = warns.map(w=>`<div class="report-warn"><span>⚠️</span><div>${w}</div></div>`).join('')
+    +`<div class="rpt-sec"><div class="rpt-sec-title">Material Factors</div>
+      <table class="res-tbl">
+        <tr><td>f<sub>ck</sub></td><td>${fck} MPa</td></tr>
+        <tr><td>f<sub>cd</sub>=f<sub>ck</sub>/1.5</td><td>${fcd.toFixed(2)} MPa</td></tr>
+        <tr><td>f<sub>ctk</sub>=0.35√f<sub>ck</sub></td><td>${fctk.toFixed(3)} MPa</td></tr>
+        <tr><td>f<sub>ctd</sub>=f<sub>ctk</sub>/1.5</td><td>${fctd.toFixed(3)} MPa</td></tr>
+      </table></div>
+     <div class="rpt-sec"><div class="rpt-sec-title">Punching Check (TS 500 §12.2)</div>
+      <table class="res-tbl">
+        <tr><td>d = h−c<sub>v</sub>−d<sub>b</sub></td><td>${d.toFixed(0)} mm</td></tr>
+        <tr><td>Critical perimeter u<sub>0</sub> (at d/2)</td><td>${u0.toFixed(0)} mm</td></tr>
+        ${isoNote?`<tr><td>Net force reduction</td><td>${isoNote}</td></tr>`:''}
+        <tr><td>V<sub>d,net</sub></td><td>${(Vd_net/1000).toFixed(1)} kN</td></tr>
+        <tr><td>τ<sub>s</sub>=V<sub>d,net</sub>/(u<sub>0</sub>·d)</td><td class="${ok_conc?'vok':'vwarn'}">${tau_s.toFixed(3)} MPa</td></tr>
+        <tr><td>τ<sub>c</sub>=0.65·f<sub>ctd</sub></td><td class="vhl">${tau_c.toFixed(3)} MPa</td></tr>
+        <tr><td>Section limit 0.22·f<sub>cd</sub></td><td class="${ok_sec?'vok':'verr'}">${tau_lim.toFixed(3)} MPa</td></tr>
+      </table></div>
+     <div class="result-box">
+       <div class="result-item ${st}"><div class="ri-label">D/C = τ<sub>s</sub>/τ<sub>c</sub></div><div class="ri-value">${dcr.toFixed(3)}</div><div class="ri-unit">≤ 1.0</div></div>
+       <div class="result-item ${ok_sec?'ok':'err'}"><div class="ri-label">Section Limit</div><div class="ri-value">${ok_sec?'OK':'FAIL'}</div><div class="ri-unit">${ok_sec?'✓':'✗'}</div></div>
+     </div>`;
+  document.getElementById('ts500f-empty').style.display='none';
+  document.getElementById('ts500f-card').style.display='block';
+}
+
 function calcIS456(){
   const U=IS456_U[is456Unit];
   const gv=id=>parseFloat(document.getElementById(id).value)||0;
@@ -2244,7 +2403,7 @@ function calcIS456(){
 }
 
 /* ── Init ── */
-aciUpdateD(); ec2UpdateD(); is456UpdateD();
+aciUpdateD(); ec2UpdateD(); is456UpdateD(); ts500UpdateD();
 </script>
 <div class="adblock-notice" id="adblockNotice">
   <div class="adblock-notice-content">
