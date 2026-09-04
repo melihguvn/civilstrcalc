@@ -75,7 +75,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 .checks-dcr-warn{color:#c07800;}
 .checks-dcr-err{color:var(--red);}
 
-.cb-svg-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;text-align:center;}
+.cb-svg-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 4px 4px;margin-bottom:8px;display:flex;justify-content:center;align-items:center;}
 
 .inp-tbl td:last-child{font-family:var(--sans);}
 .print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px;}
@@ -258,7 +258,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
       <div id="cb-panel-udl">
         <div class="form-row-2">
           <div class="form-group">
-            <label>Cover Dead Load D <span id="cb-wD-lbl" class="unit-lbl">[kip/ft]</span></label>
+            <label>Cover Load D<span id="cb-wD-lbl" class="unit-lbl">[kip/ft]</span></label>
             <div class="iw"><input type="number" id="cb-dL" value="1.5" step="0.1" min="0" oninput="cbAutoCalc()"><span id="cb-wD-us" class="us">kip/ft</span></div>
           </div>
           <div class="form-group">
@@ -275,7 +275,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label>Cover Dead Load D <span id="cb-aD-lbl" class="unit-lbl">[psf]</span></label>
+            <label>Cover Load D<span id="cb-aD-lbl" class="unit-lbl">[psf]</span></label>
             <div class="iw"><input type="number" id="cb-aD" value="20" step="1" min="0" oninput="cbAutoCalc()"><span id="cb-aD-us" class="us">psf</span></div>
           </div>
           <div class="form-group">
@@ -577,6 +577,41 @@ function cbCompactClass(d, bf, tf, tw, Fy, Es) {
   };
 }
 
+// ── Plastic section modulus about arbitrary axis (doubly-sym I) ───────────────
+function cbZpna(d, bf, tf, tw, py) {
+  function rectZ(w, y0, h) {
+    var y1 = y0 + h;
+    if (y0 >= py) return w * h * ((y0 + y1) / 2 - py);
+    if (y1 <= py) return w * h * (py - (y0 + y1) / 2);
+    var ha = py - y0, hb = y1 - py;
+    return w * ha * ha / 2 + w * hb * hb / 2;
+  }
+  return rectZ(bf, 0, tf) + rectZ(tw, tf, d - 2*tf) + rectZ(bf, d - tf, tf);
+}
+
+// ── Full composite moment capacity §I3.2a ─────────────────────────────────────
+// Returns Mn in kip·ft (US) or kN·m (SI)
+function cbMnFull(d, bf, tf, tw, Fy, Cc, Cs, fpc, beff, hr, tc, isUS) {
+  if (Cs <= Cc) {
+    // PNA in slab: all steel in tension
+    var a   = isUS ? Cs / (0.85 * fpc * beff) : Cs * 1000 / (0.85 * fpc * beff);
+    var arm = d / 2 + hr + tc - a / 2;
+    return isUS ? Cs * arm / 12 : Cs * 1000 * arm / 1e6;
+  }
+  // PNA in steel: plastic stress distribution (Cc < Cs)
+  var Fcomp = (Cs - Cc) / 2;       // compression force in steel
+  var d_c   = hr + tc / 2;         // concrete resultant above top of steel
+  var Ff = Fy * bf * tf;
+  var Fw = Fy * tw * (d - 2 * tf);
+  var py;
+  if      (Fcomp <= Ff)       py = Fcomp / (Fy * bf);
+  else if (Fcomp <= Ff + Fw)  py = tf + (Fcomp - Ff) / (Fy * tw);
+  else                         py = Math.min(d, d - tf + (Fcomp - Ff - Fw) / (Fy * bf));
+  var Zpna = cbZpna(d, bf, tf, tw, py);
+  if (isUS) return (Fy * Zpna + Cc * (d_c + py)) / 12;
+  return (Fy * Zpna + Cc * 1000 * (d_c + py)) / 1e6;
+}
+
 // ── Main calculation ──────────────────────────────────────────────────────────
 function cbCalc() {
   var isUS = cbUnit === 'us';
@@ -626,17 +661,17 @@ function cbCalc() {
     secName = name;
   }
 
-  // Fixed shear stud parameters
+  // Fixed shear stud parameters (hs auto-computed = hr + 1.5 in / 38 mm above deck)
   var stud = isUS ? STUD_US : STUD_SI;
   var ds      = stud.ds;
-  var hs_stud = stud.hs;
   var Fu_stud = stud.Fu;
 
   var L   = +document.getElementById('cb-span').value;
   var s   = +document.getElementById('cb-spacing').value;
   var tc  = +document.getElementById('cb-tc').value;
   var hr  = +document.getElementById('cb-hr').value;
-  var wr  = isUS ? 6 : 152;
+  var wr      = isUS ? 6 : 152;
+  var hs_stud = hr + (isUS ? 1.5 : 38); // stud extends 1.5 in / 38 mm above deck
   var fpc = +document.getElementById('cb-fpc').value;
   var eta_in = +document.getElementById('cb-eta').value / 100;
 
@@ -700,8 +735,7 @@ function cbCalc() {
   var Asa = Math.PI / 4 * ds * ds;
   var wr_hr_ratio = wr / hr;
   var Rg  = 0.85;
-  var emid = hs_stud - hr;
-  var Rp  = (isUS ? emid >= 3 : emid >= 76) ? 0.75 : 0.60;
+  var Rp  = 0.75; // perpendicular deck, favorable stud position (AISC §I8.2a)
   var Qn_basic = isUS
     ? 0.5 * Asa * Math.sqrt(fpc * Ec)
     : 0.5 * Asa * Math.sqrt(fpc * Ec) / 1000;
@@ -714,7 +748,12 @@ function cbCalc() {
   // Required stud count
   var SQn_req  = eta_in * SQn_full;
   var N_half   = eta_in === 0 ? 0 : Math.ceil(SQn_req / Qn);
-  var max_per_rib  = wr_hr_ratio < 1.5 ? 1 : 2;
+  // Max studs per rib: deck rib check (wr/hr) AND flange width check §I8.2d/e
+  var rib_allows2   = (wr_hr_ratio >= 1.5);
+  var bf_min_2studs = isUS ? (2 * 1.5 + 4 * ds) : (2 * 38 + 4 * ds); // 2×edge + 4×ds c/c
+  var bf_allows2    = (bf >= bf_min_2studs);
+  var max_per_rib   = (rib_allows2 && bf_allows2) ? 2 : 1;
+  var double_row    = (max_per_rib === 2);
   var deck_pitch   = isUS ? 12 : 305;
   var half_span    = isUS ? L * 12 / 2 : L * 1000 / 2;
   var N_ribs_half  = Math.floor(half_span / deck_pitch);
@@ -723,17 +762,17 @@ function cbCalc() {
   var eta_actual   = eta_in === 0 ? 0 : Math.min((N_half * Qn) / SQn_full, 1.0);
   var stud_spacing_val = N_half > 0 ? half_span / N_half : 0;
 
-  // Flexural capacity
-  var phi     = 0.9;
+  // Flexural capacity — plastic stress distribution §I3.2a
+  var phi      = 0.9;
   var Mn_steel = isUS ? Fy * Zx / 12 : Fy * Zx / 1e6;
-  var a_full  = isUS
-    ? SQn_full / (0.85 * fpc * beff)
-    : SQn_full * 1000 / (0.85 * fpc * beff);
-  var pna_in_slab = a_full <= tc;
-  var arm_full = pna_in_slab ? (d/2 + hr + tc - a_full/2) : (d/2 + hr + tc/2);
-  var Mn_full  = isUS ? SQn_full * arm_full / 12 : SQn_full * 1000 * arm_full / 1e6;
-  var phi_Mp_s  = phi * Mn_steel;
-  var phi_Mn    = eta_in === 0
+  var pna_in_slab = (Cs <= Cc); // all steel in tension when steel governs
+  // a_full: depth of concrete compression block (only relevant when PNA in slab)
+  var a_full = isUS
+    ? Cs / (0.85 * fpc * beff)
+    : Cs * 1000 / (0.85 * fpc * beff);
+  var Mn_full  = cbMnFull(d, bf, tf, tw, Fy, Cc, Cs, fpc, beff, hr, tc, isUS);
+  var phi_Mp_s = phi * Mn_steel;
+  var phi_Mn   = eta_in === 0
     ? phi_Mp_s
     : phi_Mp_s + Math.sqrt(eta_actual) * (phi * Mn_full - phi_Mp_s);
   var DCR_flex = Mu / phi_Mn;
@@ -883,7 +922,7 @@ function cbCalc() {
        + '<tr><td>Each half-span (0 to L/2)</td><td>'+N_half+'</td><td>'+(N_half>0?fmt(stud_spacing_val,isUS?1:0)+uL+' c/c':'—')+'</td></tr>'
        + '<tr><td>Total full span</td><td>'+(N_half*2)+'</td><td>—</td></tr>'
        + '</tbody></table>'
-       + '<div style="font-size:.72rem;color:var(--text-dim);padding:4px 0;font-family:var(--sans);">Uniform layout assumed &nbsp;&middot;&nbsp; Ribs/half-span: '+N_ribs_half+' &nbsp;&middot;&nbsp; Max studs/rib: '+max_per_rib+' (w<sub>r</sub>/h<sub>r</sub> = '+fmt(wr_hr_ratio,2)+')</div>'
+       + '<div style="font-size:.72rem;color:var(--text-dim);padding:4px 0;font-family:var(--sans);">Uniform layout &nbsp;&middot;&nbsp; Ribs/half: '+N_ribs_half+' &nbsp;&middot;&nbsp; Max/rib: '+max_per_rib+(double_row?' (double row: w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+', b<sub>f</sub>='+fmt(bf,isUS?2:0)+(isUS?' in':' mm')+' &ge; '+fmt(bf_min_2studs,isUS?2:0)+(isUS?' in':' mm')+')':' (single row'+(bf_allows2?' rib w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+'<1.5':' b<sub>f</sub>='+fmt(bf,isUS?2:0)+(isUS?' in':' mm')+'<'+fmt(bf_min_2studs,isUS?2:0)+(isUS?' in':' mm'))+')')+' (w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+')</div>'
        + '</div>';
   }
 
@@ -931,11 +970,11 @@ function cbCalc() {
   }
 
   var pnaStr = pna_in_slab
-    ? 'a = '+fmt(a_full,isUS?3:1)+uL+' &le; t<sub>c</sub> (PNA in slab)'
-    : 'a = '+fmt(a_full,isUS?3:1)+uL+' &gt; t<sub>c</sub> (PNA in steel, approx.)';
+    ? 'F<sub>y</sub>A<sub>g</sub> &le; 0.85f\'A<sub>c</sub> &rarr; PNA in slab, a = '+fmt(a_full,isUS?2:0)+uL
+    : 'F<sub>y</sub>A<sub>g</sub> &gt; 0.85f\'A<sub>c</sub> &rarr; PNA in steel; plastic stress distribution';
   h += step('G','Flexural Capacity &sect;I3.2',
-    pnaStr+'<br>&phi;M<sub>p,s</sub> = '+fmt(phi_Mp_s,1)+uM
-    +'<br>&phi;M<sub>n</sub> = &phi;M<sub>p,s</sub> + &radic;&eta;&middot;(&phi;M<sub>n,full</sub>&minus;&phi;M<sub>p,s</sub>)',
+    pnaStr+'<br>&phi;M<sub>p,s</sub> = '+fmt(phi_Mp_s,1)+uM+' &nbsp;|&nbsp; &phi;M<sub>n,100%</sub> = '+fmt(phi*Mn_full,1)+uM
+    +'<br>&phi;M<sub>n</sub> = &phi;M<sub>p,s</sub> + &radic;&eta;&middot;(&phi;M<sub>n,100%</sub>&minus;&phi;M<sub>p,s</sub>)',
     fmt(phi_Mn,1)+uM);
 
   h += step('H','Shear Capacity &sect;I4.2 + &sect;G2.1',
@@ -964,7 +1003,7 @@ function cbCalc() {
      + '<tr><td>t<sub>c</sub> / h<sub>r</sub></td><td>'+tc+' / '+hr+uL+'</td></tr>'
      + '<tr><td>f\'<sub>c</sub></td><td>'+fpc+(isUS?' ksi':' MPa')+'</td></tr>'
      + '<tr><td>&eta; input</td><td>'+fmt(eta_in*100,0)+'%</td></tr>'
-     + '<tr><td>Cover dead load</td><td>'+fmt(wD_cover,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
+     + '<tr><td>Cover load</td><td>'+fmt(wD_cover,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '<tr><td>Self-weight (auto)</td><td>'+fmt(sw,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '<tr><td>Live load</td><td>'+fmt(wL,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
      + '</table></div>';
@@ -979,74 +1018,127 @@ function cbCalc() {
 
 // ── SVG cross-section diagram ─────────────────────────────────────────────────
 function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual) {
-  var W = 300, H = 220, pad = 16, labW = 42;
-  var drawW = W - labW - pad;
-  var drawH = H - 30;
-  var H_eng = d_sec + hr + tc;
-  var beff_disp = Math.min(beff, bf * 2.5);
-  var scaleH = drawH / H_eng;
-  var scaleW = drawW / beff_disp;
-  var sc = Math.min(scaleH, scaleW) * 0.88;
-  var d_px = d_sec*sc, hr_px = hr*sc, tc_px = tc*sc;
-  var bf_px = bf*sc, tw_px = Math.max(tw*sc,2), tf_px = Math.max(tf*sc,1.5);
-  var beff_px = beff_disp * sc;
-  var cx = pad + beff_px/2;
-  var y0 = 10, y_bot_slab = y0+tc_px, y_bot_deck = y_bot_slab+hr_px, y_bot_steel = y_bot_deck+d_px;
+  var VW = 380, VH = 240;
+  // Geometry: left margin=46(dim lines), section area width=240, right labels=94
+  var SEC_X0 = 46, SEC_W = 240, SEC_CX = SEC_X0 + SEC_W / 2;
+  var PAD_T = 28, PAD_B = 14;
+  var avH = VH - PAD_T - PAD_B;  // ~198px
 
-  var svg = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;max-height:220px;" aria-label="Composite beam cross-section">';
+  // Scale factor: fit total section height
+  var H_total = d_sec + hr + tc;
+  var sc = avH / H_total * 0.88;
 
-  // Slab
-  svg += '<defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
-       + '<line x1="0" y1="0" x2="0" y2="6" stroke="#6a9ab8" stroke-width="0.8" opacity="0.4"/></pattern></defs>';
-  svg += '<rect x="'+fmt(cx-beff_px/2,1)+'" y="'+fmt(y0,1)+'" width="'+fmt(beff_px,1)+'" height="'+fmt(tc_px,1)+'" fill="#bcd5e6" stroke="#6a9ab8" stroke-width="1" rx="1"/>';
-  svg += '<rect x="'+fmt(cx-beff_px/2,1)+'" y="'+fmt(y0,1)+'" width="'+fmt(beff_px,1)+'" height="'+fmt(tc_px,1)+'" fill="url(#hatch)" opacity="0.5"/>';
+  var tc_px = Math.max(tc * sc, 10);
+  var hr_px = Math.max(hr * sc, 8);
+  var d_px  = (avH * 0.88) - tc_px - hr_px;  // remaining height for beam
+  var bf_px = Math.min(bf * sc, SEC_W - 4);
+  var tw_px = Math.max(tw * sc, 2.5);
+  var tf_px = Math.max(tf * sc, 3);
+  // Slab display width: min of beff-scaled and section width
+  var slab_px = Math.min(beff * sc, SEC_W);
 
-  // Deck ribs
-  var n_ribs = Math.min(6, Math.max(2, Math.round(beff_px/30)));
-  var rib_pitch = beff_px/n_ribs, rib_w = rib_pitch*0.55, rib_bot = rib_pitch*0.25;
-  for (var i=0;i<n_ribs;i++){
-    var rx = cx-beff_px/2+i*rib_pitch;
-    var p1x=rx+(rib_pitch-rib_w)/2, p2x=p1x+rib_w;
-    var p3x=p1x+(rib_w-rib_bot)/2+rib_bot, p4x=p1x+(rib_w-rib_bot)/2;
-    svg+='<polygon points="'+fmt(p1x,1)+','+fmt(y_bot_slab,1)+' '+fmt(p2x,1)+','+fmt(y_bot_slab,1)+' '+fmt(p3x,1)+','+fmt(y_bot_deck,1)+' '+fmt(p4x,1)+','+fmt(y_bot_deck,1)+'" fill="#a0a8b0" stroke="#6a7080" stroke-width="0.7"/>';
+  var yS = PAD_T;                      // slab top
+  var yD = yS + tc_px;                 // deck top (= slab bottom)
+  var yB = yD + hr_px;                 // beam top (= deck bottom)
+  var yE = yB + d_px;                  // beam bottom
+
+  var f = function(v) { return Math.round(v * 10) / 10; };
+
+  var svg = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="display:block;width:100%;max-height:260px;" aria-label="Composite beam cross-section">';
+
+  // ── Defs ─────────────────────────────────────────────────────────────────────
+  svg += '<defs>'
+       + '<pattern id="cbconc" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45 0 0)">'
+       + '<line x1="0" y1="0" x2="0" y2="10" stroke="#5a80a8" stroke-width="1" opacity="0.35"/></pattern>'
+       + '<linearGradient id="steelF" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#3a5f90"/><stop offset="100%" stop-color="#1d3a5e"/></linearGradient>'
+       + '<linearGradient id="steelW" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#2a4f7a"/><stop offset="100%" stop-color="#1d3a5e"/></linearGradient>'
+       + '</defs>';
+
+  // ── Concrete slab ─────────────────────────────────────────────────────────────
+  var slx = SEC_CX - slab_px / 2, slx2 = SEC_CX + slab_px / 2;
+  svg += '<rect x="'+f(slx)+'" y="'+f(yS)+'" width="'+f(slab_px)+'" height="'+f(tc_px)+'" fill="#c8dced" stroke="#4a7090" stroke-width="1"/>';
+  svg += '<rect x="'+f(slx)+'" y="'+f(yS)+'" width="'+f(slab_px)+'" height="'+f(tc_px)+'" fill="url(#cbconc)"/>';
+
+  // ── Concrete in deck valleys (between ribs) ───────────────────────────────────
+  var N_RIBS = 6;
+  var rib_pitch = slab_px / N_RIBS;
+  var rib_top_w = rib_pitch * 0.52;   // rib occupies 52% of pitch at top
+  var rib_bot_w = rib_pitch * 0.30;   // narrower at bottom
+  var valley_w  = rib_pitch - rib_top_w;  // concrete valley width
+  for (var i = 0; i < N_RIBS - 1; i++) {
+    var vx = slx + i * rib_pitch + rib_top_w;
+    svg += '<rect x="'+f(vx)+'" y="'+f(yD)+'" width="'+f(valley_w)+'" height="'+f(hr_px)+'" fill="#c8dced" opacity="0.75"/>';
+    svg += '<rect x="'+f(vx)+'" y="'+f(yD)+'" width="'+f(valley_w)+'" height="'+f(hr_px)+'" fill="url(#cbconc)"/>';
   }
-  svg+='<line x1="'+fmt(cx-beff_px/2,1)+'" y1="'+fmt(y_bot_slab,1)+'" x2="'+fmt(cx+beff_px/2,1)+'" y2="'+fmt(y_bot_slab,1)+'" stroke="#5a6070" stroke-width="1.5"/>';
+  // Slab-deck junction line
+  svg += '<line x1="'+f(slx)+'" y1="'+f(yD)+'" x2="'+f(slx2)+'" y2="'+f(yD)+'" stroke="#3a5a70" stroke-width="1.5"/>';
 
-  // Steel I
-  var sx0=cx-bf_px/2;
-  svg+='<rect x="'+fmt(sx0,1)+'" y="'+fmt(y_bot_deck,1)+'" width="'+fmt(bf_px,1)+'" height="'+fmt(tf_px,1)+'" fill="#4a6e96" stroke="#1a2a42" stroke-width="0.8"/>';
-  svg+='<rect x="'+fmt(cx-tw_px/2,1)+'" y="'+fmt(y_bot_deck+tf_px,1)+'" width="'+fmt(tw_px,1)+'" height="'+fmt(d_px-2*tf_px,1)+'" fill="#5a80aa" stroke="#1a2a42" stroke-width="0.6"/>';
-  svg+='<rect x="'+fmt(sx0,1)+'" y="'+fmt(y_bot_steel-tf_px,1)+'" width="'+fmt(bf_px,1)+'" height="'+fmt(tf_px,1)+'" fill="#4a6e96" stroke="#1a2a42" stroke-width="0.8"/>';
-
-  // PNA
-  if (eta_actual>0){
-    var pna_y=y_bot_deck+d_px*0.08;
-    svg+='<line x1="'+fmt(cx-beff_px/2,1)+'" y1="'+fmt(pna_y,1)+'" x2="'+fmt(cx+beff_px/2,1)+'" y2="'+fmt(pna_y,1)+'" stroke="#d04020" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
-    svg+='<text x="'+fmt(cx+beff_px/2+3,1)+'" y="'+fmt(pna_y+4,1)+'" font-size="7" fill="#d04020" font-family="monospace">PNA</text>';
+  // ── Metal deck ribs (trapezoidal) ─────────────────────────────────────────────
+  for (var i = 0; i < N_RIBS; i++) {
+    var rx = slx + i * rib_pitch;
+    var t0 = rx, t1 = rx + rib_top_w;
+    var b0 = rx + (rib_top_w - rib_bot_w) / 2;
+    var b1 = b0 + rib_bot_w;
+    svg += '<polygon points="'+f(t0)+','+f(yD)+' '+f(t1)+','+f(yD)+' '+f(b1)+','+f(yB)+' '+f(b0)+','+f(yB)+'" fill="#687888" stroke="#3a4858" stroke-width="0.8"/>';
+    // Highlight crease on rib
+    svg += '<line x1="'+f((t0+t1)/2)+'" y1="'+f(yD)+'" x2="'+f((b0+b1)/2)+'" y2="'+f(yB)+'" stroke="#8090a0" stroke-width="0.5" opacity="0.5"/>';
   }
 
-  // Dimension lines (right)
-  var lx=cx+beff_px/2+5, font='font-size="9" fill="currentColor" font-family="monospace"';
-  function dim(y1,y2,lbl,lxx){
-    var mid=(y1+y2)/2;
-    return '<line x1="'+fmt(lxx,1)+'" y1="'+fmt(y1,1)+'" x2="'+fmt(lxx,1)+'" y2="'+fmt(y2,1)+'" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
-      +'<line x1="'+fmt(lxx-3,1)+'" y1="'+fmt(y1,1)+'" x2="'+fmt(lxx+3,1)+'" y2="'+fmt(y1,1)+'" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
-      +'<line x1="'+fmt(lxx-3,1)+'" y1="'+fmt(y2,1)+'" x2="'+fmt(lxx+3,1)+'" y2="'+fmt(y2,1)+'" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
-      +'<text x="'+fmt(lxx+6,1)+'" y="'+fmt(mid+3,1)+'" '+font+'>'+lbl+'</text>';
-  }
-  if (lx+46<=W){
-    svg+=dim(y0,y_bot_slab,'tᶜ',lx);
-    svg+=dim(y_bot_slab,y_bot_deck,'hᵣ',lx);
-    svg+=dim(y_bot_deck,y_bot_steel,'d',lx);
+  // ── Steel I-section ───────────────────────────────────────────────────────────
+  var bx0 = SEC_CX - bf_px / 2;
+  // Top flange
+  svg += '<rect x="'+f(bx0)+'" y="'+f(yB)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
+  // Web
+  svg += '<rect x="'+f(SEC_CX-tw_px/2)+'" y="'+f(yB+tf_px)+'" width="'+f(tw_px)+'" height="'+f(d_px-2*tf_px)+'" fill="url(#steelW)" stroke="#0f2035" stroke-width="0.6"/>';
+  // Bottom flange
+  svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
+
+  // ── Shear studs (center 2 ribs) ───────────────────────────────────────────────
+  var stud_rib = Math.floor(N_RIBS / 2);
+  for (var si = 0; si < 2; si++) {
+    var srib_x = slx + (stud_rib + si - 0.5) * rib_pitch;
+    var stud_cx2 = srib_x + rib_top_w * 0.5;
+    var stud_h = hr_px * 0.72;
+    var stud_r = Math.max(2.5, hr_px * 0.10);
+    svg += '<rect x="'+f(stud_cx2-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+    svg += '<ellipse cx="'+f(stud_cx2)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
   }
 
-  // beff arrow
-  if (y0-6>0){
-    svg+='<line x1="'+fmt(cx-beff_px/2,1)+'" y1="'+fmt(y0-6,1)+'" x2="'+fmt(cx+beff_px/2,1)+'" y2="'+fmt(y0-6,1)+'" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-    svg+='<text x="'+fmt(cx,1)+'" y="'+fmt(y0-9,1)+'" '+font+' text-anchor="middle">bᵉᶠᶠ</text>';
+  // ── Dimension lines (right side) ─────────────────────────────────────────────
+  var DX = slx2 + 10;  // x-position of dimension line
+  var LX = DX + 18;    // x-position of labels
+  var tcol = 'fill="currentColor" font-family="sans-serif" font-size="10"';
+
+  function dimV(y1, y2) {
+    var ym = (y1 + y2) / 2;
+    return '<line x1="'+f(DX)+'" y1="'+f(y1)+'" x2="'+f(DX)+'" y2="'+f(y2)+'" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>'
+         + '<line x1="'+f(DX-4)+'" y1="'+f(y1)+'" x2="'+f(DX+4)+'" y2="'+f(y1)+'" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>'
+         + '<line x1="'+f(DX-4)+'" y1="'+f(y2)+'" x2="'+f(DX+4)+'" y2="'+f(y2)+'" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>';
   }
 
-  svg+='</svg>';
+  // tc label with subscript via tspan
+  svg += dimV(yS, yD);
+  var tcMid = (yS + yD) / 2;
+  svg += '<text x="'+f(LX)+'" y="'+f(tcMid+3)+'" '+tcol+'>t<tspan dy="3" font-size="8">c</tspan></text>';
+
+  // hr label
+  svg += dimV(yD, yB);
+  var hrMid = (yD + yB) / 2;
+  svg += '<text x="'+f(LX)+'" y="'+f(hrMid+3)+'" '+tcol+'>h<tspan dy="3" font-size="8">r</tspan></text>';
+
+  // d label
+  svg += dimV(yB, yE);
+  var dMid = (yB + yE) / 2;
+  svg += '<text x="'+f(LX)+'" y="'+f(dMid+4)+'" '+tcol+'>d</text>';
+
+  // ── beff arrow (top) ──────────────────────────────────────────────────────────
+  var arY = yS - 9;
+  svg += '<line x1="'+f(slx+4)+'" y1="'+f(arY)+'" x2="'+f(slx2-4)+'" y2="'+f(arY)+'" stroke="currentColor" stroke-width="0.9" opacity="0.6"/>';
+  svg += '<line x1="'+f(slx)+'" y1="'+f(arY-4)+'" x2="'+f(slx)+'" y2="'+f(arY+4)+'" stroke="currentColor" stroke-width="0.9" opacity="0.6"/>';
+  svg += '<line x1="'+f(slx2)+'" y1="'+f(arY-4)+'" x2="'+f(slx2)+'" y2="'+f(arY+4)+'" stroke="currentColor" stroke-width="0.9" opacity="0.6"/>';
+  svg += '<text x="'+f(SEC_CX)+'" y="'+f(arY-3)+'" '+tcol+' text-anchor="middle">b<tspan dy="3" font-size="8">eff</tspan></text>';
+
+  svg += '</svg>';
   return svg;
 }
 
