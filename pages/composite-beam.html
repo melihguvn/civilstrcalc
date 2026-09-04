@@ -934,6 +934,38 @@ function cbCalc() {
     h += '<div class="cb-svg-wrap">' + cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ribs_half, isUS) + '</div>';
   }
 
+  // ── Design Summary ────────────────────────────────────────────────────────
+  var flex_c_cls2  = DCR_flex_c  <= 0.85 ? 'ok' : (DCR_flex_c  <= 1.0 ? 'warn' : 'err');
+  var shear_c_cls2 = DCR_shear_c <= 0.85 ? 'ok' : (DCR_shear_c <= 1.0 ? 'warn' : 'err');
+  var flex_cls2    = DCR_flex    <= 0.85 ? 'ok' : (DCR_flex    <= 1.0 ? 'warn' : 'err');
+  var shear_cls2   = DCR_shear   <= 0.85 ? 'ok' : (DCR_shear   <= 1.0 ? 'warn' : 'err');
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Design Summary</div>'
+     + '<div style="font-size:.68rem;color:var(--text-mid);margin:-2px 0 5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">&#9312; Construction Stage</div>'
+     + '<div class="result-box" style="margin-bottom:8px">'
+     + '<div class="result-item ' + flex_c_cls2 + '"><div class="ri-label">&phi;M<sub>n,s</sub></div>'
+     + '<div class="ri-value">' + fmt(phi_Mn_c,1) + '</div>'
+     + '<div class="ri-unit">' + (isUS ? 'kip&middot;ft' : 'kN&middot;m') + '</div></div>'
+     + '<div class="result-item ' + flex_c_cls2 + '"><div class="ri-label">M<sub>u,c</sub>/&phi;M<sub>n,s</sub></div>'
+     + '<div class="ri-value">' + fmt(DCR_flex_c,3) + '</div>'
+     + '<div class="ri-unit">' + (DCR_flex_c <= 1.0 ? '&#10003; OK' : '&#10007; NG') + '</div></div>'
+     + '<div class="result-item ' + shear_c_cls2 + '"><div class="ri-label">V<sub>u,c</sub>/&phi;V<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(DCR_shear_c,3) + '</div>'
+     + '<div class="ri-unit">' + (DCR_shear_c <= 1.0 ? '&#10003; OK' : '&#10007; NG') + '</div></div>'
+     + '</div>'
+     + '<div style="font-size:.68rem;color:var(--text-mid);margin:-2px 0 5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">&#9313; Service Stage</div>'
+     + '<div class="result-box">'
+     + '<div class="result-item ' + flex_cls2 + '"><div class="ri-label">&phi;M<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(phi_Mn,1) + '</div>'
+     + '<div class="ri-unit">' + (isUS ? 'kip&middot;ft' : 'kN&middot;m') + '</div></div>'
+     + '<div class="result-item ' + flex_cls2 + '"><div class="ri-label">M<sub>u</sub>/&phi;M<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(DCR_flex,3) + '</div>'
+     + '<div class="ri-unit">' + (DCR_flex <= 1.0 ? '&#10003; OK' : '&#10007; NG') + '</div></div>'
+     + '<div class="result-item ' + shear_cls2 + '"><div class="ri-label">&phi;V<sub>n</sub></div>'
+     + '<div class="ri-value">' + fmt(phi_Vn,1) + '</div>'
+     + '<div class="ri-unit">' + (isUS ? 'kip' : 'kN') + '</div></div>'
+     + '</div>'
+     + '</div>';
+
   // ── Composite Section Properties ──────────────────────────────────────────
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Composite Section Properties</div>'
      + '<table class="inp-tbl"><tbody>'
@@ -1329,7 +1361,7 @@ function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ri
   var cy = 38;                  // centre y of beam
   var fy1 = cy - flg_h/2, fy2 = cy + flg_h/2;
   var pitch_px = half_px / N_half;
-  var stud_r = Math.min(3.2, Math.max(1.5, flg_h * 0.115));
+  var stud_r = Math.min(2.5, Math.max(1.5, pitch_px * 0.19));
   var f = function(v){ return (+v).toFixed(1); };
 
   var svg = '<svg viewBox="0 0 '+VW+' '+VH+'" xmlns="http://www.w3.org/2000/svg"'
