@@ -130,9 +130,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="unit-switcher">
         <label>Design Code:</label>
         <div class="unit-btns">
-          <button class="unit-btn active" id="ltb-btn-aisc" onclick="ltbSetCode('aisc')">AISC 360-22</button>
-          <button class="unit-btn"        id="ltb-btn-tsds" onclick="ltbSetCode('tsds')">TSDS 2016</button>
-          <button class="unit-btn"        id="ltb-btn-ec3"  onclick="ltbSetCode('ec3')">EC3 EN 1993-1-1</button>
+          <button class="unit-btn active" id="ltb-btn-aisc"  onclick="ltbSetCode('aisc')">AISC 360-22</button>
+          <button class="unit-btn"        id="ltb-btn-tsds"  onclick="ltbSetCode('tsds')">TSDS 2016</button>
+          <button class="unit-btn"        id="ltb-btn-ec3"   onclick="ltbSetCode('ec3')">EC3 EN 1993-1-1</button>
+          <button class="unit-btn"        id="ltb-btn-is800" onclick="ltbSetCode('is800')">IS 800:2007</button>
         </div>
       </div>
       <div class="unit-switcher" id="ltb-unit-sw">
@@ -449,6 +450,76 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <tr><td>Section families</td><td>W sections (AISC)</td><td>IPE, HEA, HEB, HEM, HD (EN 10365)</td></tr>
           <tr><td>Unit system</td><td>US customary (kip, ft, in)</td><td>SI (kN, m, mm)</td></tr>
           <tr><td>Post-AISC 360-22 revisions</td><td>Included</td><td>Not included</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-pane" id="bg-is800">
+    <div class="bg-panel-hdr"><span>IS 800:2007 &mdash; Indian Standard Code of Practice for General Construction in Steel</span></div>
+    <div class="tb">
+      <h4>About IS 800:2007</h4>
+      <p><b>IS 800:2007</b> is the Indian Standard code for general construction in steel, published by the Bureau of Indian Standards (BIS). It replaced the earlier working-stress format (IS 800:1984) with a <b>Limit State Design (LSD)</b> approach broadly aligned with Eurocode 3. The LTB provisions appear in <b>§8.2.2</b> and use a reduction-factor approach similar to EC3 but with Indian buckling curves and partial safety factors.</p>
+
+      <h4>IS 800:2007 §8.2 — Design Bending Strength</h4>
+      <p>The design bending strength of a laterally unsupported beam is:</p>
+      <div class="fml-blk"><span class="ft">Design strength — §8.2.1.2</span>
+        M<sub>d</sub> = &beta;<sub>b</sub> &middot; Z<sub>p</sub> &middot; f<sub>bd</sub>
+      </div>
+      <div class="fml-blk"><span class="ft">Design bending stress</span>
+        f<sub>bd</sub> = &chi;<sub>LT</sub> &middot; f<sub>y</sub> / &gamma;<sub>m0</sub> &nbsp;&nbsp; (&gamma;<sub>m0</sub> = 1.10)
+      </div>
+      <p>For compact sections (Class 1 &amp; 2): &beta;<sub>b</sub> = 1.0 and Z<sub>p</sub> = plastic section modulus.</p>
+
+      <h4>Non-Dimensional Slenderness</h4>
+      <div class="fml-blk"><span class="ft">Slenderness ratio — §8.2.1.2</span>
+        &lambda;&#773;<sub>LT</sub> = &radic;(&beta;<sub>b</sub> &middot; Z<sub>p</sub> &middot; f<sub>y</sub> / M<sub>cr</sub>)
+      </div>
+      <div class="fml-blk"><span class="ft">Elastic critical moment M<sub>cr</sub> — IS 800 Annex E</span>
+        M<sub>cr</sub> = (&pi;<sup>2</sup>EI<sub>y</sub> / L<sub>eff</sub><sup>2</sup>) &middot; &radic;[ I<sub>w</sub>/I<sub>y</sub> + L<sub>eff</sub><sup>2</sup>GI<sub>t</sub> / (&pi;<sup>2</sup>EI<sub>y</sub>) ]
+      </div>
+      <p style="font-size:.75rem;color:var(--text-dim)">E = 200 000 MPa, G = 77 000 MPa (IS 800), I<sub>y</sub> = minor-axis second moment, I<sub>w</sub> = warping constant, I<sub>t</sub> = torsional constant.</p>
+
+      <h4>Reduction Factor &chi;<sub>LT</sub> — IS 800 §8.2.2</h4>
+      <div class="fml-blk"><span class="ft">Imperfection parameter &phi;<sub>LT</sub></span>
+        &phi;<sub>LT</sub> = 0.5 [ 1 + &alpha;<sub>LT</sub>(&lambda;&#773;<sub>LT</sub> &minus; 0.2) + &lambda;&#773;<sub>LT</sub><sup>2</sup> ]
+      </div>
+      <div class="fml-blk"><span class="ft">Reduction factor</span>
+        &chi;<sub>LT</sub> = 1 / ( &phi;<sub>LT</sub> + &radic;(&phi;<sub>LT</sub><sup>2</sup> &minus; &lambda;&#773;<sub>LT</sub><sup>2</sup>) ) &le; 1.0
+      </div>
+      <p>When &lambda;&#773;<sub>LT</sub> &le; 0.2: no LTB reduction (&chi;<sub>LT</sub> = 1.0).</p>
+
+      <h4>Buckling Curves — IS 800 Table 8.1</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Section</th><th>h/b<sub>f</sub></th><th>Buckling curve</th><th>&alpha;<sub>LT</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Rolled I-sections</td><td>&le; 2</td><td>c</td><td>0.49</td></tr>
+          <tr><td>Rolled I-sections</td><td>&gt; 2</td><td>a</td><td>0.21</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Steel Grades — IS 2062</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Grade</th><th>f<sub>y</sub> (MPa)</th><th>E (MPa)</th><th>Application</th></tr></thead>
+        <tbody>
+          <tr><td>E250</td><td>250</td><td>200 000</td><td>General structural (most common)</td></tr>
+          <tr><td>E300</td><td>300</td><td>200 000</td><td>General structural</td></tr>
+          <tr><td>E350</td><td>350</td><td>200 000</td><td>High-strength structural</td></tr>
+          <tr><td>E410</td><td>410</td><td>200 000</td><td>High-strength structural</td></tr>
+          <tr><td>E450</td><td>450</td><td>200 000</td><td>Special high-strength</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Comparison with EC3 General Method</h4>
+      <table class="combo-ref-tbl">
+        <thead><tr><th>Aspect</th><th>IS 800:2007</th><th>EC3 §6.3.2</th></tr></thead>
+        <tbody>
+          <tr><td>Reduction factor approach</td><td>Same general form</td><td>General or specific method</td></tr>
+          <tr><td>Plateau slenderness &lambda;&#773;<sub>LT,0</sub></td><td>0.20</td><td>0.20 (general) / 0.40 (specific)</td></tr>
+          <tr><td>&beta; factor</td><td>1.0 (none)</td><td>0.75 (specific method)</td></tr>
+          <tr><td>Partial safety factor</td><td>&gamma;<sub>m0</sub> = 1.10</td><td>&gamma;<sub>M1</sub> = 1.0&ndash;1.1</td></tr>
+          <tr><td>Shear modulus G</td><td>77 000 MPa</td><td>81 000 MPa</td></tr>
+          <tr><td>Section family</td><td>ISMB (IS 808)</td><td>IPE, HEA, HEB&hellip; (EN 10365)</td></tr>
         </tbody>
       </table>
     </div>
@@ -849,12 +920,38 @@ var GRADES_EC3 = [
   {label:'S420 — fy=420 MPa', Fy:420, E:200000},
   {label:'S460 — fy=460 MPa', Fy:460, E:200000}
 ];
+// IS 800:2007 — IS 2062 grades
+var GRADES_IS800 = [
+  {label:'E250 — fy=250 MPa', Fy:250, E:200000},
+  {label:'E300 — fy=300 MPa', Fy:300, E:200000},
+  {label:'E350 — fy=350 MPa', Fy:350, E:200000},
+  {label:'E410 — fy=410 MPa', Fy:410, E:200000},
+  {label:'E450 — fy=450 MPa', Fy:450, E:200000}
+];
+// ISMB sections — IS 808 nominal dimensions, properties computed from geometry
+// [name, d(mm), bf(mm), tf(mm), tw(mm), A(mm²), Ix(mm⁴), Sx(mm³), Zx(mm³), rx(mm), Iy(mm⁴), Sy(mm³), Zy(mm³), ry(mm), J(mm⁴), Cw(mm⁶)]
+var ISMB_DATA = [
+  ['ISMB 100', 100, 75, 7.2, 4.0,  1422,   2534215,   50684,   57439,  42.2,   506706,  13512,  20592,  18.9,  20489, 1.09e9],
+  ['ISMB 125', 125, 75, 7.6, 4.4,  1624,   4416603,   70666,   80168,  52.1,   535149,  14271,  21906,  18.2,  25067, 1.84e9],
+  ['ISMB 150', 150, 80, 7.6, 4.8,  1863,   7150176,   95336,  108410,  61.9,   649775,  16244,  25096,  18.7,  28382, 3.29e9],
+  ['ISMB 175', 175, 90, 8.6, 5.5,  2415,  12527349,  143141,  163018,  72.0,  1047088,  23269,  36023,  20.8,  46918, 7.25e9],
+  ['ISMB 200', 200,100,10.8, 5.7,  3177,  22043137,  220431,  249717,  83.3,  1802751,  36055,  55448,  23.8,  95000, 1.61e10],
+  ['ISMB 225', 225,110,11.8, 6.5,  3905,  33954936,  301822,  342699,  93.3,  2624252,  47714,  73510,  25.9, 138924, 2.98e10],
+  ['ISMB 250', 250,125,12.5, 6.9,  4678,  50611094,  404889,  458422, 104.0,  4075170,  65203, 100334,  29.5, 187138, 5.75e10],
+  ['ISMB 300', 300,140,13.1, 7.5,  5723,  88407930,  589386,  666774, 124.3,  6000915,  85727, 132232,  32.4, 248318, 1.23e11],
+  ['ISMB 350', 350,140,14.2, 8.1,  6581, 134498425,  768848,  877671, 142.9,  6508458,  92978, 144441,  31.4, 324214, 1.84e11],
+  ['ISMB 400', 400,140,16.0, 8.9,  7753, 202311207, 1011556, 1161479, 161.5,  7338943, 104842, 164090,  30.8, 468769, 2.71e11],
+  ['ISMB 450', 450,150,17.4, 9.4,  9123, 300396297, 1335083, 1533761, 181.5,  9816270, 130884, 204930,  32.8, 641763, 4.59e11],
+  ['ISMB 500', 500,180,17.2,10.2, 10943, 446773260, 1787093, 2046536, 202.1, 16759567, 186217, 290766,  39.1, 775308, 9.77e11],
+  ['ISMB 550', 550,190,19.3,11.2, 13063, 639510386, 2325856, 2678391, 221.3, 22142620, 233080, 364447,  41.2,1150095, 1.56e12],
+  ['ISMB 600', 600,210,20.8,12.0, 15437, 907086318, 3023621, 3465568, 242.4, 32201216, 306678, 477782,  45.7,1581543, 2.70e12]
+];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 var ltbUnit = 'us'; // us | si | tsds | ec3
 
 function ltbSetCode(code) {
-  ['aisc','tsds','ec3'].forEach(function(c) {
+  ['aisc','tsds','ec3','is800'].forEach(function(c) {
     document.getElementById('ltb-btn-'+c).classList.toggle('active', c === code);
   });
   var unitSw = document.getElementById('ltb-unit-sw');
@@ -864,8 +961,10 @@ function ltbSetCode(code) {
     u = document.getElementById('ltb-btn-us').classList.contains('active') ? 'us' : 'si';
   } else if (code === 'tsds') {
     u = 'tsds';
-  } else {
+  } else if (code === 'ec3') {
     u = 'ec3';
+  } else {
+    u = 'is800';
   }
   ltbApplyUnit(u);
 }
@@ -880,27 +979,32 @@ function ltbSetSubUnit(u) {
 function ltbApplyUnit(u) {
   ltbUnit = u;
   var isSI = u !== 'us';
-  var tagMap  = {us:'kip · ft · in', si:'kN · m', tsds:'kN · m | TSDS', ec3:'kN · m | EC3'};
+  var tagMap  = {us:'kip · ft · in', si:'kN · m', tsds:'kN · m | TSDS', ec3:'kN · m | EC3', is800:'kN · m | IS 800'};
   var codeMap = {us:'AISC 360-22 §F2 · kip · ft · in', si:'AISC 360-22 §F2 · kN · m',
-                 tsds:'TSDS 2016 §F2 · kN · m', ec3:'EN 1993-1-1 §6.3.2 · kN · m'};
+                 tsds:'TSDS 2016 §F2 · kN · m', ec3:'EN 1993-1-1 §6.3.2 · kN · m',
+                 is800:'IS 800:2007 §8.2 · kN · m'};
   document.getElementById('ltb-unit-tag').textContent = tagMap[u];
   document.getElementById('ltb-rh-code').textContent  = codeMap[u];
   document.getElementById('ltb-Lb-lbl').textContent   = isSI ? '[m]'    : '[ft]';
   document.getElementById('ltb-Lb-us').textContent    = isSI ? 'm'      : 'ft';
   document.getElementById('ltb-Mu-lbl').textContent   = isSI ? '[kN·m]' : '[kip·ft]';
   document.getElementById('ltb-Mu-us').textContent    = isSI ? 'kN·m'   : 'kip·ft';
-  var isEC3 = u === 'ec3';
+  var isEC3   = u === 'ec3';
+  var isIS800 = u === 'is800';
   document.getElementById('ltb-Cb-lbl').innerHTML = isEC3
     ? 'C<sub>1</sub> &mdash; Moment Distribution Factor <span class="unit-lbl">[&mdash;]</span>'
     : 'C<sub>b</sub> &mdash; Moment Gradient Factor <span class="unit-lbl">[&mdash;]</span>';
   document.getElementById('ltb-Cb-hint').textContent = isEC3
     ? 'Conservative: 1.0 (uniform moment). See EN 1993-1-1 Annex F / NCCI SN003.'
-    : 'Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.';
+    : (isIS800 ? 'Conservative: 1.0 (uniform moment). See IS 800 Annex E for actual loading.'
+               : 'Conservative: 1.0 (uniform moment). Use Eq. F1-1 for actual loading.');
   document.getElementById('ltb-Mu-lbl-txt').innerHTML = isEC3
     ? 'Design Moment M<sub>Ed</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>'
-    : (u === 'us'
-      ? 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip&middot;ft]</span>'
-      : 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>');
+    : (isIS800
+      ? 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>'
+      : (u === 'us'
+        ? 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kip&middot;ft]</span>'
+        : 'Factored Moment M<sub>u</sub> <span id="ltb-Mu-lbl" class="unit-lbl">[kN&middot;m]</span>'));
   document.getElementById('ltb-gammaM1-row').style.display = isEC3 ? '' : 'none';
   ltbPopulateGrades();
   ltbPopulateTypes();
@@ -909,7 +1013,7 @@ function ltbApplyUnit(u) {
 
 function ltbPopulateGrades() {
   var sel = document.getElementById('ltb-grade');
-  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
+  var grades = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : (ltbUnit === 'is800' ? GRADES_IS800 : GRADES_SI)));
   var prev = sel.value;
   sel.innerHTML = '';
   grades.forEach(function(g, i) {
@@ -957,6 +1061,9 @@ var TYPE_MAP = {
     {key:'SHS', type:'SHS', label:'SHS — Square Hollow (EN 10210)',       data: SHS_DATA},
     {key:'RHS', type:'RHS', label:'RHS — Rectangular Hollow (EN 10210)', data: RHS_DATA},
     {key:'CHS', type:'CHS', label:'CHS — Circular Hollow (EN 10210)',    data: CHS_DATA}
+  ],
+  is800: [
+    {key:'ISMB', type:'I', label:'ISMB Sections (IS 808)', data: ISMB_DATA}
   ]
 };
 
@@ -1027,7 +1134,7 @@ function ltbCalc() {
   var row = TYPE_MAP[ltbUnit][typeIdx].data[+secIdx];
 
   var gradeIdx = +document.getElementById('ltb-grade').value;
-  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : GRADES_SI));
+  var gradeArr = ltbUnit === 'us' ? GRADES_US : (ltbUnit === 'tsds' ? GRADES_TSDS : (ltbUnit === 'ec3' ? GRADES_EC3 : (ltbUnit === 'is800' ? GRADES_IS800 : GRADES_SI)));
   var grade    = gradeArr[gradeIdx];
   var Cb  = Math.max(0.1, +document.getElementById('ltb-Cb').value || 1.0);
   var Mu  = +document.getElementById('ltb-Mu').value || 0;
@@ -1057,6 +1164,7 @@ function ltbCalc() {
   } else {
     if (ltbUnit === 'us')       result = ltbCalcUS(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
     else if (ltbUnit === 'ec3') result = ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb, gammaM1);
+    else if (ltbUnit === 'is800') result = ltbCalcIS800(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
     else                        result = ltbCalcSI(Fy, E, d, tf, Sx, Zx, ry, Iy, J, Cw, Lb_input, Cb);
   }
   result.codeSystem = ltbUnit;
@@ -1187,6 +1295,60 @@ function ltbCalcEC3(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, C1, gammaM1) 
   };
 }
 
+// ── IS 800:2007 §8.2 LTB ─────────────────────────────────────────────────────
+function ltbCalcIS800(Fy, E, d, bf, tf, Sx, Zx, ry, Iy, J, Cw, Lb_m, Cb) {
+  var G    = 77000; // MPa — IS 800 shear modulus
+  var Lcr  = Lb_m * 1000; // mm
+  var gm0  = 1.10; // IS 800 §5.4.1
+
+  // Elastic critical moment — IS 800 Annex E.1.2 (same structure as EC3, G=77000)
+  var pi2EIy_Lcr2 = Math.PI * Math.PI * E * Iy / (Lcr * Lcr);
+  var termW = Cw / Iy;
+  var termT = Lcr * Lcr * G * J / (Math.PI * Math.PI * E * Iy);
+  var Mcr_Nmm = Cb * pi2EIy_Lcr2 * Math.sqrt(termW + termT);
+  var Mcr     = Mcr_Nmm / 1e6; // kN·m
+
+  // βb = 1.0 for compact, Zp = Zx
+  var betab = 1.0;
+  var Zp = Zx; // mm³
+  var Mp = betab * Zp * Fy / 1e6; // kN·m
+
+  // Non-dimensional slenderness — §8.2.1.2
+  var lambdaLT = Math.sqrt(betab * Zp * Fy / Mcr_Nmm);
+
+  // Buckling curve — IS 800 Table 8.1
+  var hb = d / bf;
+  var alphaLT, curveName;
+  if (hb <= 2) { alphaLT = 0.49; curveName = 'c'; }
+  else          { alphaLT = 0.21; curveName = 'a'; }
+
+  // φLT and χLT — IS 800 §8.2.2 (λLT0 = 0.2, β = 1.0)
+  var phiLT, chiLT, mode;
+  if (lambdaLT <= 0.2) {
+    chiLT = 1.0; phiLT = null;
+    mode  = 'No LTB (λ̄LT ≤ 0.2)';
+  } else {
+    phiLT = 0.5 * (1 + alphaLT * (lambdaLT - 0.2) + lambdaLT * lambdaLT);
+    chiLT = 1 / (phiLT + Math.sqrt(phiLT * phiLT - lambdaLT * lambdaLT));
+    chiLT = Math.min(chiLT, 1.0);
+    mode  = lambdaLT <= 0.6 ? 'Low slenderness LTB' : 'LTB governs';
+  }
+
+  var fbd  = chiLT * Fy / gm0; // MPa
+  var MdNm = betab * Zp * fbd; // N·mm
+  var Md   = MdNm / 1e6;       // kN·m
+
+  return {
+    phiMn: Md, Md: Md, Mcr: Mcr, Mp: Mp,
+    lambdaLT: lambdaLT, lambdaLT0: 0.2, beta: 1.0,
+    phiLT: phiLT, chiLT: chiLT,
+    alphaLT: alphaLT, curveName: curveName, fbd: fbd,
+    hb: hb, mode: mode, gm0: gm0, Cb: Cb,
+    Zp: Zp, Iy: Iy, Cw: Cw, J: J, d: d, bf: bf, tf: tf, Sx: Sx,
+    unit_len: 'm', unit_mom: 'kN·m', unit_force: 'kN', unit_sec: 'mm'
+  };
+}
+
 // ── HOLLOW SECTION CALCULATIONS ──────────────────────────────────────────────
 // AISC 360-22 §F7 — HSS and Box Members
 function ltbCalcHSSUS(Fy, E, A, d, bf, Sx, Zx, ry, J, Lb_ft, Cb) {
@@ -1251,9 +1413,10 @@ function fmt(v, d) { return (d === undefined ? 4 : d) === 0 ? Math.round(v).toSt
 function ltbRender(r) {
   document.getElementById('ltb-empty').style.display = 'none';
   document.getElementById('ltb-card').style.display  = 'block';
-  if (r.secShape === 'CHS')   { ltbRenderCHS(r);  return; }
-  if (r.codeSystem === 'ec3') { ltbRenderEC3(r); return; }
-  if (r.secShape === 'HSS')   { ltbRenderHSS(r);  return; }
+  if (r.secShape === 'CHS')     { ltbRenderCHS(r);   return; }
+  if (r.codeSystem === 'ec3')  { ltbRenderEC3(r);   return; }
+  if (r.codeSystem === 'is800'){ ltbRenderIS800(r); return; }
+  if (r.secShape === 'HSS')    { ltbRenderHSS(r);   return; }
 
   var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
   var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
@@ -1609,6 +1772,118 @@ function ltbRenderEC3(r) {
   h += '</tbody></table></div>';
 
   h += '<div class="print-footer"><span>CivilStrCalc.com &mdash; EN 1993-1-1 §6.3.2 LTB Control</span><span>' + date + '</span></div>';
+  h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
+
+  document.getElementById('ltb-body').innerHTML = h;
+}
+
+// ── IS 800 RENDER ─────────────────────────────────────────────────────────────
+function ltbRenderIS800(r) {
+  var dc    = r.DCR <= 0.85 ? 'ok' : r.DCR <= 1.0 ? 'warn' : 'err';
+  var dcLbl = r.DCR <= 0.85 ? 'Section Adequate' : r.DCR <= 1.0 ? 'Adequate — Near Limit' : 'Section Overstressed';
+  var date  = new Date().toLocaleDateString('en-CA');
+  var um = 'kN·m', ul = 'mm', ulen = 'm';
+
+  function step(n, desc, fml, val, ok) {
+    var chk = ok === undefined ? ''
+      : '<span class="step-check ' + (ok ? 'chk-ok' : 'chk-err') + '">' + (ok ? 'OK' : 'NG') + '</span>';
+    var vc = ok === true ? 'ok' : ok === false ? 'err' : '';
+    return '<tr>'
+      + '<td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">' + n + '</div></td>'
+      + '<td><div class="step-desc">' + desc + '</div>'
+      + (fml ? '<div class="step-formula">' + fml + '</div>' : '')
+      + '</td>'
+      + '<td style="width:170px;text-align:right;vertical-align:middle">'
+      + '<span class="step-val ' + vc + '">' + val + '</span> ' + chk
+      + '</td></tr>';
+  }
+
+  var h = '';
+  h += '<div class="print-only"><div><div class="ph-title">LTB Control — ' + r.name + '</div>'
+     + '<div class="ph-sub">IS 800:2007 §8.2 · ' + r.grade + ' · C<sub>b</sub>=' + fmt(r.Cb,2) + ' · L<sub>eff</sub>=' + fmt(r.Lb_input,2) + ' m</div></div>'
+     + '<div class="ph-date">' + date + '</div></div>';
+
+  h += '<div class="dcr-banner ' + dc + '"><div class="dcr-text">'
+     + '<strong>D/C = ' + fmt(r.DCR,3) + ' — ' + dcLbl + '</strong>'
+     + '<span>' + r.name + ' · ' + r.grade + ' · L<sub>eff</sub>=' + fmt(r.Lb_input,2) + ' m · ' + r.mode + '</span>'
+     + '</div></div>';
+
+  h += '<div class="result-box" style="margin-bottom:8px">';
+  [{l:'M<sub>p</sub>',v:fmt(r.Mp,1),u:um},
+   {l:'M<sub>cr</sub>',v:fmt(r.Mcr,1),u:um},
+   {l:'&chi;<sub>LT</sub>',v:fmt(r.chiLT,3),u:''},
+   {l:'M<sub>d</sub>',v:fmt(r.Md,1),u:um,cls:dc},
+   {l:'M<sub>u</sub>',v:fmt(r.Mu,1),u:um}
+  ].forEach(function(it) {
+    h += '<div class="result-item' + (it.cls ? ' ' + it.cls : '') + '"><div class="ri-label">' + it.l + '</div><div class="ri-value">' + it.v + '</div><div class="ri-unit">' + it.u + '</div></div>';
+  });
+  h += '</div>';
+
+  h += ltbDiagramEC3SVG(r);
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Step-by-Step Calculation (IS 800:2007 §8.2)</div><table class="steps-table">';
+
+  h += step(1, 'M<sub>p</sub> = &beta;<sub>b</sub> &middot; Z<sub>p</sub> &middot; f<sub>y</sub> &nbsp; (&beta;<sub>b</sub>=1.0, compact)',
+    'Z<sub>p</sub>=' + fmt(r.Zp,0) + ' mm³ × f<sub>y</sub>=' + r.Fy + ' MPa / 10⁶',
+    fmt(r.Mp,2) + ' kN·m');
+
+  h += step(2, 'M<sub>cr</sub> — Elastic critical moment (IS 800 Annex E, G=77 000 MPa)',
+    'C<sub>b</sub>×(&pi;²EI<sub>y</sub>/L²)×&radic;[I<sub>w</sub>/I<sub>y</sub> + L²GI<sub>t</sub>/(&pi;²EI<sub>y</sub>)]',
+    fmt(r.Mcr,2) + ' kN·m');
+
+  h += step(3, '&lambda;&#773;<sub>LT</sub> = &radic;(&beta;<sub>b</sub>·Z<sub>p</sub>·f<sub>y</sub> / M<sub>cr</sub>) &nbsp; (§8.2.1.2)',
+    '&radic;(' + fmt(r.Zp,0) + '×' + r.Fy + '/' + (r.Mcr * 1e6).toExponential(3) + ')',
+    fmt(r.lambdaLT,4));
+
+  h += step(4, 'h/b<sub>f</sub> = ' + fmt(r.hb,2) + ' → Buckling curve <b>' + r.curveName + '</b> → &alpha;<sub>LT</sub> = ' + r.alphaLT + ' &nbsp; (IS 800 Table 8.1)',
+    'h=' + r.d + ' mm, b<sub>f</sub>=' + r.bf + ' mm', '&alpha;<sub>LT</sub> = ' + r.alphaLT);
+
+  if (r.phiLT === null) {
+    h += step(5, '&lambda;&#773;<sub>LT</sub> &le; 0.2 → No LTB reduction &nbsp; (&chi;<sub>LT</sub> = 1.0)',
+      '', '&chi;<sub>LT</sub> = 1.000');
+  } else {
+    h += step(5,
+      '&phi;<sub>LT</sub> = 0.5[1 + &alpha;<sub>LT</sub>(&lambda;&#773;<sub>LT</sub>&minus;0.2) + &lambda;&#773;<sub>LT</sub><sup>2</sup>] &nbsp; (§8.2.2)',
+      '0.5[1 + ' + r.alphaLT + '×(' + fmt(r.lambdaLT,4) + '−0.2) + ' + fmt(r.lambdaLT,4) + '²]',
+      fmt(r.phiLT,4));
+    h += step(6,
+      '&chi;<sub>LT</sub> = 1/(&phi;<sub>LT</sub>+&radic;(&phi;<sub>LT</sub><sup>2</sup>&minus;&lambda;&#773;<sub>LT</sub><sup>2</sup>)) &le; 1.0 &nbsp; (§8.2.2)',
+      '1/(' + fmt(r.phiLT,4) + '+&radic;(' + fmt(r.phiLT,4) + '²−' + fmt(r.lambdaLT,4) + '²))',
+      fmt(r.chiLT,4));
+  }
+
+  var sN = r.phiLT === null ? 6 : 7;
+  h += step(sN,
+    'f<sub>bd</sub> = &chi;<sub>LT</sub>·f<sub>y</sub>/&gamma;<sub>m0</sub> &nbsp; (&gamma;<sub>m0</sub>=1.10)',
+    fmt(r.chiLT,4) + '×' + r.Fy + '/1.10',
+    fmt(r.fbd,2) + ' MPa');
+  h += step(sN+1,
+    'M<sub>d</sub> = &beta;<sub>b</sub>·Z<sub>p</sub>·f<sub>bd</sub>',
+    '1.0×' + fmt(r.Zp,0) + '×' + fmt(r.fbd,2) + '/10⁶',
+    fmt(r.Md,2) + ' kN·m');
+  h += step(sN+2,
+    'D/C = M<sub>u</sub> / M<sub>d</sub>',
+    fmt(r.Mu,2) + ' / ' + fmt(r.Md,2) + ' kN·m',
+    fmt(r.DCR,3), r.DCR <= 1.0);
+  h += '</table></div>';
+
+  h += '<div class="rpt-sec"><div class="rpt-sec-title">Input Summary</div>';
+  h += '<table class="inp-tbl"><tbody>';
+  [
+    ['Code',          'IS 800:2007 §8.2'],
+    ['Units',         'SI — kN, m, mm'],
+    ['Steel Grade',   r.grade + ' — f<sub>y</sub>=' + r.Fy + ' MPa, E=200 000 MPa, G=77 000 MPa'],
+    ['Section',       r.name + ' &nbsp; (h/b=' + fmt(r.hb,2) + ' → Curve ' + r.curveName + ', &alpha;<sub>LT</sub>=' + r.alphaLT + ')'],
+    ['L<sub>eff</sub>', fmt(r.Lb_input,2) + ' m'],
+    ['C<sub>b</sub>', fmt(r.Cb,2)],
+    ['&gamma;<sub>m0</sub>', '1.10'],
+    ['M<sub>u</sub>', fmt(r.Mu,2) + ' kN·m']
+  ].forEach(function(row) {
+    h += '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+
+  h += '<div class="print-footer"><span>CivilStrCalc.com — IS 800:2007 §8.2 LTB Control</span><span>' + date + '</span></div>';
   h += '<div class="print-disclaimer">This calculation is for preliminary design purposes only. The engineer of record is responsible for verifying all inputs, assumptions, and results before use in construction documents.</div>';
 
   document.getElementById('ltb-body').innerHTML = h;
