@@ -1389,6 +1389,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="form-group"><label>V<sub>d,x</sub> (→h) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdx" value="300" min="0" oninput="calcShColTS500()"><span class="us">kN</span></div></div>
         <div class="form-group" id="shc-ts500-vdy-grp"><label>V<sub>d,y</sub> (→b<sub>w</sub>) [kN]</label><div class="iw"><input type="number" id="shc-ts500-Vdy" value="200" min="0" oninput="calcShColTS500()"><span class="us">kN</span></div></div>
       </div>
+      <div class="form-group"><label>Design axial force N<sub>d</sub> [kN] <span style="font-size:.63rem;color:var(--text-dim)">(compression +)</span> <span class="tip" data-tip="TSC 2018 §7.4.5.3: When Nd > 0.20·Ac·fck the confinement minimum (Denklem 7.1/7.2) governs. Enter factored axial compression force.">?</span></label><div class="iw"><input type="number" id="shc-ts500-Nd" value="1000" min="0" oninput="calcShColTS500()"><span class="us">kN</span></div></div>
       <div style="margin:4px 0 6px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:flex-start;gap:9px;">
         <input type="checkbox" id="shc-ts500-seismic" onchange="calcShColTS500()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:2px;">
         <label for="shc-ts500-seismic" style="cursor:pointer;font-size:.79rem;color:var(--text);margin:0;line-height:1.4;">
@@ -4012,12 +4013,45 @@ function calcShColTS500() {
   const crushOK_y = isCirc || Vdy <= 0 || tau_dy <= tau_lim;
   const crushOK   = crushOK_x && crushOK_y;
 
-  // Min stirrup ratio — TS 500 §8.2.4 / TSC 2018 §7.4.5: ρsw,min = 0.3·fctd/fywd
-  const rhoMin  = 0.3 * fctd / fywd;
-  const rhoSW_x = (Asv_x / sv) / bw;
-  const rhoSW_y = isCirc ? rhoSW_x : (Asv_y / sv) / h;
-  const minOK_x = rhoSW_x >= rhoMin;
-  const minOK_y = isCirc ? minOK_x : rhoSW_y >= rhoMin;
+  // TS 500 §8.2.4 minimum stirrup ratio
+  const Nd_kN = parseFloat(document.getElementById('shc-ts500-Nd').value) || 0;
+  const Nd    = Nd_kN * 1000;  // kN → N
+  const Ag    = isCirc ? Math.PI / 4 * bw * bw : bw * h;
+  const rhoMin    = 0.3 * fctd / fywd;
+  const rhoSW_x   = (Asv_x / sv) / bw;
+  const rhoSW_y   = isCirc ? rhoSW_x : (Asv_y / sv) / h;
+  const ts500OK_x = rhoSW_x >= rhoMin;
+  const ts500OK_y = isCirc ? ts500OK_x : rhoSW_y >= rhoMin;
+
+  // TSC 2018 §7.4.5.3 — confinement minimum (Denklem 7.1 rect / 7.2 circ)
+  // Applies only when Nd > 0.20·Ac·fck (compression basınç)
+  const highAxial = Nd > 0.20 * Ag * fck;
+  let tscOK_x = true, tscOK_y = true;
+  let Ash_req_x = 0, Ash_req_y = 0, rhoS_req = 0, rhoS_prov = 0;
+  let bkx = 0, bky = 0, Ack = 0;
+  if (highAxial) {
+    bkx = Math.max(bw - 2 * cv - ds, 1);   // core dim, centre-to-centre of hoops
+    bky = isCirc ? bkx : Math.max(h  - 2 * cv - ds, 1);
+    Ack = isCirc ? Math.PI / 4 * bkx * bkx : bkx * bky;
+    if (!isCirc) {
+      // Denklem 7.1 — uses characteristic strengths fck/fywk (= fyv)
+      Ash_req_x = Math.max(0.30 * sv * bkx * (Ag/Ack - 1) * (fck/fyv),
+                            0.075 * sv * bkx * (fck/fyv));
+      Ash_req_y = Math.max(0.30 * sv * bky * (Ag/Ack - 1) * (fck/fyv),
+                            0.075 * sv * bky * (fck/fyv));
+      tscOK_x = Asv_x >= Ash_req_x;
+      tscOK_y = Asv_y >= Ash_req_y;
+    } else {
+      // Denklem 7.2 — volumetric spiral ratio ρs = 4·Ab/(Dk·sv)
+      rhoS_prov = 4 * Ab / (bkx * sv);
+      rhoS_req  = Math.max(0.45 * (Ag/Ack - 1) * (fck/fyv), 0.12 * (fck/fyv));
+      tscOK_x   = rhoS_prov >= rhoS_req;
+      tscOK_y   = tscOK_x;
+    }
+  }
+
+  const minOK_x = ts500OK_x && tscOK_x;
+  const minOK_y = isCirc ? minOK_x : ts500OK_y && tscOK_y;
 
   // Max spacing — TS 500 §8.2.5: sv ≤ min(h/2, 300 mm)
   const svMax = Math.min(h / 2, 300);
@@ -4037,8 +4071,11 @@ function calcShColTS500() {
   const warns = [];
   if (!crushOK_x)             warns.push(`<b>Section crushing (X):</b> τ<sub>d,x</sub>=${tau_dx.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2). Increase section size or concrete grade.`);
   if (!crushOK_y)             warns.push(`<b>Section crushing (Y):</b> τ<sub>d,y</sub>=${tau_dy.toFixed(2)} MPa &gt; 0.22·f<sub>cd</sub>=${tau_lim.toFixed(2)} MPa (TS 500 §8.2).`);
-  if (!minOK_x)               warns.push(`<b>Min. stirrup ratio not satisfied (X):</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
-  if (!isCirc && !minOK_y)    warns.push(`<b>Min. stirrup ratio not satisfied (Y):</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)} (TS 500 §8.2.4 / TSC 2018 §7.4.5).`);
+  if (!ts500OK_x)              warns.push(`<b>Min. stirrup ratio not satisfied (X, TS 500 §8.2.4):</b> ρ<sub>sw,x</sub>=${fmtR(rhoSW_x)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)}.`);
+  if (!isCirc && !ts500OK_y)   warns.push(`<b>Min. stirrup ratio not satisfied (Y, TS 500 §8.2.4):</b> ρ<sub>sw,y</sub>=${fmtR(rhoSW_y)} &lt; ρ<sub>min</sub>=${fmtR(rhoMin)}.`);
+  if (highAxial && !isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (X, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sh,x</sub>=${fmtA(Asv_x)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_x)}.`);
+  if (highAxial && !isCirc && !tscOK_y) warns.push(`<b>Confinement insufficient (Y, TSC 2018 §7.4.5.3 Denklem 7.1):</b> A<sub>sh,y</sub>=${fmtA(Asv_y)} &lt; A<sub>sh,req</sub>=${fmtA(Ash_req_y)}.`);
+  if (highAxial &&  isCirc && !tscOK_x) warns.push(`<b>Confinement insufficient (TSC 2018 §7.4.5.3 Denklem 7.2):</b> ρ<sub>s,prov</sub>=${fmtR(rhoS_prov)} &lt; ρ<sub>s,req</sub>=${fmtR(rhoS_req)}.`);
   if (!spOK)                   warns.push(`<b>Spacing exceeds limit:</b> s<sub>v</sub>=${fmtM(sv)} &gt; s<sub>max</sub>=${fmtM(svMax)} (TS 500 §8.2.5).`);
 
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -4070,6 +4107,7 @@ function calcShColTS500() {
       ${isCirc
         ? `<tr><td>V<sub>d</sub></td><td>${fmtV(Vdx)}</td></tr>`
         : `<tr><td>V<sub>d,x</sub> (→h) &nbsp;·&nbsp; V<sub>d,y</sub> (→b<sub>w</sub>)</td><td>${fmtV(Vdx)} &nbsp;·&nbsp; ${fmtV(Vdy)}</td></tr>`}
+      <tr><td>Axial force N<sub>d</sub> (compression +)</td><td>${fmtV(Nd)}</td></tr>
       <tr><td>Concrete contribution V<sub>cr</sub></td><td>${seismic?'<b>0 (TSC 2018 §7.4.5.2)</b>':'0.65·f<sub>ctd</sub>·b·d'}</td></tr>
     </table>
   </div>
@@ -4091,13 +4129,23 @@ function calcShColTS500() {
       <div class="fl-col">
         <div class="fl-lbl">Min. ρ<sub>sw</sub>${isCirc ? '' : ' — X'}</div>
         <div class="fl-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</div>
-        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_x?'✓':'✗'}</div>
+        <div class="fl-unit">${highAxial&&!isCirc?`A<sub>sh,req</sub>=${fmtA(Ash_req_x)} &nbsp;`:``}TS500 min ${fmtR(rhoMin)} &nbsp; ${minOK_x?'✓':'✗'}</div>
       </div>
-      ${isCirc ? '' : `
+      ${isCirc ? (highAxial ? `
+      <div class="fl-col">
+        <div class="fl-lbl">Confinement ρ<sub>s</sub></div>
+        <div class="fl-val ${tscOK_x?'ok':'err'}">${fmtR(rhoS_prov)}</div>
+        <div class="fl-unit">req ${fmtR(rhoS_req)} (TSC Dk.7.2) &nbsp; ${tscOK_x?'✓':'✗'}</div>
+      </div>` : `
+      <div class="fl-col">
+        <div class="fl-lbl">TSC 2018 §7.4.5.3</div>
+        <div class="fl-val ok">N/A</div>
+        <div class="fl-unit">N<sub>d</sub> ≤ 0.20·A<sub>c</sub>·f<sub>ck</sub></div>
+      </div>`) : `
       <div class="fl-col">
         <div class="fl-lbl">Min. ρ<sub>sw</sub> — Y</div>
         <div class="fl-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</div>
-        <div class="fl-unit">min ${fmtR(rhoMin)} &nbsp; ${minOK_y?'✓':'✗'}</div>
+        <div class="fl-unit">${highAxial?`A<sub>sh,req</sub>=${fmtA(Ash_req_y)} &nbsp;`:``}TS500 min ${fmtR(rhoMin)} &nbsp; ${minOK_y?'✓':'✗'}</div>
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">Section crush</div>
@@ -4135,11 +4183,19 @@ function calcShColTS500() {
   </div>` : ''}
 
   <div class="rpt-sec">
-    <div class="rpt-sec-title">Stirrup Checks — TS 500 §8.2.4-5 / TSC 2018 §7.4.5 (gov. dir: ${govDir})</div>
+    <div class="rpt-sec-title">Stirrup Checks — TS 500 §8.2.4-5 / TSC 2018 §7.4.5.3 (gov. dir: ${govDir})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">Min. stirrup ratio &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub> — TS 500 §8.2.4 / TSC 2018 §7.4.5</div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
-      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>) — X direction</div><div class="step-formula">${fmtA(Asv_x)} / (${sv}×${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${minOK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${minOK_x?'chk-ok':'chk-err'}">${minOK_x?'OK':'NG'}</span></td></tr>
-      ${!isCirc ? `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h) — Y direction</div><div class="step-formula">${fmtA(Asv_y)} / (${sv}×${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${minOK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${minOK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${minOK_y?'chk-ok':'chk-err'}">${minOK_y?'OK':'NG'}</span></td></tr>` : ''}
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A</div></td><td><div class="step-desc">TS 500 §8.2.4 — min. stirrup ratio &nbsp; ρ<sub>sw,min</sub> = 0.3·f<sub>ctd</sub>/f<sub>ywd</sub></div><div class="step-formula">0.3 × ${fctd.toFixed(3)} / ${fywd.toFixed(1)} = ${fmtR(rhoMin)}</div></td><td style="width:170px;text-align:right"><span class="step-val">${fmtR(rhoMin)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>x</sub></div></td><td><div class="step-desc">TS 500 check — X: ρ<sub>sw,x</sub> = A<sub>sv,x</sub>/(s·b<sub>w</sub>)</div><div class="step-formula">${fmtA(Asv_x)} / (${sv} × ${fmtD(bw)}) = ${fmtR(rhoSW_x)} &nbsp; ${ts500OK_x?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${ts500OK_x?'ok':'err'}">${fmtR(rhoSW_x)}</span> <span class="step-check ${ts500OK_x?'chk-ok':'chk-err'}">${ts500OK_x?'OK':'NG'}</span></td></tr>
+      ${!isCirc ? `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">A<sub>y</sub></div></td><td><div class="step-desc">TS 500 check — Y: ρ<sub>sw,y</sub> = A<sub>sv,y</sub>/(s·h)</div><div class="step-formula">${fmtA(Asv_y)} / (${sv} × ${fmtD(h)}) = ${fmtR(rhoSW_y)} &nbsp; ${ts500OK_y?'≥':'&lt;'} ${fmtR(rhoMin)}</div></td><td style="text-align:right"><span class="step-val ${ts500OK_y?'ok':'err'}">${fmtR(rhoSW_y)}</span> <span class="step-check ${ts500OK_y?'chk-ok':'chk-err'}">${ts500OK_y?'OK':'NG'}</span></td></tr>` : ''}
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C</div></td><td><div class="step-desc">TSC 2018 §7.4.5.3 — N<sub>d</sub> vs 0.20·A<sub>c</sub>·f<sub>ck</sub> threshold</div><div class="step-formula">N<sub>d</sub> = ${fmtV(Nd)} &nbsp; 0.20·${isCirc?`π/4·(${fmtD(bw)})²`:`${fmtD(bw)}×${fmtD(h)}`}·${fck} = ${fmtV(0.20*Ag*fck)} &nbsp; ${highAxial?'→ Denklem 7.1/7.2 governs':'→ TS 500 min only'}</div></td><td style="text-align:right"><span class="step-val ${highAxial?'err':'ok'}">${highAxial?'Controls':'N/A'}</span></td></tr>
+      ${highAxial ? (!isCirc ? `
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>1</sub></div></td><td><div class="step-desc">Core dims (c-to-c of hoops) &nbsp; b<sub>kx</sub> = b<sub>w</sub>−2c<sub>v</sub>−d<sub>s</sub> &nbsp;·&nbsp; b<sub>ky</sub> = h−2c<sub>v</sub>−d<sub>s</sub> &nbsp;·&nbsp; A<sub>ck</sub> = b<sub>kx</sub>×b<sub>ky</sub></div><div class="step-formula">${fmtD(bkx)} × ${fmtD(bky)} = ${fmtA(Ack)} &nbsp;·&nbsp; A<sub>c</sub>/A<sub>ck</sub> = ${(Ag/Ack).toFixed(3)}</div></td><td style="text-align:right"><span class="step-val">${fmtA(Ack)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>x</sub></div></td><td><div class="step-desc">Denklem 7.1 — A<sub>sh,req,x</sub> = max(0.30·s·b<sub>kx</sub>·[(A<sub>c</sub>/A<sub>ck</sub>)−1]·(f<sub>ck</sub>/f<sub>ywk</sub>), &nbsp; 0.075·s·b<sub>kx</sub>·(f<sub>ck</sub>/f<sub>ywk</sub>))</div><div class="step-formula">max(0.30×${sv}×${fmtD(bkx)}×${(Ag/Ack-1).toFixed(3)}×${(fck/fyv).toFixed(3)}, &nbsp; 0.075×${sv}×${fmtD(bkx)}×${(fck/fyv).toFixed(3)}) = ${fmtA(Ash_req_x)} &nbsp; A<sub>sv,x</sub>=${fmtA(Asv_x)}</div></td><td style="text-align:right"><span class="step-val ${tscOK_x?'ok':'err'}">${fmtA(Asv_x)}</span> <span class="step-check ${tscOK_x?'chk-ok':'chk-err'}">${tscOK_x?'OK':'NG'}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>y</sub></div></td><td><div class="step-desc">Denklem 7.1 — A<sub>sh,req,y</sub> = max(0.30·s·b<sub>ky</sub>·[(A<sub>c</sub>/A<sub>ck</sub>)−1]·(f<sub>ck</sub>/f<sub>ywk</sub>), &nbsp; 0.075·s·b<sub>ky</sub>·(f<sub>ck</sub>/f<sub>ywk</sub>))</div><div class="step-formula">max(0.30×${sv}×${fmtD(bky)}×${(Ag/Ack-1).toFixed(3)}×${(fck/fyv).toFixed(3)}, &nbsp; 0.075×${sv}×${fmtD(bky)}×${(fck/fyv).toFixed(3)}) = ${fmtA(Ash_req_y)} &nbsp; A<sub>sv,y</sub>=${fmtA(Asv_y)}</div></td><td style="text-align:right"><span class="step-val ${tscOK_y?'ok':'err'}">${fmtA(Asv_y)}</span> <span class="step-check ${tscOK_y?'chk-ok':'chk-err'}">${tscOK_y?'OK':'NG'}</span></td></tr>` :
+      `<tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>1</sub></div></td><td><div class="step-desc">Circular core dim &nbsp; D<sub>k</sub> = D−2c<sub>v</sub>−d<sub>s</sub> &nbsp;·&nbsp; A<sub>ck</sub> = π/4·D<sub>k</sub>²</div><div class="step-formula">${fmtD(bkx)} &nbsp;·&nbsp; A<sub>c</sub>/A<sub>ck</sub> = ${(Ag/Ack).toFixed(3)}</div></td><td style="text-align:right"><span class="step-val">${fmtD(bkx)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>2</sub></div></td><td><div class="step-desc">Denklem 7.2 — ρ<sub>s,req</sub> = max(0.45·[(A<sub>c</sub>/A<sub>ck</sub>)−1]·(f<sub>ck</sub>/f<sub>ywk</sub>), &nbsp; 0.12·(f<sub>ck</sub>/f<sub>ywk</sub>))</div><div class="step-formula">max(0.45×${(Ag/Ack-1).toFixed(3)}×${(fck/fyv).toFixed(3)}, &nbsp; 0.12×${(fck/fyv).toFixed(3)}) = ${fmtR(rhoS_req)}</div></td><td style="text-align:right"><span class="step-val">${fmtR(rhoS_req)}</span></td></tr>
+      <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">C<sub>3</sub></div></td><td><div class="step-desc">ρ<sub>s,prov</sub> = 4·A<sub>b</sub>/(D<sub>k</sub>·s) = 4·${fmtA(Ab)}/(${fmtD(bkx)}·${sv})</div><div class="step-formula">= ${fmtR(rhoS_prov)} &nbsp; ${tscOK_x?'≥':'&lt;'} ${fmtR(rhoS_req)}</div></td><td style="text-align:right"><span class="step-val ${tscOK_x?'ok':'err'}">${fmtR(rhoS_prov)}</span> <span class="step-check ${tscOK_x?'chk-ok':'chk-err'}">${tscOK_x?'OK':'NG'}</span></td></tr>`) : ''}
       <tr><td style="width:32px;padding-right:8px;vertical-align:top;padding-top:9px"><div class="step-num">B</div></td><td><div class="step-desc">Max. spacing — TS 500 §8.2.5: s ≤ min(h/2, 300 mm)</div><div class="step-formula">min(${fmtM(h/2)}, ${fmtM(300)}) = ${fmtM(svMax)}</div></td><td style="text-align:right"><span class="step-val ${spOK?'ok':'err'}">${fmtM(svMax)}</span> <span class="step-check ${spOK?'chk-ok':'chk-err'}">${spOK?'OK':'NG'}</span></td></tr>
     </table>
   </div>
