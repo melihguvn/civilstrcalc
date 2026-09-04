@@ -1027,8 +1027,7 @@ function cbCalc() {
     h += '<div class="rpt-sec"><div class="rpt-sec-title">Shear Stud Layout</div>'
        + '<table class="stud-tbl"><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>'
        + '<tr><td>Layout</td><td>' + layout_str + layout_badge + '</td></tr>'
-       + '<tr><td>Half-span count (0 &rarr; L/2)</td><td>' + N_half + '</td></tr>'
-       + '<tr><td>Total count (full span)</td><td>' + (N_half*2) + '</td></tr>'
+       + '<tr><td>Total studs (full span)</td><td>' + (N_half*2) + ' &nbsp;<span style="color:var(--text-dim);font-size:.70rem">(' + N_half + ' per half)</span></td></tr>'
        + '<tr><td>Avg. longitudinal spacing</td><td>' + (N_half>0 ? fmt(stud_spacing_val,isUS?1:0)+uL+' c/c' : '&mdash;') + '</td></tr>'
        + '<tr><td>Ribs per half-span</td><td>' + N_ribs_half + '</td></tr>'
        + '<tr><td>Max studs per rib</td><td>' + max_per_rib + ' &nbsp;<span style="font-size:.70rem;color:var(--text-dim)">(' + (double_row ? 'double-row permitted: w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&ge;1.5, b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&ge;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm') : 'single-row only: ' + (!rib_allows2 ? 'w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&lt;1.5' : 'b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&lt;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm'))) + ')</span></td></tr>'
@@ -1312,8 +1311,8 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
 
 // ── Plan view (top view, stud layout along span) ──────────────────────────────
 function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ribs_half, isUS) {
-  var VW = 380, VH = 74;
-  var ML = 26, MR = 26;
+  var VW = 380, VH = 76;
+  var ML = 10, MR = 10;
   var beam_px = VW - ML - MR;   // 328px total span
   var half_px = beam_px / 2;    // 164px per half
   var flg_h = 26;               // flange visual height
@@ -1378,12 +1377,11 @@ function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ri
   // L/2 label
   svg += '<text x="'+f(mx)+'" y="'+(fy1-15)+'" text-anchor="middle" font-size="8" '+tcol2+'>L/2</text>';
 
-  // Per-half count labels (below supports)
-  var bl = fy2 + 13;
-  svg += '<text x="'+f(ML+half_px/2)+'" y="'+bl+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'
-       + N_half+' studs</text>';
-  svg += '<text x="'+f(ML+beam_px-half_px/2)+'" y="'+bl+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'
-       + N_half+' studs</text>';
+  // Total count + spacing label (centred below beam)
+  var bl = fy2 + 14;
+  var sp_str = isUS ? stud_spacing_val.toFixed(1)+' in' : Math.round(stud_spacing_val)+' mm';
+  svg += '<text x="'+f(ML+beam_px/2)+'" y="'+bl+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'
+       + (N_half*2)+' studs total &nbsp;&middot;&nbsp; s = '+sp_str+' c/c</text>';
 
   svg += '</svg>';
   return '<div style="margin-top:-6px;padding:0 0 2px;">' + svg + '</div>';
