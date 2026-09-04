@@ -3610,8 +3610,6 @@ function calcShCol_aci() {
   const Av_min1_y = isCirc_aci ? 0 : 0.062*Math.sqrt(fc)*h*s/fyt;
   const Av_min2_y = isCirc_aci ? 0 : 0.35*h*s/fyt;
   const Av_min_y  = isCirc_aci ? 0 : Math.max(Av_min1_y, Av_min2_y);
-  const avOk_x  = Av_x >= Av_min_x;
-  const avOk_y  = isCirc_aci || Av_y >= Av_min_y;
 
   // Tie spacing limits (§10.7.6.2)
   const s_lim_long  = 16*dbl;
@@ -3659,10 +3657,17 @@ function calcShCol_aci() {
   const s_out_lo   = (isSeismic && sdc === 'def') ? Math.min(6*dbl, 150) : Infinity;
   const s_seis_ctrl = isSeismic && sdc !== 'ab' ? s_seis_lim : Infinity;
   const s_max_ctrl  = Math.min(s_tie_max, s_shear_lim, s_seis_ctrl);
-  const seisOk      = seisAshOk_x && seisAshOk_y;
+  // Governing Av,min = max(§26.6.3.2 shear min, §18.7.5.4 seismic confinement)
+  const Av_gov_x     = !isCirc_aci ? Math.max(Av_min_x, isSeismic&&sdc==='def' ? Ash_req_x_s : 0) : Av_min_x;
+  const Av_gov_y     = !isCirc_aci ? Math.max(Av_min_y, isSeismic&&sdc==='def' ? Ash_req_y_s : 0) : 0;
+  const govSrc_aci_x = !isCirc_aci&&isSeismic&&sdc==='def'&&Ash_req_x_s>=Av_min_x ? '§18.7.5.4' : '§26.6.3.2';
+  const govSrc_aci_y = !isCirc_aci&&isSeismic&&sdc==='def'&&Ash_req_y_s>=Av_min_y ? '§18.7.5.4' : '§26.6.3.2';
+  const avOk_x       = isCirc_aci ? (Av_x >= Av_min_x && (!(isSeismic&&sdc==='def') || seisAshOk_x)) : Av_x >= Av_gov_x;
+  const avOk_y       = isCirc_aci || Av_y >= Av_gov_y;
+  const avOk         = avOk_x && avOk_y;
+  const seisOk       = avOk_x && avOk_y; // kept for report compat
 
   const st  = dcr <= 1.0 ? 'ok' : 'err';
-  const avOk  = avOk_x && avOk_y;
   const sOk   = s <= s_max_ctrl;
   const vsOk  = capX.Vs_prov <= capX.Vs_max && (isCirc_aci || capY.Vs_prov <= capY.Vs_max);
   const icons = {ok:'✅',warn:'⚠️',err:'❌'};
@@ -3702,7 +3707,7 @@ function calcShCol_aci() {
   </div>
   <div class="rpt-sec">
     <div class="rpt-sec-title">Design Result${isCirc_aci?'':'s — Both Directions'}</div>
-    <div class="fl-rb" style="${isCirc_aci?'':('grid-template-columns:'+(!isSeismic||sdc!=='def'?'1fr 1fr 1fr 1fr 1fr':'1fr 1fr 1fr 1fr 1fr 1fr'))}">
+    <div class="fl-rb" style="${isCirc_aci?'':'grid-template-columns:1fr 1fr 1fr 1fr 1fr'}">
       ${isCirc_aci?`
       <div class="fl-col"><div class="fl-lbl">D/C = V<sub>u</sub>/φV<sub>n</sub></div><div class="fl-val ${st}">${dcr_x.toFixed(3)}</div><div class="fl-unit">${labels[st]}</div></div>
       `:`
@@ -3712,24 +3717,19 @@ function calcShCol_aci() {
       <div class="fl-col">
         <div class="fl-lbl">A<sub>v,x</sub> ≥ A<sub>v,min,x</sub></div>
         <div class="fl-val ${avOk_x?'ok':'err'}">${fmtA(Av_x)}</div>
-        <div class="fl-unit">min ${fmtA(Av_min_x)} &nbsp; ${avOk_x?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">min ${fmtA(isCirc_aci?Av_min_x:Av_gov_x)} (${isCirc_aci?'§26.6.3.2':govSrc_aci_x}) &nbsp; ${avOk_x?'✓ OK':'✗ NG'}</div>
       </div>
       ${isCirc_aci?'':`
       <div class="fl-col">
         <div class="fl-lbl">A<sub>v,y</sub> ≥ A<sub>v,min,y</sub></div>
         <div class="fl-val ${avOk_y?'ok':'err'}">${fmtA(Av_y)}</div>
-        <div class="fl-unit">min ${fmtA(Av_min_y)} &nbsp; ${avOk_y?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">min ${fmtA(Av_gov_y)} (${govSrc_aci_y}) &nbsp; ${avOk_y?'✓ OK':'✗ NG'}</div>
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">s ≤ s<sub>max</sub>${isSeismic&&sdc!=='ab'?' (Ch.18)':''}</div>
         <div class="fl-val ${sOk?'ok':'err'}">${fmtD(s)}</div>
         <div class="fl-unit">max ${fmtD(s_max_ctrl)} &nbsp; ${sOk?'✓ OK':'✗ NG'}</div>
       </div>
-      ${isSeismic&&sdc==='def'?`<div class="fl-col">
-        <div class="fl-lbl">A<sub>sh</sub> §18.7.5.4</div>
-        <div class="fl-val ${seisOk?'ok':'err'}">${seisOk?'OK':'NG'}</div>
-        <div class="fl-unit">${isCirc_aci?`ρs≥${(rhoS_req_s*100).toFixed(3)}%`:seisAshOk_x&&seisAshOk_y?'Both dirs ✓':`${!seisAshOk_x?'X ✗':''}${!seisAshOk_x&&!seisAshOk_y?' ':''}${!seisAshOk_y?'Y ✗':''}`}</div>
-      </div>`:''}
     </div>
   </div>
   <div class="rpt-sec">
@@ -3746,8 +3746,8 @@ function calcShCol_aci() {
   <div class="rpt-sec">
     <div class="rpt-sec-title">${isCirc_aci?'Spiral':'Tie'} Reinforcement Limits (gov. dir: ${govDir.toUpperCase()})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">A<sub>v,min,x</sub> — §26.6.3.2 &nbsp; X-dir (b<sub>w</sub>=${fmtL(bw)})</div><div class="step-formula">max(0.062√f'c·b<sub>w</sub>·s/f<sub>yt</sub>=${fmtA(Av_min1_x)}, 0.35·b<sub>w</sub>·s/f<sub>yt</sub>=${fmtA(Av_min2_x)}) = ${fmtA(Av_min_x)} &nbsp;·&nbsp; A<sub>v,x,prov</sub> = n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Av_x)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Av_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td></tr>
-      ${!isCirc_aci?`<tr><td><div class="step-num">A'</div></td><td><div class="step-desc">A<sub>v,min,y</sub> — §26.6.3.2 &nbsp; Y-dir (b<sub>w</sub>=${fmtL(h)})</div><div class="step-formula">max(0.062√f'c·h·s/f<sub>yt</sub>=${fmtA(Av_min1_y)}, 0.35·h·s/f<sub>yt</sub>=${fmtA(Av_min2_y)}) = ${fmtA(Av_min_y)} &nbsp;·&nbsp; A<sub>v,y,prov</sub> = n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Av_y)}</div></td><td style="text-align:right"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Av_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td></tr>`:''}
+      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">A<sub>v,min,x</sub> — §26.6.3.2: max(0.062√f'c, 0.35)·b<sub>w</sub>·s/f<sub>yt</sub> = ${fmtA(Av_min_x)}${!isCirc_aci&&isSeismic&&sdc==='def'?` · §18.7.5.4: ${fmtA(Ash_req_x_s)} → governing (${govSrc_aci_x}) = ${fmtA(Av_gov_x)}`:''} &nbsp; X-dir</div><div class="step-formula">A<sub>v,x,prov</sub> = n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Av_x)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Av_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td></tr>
+      ${!isCirc_aci?`<tr><td><div class="step-num">A'</div></td><td><div class="step-desc">A<sub>v,min,y</sub> — §26.6.3.2: max(0.062√f'c, 0.35)·h·s/f<sub>yt</sub> = ${fmtA(Av_min_y)}${isSeismic&&sdc==='def'?` · §18.7.5.4: ${fmtA(Ash_req_y_s)} → governing (${govSrc_aci_y}) = ${fmtA(Av_gov_y)}`:''} &nbsp; Y-dir</div><div class="step-formula">A<sub>v,y,prov</sub> = n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Av_y)}</div></td><td style="text-align:right"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Av_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td></tr>`:''}
       <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Spacing limits — §10.7.6.2${isSeismic&&sdc!=='ab'?' + Ch.18':''}</div><div class="step-formula">min(16d<sub>bl</sub>=${fmtD(s_lim_long)}, 48d<sub>t</sub>=${fmtD(s_lim_tie)}, min(b,h)=${fmtD(s_lim_sec)}, shear=${fmtD(s_shear_lim)}${isSeismic&&sdc!=='ab'?`, seismic=${fmtD(s_seis_lim)}`:''})</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_max_ctrl)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
       ${(Vs_req_x>0||Vs_req_y>0)?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>v</sub>/s per direction</div><div class="step-formula">${Vs_req_x>0?`X: V<sub>s,req</sub>=${fmtV(Vs_req_x)}, A<sub>v,req,x</sub>@s=${fmtA(Av_req_x)} (prov ${fmtA(Av_x)} ${Av_x>=Av_req_x?'✓':'✗'})`:``}${!isCirc_aci&&Vs_req_y>0?`${Vs_req_x>0?' &nbsp;·&nbsp; ':''}Y: V<sub>s,req</sub>=${fmtV(Vs_req_y)}, A<sub>v,req,y</sub>@s=${fmtA(Av_req_y)} (prov ${fmtA(Av_y)} ${Av_y>=Av_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
@@ -3912,9 +3912,6 @@ function calcShCol_ec2() {
   const rho_w_min  = 0.08 * Math.sqrt(fck) / fyk;
   const Asw_min_x  = rho_w_min * bw * s;
   const Asw_min_y  = isCirc_ec2 ? 0 : rho_w_min * h * s;
-  const avOk_x     = Asw_x >= Asw_min_x;
-  const avOk_y     = isCirc_ec2 || Asw_y >= Asw_min_y;
-  const avOk       = avOk_x && avOk_y;
 
   // Tie spacing §9.5.3 columns: ≤ min(20·dbl, min(bw,h), 400mm)
   // If νd > 0.3 (confinement zone): reduce by factor 0.6 per §9.5.3
@@ -3956,6 +3953,16 @@ function calcShCol_ec2() {
   const ec8Ok_x         = !isSeismic || omegawd_prov_x >= omegawd_req_x;
   const ec8Ok_y         = !isSeismic || omegawd_prov_y >= omegawd_req_y;
   const ec8Ok           = ec8Ok_x && ec8Ok_y;
+  // Governing Asw,min = max(EC2 §9.2.2, EC8 ωwd-derived Ash per direction)
+  const Ash_ec8_x = isSeismic ? omegawd_req_x * (fcd/fywd) * bo_x * s : 0;
+  const Ash_ec8_y = isSeismic ? omegawd_req_y * (fcd/fywd) * bo_y * s : 0;
+  const Asw_gov_x = Math.max(Asw_min_x, Ash_ec8_x);
+  const Asw_gov_y = isCirc_ec2 ? 0 : Math.max(Asw_min_y, Ash_ec8_y);
+  const govSrc_x  = isSeismic && Ash_ec8_x >= Asw_min_x ? 'EC8' : 'EC2';
+  const govSrc_y  = isSeismic && Ash_ec8_y >= Asw_min_y ? 'EC8' : 'EC2';
+  const avOk_x    = Asw_x >= Asw_gov_x;
+  const avOk_y    = isCirc_ec2 || Asw_y >= Asw_gov_y;
+  const avOk      = avOk_x && avOk_y;
 
   const icons = {ok:'✅',err:'❌'};
   const labels = {ok:'ADEQUATE',err:'INADEQUATE'};
@@ -3979,15 +3986,7 @@ function calcShCol_ec2() {
     ? `<div class="report-warn" style="background:#fff0f0;border-color:#e53e3e;"><span>⚠️</span><div><b>Axial load exceeds ${isSeismic ? 'EC8 '+dc.toUpperCase()+' limit' : 'EC2 limit'} (ν<sub>d</sub> = ${nud.toFixed(3)} &gt; ${nud_limit}).</b>${isSeismic ? ' Reduce axial force or increase section size.' : ' Review section size or concrete grade.'}</div></div>` : '';
   const ec8WarnHtml = (isSeismic && !ec8Ok)
     ? `<div class="report-warn" style="background:#fff0f0;border-color:#e53e3e;"><span>⚠️</span><div><b>EC8 confinement not satisfied.</b> Increase d<sub>t</sub>, reduce spacing s, or add more tie legs.${!ec8Ok_x ? ` &nbsp; b<sub>w</sub>-dir: ω<sub>wd,prov</sub> = ${omegawd_prov_x.toFixed(4)} &lt; req ${omegawd_req_x.toFixed(4)}.` : ''}${(!ec8Ok_y && !isCirc_ec2) ? ` &nbsp; h-dir: ω<sub>wd,prov</sub> = ${omegawd_prov_y.toFixed(4)} &lt; req ${omegawd_req_y.toFixed(4)}.` : ''}</div></div>` : '';
-  const ec8CardHtml = !isSeismic ? '' : `
-      <div class="fl-col">
-        <div class="fl-lbl">ω<sub>wd</sub> ≥ ω<sub>wd,req</sub> — EC8</div>
-        <div class="fl-val ${ec8Ok?'ok':'err'}">${ec8Ok?'✓ OK':'✗ NG'}</div>
-        <div class="fl-unit" style="line-height:1.5">
-          b<sub>w</sub>: ${omegawd_prov_x.toFixed(4)} req ${omegawd_req_x.toFixed(4)} ${ec8Ok_x?'✓':'✗'}<br>
-          ${isCirc_ec2 ? '' : `h: ${omegawd_prov_y.toFixed(4)} req ${omegawd_req_y.toFixed(4)} ${ec8Ok_y?'✓':'✗'}`}
-        </div>
-      </div>`;
+  const ec8CardHtml = '';
   const ec8SectionHtml = !isSeismic ? '' : `
   <div class="rpt-sec">
     <div class="rpt-sec-title">EC8 Confinement — §5.4.3.2.2 (${dc.toUpperCase()}, μ<sub>φ</sub> = ${muphi})</div>
@@ -4025,7 +4024,7 @@ function calcShCol_ec2() {
   </div>
   <div class="rpt-sec">
     <div class="rpt-sec-title">Design Result${isCirc_ec2?'':'s — Both Directions'}</div>
-    <div class="fl-rb" style="${isCirc_ec2 ? (isSeismic?'grid-template-columns:1fr 1fr 1fr 1fr':'') : ('grid-template-columns:1fr 1fr 1fr 1fr 1fr'+(isSeismic?' 1fr':''))}">
+    <div class="fl-rb" style="${isCirc_ec2 ? '' : 'grid-template-columns:1fr 1fr 1fr 1fr 1fr'}">
       ${isCirc_ec2?`
       <div class="fl-col"><div class="fl-lbl">D/C = V<sub>Ed</sub>/V<sub>Rd</sub></div><div class="fl-val ${st}">${dcr_x.toFixed(3)}</div><div class="fl-unit">${labels[st]}</div></div>
       `:`
@@ -4035,13 +4034,13 @@ function calcShCol_ec2() {
       <div class="fl-col">
         <div class="fl-lbl">A<sub>sw,x</sub> ≥ A<sub>sw,min,x</sub></div>
         <div class="fl-val ${avOk_x?'ok':'err'}">${fmtA(Asw_x)}</div>
-        <div class="fl-unit">min ${fmtA(Asw_min_x)} &nbsp; ${avOk_x?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">min ${fmtA(Asw_gov_x)} (${govSrc_x}) &nbsp; ${avOk_x?'✓ OK':'✗ NG'}</div>
       </div>
       ${isCirc_ec2?'':`
       <div class="fl-col">
         <div class="fl-lbl">A<sub>sw,y</sub> ≥ A<sub>sw,min,y</sub></div>
         <div class="fl-val ${avOk_y?'ok':'err'}">${fmtA(Asw_y)}</div>
-        <div class="fl-unit">min ${fmtA(Asw_min_y)} &nbsp; ${avOk_y?'✓ OK':'✗ NG'}</div>
+        <div class="fl-unit">min ${fmtA(Asw_gov_y)} (${govSrc_y}) &nbsp; ${avOk_y?'✓ OK':'✗ NG'}</div>
       </div>`}
       <div class="fl-col">
         <div class="fl-lbl">s ≤ s<sub>max</sub></div>
@@ -4066,8 +4065,8 @@ function calcShCol_ec2() {
   <div class="rpt-sec">
     <div class="rpt-sec-title">${isCirc_ec2?'Spiral':'Link'} Reinforcement Limits — §9.2.2 &amp; §9.5.3 (gov. dir: ${govDir.toUpperCase()})</div>
     <table class="steps-table">
-      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">A<sub>sw,min,x</sub> — §9.2.2(5): ρ<sub>w,min</sub> = 0.08√f<sub>ck</sub>/f<sub>yk</sub> = ${(rho_w_min*1000).toFixed(4)}‰ &nbsp; X-dir (b = ${fmtL(bw)})</div><div class="step-formula">A<sub>sw,min,x</sub> = ρ<sub>w,min</sub>×b×s = ${fmtA(Asw_min_x)} &nbsp;·&nbsp; A<sub>sw,x,prov</sub> = n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Asw_x)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Asw_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td></tr>
-      ${!isCirc_ec2?`<tr><td><div class="step-num">A'</div></td><td><div class="step-desc">A<sub>sw,min,y</sub> — Y-dir (h = ${fmtL(h)})</div><div class="step-formula">A<sub>sw,min,y</sub> = ρ<sub>w,min</sub>×h×s = ${fmtA(Asw_min_y)} &nbsp;·&nbsp; A<sub>sw,y,prov</sub> = n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Asw_y)}</div></td><td style="text-align:right"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Asw_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td></tr>`:``}
+      <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">A<sub>sw,min,x</sub> — §9.2.2(5): ρ<sub>w,min</sub>·b·s = ${fmtA(Asw_min_x)}${isSeismic?` · EC8 ω<sub>wd</sub>→A<sub>sh</sub> = ${fmtA(Ash_ec8_x)} → governing (${govSrc_x}) = ${fmtA(Asw_gov_x)}`:''} &nbsp; X-dir</div><div class="step-formula">A<sub>sw,x,prov</sub> = n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Asw_x)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Asw_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td></tr>
+      ${!isCirc_ec2?`<tr><td><div class="step-num">A'</div></td><td><div class="step-desc">A<sub>sw,min,y</sub> — §9.2.2(5): ρ<sub>w,min</sub>·h·s = ${fmtA(Asw_min_y)}${isSeismic?` · EC8 ω<sub>wd</sub>→A<sub>sh</sub> = ${fmtA(Ash_ec8_y)} → governing (${govSrc_y}) = ${fmtA(Asw_gov_y)}`:''} &nbsp; Y-dir</div><div class="step-formula">A<sub>sw,y,prov</sub> = n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Asw_y)}</div></td><td style="text-align:right"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Asw_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td></tr>`:``}
       <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Max tie spacing — §9.5.3${confRequired?' (confinement zone: ×0.6)':''}</div><div class="step-formula">min(20d<sub>bl</sub>=${fmtD(s_max1)}, min(b,h)=${fmtD(s_max2)}, 400mm)${confRequired?` = ${fmtD(s_ec2_base)} × 0.6 → <b>${fmtD(s_ec2)}</b>`:''}</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_ec2)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
       ${(needsStirrups_x||needsStirrups_y)?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>sw</sub>/s per direction</div><div class="step-formula">${needsStirrups_x?`X: ${Asw_s_req_x.toFixed(4)} mm²/mm → A<sub>sw,req,x</sub>@s = ${fmtA(Asw_req_x)} (prov ${fmtA(Asw_x)} ${Asw_x>=Asw_req_x?'✓':'✗'})`:``}${!isCirc_ec2&&needsStirrups_y?`${needsStirrups_x?' &nbsp;·&nbsp; ':''}Y: ${Asw_s_req_y.toFixed(4)} mm²/mm → A<sub>sw,req,y</sub>@s = ${fmtA(Asw_req_y)} (prov ${fmtA(Asw_y)} ${Asw_y>=Asw_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
