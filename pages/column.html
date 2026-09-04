@@ -3592,6 +3592,7 @@ function calcShCol_aci() {
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtV = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
+  const fmtSecA = v => isUS ? (v/645.16).toFixed(2)+' in²' : unit==='nmm' ? v.toFixed(0)+' mm²' : (v/1e6).toFixed(4)+' m²';
   const fmtS = v => isUS ? (v/0.006895).toFixed(0)+' psi' : v.toFixed(2)+' MPa';
 
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -3605,7 +3606,7 @@ function calcShCol_aci() {
     <div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">
       ${isCirc_aci?`<tr><td>Diameter D</td><td>${fmtL(bw)}</td></tr>`:`<tr><td>Section b<sub>w</sub> × h</td><td>${fmtL(bw)} × ${fmtL(h)}</td></tr>`}
-      <tr><td>Gross area A<sub>g</sub></td><td>${fmtA(Ag)}</td></tr>
+      <tr><td>Gross area A<sub>g</sub></td><td>${fmtSecA(Ag)}</td></tr>
       <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
       ${isCirc_aci?`<tr><td>Effective depth d</td><td>${fmtD(d_x)}</td></tr>`:`<tr><td>d<sub>x</sub> = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(d_x)}</td></tr><tr><td>d<sub>y</sub> = b−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(d_y)}</td></tr>`}
       <tr><td>f'<sub>c</sub> &nbsp;·&nbsp; f<sub>yt</sub></td><td>${fmtS(fc)} · ${fmtS(fyt)}</td></tr>
@@ -3831,6 +3832,7 @@ function calcShCol_ec2() {
   const fmtD = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => isUS ? (v/645.16).toFixed(4)+' in²' : v.toFixed(1)+' mm²';
+  const fmtSecA = v => isUS ? (v/645.16).toFixed(2)+' in²' : unit==='nmm' ? v.toFixed(0)+' mm²' : (v/1e6).toFixed(4)+' m²';
   const fmtS = v => isUS ? (v/0.006895).toFixed(0)+' psi' : v.toFixed(2)+' MPa';
   // Unit-consistent νd formula display (force/area/stress in same unit system)
   const nedDisp = unit==='nmm' ? NEd.toFixed(0)+' N'           : fmtF(NEd);
@@ -3879,7 +3881,7 @@ function calcShCol_ec2() {
     <div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">
       ${isCirc_ec2?`<tr><td>Diameter D</td><td>${fmtL(bw)}</td></tr>`:`<tr><td>Section b<sub>w</sub> × h</td><td>${fmtL(bw)} × ${fmtL(h)}</td></tr>`}
-      <tr><td>Gross area A<sub>c</sub></td><td>${fmtA(Ac)}</td></tr>
+      <tr><td>Gross area A<sub>c</sub></td><td>${fmtSecA(Ac)}</td></tr>
       <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
       ${isCirc_ec2?`<tr><td>Effective depth d</td><td>${fmtD(d_x)}</td></tr>`:`<tr><td>d<sub>x</sub> = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(d_x)}</td></tr><tr><td>d<sub>y</sub> = b−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(d_y)}</td></tr>`}
       <tr><td>f<sub>ck</sub> · f<sub>cd</sub></td><td>${fmtS(fck)} · ${fmtS(fcd)}</td></tr>
@@ -4027,6 +4029,7 @@ function calcShColTS500() {
   const fmtV = v => (v / 1000).toFixed(1) + ' kN';
   const fmtS = v => v.toFixed(2) + ' MPa';
   const fmtA = v => v.toFixed(0) + ' mm²';
+  const fmtSecA = v => (v / 1e6).toFixed(4) + ' m²';
   const fmtD = v => v.toFixed(0) + ' mm';
   const fmtM = v => (v / 1000).toFixed(3) + ' m';
   const fmtR = v => (v * 1000).toFixed(4) + '‰';
@@ -4208,6 +4211,7 @@ function calcShCol_is456() {
   const fmtL = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
   const fmtF = v => (v/FS).toFixed(unit==='nmm'?0:1)+' '+U.forceU;
   const fmtA = v => v.toFixed(1)+' mm²';
+  const fmtSecA = v => unit==='nmm' ? v.toFixed(0)+' mm²' : (v/1e6).toFixed(4)+' m²';
   const fmtTs= v => v.toFixed(3)+' N/mm²';
   const fmtD = v => (v/LS).toFixed(unit==='nmm'?0:3)+' '+U.lenU;
 
@@ -4245,7 +4249,7 @@ function calcShCol_is456() {
     <div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">
       ${isCirc_is456?`<tr><td>Diameter D</td><td>${fmtL(bw)}</td></tr>`:`<tr><td>Section b × h</td><td>${fmtL(bw)} × ${fmtL(h)}</td></tr>`}
-      <tr><td>Gross area A<sub>g</sub></td><td>${fmtA(Ag)}</td></tr>
+      <tr><td>Gross area A<sub>g</sub></td><td>${fmtSecA(Ag)}</td></tr>
       <tr><td>Clear cover c<sub>v</sub></td><td>${fmtD(cv)}</td></tr>
       ${isCirc_is456?`<tr><td>Effective depth d</td><td>${fmtD(dx)}</td></tr>`:`<tr><td>d<sub>x</sub> = h−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(dx)}</td></tr><tr><td>d<sub>y</sub> = b−c<sub>v</sub>−d<sub>t</sub>−d<sub>bl</sub>/2</td><td>${fmtD(dy)}</td></tr>`}
       <tr><td>f<sub>ck</sub> &nbsp;·&nbsp; f<sub>y</sub></td><td>${fck.toFixed(0)} MPa · ${fy.toFixed(0)} MPa</td></tr>
