@@ -1060,6 +1060,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <label>Spacing s <span class="lu" id="lu-shc-aci-s">[mm]</span></label>
         <div class="iw"><input type="number" id="shc-aci-s" value="200" step="5" min="25"><span class="us" id="u-shc-aci-s">mm</span></div>
       </div>
+      <div class="form-div" style="margin-top:6px">
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0 3px;">
+          <input type="checkbox" id="shc-aci-seismic" onchange="toggleAciSeismic()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+          <label for="shc-aci-seismic" style="cursor:pointer;font-weight:600;font-size:.79rem;color:var(--text);margin:0;">Seismic Design — ACI 318-25 Ch.18</label>
+        </div>
+        <div id="shc-aci-seismic-opts" style="display:none;margin-top:3px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Seismic Design Cat.</label>
+              <div class="iw"><select id="shc-aci-sdc" onchange="updateAciSeismicSdc()" style="width:100%;height:34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;font-size:.82rem;"><option value="ab">A / B</option><option value="c">C — IMF</option><option value="def" selected>D / E / F — SMF</option></select></div>
+            </div>
+            <div class="form-group" id="shc-aci-ln-grp">
+              <label>Clear height l<sub>n</sub> <span class="lu" id="lu-shc-aci-ln">[mm]</span></label>
+              <div class="iw"><input type="number" id="shc-aci-ln" value="3000" step="50" min="300"><span class="us" id="u-shc-aci-ln">mm</span></div>
+            </div>
+          </div>
+          <div class="form-group" id="shc-aci-hx-grp">
+            <label>Max hoop leg spacing h<sub>x</sub> <span class="lu" id="lu-shc-aci-hx">[mm]</span> <span style="font-size:.62rem;color:var(--text-dim);">(c-to-c, ≤350 mm)</span></label>
+            <div class="iw"><input type="number" id="shc-aci-hx" value="200" step="10" min="50"><span class="us" id="u-shc-aci-hx">mm</span></div>
+          </div>
+        </div>
+      </div>
       <button class="btn-calc" onclick="calcShCol_aci()">▶ Calculate Shear Design</button>
     </div>
   </div>
@@ -3358,6 +3380,15 @@ function setShColShape(code, shape, btn) {
   if (code === 'ts500') calcShColTS500();
 }
 
+function toggleAciSeismic() {
+  const checked = document.getElementById('shc-aci-seismic').checked;
+  document.getElementById('shc-aci-seismic-opts').style.display = checked ? '' : 'none';
+}
+function updateAciSeismicSdc() {
+  const sdc = document.getElementById('shc-aci-sdc').value;
+  document.getElementById('shc-aci-ln-grp').style.display  = sdc !== 'ab' ? '' : 'none';
+  document.getElementById('shc-aci-hx-grp').style.display  = sdc === 'def' ? '' : 'none';
+}
 function toggleEC2Seismic() {
   const checked = document.getElementById('shc-ec2-seismic').checked;
   document.getElementById('shc-ec2-seismic-opts').style.display = checked ? '' : 'none';
@@ -3408,6 +3439,9 @@ function setShColUnit(unit, btn, code) {
     st('lu-shc-aci-dt','['+U.dbU+']'); st('u-shc-aci-dt',U.dbU);
     st('lu-shc-aci-dbl','['+U.dbU+']'); st('u-shc-aci-dbl',U.dbU);
     st('lu-shc-aci-s','['+U.dbU+']'); st('u-shc-aci-s',U.dbU);
+    st('lu-shc-aci-ln','['+U.dbU+']'); st('u-shc-aci-ln',U.dbU);
+    st('lu-shc-aci-hx','['+U.dbU+']'); st('u-shc-aci-hx',U.dbU);
+    if(isUS){ sv(p+'ln',120); sv(p+'hx',8); } else { sv(p+'ln',3000); sv(p+'hx',200); }
     _swapShColBarUI(isUS);
   } else if (code==='ec2') {
     st('lu-shc-ec2-fck','['+U.stressU+']'); st('u-shc-ec2-fck',U.stressU);
@@ -3524,6 +3558,11 @@ function calcShCol_aci() {
   const d_y = isCirc_aci ? d_x : Math.max(bw - cv - dt - dbl / 2, 50);
   const d   = d_x;
 
+  const isSeismic = !!(document.getElementById('shc-aci-seismic')?.checked);
+  const sdc       = isSeismic ? (document.getElementById('shc-aci-sdc')?.value || 'def') : 'ab';
+  const ln        = (isSeismic && sdc !== 'ab') ? Math.max((g('shc-aci-ln')||0)*dbS, 300) : 0;
+  const hx_in     = (isSeismic && sdc === 'def') ? Math.min((g('shc-aci-hx')||200)*dbS, 350) : 200;
+
   if (!bw||!h||!fc||!fyt||!Vu_x) { alert('Please fill all required inputs.'); return; }
   const Ab  = Math.PI * dt * dt / 4;
   const Av_x = nlx * Ab;
@@ -3583,7 +3622,44 @@ function calcShCol_aci() {
   const s_shear_lim = Vs_req > 0.33*Math.sqrt(fc)*govBw*govD
     ? Math.min(govD/4, 300)
     : Math.min(govD/2, 600);
-  const s_max_ctrl  = Math.min(s_tie_max, s_shear_lim);
+
+  // ── ACI Chapter 18 seismic provisions ───────────────────────────────────────
+  const bc_x = Math.max(bw - 2*cv - dt, 50);   // core c-to-c hoops, x-direction
+  const bc_y = isCirc_aci ? bc_x : Math.max(h - 2*cv - dt, 50);
+  const Ach  = isCirc_aci ? Math.PI*bc_x*bc_x/4 : bc_x*bc_y;
+  const lo   = (isSeismic && sdc !== 'ab') ? Math.max(ln/6, Math.max(bw,h), 457) : 0;
+
+  let s_seis_lim = Infinity, so_mm = 0, seisAshOk_x = true, seisAshOk_y = true;
+  let Ash_req_x_s = 0, Ash_req_y_s = 0, rhoS_req_s = 0, rhoS_prov_s = 0;
+
+  if (isSeismic && sdc !== 'ab') {
+    if (sdc === 'c') {
+      // §18.4.3.2a: min(8dbl, 24dt, b_min/2, 300 mm [12 in])
+      s_seis_lim = Math.min(8*dbl, 24*dt, Math.min(bw,h)/2, 300);
+    } else { // def — SMF §18.7.5
+      // §18.7.5.3: so (in mm) = 100 + (350 − hx)/3, clamped [100, 150]
+      so_mm = Math.min(Math.max(100 + (350 - hx_in)/3, 100), 150);
+      const bc_min = Math.min(bc_x, bc_y);
+      s_seis_lim = Math.min(bc_min/4, 6*dbl, so_mm);
+      // §18.7.5.4 confinement min
+      if (!isCirc_aci) {
+        const ashF = Math.max(0.3*(Ag/Ach - 1)*fc/fyt, 0.09*fc/fyt);
+        Ash_req_x_s = ashF * s * bc_x;
+        Ash_req_y_s = ashF * s * bc_y;
+        seisAshOk_x = Av_x >= Ash_req_x_s;
+        seisAshOk_y = Av_y >= Ash_req_y_s;
+      } else {
+        rhoS_req_s  = Math.max(0.45*(Ag/Ach - 1)*fc/fyt, 0.12*fc/fyt);
+        rhoS_prov_s = 4*Ab / (bc_x*s);
+        seisAshOk_x = rhoS_prov_s >= rhoS_req_s;
+        seisAshOk_y = true;
+      }
+    }
+  }
+  const s_out_lo   = (isSeismic && sdc === 'def') ? Math.min(6*dbl, 150) : Infinity;
+  const s_seis_ctrl = isSeismic && sdc !== 'ab' ? s_seis_lim : Infinity;
+  const s_max_ctrl  = Math.min(s_tie_max, s_shear_lim, s_seis_ctrl);
+  const seisOk      = seisAshOk_x && seisAshOk_y;
 
   const st  = dcr <= 1.0 ? 'ok' : 'err';
   const avOk  = avOk_x && avOk_y;
@@ -3621,11 +3697,12 @@ function calcShCol_aci() {
       <tr><td>Stirrups: Ø${dt.toFixed(0)} mm @ s = ${fmtD(s)}</td><td>n<sub>x</sub> = ${nlx}, n<sub>y</sub> = ${isCirc_aci?'—':nly}</td></tr>
       <tr><td>A<sub>v,x</sub> = n<sub>x</sub>·A<sub>b</sub>${isCirc_aci?'':` &nbsp;·&nbsp; A<sub>v,y</sub> = n<sub>y</sub>·A<sub>b</sub>`}</td><td>${fmtA(Av_x)}${isCirc_aci?'':` · ${fmtA(Av_y)}`}</td></tr>
       ${isCirc_aci?`<tr><td>V<sub>u</sub> &nbsp;·&nbsp; N<sub>u</sub></td><td>${fmtV(Vu_x)} · ${fmtV(Nu)}</td></tr>`:`<tr><td>V<sub>u,x</sub> (→h) &nbsp;·&nbsp; V<sub>u,y</sub> (→b)</td><td>${fmtV(Vu_x)} · ${fmtV(Vu_y)}</td></tr><tr><td>N<sub>u</sub></td><td>${fmtV(Nu)}</td></tr>`}
+      ${isSeismic?`<tr><td>Seismic (SDC ${sdc==='ab'?'A/B':sdc==='c'?'C':'D/E/F'})</td><td>${sdc!=='ab'?`l<sub>n</sub>=${fmtD(ln)}${sdc==='def'?`, h<sub>x</sub>=${fmtD(hx_in)}`:''}`:' — no Ch.18 requirements'}</td></tr>`:''}
     </table>
   </div>
   <div class="rpt-sec">
     <div class="rpt-sec-title">Design Result${isCirc_aci?'':'s — Both Directions'}</div>
-    <div class="fl-rb" style="${isCirc_aci?'':'grid-template-columns:1fr 1fr 1fr 1fr 1fr'}">
+    <div class="fl-rb" style="${isCirc_aci?'':('grid-template-columns:'+(!isSeismic||sdc!=='def'?'1fr 1fr 1fr 1fr 1fr':'1fr 1fr 1fr 1fr 1fr 1fr'))}">
       ${isCirc_aci?`
       <div class="fl-col"><div class="fl-lbl">D/C = V<sub>u</sub>/φV<sub>n</sub></div><div class="fl-val ${st}">${dcr_x.toFixed(3)}</div><div class="fl-unit">${labels[st]}</div></div>
       `:`
@@ -3644,10 +3721,15 @@ function calcShCol_aci() {
         <div class="fl-unit">min ${fmtA(Av_min_y)} &nbsp; ${avOk_y?'✓ OK':'✗ NG'}</div>
       </div>`}
       <div class="fl-col">
-        <div class="fl-lbl">s ≤ s<sub>max</sub></div>
+        <div class="fl-lbl">s ≤ s<sub>max</sub>${isSeismic&&sdc!=='ab'?' (Ch.18)':''}</div>
         <div class="fl-val ${sOk?'ok':'err'}">${fmtD(s)}</div>
         <div class="fl-unit">max ${fmtD(s_max_ctrl)} &nbsp; ${sOk?'✓ OK':'✗ NG'}</div>
       </div>
+      ${isSeismic&&sdc==='def'?`<div class="fl-col">
+        <div class="fl-lbl">A<sub>sh</sub> §18.7.5.4</div>
+        <div class="fl-val ${seisOk?'ok':'err'}">${seisOk?'OK':'NG'}</div>
+        <div class="fl-unit">${isCirc_aci?`ρs≥${(rhoS_req_s*100).toFixed(3)}%`:seisAshOk_x&&seisAshOk_y?'Both dirs ✓':`${!seisAshOk_x?'X ✗':''}${!seisAshOk_x&&!seisAshOk_y?' ':''}${!seisAshOk_y?'Y ✗':''}`}</div>
+      </div>`:''}
     </div>
   </div>
   <div class="rpt-sec">
@@ -3666,10 +3748,45 @@ function calcShCol_aci() {
     <table class="steps-table">
       <tr><td style="width:32px;padding-right:8px"><div class="step-num">A</div></td><td><div class="step-desc">A<sub>v,min,x</sub> — §26.6.3.2 &nbsp; X-dir (b<sub>w</sub>=${fmtL(bw)})</div><div class="step-formula">max(0.062√f'c·b<sub>w</sub>·s/f<sub>yt</sub>=${fmtA(Av_min1_x)}, 0.35·b<sub>w</sub>·s/f<sub>yt</sub>=${fmtA(Av_min2_x)}) = ${fmtA(Av_min_x)} &nbsp;·&nbsp; A<sub>v,x,prov</sub> = n<sub>x</sub>·A<sub>b</sub> = ${fmtA(Av_x)}</div></td><td style="width:170px;text-align:right"><span class="step-val ${avOk_x?'ok':'err'}">${fmtA(Av_x)}</span> <span class="step-check ${avOk_x?'chk-ok':'chk-err'}">${avOk_x?'OK':'NG'}</span></td></tr>
       ${!isCirc_aci?`<tr><td><div class="step-num">A'</div></td><td><div class="step-desc">A<sub>v,min,y</sub> — §26.6.3.2 &nbsp; Y-dir (b<sub>w</sub>=${fmtL(h)})</div><div class="step-formula">max(0.062√f'c·h·s/f<sub>yt</sub>=${fmtA(Av_min1_y)}, 0.35·h·s/f<sub>yt</sub>=${fmtA(Av_min2_y)}) = ${fmtA(Av_min_y)} &nbsp;·&nbsp; A<sub>v,y,prov</sub> = n<sub>y</sub>·A<sub>b</sub> = ${fmtA(Av_y)}</div></td><td style="text-align:right"><span class="step-val ${avOk_y?'ok':'err'}">${fmtA(Av_y)}</span> <span class="step-check ${avOk_y?'chk-ok':'chk-err'}">${avOk_y?'OK':'NG'}</span></td></tr>`:''}
-      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Tie spacing limits — §10.7.6.2</div><div class="step-formula">min(16d<sub>bl</sub>=${fmtD(s_lim_long)}, 48d<sub>t</sub>=${fmtD(s_lim_tie)}, min(b,h)=${fmtD(s_lim_sec)}, shear=${fmtD(s_shear_lim)})</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_max_ctrl)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
+      <tr><td><div class="step-num">B</div></td><td><div class="step-desc">Spacing limits — §10.7.6.2${isSeismic&&sdc!=='ab'?' + Ch.18':''}</div><div class="step-formula">min(16d<sub>bl</sub>=${fmtD(s_lim_long)}, 48d<sub>t</sub>=${fmtD(s_lim_tie)}, min(b,h)=${fmtD(s_lim_sec)}, shear=${fmtD(s_shear_lim)}${isSeismic&&sdc!=='ab'?`, seismic=${fmtD(s_seis_lim)}`:''})</div></td><td style="text-align:right"><span class="step-val ${sOk?'ok':'err'}">${fmtD(s_max_ctrl)}</span> <span class="step-check ${sOk?'chk-ok':'chk-err'}">${sOk?'OK':'NG'}</span></td></tr>
       ${(Vs_req_x>0||Vs_req_y>0)?`<tr><td><div class="step-num">C</div></td><td><div class="step-desc">Required A<sub>v</sub>/s per direction</div><div class="step-formula">${Vs_req_x>0?`X: V<sub>s,req</sub>=${fmtV(Vs_req_x)}, A<sub>v,req,x</sub>@s=${fmtA(Av_req_x)} (prov ${fmtA(Av_x)} ${Av_x>=Av_req_x?'✓':'✗'})`:``}${!isCirc_aci&&Vs_req_y>0?`${Vs_req_x>0?' &nbsp;·&nbsp; ':''}Y: V<sub>s,req</sub>=${fmtV(Vs_req_y)}, A<sub>v,req,y</sub>@s=${fmtA(Av_req_y)} (prov ${fmtA(Av_y)} ${Av_y>=Av_req_y?'✓':'✗'})`:``}</div></td><td style="text-align:right"></td></tr>`:''}
     </table>
   </div>
+  ${isSeismic?`
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">ACI 318-25 Chapter 18 — Seismic Provisions (SDC ${sdc==='ab'?'A/B':sdc==='c'?'C — IMF':'D/E/F — SMF'})</div>
+    ${sdc==='ab'?`<p style="margin:6px 0;font-size:.82rem;color:var(--text-dim);">SDC A/B: No additional Chapter 18 confinement requirements beyond §10.7.6.2.</p>`:`
+    <table class="steps-table">
+      <tr><td style="width:32px;padding-right:8px"><div class="step-num">I</div></td>
+        <td><div class="step-desc">Confinement zone length l<sub>o</sub> — §18.${sdc==='c'?'4.3.2':'7.5.2'}</div>
+          <div class="step-formula">max(l<sub>n</sub>/6=${fmtD(ln/6)}, max(b,h)=${fmtD(Math.max(bw,h))}, 457 mm) = <b>${fmtD(lo)}</b></div>
+        </td><td style="width:170px;text-align:right"><span class="step-val">${fmtD(lo)}</span></td></tr>
+      <tr><td><div class="step-num">II</div></td>
+        <td><div class="step-desc">Max spacing in l<sub>o</sub> zone — §18.${sdc==='c'?'4.3.2a':'7.5.3'}</div>
+          ${sdc==='c'
+            ?`<div class="step-formula">min(8d<sub>bl</sub>=${fmtD(8*dbl)}, 24d<sub>t</sub>=${fmtD(24*dt)}, b<sub>min</sub>/2=${fmtD(Math.min(bw,h)/2)}, 300 mm) = <b>${fmtD(s_seis_lim)}</b></div>`
+            :`<div class="step-formula">s<sub>o</sub>=100+(350−h<sub>x</sub>)/3=${so_mm.toFixed(0)} mm &nbsp;·&nbsp; b<sub>c,min</sub>/4=${fmtD(Math.min(bc_x,bc_y)/4)}, 6d<sub>bl</sub>=${fmtD(6*dbl)} &nbsp;→&nbsp; min = <b>${fmtD(s_seis_lim)}</b></div>`
+          }
+        </td><td style="text-align:right"><span class="step-val ${s<=s_seis_lim?'ok':'err'}">${fmtD(s)}</span> <span class="step-check ${s<=s_seis_lim?'chk-ok':'chk-err'}">${s<=s_seis_lim?'OK':'NG'}</span></td></tr>
+      ${sdc==='def'?(!isCirc_aci?`
+      <tr><td><div class="step-num">III</div></td>
+        <td><div class="step-desc">Min A<sub>sh</sub> in l<sub>o</sub> — §18.7.5.4a,b &nbsp; A<sub>g</sub>/A<sub>ch</sub>=${(Ag/Ach).toFixed(3)}</div>
+          <div class="step-formula">
+            X: max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,x</sub> = ${fmtA(Ash_req_x_s)} &nbsp; prov ${fmtA(Av_x)} <span style="color:${seisAshOk_x?'var(--ok)':'var(--err)'}">${seisAshOk_x?'✓':'✗'}</span><br>
+            Y: max(0.3·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.09)·f'c/f<sub>yt</sub>·s·b<sub>c,y</sub> = ${fmtA(Ash_req_y_s)} &nbsp; prov ${fmtA(Av_y)} <span style="color:${seisAshOk_y?'var(--ok)':'var(--err)'}">${seisAshOk_y?'✓':'✗'}</span>
+          </div>
+        </td><td style="text-align:right"><span class="step-val ${seisOk?'ok':'err'}">${seisOk?'OK':'NG'}</span></td></tr>`
+      :`<tr><td><div class="step-num">III</div></td>
+        <td><div class="step-desc">Min spiral ratio ρ<sub>s</sub> in l<sub>o</sub> — §18.7.5.4c,d &nbsp; A<sub>g</sub>/A<sub>ch</sub>=${(Ag/Ach).toFixed(3)}</div>
+          <div class="step-formula">ρ<sub>s,req</sub>=max(0.45·(A<sub>g</sub>/A<sub>ch</sub>−1), 0.12)·f'c/f<sub>yt</sub> = ${(rhoS_req_s*100).toFixed(3)}% &nbsp; prov = 4A<sub>b</sub>/(D<sub>c</sub>·s) = ${(rhoS_prov_s*100).toFixed(3)}%</div>
+        </td><td style="text-align:right"><span class="step-val ${seisAshOk_x?'ok':'err'}">${seisAshOk_x?'OK':'NG'}</span></td></tr>`)
+      :`<tr><td><div class="step-num">III</div></td><td><div class="step-desc">Min A<sub>sh</sub> — §18.4.3: not prescribed for SDC C (see §18.4.3.2a spacing only)</div></td><td></td></tr>`}
+      ${sdc==='def'?`<tr><td><div class="step-num">IV</div></td>
+        <td><div class="step-desc">Spacing outside l<sub>o</sub> zone — §18.7.5.5</div>
+          <div class="step-formula">s ≤ min(6d<sub>bl</sub>=${fmtD(6*dbl)}, 150 mm) = ${fmtD(s_out_lo)}</div>
+        </td><td style="text-align:right"><span class="step-val" style="color:var(--text-dim);font-size:.78rem">Info only</span></td></tr>`:''}
+    </table>`}
+  </div>`:``}
   <div class="print-disclaimer">⚠ For educational and preliminary design purposes only. Verify with a licensed structural engineer.</div>
   <div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span><span>ACI 318-25 Column Shear &nbsp;·&nbsp; ${U.tag}</span></div>`;
 
