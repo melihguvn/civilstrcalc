@@ -918,11 +918,17 @@ function cbCalc() {
     h += '<div class="report-warn" style="background:var(--bg2);border-color:var(--border);color:var(--text-mid)"><span>&#9432;</span><div>Non-composite analysis: &phi;M<sub>n</sub> based on steel section only. No stud layout computed.</div></div>';
   }
 
-  // ── Composite Section Properties (beginning of report, like other modules) ─
+  // ── SVG diagrams first ────────────────────────────────────────────────────
   var uI = isUS ? ' in&#x2074;' : ' cm&#x2074;';
   var uF = isUS ? ' kip' : ' kN';
   var uL = isUS ? ' in' : ' mm';
   function row2(lbl, val) { return '<tr><td>' + lbl + '</td><td>' + val + '</td></tr>'; }
+  h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual, using_double) + '</div>';
+  if (eta_in > 0 && N_half > 0) {
+    h += cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ribs_half, isUS);
+  }
+
+  // ── Composite Section Properties ──────────────────────────────────────────
   h += '<div class="rpt-sec"><div class="rpt-sec-title">Composite Section Properties</div>'
      + '<table class="inp-tbl"><tbody>'
      + row2('Effective slab width b<sub>eff</sub>', fmt(beff, isUS?1:0) + uL)
@@ -941,9 +947,6 @@ function cbCalc() {
      + row2('I<sub>eff</sub> (lower bound &sect;C-I3)', fmt(isUS?Ieff:Ieff/1e4, 0) + uI)
      + row2('I<sub>eff</sub> / I<sub>s</sub>', fmt(Ieff/Is, 2))
      + '</tbody></table></div>';
-
-  // Cross-section SVG
-  h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual, using_double) + '</div>';
 
   // ── Construction Stage report section ─────────────────────────────────────
   var flex_c_cls  = DCR_flex_c  <= 0.85 ? 'ok' : (DCR_flex_c  <= 1.0 ? 'warn' : 'err');
@@ -1229,29 +1232,44 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
   // Bottom flange
   svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
 
-  // ── Shear studs (center 2 ribs, clamped within flange) ──────────────────────
+  // ── Shear studs (ribs closest to beam center that lie within flange) ─────────
   var stud_h = hr_px * 0.72;
   var stud_r = Math.max(2.5, hr_px * 0.10);
   var bx1_fl = bx0 + bf_px;
-  for (var si = 0; si < 2; si++) {
-    var ri = Math.floor(N_RIBS / 2) - 1 + si;  // ribs 2 and 3 for N_RIBS=6
-    var rib_cx_s = slx + ri * rib_pitch + rib_top_w / 2;
-    var stud_cx_s = Math.max(bx0 + stud_r + 1, Math.min(bx1_fl - stud_r - 1, rib_cx_s));
+  var rib_dc = [];
+  for (var ri_b = 0; ri_b < N_RIBS; ri_b++) {
+    rib_dc.push({ rc: slx + ri_b * rib_pitch + rib_top_w / 2 });
+  }
+  rib_dc.sort(function(a,b){ return Math.abs(a.rc-SEC_CX) - Math.abs(b.rc-SEC_CX); });
+  var rshown = 0;
+  for (var ri_i = 0; ri_i < rib_dc.length && rshown < 2; ri_i++) {
+    var rc = rib_dc[ri_i].rc;
+    if (rc < bx0 + stud_r || rc > bx1_fl - stud_r) continue;
+    rshown++;
     if (dbl_row) {
       var gap_s = Math.max(stud_r * 3.5, 7);
-      var c1 = stud_cx_s - gap_s / 2, c2 = stud_cx_s + gap_s / 2;
-      if (c1 - stud_r >= bx0 && c1 + stud_r <= bx1_fl) {
+      var c1 = rc - gap_s/2, c2 = rc + gap_s/2;
+      var ok1 = (c1 >= bx0 + stud_r), ok2 = (c2 <= bx1_fl - stud_r);
+      if (ok1) {
         svg += '<rect x="'+f(c1-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
         svg += '<ellipse cx="'+f(c1)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
       }
-      if (c2 - stud_r >= bx0 && c2 + stud_r <= bx1_fl) {
+      if (ok2) {
         svg += '<rect x="'+f(c2-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
         svg += '<ellipse cx="'+f(c2)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
       }
-    } else if (stud_cx_s - stud_r >= bx0 && stud_cx_s + stud_r <= bx1_fl) {
-      svg += '<rect x="'+f(stud_cx_s-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-      svg += '<ellipse cx="'+f(stud_cx_s)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+      if (!ok1 && !ok2) {
+        svg += '<rect x="'+f(rc-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+        svg += '<ellipse cx="'+f(rc)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+      }
+    } else {
+      svg += '<rect x="'+f(rc-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+      svg += '<ellipse cx="'+f(rc)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
     }
+  }
+  if (rshown === 0 && eta_actual > 0) {
+    svg += '<rect x="'+f(SEC_CX-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+    svg += '<ellipse cx="'+f(SEC_CX)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
   }
 
   // ── Dimension lines (right side) ─────────────────────────────────────────────
@@ -1290,6 +1308,85 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
 
   svg += '</svg>';
   return svg;
+}
+
+// ── Plan view (top view, stud layout along span) ──────────────────────────────
+function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ribs_half, isUS) {
+  var VW = 380, VH = 74;
+  var ML = 26, MR = 26;
+  var beam_px = VW - ML - MR;   // 328px total span
+  var half_px = beam_px / 2;    // 164px per half
+  var flg_h = 26;               // flange visual height
+  var cy = 38;                  // centre y of beam
+  var fy1 = cy - flg_h/2, fy2 = cy + flg_h/2;
+  var pitch_px = half_px / N_half;
+  var stud_r = Math.min(5.5, Math.max(2, pitch_px * 0.3));
+  var f = function(v){ return (+v).toFixed(1); };
+
+  var svg = '<svg viewBox="0 0 '+VW+' '+VH+'" xmlns="http://www.w3.org/2000/svg"'
+           +' style="width:100%;max-width:'+VW+'px;display:block;">';
+  svg += '<defs>'
+       + '<linearGradient id="cb-plnflg" x1="0" y1="0" x2="0" y2="1">'
+       + '<stop offset="0%" stop-color="#d2dce8"/><stop offset="100%" stop-color="#b6c4d0"/>'
+       + '</linearGradient>'
+       + '</defs>';
+
+  // Beam flange rectangle (plan)
+  svg += '<rect x="'+ML+'" y="'+fy1+'" width="'+beam_px+'" height="'+flg_h
+       + '" fill="url(#cb-plnflg)" stroke="#3a5a70" stroke-width="1.2"/>';
+
+  // Midspan dashed line
+  var mx = ML + half_px;
+  svg += '<line x1="'+mx+'" y1="'+(fy1-8)+'" x2="'+mx+'" y2="'+(fy2+8)
+       + '" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.3"/>';
+
+  // Support triangles
+  svg += '<polygon points="'+ML+','+fy2+' '+(ML-6)+','+(fy2+11)+' '+(ML+6)+','+(fy2+11)+'" fill="currentColor" opacity="0.22"/>';
+  var rx2 = ML + beam_px;
+  svg += '<polygon points="'+rx2+','+fy2+' '+(rx2-6)+','+(fy2+11)+' '+(rx2+6)+','+(fy2+11)+'" fill="currentColor" opacity="0.22"/>';
+
+  // Studs
+  var off_y = Math.max(stud_r * 1.4, flg_h * 0.22);
+  for (var half = 0; half < 2; half++) {
+    for (var si2 = 0; si2 < N_half; si2++) {
+      var sx = half === 0 ? ML + (si2+0.5)*pitch_px : ML + beam_px - (si2+0.5)*pitch_px;
+      var is_dbl = using_double && si2 < ribs_with_2;
+      if (is_dbl) {
+        svg += '<circle cx="'+f(sx)+'" cy="'+f(cy-off_y)+'" r="'+f(stud_r)+'" fill="#1a3050" opacity="0.85"/>';
+        svg += '<circle cx="'+f(sx)+'" cy="'+f(cy+off_y)+'" r="'+f(stud_r)+'" fill="#1a3050" opacity="0.85"/>';
+      } else {
+        svg += '<circle cx="'+f(sx)+'" cy="'+f(cy)+'" r="'+f(stud_r)+'" fill="#1a3050" opacity="0.85"/>';
+      }
+    }
+  }
+
+  // Spacing annotation (above, first gap — only if pitch wide enough to read)
+  var tcol2 = 'font-family="sans-serif" fill="currentColor" opacity="0.58"';
+  if (pitch_px >= 10 && N_half >= 2) {
+    var s1x = ML + 0.5*pitch_px, s2x = ML + 1.5*pitch_px;
+    var ay = fy1 - 7;
+    svg += '<line x1="'+f(s1x)+'" y1="'+f(ay)+'" x2="'+f(s2x)+'" y2="'+f(ay)
+         + '" stroke="currentColor" stroke-width="0.9" opacity="0.42"/>';
+    svg += '<line x1="'+f(s1x)+'" y1="'+f(ay-3)+'" x2="'+f(s1x)+'" y2="'+f(ay+3)
+         + '" stroke="currentColor" stroke-width="0.9" opacity="0.42"/>';
+    svg += '<line x1="'+f(s2x)+'" y1="'+f(ay-3)+'" x2="'+f(s2x)+'" y2="'+f(ay+3)
+         + '" stroke="currentColor" stroke-width="0.9" opacity="0.42"/>';
+    var sp_lbl = (isUS ? stud_spacing_val.toFixed(1)+' in' : Math.round(stud_spacing_val)+' mm') + ' c/c';
+    svg += '<text x="'+f((s1x+s2x)/2)+'" y="'+f(ay-5)+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'+sp_lbl+'</text>';
+  }
+
+  // L/2 label
+  svg += '<text x="'+f(mx)+'" y="'+(fy1-15)+'" text-anchor="middle" font-size="8" '+tcol2+'>L/2</text>';
+
+  // Per-half count labels (below supports)
+  var bl = fy2 + 13;
+  svg += '<text x="'+f(ML+half_px/2)+'" y="'+bl+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'
+       + N_half+' studs</text>';
+  svg += '<text x="'+f(ML+beam_px-half_px/2)+'" y="'+bl+'" text-anchor="middle" font-size="8.5" '+tcol2+'>'
+       + N_half+' studs</text>';
+
+  svg += '</svg>';
+  return '<div style="margin-top:-6px;padding:0 0 2px;">' + svg + '</div>';
 }
 
 // ── Initialize ────────────────────────────────────────────────────────────────
