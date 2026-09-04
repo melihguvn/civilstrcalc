@@ -796,6 +796,8 @@ function cbCalc() {
   var N_ribs_half  = Math.floor(half_span / deck_pitch);
   var N_max        = N_ribs_half * max_per_rib;
   var stud_ok      = eta_in === 0 || N_half <= N_max;
+  var ribs_with_2  = (double_row && N_half > N_ribs_half) ? Math.min(N_half - N_ribs_half, N_ribs_half) : 0;
+  var using_double = ribs_with_2 > 0;
   var eta_actual   = eta_in === 0 ? 0 : Math.min((N_half * Qn) / SQn_full, 1.0);
   var stud_spacing_val = N_half > 0 ? half_span / N_half : 0;
 
@@ -941,7 +943,7 @@ function cbCalc() {
      + '</tbody></table></div>';
 
   // Cross-section SVG
-  h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual) + '</div>';
+  h += '<div class="cb-svg-wrap">' + cbDrawSVG(d, bf, tf, tw, hr, tc, beff, isUS, eta_actual, using_double) + '</div>';
 
   // ── Construction Stage report section ─────────────────────────────────────
   var flex_c_cls  = DCR_flex_c  <= 0.85 ? 'ok' : (DCR_flex_c  <= 1.0 ? 'warn' : 'err');
@@ -1008,12 +1010,26 @@ function cbCalc() {
 
   // ── Stud layout ──────────────────────────────────────────────────────────
   if (eta_in > 0) {
+    var layout_str, layout_badge = '';
+    if (!stud_ok) {
+      layout_str = '<span class="checks-dcr-err">Exceeds max (' + N_max + ') — FAIL</span>';
+    } else if (using_double) {
+      var r1 = N_ribs_half - ribs_with_2;
+      layout_str = ribs_with_2 + (ribs_with_2>1?' ribs':' rib') + ' &times; 2 studs'
+                 + (r1 > 0 ? ' + ' + r1 + (r1>1?' ribs':' rib') + ' &times; 1 stud' : '');
+      layout_badge = ' &nbsp;<span style="background:var(--accent);color:#fff;font-size:.60rem;font-weight:700;letter-spacing:.07em;padding:1px 7px;border-radius:3px;vertical-align:middle;">DOUBLE ROW</span>';
+    } else {
+      layout_str = N_half + (N_half===1?' stud':' studs') + ' in ' + Math.min(N_half,N_ribs_half) + ' ribs &mdash; single row';
+    }
     h += '<div class="rpt-sec"><div class="rpt-sec-title">Shear Stud Layout</div>'
-       + '<table class="stud-tbl"><thead><tr><th>Zone</th><th>Count</th><th>Spacing</th></tr></thead><tbody>'
-       + '<tr><td>Each half-span (0 to L/2)</td><td>'+N_half+'</td><td>'+(N_half>0?fmt(stud_spacing_val,isUS?1:0)+uL+' c/c':'—')+'</td></tr>'
-       + '<tr><td>Total full span</td><td>'+(N_half*2)+'</td><td>—</td></tr>'
+       + '<table class="stud-tbl"><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>'
+       + '<tr><td>Layout</td><td>' + layout_str + layout_badge + '</td></tr>'
+       + '<tr><td>Half-span count (0 &rarr; L/2)</td><td>' + N_half + '</td></tr>'
+       + '<tr><td>Total count (full span)</td><td>' + (N_half*2) + '</td></tr>'
+       + '<tr><td>Avg. longitudinal spacing</td><td>' + (N_half>0 ? fmt(stud_spacing_val,isUS?1:0)+uL+' c/c' : '&mdash;') + '</td></tr>'
+       + '<tr><td>Ribs per half-span</td><td>' + N_ribs_half + '</td></tr>'
+       + '<tr><td>Max studs per rib</td><td>' + max_per_rib + ' &nbsp;<span style="font-size:.70rem;color:var(--text-dim)">(' + (double_row ? 'double-row permitted: w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&ge;1.5, b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&ge;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm') : 'single-row only: ' + (!rib_allows2 ? 'w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&lt;1.5' : 'b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&lt;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm'))) + ')</span></td></tr>'
        + '</tbody></table>'
-       + '<div style="font-size:.72rem;color:var(--text-dim);padding:4px 0;font-family:var(--sans);">Uniform layout &nbsp;&middot;&nbsp; Ribs/half: '+N_ribs_half+' &nbsp;&middot;&nbsp; Max/rib: '+max_per_rib+(double_row?' (double row: w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+', b<sub>f</sub>='+fmt(bf,isUS?2:0)+(isUS?' in':' mm')+' &ge; '+fmt(bf_min_2studs,isUS?2:0)+(isUS?' in':' mm')+')':' (single row'+(bf_allows2?' rib w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+'<1.5':' b<sub>f</sub>='+fmt(bf,isUS?2:0)+(isUS?' in':' mm')+'<'+fmt(bf_min_2studs,isUS?2:0)+(isUS?' in':' mm'))+')')+' (w<sub>r</sub>/h<sub>r</sub>='+fmt(wr_hr_ratio,2)+')</div>'
        + '</div>';
   }
 
@@ -1137,7 +1153,7 @@ function cbCalc() {
 }
 
 // ── SVG cross-section diagram ─────────────────────────────────────────────────
-function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual) {
+function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
   var VW = 380, VH = 240;
   // Geometry: left margin=46(dim lines), section area width=240, right labels=94
   var SEC_X0 = 46, SEC_W = 240, SEC_CX = SEC_X0 + SEC_W / 2;
@@ -1213,15 +1229,29 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual) {
   // Bottom flange
   svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
 
-  // ── Shear studs (center 2 ribs) ───────────────────────────────────────────────
-  var stud_rib = Math.floor(N_RIBS / 2);
+  // ── Shear studs (center 2 ribs, clamped within flange) ──────────────────────
+  var stud_h = hr_px * 0.72;
+  var stud_r = Math.max(2.5, hr_px * 0.10);
+  var bx1_fl = bx0 + bf_px;
   for (var si = 0; si < 2; si++) {
-    var srib_x = slx + (stud_rib + si - 0.5) * rib_pitch;
-    var stud_cx2 = srib_x + rib_top_w * 0.5;
-    var stud_h = hr_px * 0.72;
-    var stud_r = Math.max(2.5, hr_px * 0.10);
-    svg += '<rect x="'+f(stud_cx2-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-    svg += '<ellipse cx="'+f(stud_cx2)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+    var ri = Math.floor(N_RIBS / 2) - 1 + si;  // ribs 2 and 3 for N_RIBS=6
+    var rib_cx_s = slx + ri * rib_pitch + rib_top_w / 2;
+    var stud_cx_s = Math.max(bx0 + stud_r + 1, Math.min(bx1_fl - stud_r - 1, rib_cx_s));
+    if (dbl_row) {
+      var gap_s = Math.max(stud_r * 3.5, 7);
+      var c1 = stud_cx_s - gap_s / 2, c2 = stud_cx_s + gap_s / 2;
+      if (c1 - stud_r >= bx0 && c1 + stud_r <= bx1_fl) {
+        svg += '<rect x="'+f(c1-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+        svg += '<ellipse cx="'+f(c1)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+      }
+      if (c2 - stud_r >= bx0 && c2 + stud_r <= bx1_fl) {
+        svg += '<rect x="'+f(c2-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+        svg += '<ellipse cx="'+f(c2)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+      }
+    } else if (stud_cx_s - stud_r >= bx0 && stud_cx_s + stud_r <= bx1_fl) {
+      svg += '<rect x="'+f(stud_cx_s-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
+      svg += '<ellipse cx="'+f(stud_cx_s)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+    }
   }
 
   // ── Dimension lines (right side) ─────────────────────────────────────────────
