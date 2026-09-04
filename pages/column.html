@@ -3579,7 +3579,10 @@ function calcShCol_aci() {
   const s_lim_tie   = 48*dt;
   const s_lim_sec   = Math.min(bw, h);
   const s_tie_max   = Math.min(s_lim_long, s_lim_tie, s_lim_sec);
-  const s_shear_lim = Vs_req > 0.33*Math.sqrt(fc)*govBw*govD ? govD/4 : govD/2;
+  // Table 9.7.6.2.2: shear-based spacing + absolute caps (600 mm / 300 mm)
+  const s_shear_lim = Vs_req > 0.33*Math.sqrt(fc)*govBw*govD
+    ? Math.min(govD/4, 300)
+    : Math.min(govD/2, 600);
   const s_max_ctrl  = Math.min(s_tie_max, s_shear_lim);
 
   const st  = dcr <= 1.0 ? 'ok' : 'err';
@@ -3604,6 +3607,7 @@ function calcShCol_aci() {
     <div class="ph-date">${date}<br><span style="font-size:.55rem;color:#aab;">CivilStrCalc.com</span></div>
   </div>
   ${!vsOk?`<div class="report-warn"><span>⚠️</span><div><b>V<sub>s</sub> exceeds V<sub>s,max</sub> in ${govDir.toUpperCase()}-dir.</b> Increase section size (§22.5.1.2).</div></div>`:''}
+  ${Nu<0?`<div class="report-warn"><span>⚠️</span><div><b>Tensile axial force N<sub>u</sub> = ${fmtV(Nu)}.</b> ACI 318-25 §22.5.5.1 Table row (a) uses N<sub>u</sub> = 0 for tension — V<sub>c</sub> may be unconservative. Consider using §22.5.7.1 or setting N<sub>u</sub> = 0 manually.</div></div>`:''}
   <div class="rpt-sec">
     <div class="rpt-sec-title">Input Summary</div>
     <table class="inp-tbl">
@@ -3722,12 +3726,20 @@ function calcShCol_ec2() {
   const Asw_x = nlx * Ab;
   const Asw_y = isCirc_ec2 ? Asw_x : nly * Ab;
 
-  const sigma_cp = Math.min(NEd/Ac, 0.2*fcd);
+  // VRdc uses σcp capped at 0.2·fcd per EC2 §6.2.2(1)
+  const sigma_cp_act = NEd / Ac;                          // actual compressive stress (N/mm²)
+  const sigma_cp     = Math.min(sigma_cp_act, 0.2*fcd);  // capped value for VRdc only
   const CRdc = 0.12;
   const k1   = 0.15;
   const tanT = 1 / cotT;
   const nu1  = 0.6 * (1 - fck/250);
-  const alpha_cw = Math.min(1 + sigma_cp/fcd, 2.5);
+  // α_cw piecewise per EC2 §6.2.3(3) — uses actual (uncapped) σcp
+  let alpha_cw;
+  if      (sigma_cp_act <= 0)              alpha_cw = 1;
+  else if (sigma_cp_act <= 0.25*fcd)       alpha_cw = 1 + sigma_cp_act/fcd;
+  else if (sigma_cp_act <= 0.5*fcd)        alpha_cw = 1.25;
+  else if (sigma_cp_act <= fcd)            alpha_cw = 2.5 * (1 - sigma_cp_act/fcd);
+  else                                     alpha_cw = 0;
 
   // Helper: compute VRdc and VRds capacity for a given bw_i, d_i, Asw_i
   const _ec2Cap = (bw_i, d_i, Asw_i) => {
@@ -3928,7 +3940,7 @@ function calcShCol_ec2() {
       ${NEd > 0 ? `<tr><td style="width:32px;padding-right:8px"><div class="step-num">N</div></td><td><div class="step-desc">Normalised axial force ν<sub>d</sub> = N<sub>Ed</sub> / (A<sub>c</sub> × f<sub>cd</sub>)</div><div class="step-formula">= ${nedDisp} / (${acDisp} × ${fcdDisp}) = ${nud.toFixed(3)} ${confRequired ? '&gt; 0.3 → <b>confinement ties required (§9.5.3)</b>' : '≤ 0.3 — standard ties'}</div></td><td style="width:170px;text-align:right"><span class="step-val ${nud>nud_limit?'err':nud>0.3?'':'ok'}">${nud.toFixed(3)}</span></td></tr>` : ''}
       <tr><td style="width:32px;padding-right:8px"><div class="step-num">1</div></td><td><div class="step-desc">Size factor k = 1 + √(200/d<sub>x</sub>) ≤ 2.0 &nbsp;·&nbsp; v<sub>min</sub></div></td><td style="width:170px;text-align:right"><span class="step-val">${k.toFixed(3)}${k>=2.0?' (cap 2.0)':''} · ${fmtS(vmin)}</span></td></tr>
       <tr><td><div class="step-num">2</div></td><td><div class="step-desc">V<sub>Rd,c,x</sub> — §6.2.2</div><div class="step-formula">max([C<sub>Rd,c</sub>·k·(100ρf<sub>ck</sub>)<sup>⅓</sup>+k₁σ<sub>cp</sub>]·b·d<sub>x</sub> = ${fmtF(VRdc_a)}, &nbsp; [v<sub>min</sub>+k₁σ<sub>cp</sub>]·b·d<sub>x</sub> = ${fmtF(VRdc_b)})</div></td><td style="text-align:right"><span class="step-val hl">${fmtF(VRdc)}</span></td></tr>
-      <tr><td><div class="step-num">3</div></td><td><div class="step-desc">α<sub>cw</sub> · ν<sub>1</sub> · z<sub>x</sub> = 0.9d<sub>x</sub> — §6.2.3</div><div class="step-formula">α<sub>cw</sub>=${alpha_cw.toFixed(3)} · ν<sub>1</sub>=${nu1.toFixed(3)} · z<sub>x</sub>=${fmtD(z)} · n<sub>x</sub>=${nlx}</div></td><td style="text-align:right"><span class="step-val">${fmtF(capX.VRdmax)} (max) · ${fmtF(capX.VRds)} (s)</span></td></tr>
+      <tr><td><div class="step-num">3</div></td><td><div class="step-desc">V<sub>Rd,max,x</sub> &amp; V<sub>Rd,s,x</sub> — §6.2.3 &nbsp; α<sub>cw</sub>=${alpha_cw.toFixed(3)} (σ<sub>cp</sub>=${fmtS(sigma_cp_act)} ${sigma_cp_act<=0?'≤0→1':sigma_cp_act<=0.25*fcd?'≤0.25fcd→1+σ/fcd':sigma_cp_act<=0.5*fcd?'≤0.5fcd→1.25':sigma_cp_act<=fcd?'≤fcd→2.5(1-σ/fcd)':'>'}) · ν<sub>1</sub>=${nu1.toFixed(3)} · z<sub>x</sub>=${fmtD(z)}</div></td><td style="text-align:right"><span class="step-val">${fmtF(capX.VRdmax)} (max) · ${fmtF(capX.VRds)} (s)</span></td></tr>
       <tr><td><div class="step-num">4</div></td><td><div class="step-desc">V<sub>Rd,x</sub> &nbsp;·&nbsp; D/C<sub>x</sub> = V<sub>Ed,x</sub>/V<sub>Rd,x</sub></div></td><td style="text-align:right"><span class="step-val hl">${fmtF(VRd_x)}</span> <span class="step-check ${dcr_x<=1?'chk-ok':'chk-err'}">${dcr_x.toFixed(3)} ${dcr_x<=1?'✓':'✗'}</span></td></tr>
       ${!isCirc_ec2?`<tr><td><div class="step-num">5</div></td><td><div class="step-desc">V<sub>Rd,c,y</sub> (h×d<sub>y</sub>) &nbsp;·&nbsp; V<sub>Rd,y</sub></div><div class="step-formula">d<sub>y</sub>=${fmtD(d_y)}, k=${capY.k.toFixed(3)}, VRdc=${fmtF(capY.VRdc)}, VRds=${fmtF(capY.VRds)}</div></td><td style="text-align:right"><span class="step-val hl">${fmtF(VRd_y)}</span> <span class="step-check ${dcr_y<=1?'chk-ok':'chk-err'}">${dcr_y.toFixed(3)} ${dcr_y<=1?'✓':'✗'}</span></td></tr>`:''}
       <tr><td><div class="step-num">${isCirc_ec2?5:6}</div></td><td><div class="step-desc">Governing D/C = max(D/C<sub>x</sub>${isCirc_ec2?'':', D/C<sub>y</sub>'})</div></td><td style="text-align:right"><span class="step-val ${st==='ok'?'ok':'err'}">${dcr.toFixed(3)}</span> <span class="step-check ${st==='ok'?'chk-ok':'chk-err'}">${st==='ok'?'ADEQUATE':'INADEQUATE'}</span></td></tr>
