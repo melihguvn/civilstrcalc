@@ -1258,58 +1258,46 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
 
   var svg = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="display:block;width:100%;max-height:260px;" aria-label="Composite beam cross-section">';
 
-  // ── Defs ─────────────────────────────────────────────────────────────────────
-  svg += '<defs>'
-       + '<pattern id="cbconc" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45 0 0)">'
-       + '<line x1="0" y1="0" x2="0" y2="10" stroke="#5a80a8" stroke-width="1" opacity="0.35"/></pattern>'
-       + '<linearGradient id="steelF" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#3a5f90"/><stop offset="100%" stop-color="#1d3a5e"/></linearGradient>'
-       + '<linearGradient id="steelW" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#2a4f7a"/><stop offset="100%" stop-color="#1d3a5e"/></linearGradient>'
-       + '</defs>';
-
-  // ── Concrete slab ─────────────────────────────────────────────────────────────
+  // ── Geometry helpers ──────────────────────────────────────────────────────
   var slx = SEC_CX - slab_px / 2, slx2 = SEC_CX + slab_px / 2;
-  svg += '<rect x="'+f(slx)+'" y="'+f(yS)+'" width="'+f(slab_px)+'" height="'+f(tc_px)+'" fill="#c8dced" stroke="#4a7090" stroke-width="1"/>';
-  svg += '<rect x="'+f(slx)+'" y="'+f(yS)+'" width="'+f(slab_px)+'" height="'+f(tc_px)+'" fill="url(#cbconc)"/>';
-
-  // ── Concrete in deck valleys (between ribs) ───────────────────────────────────
+  var bx0 = SEC_CX - bf_px / 2, bx1_fl = bx0 + bf_px;
   var N_RIBS = 6;
   var rib_pitch = slab_px / N_RIBS;
-  var rib_top_w = rib_pitch * 0.52;   // rib occupies 52% of pitch at top
-  var rib_bot_w = rib_pitch * 0.30;   // narrower at bottom
-  var valley_w  = rib_pitch - rib_top_w;  // concrete valley width
-  for (var i = 0; i < N_RIBS - 1; i++) {
-    var vx = slx + i * rib_pitch + rib_top_w;
-    svg += '<rect x="'+f(vx)+'" y="'+f(yD)+'" width="'+f(valley_w)+'" height="'+f(hr_px)+'" fill="#c8dced" opacity="0.75"/>';
-    svg += '<rect x="'+f(vx)+'" y="'+f(yD)+'" width="'+f(valley_w)+'" height="'+f(hr_px)+'" fill="url(#cbconc)"/>';
-  }
-  // Slab-deck junction line
-  svg += '<line x1="'+f(slx)+'" y1="'+f(yD)+'" x2="'+f(slx2)+'" y2="'+f(yD)+'" stroke="#3a5a70" stroke-width="1.5"/>';
+  var rib_top_w = rib_pitch * 0.52;
+  var rib_bot_w = rib_pitch * 0.30;
 
-  // ── Metal deck ribs (trapezoidal) ─────────────────────────────────────────────
+  // ── Concrete slab (clean white rect) ─────────────────────────────────────
+  svg += '<rect x="'+f(slx)+'" y="'+f(yS)+'" width="'+f(slab_px)+'" height="'+f(tc_px)+'" fill="#f6f6f6" stroke="#888" stroke-width="1"/>';
+
+  // ── Deck zone: valley fill then outlined rib trapezoids ──────────────────
+  // Light fill for concrete in valleys
+  svg += '<rect x="'+f(slx)+'" y="'+f(yD)+'" width="'+f(slab_px)+'" height="'+f(hr_px)+'" fill="#f0f0f0" stroke="none"/>';
   for (var i = 0; i < N_RIBS; i++) {
-    var rx = slx + i * rib_pitch;
-    var t0 = rx, t1 = rx + rib_top_w;
-    var b0 = rx + (rib_top_w - rib_bot_w) / 2;
-    var b1 = b0 + rib_bot_w;
-    svg += '<polygon points="'+f(t0)+','+f(yD)+' '+f(t1)+','+f(yD)+' '+f(b1)+','+f(yB)+' '+f(b0)+','+f(yB)+'" fill="#687888" stroke="#3a4858" stroke-width="0.8"/>';
-    // Highlight crease on rib
-    svg += '<line x1="'+f((t0+t1)/2)+'" y1="'+f(yD)+'" x2="'+f((b0+b1)/2)+'" y2="'+f(yB)+'" stroke="#8090a0" stroke-width="0.5" opacity="0.5"/>';
+    var rx_i = slx + i * rib_pitch;
+    var t0 = rx_i, t1 = rx_i + rib_top_w;
+    var b0 = rx_i + (rib_top_w - rib_bot_w) / 2, b1 = b0 + rib_bot_w;
+    svg += '<polygon points="'+f(t0)+','+f(yD)+' '+f(t1)+','+f(yD)+' '+f(b1)+','+f(yB)+' '+f(b0)+','+f(yB)+'" fill="#d8d8d8" stroke="#666" stroke-width="1"/>';
+  }
+  // Deck boundary lines
+  svg += '<line x1="'+f(slx)+'" y1="'+f(yD)+'" x2="'+f(slx2)+'" y2="'+f(yD)+'" stroke="#888" stroke-width="1.2"/>';
+  svg += '<line x1="'+f(slx)+'" y1="'+f(yB)+'" x2="'+f(slx2)+'" y2="'+f(yB)+'" stroke="#888" stroke-width="0.8"/>';
+
+  // ── Steel I-section (solid dark red, engineering drawing style) ───────────
+  var sF = '#8B1515', sSt = '#5a0808';
+  svg += '<rect x="'+f(bx0)+'" y="'+f(yB)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="'+sF+'" stroke="'+sSt+'" stroke-width="1"/>';
+  svg += '<rect x="'+f(SEC_CX-tw_px/2)+'" y="'+f(yB+tf_px)+'" width="'+f(tw_px)+'" height="'+f(d_px-2*tf_px)+'" fill="'+sF+'" stroke="'+sSt+'" stroke-width="0.7"/>';
+  svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="'+sF+'" stroke="'+sSt+'" stroke-width="1"/>';
+
+  // ── Shear studs (gray cylinders with flat head) ───────────────────────────
+  var stud_h  = hr_px * 0.82 + tc_px * 0.22;   // through deck, slightly into slab
+  var stud_sw = Math.max(3, hr_px * 0.14);       // shaft width
+  var stud_hr = Math.max(4, stud_sw * 1.8);      // head half-width
+
+  function drawStud(cx) {
+    svg += '<rect x="'+f(cx-stud_sw/2)+'" y="'+f(yB-stud_h)+'" width="'+f(stud_sw)+'" height="'+f(stud_h)+'" fill="#888" rx="'+f(stud_sw*0.35)+'" stroke="#555" stroke-width="0.5"/>';
+    svg += '<ellipse cx="'+f(cx)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_hr)+'" ry="'+f(stud_hr*0.42)+'" fill="#b0b0b0" stroke="#666" stroke-width="0.6"/>';
   }
 
-  // ── Steel I-section ───────────────────────────────────────────────────────────
-  var bx0 = SEC_CX - bf_px / 2;
-  // Top flange
-  svg += '<rect x="'+f(bx0)+'" y="'+f(yB)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
-  // Web
-  svg += '<rect x="'+f(SEC_CX-tw_px/2)+'" y="'+f(yB+tf_px)+'" width="'+f(tw_px)+'" height="'+f(d_px-2*tf_px)+'" fill="url(#steelW)" stroke="#0f2035" stroke-width="0.6"/>';
-  // Bottom flange
-  svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
-
-  // ── Shear studs (valley centers closest to beam center that lie within flange) ──
-  var stud_h = hr_px * 0.72;
-  var stud_r = Math.max(2.5, hr_px * 0.10);
-  var bx1_fl = bx0 + bf_px;
-  // Valleys are between ribs — N_RIBS-1 valleys total
   var valley_cxs = [];
   for (var vi = 0; vi < N_RIBS - 1; vi++) {
     valley_cxs.push({ vc: slx + vi * rib_pitch + (rib_pitch + rib_top_w) / 2 });
@@ -1318,33 +1306,21 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
   var rshown = 0;
   for (var ri_i = 0; ri_i < valley_cxs.length && rshown < 2; ri_i++) {
     var rc = valley_cxs[ri_i].vc;
-    if (rc < bx0 + stud_r || rc > bx1_fl - stud_r) continue;
+    if (rc < bx0 + stud_hr || rc > bx1_fl - stud_hr) continue;
     rshown++;
     if (dbl_row) {
-      var gap_s = Math.max(stud_r * 3.5, 7);
+      var gap_s = Math.max(stud_hr * 2.4, 9);
       var c1 = rc - gap_s/2, c2 = rc + gap_s/2;
-      var ok1 = (c1 >= bx0 + stud_r), ok2 = (c2 <= bx1_fl - stud_r);
-      if (ok1) {
-        svg += '<rect x="'+f(c1-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-        svg += '<ellipse cx="'+f(c1)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
-      }
-      if (ok2) {
-        svg += '<rect x="'+f(c2-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-        svg += '<ellipse cx="'+f(c2)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
-      }
-      if (!ok1 && !ok2) {
-        svg += '<rect x="'+f(rc-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-        svg += '<ellipse cx="'+f(rc)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
-      }
+      var ok1 = (c1 >= bx0 + stud_hr), ok2 = (c2 <= bx1_fl - stud_hr);
+      if (ok1 && ok2) { drawStud(c1); drawStud(c2); }
+      else if (ok1)   { drawStud(c1); }
+      else if (ok2)   { drawStud(c2); }
+      else            { drawStud(rc); }
     } else {
-      svg += '<rect x="'+f(rc-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-      svg += '<ellipse cx="'+f(rc)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
+      drawStud(rc);
     }
   }
-  if (rshown === 0 && eta_actual > 0) {
-    svg += '<rect x="'+f(SEC_CX-1)+'" y="'+f(yB-stud_h)+'" width="2" height="'+f(stud_h)+'" fill="#0f2035" rx="1"/>';
-    svg += '<ellipse cx="'+f(SEC_CX)+'" cy="'+f(yB-stud_h)+'" rx="'+f(stud_r)+'" ry="'+f(stud_r*0.65)+'" fill="#1a3050"/>';
-  }
+  if (rshown === 0 && eta_actual > 0) { drawStud(SEC_CX); }
 
   // ── Dimension lines (right side) ─────────────────────────────────────────────
   var DX = slx2 + 10;  // x-position of dimension line
