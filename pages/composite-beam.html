@@ -640,6 +640,28 @@ function cbMnFull(d, bf, tf, tw, Fy, Cc, Cs, fpc, beff, hr, tc, isUS) {
   return (Fy * Zpna + Cc * 1000 * (d_c + py)) / 1e6;
 }
 
+// ── Partial composite moment capacity §I3.2a (exact PSD) ─────────────────────
+// SQn: partial shear transferred (kips US / kN SI); Cs: full steel force (same units)
+// Returns Mn in kip·ft (US) or kN·m (SI)
+function cbMnPartial(d, bf, tf, tw, Fy, Cs, SQn, fpc, beff, hr, tc, isUS) {
+  var C_conc = SQn;
+  var a      = isUS ? C_conc / (0.85 * fpc * beff) : C_conc * 1000 / (0.85 * fpc * beff);
+  var d_c    = hr + tc - a / 2;           // concrete centroid above steel top
+  var Fcomp  = (Cs - C_conc) / 2;        // steel compression above PNA
+  var sc     = isUS ? 1 : 1 / 1000;      // Fy·A (N) → kN for SI
+  var Ff     = Fy * bf * tf * sc;
+  var Fw     = Fy * tw * (d - 2 * tf) * sc;
+  var Fy_b   = Fy * bf * sc;
+  var Fy_w   = Fy * tw * sc;
+  var py;
+  if      (Fcomp <= Ff)       py = Fcomp / Fy_b;
+  else if (Fcomp <= Ff + Fw)  py = tf + (Fcomp - Ff) / Fy_w;
+  else                        py = Math.min(d, d - tf + (Fcomp - Ff - Fw) / Fy_b);
+  var Zpna = cbZpna(d, bf, tf, tw, py);
+  if (isUS) return (Fy * Zpna + C_conc * (d_c + py)) / 12;
+  return (Fy * Zpna + C_conc * 1000 * (d_c + py)) / 1e6;
+}
+
 // ── Main calculation ──────────────────────────────────────────────────────────
 function cbCalc() {
   var isUS = cbUnit === 'us';
@@ -822,9 +844,13 @@ function cbCalc() {
     : Cs * 1000 / (0.85 * fpc * beff);
   var Mn_full  = cbMnFull(d, bf, tf, tw, Fy, Cc, Cs, fpc, beff, hr, tc, isUS);
   var phi_Mp_s = phi * Mn_steel;
-  var phi_Mn   = eta_in === 0
-    ? phi_Mp_s
-    : phi_Mp_s + Math.sqrt(eta_actual) * (phi * Mn_full - phi_Mp_s);
+  var phi_Mn;
+  if (eta_in === 0) {
+    phi_Mn = phi_Mp_s;
+  } else {
+    var SQn_partial = Math.min(N_half * Qn, SQn_full);
+    phi_Mn = phi * cbMnPartial(d, bf, tf, tw, Fy, Cs, SQn_partial, fpc, beff, hr, tc, isUS);
+  }
   var DCR_flex = Mu / phi_Mn;
   var flex_ok  = DCR_flex <= 1.0;
 
@@ -1159,7 +1185,7 @@ function cbCalc() {
     : 'F<sub>y</sub>A<sub>g</sub> &gt; 0.85f\'A<sub>c</sub> &rarr; PNA in steel; plastic stress distribution';
   h += step('K','Flexural Capacity &sect;I3.2',
     pnaStr+'<br>&phi;M<sub>p,s</sub> = '+fmt(phi_Mp_s,1)+uM+' &nbsp;|&nbsp; &phi;M<sub>n,100%</sub> = '+fmt(phi*Mn_full,1)+uM
-    +'<br>&phi;M<sub>n</sub> = &phi;M<sub>p,s</sub> + &radic;&eta;&middot;(&phi;M<sub>n,100%</sub>&minus;&phi;M<sub>p,s</sub>)',
+    +'<br>&Sigma;Q<sub>n</sub> = '+fmt(N_half * Qn,1)+(isUS?' kips':' kN')+' &rarr; exact plastic stress distribution (PSD) &sect;I3.2a',
     fmt(phi_Mn,1)+uM);
 
   h += step('L','Shear Capacity &sect;I4.2 + &sect;G2.1',
