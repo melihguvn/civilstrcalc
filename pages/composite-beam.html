@@ -1273,18 +1273,19 @@ function cbDrawSVG(d_sec, bf, tf, tw, hr, tc, beff, isUS, eta_actual, dbl_row) {
   // Bottom flange
   svg += '<rect x="'+f(bx0)+'" y="'+f(yE-tf_px)+'" width="'+f(bf_px)+'" height="'+f(tf_px)+'" fill="url(#steelF)" stroke="#0f2035" stroke-width="0.9"/>';
 
-  // ── Shear studs (ribs closest to beam center that lie within flange) ─────────
+  // ── Shear studs (valley centers closest to beam center that lie within flange) ──
   var stud_h = hr_px * 0.72;
   var stud_r = Math.max(2.5, hr_px * 0.10);
   var bx1_fl = bx0 + bf_px;
-  var rib_dc = [];
-  for (var ri_b = 0; ri_b < N_RIBS; ri_b++) {
-    rib_dc.push({ rc: slx + ri_b * rib_pitch + rib_top_w / 2 });
+  // Valleys are between ribs — N_RIBS-1 valleys total
+  var valley_cxs = [];
+  for (var vi = 0; vi < N_RIBS - 1; vi++) {
+    valley_cxs.push({ vc: slx + vi * rib_pitch + (rib_pitch + rib_top_w) / 2 });
   }
-  rib_dc.sort(function(a,b){ return Math.abs(a.rc-SEC_CX) - Math.abs(b.rc-SEC_CX); });
+  valley_cxs.sort(function(a,b){ return Math.abs(a.vc-SEC_CX) - Math.abs(b.vc-SEC_CX); });
   var rshown = 0;
-  for (var ri_i = 0; ri_i < rib_dc.length && rshown < 2; ri_i++) {
-    var rc = rib_dc[ri_i].rc;
+  for (var ri_i = 0; ri_i < valley_cxs.length && rshown < 2; ri_i++) {
+    var rc = valley_cxs[ri_i].vc;
     if (rc < bx0 + stud_r || rc > bx1_fl - stud_r) continue;
     rshown++;
     if (dbl_row) {
