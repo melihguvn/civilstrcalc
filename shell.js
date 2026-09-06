@@ -42,6 +42,11 @@
     if (/\/punching-shear-guide(\.html)?$/.test(P))           return 'art-punch';
     if (/\/concrete-cover-durability(\.html)?$/.test(P))      return 'art-cover';
     if (/\/seismic-design-basics(\.html)?$/.test(P))          return 'art-seismic';
+    if (/\/articles\/us-standards\/1-introduction(\.html)?$/.test(P))     return 'us-intro';
+    if (/\/articles\/us-standards\/2-material-selection(\.html)?$/.test(P)) return 'us-materials';
+    if (/\/articles\/us-standards\/3-load-determination(\.html)?$/.test(P)) return 'us-loads';
+    if (/\/articles\/us-standards\/4-seismic-design(\.html)?$/.test(P))   return 'us-seismic';
+    if (/\/articles\/us-standards\/5-load-combinations(\.html)?$/.test(P)) return 'us-loadcomb';
     return '';
   }
   var ap = _ap();
@@ -204,6 +209,12 @@
       sub('/pages/lateral-torsional-buckling-guide', 'Lateral-Torsional Buckling', 'art-ltb') +
       sub('/pages/how-to-size-a-steel-column',       'How to Size a Steel Column', 'art-steelcol')) +
     item('/pages/seismic-design-basics', ic.guide, 'Seismic Design Basics', 'art-seismic') +
+    grp(ic.guide, 'US Standards', ['us-intro','us-materials','us-loads','us-seismic','us-loadcomb'],
+      sub('/pages/articles/us-standards/1-introduction.html',     '1. Introduction',      'us-intro') +
+      sub('/pages/articles/us-standards/2-material-selection.html','2. Material Selection','us-materials') +
+      sub('/pages/articles/us-standards/3-load-determination.html','3. Load Determination','us-loads') +
+      sub('/pages/articles/us-standards/4-seismic-design.html',   '4. Seismic Design',    'us-seismic') +
+      sub('/pages/articles/us-standards/5-load-combinations.html', '5. Load Combinations','us-loadcomb')) +
     '<div class="sh-foot">ACI 318-25 · Eurocode 2 · IS 456<br>AISC 360-22 · TS 500 · TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
@@ -252,5 +263,5 @@
   // ── Inject into body ─────────────────────────────────────────────────────────
   document.body.prepend(ham, ov, hdr, side);
   // Hide article-page standalone topbar — shell header replaces it
-  document.querySelectorAll('.sg-topbar').forEach(function(el){ el.style.display='none'; });
+  document.querySelectorAll('.sg-topbar,.art-topbar').forEach(function(el){ el.style.display='none'; });
 })();
