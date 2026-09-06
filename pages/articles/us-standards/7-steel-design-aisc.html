@@ -103,12 +103,15 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     <h3>Contents</h3>
     <ol>
       <li><a href="#s1">Pre-Sizing Rules of Thumb</a></li>
-      <li><a href="#s2">Beam Flexure — Chapter F</a></li>
-      <li><a href="#s3">Lateral-Torsional Buckling (LTB)</a></li>
-      <li><a href="#s4">Shear Design — Chapter G</a></li>
-      <li><a href="#s5">Column Compression — Chapter E</a></li>
-      <li><a href="#s6">Combined Loading — Chapter H</a></li>
-      <li><a href="#s7">Composite Beam Design — Chapter I</a></li>
+      <li><a href="#s2">Tension Members — Chapter D</a></li>
+      <li><a href="#s3">Beam Flexure — Chapter F</a></li>
+      <li><a href="#s4">Lateral-Torsional Buckling (LTB)</a></li>
+      <li><a href="#s5">Shear Design — Chapter G</a></li>
+      <li><a href="#s6">Column Compression — Chapter E</a></li>
+      <li><a href="#s7">Combined Loading — Chapter H</a></li>
+      <li><a href="#s8">Composite Beam Design — Chapter I</a></li>
+      <li><a href="#s9">Connections — Chapter J</a></li>
+      <li><a href="#s10">Seismic Steel — AISC 341-22</a></li>
     </ol>
   </div>
 
@@ -145,9 +148,88 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
 
   <!-- S2 -->
   <div class="art-section" id="s2">
-    <h2>2. Beam Flexure — Chapter F</h2>
+    <h2>2. Tension Members — Chapter D</h2>
 
-    <h3>2.1 Compact Section — Full Yielding (F2)</h3>
+    <h3>2.1 Limit States (D2)</h3>
+    <p>Tension members are governed by the lesser of two limit states. Both must be checked:</p>
+    <div class="formula-block">
+      <div class="f-label">Tensile yielding on gross section (φ<sub>t</sub> = 0.90)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">φ<sub>t</sub>P<sub>n</sub> = 0.90 · F<sub>y</sub> · A<sub>g</sub></span>
+        <span class="f-unit">kips</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">φ<sub>t</sub>P<sub>n</sub> = 0.90 · F<sub>y</sub> · A<sub>g</sub></span>
+        <span class="f-unit">kN</span>
+      </div>
+    </div>
+    <div class="formula-block">
+      <div class="f-label">Tensile rupture on effective net section (φ<sub>t</sub> = 0.75)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">φ<sub>t</sub>P<sub>n</sub> = 0.75 · F<sub>u</sub> · A<sub>e</sub></span>
+        <span class="f-unit">kips</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">φ<sub>t</sub>P<sub>n</sub> = 0.75 · F<sub>u</sub> · A<sub>e</sub></span>
+        <span class="f-unit">kN</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Where</span>
+        <span class="f-expr">A<sub>e</sub> = A<sub>n</sub> · U &nbsp;(effective net area)</span>
+      </div>
+    </div>
+
+    <h3>2.2 Shear Lag Factor U (Table D3.1)</h3>
+    <p>U accounts for the fact that not all elements of a connected member carry load uniformly (shear lag). A<sub>n</sub> = gross area minus hole areas (for bolt holes, add 1/16 in / 2 mm to hole diameter).</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Connection condition</th><th>U</th></tr></thead>
+        <tbody>
+          <tr><td>All elements connected directly (plates, HSS welded all around)</td><td>1.00</td></tr>
+          <tr><td>W-shape, flanges connected, b<sub>f</sub> ≥ 2d/3, ≥ 3 fasteners per line</td><td>0.90</td></tr>
+          <tr><td>W-shape, flanges connected, b<sub>f</sub> &lt; 2d/3, ≥ 3 fasteners per line</td><td>0.85</td></tr>
+          <tr><td>W-shape, web only connected, ≥ 4 fasteners per line</td><td>0.70</td></tr>
+          <tr><td>Single angle, ≥ 4 fasteners per line</td><td>0.80</td></tr>
+          <tr><td>Single angle, 2–3 fasteners per line</td><td>0.60</td></tr>
+          <tr><td>Alternative (any case): U = 1 − x̄/L</td><td>x̄ = eccentricity of connection; L = length</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>2.3 Block Shear (ACI §J4.3)</h3>
+    <p>Block shear is a combined failure mode involving shear on one plane and tension on a perpendicular plane, governing gusset plates and coped beam ends:</p>
+    <div class="formula-block">
+      <div class="f-label">Block shear strength (φ = 0.75)</div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">R<sub>n</sub> = 0.60F<sub>u</sub>·A<sub>nv</sub> + U<sub>bs</sub>·F<sub>u</sub>·A<sub>nt</sub></span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Not to exceed</span>
+        <span class="f-expr">R<sub>n</sub> ≤ 0.60F<sub>y</sub>·A<sub>gv</sub> + U<sub>bs</sub>·F<sub>u</sub>·A<sub>nt</sub></span>
+      </div>
+    </div>
+    <p>A<sub>nv</sub> = net area in shear; A<sub>nt</sub> = net area in tension; A<sub>gv</sub> = gross area in shear. U<sub>bs</sub> = 1.0 for uniform tension stress; 0.5 for non-uniform.</p>
+
+    <h3>2.4 Slenderness Limit</h3>
+    <div class="callout">
+      AISC recommends L/r ≤ 300 for tension members to limit vibration, sag, and handling damage. This is a practical guideline, not a code limit — slender rods in bracing systems may be exempt.
+    </div>
+
+    <div class="art-cta-row">
+      <a class="art-cta" href="../../steel-axial.html" target="content-frame">Try Axial Strength Calculator →</a>
+    </div>
+  </div>
+
+  <!-- S3 -->
+  <div class="art-section" id="s3">
+    <h2>3. Beam Flexure — Chapter F</h2>
+
+    <h3>3.1 Compact Section — Full Yielding (F2)</h3>
     <p>When the section is compact and bracing is adequate (L<sub>b</sub> ≤ L<sub>p</sub>), the beam reaches full plastic moment:</p>
     <div class="formula-block">
       <div class="f-label">Plastic moment capacity</div>
@@ -163,7 +245,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>2.2 Compactness Classification</h3>
+    <h3>3.2 Compactness Classification</h3>
     <div class="art-table-wrap">
       <table class="art-tbl">
         <thead><tr><th>Element</th><th>Compact limit λ<sub>p</sub></th><th>Non-compact limit λ<sub>r</sub></th></tr></thead>
@@ -180,12 +262,12 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
   </div>
 
-  <!-- S3 -->
-  <div class="art-section" id="s3">
-    <h2>3. Lateral-Torsional Buckling (LTB)</h2>
+  <!-- S8 -->
+  <div class="art-section" id="s4">
+    <h2>4. Lateral-Torsional Buckling (LTB)</h2>
     <p>LTB reduces flexural capacity when the compression flange is inadequately braced. Three zones are defined by the unbraced length L<sub>b</sub>.</p>
 
-    <h3>3.1 Limiting Unbraced Lengths</h3>
+    <h3>4.1 Limiting Unbraced Lengths</h3>
     <div class="formula-block">
       <div class="f-label">Plastic limit L<sub>p</sub></div>
       <div class="formula-row">
@@ -220,7 +302,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>3.2 LTB Zones</h3>
+    <h3>4.2 LTB Zones</h3>
     <div class="formula-block">
       <div class="f-label">LTB capacity by zone</div>
       <div class="ltb-row">
@@ -237,7 +319,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>3.3 Moment Gradient Factor C<sub>b</sub></h3>
+    <h3>4.3 Moment Gradient Factor C<sub>b</sub></h3>
     <div class="formula-block">
       <div class="f-label">C<sub>b</sub> for non-uniform moment</div>
       <div class="formula-row">
@@ -252,11 +334,11 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
   </div>
 
-  <!-- S4 -->
-  <div class="art-section" id="s4">
-    <h2>4. Shear Design — Chapter G</h2>
+  <!-- S8 -->
+  <div class="art-section" id="s5">
+    <h2>5. Shear Design — Chapter G</h2>
 
-    <h3>4.1 Shear Strength for Most W-Shapes (G2.1)</h3>
+    <h3>5.1 Shear Strength for Most W-Shapes (G2.1)</h3>
     <p>For hot-rolled I-shapes with h/t<sub>w</sub> ≤ 2.24√(E/F<sub>y</sub>), the shear strength reduction factor C<sub>v1</sub> = 1.0 and φ = 1.00:</p>
     <div class="formula-block">
       <div class="f-label">Web shear strength (most W shapes)</div>
@@ -277,11 +359,11 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
   </div>
 
-  <!-- S5 -->
-  <div class="art-section" id="s5">
-    <h2>5. Column Compression — Chapter E</h2>
+  <!-- S8 -->
+  <div class="art-section" id="s6">
+    <h2>6. Column Compression — Chapter E</h2>
 
-    <h3>5.1 Euler Elastic Buckling Stress F<sub>e</sub> (E3)</h3>
+    <h3>6.1 Euler Elastic Buckling Stress F<sub>e</sub> (E3)</h3>
     <div class="formula-block">
       <div class="f-label">Elastic buckling stress</div>
       <div class="formula-row">
@@ -290,7 +372,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>5.2 Critical Stress F<sub>cr</sub></h3>
+    <h3>6.2 Critical Stress F<sub>cr</sub></h3>
     <div class="formula-block">
       <div class="f-label">Inelastic buckling — KL/r ≤ 4.71√(E/F<sub>y</sub>)</div>
       <div class="formula-row">
@@ -320,7 +402,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
     <p>Slenderness limit: KL/r ≤ 200 (recommended). For A992: 4.71√(E/F<sub>y</sub>) = 4.71√(29000/50) = 113 (US) / 4.71√(200000/345) = 113 (SI).</p>
 
-    <h3>5.3 Effective Length Factor K</h3>
+    <h3>6.3 Effective Length Factor K</h3>
     <div class="art-table-wrap">
       <table class="art-tbl">
         <thead><tr><th>End conditions</th><th>K (theoretical)</th><th>K (recommended)</th></tr></thead>
@@ -340,9 +422,9 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
   </div>
 
-  <!-- S6 -->
-  <div class="art-section" id="s6">
-    <h2>6. Combined Loading — Chapter H</h2>
+  <!-- S8 -->
+  <div class="art-section" id="s7">
+    <h2>7. Combined Loading — Chapter H</h2>
     <p>Members subject to combined axial and bending loads are checked with the biaxial interaction equations of H1-1:</p>
 
     <div class="formula-block">
@@ -377,12 +459,12 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
   </div>
 
-  <!-- S7 -->
-  <div class="art-section" id="s7">
-    <h2>7. Composite Beam Design — Chapter I</h2>
+  <!-- S8 -->
+  <div class="art-section" id="s8">
+    <h2>8. Composite Beam Design — Chapter I</h2>
     <p>Composite beams combine a steel section with a concrete slab via steel headed stud anchors, increasing flexural stiffness and strength.</p>
 
-    <h3>7.1 Effective Slab Width</h3>
+    <h3>8.1 Effective Slab Width</h3>
     <div class="formula-block">
       <div class="f-label">Effective width b<sub>eff</sub></div>
       <div class="formula-row">
@@ -391,7 +473,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>7.2 Full Composite Action</h3>
+    <h3>8.2 Full Composite Action</h3>
     <div class="formula-block">
       <div class="f-label">Full composite strength (minimum of concrete/steel)</div>
       <div class="formula-row">
@@ -406,7 +488,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </div>
     </div>
 
-    <h3>7.3 Stud Shear Anchor Strength Q<sub>n</sub> (I8.2a)</h3>
+    <h3>8.3 Stud Shear Anchor Strength Q<sub>n</sub> (I8.2a)</h3>
     <div class="formula-block">
       <div class="f-label">Nominal strength per stud</div>
       <div class="formula-row">
@@ -432,7 +514,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </table>
     </div>
 
-    <h3>7.4 Effective Moment of Inertia (Partial Composite)</h3>
+    <h3>8.4 Effective Moment of Inertia (Partial Composite)</h3>
     <div class="formula-block">
       <div class="f-label">Lower-bound moment of inertia</div>
       <div class="formula-row">
@@ -452,6 +534,145 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
 
     <div class="art-cta-row">
       <a class="art-cta" href="../../composite-beam.html" target="content-frame">Try Composite Beam Calculator →</a>
+    </div>
+  </div>
+
+  <!-- S9 -->
+  <div class="art-section" id="s9">
+    <h2>9. Connections — Chapter J</h2>
+    <p>Connection design covers welds, bolts, and the plates, gussets, and angles that transmit forces between members.</p>
+
+    <h3>9.1 Bolt Types and Strengths</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Bolt grade</th><th>F<sub>nt</sub> (tension)</th><th>F<sub>nv</sub> (shear, N-T/X)</th><th>Common use</th></tr></thead>
+        <tbody>
+          <tr><td>A307</td><td>45 ksi / 310 MPa</td><td>27 / 27 ksi</td><td>Light connections</td></tr>
+          <tr><td>A325 / F1852</td><td>90 ksi / 620 MPa</td><td>54 / 68 ksi</td><td>Standard structural</td></tr>
+          <tr><td>A490 / F2280</td><td>113 ksi / 780 MPa</td><td>68 / 84 ksi</td><td>High-strength</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>N = threads included in shear plane (lower F<sub>nv</sub>); X = threads excluded. φ = 0.75 for tension and shear.</p>
+
+    <h3>9.2 Bearing-Type Connection (J3.6–J3.7)</h3>
+    <div class="formula-block">
+      <div class="f-label">Shear per bolt (φ = 0.75)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">φR<sub>n</sub> = 0.75 · F<sub>nv</sub> · A<sub>b</sub></span>
+        <span class="f-unit">kips/bolt</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">φR<sub>n</sub> = 0.75 · F<sub>nv</sub> · A<sub>b</sub></span>
+        <span class="f-unit">kN/bolt</span>
+      </div>
+    </div>
+    <div class="formula-block">
+      <div class="f-label">Bearing strength on connected material (φ = 0.75)</div>
+      <div class="formula-row">
+        <span class="f-sys">Standard holes, deformation considered</span>
+        <span class="f-expr">φR<sub>n</sub> = 0.75 · 2.4 · F<sub>u</sub> · d · t</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Long-slotted, deformation not considered</span>
+        <span class="f-expr">φR<sub>n</sub> = 0.75 · 3.0 · F<sub>u</sub> · d · t</span>
+      </div>
+    </div>
+
+    <h3>9.3 Slip-Critical Connection (J3.8)</h3>
+    <p>Required when joint movement would impair function (dynamic loads, fatigue, joints with oversized holes). Slip resistance is a serviceability limit state.</p>
+    <div class="formula-block">
+      <div class="f-label">Design slip resistance (φ = 1.00 serviceability / 0.85 strength)</div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">φR<sub>n</sub> = φ · μ · D<sub>u</sub> · h<sub>f</sub> · T<sub>b</sub> · n<sub>s</sub></span>
+      </div>
+    </div>
+    <p>μ = mean slip coefficient (Class A: 0.35, Class B: 0.50); D<sub>u</sub> = 1.13; h<sub>f</sub> = 1.0 (no fillers); T<sub>b</sub> = bolt pretension from Table J3.1; n<sub>s</sub> = number of slip planes.</p>
+
+    <h3>9.4 Fillet Weld Strength (J2.4)</h3>
+    <div class="formula-block">
+      <div class="f-label">Weld shear capacity per unit length (φ = 0.75)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">φR<sub>n</sub>/L = 0.75 · 0.60 · F<sub>EXX</sub> · 0.707 · a</span>
+        <span class="f-unit">kips/in</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">φR<sub>n</sub>/L = 0.75 · 0.60 · F<sub>EXX</sub> · 0.707 · a</span>
+        <span class="f-unit">kN/mm</span>
+      </div>
+    </div>
+    <p>a = weld size (leg); effective throat = 0.707a. Common electrodes: E70XX (F<sub>EXX</sub> = 70 ksi / 482 MPa). Minimum weld size governs thin material; maximum weld size = t − 1/16 in (t − 2 mm) along edges ≥ 1/4 in (6 mm) thick.</p>
+
+    <div class="callout">
+      <strong>Combined tension + shear on bolts (J3.7):</strong> When a bolt carries both, use the reduced tension strength: F'<sub>nt</sub> = 1.3F<sub>nt</sub> − (F<sub>nt</sub>/φF<sub>nv</sub>)·f<sub>rv</sub> ≤ F<sub>nt</sub>, where f<sub>rv</sub> is the required shear stress.
+    </div>
+  </div>
+
+  <!-- S10 -->
+  <div class="art-section" id="s10">
+    <h2>10. Seismic Steel Design — AISC 341-22</h2>
+    <p>AISC 341-22 (Seismic Provisions for Structural Steel Buildings) supplements AISC 360-22 for Seismic Design Categories C–F. The system response modification factor R is from ASCE 7-22 Table 12.2-1.</p>
+
+    <h3>10.1 R Factor Summary (Common Systems)</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Seismic force-resisting system</th><th>R</th><th>C<sub>d</sub></th><th>Ω<sub>0</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Special Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td></tr>
+          <tr><td>Intermediate Moment Frame (IMF)</td><td>4.5</td><td>4</td><td>3</td></tr>
+          <tr><td>Ordinary Moment Frame (OMF)</td><td>3.5</td><td>3</td><td>3</td></tr>
+          <tr><td>Special Concentrically Braced Frame (SCBF)</td><td>6</td><td>5</td><td>2</td></tr>
+          <tr><td>Ordinary Concentrically Braced Frame (OCBF)</td><td>3.25</td><td>3.25</td><td>2</td></tr>
+          <tr><td>Eccentrically Braced Frame (EBF)</td><td>8</td><td>4</td><td>2</td></tr>
+          <tr><td>Special Plate Shear Wall (SPSW)</td><td>7</td><td>6</td><td>2.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>10.2 Special Moment Frame (SMF) — Chapter E</h3>
+    <p>SMF provides ductility through plastic hinging in beams away from columns (protected zones). Key requirements:</p>
+    <ul class="art-list">
+      <li><strong>Beam-to-column connections:</strong> Must be prequalified per AISC 358, or qualify via testing. Plastic hinge location moved away from column face (e.g., RBS — reduced beam section).</li>
+      <li><strong>Expected plastic moment:</strong> M<sub>pe</sub> = R<sub>y</sub> · F<sub>y</sub> · Z<sub>x</sub>, where R<sub>y</sub> = 1.1 for A992; 1.5 for A36.</li>
+      <li><strong>Strong column — weak beam:</strong> ΣM*<sub>pc</sub> / ΣM*<sub>pb</sub> ≥ 1.0, where M*<sub>pc</sub> and M*<sub>pb</sub> are projected onto the joint centerline accounting for axial load.</li>
+      <li><strong>Continuity plates</strong> (column web stiffeners) required when beam flanges deliver concentrated force exceeding column web/flange capacity.</li>
+      <li><strong>Panel zone shear:</strong> φR<sub>n</sub> = 0.60·F<sub>y</sub>·d<sub>c</sub>·t<sub>w</sub>·(1 + 3b<sub>cf</sub>·t<sub>cf</sub>² / (d<sub>b</sub>·d<sub>c</sub>·t<sub>w</sub>))</li>
+      <li><strong>Protected zone:</strong> No attachments by notching, drilling, or welding within the plastic hinge region.</li>
+    </ul>
+
+    <h3>10.3 Special Concentrically Braced Frame (SCBF) — Chapter F</h3>
+    <p>SCBF relies on both tension and compression braces for ductility. Post-buckling behavior must be accommodated:</p>
+    <ul class="art-list">
+      <li><strong>Width-to-thickness limits:</strong> All members must be highly ductile (seismically compact) per Table D1.1.</li>
+      <li><strong>Brace slenderness:</strong> KL/r ≤ 200 (preferred ≤ 4√(E/F<sub>y</sub>) ≈ 96 for A992).</li>
+      <li><strong>Brace-to-gusset:</strong> Gusset plate must accommodate out-of-plane brace rotation via 2t<sub>p</sub> offset from the brace work point.</li>
+      <li><strong>Required strength of columns and beams:</strong> Designed for the amplified seismic load using R<sub>y</sub>F<sub>y</sub>A<sub>g</sub> of braces (capacity design).</li>
+    </ul>
+
+    <h3>10.4 Eccentrically Braced Frame (EBF) Link — Chapter F</h3>
+    <p>The ductile "link" beam segment between brace connections is the designated yield element:</p>
+    <div class="formula-block">
+      <div class="f-label">Link classification by length e</div>
+      <div class="formula-row">
+        <span class="f-sys">Shear link</span>
+        <span class="f-expr">e ≤ 1.6M<sub>p</sub>/V<sub>p</sub></span>
+        <span class="f-unit">preferred for ductility</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Moment link</span>
+        <span class="f-expr">e ≥ 2.6M<sub>p</sub>/V<sub>p</sub></span>
+        <span class="f-unit">less common</span>
+      </div>
+    </div>
+    <p>V<sub>p</sub> = 0.6F<sub>y</sub>(d − 2t<sub>f</sub>)t<sub>w</sub>; M<sub>p</sub> = F<sub>y</sub>Z<sub>x</sub>. Link rotation angle γ<sub>p</sub> ≤ 0.08 rad (shear link) or 0.02 rad (moment link). Link stiffeners at each end; intermediate stiffeners for shear links with e ≤ 5d.</p>
+
+    <div class="callout">
+      <strong>Quality assurance (Chapter J):</strong> SDC C–F steel seismic systems require a quality assurance plan, including special inspection of welded connections, bolted joints, and protected-zone areas. Purchase verification of mill certificates is required.
     </div>
   </div>
 

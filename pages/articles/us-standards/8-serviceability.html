@@ -100,6 +100,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       <li><a href="#s5">Steel Beam Deflection — AISC §L3</a></li>
       <li><a href="#s6">Crack Width Control — ACI §24.3</a></li>
       <li><a href="#s7">Vibration Overview</a></li>
+      <li><a href="#s8">Ponding — AISC 360-22 App. 2</a></li>
     </ol>
   </div>
 
@@ -355,6 +356,77 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
 
     <div class="callout">
       <strong>Note:</strong> Full vibration design requires the combined beam-girder-slab system natural frequency and modal mass, best handled with specialized software (RAM, SAP2000 with DG11 module). The f<sub>n</sub> formula above is a quick first check only.
+    </div>
+  </div>
+
+  <!-- S8 -->
+  <div class="art-section" id="s8">
+    <h2>8. Ponding — AISC 360-22 Appendix 2</h2>
+    <p>Ponding is the accumulation of rainwater on flat or low-slope roofs (pitch &lt; ¼:12 = 1:48). As water accumulates, the roof deflects; deflection increases the water depth; this increases load — a potential runaway instability.</p>
+
+    <h3>8.1 When to Check</h3>
+    <ul class="art-list">
+      <li>Roof slope &lt; ¼:12 in any direction (AISC 360-22 App. 2, Commentary).</li>
+      <li>Interior bays where drainage cannot be confirmed positive.</li>
+      <li>Any bay where secondary (joist/purlin) or primary (girder/beam) member deflects significantly under full rain load (at least L/240 threshold is typical trigger).</li>
+    </ul>
+
+    <h3>8.2 Simplified Stability Check (App. 2, §A-2.2)</h3>
+    <p>The simplified approach uses two ponding coefficients for primary (p) and secondary (s) framing:</p>
+    <div class="formula-block">
+      <div class="f-label">Ponding flexibility coefficients</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">C<sub>p</sub> = 32L<sub>s</sub>L<sub>p</sub><sup>4</sup> / (10<sup>7</sup>I<sub>p</sub>)</span>
+        <span class="f-unit">L in ft, I in in⁴</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">C<sub>s</sub> = 32L<sub>s</sub><sup>4</sup>S / (10<sup>7</sup>I<sub>s</sub>)</span>
+        <span class="f-unit">L, S in ft, I in in⁴</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">C<sub>p</sub> = 5.20L<sub>s</sub>L<sub>p</sub><sup>4</sup> / (10<sup>6</sup>I<sub>p</sub>)</span>
+        <span class="f-unit">L in m, I in mm⁴</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">C<sub>s</sub> = 5.20L<sub>s</sub><sup>4</sup>S / (10<sup>6</sup>I<sub>s</sub>)</span>
+        <span class="f-unit">L, S in m, I in mm⁴</span>
+      </div>
+    </div>
+    <p>L<sub>p</sub> = primary member span; L<sub>s</sub> = secondary member span; S = secondary member spacing; I<sub>p</sub>, I<sub>s</sub> = moments of inertia of primary and secondary members.</p>
+
+    <div class="formula-block">
+      <div class="f-label">Stability criterion (must satisfy)</div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">C<sub>p</sub> + 0.9 · C<sub>s</sub> ≤ 0.25</span>
+      </div>
+    </div>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Condition</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td>C<sub>p</sub> + 0.9C<sub>s</sub> ≤ 0.25</td><td>Ponding stable — no further check needed</td></tr>
+          <tr><td>0.25 &lt; C<sub>p</sub> + 0.9C<sub>s</sub> ≤ 1.00</td><td>Potentially unstable — use more rigorous App. 2 method or stiffen members</td></tr>
+          <tr><td>C<sub>p</sub> + 0.9C<sub>s</sub> &gt; 1.00</td><td>Unstable — redesign required</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>8.3 Practical Measures</h3>
+    <ul class="art-list">
+      <li><strong>Primary drainage:</strong> Roof drains or scuppers sized per IPC/SMACNA; design for 100-year 1-hour rainfall intensity for the site.</li>
+      <li><strong>Secondary (overflow) drainage:</strong> Required by IBC §1611 when primary drainage could be blocked; overflow inlet set 2 in (50 mm) above primary.</li>
+      <li><strong>Camber:</strong> Cambering primary members to counteract dead load deflection reduces the initial water depth and improves C<sub>p</sub>.</li>
+      <li><strong>Member stiffness:</strong> Deeper sections (increasing I) are the most direct fix; adding intermediate supports reduces effective span.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Rain load R (ASCE 7-22 §8):</strong> The design rain load is R = 5.2(d<sub>s</sub> + d<sub>h</sub>) [psf / US] or 0.0098(d<sub>s</sub> + d<sub>h</sub>) [kPa / SI], where d<sub>s</sub> = static head at the secondary drain inlet (in/mm) and d<sub>h</sub> = hydraulic head at the secondary drain (typically 1 in / 25 mm). This load is applied to the AISC ponding check in addition to dead load.
     </div>
   </div>
 
