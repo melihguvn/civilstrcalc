@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serviceability Checks — Deflection &amp; Crack Width | CivilStrCalc</title>
+<meta name="description" content="Serviceability design guide: ACI 318-25 RC deflection limits, effective moment of inertia (Ie), long-term deflection (lambda factor), steel beam deflection per AISC §L3, crack width control (ACI §24.3), and vibration criteria.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/articles/us-standards/8-serviceability">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "name": "Serviceability Checks — Deflection and Crack Width",
+  "description": "ACI 318-25 deflection limits and effective moment of inertia, long-term deflection multipliers, AISC 360-22 steel beam deflection, ACI §24.3 crack width control, and vibration criteria per AISC DG11.",
+  "publisher": { "@type": "Organization", "name": "CivilStrCalc" },
+  "datePublished": "2026-09-06",
+  "inLanguage": "en"
+}
+</script>
+<link rel="stylesheet" href="../../../css/style.css">
+<style>
+body{background:#f4f6f8;font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:#2c3a4a;margin:0;padding:0;display:block;}
+.art-topbar{background:#1a2332;padding:11px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.art-topbar a{color:#7db9e8;font-size:.78rem;text-decoration:none;}.art-topbar a:hover{text-decoration:underline;}
+.art-topbar .sep{color:rgba(255,255,255,.28);font-size:.78rem;}
+.art-topbar .cur{color:rgba(255,255,255,.65);font-size:.78rem;}
+.art-wrap{max-width:960px;margin:0;padding:32px 32px 56px 28px;}
+.art-hdr{margin-bottom:24px;}
+.art-hdr .series-tag{display:inline-block;background:#e8f2fc;color:#1a6db5;border:1px solid #b8d0eb;border-radius:4px;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;margin-bottom:10px;}
+.art-hdr h1{font-size:1.5rem;font-weight:700;color:#1a2332;margin:0 0 10px;line-height:1.25;}
+.art-hdr .desc{font-size:.88rem;color:#475569;line-height:1.7;margin:0;}
+.art-toc{background:#f8fafc;border:1px solid #dde2e8;border-radius:8px;padding:16px 20px;margin-bottom:28px;}
+.art-toc h3{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#8898aa;margin:0 0 10px;}
+.art-toc ol{margin:0;padding-left:18px;}
+.art-toc li{font-size:.82rem;margin:5px 0;}
+.art-toc a{color:#1a6db5;text-decoration:none;}.art-toc a:hover{text-decoration:underline;}
+.art-section{margin-bottom:32px;scroll-margin-top:12px;}
+.art-section h2{font-size:1rem;font-weight:700;color:#1a2332;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid #1a6db5;}
+.art-section h3{font-size:.88rem;font-weight:600;color:#1a2332;margin:18px 0 8px;}
+.art-section p{font-size:.84rem;color:#475569;line-height:1.72;margin:8px 0;}
+.art-section ul,.art-section ol{font-size:.84rem;color:#475569;line-height:1.72;padding-left:20px;margin:8px 0;}
+.art-section li{margin:5px 0;}
+.art-table-wrap{overflow-x:auto;margin:12px 0;}
+table.art-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+table.art-tbl th{background:#1a2332;color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:.78rem;white-space:nowrap;}
+table.art-tbl td{padding:8px 12px;border-bottom:1px solid #dde2e8;color:#2c3a4a;vertical-align:top;line-height:1.5;}
+table.art-tbl tr:nth-child(even) td{background:#f8fafc;}
+table.art-tbl tr:hover td{background:#f0f5fb;}
+.formula-block{background:#f0f5fb;border-left:3px solid #1a6db5;border-radius:0 6px 6px 0;padding:14px 18px;margin:12px 0;}
+.formula-block .f-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#8898aa;margin-bottom:10px;}
+.formula-row{display:flex;gap:8px;align-items:baseline;margin:5px 0;flex-wrap:wrap;}
+.f-sys{font-size:.68rem;font-weight:700;background:#1a2332;color:#fff;border-radius:3px;padding:2px 6px;white-space:nowrap;flex-shrink:0;}
+.f-expr{font-size:.86rem;color:#1a2332;font-weight:500;flex:1;}
+.f-unit{background:#e8f2fc;color:#1a6db5;border:1px solid #b8d0eb;border-radius:4px;padding:2px 8px;font-size:.72rem;white-space:nowrap;margin-left:auto;}
+.callout{background:#e8f7ef;border-left:3px solid #1a8a5a;border-radius:0 6px 6px 0;padding:12px 16px;margin:12px 0;font-size:.83rem;color:#1a2332;line-height:1.65;}
+.callout-warn{background:#fef3e2;border-left:3px solid #d97706;border-radius:0 6px 6px 0;padding:12px 16px;margin:12px 0;font-size:.83rem;color:#1a2332;line-height:1.65;}
+.art-cta-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
+.art-cta{display:inline-flex;align-items:center;gap:6px;background:#1a6db5;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:.8rem;font-weight:600;transition:background .14s;}
+.art-cta:hover{background:#155d9e;}
+.art-cta.sec{background:#fff;color:#1a6db5;border:1px solid #b8d0eb;}.art-cta.sec:hover{background:#f0f5fb;}
+.xi-table td:nth-child(1){font-weight:700;color:#1a2332;}
+.art-series-nav{display:flex;justify-content:space-between;border-top:1px solid #dde2e8;padding-top:20px;margin-top:36px;gap:12px;}
+.art-nav-btn{display:flex;flex-direction:column;text-decoration:none;padding:12px 16px;border:1px solid #dde2e8;border-radius:8px;background:#fff;transition:all .14s;min-width:160px;}
+.art-nav-btn:hover{border-color:#1a6db5;background:#f0f5fb;}
+.art-nav-btn.next{align-items:flex-end;}
+.art-nav-btn .nav-dir{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#8898aa;margin-bottom:4px;}
+.art-nav-btn .nav-title{font-size:.82rem;font-weight:600;color:#1a6db5;}
+.art-disclaimer{background:#fef3e2;border:1px solid #fbd38d;border-radius:6px;padding:12px 16px;font-size:.77rem;color:#7c4a00;margin-top:28px;line-height:1.6;}
+@media(max-width:640px){.art-wrap{padding:20px 14px 40px;}.art-hdr h1{font-size:1.2rem;}.art-series-nav{flex-direction:column;}.art-nav-btn{width:100%;}.art-nav-btn.next{align-items:flex-start;}}
+</style>
+</head>
+<body>
+
+<div class="art-topbar">
+  <a href="../../home.html">CivilStrCalc</a>
+  <span class="sep">›</span>
+  <span class="cur">Articles</span>
+  <span class="sep">›</span>
+  <span class="cur">US Standards</span>
+  <span class="sep">›</span>
+  <span class="cur">8. Serviceability Checks</span>
+</div>
+
+<div class="art-wrap">
+
+  <div class="art-hdr">
+    <div class="series-tag">US Standards Series · Part 8 of 9</div>
+    <h1>Serviceability Checks — Deflection &amp; Crack Width</h1>
+    <p class="desc">Serviceability limit states are often the controlling design criterion for long-span members and sensitive occupancies. This article covers ACI 318-25 deflection limits, the effective moment of inertia method, long-term deflection multipliers, AISC 360-22 steel beam deflection, ACI §24.3 crack width control, and a vibration overview per AISC DG11. All formulas in US Customary and SI units.</p>
+  </div>
+
+  <div class="art-toc">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#s1">Why Serviceability Often Governs</a></li>
+      <li><a href="#s2">RC Deflection Limits — ACI Table 24.2.2</a></li>
+      <li><a href="#s3">Effective Moment of Inertia I<sub>e</sub></a></li>
+      <li><a href="#s4">Long-Term Deflection</a></li>
+      <li><a href="#s5">Steel Beam Deflection — AISC §L3</a></li>
+      <li><a href="#s6">Crack Width Control — ACI §24.3</a></li>
+      <li><a href="#s7">Vibration Overview</a></li>
+    </ol>
+  </div>
+
+  <!-- S1 -->
+  <div class="art-section" id="s1">
+    <h2>1. Why Serviceability Often Governs</h2>
+    <p>Strength checks ensure members do not fail. Serviceability checks ensure members perform acceptably under service conditions. Three phenomena commonly drive the design:</p>
+    <ul>
+      <li><strong>Excessive deflection:</strong> Long spans — especially those with span/depth ratios beyond L/16 for RC or L/20 for steel — frequently control under L/360 or L/240 deflection limits.</li>
+      <li><strong>Crack width:</strong> Exposed RC in humid or corrosive environments must limit crack widths to protect reinforcement from corrosion and to satisfy architectural appearance.</li>
+      <li><strong>Vibration:</strong> Lightweight long-span floors, open-plan offices, and healthcare facilities require floor natural frequency above threshold values.</li>
+    </ul>
+    <div class="callout">
+      In practice, serviceability controls the design of about 30–40% of RC beams and most long-span composite steel floors. Always check it — do not assume strength governs.
+    </div>
+  </div>
+
+  <!-- S2 -->
+  <div class="art-section" id="s2">
+    <h2>2. RC Deflection Limits — ACI Table 24.2.2</h2>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead>
+          <tr>
+            <th>Member and load condition</th>
+            <th>Deflection limit</th>
+            <th>US example (L=20ft)</th>
+            <th>SI example (L=6m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Flat roofs — live load only</td><td>L/180</td><td>1.33 in</td><td>33 mm</td></tr>
+          <tr><td>Floors — live load only</td><td>L/360</td><td>0.67 in</td><td>17 mm</td></tr>
+          <tr><td>Floors supporting non-structural elements not likely to be damaged</td><td>L/240 (total after elements attached)</td><td>1.00 in</td><td>25 mm</td></tr>
+          <tr><td>Floors supporting non-structural elements likely to be damaged</td><td>L/480 (LL + sustained) &amp; L/240 (total)</td><td>0.50 in &amp; 1.00 in</td><td>12.5 mm &amp; 25 mm</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Deflections are measured in inches (US) or mm (SI). "After elements attached" means deflection occurring after partitions or finishes are installed — typically the long-term component plus remaining live load.</p>
+
+    <h3>2.1 Minimum Thickness to Waive Deflection Check</h3>
+    <p>ACI provides minimum h values (Tables 7.3.1.1, 8.3.1.1) below which deflection calculations are required. These apply for members not supporting or attached to partitions likely to be damaged.</p>
+  </div>
+
+  <!-- S3 -->
+  <div class="art-section" id="s3">
+    <h2>3. Effective Moment of Inertia I<sub>e</sub></h2>
+    <p>Cracked RC sections have a reduced effective stiffness between the gross section (I<sub>g</sub>) and the cracked transformed section (I<sub>cr</sub>). ACI uses the Branson equation to interpolate:</p>
+
+    <div class="formula-block">
+      <div class="f-label">Branson effective moment of inertia (ACI §24.2.3)</div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">I<sub>e</sub> = (M<sub>cr</sub>/M<sub>a</sub>)³ · I<sub>g</sub> + [1 − (M<sub>cr</sub>/M<sub>a</sub>)³] · I<sub>cr</sub> ≤ I<sub>g</sub></span>
+      </div>
+    </div>
+
+    <div class="formula-block">
+      <div class="f-label">Cracking moment M<sub>cr</sub></div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">M<sub>cr</sub> = f<sub>r</sub> · I<sub>g</sub> / y<sub>t</sub></span>
+      </div>
+    </div>
+
+    <div class="formula-block">
+      <div class="f-label">Modulus of rupture f<sub>r</sub></div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">f<sub>r</sub> = 7.5 · λ · √f'<sub>c</sub></span>
+        <span class="f-unit">psi</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">f<sub>r</sub> = 0.62 · λ · √f'<sub>c</sub></span>
+        <span class="f-unit">MPa</span>
+      </div>
+    </div>
+
+    <p>M<sub>a</sub> = maximum service moment at which deflection is computed. y<sub>t</sub> = distance from neutral axis to tension face for the gross section. λ = 1.0 for normal-weight concrete.</p>
+
+    <div class="callout-warn">
+      For continuous members, ACI §24.2.3.6 requires I<sub>e</sub> to be calculated at midspan for positive moment regions and at the support for negative moment regions, then averaged.
+    </div>
+  </div>
+
+  <!-- S4 -->
+  <div class="art-section" id="s4">
+    <h2>4. Long-Term Deflection</h2>
+    <p>Creep and shrinkage cause additional long-term deflection under sustained loads. ACI uses a simple multiplier approach:</p>
+
+    <div class="formula-block">
+      <div class="f-label">Total long-term deflection</div>
+      <div class="formula-row">
+        <span class="f-sys">Both</span>
+        <span class="f-expr">Δ<sub>lt</sub> = λ<sub>Δ</sub> · Δ<sub>i</sub>(sustained)</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Where</span>
+        <span class="f-expr">λ<sub>Δ</sub> = ξ / (1 + 50ρ')</span>
+      </div>
+    </div>
+
+    <p>ρ' = compression steel ratio at midspan (A<sub>s</sub>'/bd). Additional compression steel reduces long-term deflection.</p>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl xi-table">
+        <thead><tr><th>Sustained load duration</th><th>ξ (time factor)</th></tr></thead>
+        <tbody>
+          <tr><td>3 months</td><td>1.0</td></tr>
+          <tr><td>6 months</td><td>1.2</td></tr>
+          <tr><td>12 months</td><td>1.4</td></tr>
+          <tr><td>5 years or more</td><td>2.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Total deflection to compare against limits = Δ<sub>i</sub>(LL) + λ<sub>Δ</sub> · Δ<sub>i</sub>(DL+sustained LL). The long-term portion (λ<sub>Δ</sub> · Δ<sub>i,sustained</sub>) is then compared against the post-installation limits.</p>
+
+    <div class="art-cta-row">
+      <a class="art-cta" href="../../beam.html" target="content-frame">Try RC Beam Calculator (deflection) →</a>
+    </div>
+  </div>
+
+  <!-- S5 -->
+  <div class="art-section" id="s5">
+    <h2>5. Steel Beam Deflection — AISC §L3</h2>
+    <p>AISC 360-22 does not prescribe specific deflection limits but defers to the applicable building code (typically IBC). Common practice follows AISC Design Guide recommendations:</p>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Load condition</th><th>Typical limit</th></tr></thead>
+        <tbody>
+          <tr><td>Live load, floors</td><td>L/360</td></tr>
+          <tr><td>Total load, floors</td><td>L/240</td></tr>
+          <tr><td>Live load, roof (not supporting ceiling)</td><td>L/240</td></tr>
+          <tr><td>Wind or seismic (drift)</td><td>H/400 – H/500</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-block">
+      <div class="f-label">Uniformly loaded beam deflection</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">δ = 5wL⁴ / (384EI)</span>
+        <span class="f-unit">w: kip/in, L: in, E: ksi, I: in⁴ → δ: in</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">δ = 5wL⁴ / (384EI)</span>
+        <span class="f-unit">w: kN/mm, L: mm, E: MPa, I: mm⁴ → δ: mm</span>
+      </div>
+    </div>
+
+    <p>For steel, E = 29,000 ksi (200,000 MPa). For composite beams under service loads, use I<sub>eff</sub> (partial composite) rather than I<sub>t</sub> (full composite).</p>
+
+    <div class="callout">
+      <strong>Pre-cambering:</strong> For long-span steel beams (&gt;30 ft / 9 m), specify camber equal to 75–80% of the dead load deflection. This offsets dead load sag so the member is nearly level under sustained load.
+    </div>
+
+    <div class="art-cta-row">
+      <a class="art-cta" href="../../steel-flexural.html" target="content-frame">Try Steel Flexural Calculator →</a>
+      <a class="art-cta sec" href="../../composite-beam.html" target="content-frame">Composite Beam Calculator →</a>
+    </div>
+  </div>
+
+  <!-- S6 -->
+  <div class="art-section" id="s6">
+    <h2>6. Crack Width Control — ACI §24.3</h2>
+    <p>ACI 318-25 controls crack width indirectly through maximum reinforcing bar spacing rather than by computing crack width explicitly. The approach targets an assumed service stress f<sub>s</sub> = 0.60f<sub>y</sub>:</p>
+
+    <div class="formula-block">
+      <div class="f-label">Maximum bar spacing (ACI §24.3.2)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">s ≤ 15(40,000/f<sub>s</sub>) − 2.5c<sub>c</sub></span>
+        <span class="f-unit">in, psi</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">s ≤ 12(40,000/f<sub>s</sub>)</span>
+        <span class="f-unit">not to exceed, in</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">s ≤ 380(280/f<sub>s</sub>) − 2.5c<sub>c</sub></span>
+        <span class="f-unit">mm, MPa</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">s ≤ 300(280/f<sub>s</sub>)</span>
+        <span class="f-unit">not to exceed, mm</span>
+      </div>
+    </div>
+
+    <p>f<sub>s</sub> = calculated stress in steel under service loads (may use 0.60f<sub>y</sub> = 36,000 psi / 252 MPa for Grade 60/420). c<sub>c</sub> = clear cover from the nearest bar face to the concrete surface, inches (mm).</p>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>f<sub>y</sub></th><th>f<sub>s</sub> = 0.60f<sub>y</sub></th><th>Max s (US, c<sub>c</sub>=1.5in)</th><th>Max s (SI, c<sub>c</sub>=40mm)</th></tr></thead>
+        <tbody>
+          <tr><td>60 ksi / 420 MPa</td><td>36 ksi / 252 MPa</td><td>12.8 in → 12 in governs</td><td>322 → 300 mm governs</td></tr>
+          <tr><td>80 ksi / 550 MPa</td><td>48 ksi / 336 MPa</td><td>8.75 in</td><td>218 mm</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout-warn">
+      <strong>Exposure classes:</strong> ACI does not increase limits for aggressive environments — instead, reduce cover or specify lower f<sub>s</sub> for structures exposed to deicing salts, marine environments, or corrosive conditions. Consider w/cm ratio, cover, and coating provisions (Ch.20).
+    </div>
+
+    <div class="art-cta-row">
+      <a class="art-cta" href="../../crack-width.html" target="content-frame">Try Crack Width Calculator →</a>
+    </div>
+  </div>
+
+  <!-- S7 -->
+  <div class="art-section" id="s7">
+    <h2>7. Vibration Overview</h2>
+    <p>Floor vibration is checked against human comfort criteria. The primary reference is AISC Design Guide 11 (Floor Vibrations due to Human Activity).</p>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Occupancy</th><th>Minimum f<sub>n</sub></th><th>Allowable a<sub>o</sub>/g</th></tr></thead>
+        <tbody>
+          <tr><td>Open offices, residences</td><td>4 Hz</td><td>0.5%</td></tr>
+          <tr><td>Busy offices, dining, malls</td><td>4 Hz</td><td>1.5%</td></tr>
+          <tr><td>Rhythmic activities (aerobics)</td><td>2× forcing frequency</td><td>4–7%</td></tr>
+          <tr><td>Healthcare, labs (sensitive)</td><td>8 Hz</td><td>0.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>f<sub>n</sub> = natural frequency of the floor panel (Hz); a<sub>o</sub>/g = peak acceleration as a fraction of gravity.</p>
+
+    <div class="formula-block">
+      <div class="f-label">Approximate natural frequency (simply-supported beam panel)</div>
+      <div class="formula-row">
+        <span class="f-sys">US</span>
+        <span class="f-expr">f<sub>n</sub> ≈ π/2 · √(g/Δ<sub>j</sub>) = 0.18/√Δ<sub>j</sub></span>
+        <span class="f-unit">Δ<sub>j</sub> in inches → f<sub>n</sub> in Hz</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">f<sub>n</sub> ≈ π/2 · √(9810/Δ<sub>j</sub>) = 15.76/√Δ<sub>j</sub></span>
+        <span class="f-unit">Δ<sub>j</sub> in mm → f<sub>n</sub> in Hz</span>
+      </div>
+    </div>
+
+    <p>Δ<sub>j</sub> = maximum midspan deflection of the beam under supported weight. For most office floors, fn ≥ 4 Hz limits steel beam spans to approximately 30–35 ft (9–10.5 m) without special measures.</p>
+
+    <div class="callout">
+      <strong>Note:</strong> Full vibration design requires the combined beam-girder-slab system natural frequency and modal mass, best handled with specialized software (RAM, SAP2000 with DG11 module). The f<sub>n</sub> formula above is a quick first check only.
+    </div>
+  </div>
+
+  <div class="art-disclaimer">
+    <strong>Disclaimer:</strong> This article summarizes ACI 318-25 §24.2, §24.3 and AISC 360-22 §L provisions for educational purposes. All serviceability checks must be verified by a licensed structural engineer using the full code text and project-specific loading conditions.
+  </div>
+
+  <div class="art-series-nav">
+    <a class="art-nav-btn" href="7-steel-design-aisc.html" target="_top">
+      <span class="nav-dir">← Previous</span>
+      <span class="nav-title">7. Steel Design (AISC 360-22)</span>
+    </a>
+    <a class="art-nav-btn next" href="9-retaining-wall-aci.html" target="_top">
+      <span class="nav-dir">Next →</span>
+      <span class="nav-title">9. Retaining Wall Design</span>
+    </a>
+  </div>
+
+</div><!-- .art-wrap -->
+
+<script src="../../../js/shell.js" defer></script>
+</body>
+</html>
