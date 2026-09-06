@@ -91,7 +91,7 @@
     '  background:#1f2d40;overflow-y:auto;z-index:1001;border-right:1px solid rgba(255,255,255,.06);',
     '  display:flex;flex-direction:column}',
     '@media(max-width:768px){.sh-side{top:0;transform:translateX(calc(-1*var(--sh-w)));',
-    '  transition:transform .25s ease}.sh-side.sh-open{transform:translateX(0)}}',
+    '  transition:transform .25s ease;z-index:1060}.sh-side.sh-open{transform:translateX(0)}}',
     /* sidebar elements */
     '.sh-sec{font-family:"IBM Plex Mono",monospace;font-size:.57rem;font-weight:500;',
     '  letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.24);padding:12px 16px 4px}',
