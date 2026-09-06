@@ -47,6 +47,10 @@
     if (/\/articles\/us-standards\/3-load-determination(\.html)?$/.test(P)) return 'us-loads';
     if (/\/articles\/us-standards\/4-seismic-design(\.html)?$/.test(P))   return 'us-seismic';
     if (/\/articles\/us-standards\/5-load-combinations(\.html)?$/.test(P)) return 'us-loadcomb';
+    if (/\/articles\/us-standards\/6-rc-design-aci(\.html)?$/.test(P))    return 'us-rcdesign';
+    if (/\/articles\/us-standards\/7-steel-design-aisc(\.html)?$/.test(P)) return 'us-steeldesign';
+    if (/\/articles\/us-standards\/8-serviceability(\.html)?$/.test(P))   return 'us-service';
+    if (/\/articles\/us-standards\/9-retaining-wall-aci(\.html)?$/.test(P)) return 'us-retwall';
     return '';
   }
   var ap = _ap();
@@ -209,12 +213,16 @@
       sub('/pages/lateral-torsional-buckling-guide', 'Lateral-Torsional Buckling', 'art-ltb') +
       sub('/pages/how-to-size-a-steel-column',       'How to Size a Steel Column', 'art-steelcol')) +
     item('/pages/seismic-design-basics', ic.guide, 'Seismic Design Basics', 'art-seismic') +
-    grp(ic.guide, 'US Standards', ['us-intro','us-materials','us-loads','us-seismic','us-loadcomb'],
+    grp(ic.guide, 'US Standards', ['us-intro','us-materials','us-loads','us-seismic','us-loadcomb','us-rcdesign','us-steeldesign','us-service','us-retwall'],
       sub('/pages/articles/us-standards/1-introduction.html',     '1. Introduction',      'us-intro') +
       sub('/pages/articles/us-standards/2-material-selection.html','2. Material Selection','us-materials') +
       sub('/pages/articles/us-standards/3-load-determination.html','3. Load Determination','us-loads') +
       sub('/pages/articles/us-standards/4-seismic-design.html',   '4. Seismic Design',    'us-seismic') +
-      sub('/pages/articles/us-standards/5-load-combinations.html', '5. Load Combinations','us-loadcomb')) +
+      sub('/pages/articles/us-standards/5-load-combinations.html', '5. Load Combinations','us-loadcomb') +
+      sub('/pages/articles/us-standards/6-rc-design-aci.html',    '6. RC Design (ACI 318-25)','us-rcdesign') +
+      sub('/pages/articles/us-standards/7-steel-design-aisc.html','7. Steel Design (AISC 360-22)','us-steeldesign') +
+      sub('/pages/articles/us-standards/8-serviceability.html',   '8. Serviceability Checks','us-service') +
+      sub('/pages/articles/us-standards/9-retaining-wall-aci.html','9. Retaining Wall Design','us-retwall')) +
     '<div class="sh-foot">ACI 318-25 · Eurocode 2 · IS 456<br>AISC 360-22 · TS 500 · TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
