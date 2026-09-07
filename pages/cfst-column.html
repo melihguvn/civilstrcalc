@@ -190,7 +190,7 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
     </div>
 
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px 6px;margin:8px 0;">
-      <svg id="sec-svg" viewBox="0 0 120 120" style="width:100%;max-width:200px;display:block;margin:0 auto;"></svg>
+      <svg id="sec-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto;"></svg>
       <div style="font-size:.67rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:3px 0 2px;">Select end conditions per buckling axis below</div>
     </div>
 
@@ -396,41 +396,52 @@ function setShape(s, btn) {
 // SECTION PREVIEW SVG
 // ═══════════════════════════════════════════════════
 function updateSVG() {
+  // viewBox 200×172, matching steel-axial module layout
   const svg = document.getElementById('sec-svg');
-  const cx = 60, cy = 60, R = 46;
-  const axC = '#8899aa';
-  const axL = (x1,y1,x2,y2) =>
-    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${axC}" stroke-width="1" stroke-dasharray="4,3"/>`;
-  const axT = (x,y,t,anc) =>
-    `<text x="${x}" y="${y}" text-anchor="${anc}" font-size="9.5" font-family="sans-serif" fill="${axC}" font-weight="bold">${t}</text>`;
-  // axes (drawn first, behind section)
-  const axes = axL(3,cy,117,cy) + axL(cx,3,cx,117);
-  // axis labels (drawn last, on top)
-  const lbls = axT(1,cy+3.5,'x','start') + axT(119,cy+3.5,'x','end') +
-               axT(cx,10,'y','middle') + axT(cx,119,'y','middle');
+  const cx = 100, cy = 84, axR = 72;
+  const col = '#c0d0e0', colI = '#e8eedc';
+  const axCol = '#888';
+  const fsz = 10, fw = 'bold';
 
+  let s = '';
+
+  // Section shape
   if (shape === 'round') {
     const D = parseFloat(document.getElementById('inp-D').value) || 10;
     const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
-    const ri_ratio = Math.max(0.1, (D/2 - t) / (D/2));
-    const Ri = R * ri_ratio;
-    svg.innerHTML = axes +
-      `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5"/>` +
-      `<circle cx="${cx}" cy="${cy}" r="${Ri}" fill="#e8eedc" stroke="#8898aa" stroke-width="1"/>` +
-      lbls;
+    const maxR = 52;
+    const ri_ratio = Math.max(0.05, (D/2 - t) / (D/2));
+    s += `<circle cx="${cx}" cy="${cy}" r="${maxR}" fill="${col}" stroke="#5a6a7a" stroke-width="1.5"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${maxR*ri_ratio}" fill="${colI}" stroke="#8898aa" stroke-width="1"/>`;
   } else {
     const B = parseFloat(document.getElementById('inp-B').value) || 10;
     const H = parseFloat(document.getElementById('inp-H').value) || 10;
     const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
-    const scale = 90 / Math.max(B, H);
-    const bw = Math.min(B*scale, 90), bh = Math.min(H*scale, 90);
-    const t2 = Math.max(3, Math.min(t*scale, Math.min(bw,bh)*0.4));
-    const x = cx - bw/2, y = cy - bh/2;
-    svg.innerHTML = axes +
-      `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>` +
-      `<rect x="${x+t2}" y="${y+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="#e8eedc" stroke="#8898aa" stroke-width="1" rx="0.5"/>` +
-      lbls;
+    const maxW = 100, maxH = 80;
+    const aspect = B / H;
+    let bw, bh;
+    if (aspect >= 1) { bw = maxW; bh = Math.max(20, maxW / aspect); }
+    else             { bh = maxH; bw = Math.max(20, maxH * aspect); }
+    bw = Math.min(bw, maxW); bh = Math.min(bh, maxH);
+    const scale = Math.min(bw/B, bh/H);
+    const t2 = Math.max(3, Math.min(t*scale, Math.min(bw,bh)*0.38));
+    const rx = cx - bw/2, ry = cy - bh/2;
+    s += `<rect x="${rx}" y="${ry}" width="${bw}" height="${bh}" fill="${col}" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>`;
+    s += `<rect x="${rx+t2}" y="${ry+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="${colI}" stroke="#8898aa" stroke-width="1" rx="0.5"/>`;
   }
+
+  // x-x axis line — stops just outside section, labels beyond endpoints (steel-axial pattern)
+  s += `<line x1="${cx-axR}" y1="${cy}" x2="${cx+axR}" y2="${cy}" stroke="${axCol}" stroke-width="1.2" stroke-dasharray="5,3"/>`;
+  // y-y axis line
+  s += `<line x1="${cx}" y1="${cy-axR}" x2="${cx}" y2="${cy+axR}" stroke="${axCol}" stroke-width="1.2" stroke-dasharray="5,3"/>`;
+  // x labels — outside axis endpoints
+  s += `<text x="${cx-axR-3}" y="${cy+4}" text-anchor="end"    font-size="${fsz}" font-family="sans-serif" fill="${axCol}" font-weight="${fw}">x</text>`;
+  s += `<text x="${cx+axR+3}" y="${cy+4}" text-anchor="start"  font-size="${fsz}" font-family="sans-serif" fill="${axCol}" font-weight="${fw}">x</text>`;
+  // y labels — outside axis endpoints
+  s += `<text x="${cx}"       y="${cy-axR-5}"  text-anchor="middle" font-size="${fsz}" font-family="sans-serif" fill="${axCol}" font-weight="${fw}">y</text>`;
+  s += `<text x="${cx}"       y="${cy+axR+13}" text-anchor="middle" font-size="${fsz}" font-family="sans-serif" fill="${axCol}" font-weight="${fw}">y</text>`;
+
+  svg.innerHTML = s;
 }
 
 // ═══════════════════════════════════════════════════
