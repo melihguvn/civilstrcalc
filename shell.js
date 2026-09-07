@@ -143,7 +143,7 @@
   function grp(icon, label, pages, subs) {
     return '<div class="sh-grp' + g(pages) + '">' +
       '<div class="sh-gh" onclick="this.closest(\'.sh-grp\').classList.toggle(\'sh-open\')">' +
-        '<span>' + icon + '</span>' + label + '<span class="sh-arr">â–¾</span>' +
+        '<span>' + icon + '</span>' + label + '<span class="sh-arr">&#9662;</span>' +
       '</div>' +
       '<div class="sh-gb">' + subs + '</div>' +
     '</div>';
@@ -223,7 +223,7 @@
       sub('/pages/articles/us-standards/7-steel-design-aisc','7. Steel Design (AISC 360-22)','us-steeldesign') +
       sub('/pages/articles/us-standards/8-serviceability',   '8. Serviceability Checks','us-service') +
       sub('/pages/articles/us-standards/9-retaining-wall-aci','9. Retaining Wall Design','us-retwall')) +
-    '<div class="sh-foot">ACI 318-25 Â· Eurocode 2 Â· IS 456<br>AISC 360-22 Â· TS 500 Â· TBDY 2018' +
+    '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
         '<a href="/contact">Contact</a>' +
