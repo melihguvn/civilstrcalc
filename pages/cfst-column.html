@@ -133,10 +133,6 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
       </div>
     </div>
 
-    <div class="sec-preview">
-      <svg id="sec-svg" width="120" height="120" viewBox="0 0 120 120"></svg>
-    </div>
-
     <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
 
     <div id="dims-round" style="display:none;">
@@ -191,6 +187,11 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
     <div class="form-group">
       <label>Column Height L <span id="lu-KL" class="lu"></span></label>
       <div class="iw"><input type="number" id="inp-L" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KL">ft</span></div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px 6px;margin:8px 0;">
+      <svg id="sec-svg" viewBox="0 0 120 120" style="width:100%;max-width:200px;display:block;margin:0 auto;"></svg>
+      <div style="font-size:.67rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:3px 0 2px;">Select end conditions per buckling axis below</div>
     </div>
 
     <div class="form-row-2">
@@ -396,30 +397,39 @@ function setShape(s, btn) {
 // ═══════════════════════════════════════════════════
 function updateSVG() {
   const svg = document.getElementById('sec-svg');
-  const cx = 60, cy = 60, R = 48;
+  const cx = 60, cy = 60, R = 46;
+  const axC = '#8899aa';
+  const axL = (x1,y1,x2,y2) =>
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${axC}" stroke-width="1" stroke-dasharray="4,3"/>`;
+  const axT = (x,y,t,anc) =>
+    `<text x="${x}" y="${y}" text-anchor="${anc}" font-size="9.5" font-family="sans-serif" fill="${axC}" font-weight="bold">${t}</text>`;
+  // axes (drawn first, behind section)
+  const axes = axL(3,cy,117,cy) + axL(cx,3,cx,117);
+  // axis labels (drawn last, on top)
+  const lbls = axT(1,cy+3.5,'x','start') + axT(119,cy+3.5,'x','end') +
+               axT(cx,10,'y','middle') + axT(cx,119,'y','middle');
+
   if (shape === 'round') {
     const D = parseFloat(document.getElementById('inp-D').value) || 10;
     const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
     const ri_ratio = Math.max(0.1, (D/2 - t) / (D/2));
     const Ri = R * ri_ratio;
-    svg.innerHTML =
+    svg.innerHTML = axes +
       `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5"/>` +
       `<circle cx="${cx}" cy="${cy}" r="${Ri}" fill="#e8eedc" stroke="#8898aa" stroke-width="1"/>` +
-      `<line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>` +
-      `<line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+      lbls;
   } else {
     const B = parseFloat(document.getElementById('inp-B').value) || 10;
     const H = parseFloat(document.getElementById('inp-H').value) || 10;
     const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
-    const scale = 96 / Math.max(B, H);
-    const bw = Math.min(B*scale,96), bh = Math.min(H*scale,96);
+    const scale = 90 / Math.max(B, H);
+    const bw = Math.min(B*scale, 90), bh = Math.min(H*scale, 90);
     const t2 = Math.max(3, Math.min(t*scale, Math.min(bw,bh)*0.4));
     const x = cx - bw/2, y = cy - bh/2;
-    svg.innerHTML =
+    svg.innerHTML = axes +
       `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>` +
       `<rect x="${x+t2}" y="${y+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="#e8eedc" stroke="#8898aa" stroke-width="1" rx="0.5"/>` +
-      `<line x1="${cx-bw/2}" y1="${cy}" x2="${cx+bw/2}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>` +
-      `<line x1="${cx}" y1="${cy-bh/2}" x2="${cx}" y2="${cy+bh/2}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+      lbls;
   }
 }
 
@@ -614,7 +624,9 @@ function calc() {
   const fU  = isUS ? 'kips' : 'kN';
   const mU  = isUS ? 'kip-ft' : 'kN·m';
   const k2U = isUS ? 'ksi' : 'MPa';
-  const EIU = isUS ? 'kip·in²' : 'kN·mm²';
+  const EIU    = isUS ? 'kip·in²' : 'kN·m²';
+  // SI: EIeff in N·mm²; ÷10⁹ → kN·m² (1 kN·m² = 10⁹ N·mm²)
+  const EIscale = isUS ? 1 : 1e-9;
   const toM = v => isUS ? v/12 : v/1000; // kip·in→kip·ft or kN·mm→kN·m
   const fmt  = (v,d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
   const fmt0 = v => fmt(v,0);
@@ -730,8 +742,8 @@ function calc() {
        (shape==='rect' ? r2('KL<sub>y</sub> (K<sub>y</sub> = ' + KyLbl + ')', `${fmt(KLy/(isUS?12:1000),2)} ${Lunit}`) : '') +
        r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
        r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
-       r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*uS)} ${EIU}`) +
-       (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y*uS)} ${EIU}`) : '') +
+       r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*EIscale)} ${EIU}`) +
+       (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y*EIscale)} ${EIU}`) : '') +
        r2('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', `${fmt(Pe_x*uS,1)} ${fU}`) +
        (shape==='rect' ? r2('P<sub>e,y</sub> = &pi;²EI<sub>eff,y</sub>/(KL<sub>y</sub>)²', `${fmt(Pe_y*uS,1)} ${fU}`) : '') +
        r2('P<sub>no</sub>/P<sub>e,gov</sub>', `${fmt(pnoRat,3)} &nbsp; ${buckMode}`) +
