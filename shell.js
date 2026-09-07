@@ -30,7 +30,6 @@
     if (/\/ec2-design-guide(\.html)?$/.test(P))        return 'guide-ec2';
     if (/\/is456-design-guide(\.html)?$/.test(P))      return 'guide-is456';
     if (/\/ts500-design-guide(\.html)?$/.test(P))      return 'guide-ts500';
-    if (/\/aisc360-design-guide(\.html)?$/.test(P))    return 'guide-aisc';
     if (/\/aci-318-vs-eurocode-2(\.html)?$/.test(P))          return 'art-aci-ec2';
     if (/\/one-way-vs-two-way-slabs(\.html)?$/.test(P))       return 'art-slabs';
     if (/\/lateral-torsional-buckling-guide(\.html)?$/.test(P)) return 'art-ltb';
@@ -196,7 +195,6 @@
     item('/pages/ec2-design-guide',   ic.guide, 'Eurocode 2 Guide',   'guide-ec2') +
     item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',       'guide-is456') +
     item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',       'guide-ts500') +
-    item('/pages/aisc360-design-guide', ic.guide, 'AISC 360 Guide',   'guide-aisc') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Articles</div>' +
     grp(ic.guide, 'Concrete', ['art-aci-ec2','art-slabs','art-beam','art-devlen','art-loadcomb','art-punch','art-cover'],

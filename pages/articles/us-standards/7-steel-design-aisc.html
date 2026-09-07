@@ -112,6 +112,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       <li><a href="#s8">Composite Beam Design — Chapter I</a></li>
       <li><a href="#s9">Connections — Chapter J</a></li>
       <li><a href="#s10">Seismic Steel — AISC 341-22</a></li>
+      <li><a href="#s11">Second-Order Effects — DAM</a></li>
     </ol>
   </div>
 
@@ -220,6 +221,19 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       AISC recommends L/r ≤ 300 for tension members to limit vibration, sag, and handling damage. This is a practical guideline, not a code limit — slender rods in bracing systems may be exempt.
     </div>
 
+    <h3>2.5 Net Area Calculation (§B4.3)</h3>
+    <p>For bolted connections, the net area A<sub>n</sub> is the gross area minus deductions for holes:</p>
+    <ul class="art-list">
+      <li><strong>Hole deduction:</strong> Deduct diameter = bolt diameter + 1/16 in (2 mm) for standard punched/drilled holes (damage from punching is included in the extra 1/16 in).</li>
+      <li><strong>Staggered holes:</strong> When holes are staggered, check all possible failure paths. For a diagonal path, add s²/(4g) to the net width for each stagger, where s = longitudinal spacing and g = transverse gauge.</li>
+    </ul>
+    <div class="formula-block">
+      <div class="f-label">Net width for staggered hole path (§B4.3b)</div>
+      <div class="formula-row"><span class="f-sys">US</span><span class="f-expr">w<sub>n</sub> = w<sub>g</sub> − Σ(d<sub>h</sub> + 1/16") + Σ(s²/4g)</span><span class="f-unit">in</span></div>
+      <div class="formula-row"><span class="f-sys">SI</span><span class="f-expr">w<sub>n</sub> = w<sub>g</sub> − Σ(d<sub>h</sub> + 2 mm) + Σ(s²/4g)</span><span class="f-unit">mm</span></div>
+    </div>
+    <p>A<sub>n</sub> = w<sub>n</sub> × t (plate) or sum of element net widths × thickness. A<sub>e</sub> = U·A<sub>n</sub> ≤ A<sub>g</sub>. The critical path gives the minimum A<sub>n</sub>.</p>
+
     <div class="art-cta-row">
       <a class="art-cta" href="../../steel-axial" target="content-frame">Try Axial Strength Calculator →</a>
     </div>
@@ -256,6 +270,60 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </table>
     </div>
     <p>These ratios are dimensionless. For A992 steel (E = 29,000 ksi / 200,000 MPa, F<sub>y</sub> = 50 ksi / 345 MPa): λ<sub>pf</sub> = 9.15; λ<sub>pw</sub> = 90.5. Most W shapes are compact.</p>
+
+    <h3>3.3 Compression Element Classification — Table B4.1a</h3>
+    <p>For members under uniform compression (columns, braces), only the slender/nonslender distinction matters. Slender elements reduce P<sub>n</sub> via Q factor (§E7).</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Element</th><th>Slenderness ratio</th><th>λ<sub>r</sub> (slender limit)</th></tr></thead>
+        <tbody>
+          <tr><td>W-shape flange (outstanding leg)</td><td>b<sub>f</sub>/(2t<sub>f</sub>)</td><td>0.56√(E/F<sub>y</sub>)</td></tr>
+          <tr><td>W-shape web</td><td>h/t<sub>w</sub></td><td>1.49√(E/F<sub>y</sub>)</td></tr>
+          <tr><td>HSS rectangular wall</td><td>b/t</td><td>1.40√(E/F<sub>y</sub>)</td></tr>
+          <tr><td>HSS circular (round)</td><td>D/t</td><td>0.15·E/F<sub>y</sub></td></tr>
+          <tr><td>Angle outstanding leg</td><td>b/t</td><td>0.45√(E/F<sub>y</sub>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>For A992 (F<sub>y</sub> = 50 ksi): λ<sub>r,flange</sub> = 13.5; λ<sub>r,web</sub> = 35.9; λ<sub>r,HSS-rect</sub> = 33.7. Most standard W-shapes are non-slender for compression.</p>
+
+    <h3>3.4 Seismic Compactness — AISC 341-22 Table D1.1</h3>
+    <p>Seismic systems require more stringent limits to sustain cyclic inelastic deformations without local buckling. Two tiers apply: <strong>highly ductile</strong> (λ<sub>hd</sub>) and <strong>moderately ductile</strong> (λ<sub>md</sub>).</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Element</th><th>Highly ductile λ<sub>hd</sub></th><th>Moderately ductile λ<sub>md</sub></th></tr></thead>
+        <tbody>
+          <tr><td>W-shape flange</td><td>0.30√(E/C<sub>a</sub>F<sub>y</sub>)</td><td>0.38√(E/C<sub>a</sub>F<sub>y</sub>)</td></tr>
+          <tr><td>W-shape web (axial + flexure)</td><td>2.57√(E/F<sub>y</sub>)·(1−1.04C<sub>a</sub>)</td><td>3.76√(E/F<sub>y</sub>)·(1−2.75C<sub>a</sub>)</td></tr>
+          <tr><td>HSS rectangular flange</td><td>0.55√(E/F<sub>y</sub>)</td><td>0.64√(E/F<sub>y</sub>)</td></tr>
+          <tr><td>HSS rectangular web</td><td>1.25√(E/F<sub>y</sub>)</td><td>1.40√(E/F<sub>y</sub>)</td></tr>
+          <tr><td>HSS circular D/t</td><td>0.053·E/F<sub>y</sub></td><td>0.076·E/F<sub>y</sub></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>C<sub>a</sub> = P<sub>u</sub>/(φ<sub>c</sub>F<sub>y</sub>A<sub>g</sub>) ≤ 1.0 (LRFD). Higher axial load → more stringent web limit. Highly ductile required for SMF beams/columns, EBF members outside link, BRBF beams/columns. Moderately ductile for IMF, SCBF braces.</p>
+
+    <h3>3.5 Noncompact and Slender Web I-Shapes (§F3–F5)</h3>
+    <p>When flanges or webs are noncompact or slender, M<sub>n</sub> is reduced below M<sub>p</sub>:</p>
+    <ul class="art-list">
+      <li><strong>§F3 — Compact web, noncompact/slender flange:</strong> M<sub>n</sub> reduced for flange local buckling (FLB). Linear interpolation between M<sub>p</sub> (at λ<sub>p</sub>) and 0.7F<sub>y</sub>S<sub>x</sub> (at λ<sub>r</sub>); below 0.7F<sub>y</sub>S<sub>x</sub> for slender flanges.</li>
+      <li><strong>§F4–F5 (Plate girders) — Noncompact or slender web:</strong> Separate checks for compression flange yielding (CFY), LTB using Rpg factor, and tension flange yielding (TFY). The R<sub>pg</sub> factor (≤1.0) accounts for web bend-buckling reducing the effective flange stress.</li>
+    </ul>
+    <p>Practical note: For standard rolled W-shapes, §F2 governs for nearly all cases. §F3–F5 apply to welded plate girders or heavy built-up sections where the web is proportioned for shear efficiency over moment efficiency.</p>
+
+    <h3>3.6 Other Cross-Section Types</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Section</th><th>AISC 360 §</th><th>Key limit states</th></tr></thead>
+        <tbody>
+          <tr><td>Channels (C, MC)</td><td>§F6</td><td>LTB, FLB — check L<sub>b</sub> as for I-shapes</td></tr>
+          <tr><td>Tees and double angles</td><td>§F9</td><td>LTB, FLB, stem local buckling in compression</td></tr>
+          <tr><td>HSS rectangular</td><td>§F7</td><td>Yielding, FLB (flanges), WLB (webs); closed section — no LTB about strong axis</td></tr>
+          <tr><td>HSS circular (round pipe)</td><td>§F8</td><td>Yielding, local buckling (D/t limits)</td></tr>
+          <tr><td>Single angles</td><td>§F10</td><td>Geometric LTB, local buckling of outstanding leg</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <div class="art-cta-row">
       <a class="art-cta" href="../../steel-flexural" target="content-frame">Try Steel Flexural Calculator →</a>
@@ -357,6 +425,30 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     <div class="callout">
       For plate girders or shapes with high h/t<sub>w</sub>, use the full Chapter G procedure with C<sub>v1</sub> &lt; 1.0 and φ = 0.90.
     </div>
+
+    <h3>5.2 Stiffened Webs with Tension-Field Action (§G3)</h3>
+    <p>Plate girders with intermediate transverse stiffeners can develop tension-field action (post-buckling diagonal tension) for higher shear capacity:</p>
+    <div class="formula-block">
+      <div class="f-label">Shear with TFA (φ<sub>v</sub> = 0.90)</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">V<sub>n</sub> = 0.6F<sub>y</sub>·A<sub>w</sub>·[C<sub>v2</sub> + (1−C<sub>v2</sub>)/(1.15√(1+(a/h)²))]</span></div>
+    </div>
+    <p>a = clear distance between stiffeners; C<sub>v2</sub> = shear buckling coefficient (function of h/t<sub>w</sub> and a/h). Tension-field action is <strong>not</strong> permitted for: end panels, panels with large openings, or when 2A<sub>w</sub>/(A<sub>fc</sub>+A<sub>ft</sub>) &gt; 2.5.</p>
+
+    <h3>5.3 Transverse Stiffener Design (§G2.2 / G3.3)</h3>
+    <p>Intermediate stiffeners are required when h/t<sub>w</sub> &gt; 2.46√(E/F<sub>y</sub>) (= 59.2 for A992). Requirements:</p>
+    <ul class="art-list">
+      <li>Moment of inertia: I<sub>st</sub> ≥ I<sub>st1</sub> (minimum for shear without TFA) and I<sub>st2</sub> (for TFA, §G3.3).</li>
+      <li>Stiffeners may be single or double (one or both sides of web).</li>
+      <li>Stiffener-to-web weld: termination ≥ 4t<sub>w</sub> from flange fillet weld but ≤ 6t<sub>w</sub>.</li>
+      <li>Width-to-thickness ratio of stiffener: b<sub>st</sub>/t<sub>st</sub> ≤ 0.56√(E/F<sub>y</sub>).</li>
+    </ul>
+
+    <h3>5.4 Shear in HSS and Box Sections (§G4)</h3>
+    <div class="formula-block">
+      <div class="f-label">HSS rectangular shear (φ<sub>v</sub> = 0.90)</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">V<sub>n</sub> = 0.6F<sub>y</sub>·A<sub>w</sub>·C<sub>v2</sub> &nbsp;&nbsp; A<sub>w</sub> = 2·h·t (two webs)</span></div>
+    </div>
+    <p>For HSS round (§G5): V<sub>n</sub> = F<sub>cr</sub>·A<sub>g</sub>/2, where F<sub>cr</sub> is the shear buckling stress based on D/t. φ<sub>v</sub> = 0.90 for both.</p>
   </div>
 
   <!-- S8 -->
@@ -417,6 +509,24 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       </table>
     </div>
 
+    <h3>6.4 Local Buckling Reduction — Q Factor (§E7)</h3>
+    <p>When a section has slender elements (λ &gt; λ<sub>r</sub> from Table B4.1a), the nominal strength is reduced by Q = Q<sub>s</sub>·Q<sub>a</sub>:</p>
+    <ul class="art-list">
+      <li><strong>Q<sub>s</sub></strong> — for slender unstiffened elements (flange outstanding legs, angle legs): ranges from 1.0 at λ<sub>r</sub> to a minimum value at high slenderness. Computed from §E7.1.</li>
+      <li><strong>Q<sub>a</sub></strong> — for slender stiffened elements (web, HSS walls): Q<sub>a</sub> = A<sub>eff</sub>/A<sub>g</sub>, where A<sub>eff</sub> uses the reduced effective width b<sub>e</sub> per §E7.2.</li>
+      <li>For non-slender sections: Q = 1.0, and the standard F<sub>cr</sub> formulas apply directly.</li>
+    </ul>
+    <p>With Q &lt; 1.0: replace F<sub>y</sub> with Q·F<sub>y</sub> in the column curve, and the slenderness limit becomes 4.71√(E/(Q·F<sub>y</sub>)).</p>
+
+    <h3>6.5 Torsional and Flexural-Torsional Buckling (§E4)</h3>
+    <p>For doubly symmetric W-shapes (typical columns), flexural buckling about the weak axis governs and §E4 rarely controls. However, §E4 must be checked for:</p>
+    <ul class="art-list">
+      <li><strong>Singly symmetric sections</strong> (channels, T-shapes, Tees, singly symmetric I-sections): Flexural-torsional buckling combines bending about the symmetric axis with torsion. Effective slenderness (KL/r)<sub>eff</sub> is computed from the torsional buckling stress F<sub>e</sub> (§E4-3 to E4-5).</li>
+      <li><strong>Asymmetric sections</strong> (single angles, unequal angles): All three buckling modes (x, y, z) interact — use the general procedure of §E4.</li>
+      <li><strong>Double angles and WT sections:</strong> F<sub>e</sub> for flexural-torsional buckling per §E4-4/5, then enter the standard F<sub>cr</sub> equations.</li>
+    </ul>
+    <p>For wide-flange columns with KL<sub>y</sub> governing, torsional buckling check is usually not critical because I<sub>y</sub>·C<sub>w</sub>/J is large for W-shapes. Always check when using channels or WT sections as compression members.</p>
+
     <div class="art-cta-row">
       <a class="art-cta" href="../../steel-axial" target="content-frame">Try Steel Column Calculator →</a>
     </div>
@@ -453,6 +563,22 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
         </tbody>
       </table>
     </div>
+
+    <h3>7.2 Unsymmetric or General Cross-Sections (§H2)</h3>
+    <p>For sections without an axis of symmetry, or members with biaxial bending and axial load where §H1-1 does not apply, use the stress-based interaction:</p>
+    <div class="formula-block">
+      <div class="f-label">§H2 interaction check</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">f<sub>ra</sub>/F<sub>ca</sub> + f<sub>rbw</sub>/F<sub>cbw</sub> + f<sub>rbz</sub>/F<sub>cbz</sub> ≤ 1.0</span></div>
+    </div>
+    <p>f<sub>ra</sub> = required axial stress; F<sub>ca</sub> = available axial stress. Bending stresses computed at the critical (maximum stress) point including combined biaxial bending. Applies to asymmetric shapes, angles used as beams, and general unsymmetric built-up sections.</p>
+
+    <h3>7.3 Combined Shear and Torsion (§H3)</h3>
+    <p>For HSS and box sections subject to combined shear (V<sub>r</sub>) and torsion (T<sub>r</sub>):</p>
+    <div class="formula-block">
+      <div class="f-label">Shear + torsion interaction</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">√[(V<sub>r</sub>/V<sub>c</sub>)² + (T<sub>r</sub>/T<sub>c</sub>)²] ≤ 1.0</span></div>
+    </div>
+    <p>V<sub>c</sub> = φ·V<sub>n</sub> from Chapter G; T<sub>c</sub> = φ·F<sub>cr</sub>·C, where F<sub>cr</sub> is the torsional shear buckling stress and C is the torsional shear constant of the section (= 2·A<sub>o</sub>·t for thin-walled closed sections, where A<sub>o</sub> = enclosed area). φ = 0.90.</p>
 
     <div class="art-cta-row">
       <a class="art-cta" href="../../steel-combined" target="content-frame">Try Combined Loading Calculator →</a>
@@ -611,6 +737,48 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     <div class="callout">
       <strong>Combined tension + shear on bolts (J3.7):</strong> When a bolt carries both, use the reduced tension strength: F'<sub>nt</sub> = 1.3F<sub>nt</sub> − (F<sub>nt</sub>/φF<sub>nv</sub>)·f<sub>rv</sub> ≤ F<sub>nt</sub>, where f<sub>rv</sub> is the required shear stress.
     </div>
+
+    <h3>9.5 Bolt Spacing and Edge Distance (§J3.3–J3.5)</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Requirement</th><th>Minimum</th><th>Preferred / Maximum</th></tr></thead>
+        <tbody>
+          <tr><td>Bolt spacing (center-to-center)</td><td>2⅔d<sub>b</sub> (absolute minimum)</td><td>3d<sub>b</sub> preferred</td></tr>
+          <tr><td>Edge distance (center of hole to edge)</td><td>Per Table J3.4 (varies by d<sub>b</sub> and hole type)</td><td>≥ 1.5d<sub>b</sub> for d<sub>b</sub> ≤ ¾ in</td></tr>
+          <tr><td>Maximum spacing (environmental exposure)</td><td>—</td><td>12t or 6 in, whichever less (painted/exposed)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>These limits ensure proper fabrication clearance and reliable bearing/tearout behavior. Edge distance below the minimum reduces bearing strength proportionally.</p>
+
+    <h3>9.6 Complete and Partial Joint Penetration Welds (§J2)</h3>
+    <p><strong>CJP (Complete Joint Penetration) — §J2.1a:</strong> Full weld throat equals the connected plate thickness. Design strength governed by the base metal: φR<sub>n</sub> = φ·F<sub>BM</sub>·A<sub>BM</sub>. Pre-qualified CJP joints per AWS D1.1/AISC. Required for primary tension moment connections in SMF/IMF beam-column joints.</p>
+    <p><strong>PJP (Partial Joint Penetration) — §J2.1b:</strong> Effective throat is less than the plate thickness. R<sub>n</sub> = 0.60·F<sub>EXX</sub>·A<sub>we</sub> (same form as fillet weld). PJP welds are not permitted for primary tension members in SMF connections; CJP is required there.</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Connected part thickness t</th><th>Min fillet weld size</th><th>Max fillet weld size</th></tr></thead>
+        <tbody>
+          <tr><td>t ≤ ¼ in (6 mm)</td><td>⅛ in (3 mm)</td><td>t (for t &lt; ¼ in)</td></tr>
+          <tr><td>¼ &lt; t ≤ ½ in (6–12 mm)</td><td>3/16 in (5 mm)</td><td>t − 1/16 in</td></tr>
+          <tr><td>½ &lt; t ≤ ¾ in (12–19 mm)</td><td>¼ in (6 mm)</td><td>t − 1/16 in</td></tr>
+          <tr><td>t &gt; ¾ in (&gt;19 mm)</td><td>5/16 in (8 mm)</td><td>t − 1/16 in</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Transverse (90°) fillet welds are ~50% stronger than longitudinal (0°) welds: R<sub>n</sub> multiplied by (1 + 0.50·sin¹·⁵θ), capped at M<sub>n</sub> = M<sub>p</sub>.</p>
+
+    <h3>9.7 Column Base Plate Design (AISC Design Guide 1)</h3>
+    <p>Base plates transfer column loads to the concrete foundation via bearing pressure. Anchor rods (ASTM F1554 Gr. 36, 55, or 105) resist uplift and shear.</p>
+    <div class="formula-block">
+      <div class="f-label">Required bearing area</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">A<sub>req</sub> = P<sub>u</sub> / (φ·f<sub>p,max</sub>) &nbsp;&nbsp; f<sub>p,max</sub> = φ<sub>c</sub>·0.85·f'<sub>c</sub> (partial bearing)</span></div>
+    </div>
+    <p>Plate dimensions N × B chosen from A<sub>req</sub> and constructability. Overhang dimensions n = (N−0.80d)/2 and m = (B−0.95b<sub>f</sub>)/2. Plate thickness from cantilever bending at critical sections:</p>
+    <div class="formula-block">
+      <div class="f-label">Base plate thickness</div>
+      <div class="formula-row"><span class="f-sys">US</span><span class="f-expr">t<sub>p</sub> = l·√(2P<sub>u</sub>/(φF<sub>y</sub>·B·N))</span><span class="f-unit">where l = max(m, n, λn')</span></div>
+    </div>
+    <p>λn' accounts for the plastic hinge in the column footprint zone. For columns with large moments, use AISC DG1 procedures for combined axial + moment base plates including anchor rod tension design.</p>
   </div>
 
   <!-- S10 -->
@@ -618,21 +786,29 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     <h2>10. Seismic Steel Design — AISC 341-22</h2>
     <p>AISC 341-22 (Seismic Provisions for Structural Steel Buildings) supplements AISC 360-22 for Seismic Design Categories C–F. The system response modification factor R is from ASCE 7-22 Table 12.2-1.</p>
 
-    <h3>10.1 R Factor Summary (Common Systems)</h3>
+    <h3>10.1 R Factor Summary — ASCE 7-22 Table 12.2-1</h3>
     <div class="art-table-wrap">
       <table class="art-tbl">
-        <thead><tr><th>Seismic force-resisting system</th><th>R</th><th>C<sub>d</sub></th><th>Ω<sub>0</sub></th></tr></thead>
+        <thead><tr><th>Seismic force-resisting system</th><th>R</th><th>C<sub>d</sub></th><th>Ω<sub>0</sub></th><th>Min SDC</th></tr></thead>
         <tbody>
-          <tr><td>Special Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td></tr>
-          <tr><td>Intermediate Moment Frame (IMF)</td><td>4.5</td><td>4</td><td>3</td></tr>
-          <tr><td>Ordinary Moment Frame (OMF)</td><td>3.5</td><td>3</td><td>3</td></tr>
-          <tr><td>Special Concentrically Braced Frame (SCBF)</td><td>6</td><td>5</td><td>2</td></tr>
-          <tr><td>Ordinary Concentrically Braced Frame (OCBF)</td><td>3.25</td><td>3.25</td><td>2</td></tr>
-          <tr><td>Eccentrically Braced Frame (EBF)</td><td>8</td><td>4</td><td>2</td></tr>
-          <tr><td>Special Plate Shear Wall (SPSW)</td><td>7</td><td>6</td><td>2.5</td></tr>
+          <tr><td colspan="5" style="background:var(--bg-alt,#f8fafc);font-weight:600;font-size:.78rem;">Moment Frame Systems</td></tr>
+          <tr><td>Special Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td><td>A–F</td></tr>
+          <tr><td>Intermediate Moment Frame (IMF)</td><td>4.5</td><td>4</td><td>3</td><td>B–C (D/E: 35 ft limit)</td></tr>
+          <tr><td>Ordinary Moment Frame (OMF)</td><td>3.5</td><td>3</td><td>3</td><td>A–C only</td></tr>
+          <tr><td colspan="5" style="background:var(--bg-alt,#f8fafc);font-weight:600;font-size:.78rem;">Braced Frame Systems</td></tr>
+          <tr><td>Special Concentrically Braced Frame (SCBF)</td><td>6</td><td>5</td><td>2</td><td>A–F</td></tr>
+          <tr><td>Ordinary Concentrically Braced Frame (OCBF)</td><td>3.25</td><td>3.25</td><td>2</td><td>A–C (D/E: 35 ft)</td></tr>
+          <tr><td>Eccentrically Braced Frame (EBF)</td><td>8</td><td>4</td><td>2</td><td>A–F</td></tr>
+          <tr><td>Buckling-Restrained Braced Frame (BRBF)</td><td>8</td><td>5</td><td>2.5</td><td>A–F</td></tr>
+          <tr><td>Special Plate Shear Wall (SPSW)</td><td>7</td><td>6</td><td>2</td><td>A–F</td></tr>
+          <tr><td colspan="5" style="background:var(--bg-alt,#f8fafc);font-weight:600;font-size:.78rem;">Dual Systems</td></tr>
+          <tr><td>Dual — SMF + SCBF</td><td>7</td><td>5.5</td><td>2.5</td><td>A–F</td></tr>
+          <tr><td>Dual — SMF + EBF</td><td>8</td><td>4</td><td>2.5</td><td>A–F</td></tr>
+          <tr><td>Dual — SMF + BRBF</td><td>8</td><td>5</td><td>2.5</td><td>A–F</td></tr>
         </tbody>
       </table>
     </div>
+    <p>NL = Not Limited (height); NP = Not Permitted. Ω<sub>0</sub> = overstrength factor (for capacity-protected elements); C<sub>d</sub> = deflection amplification factor (for drift check). Verify current ASCE 7-22 Table 12.2-1 for full height limits by SDC.</p>
 
     <h3>10.2 Special Moment Frame (SMF) — Chapter E</h3>
     <p>SMF provides ductility through plastic hinging in beams away from columns (protected zones). Key requirements:</p>
@@ -671,8 +847,72 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </div>
     <p>V<sub>p</sub> = 0.6F<sub>y</sub>(d − 2t<sub>f</sub>)t<sub>w</sub>; M<sub>p</sub> = F<sub>y</sub>Z<sub>x</sub>. Link rotation angle γ<sub>p</sub> ≤ 0.08 rad (shear link) or 0.02 rad (moment link). Link stiffeners at each end; intermediate stiffeners for shear links with e ≤ 5d.</p>
 
+    <h3>10.5 Buckling-Restrained Braced Frame (BRBF) — AISC 341-22 §F4</h3>
+    <p>BRBs eliminate compression buckling by encasing the steel core in a mortar-filled steel tube, creating a member with equal tension and compression yield capacity.</p>
+    <ul class="art-list">
+      <li>BRB elements must be qualified by testing per §K3 or use pre-qualified products.</li>
+      <li>Adjusted brace strength for capacity design: ω·β·R<sub>y</sub>·F<sub>y</sub>·A<sub>sc</sub> (compression) and ω·R<sub>y</sub>·F<sub>y</sub>·A<sub>sc</sub> (tension). Typical values: ω ≈ 1.5 (strain hardening), β ≈ 1.1 (compression overstrength).</li>
+      <li>Beams and columns: highly ductile λ<sub>hd</sub> compactness required (§D1.1).</li>
+      <li>A<sub>sc</sub> = area of the steel core (yielding segment only — not the connection plates).</li>
+      <li>BRBF allows R = 8 with significantly simpler connection details than SMF — a practical advantage for buildings with large lateral demands but limited connection access.</li>
+    </ul>
+
+    <h3>10.6 Capacity Design Principle</h3>
+    <p>Capacity design ensures that yielding occurs in the intended ductile element (brace, link, beam plastic hinge) before non-ductile elements (connections, columns) are stressed. For capacity-protected elements, forces are computed from the <strong>expected</strong> (probable) material strengths:</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Property</th><th>Formula</th><th>R<sub>y</sub> / R<sub>t</sub> values</th></tr></thead>
+        <tbody>
+          <tr><td>Expected yield strength</td><td>R<sub>y</sub>·F<sub>y</sub></td><td>A992/A572 Gr.50: R<sub>y</sub> = 1.1 · A36: R<sub>y</sub> = 1.5 · A500/A1085: R<sub>y</sub> = 1.3</td></tr>
+          <tr><td>Expected tensile strength</td><td>R<sub>t</sub>·F<sub>u</sub></td><td>A992/A572 Gr.50: R<sub>t</sub> = 1.1 · A36: R<sub>t</sub> = 1.2 · A500: R<sub>t</sub> = 1.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>These amplified forces are used to design connections, columns, and other elements that must remain elastic. The overstrength factor Ω<sub>0</sub> from ASCE 7-22 Table 12.2-1 provides an alternative simplified amplification for certain elements per ASCE 7-22 §12.4.3.</p>
+
     <div class="callout">
       <strong>Quality assurance (Chapter J):</strong> SDC C–F steel seismic systems require a quality assurance plan, including special inspection of welded connections, bolted joints, and protected-zone areas. Purchase verification of mill certificates is required.
+    </div>
+  </div>
+
+  <!-- S11 -->
+  <div class="art-section" id="s11">
+    <h2>11. Second-Order Effects — Direct Analysis Method (DAM)</h2>
+    <p>Real structures experience additional moments due to displaced geometry (P-Δ at story level, P-δ at member level). AISC 360-22 Chapter C mandates accounting for these effects; the Direct Analysis Method (DAM) is the primary approach.</p>
+
+    <h3>11.1 DAM Procedure (§C2)</h3>
+    <ul class="art-list">
+      <li><strong>Reduced stiffness:</strong> Use E* = 0.8τ<sub>b</sub>·E and EI* = 0.8τ<sub>b</sub>·EI in analysis. τ<sub>b</sub> = 1.0 when α·P<sub>r</sub>/P<sub>y</sub> ≤ 0.5; otherwise τ<sub>b</sub> = 4·(α·P<sub>r</sub>/P<sub>y</sub>)·(1 − α·P<sub>r</sub>/P<sub>y</sub>) (where α = 1.0 for LRFD, 1.6 for ASD).</li>
+      <li><strong>Notional loads:</strong> Apply N<sub>i</sub> = 0.002·Y<sub>i</sub> as a lateral load at each floor level (Y<sub>i</sub> = gravity load at level i). These represent initial geometric imperfections.</li>
+      <li><strong>K = 1.0:</strong> After applying reduced stiffness and notional loads, K = 1.0 may be used for compression member design (no alignment chart needed).</li>
+    </ul>
+
+    <h3>11.2 Alternative Methods</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Method</th><th>Where used</th><th>Key requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Direct Analysis Method (DAM) — App. 1</td><td>All structures (preferred)</td><td>Reduced stiffness + notional loads; K = 1.0</td></tr>
+          <tr><td>Effective Length Method (ELM) — App. 7</td><td>Δ<sub>2nd</sub>/Δ<sub>1st</sub> ≤ 1.5</td><td>K from alignment charts; full stiffness in analysis</td></tr>
+          <tr><td>First-Order Method — App. 8</td><td>Δ<sub>2nd</sub>/Δ<sub>1st</sub> ≤ 1.5 and α·P<sub>r</sub>/P<sub>y</sub> ≤ 0.5</td><td>Amplified notional loads (B<sub>1</sub> factor); K = 1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>11.3 B<sub>1</sub>–B<sub>2</sub> Amplifiers (§C2.1b — Simplified 2nd-Order)</h3>
+    <p>When a first-order analysis is used, moments are amplified by:</p>
+    <div class="formula-block">
+      <div class="f-label">P-δ amplifier (member curvature)</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">B<sub>1</sub> = C<sub>m</sub>/(1 − α·P<sub>r</sub>/P<sub>e1</sub>) ≥ 1.0</span></div>
+    </div>
+    <div class="formula-block">
+      <div class="f-label">P-Δ amplifier (story sway)</div>
+      <div class="formula-row"><span class="f-sys">Both</span><span class="f-expr">B<sub>2</sub> = 1/(1 − α·ΣP<sub>story</sub>/P<sub>e,story</sub>) ≥ 1.0</span></div>
+    </div>
+    <p>C<sub>m</sub> = equivalent uniform moment factor (0.6–0.4·M<sub>1</sub>/M<sub>2</sub> for braced members); P<sub>e1</sub> = π²EI/(KL)² about the bending axis; P<sub>e,story</sub> = story elastic buckling load. M<sub>r</sub> = B<sub>1</sub>·M<sub>nt</sub> + B<sub>2</sub>·M<sub>lt</sub> (combined amplified moment).</p>
+
+    <div class="callout">
+      <strong>When does 2nd-order matter?</strong> For braced frames with Δ<sub>2nd</sub>/Δ<sub>1st</sub> &lt; 1.05, second-order effects are negligible. For moment frames or tall/slender structures, Δ<sub>2nd</sub>/Δ<sub>1st</sub> can reach 1.3–1.5 — always use a 2nd-order analysis or the B<sub>1</sub>–B<sub>2</sub> amplifier approach.
     </div>
   </div>
 
