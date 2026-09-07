@@ -256,17 +256,18 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
   <div class="pmm-wrap" id="pmm-wrap" style="display:none;">
     <div class="pmm-hdr">
       <h4>P-M Interaction Diagram &mdash; LRFD</h4>
-      <div id="pmm-axis-tabs" style="display:flex;gap:0;flex-wrap:wrap;">
-        <button class="unit-btn active" id="tab-x"  onclick="setPmmAxis('x',this)"       style="border-radius:4px 0 0 4px;">P &ndash; M<sub>u,x</sub> (NA &parallel; b)</button>
-        <button class="unit-btn"        id="tab-y"  onclick="setPmmAxis('y',this)"       style="border-radius:0;">P &ndash; M<sub>u,y</sub> (NA &parallel; h)</button>
-        <button class="unit-btn"        id="tab-bx" onclick="setPmmAxis('biaxial',this)" style="border-radius:0 4px 4px 0;">Biaxial Check</button>
+      <div id="pmm-axis-tabs" style="display:flex;gap:0;">
+        <button class="unit-btn active" id="tab-x"  onclick="setPmmAxis('x',this)"       style="border-radius:4px 0 0 4px;">P &ndash; M<sub>x</sub></button>
+        <button class="unit-btn"        id="tab-y"  onclick="setPmmAxis('y',this)"       style="border-radius:0;">P &ndash; M<sub>y</sub></button>
+        <button class="unit-btn"        id="tab-bx" onclick="setPmmAxis('biaxial',this)" style="border-radius:0 4px 4px 0;">Biaxial</button>
       </div>
     </div>
     <div class="pmm-canvas-wrap">
       <canvas id="pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
     </div>
     <div class="pmm-legend">
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> Capacity envelope</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> Capacity envelope (PSDM)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#e74c3c;border-top:2px dashed #e74c3c;height:0;"></div> AISC H1-1 design limit</div>
       <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div> Demand</div>
     </div>
   </div>
@@ -909,11 +910,28 @@ function drawPMM() {
     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
   }
 
-  // 0.2·φPn reference line (AISC H1-1 kink point)
+  // AISC H1-1 design limit (red dashed) — kink at 0.2·φPn
   const kinkP = 0.2 * r.phiPn;
-  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.setLineDash([5,4]);
-  ctx.beginPath(); ctx.moveTo(pad.left, toY(kinkP)); ctx.lineTo(pad.left+cw, toY(kinkP)); ctx.stroke();
+  const kinkM = 0.9 * phiMn;
+  ctx.beginPath();
+  ctx.moveTo(toX(0),     toY(r.phiPn));
+  ctx.lineTo(toX(kinkM), toY(kinkP));
+  ctx.lineTo(toX(phiMn), toY(0));
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7,4]); ctx.stroke(); ctx.setLineDash([]);
+
+  // φPn tick + label
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, toY(r.phiPn)); ctx.lineTo(pad.left+10, toY(r.phiPn)); ctx.stroke();
   ctx.setLineDash([]);
+  ctx.fillStyle = '#e74c3c'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('φPn', pad.left+3, toY(r.phiPn)-3);
+
+  // φMn tick + label
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0)-10); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
+  ctx.fillText('φMn', toX(phiMn), pad.top+ch+28);
 
   // Demand point (with crosshairs)
   const dx = toX(Mu), dy = toY(r.Pu);
