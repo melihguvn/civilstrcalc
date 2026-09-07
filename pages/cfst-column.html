@@ -256,18 +256,18 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
   <div class="pmm-wrap" id="pmm-wrap" style="display:none;">
     <div class="pmm-hdr">
       <h4>P-M Interaction Diagram &mdash; LRFD</h4>
-      <div id="pmm-axis-tabs" style="display:flex;gap:0;">
-        <button class="unit-btn active" id="tab-x" onclick="setPmmAxis('x',this)" style="border-radius:4px 0 0 4px;">P &ndash; M<sub>x</sub></button>
-        <button class="unit-btn" id="tab-y" onclick="setPmmAxis('y',this)" style="border-radius:0 4px 4px 0;">P &ndash; M<sub>y</sub></button>
+      <div id="pmm-axis-tabs" style="display:flex;gap:0;flex-wrap:wrap;">
+        <button class="unit-btn active" id="tab-x"  onclick="setPmmAxis('x',this)"       style="border-radius:4px 0 0 4px;">P &ndash; M<sub>u,x</sub> (NA &parallel; b)</button>
+        <button class="unit-btn"        id="tab-y"  onclick="setPmmAxis('y',this)"       style="border-radius:0;">P &ndash; M<sub>u,y</sub> (NA &parallel; h)</button>
+        <button class="unit-btn"        id="tab-bx" onclick="setPmmAxis('biaxial',this)" style="border-radius:0 4px 4px 0;">Biaxial Check</button>
       </div>
     </div>
     <div class="pmm-canvas-wrap">
       <canvas id="pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
     </div>
     <div class="pmm-legend">
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> PSDM curve (nominal)</div>
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#e74c3c;border-top:2px dashed #e74c3c;height:0;"></div> AISC H1-1 design envelope</div>
-      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#555;display:inline-block;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> Capacity envelope</div>
+      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div> Demand</div>
     </div>
   </div>
 </div><!-- /results col -->
@@ -631,6 +631,17 @@ function calc() {
   }
   const pass = DCR <= 1.0 && classify !== 'not-permitted';
 
+  // Axis-specific DCRs (single-axis check, for P-Mx and P-My tabs)
+  let DCR_x = 9999, DCR_y = 9999;
+  if (pPhiU > 0 && mPhiXu > 0) {
+    const pr = Pu / pPhiU;
+    DCR_x = pr >= 0.2 ? pr + (8/9)*(Mux/mPhiXu) : Pu/(2*pPhiU) + Mux/mPhiXu;
+  }
+  if (pPhiU > 0 && mPhiYu > 0) {
+    const pr = Pu / pPhiU;
+    DCR_y = pr >= 0.2 ? pr + (8/9)*(Muy/mPhiYu) : Pu/(2*pPhiU) + Muy/mPhiYu;
+  }
+
   // ── Unit labels ──
   const fU  = isUS ? 'kips' : 'kN';
   const mU  = isUS ? 'kip-ft' : 'kN·m';
@@ -787,13 +798,20 @@ function calc() {
   document.getElementById('cf-report-wrap').style.display = '';
   document.getElementById('pmm-wrap').style.display = '';
   document.getElementById('tab-y').style.display    = shape === 'rect' ? '' : 'none';
+  document.getElementById('tab-bx').style.display   = '';
+  // If current axis tab became hidden, reset to x
+  if (shape !== 'rect' && (pmmAxis === 'y')) {
+    pmmAxis = 'x';
+    document.querySelectorAll('#pmm-axis-tabs .unit-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-x').classList.add('active');
+  }
   document.getElementById('rh-code').textContent =
     'AISC 360-22 · ' + (isUS ? 'kip · in' : 'kN · mm');
 
   lastResult = { pts_x, pts_y, uS,
                  Pno: Pno*uS, Mp_x: Mp_x*uS, Mp_y: Mp_y*uS,
                  phiPn: pPhiU, phiMn_x: mPhiXu, phiMn_y: mPhiYu,
-                 Pu, Mux, Muy, DCR, fU, mU, pass };
+                 Pu, Mux, Muy, DCR, DCR_x, DCR_y, eqUsed, fU, mU, pass };
   drawPMM();
 }
 
@@ -809,20 +827,37 @@ function setPmmAxis(ax, btn) {
 
 function drawPMM() {
   if (!lastResult) return;
-  const r    = lastResult;
-  const uS   = r.uS || 1;
-  const pts_raw = pmmAxis === 'x' ? r.pts_x : r.pts_y;
-  const pts  = pts_raw.map(p => ({ P: p.P * uS, M: p.M * uS }));
-  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;
-  const phiMn = pmmAxis === 'x' ? r.phiMn_x : r.phiMn_y;
-  const Mu   = pmmAxis === 'x' ? r.Mux : r.Muy;
+  const r   = lastResult;
+  const uS  = r.uS || 1;
+  const isBiaxial = pmmAxis === 'biaxial';
+  const axKey = (pmmAxis === 'y') ? 'y' : 'x';
+
+  const pts_raw = axKey === 'x' ? r.pts_x : r.pts_y;
+  const pts = pts_raw.map(p => ({ P: p.P * uS, M: p.M * uS }));
+  const Mp    = axKey === 'x' ? r.Mp_x    : r.Mp_y;
+  const phiMn = axKey === 'x' ? r.phiMn_x : r.phiMn_y;
+  const Mu    = axKey === 'x' ? r.Mux     : r.Muy;
+
+  // DCR to show: axis-specific or biaxial
+  const dcr_show  = isBiaxial ? r.DCR : (axKey === 'x' ? r.DCR_x : r.DCR_y);
+  const pass_show = dcr_show <= 1.0;
 
   const canvas = document.getElementById('pmm-canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
 
-  const pad = { top:28, right:28, bot:52, left:68 };
+  // Canvas title
+  const titles = {
+    x:       shape === 'round' ? 'P – Mx  (Round HSS)' : 'P – Mx  (Neutral Axis parallel to b)',
+    y:       'P – My  (Neutral Axis parallel to h)',
+    biaxial: 'Biaxial Check — AISC H1-1'
+  };
+  ctx.fillStyle = '#374151'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(titles[pmmAxis] || titles.x, W/2, 16);
+
+  const pad = { top:30, right:28, bot:52, left:72 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top  - pad.bot;
 
@@ -831,32 +866,36 @@ function drawPMM() {
   const toX  = m => pad.left + m/Mmax * cw;
   const toY  = p => pad.top  + ch - p/Pmax * ch;
 
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
-
+  // Grid
   ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
   for (let i = 1; i <= 4; i++) {
     ctx.beginPath(); ctx.moveTo(toX(Mmax*i/4), pad.top); ctx.lineTo(toX(Mmax*i/4), pad.top+ch); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, toY(Pmax*i/4)); ctx.lineTo(pad.left+cw, toY(Pmax*i/4)); ctx.stroke();
   }
 
+  // Axes
   const axCol = '#4a5568';
   ctx.strokeStyle = axCol; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+ch+8); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left-8, pad.top+ch); ctx.lineTo(pad.left+cw, pad.top+ch); ctx.stroke();
 
+  // Axis labels
+  const Mlbl = axKey === 'x' ? 'Mₓ (' + r.mU + ')' : 'Mᵧ (' + r.mU + ')';
   ctx.fillStyle = axCol; ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
-  ctx.fillText('M (' + r.mU + ')', pad.left + cw/2, H - 6);
+  ctx.fillText(Mlbl, pad.left + cw/2, H - 6);
   ctx.save(); ctx.translate(14, pad.top + ch/2); ctx.rotate(-Math.PI/2);
   ctx.fillText('P (' + r.fU + ')', 0, 0); ctx.restore();
 
+  // Tick labels
   ctx.font = '10px monospace'; ctx.fillStyle = axCol;
+  const f1 = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
   const toMd = v => isUS ? v/12 : v/1000;
-  const f1   = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
   for (let i = 0; i <= 4; i++) {
     ctx.textAlign = 'right';  ctx.fillText(f1(Pmax*i/4), pad.left-4, toY(Pmax*i/4)+4);
     ctx.textAlign = 'center'; ctx.fillText(f1(toMd(Mmax*i/4)), toX(Mmax*i/4), pad.top+ch+14);
   }
 
+  // PSDM capacity envelope (fill + stroke)
   if (pts.length > 1) {
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(pts[0].P));
@@ -867,39 +906,41 @@ function drawPMM() {
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(pts[0].P));
     for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
-    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.8; ctx.setLineDash([]); ctx.stroke();
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
   }
 
-  const kink_P = 0.2 * r.phiPn, kink_M = 0.9 * phiMn;
-  ctx.beginPath();
-  ctx.moveTo(toX(0), toY(r.phiPn));
-  ctx.lineTo(toX(kink_M), toY(kink_P));
-  ctx.lineTo(toX(phiMn),  toY(0));
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7,4]); ctx.stroke(); ctx.setLineDash([]);
-
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(pad.left, toY(r.phiPn)); ctx.lineTo(pad.left+10, toY(r.phiPn)); ctx.stroke();
+  // 0.2·φPn reference line (AISC H1-1 kink point)
+  const kinkP = 0.2 * r.phiPn;
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(pad.left, toY(kinkP)); ctx.lineTo(pad.left+cw, toY(kinkP)); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#e74c3c'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-  ctx.fillText('φPn', pad.left+3, toY(r.phiPn)-3);
 
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0)-10); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
-  ctx.fillText('φMn', toX(phiMn), pad.top+ch+28);
-
+  // Demand point (with crosshairs)
   const dx = toX(Mu), dy = toY(r.Pu);
-  const ptColor = r.pass ? '#16a34a' : '#dc2626';
-  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2*Math.PI);
-  ctx.fillStyle = ptColor; ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  const ptColor = pass_show ? '#16a34a' : '#dc2626';
   ctx.strokeStyle = ptColor; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
   ctx.beginPath(); ctx.moveTo(pad.left, dy); ctx.lineTo(dx, dy); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(dx, pad.top+ch); ctx.lineTo(dx, dy); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = ptColor; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'left';
-  ctx.fillText('DCR=' + (isNaN(r.DCR) ? '?' : r.DCR.toFixed(3)), dx+9, dy-9);
+  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2*Math.PI);
+  ctx.fillStyle = ptColor; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+  // D/C label
+  const dcrLabel = 'D/C = ' + (isNaN(dcr_show) ? '?' : dcr_show.toFixed(2));
+  ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = ptColor; ctx.textAlign = 'left';
+  ctx.fillText(dcrLabel, dx + 9, dy - 7);
+
+  // Biaxial tab: also show My demand ratio as note
+  if (isBiaxial && r.phiMn_y > 0) {
+    const eq = r.eqUsed || 'H1-1';
+    ctx.font = '10px sans-serif'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
+    const pr_x = r.phiMn_x > 0 ? r.Mux / r.phiMn_x : 0;
+    const pr_y = r.phiMn_y > 0 ? r.Muy / r.phiMn_y : 0;
+    const pr_p = r.phiPn    > 0 ? r.Pu  / r.phiPn   : 0;
+    ctx.fillText('Eq. ' + eq + '  |  P/φPn=' + pr_p.toFixed(3) + '  Mx/φMnx=' + pr_x.toFixed(3) + '  My/φMny=' + pr_y.toFixed(3),
+                 pad.left + cw/2, pad.top + ch + 36);
+  }
 }
 
 // ═══════════════════════════════════════════════════
