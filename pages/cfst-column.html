@@ -57,27 +57,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .sec-preview{display:flex;justify-content:center;margin-bottom:10px;}
 .sec-preview svg{border:1px solid var(--border);border-radius:6px;background:var(--bg2);}
 
-/* Summary bar */
-.summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);}
-.sum-item{display:flex;flex-direction:column;gap:2px;}
-.sum-lbl{font-size:.63rem;color:var(--text-dim);letter-spacing:.04em;text-transform:uppercase;}
-.sum-val{font-size:.95rem;font-weight:700;font-family:var(--mono);color:var(--text);}
-.sum-val.ok{color:var(--green);}
-.sum-val.err{color:var(--red);}
-.sum-val.warn{color:var(--orange);}
-
-/* Step section headers in results */
-.step-hdr{font-size:.65rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px;margin-top:12px;}
-.step-hdr:first-child{margin-top:0;}
-
-/* Inline status badges */
+/* Inline status badges (used in table cells) */
 .badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;text-transform:uppercase;}
 .badge-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green);}
 .badge-warn{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange);}
 .badge-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red);}
-.badge-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
 
-/* PMM diagram card */
+/* PMM diagram (below report card) */
 .pmm-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;margin-top:16px;}
 .pmm-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .pmm-hdr h4{font-family:var(--cond);font-weight:700;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);}
@@ -122,7 +108,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
 
-    <!-- Cross-section preview -->
     <div class="sec-preview">
       <svg id="sec-svg" width="120" height="120" viewBox="0 0 120 120"></svg>
     </div>
@@ -227,75 +212,26 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ══════════ RESULTS COLUMN ══════════ -->
 <div>
+  <div class="res-empty" id="cf-empty"><div class="ri">&#128202;</div>Enter section geometry and loads — results appear here.</div>
 
-  <!-- Warning / error messages -->
-  <div id="warn-box" style="display:none;margin-bottom:12px;padding:9px 12px;border-radius:6px;font-size:.78rem;border:1px solid var(--orange);background:var(--orange-bg);color:var(--orange);"></div>
-
-  <!-- Results card -->
-  <div class="card" id="results-card">
-    <!-- Summary bar -->
-    <div class="summary-bar" id="summary-bar">
-      <div class="sum-item"><div class="sum-lbl">Classification</div><div class="sum-val" id="s-class">—</div></div>
-      <div class="sum-item"><div class="sum-lbl">&phi;P<sub>n</sub></div><div class="sum-val" id="s-phiPn">—</div></div>
-      <div class="sum-item"><div class="sum-lbl">&phi;M<sub>n</sub></div><div class="sum-val" id="s-phiMn">—</div></div>
-      <div class="sum-item"><div class="sum-lbl">DCR</div><div class="sum-val" id="s-dcr">—</div></div>
-      <div class="sum-item"><div class="sum-lbl">Result</div><div class="sum-val" id="s-result">—</div></div>
+  <div id="cf-report-wrap" style="display:none;">
+    <div class="report-card">
+      <div class="report-hdr">
+        <h4>Calculation Report</h4>
+        <span class="rh-code" id="rh-code">AISC 360-22 &middot; kip &middot; in</span>
+        <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+      </div>
+      <div class="report-body" id="res-body"></div>
     </div>
+  </div>
 
-    <div class="card-body" id="res-body">
-
-      <div class="step-hdr">§ I1.3 Material &amp; Area Limits</div>
-      <table class="res-tbl">
-        <thead><tr><th>Check</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead>
-        <tbody id="tbl-limits"></tbody>
-      </table>
-
-      <div class="step-hdr">§ Table I1.1a — Section Classification</div>
-      <table class="res-tbl">
-        <thead><tr><th>Parameter</th><th>Computed</th><th>Compact (&lambda;<sub>p</sub>)</th><th>Noncompact (&lambda;<sub>r</sub>)</th><th>Max (&lambda;<sub>max</sub>)</th></tr></thead>
-        <tbody id="tbl-compact"></tbody>
-      </table>
-
-      <div class="step-hdr">Cross-Section Properties</div>
-      <table class="res-tbl">
-        <thead><tr><th>Property</th><th>Value</th><th>Unit</th></tr></thead>
-        <tbody id="tbl-props"></tbody>
-      </table>
-
-      <div class="step-hdr">§ I2.2b — Nominal Squash Load P<sub>no</sub></div>
-      <table class="res-tbl">
-        <thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead>
-        <tbody id="tbl-pno"></tbody>
-      </table>
-
-      <div class="step-hdr">§ I2.2c/d — Stiffness, Buckling &amp; Available Axial Strength</div>
-      <table class="res-tbl">
-        <thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead>
-        <tbody id="tbl-buck"></tbody>
-      </table>
-
-      <div class="step-hdr">§ I3.4 — Flexural Strength (PSDM, compact)</div>
-      <table class="res-tbl">
-        <thead><tr><th>Axis</th><th>M<sub>p</sub> (nominal)</th><th>&phi;M<sub>n</sub> (&phi;<sub>b</sub>=0.90)</th></tr></thead>
-        <tbody id="tbl-flex"></tbody>
-      </table>
-
-      <div class="step-hdr">§ I5 / H1-1 — P-M Interaction Check</div>
-      <table class="res-tbl">
-        <thead><tr><th>Term</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead>
-        <tbody id="tbl-interaction"></tbody>
-      </table>
-
-    </div><!-- /card-body -->
-  </div><!-- /results card -->
-
-  <!-- PMM Diagram -->
+  <!-- PMM Diagram (below report card) -->
   <div class="pmm-wrap" id="pmm-wrap" style="display:none;">
     <div class="pmm-hdr">
-      <h4>P-M Interaction Diagram — LRFD</h4>
+      <h4>P-M Interaction Diagram &mdash; LRFD</h4>
       <div id="pmm-axis-tabs" style="display:flex;gap:0;">
-        <button class="unit-btn active" id="tab-x" onclick="setPmmAxis('x',this)" style="border-radius:4px 0 0 4px;">P – M<sub>x</sub></button>
-        <button class="unit-btn" id="tab-y" onclick="setPmmAxis('y',this)" style="border-radius:0 4px 4px 0;">P – M<sub>y</sub></button>
+        <button class="unit-btn active" id="tab-x" onclick="setPmmAxis('x',this)" style="border-radius:4px 0 0 4px;">P &ndash; M<sub>x</sub></button>
+        <button class="unit-btn" id="tab-y" onclick="setPmmAxis('y',this)" style="border-radius:0 4px 4px 0;">P &ndash; M<sub>y</sub></button>
       </div>
     </div>
     <div class="pmm-canvas-wrap">
@@ -304,14 +240,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="pmm-legend">
       <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> PSDM curve (nominal)</div>
       <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#e74c3c;border-top:2px dashed #e74c3c;height:0;"></div> AISC H1-1 design envelope</div>
-      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#555;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
+      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#555;display:inline-block;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
     </div>
   </div>
-
 </div><!-- /results col -->
-</div><!-- /calc-layout -->
 
+</div><!-- /calc-layout -->
 </main>
+
 <script src="../shell.js" defer></script>
 <script>
 // ═══════════════════════════════════════════════════
@@ -357,28 +293,22 @@ function updateLabels() {
   setU('u-My', M); setU('lu-My', '['+M+']');
   document.getElementById('utag').textContent = isUS ? 'kip · in' : 'kN · mm';
 
-  // Update defaults when switching
   const defD = isUS ? 10 : 254, defT = isUS ? 0.5 : 12.7;
-  const defB = isUS ? 10 : 254, defH = isUS ? 10 : 254;
-  const defTr = isUS ? 0.5 : 12.7;
+  const defB = isUS ? 10 : 254, defH = isUS ? 10 : 254, defTr = isUS ? 0.5 : 12.7;
   const deffc = isUS ? 5 : 34.5, defwc = isUS ? 145 : 2323;
   const defKL = isUS ? 14 : 4.3;
-  const defFy = isUS ? 50 : 345;
   const defPu = isUS ? 600 : 2670, defMu = isUS ? 100 : 136;
 
-  ['inp-D','inp-t','inp-B','inp-H','inp-tr','inp-fc','inp-wc','inp-KLx','inp-KLy','inp-Pu','inp-Mux','inp-Muy','inp-Fy']
-    .forEach(id => { const el = document.getElementById(id); if (!el) return; });
-
-  document.getElementById('inp-D').value = defD;
-  document.getElementById('inp-t').value = defT;
-  document.getElementById('inp-B').value = defB;
-  document.getElementById('inp-H').value = defH;
+  document.getElementById('inp-D').value  = defD;
+  document.getElementById('inp-t').value  = defT;
+  document.getElementById('inp-B').value  = defB;
+  document.getElementById('inp-H').value  = defH;
   document.getElementById('inp-tr').value = defTr;
   document.getElementById('inp-fc').value = deffc;
   document.getElementById('inp-wc').value = defwc;
   document.getElementById('inp-KLx').value = defKL;
   document.getElementById('inp-KLy').value = defKL;
-  document.getElementById('inp-Pu').value = defPu;
+  document.getElementById('inp-Pu').value  = defPu;
   document.getElementById('inp-Mux').value = defMu;
   document.getElementById('inp-Muy').value = 0;
   gradeChanged();
@@ -391,14 +321,14 @@ function setShape(s, btn) {
   });
   btn.classList.add('active');
   document.getElementById('dims-round').style.display = (s === 'round') ? '' : 'none';
-  document.getElementById('dims-rect').style.display = (s === 'rect') ? '' : 'none';
+  document.getElementById('dims-rect').style.display  = (s === 'rect')  ? '' : 'none';
   updateSVG();
   autoCalc();
 }
 
 function gradeChanged() {
   const v = document.getElementById('steel-grade').value;
-  const map = { '50': 50, '46': 46, '50r': 50, '35': 35, '50s': 50, '46s': 46 };
+  const map = { '50':50, '46':46, '50r':50, '35':35, '50s':50, '46s':46 };
   const row = document.getElementById('fy-custom-row');
   if (v === 'custom') {
     row.style.display = '';
@@ -411,9 +341,9 @@ function gradeChanged() {
 
 function getFy() {
   const v = document.getElementById('steel-grade').value;
-  const map = { '50': 50, '46': 46, '50r': 50, '35': 35, '50s': 50, '46s': 46 };
+  const map = { '50':50, '46':46, '50r':50, '35':35, '50s':50, '46s':46 };
   const fy_ksi = map[v] || parseFloat(document.getElementById('inp-Fy').value) || 50;
-  return isUS ? fy_ksi : fy_ksi * 6.895; // ksi → MPa
+  return isUS ? fy_ksi : fy_ksi * 6.895;
 }
 
 // ═══════════════════════════════════════════════════
@@ -425,381 +355,354 @@ function updateSVG() {
   if (shape === 'round') {
     const D = parseFloat(document.getElementById('inp-D').value) || 10;
     const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
-    const ri_ratio = Math.max(0.1, (D / 2 - t) / (D / 2));
+    const ri_ratio = Math.max(0.1, (D/2 - t) / (D/2));
     const Ri = R * ri_ratio;
-    svg.innerHTML = `
-      <circle cx="${cx}" cy="${cy}" r="${R}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5"/>
-      <circle cx="${cx}" cy="${cy}" r="${Ri}" fill="#e8eedc" stroke="#8898aa" stroke-width="1"/>
-      <line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>
-      <line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+    svg.innerHTML =
+      `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="${Ri}" fill="#e8eedc" stroke="#8898aa" stroke-width="1"/>` +
+      `<line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>` +
+      `<line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
   } else {
     const B = parseFloat(document.getElementById('inp-B').value) || 10;
     const H = parseFloat(document.getElementById('inp-H').value) || 10;
     const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
     const scale = 96 / Math.max(B, H);
-    const bw = Math.min(B * scale, 96), bh = Math.min(H * scale, 96);
-    const t2 = Math.max(3, Math.min(t * scale, Math.min(bw, bh) * 0.4));
-    const x = cx - bw / 2, y = cy - bh / 2;
-    svg.innerHTML = `
-      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>
-      <rect x="${x+t2}" y="${y+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="#e8eedc" stroke="#8898aa" stroke-width="1" rx="0.5"/>
-      <line x1="${cx-bw/2}" y1="${cy}" x2="${cx+bw/2}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>
-      <line x1="${cx}" y1="${cy-bh/2}" x2="${cx}" y2="${cy+bh/2}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+    const bw = Math.min(B*scale,96), bh = Math.min(H*scale,96);
+    const t2 = Math.max(3, Math.min(t*scale, Math.min(bw,bh)*0.4));
+    const x = cx - bw/2, y = cy - bh/2;
+    svg.innerHTML =
+      `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>` +
+      `<rect x="${x+t2}" y="${y+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="#e8eedc" stroke="#8898aa" stroke-width="1" rx="0.5"/>` +
+      `<line x1="${cx-bw/2}" y1="${cy}" x2="${cx+bw/2}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>` +
+      `<line x1="${cx}" y1="${cy-bh/2}" x2="${cx}" y2="${cy+bh/2}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
   }
 }
 
 // ═══════════════════════════════════════════════════
-// GEOMETRY HELPERS (circular segments)
+// GEOMETRY HELPERS
 // ═══════════════════════════════════════════════════
 function cSegA(R, h) {
-  if (h >= R) return 0;
+  if (h >= R)  return 0;
   if (h <= -R) return Math.PI * R * R;
-  const theta = Math.acos(Math.min(Math.max(h / R, -1), 1));
-  return R * R * (theta - Math.sin(theta) * Math.cos(theta));
+  const theta = Math.acos(Math.min(Math.max(h/R, -1), 1));
+  return R*R * (theta - Math.sin(theta)*Math.cos(theta));
 }
 function cSegQ(R, h) {
-  if (h >= R) return 0;
-  if (h <= -R) return 0;
-  const sinTheta = Math.sqrt(Math.max(0, 1 - (h / R) * (h / R)));
-  return (2 / 3) * R * R * R * sinTheta * sinTheta * sinTheta;
+  if (h >= R || h <= -R) return 0;
+  const s = Math.sqrt(Math.max(0, 1 - (h/R)*(h/R)));
+  return (2/3) * R*R*R * s*s*s;
 }
 function rA(W, H, y) {
-  if (y >= H / 2) return 0;
-  if (y <= -H / 2) return W * H;
-  return W * (H / 2 - y);
+  if (y >= H/2)  return 0;
+  if (y <= -H/2) return W*H;
+  return W * (H/2 - y);
 }
 function rQ(W, H, y) {
-  if (y >= H / 2) return 0;
-  if (y <= -H / 2) return 0;
-  return (W / 2) * (H * H / 4 - y * y);
+  if (y >= H/2 || y <= -H/2) return 0;
+  return (W/2) * (H*H/4 - y*y);
 }
 
 // ═══════════════════════════════════════════════════
-// PSDM — P-M curve (returns array of {P, M})
+// PSDM — P-M curve
 // ═══════════════════════════════════════════════════
-function computePM(shape, geom, Fy, fc, C2, N) {
+function computePM(sh, geom, Fy, fc, C2, N) {
   N = N || 300;
   const pts = [];
-  if (shape === 'round') {
+  if (sh === 'round') {
     const { Ro, Ri } = geom;
-    const As = Math.PI * (Ro * Ro - Ri * Ri);
+    const As = Math.PI * (Ro*Ro - Ri*Ri);
     for (let i = 0; i <= N; i++) {
-      const h = Ro - (2 * Ro * i / N);
-      const As_a = cSegA(Ro, h) - cSegA(Ri, h);
-      const As_b = As - As_a;
-      const Ac_a = cSegA(Ri, h);
-      const Qs_a = cSegQ(Ro, h) - cSegQ(Ri, h);
-      const Qc_a = cSegQ(Ri, h);
-      const ys_a = As_a > 1e-14 ? Qs_a / As_a : 0;
-      const yc_a = Ac_a > 1e-14 ? Qc_a / Ac_a : 0;
-      const P = Fy * (As_a - As_b) + C2 * fc * Ac_a;
-      const M = 2 * Fy * As_a * ys_a + C2 * fc * Ac_a * yc_a;
-      if (P >= -0.01 * Fy * As) pts.push({ P: Math.max(0, P), M });
+      const h = Ro - 2*Ro*i/N;
+      const As_a = cSegA(Ro,h) - cSegA(Ri,h);
+      const Ac_a = cSegA(Ri,h);
+      const ys_a = As_a > 1e-14 ? (cSegQ(Ro,h) - cSegQ(Ri,h)) / As_a : 0;
+      const yc_a = Ac_a > 1e-14 ? cSegQ(Ri,h) / Ac_a : 0;
+      const P = Fy*(As_a - (As - As_a)) + C2*fc*Ac_a;
+      const M = 2*Fy*As_a*ys_a + C2*fc*Ac_a*yc_a;
+      if (P >= -0.01*Fy*As) pts.push({ P: Math.max(0,P), M });
     }
   } else {
     const { B, H, t } = geom;
-    const bc = B - 2 * t, hc = H - 2 * t;
-    const As = B * H - bc * hc;
+    const bc = B-2*t, hc = H-2*t;
+    const As = B*H - bc*hc;
     for (let i = 0; i <= N; i++) {
-      const y = H / 2 - H * i / N;
-      const As_a = rA(B, H, y) - rA(bc, hc, y);
-      const As_b = As - As_a;
-      const Ac_a = rA(bc, hc, y);
-      const Qs_a = rQ(B, H, y) - rQ(bc, hc, y);
-      const Qc_a = rQ(bc, hc, y);
-      const ys_a = As_a > 1e-14 ? Qs_a / As_a : 0;
-      const yc_a = Ac_a > 1e-14 ? Qc_a / Ac_a : 0;
-      const P = Fy * (As_a - As_b) + C2 * fc * Ac_a;
-      const M = 2 * Fy * As_a * ys_a + C2 * fc * Ac_a * yc_a;
-      if (P >= -0.01 * Fy * As) pts.push({ P: Math.max(0, P), M });
+      const y = H/2 - H*i/N;
+      const As_a = rA(B,H,y) - rA(bc,hc,y);
+      const Ac_a = rA(bc,hc,y);
+      const ys_a = As_a > 1e-14 ? (rQ(B,H,y) - rQ(bc,hc,y)) / As_a : 0;
+      const yc_a = Ac_a > 1e-14 ? rQ(bc,hc,y) / Ac_a : 0;
+      const P = Fy*(As_a - (As - As_a)) + C2*fc*Ac_a;
+      const M = 2*Fy*As_a*ys_a + C2*fc*Ac_a*yc_a;
+      if (P >= -0.01*Fy*As) pts.push({ P: Math.max(0,P), M });
     }
   }
   return pts;
 }
 
 function findMp(pts) {
-  let best = pts[0], bestDelta = Infinity;
-  for (const p of pts) {
-    const d = Math.abs(p.P);
-    if (d < bestDelta) { bestDelta = d; best = p; }
-  }
+  let best = pts[0], bd = Infinity;
+  for (const p of pts) { const d = Math.abs(p.P); if (d < bd) { bd = d; best = p; } }
   return best ? best.M : 0;
 }
 
 // ═══════════════════════════════════════════════════
 // MAIN CALCULATION
 // ═══════════════════════════════════════════════════
-function autoCalc() {
-  try { calc(); } catch(e) { console.error(e); }
-}
+function autoCalc() { try { calc(); } catch(e) { console.error(e); } }
 
 function calc() {
   const Es = isUS ? Es_us : Es_si;
   const Fy = getFy();
-  const fc_raw = parseFloat(document.getElementById('inp-fc').value) || 5;
-  const fc = fc_raw;
-  const wc_raw = parseFloat(document.getElementById('inp-wc').value) || 145;
-  const Ec = isUS
-    ? 33 * Math.pow(wc_raw, 1.5) * Math.sqrt(fc * 1000) / 1000
-    : 0.043 * Math.pow(wc_raw, 1.5) * Math.sqrt(fc);
+  const fc  = parseFloat(document.getElementById('inp-fc').value)  || 5;
+  const wc  = parseFloat(document.getElementById('inp-wc').value)  || 145;
+  const Ec  = isUS
+    ? 33 * Math.pow(wc,1.5) * Math.sqrt(fc*1000) / 1000
+    : 0.043 * Math.pow(wc,1.5) * Math.sqrt(fc);
 
-  const KLx_raw = parseFloat(document.getElementById('inp-KLx').value) || 14;
-  const KLy_raw = parseFloat(document.getElementById('inp-KLy').value) || 14;
-  const KLx = isUS ? KLx_raw * 12 : KLx_raw * 1000;
-  const KLy = isUS ? KLy_raw * 12 : KLy_raw * 1000;
-
-  const Pu = parseFloat(document.getElementById('inp-Pu').value) || 0;
-  const Mux_raw = parseFloat(document.getElementById('inp-Mux').value) || 0;
-  const Muy_raw = parseFloat(document.getElementById('inp-Muy').value) || 0;
-  const Mux = isUS ? Mux_raw * 12 : Mux_raw * 1000;
-  const Muy = isUS ? Muy_raw * 12 : Muy_raw * 1000;
+  const KLx = (parseFloat(document.getElementById('inp-KLx').value)||14) * (isUS ? 12 : 1000);
+  const KLy = (parseFloat(document.getElementById('inp-KLy').value)||14) * (isUS ? 12 : 1000);
+  const Pu  = parseFloat(document.getElementById('inp-Pu').value)  || 0;
+  const Mux = (parseFloat(document.getElementById('inp-Mux').value)||0) * (isUS ? 12 : 1000);
+  const Muy = (parseFloat(document.getElementById('inp-Muy').value)||0) * (isUS ? 12 : 1000);
 
   let As, Ac, Ag, Is_x, Ic_x, Is_y, Ic_y, lambda_x, lambda_y;
-  let lambda_px, lambda_rx, lambda_max_x, lambda_py, lambda_ry, lambda_max_y;
-  let C2, geom;
+  let lambda_p, lambda_r, lambda_max, C2, geom;
 
   if (shape === 'round') {
     const D = parseFloat(document.getElementById('inp-D').value) || 10;
     const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
-    const Ro = D / 2, Ri = Ro - t;
-    As = Math.PI * (Ro * Ro - Ri * Ri);
-    Ac = Math.PI * Ri * Ri;
-    Ag = Math.PI * Ro * Ro;
-    Is_x = Math.PI / 4 * (Math.pow(Ro, 4) - Math.pow(Ri, 4));
-    Ic_x = Math.PI / 4 * Math.pow(Ri, 4);
+    const Ro = D/2, Ri = Ro - t;
+    As = Math.PI*(Ro*Ro - Ri*Ri);
+    Ac = Math.PI*Ri*Ri; Ag = Math.PI*Ro*Ro;
+    Is_x = Math.PI/4*(Math.pow(Ro,4) - Math.pow(Ri,4));
+    Ic_x = Math.PI/4*Math.pow(Ri,4);
     Is_y = Is_x; Ic_y = Ic_x;
-    lambda_x = lambda_y = D / t;
-    lambda_px = lambda_py = 0.15 * Es / Fy;
-    lambda_rx = lambda_ry = 0.19 * Es / Fy;
-    lambda_max_x = lambda_max_y = 0.31 * Es / Fy;
-    C2 = 0.95;
-    geom = { Ro, Ri };
+    lambda_x = lambda_y = D/t;
+    lambda_p = 0.15*Es/Fy; lambda_r = 0.19*Es/Fy; lambda_max = 0.31*Es/Fy;
+    C2 = 0.95; geom = { Ro, Ri };
   } else {
     const B = parseFloat(document.getElementById('inp-B').value) || 10;
     const H = parseFloat(document.getElementById('inp-H').value) || 10;
     const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
-    const bc = B - 2 * t, hc = H - 2 * t;
-    As = B * H - bc * hc;
-    Ac = bc * hc;
-    Ag = B * H;
-    Is_x = (B * Math.pow(H, 3) - bc * Math.pow(hc, 3)) / 12;
-    Ic_x = bc * Math.pow(hc, 3) / 12;
-    Is_y = (H * Math.pow(B, 3) - hc * Math.pow(bc, 3)) / 12;
-    Ic_y = hc * Math.pow(bc, 3) / 12;
-    lambda_x = hc / t;
-    lambda_y = bc / t;
-    lambda_px = lambda_py = 2.26 * Math.sqrt(Es / Fy);
-    lambda_rx = lambda_ry = 3.00 * Math.sqrt(Es / Fy);
-    lambda_max_x = lambda_max_y = 5.00 * Math.sqrt(Es / Fy);
-    C2 = 0.85;
-    geom = { B, H, t };
+    const bc = B-2*t, hc = H-2*t;
+    As = B*H - bc*hc; Ac = bc*hc; Ag = B*H;
+    Is_x = (B*Math.pow(H,3) - bc*Math.pow(hc,3))/12;
+    Ic_x = bc*Math.pow(hc,3)/12;
+    Is_y = (H*Math.pow(B,3) - hc*Math.pow(bc,3))/12;
+    Ic_y = hc*Math.pow(bc,3)/12;
+    lambda_x = hc/t; lambda_y = bc/t;
+    lambda_p = 2.26*Math.sqrt(Es/Fy); lambda_r = 3.00*Math.sqrt(Es/Fy); lambda_max = 5.00*Math.sqrt(Es/Fy);
+    C2 = 0.85; geom = { B, H, t };
   }
 
-  const rho_s = As / Ag;
+  const rho_s = As/Ag;
   const lambda_gov = shape === 'round' ? lambda_x : Math.max(lambda_x, lambda_y);
-  const lambda_p = lambda_px, lambda_r = lambda_rx, lambda_max = lambda_max_x;
 
   let classify, classLabel;
-  if (lambda_gov <= lambda_p) {
-    classify = 'compact'; classLabel = 'Compact Composite';
-  } else if (lambda_gov <= lambda_r) {
-    classify = 'noncompact'; classLabel = 'Noncompact Composite';
-  } else if (lambda_gov <= lambda_max) {
-    classify = 'slender'; classLabel = 'Slender-Element Composite';
-  } else {
-    classify = 'not-permitted'; classLabel = 'NOT PERMITTED';
-  }
+  if      (lambda_gov <= lambda_p)   { classify = 'compact';       classLabel = 'Compact Composite'; }
+  else if (lambda_gov <= lambda_r)   { classify = 'noncompact';    classLabel = 'Noncompact Composite'; }
+  else if (lambda_gov <= lambda_max) { classify = 'slender';       classLabel = 'Slender-Element Composite'; }
+  else                               { classify = 'not-permitted'; classLabel = 'NOT PERMITTED'; }
 
-  const Pp_x = Fy * As + C2 * fc * Ac;
-  const Py_x = Fy * As + 0.70 * fc * Ac;
+  const Pp = Fy*As + C2*fc*Ac;
+  const Py = Fy*As + 0.70*fc*Ac;
   let Pno;
   if (classify === 'compact') {
-    Pno = Pp_x;
+    Pno = Pp;
   } else if (classify === 'noncompact') {
-    const ratio = (lambda_gov - lambda_p) / (lambda_r - lambda_p);
-    Pno = Pp_x - (Pp_x - Py_x) * ratio * ratio;
+    const r = (lambda_gov - lambda_p) / (lambda_r - lambda_p);
+    Pno = Pp - (Pp - Py)*r*r;
   } else if (classify === 'slender') {
     if (shape === 'round') {
-      const Fn = 0.7 * Math.min(Fy, 0.72 * Es / lambda_gov);
-      Pno = Fn * As + 0.70 * fc * Ac;
+      Pno = 0.7*Math.min(Fy, 0.72*Es/lambda_gov)*As + 0.70*fc*Ac;
     } else {
-      const Fcr = 9 * Es / (lambda_gov * lambda_gov);
-      Pno = Math.min(Fcr, Fy) * As + 0.70 * fc * Ac;
+      Pno = Math.min(9*Es/(lambda_gov*lambda_gov), Fy)*As + 0.70*fc*Ac;
     }
-  } else {
-    Pno = 0;
-  }
+  } else { Pno = 0; }
 
-  const C3_x = Math.min(0.90, 0.45 + 3 * As / Ag);
-  const C3_y = C3_x;
-  const EIeff_x = Es * Is_x + C3_x * Ec * Ic_x;
-  const EIeff_y = Es * Is_y + C3_y * Ec * Ic_y;
-
-  const Pe_x = Math.PI * Math.PI * EIeff_x / (KLx * KLx);
-  const Pe_y = Math.PI * Math.PI * EIeff_y / (KLy * KLy);
+  const C3 = Math.min(0.90, 0.45 + 3*As/Ag);
+  const EIeff_x = Es*Is_x + C3*Ec*Ic_x;
+  const EIeff_y = Es*Is_y + C3*Ec*Ic_y;
+  const Pe_x = Math.PI*Math.PI*EIeff_x / (KLx*KLx);
+  const Pe_y = Math.PI*Math.PI*EIeff_y / (KLy*KLy);
   const Pe_gov = Math.min(Pe_x, Pe_y);
 
-  let Pn;
-  if (classify === 'not-permitted' || Pno <= 0) {
-    Pn = 0;
-  } else if (Pno / Pe_gov <= 2.25) {
-    Pn = Pno * Math.pow(0.658, Pno / Pe_gov);
-  } else {
-    Pn = 0.877 * Pe_gov;
+  let Pn = 0;
+  if (classify !== 'not-permitted' && Pno > 0) {
+    Pn = Pno/Pe_gov <= 2.25 ? Pno*Math.pow(0.658, Pno/Pe_gov) : 0.877*Pe_gov;
   }
-  const phiPn = 0.75 * Pn;
+  const phiPn = 0.75*Pn;
 
   const pts_x = computePM(shape, geom, Fy, fc, C2, 300);
-  const Mp_x = findMp(pts_x);
-  const phiMn_x = 0.90 * Mp_x;
+  const Mp_x  = findMp(pts_x);
+  const phiMn_x = 0.90*Mp_x;
 
   let pts_y = pts_x, Mp_y = Mp_x, phiMn_y = phiMn_x;
   if (shape === 'rect') {
     const { B, H, t } = geom;
-    const geom_y = { B: H, H: B, t };
-    pts_y = computePM('rect', geom_y, Fy, fc, C2, 300);
-    Mp_y = findMp(pts_y);
-    phiMn_y = 0.90 * Mp_y;
+    pts_y = computePM('rect', { B:H, H:B, t }, Fy, fc, C2, 300);
+    Mp_y  = findMp(pts_y); phiMn_y = 0.90*Mp_y;
   }
 
-  const Pc = phiPn;
-  const Mcx = phiMn_x, Mcy = phiMn_y;
-  let DCR, eqUsed;
-  if (Pc > 0) {
-    const Pr_ratio = Pu / Pc;
-    if (Pr_ratio >= 0.2) {
-      DCR = Pr_ratio + (8 / 9) * (Mux / Mcx + (Mcy > 0 ? Muy / Mcy : 0));
-      eqUsed = 'H1-1a';
-    } else {
-      DCR = Pu / (2 * Pc) + (Mux / Mcx + (Mcy > 0 ? Muy / Mcy : 0));
-      eqUsed = 'H1-1b';
-    }
-  } else {
-    DCR = 9999;
-    eqUsed = '—';
+  let DCR = 9999, eqUsed = '—';
+  if (phiPn > 0) {
+    const pr = Pu/phiPn;
+    if (pr >= 0.2) { DCR = pr + (8/9)*(Mux/phiMn_x + (phiMn_y > 0 ? Muy/phiMn_y : 0)); eqUsed = 'H1-1a'; }
+    else           { DCR = Pu/(2*phiPn) + (Mux/phiMn_x + (phiMn_y > 0 ? Muy/phiMn_y : 0)); eqUsed = 'H1-1b'; }
   }
   const pass = DCR <= 1.0 && classify !== 'not-permitted';
 
-  const fU = isUS ? 'kips' : 'kN';
-  const mU = isUS ? 'kip-ft' : 'kN·m';
-  const lU = isUS ? 'in' : 'mm';
+  // ── Unit labels ──
+  const fU  = isUS ? 'kips' : 'kN';
+  const mU  = isUS ? 'kip-ft' : 'kN·m';
   const l4U = isUS ? 'in⁴' : 'mm⁴';
   const k2U = isUS ? 'ksi' : 'MPa';
   const EIU = isUS ? 'kip·in²' : 'kN·mm²';
-  const toM = v => isUS ? v / 12 : v / 1000;
-  const fmt = (v, d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
-  const fmt3 = v => fmt(v, 3);
-  const fmt0 = v => fmt(v, 0);
+  const toM = v => isUS ? v/12 : v/1000;
+  const fmt = (v,d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
+  const fmt0 = v => fmt(v,0);
+  const sciE = v => {
+    if (!v) return '0';
+    const e = Math.floor(Math.log10(Math.abs(v)));
+    return (v/Math.pow(10,e)).toFixed(3) + ' × 10<sup>' + e + '</sup>';
+  };
 
-  const Ec_disp = Ec;
-  const fy_ksi = isUS ? Fy : Fy / 6.895;
-  const fc_ksi = isUS ? fc : fc / 6.895;
-  const fy_ok = Fy <= (isUS ? 75 : 517);
-  const fc_ok = fc_ksi >= 3 && fc_ksi <= 10;
+  const phiMn_x_d = toM(phiMn_x), phiMn_y_d = toM(phiMn_y);
+  const Mp_x_d    = toM(Mp_x),    Mp_y_d    = toM(Mp_y);
+  const Mux_d = toM(Mux), Muy_d = toM(Muy);
+  const Mcx_d = toM(phiMn_x), Mcy_d = toM(phiMn_y);
+
+  const fc_ksi = isUS ? fc : fc/6.895;
+  const fy_ok  = Fy <= (isUS ? 75 : 517);
+  const fc_ok  = fc_ksi >= 3 && fc_ksi <= 10;
   const rho_ok = rho_s >= 0.01;
 
-  const mkRow = (a, b, c, d) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td></tr>`;
-  const badge = (ok, txt) => `<span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${txt}</span>`;
-  const classB = classify === 'compact' ? 'badge-ok' : classify === 'noncompact' ? 'badge-warn' : 'badge-err';
-
-  document.getElementById('tbl-limits').innerHTML =
-    mkRow('Fy ≤ ' + (isUS ? '75 ksi' : '517 MPa'), fmt(Fy,1)+' '+k2U, isUS ? '75 ksi' : '517 MPa', badge(fy_ok, fy_ok ? 'OK' : 'FAIL')) +
-    mkRow("3 ≤ f'c ≤ 10 ksi", fmt(fc_ksi,1)+' ksi', '3 – 10 ksi', badge(fc_ok, fc_ok ? 'OK' : 'FAIL')) +
-    mkRow('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> ≥ 1%', fmt(rho_s*100,2)+'%', '≥ 1%', badge(rho_ok, rho_ok ? 'OK' : 'FAIL'));
-
-  const cmpRows = shape === 'round'
-    ? `<tr>
-        <td>D/t (round)</td>
-        <td class="${lambda_gov > lambda_max ? 'verr' : lambda_gov > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_gov,1)}</td>
-        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
-       </tr>`
-    : `<tr>
-        <td>h<sub>c</sub>/t (strong, H dir.)</td>
-        <td class="${lambda_x > lambda_max ? 'verr' : lambda_x > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_x,1)}</td>
-        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
-       </tr>
-       <tr>
-        <td>b<sub>c</sub>/t (weak, B dir.)</td>
-        <td class="${lambda_y > lambda_max ? 'verr' : lambda_y > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_y,1)}</td>
-        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
-       </tr>`;
-  document.getElementById('tbl-compact').innerHTML =
-    cmpRows +
-    `<tr><td colspan="4" style="padding-top:6px;"><span class="badge ${classB}">${classLabel}</span></td></tr>`;
-
-  document.getElementById('tbl-props').innerHTML =
-    `<tr><td>A<sub>g</sub> (gross)</td><td>${fmt(Ag,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
-    `<tr><td>A<sub>s</sub> (steel)</td><td>${fmt(As,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
-    `<tr><td>A<sub>c</sub> (concrete)</td><td>${fmt(Ac,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
-    `<tr><td>&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub></td><td>${fmt(rho_s*100,2)}</td><td>%</td></tr>` +
-    `<tr><td>I<sub>s,x</sub> (steel)</td><td>${fmt0(Is_x)}</td><td>${l4U}</td></tr>` +
-    `<tr><td>I<sub>c,x</sub> (concrete)</td><td>${fmt0(Ic_x)}</td><td>${l4U}</td></tr>` +
-    (shape === 'rect' ? `<tr><td>I<sub>s,y</sub> (steel)</td><td>${fmt0(Is_y)}</td><td>${l4U}</td></tr><tr><td>I<sub>c,y</sub> (concrete)</td><td>${fmt0(Ic_y)}</td><td>${l4U}</td></tr>` : '');
-
-  const C2label = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
-  document.getElementById('tbl-pno').innerHTML =
-    `<tr><td>C<sub>2</sub></td><td>${C2label}</td><td>—</td></tr>` +
-    `<tr><td>P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub></td><td>${fmt(Pp_x,1)}</td><td>${fU}</td></tr>` +
-    (classify !== 'compact' ? `<tr><td>P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f'<sub>c</sub>A<sub>c</sub></td><td>${fmt(Py_x,1)}</td><td>${fU}</td></tr>` : '') +
-    `<tr><td><b>P<sub>no</sub></b> (${classLabel})</td><td><b>${fmt(Pno,1)}</b></td><td>${fU}</td></tr>`;
-
-  const sciE = v => {
-    if (v === 0) return '0';
-    const e = Math.floor(Math.log10(Math.abs(v)));
-    return (v / Math.pow(10, e)).toFixed(3) + ' × 10<sup>' + e + '</sup>';
-  };
-  document.getElementById('tbl-buck').innerHTML =
-    `<tr><td>E<sub>c</sub> (concrete)</td><td>${fmt(Ec_disp,0)}</td><td>${k2U}</td></tr>` +
-    `<tr><td>C<sub>3</sub> = 0.45 + 3·A<sub>s</sub>/A<sub>g</sub></td><td>${fmt(C3_x,3)}</td><td>—</td></tr>` +
-    `<tr><td>EI<sub>eff,x</sub></td><td>${sciE(EIeff_x)}</td><td>${EIU}</td></tr>` +
-    (shape === 'rect' ? `<tr><td>EI<sub>eff,y</sub></td><td>${sciE(EIeff_y)}</td><td>${EIU}</td></tr>` : '') +
-    `<tr><td>P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²</td><td>${fmt(Pe_x,1)}</td><td>${fU}</td></tr>` +
-    (shape === 'rect' ? `<tr><td>P<sub>e,y</sub></td><td>${fmt(Pe_y,1)}</td><td>${fU}</td></tr>` : '') +
-    `<tr><td>P<sub>no</sub>/P<sub>e,gov</sub></td><td>${fmt(Pno/Pe_gov,3)}</td><td>${Pno/Pe_gov<=2.25?'≤ 2.25 → inelastic':'> 2.25 → elastic'}</td></tr>` +
-    `<tr><td>P<sub>n</sub></td><td>${fmt(Pn,1)}</td><td>${fU}</td></tr>` +
-    `<tr><td><b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub>=0.75)</td><td class="vok"><b>${fmt(phiPn,1)}</b></td><td>${fU}</td></tr>`;
-
-  const Mp_x_disp = toM(Mp_x), Mp_y_disp = toM(Mp_y);
-  const phiMn_x_disp = toM(phiMn_x), phiMn_y_disp = toM(phiMn_y);
-  document.getElementById('tbl-flex').innerHTML =
-    `<tr><td>Strong axis (x)</td><td>${fmt(Mp_x_disp,1)} ${mU}</td><td class="vok">${fmt(phiMn_x_disp,1)} ${mU}</td></tr>` +
-    (shape === 'rect' ? `<tr><td>Weak axis (y)</td><td>${fmt(Mp_y_disp,1)} ${mU}</td><td class="vok">${fmt(phiMn_y_disp,1)} ${mU}</td></tr>` : '');
-
-  const Mux_disp = toM(Mux), Muy_disp = toM(Muy);
-  const Mcx_disp = toM(Mcx), Mcy_disp = toM(Mcy);
-  document.getElementById('tbl-interaction').innerHTML =
-    mkRow('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/phiPn,3), eqUsed, '') +
-    mkRow('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_disp/Mcx_disp,3), eqUsed, '') +
-    (Muy > 0 ? mkRow('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_disp/Mcy_disp,3), eqUsed, '') : '') +
-    `<tr><td colspan="2"><b>DCR (AISC ${eqUsed})</b></td><td><b>${fmt(DCR,3)}</b></td><td>${pass ? badge(true,'OK') : badge(false,'NG')}</td></tr>`;
-
-  document.getElementById('s-class').textContent = classLabel;
-  document.getElementById('s-class').className = 'sum-val ' + (classify === 'compact' ? 'ok' : classify === 'not-permitted' ? 'err' : 'warn');
-  document.getElementById('s-phiPn').textContent = fmt(phiPn,0) + ' ' + fU;
-  document.getElementById('s-phiMn').textContent = fmt(phiMn_x_disp,0) + ' ' + mU;
-  document.getElementById('s-dcr').textContent = fmt(DCR,3);
-  document.getElementById('s-dcr').className = 'sum-val ' + (DCR <= 1 ? 'ok' : 'err');
-  document.getElementById('s-result').textContent = pass ? 'PASS' : 'FAIL';
-  document.getElementById('s-result').className = 'sum-val ' + (pass ? 'ok' : 'err');
-
-  let warns = [];
-  if (!fy_ok) warns.push('Fy exceeds 75 ksi (AISC I1.3 limit). Consider Appendix 2 for high-strength steel.');
-  if (!fc_ok) warns.push("f'c outside 3–10 ksi range (AISC I1.3). Adjust concrete strength.");
+  // ── Warnings ──
+  const warns = [];
+  if (!fy_ok)  warns.push('Fy exceeds 75 ksi limit (AISC I1.3). Consider Appendix 2 for high-strength steel.');
+  if (!fc_ok)  warns.push("f'c outside 3–10 ksi range (AISC I1.3). Adjust concrete strength.");
   if (!rho_ok) warns.push('ρ_s = As/Ag < 1% — minimum steel ratio not satisfied (AISC I1.3).');
-  if (classify === 'not-permitted') warns.push('Section exceeds maximum D/t or b/t limit. Cannot be designed as filled composite.');
-  if (classify === 'slender') warns.push('Slender-element section: local buckling governs. Results are approximate for slender round HSS. Verify with AISC Design Guide 6.');
-  const wb = document.getElementById('warn-box');
-  wb.style.display = warns.length ? '' : 'none';
-  wb.innerHTML = warns.map(w => '⚠ ' + w).join('<br>');
+  if (classify === 'not-permitted') warns.push('Section exceeds maximum D/t or b/t limit — cannot be designed as filled composite.');
+  if (classify === 'slender')       warns.push('Slender-element section: local buckling governs. Results are approximate. Verify with AISC Design Guide 6.');
 
-  lastResult = {
-    pts_x, pts_y, Pno, Mp_x, Mp_y, phiPn, phiMn_x, phiMn_y,
-    Pu, Mux, Muy, Mux_disp, Muy_disp, Mcx_disp, Mcy_disp,
-    phiMn_x_disp, phiMn_y_disp, fU, mU, pass
-  };
+  // ── Build report HTML ──
+  const badge  = (ok, txt) => `<span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${txt}</span>`;
+  const classB = classify === 'compact' ? 'badge-ok' : classify === 'noncompact' ? 'badge-warn' : 'badge-err';
+  const mkRow4 = (a,b,c,d) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td></tr>`;
+  const mkRow3 = (a,b,c)   => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
 
+  let h = '';
+
+  // DCR banner
+  const dcCls = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
+  h += `<div class="dcr-banner ${dcCls}">` +
+       `<div class="dcr-icon">${pass ? '&#10003;' : '&#10007;'}</div>` +
+       `<div class="dcr-text"><strong>${pass ? 'PASS' : 'FAIL'} &mdash; DCR = ${fmt(DCR,3)}</strong>` +
+       `<span>AISC 360-22 Ch. I &middot; Eq. ${eqUsed} &middot; ${classLabel}</span></div></div>`;
+
+  // Warn box
+  if (warns.length) {
+    h += `<div class="report-warn">` + warns.map(w => '&#9888; ' + w).join('<br>') + `</div>`;
+  }
+
+  // Key results box
+  const clsCls = classify === 'compact' ? ' ok' : classify === 'not-permitted' ? ' err' : ' warn';
+  h += `<div class="result-box">` +
+       `<div class="result-item${clsCls}"><div class="ri-label">Classification</div><div class="ri-value" style="font-size:.85rem">${classLabel}</div></div>` +
+       `<div class="result-item"><div class="ri-label">&phi;P<sub>n</sub></div><div class="ri-value">${fmt0(phiPn)}</div><div class="ri-unit">${fU}</div></div>` +
+       `<div class="result-item"><div class="ri-label">&phi;M<sub>n,x</sub></div><div class="ri-value">${fmt(phiMn_x_d,0)}</div><div class="ri-unit">${mU}</div></div>` +
+       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">DCR</div><div class="ri-value" id="s-dcr">${fmt(DCR,3)}</div><div class="ri-unit">Eq. ${eqUsed}</div></div>` +
+       `</div>`;
+
+  // § I1.3 Material & Area Limits
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I1.3 Material &amp; Area Limits</div>` +
+       `<table class="res-tbl"><thead><tr><th>Check</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead><tbody>` +
+       mkRow4('F<sub>y</sub> &le; '+(isUS?'75 ksi':'517 MPa'), fmt(Fy,1)+' '+k2U, isUS?'75 ksi':'517 MPa', badge(fy_ok, fy_ok?'OK':'FAIL')) +
+       mkRow4("3 &le; f'<sub>c</sub> &le; 10 ksi", fmt(fc_ksi,1)+' ksi', '3 – 10 ksi', badge(fc_ok, fc_ok?'OK':'FAIL')) +
+       mkRow4('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> &ge; 1%', fmt(rho_s*100,2)+'%', '&ge; 1%', badge(rho_ok, rho_ok?'OK':'FAIL')) +
+       `</tbody></table></div>`;
+
+  // § Table I1.1a — Classification
+  const cmpBody = shape === 'round'
+    ? mkRow4('D/t (round)', `<b class="${lambda_gov > lambda_max ? 'verr' : lambda_gov > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_gov,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1)) +
+      mkRow4('', '', `&lambda;<sub>r</sub> = ${fmt(lambda_r,1)}`, `&lambda;<sub>max</sub> = ${fmt(lambda_max,1)}`)
+    : mkRow4('h<sub>c</sub>/t (H dir.)', `<b class="${lambda_x > lambda_max ? 'verr' : lambda_x > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_x,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1)) +
+      mkRow4('b<sub>c</sub>/t (B dir.)', `<b class="${lambda_y > lambda_max ? 'verr' : lambda_y > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_y,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1));
+
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; Table I1.1a &mdash; Section Classification</div>` +
+       `<table class="res-tbl"><thead><tr><th>Parameter</th><th>Computed</th><th>Compact (&lambda;<sub>p</sub>)</th><th>Noncompact (&lambda;<sub>r</sub>)</th></tr></thead><tbody>` +
+       cmpBody +
+       `<tr><td colspan="4"><span class="badge ${classB}">${classLabel}</span> &nbsp; &lambda;<sub>max</sub> = ${fmt(lambda_max,1)}</td></tr>` +
+       `</tbody></table></div>`;
+
+  // Cross-section properties
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">Cross-Section Properties</div>` +
+       `<table class="res-tbl"><thead><tr><th>Property</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
+       mkRow3('A<sub>g</sub> (gross)',    fmt(Ag,3),       l4U.replace('⁴','²')) +
+       mkRow3('A<sub>s</sub> (steel)',    fmt(As,3),       l4U.replace('⁴','²')) +
+       mkRow3('A<sub>c</sub> (concrete)',  fmt(Ac,3),       l4U.replace('⁴','²')) +
+       mkRow3('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', fmt(rho_s*100,2), '%') +
+       mkRow3('I<sub>s,x</sub>',          fmt0(Is_x),      l4U) +
+       mkRow3('I<sub>c,x</sub>',          fmt0(Ic_x),      l4U) +
+       (shape==='rect' ? mkRow3('I<sub>s,y</sub>', fmt0(Is_y), l4U) + mkRow3('I<sub>c,y</sub>', fmt0(Ic_y), l4U) : '') +
+       `</tbody></table></div>`;
+
+  // § I2.2b — Pno
+  const C2label = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2b &mdash; Nominal Squash Load P<sub>no</sub></div>` +
+       `<table class="res-tbl"><thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
+       mkRow3('C<sub>2</sub>', C2label, '—') +
+       mkRow3('P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f\'<sub>c</sub>A<sub>c</sub>', fmt(Pp,1), fU) +
+       (classify!=='compact' ? mkRow3('P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f\'<sub>c</sub>A<sub>c</sub>', fmt(Py,1), fU) : '') +
+       `<tr><td><b>P<sub>no</sub> (${classLabel})</b></td><td><b>${fmt(Pno,1)}</b></td><td>${fU}</td></tr>` +
+       `</tbody></table></div>`;
+
+  // § I2.2c/d — Buckling
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Available Axial Strength</div>` +
+       `<table class="res-tbl"><thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
+       mkRow3('E<sub>c</sub> (concrete)', fmt(Ec,0), k2U) +
+       mkRow3('C<sub>3</sub> = 0.45 + 3·A<sub>s</sub>/A<sub>g</sub>', fmt(C3,3), '—') +
+       mkRow3('EI<sub>eff,x</sub>', sciE(EIeff_x), EIU) +
+       (shape==='rect' ? mkRow3('EI<sub>eff,y</sub>', sciE(EIeff_y), EIU) : '') +
+       mkRow3('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', fmt(Pe_x,1), fU) +
+       (shape==='rect' ? mkRow3('P<sub>e,y</sub>', fmt(Pe_y,1), fU) : '') +
+       mkRow3('P<sub>no</sub>/P<sub>e,gov</sub>', fmt(Pno/Pe_gov,3), Pno/Pe_gov<=2.25 ? '&le; 2.25 &rarr; inelastic' : '&gt; 2.25 &rarr; elastic') +
+       mkRow3('P<sub>n</sub>', fmt(Pn,1), fU) +
+       `<tr><td><b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub>=0.75)</td><td class="vok"><b>${fmt(phiPn,1)}</b></td><td>${fU}</td></tr>` +
+       `</tbody></table></div>`;
+
+  // § I3.4 — Flexural
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I3.4 &mdash; Flexural Strength (PSDM, compact cross-section)</div>` +
+       `<table class="res-tbl"><thead><tr><th>Axis</th><th>M<sub>p</sub> (nominal)</th><th>&phi;M<sub>n</sub> (&phi;<sub>b</sub>=0.90)</th></tr></thead><tbody>` +
+       `<tr><td>Strong axis (x)</td><td>${fmt(Mp_x_d,1)} ${mU}</td><td class="vok"><b>${fmt(phiMn_x_d,1)} ${mU}</b></td></tr>` +
+       (shape==='rect' ? `<tr><td>Weak axis (y)</td><td>${fmt(Mp_y_d,1)} ${mU}</td><td class="vok"><b>${fmt(phiMn_y_d,1)} ${mU}</b></td></tr>` : '') +
+       `</tbody></table></div>`;
+
+  // § I5 / H1-1 — Interaction
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
+       `<table class="res-tbl"><thead><tr><th>Term</th><th>Demand / Capacity</th><th>Equation</th><th>Status</th></tr></thead><tbody>` +
+       mkRow4('P<sub>u</sub> / &phi;P<sub>n</sub>',   fmt(Pu/phiPn,3),      eqUsed, '') +
+       mkRow4('M<sub>ux</sub> / &phi;M<sub>n,x</sub>',fmt(Mux_d/Mcx_d,3),   eqUsed, '') +
+       (Muy > 0 ? mkRow4('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3), eqUsed, '') : '') +
+       `<tr><td colspan="2"><b>DCR (AISC ${eqUsed})</b></td><td><b>${fmt(DCR,3)}</b></td><td>${badge(pass, pass?'OK':'NG')}</td></tr>` +
+       `</tbody></table></div>`;
+
+  document.getElementById('res-body').innerHTML = h;
+
+  // Show / hide report
+  document.getElementById('cf-empty').style.display      = 'none';
+  document.getElementById('cf-report-wrap').style.display = '';
+
+  // PMM
   document.getElementById('pmm-wrap').style.display = '';
-  document.getElementById('tab-y').style.display = shape === 'rect' ? '' : 'none';
+  document.getElementById('tab-y').style.display    = shape === 'rect' ? '' : 'none';
+
+  // Update header code label
+  document.getElementById('rh-code').textContent =
+    'AISC 360-22 · ' + (isUS ? 'kip · in' : 'kN · mm');
+
+  lastResult = { pts_x, pts_y, Pno, Mp_x, Mp_y, phiPn, phiMn_x, phiMn_y,
+                 Pu, Mux, Muy, DCR, fU, mU, pass };
   drawPMM();
 }
 
@@ -815,119 +718,104 @@ function setPmmAxis(ax, btn) {
 
 function drawPMM() {
   if (!lastResult) return;
-  const r = lastResult;
-  const pts = pmmAxis === 'x' ? r.pts_x : r.pts_y;
-  const Mp = pmmAxis === 'x' ? r.Mp_x : r.Mp_y;
+  const r    = lastResult;
+  const pts  = pmmAxis === 'x' ? r.pts_x : r.pts_y;
+  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;
   const phiMn = pmmAxis === 'x' ? r.phiMn_x : r.phiMn_y;
-  const Mu = pmmAxis === 'x' ? r.Mux : r.Muy;
-  const Mu_disp = pmmAxis === 'x' ? r.Mux_disp : r.Muy_disp;
-  const phiMn_disp = pmmAxis === 'x' ? r.phiMn_x_disp : r.phiMn_y_disp;
+  const Mu   = pmmAxis === 'x' ? r.Mux : r.Muy;
 
   const canvas = document.getElementById('pmm-canvas');
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const pad = { top: 28, right: 28, bot: 52, left: 68 };
+  const pad = { top:28, right:28, bot:52, left:68 };
   const cw = W - pad.left - pad.right;
-  const ch = H - pad.top - pad.bot;
+  const ch = H - pad.top  - pad.bot;
 
-  const Pmax = Math.max(r.Pno * 1.08, r.Pu * 1.15);
-  const Mmax = Math.max(Mp * 1.08, Mu * 1.15, phiMn * 1.08);
+  const Pmax = Math.max(r.Pno * 1.08, r.Pu * 1.15, 1);
+  const Mmax = Math.max(Mp * 1.08, Mu * 1.15, phiMn * 1.08, 1);
+  const toX  = m => pad.left + m/Mmax * cw;
+  const toY  = p => pad.top  + ch - p/Pmax * ch;
 
-  const toX = m => pad.left + m / Mmax * cw;
-  const toY = p => pad.top + ch - p / Pmax * ch;
+  // Background
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
 
-  const axCol = '#4a5568';
-  const gridCol = 'rgba(0,0,0,0.06)';
-  const bgCol = '#fff';
-
-  ctx.fillStyle = bgCol;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.strokeStyle = gridCol;
-  ctx.lineWidth = 1;
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
   for (let i = 1; i <= 4; i++) {
-    const x = toX(Mmax * i / 4), y = toY(Pmax * i / 4);
-    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + ch); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toX(Mmax*i/4), pad.top); ctx.lineTo(toX(Mmax*i/4), pad.top+ch); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, toY(Pmax*i/4)); ctx.lineTo(pad.left+cw, toY(Pmax*i/4)); ctx.stroke();
   }
-  ctx.strokeStyle = axCol; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + ch + 8); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(pad.left - 8, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
 
-  ctx.fillStyle = axCol; ctx.font = '12px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('M (' + r.mU + ')', pad.left + cw / 2, H - 6);
-  ctx.save(); ctx.translate(14, pad.top + ch / 2); ctx.rotate(-Math.PI / 2);
+  // Axes
+  const axCol = '#4a5568';
+  ctx.strokeStyle = axCol; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+ch+8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left-8, pad.top+ch); ctx.lineTo(pad.left+cw, pad.top+ch); ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = axCol; ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
+  ctx.fillText('M (' + r.mU + ')', pad.left + cw/2, H - 6);
+  ctx.save(); ctx.translate(14, pad.top + ch/2); ctx.rotate(-Math.PI/2);
   ctx.fillText('P (' + r.fU + ')', 0, 0); ctx.restore();
 
+  // Tick labels
   ctx.font = '10px monospace'; ctx.fillStyle = axCol;
+  const toMd = v => isUS ? v/12 : v/1000;
+  const f1   = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
   for (let i = 0; i <= 4; i++) {
-    const pv = Pmax * i / 4, mv = Mmax * i / 4;
-    const toMdisp = v => isUS ? v / 12 : v / 1000;
-    const fmt1 = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
-    ctx.textAlign = 'right';
-    ctx.fillText(fmt1(pv), pad.left - 4, toY(pv) + 4);
-    ctx.textAlign = 'center';
-    ctx.fillText(fmt1(toMdisp(mv)), toX(mv), pad.top + ch + 14);
+    ctx.textAlign = 'right';  ctx.fillText(f1(Pmax*i/4), pad.left-4, toY(Pmax*i/4)+4);
+    ctx.textAlign = 'center'; ctx.fillText(f1(toMd(Mmax*i/4)), toX(Mmax*i/4), pad.top+ch+14);
   }
 
+  // PSDM curve
   if (pts.length > 1) {
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(pts[0].P));
     for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
-    const lastPt = pts[pts.length - 1];
-    ctx.lineTo(toX(lastPt.M), toY(0));
-    ctx.lineTo(toX(0), toY(0));
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(59,130,246,0.10)';
-    ctx.fill();
-
+    const lp = pts[pts.length-1];
+    ctx.lineTo(toX(lp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
+    ctx.fillStyle = 'rgba(59,130,246,0.10)'; ctx.fill();
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(pts[0].P));
     for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
-    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
-    ctx.stroke();
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.8; ctx.setLineDash([]); ctx.stroke();
   }
 
-  const Pc = r.phiPn;
-  const kink_P = 0.2 * Pc;
-  const kink_M = 0.9 * phiMn;
+  // H1-1 envelope (dashed red)
+  const kink_P = 0.2 * r.phiPn, kink_M = 0.9 * phiMn;
   ctx.beginPath();
-  ctx.moveTo(toX(0), toY(Pc));
+  ctx.moveTo(toX(0), toY(r.phiPn));
   ctx.lineTo(toX(kink_M), toY(kink_P));
-  ctx.lineTo(toX(phiMn), toY(0));
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7, 4]);
-  ctx.stroke(); ctx.setLineDash([]);
+  ctx.lineTo(toX(phiMn),  toY(0));
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7,4]); ctx.stroke(); ctx.setLineDash([]);
 
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(pad.left, toY(Pc)); ctx.lineTo(toX(0) + 10, toY(Pc)); ctx.stroke();
+  // φPn / φMn markers
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, toY(r.phiPn)); ctx.lineTo(pad.left+10, toY(r.phiPn)); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#e74c3c'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-  ctx.fillText('φPn', pad.left + 3, toY(Pc) - 3);
+  ctx.fillText('φPn', pad.left+3, toY(r.phiPn)-3);
 
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0) - 10); ctx.stroke();
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0)-10); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
-  ctx.fillText('φMn', toX(phiMn), pad.top + ch + 28);
+  ctx.fillText('φMn', toX(phiMn), pad.top+ch+28);
 
+  // Demand point
   const dx = toX(Mu), dy = toY(r.Pu);
   const ptColor = r.pass ? '#16a34a' : '#dc2626';
-  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2 * Math.PI);
+  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2*Math.PI);
   ctx.fillStyle = ptColor; ctx.fill();
-  ctx.strokeStyle = bgCol; ctx.lineWidth = 2; ctx.stroke();
-
-  ctx.strokeStyle = ptColor; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = ptColor; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
   ctx.beginPath(); ctx.moveTo(pad.left, dy); ctx.lineTo(dx, dy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(dx, pad.top + ch); ctx.lineTo(dx, dy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(dx, pad.top+ch); ctx.lineTo(dx, dy); ctx.stroke();
   ctx.setLineDash([]);
-
-  const dcr = parseFloat(document.getElementById('s-dcr').textContent);
   ctx.fillStyle = ptColor; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'left';
-  const lx = dx + 9, ly = dy - 9;
-  ctx.fillText('DCR=' + (isNaN(dcr) ? '?' : dcr.toFixed(3)), lx, ly);
+  ctx.fillText('DCR=' + (isNaN(r.DCR) ? '?' : r.DCR.toFixed(3)), dx+9, dy-9);
 }
 
 // ═══════════════════════════════════════════════════
