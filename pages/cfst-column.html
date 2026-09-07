@@ -552,11 +552,18 @@ function calc() {
     Mp_y  = findMp(pts_y); phiMn_y = 0.90*Mp_y;
   }
 
+  // SI: Fy(MPa=N/mm²) × area(mm²) = N, but user input Pu is kN, Mux is kN·mm.
+  // Scale cross-section forces/moments to match user input units (kips/kip·in or kN/kN·mm).
+  const uS = isUS ? 1 : 1/1000;
+  const pPhiU  = phiPn  * uS;
+  const mPhiXu = phiMn_x * uS;
+  const mPhiYu = phiMn_y * uS;
+
   let DCR = 9999, eqUsed = '—';
-  if (phiPn > 0) {
-    const pr = Pu/phiPn;
-    if (pr >= 0.2) { DCR = pr + (8/9)*(Mux/phiMn_x + (phiMn_y > 0 ? Muy/phiMn_y : 0)); eqUsed = 'H1-1a'; }
-    else           { DCR = Pu/(2*phiPn) + (Mux/phiMn_x + (phiMn_y > 0 ? Muy/phiMn_y : 0)); eqUsed = 'H1-1b'; }
+  if (pPhiU > 0) {
+    const pr = Pu / pPhiU;
+    if (pr >= 0.2) { DCR = pr + (8/9)*(Mux/mPhiXu + (mPhiYu > 0 ? Muy/mPhiYu : 0)); eqUsed = 'H1-1a'; }
+    else           { DCR = Pu/(2*pPhiU) + (Mux/mPhiXu + (mPhiYu > 0 ? Muy/mPhiYu : 0)); eqUsed = 'H1-1b'; }
   }
   const pass = DCR <= 1.0 && classify !== 'not-permitted';
 
@@ -565,7 +572,7 @@ function calc() {
   const mU  = isUS ? 'kip-ft' : 'kN·m';
   const k2U = isUS ? 'ksi' : 'MPa';
   const EIU = isUS ? 'kip·in²' : 'kN·mm²';
-  const toM = v => isUS ? v/12 : v/1000;
+  const toM = v => isUS ? v/12 : v/1000;  // kip·in→kip·ft  or  kN·mm→kN·m
   const fmt = (v,d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
   const fmt0 = v => fmt(v,0);
   const sciE = v => {
@@ -574,10 +581,11 @@ function calc() {
     return (v/Math.pow(10,e)).toFixed(3) + ' × 10<sup>' + e + '</sup>';
   };
 
-  const phiMn_x_d = toM(phiMn_x), phiMn_y_d = toM(phiMn_y);
-  const Mp_x_d    = toM(Mp_x),    Mp_y_d    = toM(Mp_y);
+  // Display-unit moment conversions (already in kip·in or kN·mm after uS scaling)
+  const phiMn_x_d = toM(mPhiXu), phiMn_y_d = toM(mPhiYu);
+  const Mp_x_d    = toM(Mp_x*uS), Mp_y_d    = toM(Mp_y*uS);
   const Mux_d = toM(Mux), Muy_d = toM(Muy);
-  const Mcx_d = toM(phiMn_x), Mcy_d = toM(phiMn_y);
+  const Mcx_d = phiMn_x_d, Mcy_d = phiMn_y_d;
 
   const fc_ksi = isUS ? fc : fc/6.895;
   const fy_ok  = Fy <= (isUS ? 75 : 517);
@@ -613,7 +621,7 @@ function calc() {
   const clsCls = classify === 'compact' ? ' ok' : classify === 'not-permitted' ? ' err' : ' warn';
   h += `<div class="result-box">` +
        `<div class="result-item${clsCls}"><div class="ri-label">Classification</div><div class="ri-value" style="font-size:.82rem">${classLabel}</div></div>` +
-       `<div class="result-item"><div class="ri-label">&phi;P<sub>n</sub></div><div class="ri-value">${fmt0(phiPn)}</div><div class="ri-unit">${fU}</div></div>` +
+       `<div class="result-item"><div class="ri-label">&phi;P<sub>n</sub></div><div class="ri-value">${fmt0(pPhiU)}</div><div class="ri-unit">${fU}</div></div>` +
        `<div class="result-item"><div class="ri-label">&phi;M<sub>n,x</sub></div><div class="ri-value">${fmt(phiMn_x_d,0)}</div><div class="ri-unit">${mU}</div></div>` +
        `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">DCR</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">Eq. ${eqUsed}</div></div>` +
        `</div>`;
@@ -659,9 +667,9 @@ function calc() {
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2b &mdash; Nominal Squash Load P<sub>no</sub></div>` +
        `<table class="res-tbl">` +
        r2('C<sub>2</sub>', C2str) +
-       r2('P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Pp,1)} ${fU}`) +
-       (classify !== 'compact' ? r2('P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Py,1)} ${fU}`) : '') +
-       r2('<b>P<sub>no</sub></b>', `<b class="vok">${fmt(Pno,1)} ${fU}</b>`) +
+       r2('P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Pp*uS,1)} ${fU}`) +
+       (classify !== 'compact' ? r2('P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Py*uS,1)} ${fU}`) : '') +
+       r2('<b>P<sub>no</sub></b>', `<b class="vok">${fmt(Pno*uS,1)} ${fU}</b>`) +
        `</table></div>`;
 
   // § I2.2c/d — Stiffness & Buckling
@@ -671,13 +679,13 @@ function calc() {
        `<table class="res-tbl">` +
        r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
        r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
-       r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x)} ${EIU}`) +
-       (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y)} ${EIU}`) : '') +
-       r2('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', `${fmt(Pe_x,1)} ${fU}`) +
-       (shape==='rect' ? r2('P<sub>e,y</sub> = &pi;²EI<sub>eff,y</sub>/(KL<sub>y</sub>)²', `${fmt(Pe_y,1)} ${fU}`) : '') +
+       r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*uS)} ${EIU}`) +
+       (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y*uS)} ${EIU}`) : '') +
+       r2('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', `${fmt(Pe_x*uS,1)} ${fU}`) +
+       (shape==='rect' ? r2('P<sub>e,y</sub> = &pi;²EI<sub>eff,y</sub>/(KL<sub>y</sub>)²', `${fmt(Pe_y*uS,1)} ${fU}`) : '') +
        r2('P<sub>no</sub>/P<sub>e,gov</sub>', `${fmt(pnoRat,3)} &nbsp; ${buckMode}`) +
-       r2('P<sub>n</sub>', `${fmt(Pn,1)} ${fU}`) +
-       r2('<b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub> = 0.75)', `<b class="vok">${fmt(phiPn,1)} ${fU}</b>`) +
+       r2('P<sub>n</sub>', `${fmt(Pn*uS,1)} ${fU}`) +
+       r2('<b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub> = 0.75)', `<b class="vok">${fmt(pPhiU,1)} ${fU}</b>`) +
        `</table></div>`;
 
   // § I3.4 — Flexural
@@ -692,7 +700,7 @@ function calc() {
   // § H1-1 — P-M Interaction
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
        `<table class="res-tbl">` +
-       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/phiPn,3)) +
+       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/pPhiU,3)) +
        r2('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_d/Mcx_d,3)) +
        (Muy > 0 ? r2('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3)) : '') +
        r2(`AISC Eq. ${eqUsed}`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
@@ -712,7 +720,9 @@ function calc() {
   document.getElementById('rh-code').textContent =
     'AISC 360-22 · ' + (isUS ? 'kip · in' : 'kN · mm');
 
-  lastResult = { pts_x, pts_y, Pno, Mp_x, Mp_y, phiPn, phiMn_x, phiMn_y,
+  lastResult = { pts_x, pts_y, uS,
+                 Pno: Pno*uS, Mp_x: Mp_x*uS, Mp_y: Mp_y*uS,
+                 phiPn: pPhiU, phiMn_x: mPhiXu, phiMn_y: mPhiYu,
                  Pu, Mux, Muy, DCR, fU, mU, pass };
   drawPMM();
 }
@@ -730,8 +740,11 @@ function setPmmAxis(ax, btn) {
 function drawPMM() {
   if (!lastResult) return;
   const r    = lastResult;
-  const pts  = pmmAxis === 'x' ? r.pts_x : r.pts_y;
-  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;
+  const uS   = r.uS || 1;
+  // Scale raw pts from N/N·mm (SI) or kips/kip·in (US) to user display units
+  const pts_raw = pmmAxis === 'x' ? r.pts_x : r.pts_y;
+  const pts  = pts_raw.map(p => ({ P: p.P * uS, M: p.M * uS }));
+  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;   // already scaled in lastResult
   const phiMn = pmmAxis === 'x' ? r.phiMn_x : r.phiMn_y;
   const Mu   = pmmAxis === 'x' ? r.Mux : r.Muy;
 
