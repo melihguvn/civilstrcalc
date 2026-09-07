@@ -54,24 +54,41 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .sec-preview{display:flex;justify-content:center;margin-bottom:10px;}
 .sec-preview svg{border:1px solid var(--border);border-radius:6px;background:var(--bg2);}
 
-/* Inline status badges (used in table cells) */
+/* Inline status badges */
 .badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;text-transform:uppercase;}
 .badge-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green);}
 .badge-warn{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange);}
 .badge-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red);}
 
-/* ── Report overrides (match column.html design exactly) ── */
+/* ── Report / result overrides ── */
 .report-body{padding:12px 20px;}
-.result-box{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;padding:11px 14px;}
-.result-item{text-align:center;}
-.ri-value{font-size:1.05rem;}
+
+/* Summary tiles — match design image */
+.result-box{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:10px;padding:12px 14px;}
+.result-item{text-align:center;border:1px solid var(--border);border-radius:6px;background:var(--bg2);padding:10px 8px;}
+.result-item.ok{border-color:var(--green);background:var(--green-bg);}
+.result-item.err{border-color:var(--red);background:var(--red-bg);}
+.ri-label{font-size:.58rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;}
+.ri-value{font-size:1.15rem;font-weight:700;font-family:var(--mono);line-height:1.1;color:var(--text);}
+.result-item.ok .ri-value{color:var(--green);}
+.result-item.err .ri-value{color:var(--red);}
+.ri-unit{font-size:.63rem;color:var(--text-dim);margin-top:3px;}
+
+/* DCR banner */
+.dcr-banner{display:flex;align-items:stretch;border-radius:6px;overflow:hidden;margin-bottom:10px;}
+.dcr-icon{width:46px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;flex-shrink:0;}
+.dcr-text{padding:9px 13px;display:flex;flex-direction:column;gap:3px;}
+.dcr-text strong{font-family:var(--sans);font-weight:700;font-size:.82rem;}
+.dcr-text span{font-family:var(--sans);font-size:.71rem;opacity:.9;}
+
 .rpt-sec{margin-bottom:10px;padding-bottom:10px;}
 .rpt-sec-title{font-family:var(--sans);font-weight:600;padding:3px 10px;margin-bottom:8px;}
-.dcr-text strong{font-family:var(--sans);font-weight:700;}
-.dcr-text span{font-family:var(--mono);}
 .report-warn{gap:8px;padding:8px 11px;font-size:.76rem;margin-bottom:10px;}
 
-/* PMM diagram (below report card) */
+/* bc dropdown */
+select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:5px;font-size:.79rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;}
+
+/* PMM diagram */
 .pmm-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;margin-top:16px;}
 .pmm-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .pmm-hdr h4{font-family:var(--cond);font-weight:700;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);}
@@ -87,7 +104,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="page-title no-print">
   <h1>CFST Column Design</h1>
-  <p>Concrete-Filled Steel Tube (CFST) &mdash; AISC 360-22 Chapter I &mdash; Round HSS &amp; Rectangular HSS. Compactness classification, P<sub>no</sub>, EI<sub>eff</sub>, axial &amp; flexural strength, P-M interaction diagram.</p>
+  <p>Concrete-Filled Steel Tube (CFST) &mdash; AISC 360-22 Chapter I &mdash; Rect/Sq HSS &amp; Round HSS. Compactness classification, P<sub>no</sub>, EI<sub>eff</sub>, axial &amp; flexural strength, P-M interaction diagram.</p>
 </div>
 
 <div class="calc-layout">
@@ -111,8 +128,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="unit-switcher">
       <label>Section</label>
       <div class="unit-btns">
-        <button class="unit-btn active" id="btn-round" onclick="setShape('round',this)">Round HSS</button>
-        <button class="unit-btn" id="btn-rect" onclick="setShape('rect',this)">Rect / Sq HSS</button>
+        <button class="unit-btn active" id="btn-rect" onclick="setShape('rect',this)">Rect / Sq HSS</button>
+        <button class="unit-btn" id="btn-round" onclick="setShape('round',this)">Round HSS</button>
       </div>
     </div>
 
@@ -122,7 +139,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
     <div class="form-div"><div class="form-div-lbl">Section Geometry</div></div>
 
-    <div id="dims-round">
+    <div id="dims-round" style="display:none;">
       <div class="form-row-2">
         <div class="form-group">
           <label>Outer Diameter D <span id="lu-D" class="lu"></span></label>
@@ -135,7 +152,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
 
-    <div id="dims-rect" style="display:none;">
+    <div id="dims-rect">
       <div class="form-row-2">
         <div class="form-group">
           <label>Width B <span id="lu-B" class="lu"></span></label>
@@ -156,43 +173,44 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
     <div class="form-group">
       <label>Steel Grade</label>
-      <select id="steel-grade" onchange="gradeChanged();autoCalc()">
-        <option value="50">A500 Gr. C — Fy = 50 ksi (round)</option>
-        <option value="46">A500 Gr. B — Fy = 46 ksi (round)</option>
-        <option value="50r">A1085 — Fy = 50 ksi (round/rect)</option>
-        <option value="35">A53 Gr. B — Fy = 35 ksi (pipe)</option>
-        <option value="50s">A500 Gr. C — Fy = 50 ksi (rect)</option>
-        <option value="46s">A500 Gr. B — Fy = 46 ksi (rect)</option>
-        <option value="custom">Custom Fy</option>
-      </select>
+      <select id="steel-grade" onchange="gradeChanged();autoCalc()"></select>
     </div>
 
     <div id="fy-custom-row" class="form-group" style="display:none;">
       <label>Custom Fy</label>
-      <div class="iw"><input type="number" id="inp-Fy" value="50" step="1" min="20" max="75" oninput="autoCalc()"><span class="us" id="u-Fy">ksi</span></div>
+      <div class="iw"><input type="number" id="inp-Fy" value="50" step="1" min="20" max="100" oninput="autoCalc()"><span class="us" id="u-Fy">ksi</span></div>
     </div>
 
-    <div class="form-row-2">
-      <div class="form-group">
-        <label>f'c (concrete) <span id="lu-fc" class="lu"></span></label>
-        <div class="iw"><input type="number" id="inp-fc" value="5" step="0.5" min="3" max="10" oninput="autoCalc()"><span class="us" id="u-fc">ksi</span></div>
-      </div>
-      <div class="form-group">
-        <label>Unit weight w<sub>c</sub> <span id="lu-wc" class="lu"></span></label>
-        <div class="iw"><input type="number" id="inp-wc" value="145" step="1" oninput="autoCalc()"><span class="us" id="u-wc">pcf</span></div>
-      </div>
+    <div class="form-group">
+      <label>f'c (concrete) <span id="lu-fc" class="lu"></span></label>
+      <div class="iw"><input type="number" id="inp-fc" value="5" step="0.5" min="3" max="10" oninput="autoCalc()"><span class="us" id="u-fc">ksi</span></div>
     </div>
 
     <div class="form-div"><div class="form-div-lbl">Column Parameters</div></div>
 
+    <div class="form-group">
+      <label>Column Height L <span id="lu-KL" class="lu"></span></label>
+      <div class="iw"><input type="number" id="inp-L" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KL">ft</span></div>
+    </div>
+
     <div class="form-row-2">
       <div class="form-group">
-        <label>KL<sub>x</sub> <span id="lu-KL" class="lu"></span></label>
-        <div class="iw"><input type="number" id="inp-KLx" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KL">ft</span></div>
+        <label>K<sub>x</sub> &mdash; x&ndash;x Axis</label>
+        <select id="inp-bcx" class="bc-sel" onchange="autoCalc()">
+          <option value="1.00">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+          <option value="0.80">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+          <option value="0.65">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+          <option value="2.00">Cantilever &nbsp;(K = 2.00)</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>KL<sub>y</sub> <span id="lu-KLy" class="lu"></span></label>
-        <div class="iw"><input type="number" id="inp-KLy" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KLy">ft</span></div>
+        <label>K<sub>y</sub> &mdash; y&ndash;y Axis</label>
+        <select id="inp-bcy" class="bc-sel" onchange="autoCalc()">
+          <option value="1.00">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
+          <option value="0.80">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
+          <option value="0.65">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
+          <option value="2.00">Cantilever &nbsp;(K = 2.00)</option>
+        </select>
       </div>
     </div>
 
@@ -225,7 +243,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div id="cf-report-wrap" style="display:none;">
     <div class="report-card">
       <div class="report-hdr">
-        <h4>Calculation Report</h4>
+        <h4>Design Results</h4>
         <span class="rh-code" id="rh-code">AISC 360-22 &middot; kip &middot; in</span>
         <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
       </div>
@@ -263,8 +281,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 // ═══════════════════════════════════════════════════
 const Es_us = 29000; // ksi
 const Es_si = 200000; // MPa
+
+const GRADES_US = [
+  {v:'a992',    n:'A992 Gr 50 (W shapes)', Fy:50},
+  {v:'a572g50', n:'A572 Gr 50',            Fy:50},
+  {v:'a572g60', n:'A572 Gr 60',            Fy:60},
+  {v:'a500c',   n:'A500 Gr C (HSS)',        Fy:46},
+  {v:'a36',     n:'A36',                   Fy:36}
+];
+const GRADES_SI = [
+  {v:'s235', n:'S235', Fy:235},
+  {v:'s275', n:'S275', Fy:275},
+  {v:'s355', n:'S355', Fy:355},
+  {v:'s460', n:'S460', Fy:460}
+];
+
 let isUS = true;
-let shape = 'round';
+let shape = 'rect';
 let pmmAxis = 'x';
 let lastResult = null;
 
@@ -281,10 +314,38 @@ function setUnits(u, btn) {
   autoCalc();
 }
 
+function populateGrades() {
+  const sel = document.getElementById('steel-grade');
+  const prev = sel.value;
+  const grades = isUS ? GRADES_US : GRADES_SI;
+  const unit   = isUS ? ' ksi' : ' MPa';
+  const def    = isUS ? 'a500c' : 's355';
+  sel.innerHTML = grades.map(g =>
+    `<option value="${g.v}">${g.n} &mdash; Fy = ${g.Fy}${unit}</option>`
+  ).join('') + '<option value="custom">Custom Fy</option>';
+  // restore previous selection if still valid, else set default
+  const exists = grades.find(g => g.v === prev) || prev === 'custom';
+  sel.value = (exists && prev) ? prev : def;
+}
+
+function gradeChanged() {
+  const v = document.getElementById('steel-grade').value;
+  document.getElementById('fy-custom-row').style.display = v === 'custom' ? '' : 'none';
+  const label = isUS ? 'ksi' : 'MPa';
+  document.getElementById('u-Fy').textContent = label;
+}
+
+function getFy() {
+  const v = document.getElementById('steel-grade').value;
+  if (v === 'custom') return parseFloat(document.getElementById('inp-Fy').value) || (isUS ? 50 : 355);
+  const grades = isUS ? GRADES_US : GRADES_SI;
+  const g = grades.find(x => x.v === v);
+  return g ? g.Fy : (isUS ? 50 : 355);
+}
+
 function updateLabels() {
   const d = isUS ? 'in' : 'mm', L = isUS ? 'ft' : 'm', F = isUS ? 'kips' : 'kN';
-  const M = isUS ? 'kip-ft' : 'kN·m', fc = isUS ? 'ksi' : 'MPa', fy = isUS ? 'ksi' : 'MPa';
-  const wc = isUS ? 'pcf' : 'kg/m³';
+  const M = isUS ? 'kip-ft' : 'kN·m', fc = isUS ? 'ksi' : 'MPa';
   const setU = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   setU('u-D', d); setU('lu-D', '['+d+']');
   setU('u-t', d); setU('lu-t', '['+d+']');
@@ -292,33 +353,29 @@ function updateLabels() {
   setU('u-H', d); setU('lu-H', '['+d+']');
   setU('u-tr', d); setU('lu-tr', '['+d+']');
   setU('u-fc', fc); setU('lu-fc', '['+fc+']');
-  setU('u-Fy', fy);
-  setU('u-wc', wc); setU('lu-wc', '['+wc+']');
   setU('u-KL', L); setU('lu-KL', '['+L+']');
-  setU('u-KLy', L); setU('lu-KLy', '['+L+']');
   setU('u-P', F); setU('lu-P', '['+F+']');
   setU('u-M', M); setU('lu-M', '['+M+']');
   setU('u-My', M); setU('lu-My', '['+M+']');
   document.getElementById('utag').textContent = isUS ? 'kip · in' : 'kN · mm';
 
-  const defD = isUS ? 10 : 600, defT = isUS ? 0.5 : 16;
-  const defB = isUS ? 10 : 600, defH = isUS ? 10 : 600, defTr = isUS ? 0.5 : 16;
-  const deffc = isUS ? 5 : 35, defwc = isUS ? 145 : 2400;
-  const defKL = isUS ? 14 : 4.0;
-  const defPu = isUS ? 600 : 3000, defMu = isUS ? 100 : 150;
+  const defD  = isUS ? 10  : 600,  defT  = isUS ? 0.5  : 16;
+  const defB  = isUS ? 10  : 600,  defH  = isUS ? 10   : 600, defTr = isUS ? 0.5 : 16;
+  const deffc = isUS ? 5   : 35;
+  const defL  = isUS ? 14  : 4.0;
+  const defPu = isUS ? 600 : 3000, defMu = isUS ? 100  : 150;
 
-  document.getElementById('inp-D').value  = defD;
-  document.getElementById('inp-t').value  = defT;
-  document.getElementById('inp-B').value  = defB;
-  document.getElementById('inp-H').value  = defH;
-  document.getElementById('inp-tr').value = defTr;
-  document.getElementById('inp-fc').value = deffc;
-  document.getElementById('inp-wc').value = defwc;
-  document.getElementById('inp-KLx').value = defKL;
-  document.getElementById('inp-KLy').value = defKL;
+  document.getElementById('inp-D').value   = defD;
+  document.getElementById('inp-t').value   = defT;
+  document.getElementById('inp-B').value   = defB;
+  document.getElementById('inp-H').value   = defH;
+  document.getElementById('inp-tr').value  = defTr;
+  document.getElementById('inp-fc').value  = deffc;
+  document.getElementById('inp-L').value   = defL;
   document.getElementById('inp-Pu').value  = defPu;
   document.getElementById('inp-Mux').value = defMu;
   document.getElementById('inp-Muy').value = 0;
+  populateGrades();
   gradeChanged();
 }
 
@@ -332,26 +389,6 @@ function setShape(s, btn) {
   document.getElementById('dims-rect').style.display  = (s === 'rect')  ? '' : 'none';
   updateSVG();
   autoCalc();
-}
-
-function gradeChanged() {
-  const v = document.getElementById('steel-grade').value;
-  const map = { '50':50, '46':46, '50r':50, '35':35, '50s':50, '46s':46 };
-  const row = document.getElementById('fy-custom-row');
-  if (v === 'custom') {
-    row.style.display = '';
-  } else {
-    row.style.display = 'none';
-    document.getElementById('inp-Fy').value = map[v] || 50;
-  }
-  autoCalc();
-}
-
-function getFy() {
-  const v = document.getElementById('steel-grade').value;
-  const map = { '50':50, '46':46, '50r':50, '35':35, '50s':50, '46s':46 };
-  const fy_ksi = map[v] || parseFloat(document.getElementById('inp-Fy').value) || 50;
-  return isUS ? fy_ksi : fy_ksi * 6.895;
 }
 
 // ═══════════════════════════════════════════════════
@@ -461,14 +498,21 @@ function autoCalc() { try { calc(); } catch(e) { console.error(e); } }
 function calc() {
   const Es = isUS ? Es_us : Es_si;
   const Fy = getFy();
-  const fc  = parseFloat(document.getElementById('inp-fc').value)  || 5;
-  const wc  = parseFloat(document.getElementById('inp-wc').value)  || 145;
+  const fc  = parseFloat(document.getElementById('inp-fc').value)  || (isUS ? 5 : 35);
+  // Standard unit weights (pcf or kg/m³) — not user-input
+  const wc  = isUS ? 145 : 2400;
   const Ec  = isUS
     ? 33 * Math.pow(wc,1.5) * Math.sqrt(fc*1000) / 1000
     : 0.043 * Math.pow(wc,1.5) * Math.sqrt(fc);
 
-  const KLx = (parseFloat(document.getElementById('inp-KLx').value)||14) * (isUS ? 12 : 1000);
-  const KLy = (parseFloat(document.getElementById('inp-KLy').value)||14) * (isUS ? 12 : 1000);
+  // Effective lengths from L × K
+  const Lval = parseFloat(document.getElementById('inp-L').value)   || (isUS ? 14 : 4.0);
+  const Kx   = parseFloat(document.getElementById('inp-bcx').value) || 1.0;
+  const Ky   = parseFloat(document.getElementById('inp-bcy').value) || 1.0;
+  const cfac = isUS ? 12 : 1000; // ft→in or m→mm
+  const KLx  = Kx * Lval * cfac;
+  const KLy  = Ky * Lval * cfac;
+
   const Pu  = parseFloat(document.getElementById('inp-Pu').value)  || 0;
   const Mux = (parseFloat(document.getElementById('inp-Mux').value)||0) * (isUS ? 12 : 1000);
   const Muy = (parseFloat(document.getElementById('inp-Muy').value)||0) * (isUS ? 12 : 1000);
@@ -552,10 +596,9 @@ function calc() {
     Mp_y  = findMp(pts_y); phiMn_y = 0.90*Mp_y;
   }
 
-  // SI: Fy(MPa=N/mm²) × area(mm²) = N, but user input Pu is kN, Mux is kN·mm.
-  // Scale cross-section forces/moments to match user input units (kips/kip·in or kN/kN·mm).
+  // SI: Fy(MPa=N/mm²)×area(mm²)=N, user input is kN/kN·mm → scale by 1/1000
   const uS = isUS ? 1 : 1/1000;
-  const pPhiU  = phiPn  * uS;
+  const pPhiU  = phiPn   * uS;
   const mPhiXu = phiMn_x * uS;
   const mPhiYu = phiMn_y * uS;
 
@@ -572,8 +615,8 @@ function calc() {
   const mU  = isUS ? 'kip-ft' : 'kN·m';
   const k2U = isUS ? 'ksi' : 'MPa';
   const EIU = isUS ? 'kip·in²' : 'kN·mm²';
-  const toM = v => isUS ? v/12 : v/1000;  // kip·in→kip·ft  or  kN·mm→kN·m
-  const fmt = (v,d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
+  const toM = v => isUS ? v/12 : v/1000; // kip·in→kip·ft or kN·mm→kN·m
+  const fmt  = (v,d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
   const fmt0 = v => fmt(v,0);
   const sciE = v => {
     if (!v) return '0';
@@ -581,59 +624,61 @@ function calc() {
     return (v/Math.pow(10,e)).toFixed(3) + ' × 10<sup>' + e + '</sup>';
   };
 
-  // Display-unit moment conversions (already in kip·in or kN·mm after uS scaling)
+  // Display-unit moment conversions (already scaled to kN·mm or kip·in via uS)
   const phiMn_x_d = toM(mPhiXu), phiMn_y_d = toM(mPhiYu);
   const Mp_x_d    = toM(Mp_x*uS), Mp_y_d    = toM(Mp_y*uS);
   const Mux_d = toM(Mux), Muy_d = toM(Muy);
   const Mcx_d = phiMn_x_d, Mcy_d = phiMn_y_d;
 
+  // Material limit checks
   const fc_ksi = isUS ? fc : fc/6.895;
-  const fy_ok  = Fy <= (isUS ? 75 : 517);
+  const fy_ok  = Fy <= (isUS ? 75 : 525);
   const fc_ok  = fc_ksi >= 3 && fc_ksi <= 10;
   const rho_ok = rho_s >= 0.01;
 
-  // ── Warnings ──
+  // ── Warnings (shown only when limits violated) ──
   const warns = [];
-  if (!fy_ok)  warns.push('Fy exceeds 75 ksi limit (AISC I1.3). Consider Appendix 2 for high-strength steel.');
-  if (!fc_ok)  warns.push("f'c outside 3–10 ksi range (AISC I1.3). Adjust concrete strength.");
-  if (!rho_ok) warns.push('ρ_s = As/Ag < 1% — minimum steel ratio not satisfied (AISC I1.3).');
+  if (!fy_ok)  warns.push('F<sub>y</sub> exceeds 75 ksi (525 MPa) limit per AISC I1.3. Consider Appendix 2 for high-strength steel.');
+  if (!fc_ok)  warns.push("f'<sub>c</sub> outside 3–10 ksi range (AISC I1.3). Adjust concrete strength.");
+  if (!rho_ok) warns.push('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> < 1% — minimum steel ratio not satisfied (AISC I1.3).');
   if (classify === 'not-permitted') warns.push('Section exceeds maximum D/t or b/t limit — cannot be designed as filled composite.');
   if (classify === 'slender')       warns.push('Slender-element section: local buckling governs. Results are approximate. Verify with AISC Design Guide 6.');
 
   // ── Build report HTML ──
-  const r2  = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
-  const aU  = isUS ? 'in²' : 'mm²';
-  const i4U = isUS ? 'in⁴' : 'mm⁴';
+  const r2 = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+
+  // Area/inertia display units — cm² and cm⁴ in SI
+  const aFact  = isUS ? 1 : 0.01;   // mm²→cm²
+  const i4Fact = isUS ? 1 : 1e-4;   // mm⁴→cm⁴
+  const aU  = isUS ? 'in²' : 'cm²';
+  const i4U = isUS ? 'in⁴' : 'cm⁴';
+  const aDP = isUS ? 1 : 1; // decimal places for area
 
   let h = '';
 
-  // DCR banner
-  const dcCls = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
-  h += `<div class="dcr-banner ${dcCls}">` +
-       `<div class="dcr-icon">${pass ? '&#10003;' : '&#10007;'}</div>` +
-       `<div class="dcr-text"><strong>${pass ? 'PASS' : 'FAIL'} &mdash; DCR = ${fmt(DCR,3)}</strong>` +
-       `<span>AISC 360-22 Ch. I &middot; Eq. ${eqUsed} &middot; ${classLabel}</span></div></div>`;
-
-  // Warn boxes
+  // Warn boxes (material limits only if violated)
   for (const w of warns) h += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
 
-  // Key results box
-  const clsCls = classify === 'compact' ? ' ok' : classify === 'not-permitted' ? ' err' : ' warn';
+  // Summary tiles
   h += `<div class="result-box">` +
-       `<div class="result-item${clsCls}"><div class="ri-label">Classification</div><div class="ri-value" style="font-size:.82rem">${classLabel}</div></div>` +
-       `<div class="result-item"><div class="ri-label">&phi;P<sub>n</sub></div><div class="ri-value">${fmt0(pPhiU)}</div><div class="ri-unit">${fU}</div></div>` +
-       `<div class="result-item"><div class="ri-label">&phi;M<sub>n,x</sub></div><div class="ri-value">${fmt(phiMn_x_d,0)}</div><div class="ri-unit">${mU}</div></div>` +
-       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">DCR</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">Eq. ${eqUsed}</div></div>` +
+       `<div class="result-item"><div class="ri-label">MAX AXIAL &phi;P<sub>n</sub></div><div class="ri-value">${fmt0(pPhiU)}</div><div class="ri-unit">${fU}</div></div>` +
+       `<div class="result-item"><div class="ri-label">M<sub>x</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_x_d,1)}</div><div class="ri-unit">${mU}</div></div>` +
+       (shape==='rect' ? `<div class="result-item"><div class="ri-label">M<sub>y</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_y_d,1)}</div><div class="ri-unit">${mU}</div></div>` : '') +
+       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">D/C RATIO</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">&le; 1.0</div></div>` +
        `</div>`;
 
-  // § I1.3 Material Limits
-  const fyC = fy_ok ? 'vok' : 'verr', fcC = fc_ok ? 'vok' : 'verr', rhoC = rho_ok ? 'vok' : 'verr';
-  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I1.3 Material &amp; Area Limits</div>` +
-       `<table class="res-tbl">` +
-       r2('F<sub>y</sub>', `<span class="${fyC}">${fmt(Fy,1)} ${k2U}</span> &nbsp; (limit: ${isUS?'75 ksi':'517 MPa'})`) +
-       r2("f'<sub>c</sub>", `<span class="${fcC}">${fmt(fc_ksi,1)} ksi</span> &nbsp; (limit: 3 – 10 ksi)`) +
-       r2('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', `<span class="${rhoC}">${fmt(rho_s*100,2)}%</span> &nbsp; (min: 1.0%)`) +
-       `</table></div>`;
+  // DCR status banner
+  const dcCls = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
+  const dcr_p = pPhiU  > 0 ? Pu  / pPhiU  : 0;
+  const dcr_x = mPhiXu > 0 ? Mux / mPhiXu : 0;
+  const dcr_y = mPhiYu > 0 ? Muy / mPhiYu : 0;
+  const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `M<sub>x</sub>/&phi;M<sub>n,x</sub> = ${fmt(dcr_x,3)}`];
+  if (Muy > 0) subParts.push(`M<sub>y</sub>/&phi;M<sub>n,y</sub> = ${fmt(dcr_y,3)}`);
+  subParts.push(`${classLabel} &middot; Eq. ${eqUsed}`);
+  h += `<div class="dcr-banner ${dcCls}">` +
+       `<div class="dcr-icon">${pass ? '&#10003;' : '&#10007;'}</div>` +
+       `<div class="dcr-text"><strong>${pass ? 'ADEQUATE' : 'FAIL'} &mdash; D/C = ${fmt(DCR,3)}</strong>` +
+       `<span>${subParts.join(' &middot; ')}</span></div></div>`;
 
   // § Table I1.1a — Classification
   const lamCls = l => l > lambda_max ? 'verr' : l > lambda_r ? 'vwarn' : 'vok';
@@ -650,16 +695,16 @@ function calc() {
   h += r2('Classification', `<b class="${clsVcls}">${classLabel}</b>`);
   h += `</table></div>`;
 
-  // Cross-section properties
+  // Cross-section properties (areas in cm² for SI)
   h += `<div class="rpt-sec"><div class="rpt-sec-title">Cross-Section Properties</div>` +
        `<table class="res-tbl">` +
-       r2('A<sub>g</sub> (gross)', `${fmt(Ag,1)} ${aU}`) +
-       r2('A<sub>s</sub> (steel tube)', `${fmt(As,1)} ${aU}`) +
-       r2('A<sub>c</sub> (concrete fill)', `${fmt(Ac,1)} ${aU}`) +
+       r2('A<sub>g</sub> (gross)', `${fmt(Ag*aFact,aDP)} ${aU}`) +
+       r2('A<sub>s</sub> (steel tube)', `${fmt(As*aFact,aDP)} ${aU}`) +
+       r2('A<sub>c</sub> (concrete fill)', `${fmt(Ac*aFact,aDP)} ${aU}`) +
        r2('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', `${fmt(rho_s*100,2)}%`) +
-       r2('I<sub>s,x</sub>', `${fmt0(Is_x)} ${i4U}`) +
-       r2('I<sub>c,x</sub>', `${fmt0(Ic_x)} ${i4U}`) +
-       (shape==='rect' ? r2('I<sub>s,y</sub>', `${fmt0(Is_y)} ${i4U}`) + r2('I<sub>c,y</sub>', `${fmt0(Ic_y)} ${i4U}`) : '') +
+       r2('I<sub>s,x</sub>', `${fmt0(Is_x*i4Fact)} ${i4U}`) +
+       r2('I<sub>c,x</sub>', `${fmt0(Ic_x*i4Fact)} ${i4U}`) +
+       (shape==='rect' ? r2('I<sub>s,y</sub>', `${fmt0(Is_y*i4Fact)} ${i4U}`) + r2('I<sub>c,y</sub>', `${fmt0(Ic_y*i4Fact)} ${i4U}`) : '') +
        `</table></div>`;
 
   // § I2.2b — Pno
@@ -675,8 +720,14 @@ function calc() {
   // § I2.2c/d — Stiffness & Buckling
   const pnoRat = Pno / Pe_gov;
   const buckMode = pnoRat <= 2.25 ? '&le; 2.25 (inelastic)' : '&gt; 2.25 (elastic)';
+  const KxLbl = document.getElementById('inp-bcx').options[document.getElementById('inp-bcx').selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
+  const KyLbl = document.getElementById('inp-bcy').options[document.getElementById('inp-bcy').selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
+  const Lunit = isUS ? 'ft' : 'm';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Axial Strength</div>` +
        `<table class="res-tbl">` +
+       r2('L', `${fmt(Lval,2)} ${Lunit}`) +
+       r2('KL<sub>x</sub> (K<sub>x</sub> = ' + KxLbl + ')', `${fmt(KLx/(isUS?12:1000),2)} ${Lunit}`) +
+       (shape==='rect' ? r2('KL<sub>y</sub> (K<sub>y</sub> = ' + KyLbl + ')', `${fmt(KLy/(isUS?12:1000),2)} ${Lunit}`) : '') +
        r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
        r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
        r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*uS)} ${EIU}`) +
@@ -700,7 +751,7 @@ function calc() {
   // § H1-1 — P-M Interaction
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
        `<table class="res-tbl">` +
-       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/pPhiU,3)) +
+       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(dcr_p,3)) +
        r2('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_d/Mcx_d,3)) +
        (Muy > 0 ? r2('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3)) : '') +
        r2(`AISC Eq. ${eqUsed}`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
@@ -708,15 +759,11 @@ function calc() {
 
   document.getElementById('res-body').innerHTML = h;
 
-  // Show / hide report
+  // Show / hide
   document.getElementById('cf-empty').style.display      = 'none';
   document.getElementById('cf-report-wrap').style.display = '';
-
-  // PMM
   document.getElementById('pmm-wrap').style.display = '';
   document.getElementById('tab-y').style.display    = shape === 'rect' ? '' : 'none';
-
-  // Update header code label
   document.getElementById('rh-code').textContent =
     'AISC 360-22 · ' + (isUS ? 'kip · in' : 'kN · mm');
 
@@ -741,10 +788,9 @@ function drawPMM() {
   if (!lastResult) return;
   const r    = lastResult;
   const uS   = r.uS || 1;
-  // Scale raw pts from N/N·mm (SI) or kips/kip·in (US) to user display units
   const pts_raw = pmmAxis === 'x' ? r.pts_x : r.pts_y;
   const pts  = pts_raw.map(p => ({ P: p.P * uS, M: p.M * uS }));
-  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;   // already scaled in lastResult
+  const Mp   = pmmAxis === 'x' ? r.Mp_x  : r.Mp_y;
   const phiMn = pmmAxis === 'x' ? r.phiMn_x : r.phiMn_y;
   const Mu   = pmmAxis === 'x' ? r.Mux : r.Muy;
 
@@ -762,29 +808,24 @@ function drawPMM() {
   const toX  = m => pad.left + m/Mmax * cw;
   const toY  = p => pad.top  + ch - p/Pmax * ch;
 
-  // Background
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
 
-  // Grid
   ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
   for (let i = 1; i <= 4; i++) {
     ctx.beginPath(); ctx.moveTo(toX(Mmax*i/4), pad.top); ctx.lineTo(toX(Mmax*i/4), pad.top+ch); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, toY(Pmax*i/4)); ctx.lineTo(pad.left+cw, toY(Pmax*i/4)); ctx.stroke();
   }
 
-  // Axes
   const axCol = '#4a5568';
   ctx.strokeStyle = axCol; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+ch+8); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left-8, pad.top+ch); ctx.lineTo(pad.left+cw, pad.top+ch); ctx.stroke();
 
-  // Axis labels
   ctx.fillStyle = axCol; ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
   ctx.fillText('M (' + r.mU + ')', pad.left + cw/2, H - 6);
   ctx.save(); ctx.translate(14, pad.top + ch/2); ctx.rotate(-Math.PI/2);
   ctx.fillText('P (' + r.fU + ')', 0, 0); ctx.restore();
 
-  // Tick labels
   ctx.font = '10px monospace'; ctx.fillStyle = axCol;
   const toMd = v => isUS ? v/12 : v/1000;
   const f1   = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
@@ -793,7 +834,6 @@ function drawPMM() {
     ctx.textAlign = 'center'; ctx.fillText(f1(toMd(Mmax*i/4)), toX(Mmax*i/4), pad.top+ch+14);
   }
 
-  // PSDM curve
   if (pts.length > 1) {
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(pts[0].P));
@@ -807,7 +847,6 @@ function drawPMM() {
     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.8; ctx.setLineDash([]); ctx.stroke();
   }
 
-  // H1-1 envelope (dashed red)
   const kink_P = 0.2 * r.phiPn, kink_M = 0.9 * phiMn;
   ctx.beginPath();
   ctx.moveTo(toX(0), toY(r.phiPn));
@@ -815,7 +854,6 @@ function drawPMM() {
   ctx.lineTo(toX(phiMn),  toY(0));
   ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7,4]); ctx.stroke(); ctx.setLineDash([]);
 
-  // φPn / φMn markers
   ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
   ctx.beginPath(); ctx.moveTo(pad.left, toY(r.phiPn)); ctx.lineTo(pad.left+10, toY(r.phiPn)); ctx.stroke();
   ctx.setLineDash([]);
@@ -828,7 +866,6 @@ function drawPMM() {
   ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
   ctx.fillText('φMn', toX(phiMn), pad.top+ch+28);
 
-  // Demand point
   const dx = toX(Mu), dy = toY(r.Pu);
   const ptColor = r.pass ? '#16a34a' : '#dc2626';
   ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2*Math.PI);
@@ -845,6 +882,7 @@ function drawPMM() {
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
+updateLabels();
 updateSVG();
 autoCalc();
 </script>
