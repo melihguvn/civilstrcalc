@@ -50,9 +50,6 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
-/* Standard code tag */
-.std-tag{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:var(--accent);color:#fff;border-radius:3px;padding:2px 7px;margin-right:5px;vertical-align:middle;}
-
 /* Section preview SVG */
 .sec-preview{display:flex;justify-content:center;margin-bottom:10px;}
 .sec-preview svg{border:1px solid var(--border);border-radius:6px;background:var(--bg2);}
@@ -78,8 +75,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
 
 <div class="page-title no-print">
-  <h1><span class="std-tag">AISC 360-22</span> CFST Column Design</h1>
-  <p>Concrete-Filled Steel Tube (CFST) &mdash; Round HSS &amp; Rectangular HSS &mdash; Chapter I Composite Members</p>
+  <h1>CFST Column Design</h1>
+  <p>Concrete-Filled Steel Tube (CFST) &mdash; AISC 360-22 Chapter I &mdash; Round HSS &amp; Rectangular HSS. Compactness classification, P<sub>no</sub>, EI<sub>eff</sub>, axial &amp; flexural strength, P-M interaction diagram.</p>
 </div>
 
 <div class="calc-layout">
@@ -293,11 +290,11 @@ function updateLabels() {
   setU('u-My', M); setU('lu-My', '['+M+']');
   document.getElementById('utag').textContent = isUS ? 'kip · in' : 'kN · mm';
 
-  const defD = isUS ? 10 : 254, defT = isUS ? 0.5 : 12.7;
-  const defB = isUS ? 10 : 254, defH = isUS ? 10 : 254, defTr = isUS ? 0.5 : 12.7;
-  const deffc = isUS ? 5 : 34.5, defwc = isUS ? 145 : 2323;
-  const defKL = isUS ? 14 : 4.3;
-  const defPu = isUS ? 600 : 2670, defMu = isUS ? 100 : 136;
+  const defD = isUS ? 10 : 600, defT = isUS ? 0.5 : 16;
+  const defB = isUS ? 10 : 600, defH = isUS ? 10 : 600, defTr = isUS ? 0.5 : 16;
+  const deffc = isUS ? 5 : 35, defwc = isUS ? 145 : 2400;
+  const defKL = isUS ? 14 : 4.0;
+  const defPu = isUS ? 600 : 3000, defMu = isUS ? 100 : 150;
 
   document.getElementById('inp-D').value  = defD;
   document.getElementById('inp-t').value  = defT;
@@ -600,9 +597,9 @@ function calc() {
        `<div class="dcr-text"><strong>${pass ? 'PASS' : 'FAIL'} &mdash; DCR = ${fmt(DCR,3)}</strong>` +
        `<span>AISC 360-22 Ch. I &middot; Eq. ${eqUsed} &middot; ${classLabel}</span></div></div>`;
 
-  // Warn box
-  if (warns.length) {
-    h += `<div class="report-warn">` + warns.map(w => '&#9888; ' + w).join('<br>') + `</div>`;
+  // Warn boxes
+  for (const w of warns) {
+    h += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
   }
 
   // Key results box
