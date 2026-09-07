@@ -23,6 +23,8 @@
     if (/\/steel-combined(\.html)?$/.test(P))          return 'steelbc';
     if (/\/steel-ltb(\.html)?$/.test(P))               return 'steelltb';
     if (/\/truss-design(\.html)?$/.test(P))            return 'steeltruss';
+    if (/\/composite-beam(\.html)?$/.test(P))          return 'compbeam';
+    if (/\/cfst-column(\.html)?$/.test(P))             return 'cfstcol';
     if (/\/steel(\.html)?$/.test(P))                   return 'steel';
     if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
     if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
@@ -178,12 +180,14 @@
       sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',   'retwall-tsc')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Steel Design</div>' +
-    grp(ic.st, 'Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
+    grp(ic.st, 'Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss','compbeam','cfstcol'],
       sub('/pages/steel-flexural',  'Flexural Design',        'steelfd') +
       sub('/pages/steel-axial',     'Axial (Column) Design',  'steelaxi') +
       sub('/pages/steel-combined',  'Combined (Beam-Column)', 'steelbc') +
       sub('/pages/steel-ltb',       'LTB Check',              'steelltb') +
-      sub('/pages/truss-design',    'Truss Design',           'steeltruss')) +
+      sub('/pages/truss-design',    'Truss Design',           'steeltruss') +
+      sub('/pages/composite-beam',  'Composite Beam',         'compbeam') +
+      sub('/pages/cfst-column',     'CFST Column',            'cfstcol')) +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +

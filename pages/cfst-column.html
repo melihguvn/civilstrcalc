@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CFST Column Design Calculator — AISC 360-22 | CivilStrCalc</title>
+<meta name="description" content="Design concrete-filled steel tube (CFST) columns per AISC 360-22 Chapter I. Round HSS and rectangular HSS, compactness classification, axial strength, P-M interaction diagram.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/cfst-column">
+<meta property="og:title" content="CFST Column Design Calculator — AISC 360-22">
+<meta property="og:description" content="Design concrete-filled steel tube columns (CFST) per AISC 360-22 Chapter I. Compactness, Pno, EIeff, P-M interaction diagram.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/cfst-column">
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<style>
+:root{
+  --bg:#f0f2f5;--bg2:#fff;--bg3:#f7f8fa;
+  --text:#1a2332;--text-mid:#4a5568;--text-dim:#8898aa;
+  --accent:#1a6db5;--accent2:#155a96;
+  --border:#dde3ec;--border2:#c8d0db;
+  --green:#16a34a;--green-bg:#f0fdf4;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --yellow:#d97706;--yellow-bg:#fffbeb;
+  --sh:0 1px 4px rgba(0,0,0,.07);
+  --sans:'Segoe UI',system-ui,sans-serif;
+  --mono:'Consolas','Fira Mono',monospace;
+  --cond:'Segoe UI Condensed','Arial Narrow',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111827;--bg2:#1f2937;--bg3:#151e2b;
+    --text:#e2e8f0;--text-mid:#94a3b8;--text-dim:#64748b;
+    --border:#2d3748;--border2:#374151;
+    --green-bg:#052e16;--red-bg:#450a0a;--yellow-bg:#1c1008;
+    --sh:0 1px 4px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111827;--bg2:#1f2937;--bg3:#151e2b;
+  --text:#e2e8f0;--text-mid:#94a3b8;--text-dim:#64748b;
+  --border:#2d3748;--border2:#374151;
+  --green-bg:#052e16;--red-bg:#450a0a;--yellow-bg:#1c1008;
+  --sh:0 1px 4px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:.9rem;line-height:1.5;padding-bottom:60px;}
+a{color:var(--accent);}
+.page-wrap{max-width:1100px;margin:0 auto;padding:0 16px;}
+
+/* Breadcrumb */
+.bc{padding:12px 0 4px;font-size:.72rem;color:var(--text-dim);}
+.bc a{color:var(--text-dim);text-decoration:none;}.bc a:hover{color:var(--accent);}
+.bc span{margin:0 5px;opacity:.5;}
+
+/* Page header */
+.page-hdr{padding:8px 0 18px;}
+.page-hdr h1{font-size:1.35rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.page-hdr p{font-size:.8rem;color:var(--text-mid);}
+.std-tag{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:var(--accent);color:#fff;border-radius:3px;padding:2px 7px;margin-right:5px;vertical-align:middle;}
+
+/* Layout */
+.col-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;}
+@media(max-width:780px){.col-layout{grid-template-columns:1fr;}}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;}
+.card-hdr{background:var(--bg3);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.card-hdr h3{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);}
+.card-body{padding:14px;}
+
+/* Unit switcher */
+.unit-sw{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.unit-sw label{font-size:.73rem;font-weight:600;color:var(--text-mid);min-width:48px;}
+.unit-btns{display:flex;gap:3px;}
+.unit-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.73rem;color:var(--text-mid);cursor:pointer;transition:.15s;}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* Form groups */
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.72rem;font-weight:600;color:var(--text-mid);margin-bottom:3px;}
+.iw{display:flex;align-items:center;gap:0;}
+.iw input,.iw select{flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:5px 0 0 5px;font-size:.83rem;background:var(--bg2);color:var(--text);font-family:var(--mono);}
+.iw select{border-radius:5px;font-family:var(--sans);}
+.iw .us{padding:7px 9px;background:var(--bg3);border:1px solid var(--border2);border-left:none;border-radius:0 5px 5px 0;font-size:.72rem;color:var(--text-dim);white-space:nowrap;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.section-lbl{font-size:.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;padding:7px 0 4px;border-bottom:1px solid var(--border);margin-bottom:9px;}
+
+/* Section preview SVG */
+.sec-preview{display:flex;justify-content:center;margin-bottom:10px;}
+.sec-preview svg{border:1px solid var(--border);border-radius:6px;background:var(--bg3);}
+
+/* Calc button */
+.btn-calc{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:8px;transition:.15s;font-family:var(--sans);}
+.btn-calc:hover{background:var(--accent2);}
+
+/* Results */
+.results-hidden{display:none;}
+
+/* Badges */
+.badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;text-transform:uppercase;}
+.badge-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green);}
+.badge-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow);}
+.badge-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red);}
+.badge-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+
+/* Results table */
+.res-tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:10px;}
+.res-tbl th{text-align:left;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding:5px 8px;border-bottom:2px solid var(--border);}
+.res-tbl td{padding:5px 8px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;}
+.res-tbl td:first-child{color:var(--text-mid);}
+.res-tbl td:nth-child(2){font-family:var(--mono);color:var(--text);}
+.res-tbl td:last-child{font-family:var(--mono);}
+.res-tbl tr:last-child td{border-bottom:none;}
+.td-ok{color:var(--green);font-weight:700;}
+.td-err{color:var(--red);font-weight:700;}
+.td-warn{color:var(--yellow);font-weight:700;}
+
+/* Step headers */
+.step-hdr{font-size:.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+
+/* Summary bar */
+.summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);}
+.sum-item{display:flex;flex-direction:column;gap:2px;}
+.sum-lbl{font-size:.63rem;color:var(--text-dim);letter-spacing:.04em;text-transform:uppercase;}
+.sum-val{font-size:.95rem;font-weight:700;font-family:var(--mono);color:var(--text);}
+.sum-val.ok{color:var(--green);}
+.sum-val.err{color:var(--red);}
+.sum-val.warn{color:var(--yellow);}
+
+/* PMM canvas */
+.pmm-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;margin-top:0;}
+.pmm-hdr{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+.pmm-hdr h4{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);}
+.pmm-canvas-wrap{padding:8px 12px 12px;display:flex;justify-content:center;}
+.pmm-legend{display:flex;gap:16px;padding:0 12px 10px;font-size:.7rem;color:var(--text-dim);}
+.pmm-leg-item{display:flex;align-items:center;gap:5px;}
+.pmm-leg-line{width:24px;height:2px;}
+
+/* Note box */
+.note-box{font-size:.7rem;color:var(--text-mid);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:7px 10px;margin-top:8px;line-height:1.55;}
+</style>
+<style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="bc">
+  <a href="/pages/home">Home</a><span>›</span>
+  <a href="/pages/home">Calculators</a><span>›</span>
+  CFST Column Design
+</div>
+
+<div class="page-hdr">
+  <h1><span class="std-tag">AISC 360-22</span> CFST Column Design</h1>
+  <p>Concrete-Filled Steel Tube (CFST) — Round HSS &amp; Rectangular HSS — Chapter I Composite Members</p>
+</div>
+
+<div class="col-layout">
+
+<!-- ══════════ INPUT CARD ══════════ -->
+<div class="card">
+  <div class="card-hdr">
+    <h3>Input Parameters</h3>
+    <span id="utag" style="font-size:.68rem;color:var(--text-dim);font-family:var(--mono);">kip · in</span>
+  </div>
+  <div class="card-body">
+
+    <!-- Units -->
+    <div class="unit-sw">
+      <label>Units</label>
+      <div class="unit-btns">
+        <button class="unit-btn active" onclick="setUnits('us',this)">US (kip, in)</button>
+        <button class="unit-btn" onclick="setUnits('si',this)">SI (kN, mm)</button>
+      </div>
+    </div>
+
+    <!-- Section type -->
+    <div class="unit-sw">
+      <label>Section</label>
+      <div class="unit-btns">
+        <button class="unit-btn active" id="btn-round" onclick="setShape('round',this)">Round HSS</button>
+        <button class="unit-btn" id="btn-rect" onclick="setShape('rect',this)">Rect / Sq HSS</button>
+      </div>
+    </div>
+
+    <!-- Cross-section preview -->
+    <div class="sec-preview">
+      <svg id="sec-svg" width="120" height="120" viewBox="0 0 120 120"></svg>
+    </div>
+
+    <!-- DIMENSIONS -->
+    <div class="section-lbl">Section Geometry</div>
+
+    <div id="dims-round">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Outer Diameter D <span id="lu-D"></span></label>
+          <div class="iw"><input type="number" id="inp-D" value="10" step="0.125" min="2" oninput="updateSVG();autoCalc()"><span class="us" id="u-D">in</span></div>
+        </div>
+        <div class="form-group">
+          <label>Wall Thickness t <span id="lu-t"></span></label>
+          <div class="iw"><input type="number" id="inp-t" value="0.5" step="0.0625" min="0.05" oninput="updateSVG();autoCalc()"><span class="us" id="u-t">in</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dims-rect" style="display:none;">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Width B <span id="lu-B"></span></label>
+          <div class="iw"><input type="number" id="inp-B" value="10" step="0.125" min="2" oninput="updateSVG();autoCalc()"><span class="us" id="u-B">in</span></div>
+        </div>
+        <div class="form-group">
+          <label>Depth H <span id="lu-H"></span></label>
+          <div class="iw"><input type="number" id="inp-H" value="10" step="0.125" min="2" oninput="updateSVG();autoCalc()"><span class="us" id="u-H">in</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Wall Thickness t <span id="lu-tr"></span></label>
+        <div class="iw"><input type="number" id="inp-tr" value="0.5" step="0.0625" min="0.05" oninput="updateSVG();autoCalc()"><span class="us" id="u-tr">in</span></div>
+      </div>
+    </div>
+
+    <!-- MATERIAL -->
+    <div class="section-lbl">Materials</div>
+
+    <div class="form-group">
+      <label>Steel Grade</label>
+      <div class="iw">
+        <select id="steel-grade" onchange="gradeChanged();autoCalc()" style="border-radius:5px;font-family:var(--sans);padding:7px 9px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);width:100%;font-size:.83rem;">
+          <option value="50">A500 Gr. C — Fy = 50 ksi (round)</option>
+          <option value="46">A500 Gr. B — Fy = 46 ksi (round)</option>
+          <option value="50r">A1085 — Fy = 50 ksi (round/rect)</option>
+          <option value="35">A53 Gr. B — Fy = 35 ksi (pipe)</option>
+          <option value="50s">A500 Gr. C — Fy = 50 ksi (rect)</option>
+          <option value="46s">A500 Gr. B — Fy = 46 ksi (rect)</option>
+          <option value="custom">Custom Fy</option>
+        </select>
+      </div>
+    </div>
+    <div id="fy-custom-row" class="form-group" style="display:none;">
+      <label>Custom Fy</label>
+      <div class="iw"><input type="number" id="inp-Fy" value="50" step="1" min="20" max="75" oninput="autoCalc()"><span class="us" id="u-Fy">ksi</span></div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>f'c (concrete) <span id="lu-fc"></span></label>
+        <div class="iw"><input type="number" id="inp-fc" value="5" step="0.5" min="3" max="10" oninput="autoCalc()"><span class="us" id="u-fc">ksi</span></div>
+      </div>
+      <div class="form-group">
+        <label>Unit weight wc <span id="lu-wc"></span></label>
+        <div class="iw"><input type="number" id="inp-wc" value="145" step="1" oninput="autoCalc()"><span class="us" id="u-wc">pcf</span></div>
+      </div>
+    </div>
+
+    <!-- COLUMN -->
+    <div class="section-lbl">Column Parameters</div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>KL<sub>x</sub> <span id="lu-KL"></span></label>
+        <div class="iw"><input type="number" id="inp-KLx" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KL">ft</span></div>
+      </div>
+      <div class="form-group">
+        <label>KL<sub>y</sub> <span id="lu-KLy"></span></label>
+        <div class="iw"><input type="number" id="inp-KLy" value="14" step="0.5" min="0.1" oninput="autoCalc()"><span class="us" id="u-KLy">ft</span></div>
+      </div>
+    </div>
+
+    <!-- LOADS -->
+    <div class="section-lbl">Applied Loads (LRFD)</div>
+    <div class="form-group">
+      <label>Pu — Factored Axial <span id="lu-P"></span></label>
+      <div class="iw"><input type="number" id="inp-Pu" value="600" step="10" min="0" oninput="autoCalc()"><span class="us" id="u-P">kips</span></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>M<sub>ux</sub> (incl. P-δ) <span id="lu-M"></span></label>
+        <div class="iw"><input type="number" id="inp-Mux" value="100" step="5" min="0" oninput="autoCalc()"><span class="us" id="u-M">kip-ft</span></div>
+      </div>
+      <div class="form-group">
+        <label>M<sub>uy</sub> <span id="lu-My"></span></label>
+        <div class="iw"><input type="number" id="inp-Muy" value="0" step="5" min="0" oninput="autoCalc()"><span class="us" id="u-My">kip-ft</span></div>
+      </div>
+    </div>
+
+    <div class="note-box">M<sub>u</sub> must include second-order (P-&delta;) amplification per AISC Ch. C / DAM before entry.</div>
+
+  </div><!-- /card-body -->
+</div><!-- /input card -->
+
+<!-- ══════════ RESULTS COLUMN ══════════ -->
+<div>
+
+  <!-- Warning / error messages -->
+  <div id="warn-box" style="display:none;margin-bottom:12px;padding:9px 12px;border-radius:6px;font-size:.78rem;border:1px solid var(--yellow);background:var(--yellow-bg);color:var(--yellow);"></div>
+
+  <!-- Results card -->
+  <div class="card" id="results-card">
+    <!-- Summary bar -->
+    <div class="summary-bar" id="summary-bar">
+      <div class="sum-item"><div class="sum-lbl">Classification</div><div class="sum-val" id="s-class">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">&phi;P<sub>n</sub></div><div class="sum-val" id="s-phiPn">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">&phi;M<sub>n</sub></div><div class="sum-val" id="s-phiMn">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">DCR</div><div class="sum-val" id="s-dcr">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">Result</div><div class="sum-val" id="s-result">—</div></div>
+    </div>
+
+    <div class="card-body" id="res-body">
+
+      <!-- S1: Limits -->
+      <div class="step-hdr">§ I1.3 Material &amp; Area Limits</div>
+      <table class="res-tbl">
+        <thead><tr><th>Check</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead>
+        <tbody id="tbl-limits"></tbody>
+      </table>
+
+      <!-- S2: Compactness -->
+      <div class="step-hdr">§ Table I1.1a — Section Classification</div>
+      <table class="res-tbl">
+        <thead><tr><th>Parameter</th><th>Computed</th><th>Compact (&lambda;<sub>p</sub>)</th><th>Noncompact (&lambda;<sub>r</sub>)</th><th>Max (&lambda;<sub>max</sub>)</th></tr></thead>
+        <tbody id="tbl-compact"></tbody>
+      </table>
+
+      <!-- S3: Cross-section properties -->
+      <div class="step-hdr">Cross-Section Properties</div>
+      <table class="res-tbl">
+        <thead><tr><th>Property</th><th>Value</th><th>Unit</th></tr></thead>
+        <tbody id="tbl-props"></tbody>
+      </table>
+
+      <!-- S4: Squash load -->
+      <div class="step-hdr">§ I2.2b — Nominal Squash Load P<sub>no</sub></div>
+      <table class="res-tbl">
+        <thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead>
+        <tbody id="tbl-pno"></tbody>
+      </table>
+
+      <!-- S5: Effective stiffness & buckling -->
+      <div class="step-hdr">§ I2.2c/d — Stiffness, Buckling &amp; Available Axial Strength</div>
+      <table class="res-tbl">
+        <thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead>
+        <tbody id="tbl-buck"></tbody>
+      </table>
+
+      <!-- S6: Flexural strength -->
+      <div class="step-hdr">§ I3.4 — Flexural Strength (PSDM, compact)</div>
+      <table class="res-tbl">
+        <thead><tr><th>Axis</th><th>M<sub>p</sub> (nominal)</th><th>&phi;M<sub>n</sub> (&phi;<sub>b</sub>=0.90)</th></tr></thead>
+        <tbody id="tbl-flex"></tbody>
+      </table>
+
+      <!-- S7: Interaction check -->
+      <div class="step-hdr">§ I5 / H1-1 — P-M Interaction Check</div>
+      <table class="res-tbl">
+        <thead><tr><th>Term</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead>
+        <tbody id="tbl-interaction"></tbody>
+      </table>
+
+    </div><!-- /card-body -->
+  </div><!-- /results card -->
+
+  <!-- PMM Diagram -->
+  <div class="pmm-wrap" id="pmm-wrap" style="display:none;margin-top:14px;">
+    <div class="pmm-hdr">
+      <h4>P-M Interaction Diagram — LRFD</h4>
+      <div id="pmm-axis-tabs" style="display:flex;gap:0;">
+        <button class="unit-btn active" id="tab-x" onclick="setPmmAxis('x',this)" style="border-radius:4px 0 0 4px;">P – M<sub>x</sub></button>
+        <button class="unit-btn" id="tab-y" onclick="setPmmAxis('y',this)" style="border-radius:0 4px 4px 0;">P – M<sub>y</sub></button>
+      </div>
+    </div>
+    <div class="pmm-canvas-wrap">
+      <canvas id="pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
+    </div>
+    <div class="pmm-legend">
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> PSDM curve (nominal × 0.75)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#e74c3c;border-top:2px dashed #e74c3c;height:0;"></div> AISC H1-1 design envelope</div>
+      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#555;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
+    </div>
+  </div>
+
+</div><!-- /results col -->
+</div><!-- /col-layout -->
+
+</div><!-- /page-wrap -->
+
+<script src="../shell.js" defer></script>
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════════════
+const Es_us = 29000; // ksi
+const Es_si = 200000; // MPa
+let isUS = true;
+let shape = 'round';
+let pmmAxis = 'x';
+let lastResult = null;
+
+// ═══════════════════════════════════════════════════
+// UNITS
+// ═══════════════════════════════════════════════════
+function setUnits(u, btn) {
+  isUS = (u === 'us');
+  document.querySelectorAll('.unit-btns .unit-btn').forEach(b => {
+    if (b.closest('.unit-sw') === btn.closest('.unit-sw')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  updateLabels();
+  autoCalc();
+}
+
+function updateLabels() {
+  const d = isUS ? 'in' : 'mm', L = isUS ? 'ft' : 'm', F = isUS ? 'kips' : 'kN';
+  const M = isUS ? 'kip-ft' : 'kN·m', fc = isUS ? 'ksi' : 'MPa', fy = isUS ? 'ksi' : 'MPa';
+  const wc = isUS ? 'pcf' : 'kg/m³';
+  const setU = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setU('u-D', d); setU('lu-D', '['+d+']');
+  setU('u-t', d); setU('lu-t', '['+d+']');
+  setU('u-B', d); setU('lu-B', '['+d+']');
+  setU('u-H', d); setU('lu-H', '['+d+']');
+  setU('u-tr', d); setU('lu-tr', '['+d+']');
+  setU('u-fc', fc); setU('lu-fc', '['+fc+']');
+  setU('u-Fy', fy);
+  setU('u-wc', wc); setU('lu-wc', '['+wc+']');
+  setU('u-KL', L); setU('lu-KL', '['+L+']');
+  setU('u-KLy', L); setU('lu-KLy', '['+L+']');
+  setU('u-P', F); setU('lu-P', '['+F+']');
+  setU('u-M', M); setU('lu-M', '['+M+']');
+  setU('u-My', M); setU('lu-My', '['+M+']');
+  document.getElementById('utag').textContent = isUS ? 'kip · in' : 'kN · mm';
+
+  // Update defaults when switching
+  const defD = isUS ? 10 : 254, defT = isUS ? 0.5 : 12.7;
+  const defB = isUS ? 10 : 254, defH = isUS ? 10 : 254;
+  const defTr = isUS ? 0.5 : 12.7;
+  const deffc = isUS ? 5 : 34.5, defwc = isUS ? 145 : 2323;
+  const defKL = isUS ? 14 : 4.3;
+  const defFy = isUS ? 50 : 345;
+  const defPu = isUS ? 600 : 2670, defMu = isUS ? 100 : 136;
+
+  ['inp-D','inp-t','inp-B','inp-H','inp-tr','inp-fc','inp-wc','inp-KLx','inp-KLy','inp-Pu','inp-Mux','inp-Muy','inp-Fy']
+    .forEach(id => { const el = document.getElementById(id); if (!el) return; });
+
+  document.getElementById('inp-D').value = defD;
+  document.getElementById('inp-t').value = defT;
+  document.getElementById('inp-B').value = defB;
+  document.getElementById('inp-H').value = defH;
+  document.getElementById('inp-tr').value = defTr;
+  document.getElementById('inp-fc').value = deffc;
+  document.getElementById('inp-wc').value = defwc;
+  document.getElementById('inp-KLx').value = defKL;
+  document.getElementById('inp-KLy').value = defKL;
+  document.getElementById('inp-Pu').value = defPu;
+  document.getElementById('inp-Mux').value = defMu;
+  document.getElementById('inp-Muy').value = 0;
+  gradeChanged();
+}
+
+function setShape(s, btn) {
+  shape = s;
+  document.querySelectorAll('.unit-btns .unit-btn').forEach(b => {
+    if (b.closest('.unit-sw') === btn.closest('.unit-sw')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  document.getElementById('dims-round').style.display = (s === 'round') ? '' : 'none';
+  document.getElementById('dims-rect').style.display = (s === 'rect') ? '' : 'none';
+  updateSVG();
+  autoCalc();
+}
+
+function gradeChanged() {
+  const v = document.getElementById('steel-grade').value;
+  const map = { '50': 50, '46': 46, '50r': 50, '35': 35, '50s': 50, '46s': 46 };
+  const row = document.getElementById('fy-custom-row');
+  if (v === 'custom') {
+    row.style.display = '';
+  } else {
+    row.style.display = 'none';
+    document.getElementById('inp-Fy').value = map[v] || 50;
+  }
+  autoCalc();
+}
+
+function getFy() {
+  const v = document.getElementById('steel-grade').value;
+  const map = { '50': 50, '46': 46, '50r': 50, '35': 35, '50s': 50, '46s': 46 };
+  const fy_ksi = map[v] || parseFloat(document.getElementById('inp-Fy').value) || 50;
+  return isUS ? fy_ksi : fy_ksi * 6.895; // ksi → MPa
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION PREVIEW SVG
+// ═══════════════════════════════════════════════════
+function updateSVG() {
+  const svg = document.getElementById('sec-svg');
+  const cx = 60, cy = 60, R = 48;
+  if (shape === 'round') {
+    const D = parseFloat(document.getElementById('inp-D').value) || 10;
+    const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
+    const ri_ratio = Math.max(0.1, (D / 2 - t) / (D / 2));
+    const Ri = R * ri_ratio;
+    svg.innerHTML = `
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${Ri}" fill="#e8eedc" stroke="#8898aa" stroke-width="1"/>
+      <line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>
+      <line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+  } else {
+    const B = parseFloat(document.getElementById('inp-B').value) || 10;
+    const H = parseFloat(document.getElementById('inp-H').value) || 10;
+    const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
+    const scale = 96 / Math.max(B, H);
+    const bw = Math.min(B * scale, 96), bh = Math.min(H * scale, 96);
+    const t2 = Math.max(3, Math.min(t * scale, Math.min(bw, bh) * 0.4));
+    const x = cx - bw / 2, y = cy - bh / 2;
+    svg.innerHTML = `
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#c0d0e0" stroke="#5a6a7a" stroke-width="1.5" rx="1"/>
+      <rect x="${x+t2}" y="${y+t2}" width="${bw-2*t2}" height="${bh-2*t2}" fill="#e8eedc" stroke="#8898aa" stroke-width="1" rx="0.5"/>
+      <line x1="${cx-bw/2}" y1="${cy}" x2="${cx+bw/2}" y2="${cy}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>
+      <line x1="${cx}" y1="${cy-bh/2}" x2="${cx}" y2="${cy+bh/2}" stroke="rgba(90,106,122,.25)" stroke-width=".6" stroke-dasharray="3,3"/>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// GEOMETRY HELPERS (circular segments)
+// ═══════════════════════════════════════════════════
+function cSegA(R, h) {
+  if (h >= R) return 0;
+  if (h <= -R) return Math.PI * R * R;
+  const theta = Math.acos(Math.min(Math.max(h / R, -1), 1));
+  return R * R * (theta - Math.sin(theta) * Math.cos(theta));
+}
+function cSegQ(R, h) {
+  // ∫y dA for segment above h (first moment about section centroid)
+  if (h >= R) return 0;
+  if (h <= -R) return 0;
+  const sinTheta = Math.sqrt(Math.max(0, 1 - (h / R) * (h / R)));
+  return (2 / 3) * R * R * R * sinTheta * sinTheta * sinTheta;
+}
+// Rectangular helpers
+function rA(W, H, y) {
+  if (y >= H / 2) return 0;
+  if (y <= -H / 2) return W * H;
+  return W * (H / 2 - y);
+}
+function rQ(W, H, y) {
+  if (y >= H / 2) return 0;
+  if (y <= -H / 2) return 0;
+  return (W / 2) * (H * H / 4 - y * y);
+}
+
+// ═══════════════════════════════════════════════════
+// PSDM — P-M curve (returns array of {P, M})
+// P in force units, M in force·length units (same system)
+// ═══════════════════════════════════════════════════
+function computePM(shape, geom, Fy, fc, C2, N) {
+  N = N || 300;
+  const pts = [];
+  if (shape === 'round') {
+    const { Ro, Ri } = geom;
+    const As = Math.PI * (Ro * Ro - Ri * Ri);
+    for (let i = 0; i <= N; i++) {
+      const h = Ro - (2 * Ro * i / N);
+      const As_a = cSegA(Ro, h) - cSegA(Ri, h);
+      const As_b = As - As_a;
+      const Ac_a = cSegA(Ri, h);
+      const Qs_a = cSegQ(Ro, h) - cSegQ(Ri, h);
+      const Qc_a = cSegQ(Ri, h);
+      const ys_a = As_a > 1e-14 ? Qs_a / As_a : 0;
+      const yc_a = Ac_a > 1e-14 ? Qc_a / Ac_a : 0;
+      const P = Fy * (As_a - As_b) + C2 * fc * Ac_a;
+      const M = 2 * Fy * As_a * ys_a + C2 * fc * Ac_a * yc_a;
+      if (P >= -0.01 * Fy * As) pts.push({ P: Math.max(0, P), M });
+    }
+  } else {
+    const { B, H, t } = geom;
+    const bc = B - 2 * t, hc = H - 2 * t;
+    const As = B * H - bc * hc;
+    for (let i = 0; i <= N; i++) {
+      const y = H / 2 - H * i / N;
+      const As_a = rA(B, H, y) - rA(bc, hc, y);
+      const As_b = As - As_a;
+      const Ac_a = rA(bc, hc, y);
+      const Qs_a = rQ(B, H, y) - rQ(bc, hc, y);
+      const Qc_a = rQ(bc, hc, y);
+      const ys_a = As_a > 1e-14 ? Qs_a / As_a : 0;
+      const yc_a = Ac_a > 1e-14 ? Qc_a / Ac_a : 0;
+      const P = Fy * (As_a - As_b) + C2 * fc * Ac_a;
+      const M = 2 * Fy * As_a * ys_a + C2 * fc * Ac_a * yc_a;
+      if (P >= -0.01 * Fy * As) pts.push({ P: Math.max(0, P), M });
+    }
+  }
+  return pts;
+}
+
+function findMp(pts) {
+  // Find M at P closest to 0
+  let best = pts[0], bestDelta = Infinity;
+  for (const p of pts) {
+    const d = Math.abs(p.P);
+    if (d < bestDelta) { bestDelta = d; best = p; }
+  }
+  return best ? best.M : 0;
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN CALCULATION
+// ═══════════════════════════════════════════════════
+function autoCalc() {
+  try { calc(); } catch(e) { console.error(e); }
+}
+
+function calc() {
+  const Es = isUS ? Es_us : Es_si;
+  const Fy = getFy();
+  const fc_raw = parseFloat(document.getElementById('inp-fc').value) || 5;
+  // Convert: US: ksi, SI: MPa
+  const fc = fc_raw; // both systems use their native pressure units
+  const wc_raw = parseFloat(document.getElementById('inp-wc').value) || 145;
+  // Ec: US: 33*wc^1.5*sqrt(fc_psi) psi → ksi; SI: 0.043*wc^1.5*sqrt(fc_MPa) MPa
+  const Ec = isUS
+    ? 33 * Math.pow(wc_raw, 1.5) * Math.sqrt(fc * 1000) / 1000 // ksi
+    : 0.043 * Math.pow(wc_raw, 1.5) * Math.sqrt(fc); // MPa (wc in kg/m³)
+
+  const KLx_raw = parseFloat(document.getElementById('inp-KLx').value) || 14;
+  const KLy_raw = parseFloat(document.getElementById('inp-KLy').value) || 14;
+  const KLx = isUS ? KLx_raw * 12 : KLx_raw * 1000; // ft→in or m→mm
+  const KLy = isUS ? KLy_raw * 12 : KLy_raw * 1000;
+
+  const Pu = parseFloat(document.getElementById('inp-Pu').value) || 0;
+  const Mux_raw = parseFloat(document.getElementById('inp-Mux').value) || 0;
+  const Muy_raw = parseFloat(document.getElementById('inp-Muy').value) || 0;
+  // Convert moments to force·length (same unit system as forces × length)
+  const Mux = isUS ? Mux_raw * 12 : Mux_raw * 1000; // kip-ft→kip-in or kN-m→kN-mm
+  const Muy = isUS ? Muy_raw * 12 : Muy_raw * 1000;
+
+  // ── GEOMETRY ──
+  let As, Ac, Ag, Is_x, Ic_x, Is_y, Ic_y, lambda_x, lambda_y;
+  let lambda_px, lambda_rx, lambda_max_x, lambda_py, lambda_ry, lambda_max_y;
+  let C2, geom;
+
+  if (shape === 'round') {
+    const D = parseFloat(document.getElementById('inp-D').value) || 10;
+    const t = parseFloat(document.getElementById('inp-t').value) || 0.5;
+    const Ro = D / 2, Ri = Ro - t;
+    As = Math.PI * (Ro * Ro - Ri * Ri);
+    Ac = Math.PI * Ri * Ri;
+    Ag = Math.PI * Ro * Ro;
+    Is_x = Math.PI / 4 * (Math.pow(Ro, 4) - Math.pow(Ri, 4));
+    Ic_x = Math.PI / 4 * Math.pow(Ri, 4);
+    Is_y = Is_x; Ic_y = Ic_x;
+    lambda_x = lambda_y = D / t;
+    lambda_px = lambda_py = 0.15 * Es / Fy;
+    lambda_rx = lambda_ry = 0.19 * Es / Fy;
+    lambda_max_x = lambda_max_y = 0.31 * Es / Fy;
+    C2 = 0.95;
+    geom = { Ro, Ri };
+  } else {
+    const B = parseFloat(document.getElementById('inp-B').value) || 10;
+    const H = parseFloat(document.getElementById('inp-H').value) || 10;
+    const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
+    const bc = B - 2 * t, hc = H - 2 * t;
+    As = B * H - bc * hc;
+    Ac = bc * hc;
+    Ag = B * H;
+    Is_x = (B * Math.pow(H, 3) - bc * Math.pow(hc, 3)) / 12;
+    Ic_x = bc * Math.pow(hc, 3) / 12;
+    Is_y = (H * Math.pow(B, 3) - hc * Math.pow(bc, 3)) / 12;
+    Ic_y = hc * Math.pow(bc, 3) / 12;
+    const b_max = Math.max(bc, hc), b_min = Math.min(bc, hc);
+    lambda_x = hc / t; // strong axis wall (H direction)
+    lambda_y = bc / t; // weak axis wall (B direction)
+    lambda_px = lambda_py = 2.26 * Math.sqrt(Es / Fy);
+    lambda_rx = lambda_ry = 3.00 * Math.sqrt(Es / Fy);
+    lambda_max_x = lambda_max_y = 5.00 * Math.sqrt(Es / Fy);
+    C2 = 0.85;
+    geom = { B, H, t };
+  }
+
+  const rho_s = As / Ag;
+  const lambda_gov = shape === 'round' ? lambda_x : Math.max(lambda_x, lambda_y);
+  const lambda_p = lambda_px, lambda_r = lambda_rx, lambda_max = lambda_max_x;
+
+  // ── CLASSIFICATION ──
+  let classify, classLabel;
+  if (lambda_gov <= lambda_p) {
+    classify = 'compact'; classLabel = 'Compact Composite';
+  } else if (lambda_gov <= lambda_r) {
+    classify = 'noncompact'; classLabel = 'Noncompact Composite';
+  } else if (lambda_gov <= lambda_max) {
+    classify = 'slender'; classLabel = 'Slender-Element Composite';
+  } else {
+    classify = 'not-permitted'; classLabel = 'NOT PERMITTED';
+  }
+
+  // ── Pno (I2.2b) ──
+  const Pp_x = Fy * As + C2 * fc * Ac;
+  const Py_x = Fy * As + 0.70 * fc * Ac;
+  let Pno;
+  if (classify === 'compact') {
+    Pno = Pp_x;
+  } else if (classify === 'noncompact') {
+    const ratio = (lambda_gov - lambda_p) / (lambda_r - lambda_p);
+    Pno = Pp_x - (Pp_x - Py_x) * ratio * ratio;
+  } else if (classify === 'slender') {
+    if (shape === 'round') {
+      // Approximate Fn for slender round: use elastic local buckling (simplified)
+      const Fn = 0.7 * Math.min(Fy, 0.72 * Es / lambda_gov);
+      Pno = Fn * As + 0.70 * fc * Ac;
+    } else {
+      const Fcr = 9 * Es / (lambda_gov * lambda_gov);
+      Pno = Math.min(Fcr, Fy) * As + 0.70 * fc * Ac;
+    }
+  } else {
+    Pno = 0;
+  }
+
+  // ── EIeff (I2.2c) ──
+  const C3_x = Math.min(0.90, 0.45 + 3 * As / Ag);
+  const C3_y = C3_x;
+  const EIeff_x = Es * Is_x + C3_x * Ec * Ic_x;
+  const EIeff_y = Es * Is_y + C3_y * Ec * Ic_y;
+
+  // ── Pe and Pn ──
+  const Pe_x = Math.PI * Math.PI * EIeff_x / (KLx * KLx);
+  const Pe_y = Math.PI * Math.PI * EIeff_y / (KLy * KLy);
+  const Pe_gov = Math.min(Pe_x, Pe_y);
+  const KL_gov = Pe_gov === Pe_x ? KLx : KLy;
+
+  let Pn;
+  if (classify === 'not-permitted' || Pno <= 0) {
+    Pn = 0;
+  } else if (Pno / Pe_gov <= 2.25) {
+    Pn = Pno * Math.pow(0.658, Pno / Pe_gov);
+  } else {
+    Pn = 0.877 * Pe_gov;
+  }
+  const phiPn = 0.75 * Pn;
+
+  // ── Mp (PSDM, bending about x-axis and y-axis) ──
+  const pts_x = computePM(shape, geom, Fy, fc, C2, 300);
+  const Mp_x = findMp(pts_x);
+  const phiMn_x = 0.90 * Mp_x;
+
+  let pts_y = pts_x, Mp_y = Mp_x, phiMn_y = phiMn_x;
+  if (shape === 'rect') {
+    // Weak-axis PSDM: swap B and H
+    const { B, H, t } = geom;
+    const geom_y = { B: H, H: B, t };
+    pts_y = computePM('rect', geom_y, Fy, fc, C2, 300);
+    Mp_y = findMp(pts_y);
+    phiMn_y = 0.90 * Mp_y;
+  }
+
+  // ── Chapter H1-1 Interaction ──
+  const Pc = phiPn;
+  const Mcx = phiMn_x, Mcy = phiMn_y;
+  let DCR, eqUsed;
+  if (Pc > 0) {
+    const Pr_ratio = Pu / Pc;
+    if (Pr_ratio >= 0.2) {
+      DCR = Pr_ratio + (8 / 9) * (Mux / Mcx + (Mcy > 0 ? Muy / Mcy : 0));
+      eqUsed = 'H1-1a';
+    } else {
+      DCR = Pu / (2 * Pc) + (Mux / Mcx + (Mcy > 0 ? Muy / Mcy : 0));
+      eqUsed = 'H1-1b';
+    }
+  } else {
+    DCR = 9999;
+    eqUsed = '—';
+  }
+  const pass = DCR <= 1.0 && classify !== 'not-permitted';
+
+  // ── UNIT CONVERSIONS FOR DISPLAY ──
+  const fU = isUS ? 'kips' : 'kN';
+  const mU = isUS ? 'kip-ft' : 'kN·m';
+  const lU = isUS ? 'in' : 'mm';
+  const l4U = isUS ? 'in⁴' : 'mm⁴';
+  const k2U = isUS ? 'ksi' : 'MPa';
+  const EIU = isUS ? 'kip·in²' : 'kN·mm²';
+  const toM = v => isUS ? v / 12 : v / 1000; // force·length → display moment
+  const fmt = (v, d) => isNaN(v) ? '—' : v.toFixed(d !== undefined ? d : 1);
+  const fmt3 = v => fmt(v, 3);
+  const fmt0 = v => fmt(v, 0);
+
+  // Display Ec in native units
+  const Ec_disp = Ec;
+
+  // ── RENDER RESULTS ──
+
+  // Material & area limits
+  const fy_ksi = isUS ? Fy : Fy / 6.895;
+  const fc_ksi = isUS ? fc : fc / 6.895;
+  const fc_MPa = isUS ? fc * 6.895 : fc;
+  const fy_MPa = isUS ? Fy * 6.895 : Fy;
+
+  const fy_ok = Fy <= (isUS ? 75 : 517);
+  const fc_ok = fc_ksi >= 3 && fc_ksi <= 10;
+  const rho_ok = rho_s >= 0.01;
+
+  const mkRow = (a, b, c, d) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td></tr>`;
+  const badge = (ok, txt) => `<span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${txt}</span>`;
+  const classB = classify === 'compact' ? 'badge-ok' : classify === 'noncompact' ? 'badge-warn' : 'badge-err';
+
+  document.getElementById('tbl-limits').innerHTML =
+    mkRow('Fy ≤ ' + (isUS ? '75 ksi' : '517 MPa'), fmt(Fy,1)+' '+k2U, isUS ? '75 ksi' : '517 MPa', badge(fy_ok, fy_ok ? 'OK' : 'FAIL')) +
+    mkRow("3 ≤ f'c ≤ 10 ksi", fmt(fc_ksi,1)+' ksi', '3 – 10 ksi', badge(fc_ok, fc_ok ? 'OK' : 'FAIL')) +
+    mkRow('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> ≥ 1%', fmt(rho_s*100,2)+'%', '≥ 1%', badge(rho_ok, rho_ok ? 'OK' : 'FAIL'));
+
+  // Compactness table
+  const cmpRows = shape === 'round'
+    ? `<tr>
+        <td>D/t (round)</td>
+        <td class="${lambda_gov > lambda_max ? 'td-err' : lambda_gov > lambda_r ? 'td-warn' : 'td-ok'}">${fmt(lambda_gov,1)}</td>
+        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
+       </tr>`
+    : `<tr>
+        <td>h<sub>c</sub>/t (strong, H dir.)</td>
+        <td class="${lambda_x > lambda_max ? 'td-err' : lambda_x > lambda_r ? 'td-warn' : 'td-ok'}">${fmt(lambda_x,1)}</td>
+        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
+       </tr>
+       <tr>
+        <td>b<sub>c</sub>/t (weak, B dir.)</td>
+        <td class="${lambda_y > lambda_max ? 'td-err' : lambda_y > lambda_r ? 'td-warn' : 'td-ok'}">${fmt(lambda_y,1)}</td>
+        <td>${fmt(lambda_p,1)}</td><td>${fmt(lambda_r,1)}</td><td>${fmt(lambda_max,1)}</td>
+       </tr>`;
+  document.getElementById('tbl-compact').innerHTML =
+    cmpRows +
+    `<tr><td colspan="4" style="padding-top:6px;"><span class="badge ${classB}">${classLabel}</span></td></tr>`;
+
+  // Properties
+  document.getElementById('tbl-props').innerHTML =
+    `<tr><td>A<sub>g</sub> (gross)</td><td>${fmt(Ag,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
+    `<tr><td>A<sub>s</sub> (steel)</td><td>${fmt(As,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
+    `<tr><td>A<sub>c</sub> (concrete)</td><td>${fmt(Ac,3)}</td><td>${l4U.replace('⁴','²')}</td></tr>` +
+    `<tr><td>&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub></td><td>${fmt(rho_s*100,2)}</td><td>%</td></tr>` +
+    `<tr><td>I<sub>s,x</sub> (steel)</td><td>${fmt0(Is_x)}</td><td>${l4U}</td></tr>` +
+    `<tr><td>I<sub>c,x</sub> (concrete)</td><td>${fmt0(Ic_x)}</td><td>${l4U}</td></tr>` +
+    (shape === 'rect' ? `<tr><td>I<sub>s,y</sub> (steel)</td><td>${fmt0(Is_y)}</td><td>${l4U}</td></tr><tr><td>I<sub>c,y</sub> (concrete)</td><td>${fmt0(Ic_y)}</td><td>${l4U}</td></tr>` : '');
+
+  // Pno
+  const C2label = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
+  document.getElementById('tbl-pno').innerHTML =
+    `<tr><td>C<sub>2</sub></td><td>${C2label}</td><td>—</td></tr>` +
+    `<tr><td>P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub></td><td>${fmt(Pp_x,1)}</td><td>${fU}</td></tr>` +
+    (classify !== 'compact' ? `<tr><td>P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f'<sub>c</sub>A<sub>c</sub></td><td>${fmt(Py_x,1)}</td><td>${fU}</td></tr>` : '') +
+    `<tr><td><b>P<sub>no</sub></b> (${classLabel})</td><td><b>${fmt(Pno,1)}</b></td><td>${fU}</td></tr>`;
+
+  // Buckling
+  const sciE = v => {
+    if (v === 0) return '0';
+    const e = Math.floor(Math.log10(Math.abs(v)));
+    return (v / Math.pow(10, e)).toFixed(3) + ' × 10<sup>' + e + '</sup>';
+  };
+  document.getElementById('tbl-buck').innerHTML =
+    `<tr><td>E<sub>c</sub> (concrete)</td><td>${fmt(Ec_disp,0)}</td><td>${k2U}</td></tr>` +
+    `<tr><td>C<sub>3</sub> = 0.45 + 3·A<sub>s</sub>/A<sub>g</sub></td><td>${fmt(C3_x,3)}</td><td>—</td></tr>` +
+    `<tr><td>EI<sub>eff,x</sub></td><td>${sciE(EIeff_x)}</td><td>${EIU}</td></tr>` +
+    (shape === 'rect' ? `<tr><td>EI<sub>eff,y</sub></td><td>${sciE(EIeff_y)}</td><td>${EIU}</td></tr>` : '') +
+    `<tr><td>P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²</td><td>${fmt(Pe_x,1)}</td><td>${fU}</td></tr>` +
+    (shape === 'rect' ? `<tr><td>P<sub>e,y</sub></td><td>${fmt(Pe_y,1)}</td><td>${fU}</td></tr>` : '') +
+    `<tr><td>P<sub>no</sub>/P<sub>e,gov</sub></td><td>${fmt(Pno/Pe_gov,3)}</td><td>${Pno/Pe_gov<=2.25?'≤ 2.25 → inelastic':'> 2.25 → elastic'}</td></tr>` +
+    `<tr><td>P<sub>n</sub></td><td>${fmt(Pn,1)}</td><td>${fU}</td></tr>` +
+    `<tr><td><b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub>=0.75)</td><td class="td-ok"><b>${fmt(phiPn,1)}</b></td><td>${fU}</td></tr>`;
+
+  // Flexural
+  const Mp_x_disp = toM(Mp_x), Mp_y_disp = toM(Mp_y);
+  const phiMn_x_disp = toM(phiMn_x), phiMn_y_disp = toM(phiMn_y);
+  document.getElementById('tbl-flex').innerHTML =
+    `<tr><td>Strong axis (x)</td><td>${fmt(Mp_x_disp,1)} ${mU}</td><td class="td-ok">${fmt(phiMn_x_disp,1)} ${mU}</td></tr>` +
+    (shape === 'rect' ? `<tr><td>Weak axis (y)</td><td>${fmt(Mp_y_disp,1)} ${mU}</td><td class="td-ok">${fmt(phiMn_y_disp,1)} ${mU}</td></tr>` : '');
+
+  // Interaction
+  const Mux_disp = toM(Mux), Muy_disp = toM(Muy);
+  const Mcx_disp = toM(Mcx), Mcy_disp = toM(Mcy);
+  document.getElementById('tbl-interaction').innerHTML =
+    mkRow('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/phiPn,3), eqUsed, '') +
+    mkRow('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_disp/Mcx_disp,3), eqUsed, '') +
+    (Muy > 0 ? mkRow('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_disp/Mcy_disp,3), eqUsed, '') : '') +
+    `<tr><td colspan="2"><b>DCR (AISC ${eqUsed})</b></td><td><b>${fmt(DCR,3)}</b></td><td>${pass ? badge(true,'OK') : badge(false,'NG')}</td></tr>`;
+
+  // Summary bar
+  document.getElementById('s-class').textContent = classLabel;
+  document.getElementById('s-class').className = 'sum-val ' + (classify === 'compact' ? 'ok' : classify === 'not-permitted' ? 'err' : 'warn');
+  document.getElementById('s-phiPn').textContent = fmt(phiPn,0) + ' ' + fU;
+  document.getElementById('s-phiMn').textContent = fmt(phiMn_x_disp,0) + ' ' + mU;
+  document.getElementById('s-dcr').textContent = fmt(DCR,3);
+  document.getElementById('s-dcr').className = 'sum-val ' + (DCR <= 1 ? 'ok' : 'err');
+  document.getElementById('s-result').textContent = pass ? 'PASS' : 'FAIL';
+  document.getElementById('s-result').className = 'sum-val ' + (pass ? 'ok' : 'err');
+
+  // Warnings
+  let warns = [];
+  if (!fy_ok) warns.push('Fy exceeds 75 ksi (AISC I1.3 limit). Consider Appendix 2 for high-strength steel.');
+  if (!fc_ok) warns.push("f'c outside 3–10 ksi range (AISC I1.3). Adjust concrete strength.");
+  if (!rho_ok) warns.push('ρ_s = As/Ag < 1% — minimum steel ratio not satisfied (AISC I1.3).');
+  if (classify === 'not-permitted') warns.push('Section exceeds maximum D/t or b/t limit. Cannot be designed as filled composite.');
+  if (classify === 'slender') warns.push('Slender-element section: local buckling governs. Results are approximate for slender round HSS. Verify with AISC Design Guide 6.');
+  const wb = document.getElementById('warn-box');
+  wb.style.display = warns.length ? '' : 'none';
+  wb.innerHTML = warns.map(w => '⚠ ' + w).join('<br>');
+
+  // Store for PMM draw
+  lastResult = {
+    pts_x, pts_y, Pno, Mp_x, Mp_y, phiPn, phiMn_x, phiMn_y,
+    Pu, Mux, Muy, Mux_disp, Muy_disp, Mcx_disp, Mcy_disp,
+    phiMn_x_disp, phiMn_y_disp, fU, mU, pass
+  };
+
+  // Show PMM diagram
+  document.getElementById('pmm-wrap').style.display = '';
+  // Show/hide y-tab
+  document.getElementById('tab-y').style.display = shape === 'rect' ? '' : 'none';
+  drawPMM();
+}
+
+// ═══════════════════════════════════════════════════
+// PMM CANVAS
+// ═══════════════════════════════════════════════════
+function setPmmAxis(ax, btn) {
+  pmmAxis = ax;
+  document.querySelectorAll('#pmm-axis-tabs .unit-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawPMM();
+}
+
+function drawPMM() {
+  if (!lastResult) return;
+  const r = lastResult;
+  const pts = pmmAxis === 'x' ? r.pts_x : r.pts_y;
+  const Mp = pmmAxis === 'x' ? r.Mp_x : r.Mp_y;
+  const phiMn = pmmAxis === 'x' ? r.phiMn_x : r.phiMn_y;
+  const Mu = pmmAxis === 'x' ? r.Mux : r.Muy;
+  const Mu_disp = pmmAxis === 'x' ? r.Mux_disp : r.Muy_disp;
+  const phiMn_disp = pmmAxis === 'x' ? r.phiMn_x_disp : r.phiMn_y_disp;
+
+  const canvas = document.getElementById('pmm-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { top: 28, right: 28, bot: 52, left: 68 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bot;
+
+  // Scale: use PSDM Pno and Mp for nominal
+  const Pmax = Math.max(r.Pno * 1.08, r.Pu * 1.15);
+  const Mmax = Math.max(Mp * 1.08, Mu * 1.15, phiMn * 1.08);
+
+  const toX = m => pad.left + m / Mmax * cw;
+  const toY = p => pad.top + ch - p / Pmax * ch;
+
+  // Theme-aware colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  const axCol = isDark ? '#94a3b8' : '#4a5568';
+  const gridCol = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const bgCol = isDark ? '#1f2937' : '#fff';
+
+  ctx.fillStyle = bgCol;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = gridCol;
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const x = toX(Mmax * i / 4), y = toY(Pmax * i / 4);
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + ch); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle = axCol; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + ch + 8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left - 8, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = axCol; ctx.font = '12px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
+  ctx.textAlign = 'center';
+  ctx.fillText('M (' + r.mU + ')', pad.left + cw / 2, H - 6);
+  ctx.save(); ctx.translate(14, pad.top + ch / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('P (' + r.fU + ')', 0, 0); ctx.restore();
+
+  // Tick labels
+  ctx.font = '10px monospace'; ctx.fillStyle = axCol;
+  for (let i = 0; i <= 4; i++) {
+    const pv = Pmax * i / 4, mv = Mmax * i / 4;
+    const toM = v => isUS ? v / 12 : v / 1000;
+    const fmt1 = v => v < 100 ? v.toFixed(1) : Math.round(v).toString();
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt1(pv), pad.left - 4, toY(pv) + 4);
+    ctx.textAlign = 'center';
+    ctx.fillText(fmt1(toM(mv)), toX(mv), pad.top + ch + 14);
+  }
+
+  // PSDM curve (nominal, shaded)
+  if (pts.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(pts[0].P));
+    for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
+    const lastPt = pts[pts.length - 1];
+    ctx.lineTo(toX(lastPt.M), toY(0));
+    ctx.lineTo(toX(0), toY(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(59,130,246,0.10)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(pts[0].P));
+    for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+    ctx.stroke();
+  }
+
+  // Chapter H design envelope (dashed red)
+  const Pc = r.phiPn;
+  const kink_P = 0.2 * Pc;
+  const kink_M = 0.9 * phiMn;
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(Pc));
+  ctx.lineTo(toX(kink_M), toY(kink_P));
+  ctx.lineTo(toX(phiMn), toY(0));
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7, 4]);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // φPn horizontal cap marker
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, toY(Pc)); ctx.lineTo(toX(0) + 10, toY(Pc)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e74c3c'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('φPn', pad.left + 3, toY(Pc) - 3);
+
+  // φMn vertical marker
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0) - 10); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
+  ctx.fillText('φMn', toX(phiMn), pad.top + ch + 28);
+
+  // Demand point
+  const dx = toX(Mu), dy = toY(r.Pu);
+  const ptColor = r.pass ? '#16a34a' : '#dc2626';
+  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2 * Math.PI);
+  ctx.fillStyle = ptColor; ctx.fill();
+  ctx.strokeStyle = bgCol; ctx.lineWidth = 2; ctx.stroke();
+
+  // Demand crosshairs
+  ctx.strokeStyle = ptColor; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, dy); ctx.lineTo(dx, dy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(dx, pad.top + ch); ctx.lineTo(dx, dy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // DCR label
+  const dcr = parseFloat(document.getElementById('s-dcr').textContent);
+  ctx.fillStyle = ptColor; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'left';
+  const lx = dx + 9, ly = dy - 9;
+  ctx.fillText('DCR=' + (isNaN(dcr) ? '?' : dcr.toFixed(3)), lx, ly);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+updateSVG();
+autoCalc();
+</script>
+</body>
+</html>
