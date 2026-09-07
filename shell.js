@@ -27,7 +27,6 @@
     if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
     if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
     if (/\/unit-converter(\.html)?$/.test(P))          return 'unitconv';
-    if (/\/aci-design-guide(\.html)?$/.test(P))        return 'guide-aci';
     if (/\/ec2-design-guide(\.html)?$/.test(P))        return 'guide-ec2';
     if (/\/is456-design-guide(\.html)?$/.test(P))      return 'guide-is456';
     if (/\/ts500-design-guide(\.html)?$/.test(P))      return 'guide-ts500';
@@ -194,7 +193,6 @@
     item('/pages/unit-converter', ic.uc,    'Unit Converter',    'unitconv') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Design Guides</div>' +
-    item('/pages/aci-design-guide',   ic.guide, 'ACI 318-25 Guide',   'guide-aci') +
     item('/pages/ec2-design-guide',   ic.guide, 'Eurocode 2 Guide',   'guide-ec2') +
     item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',       'guide-is456') +
     item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',       'guide-ts500') +
