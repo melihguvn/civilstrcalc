@@ -563,7 +563,6 @@ function calc() {
   // ── Unit labels ──
   const fU  = isUS ? 'kips' : 'kN';
   const mU  = isUS ? 'kip-ft' : 'kN·m';
-  const l4U = isUS ? 'in⁴' : 'mm⁴';
   const k2U = isUS ? 'ksi' : 'MPa';
   const EIU = isUS ? 'kip·in²' : 'kN·mm²';
   const toM = v => isUS ? v/12 : v/1000;
@@ -594,10 +593,9 @@ function calc() {
   if (classify === 'slender')       warns.push('Slender-element section: local buckling governs. Results are approximate. Verify with AISC Design Guide 6.');
 
   // ── Build report HTML ──
-  const badge  = (ok, txt) => `<span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${txt}</span>`;
-  const classB = classify === 'compact' ? 'badge-ok' : classify === 'noncompact' ? 'badge-warn' : 'badge-err';
-  const mkRow4 = (a,b,c,d) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td></tr>`;
-  const mkRow3 = (a,b,c)   => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
+  const r2  = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+  const aU  = isUS ? 'in²' : 'mm²';
+  const i4U = isUS ? 'in⁴' : 'mm⁴';
 
   let h = '';
 
@@ -609,91 +607,96 @@ function calc() {
        `<span>AISC 360-22 Ch. I &middot; Eq. ${eqUsed} &middot; ${classLabel}</span></div></div>`;
 
   // Warn boxes
-  for (const w of warns) {
-    h += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
-  }
+  for (const w of warns) h += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
 
   // Key results box
   const clsCls = classify === 'compact' ? ' ok' : classify === 'not-permitted' ? ' err' : ' warn';
   h += `<div class="result-box">` +
-       `<div class="result-item${clsCls}"><div class="ri-label">Classification</div><div class="ri-value" style="font-size:.85rem">${classLabel}</div></div>` +
+       `<div class="result-item${clsCls}"><div class="ri-label">Classification</div><div class="ri-value" style="font-size:.82rem">${classLabel}</div></div>` +
        `<div class="result-item"><div class="ri-label">&phi;P<sub>n</sub></div><div class="ri-value">${fmt0(phiPn)}</div><div class="ri-unit">${fU}</div></div>` +
        `<div class="result-item"><div class="ri-label">&phi;M<sub>n,x</sub></div><div class="ri-value">${fmt(phiMn_x_d,0)}</div><div class="ri-unit">${mU}</div></div>` +
-       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">DCR</div><div class="ri-value" id="s-dcr">${fmt(DCR,3)}</div><div class="ri-unit">Eq. ${eqUsed}</div></div>` +
+       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">DCR</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">Eq. ${eqUsed}</div></div>` +
        `</div>`;
 
-  // § I1.3 Material & Area Limits
+  // § I1.3 Material Limits
+  const fyC = fy_ok ? 'vok' : 'verr', fcC = fc_ok ? 'vok' : 'verr', rhoC = rho_ok ? 'vok' : 'verr';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I1.3 Material &amp; Area Limits</div>` +
-       `<table class="res-tbl"><thead><tr><th>Check</th><th>Value</th><th>Limit</th><th>Status</th></tr></thead><tbody>` +
-       mkRow4('F<sub>y</sub> &le; '+(isUS?'75 ksi':'517 MPa'), fmt(Fy,1)+' '+k2U, isUS?'75 ksi':'517 MPa', badge(fy_ok, fy_ok?'OK':'FAIL')) +
-       mkRow4("3 &le; f'<sub>c</sub> &le; 10 ksi", fmt(fc_ksi,1)+' ksi', '3 – 10 ksi', badge(fc_ok, fc_ok?'OK':'FAIL')) +
-       mkRow4('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> &ge; 1%', fmt(rho_s*100,2)+'%', '&ge; 1%', badge(rho_ok, rho_ok?'OK':'FAIL')) +
-       `</tbody></table></div>`;
+       `<table class="res-tbl">` +
+       r2('F<sub>y</sub>', `<span class="${fyC}">${fmt(Fy,1)} ${k2U}</span> &nbsp; (limit: ${isUS?'75 ksi':'517 MPa'})`) +
+       r2("f'<sub>c</sub>", `<span class="${fcC}">${fmt(fc_ksi,1)} ksi</span> &nbsp; (limit: 3 – 10 ksi)`) +
+       r2('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', `<span class="${rhoC}">${fmt(rho_s*100,2)}%</span> &nbsp; (min: 1.0%)`) +
+       `</table></div>`;
 
   // § Table I1.1a — Classification
-  const cmpBody = shape === 'round'
-    ? mkRow4('D/t (round)', `<b class="${lambda_gov > lambda_max ? 'verr' : lambda_gov > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_gov,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1)) +
-      mkRow4('', '', `&lambda;<sub>r</sub> = ${fmt(lambda_r,1)}`, `&lambda;<sub>max</sub> = ${fmt(lambda_max,1)}`)
-    : mkRow4('h<sub>c</sub>/t (H dir.)', `<b class="${lambda_x > lambda_max ? 'verr' : lambda_x > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_x,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1)) +
-      mkRow4('b<sub>c</sub>/t (B dir.)', `<b class="${lambda_y > lambda_max ? 'verr' : lambda_y > lambda_r ? 'vwarn' : 'vok'}">${fmt(lambda_y,1)}</b>`, fmt(lambda_p,1), fmt(lambda_r,1));
-
+  const lamCls = l => l > lambda_max ? 'verr' : l > lambda_r ? 'vwarn' : 'vok';
+  const limStr = `(&lambda;<sub>p</sub>&thinsp;=&thinsp;${fmt(lambda_p,1)}, &lambda;<sub>r</sub>&thinsp;=&thinsp;${fmt(lambda_r,1)}, &lambda;<sub>max</sub>&thinsp;=&thinsp;${fmt(lambda_max,1)})`;
+  const clsVcls = classify === 'compact' ? 'vok' : classify === 'not-permitted' ? 'verr' : 'vwarn';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; Table I1.1a &mdash; Section Classification</div>` +
-       `<table class="res-tbl"><thead><tr><th>Parameter</th><th>Computed</th><th>Compact (&lambda;<sub>p</sub>)</th><th>Noncompact (&lambda;<sub>r</sub>)</th></tr></thead><tbody>` +
-       cmpBody +
-       `<tr><td colspan="4"><span class="badge ${classB}">${classLabel}</span> &nbsp; &lambda;<sub>max</sub> = ${fmt(lambda_max,1)}</td></tr>` +
-       `</tbody></table></div>`;
+       `<table class="res-tbl">`;
+  if (shape === 'round') {
+    h += r2('D/t', `<span class="${lamCls(lambda_gov)}">${fmt(lambda_gov,1)}</span> &nbsp; ${limStr}`);
+  } else {
+    h += r2('h<sub>c</sub>/t (H direction)', `<span class="${lamCls(lambda_x)}">${fmt(lambda_x,1)}</span> &nbsp; ${limStr}`);
+    h += r2('b<sub>c</sub>/t (B direction)', `<span class="${lamCls(lambda_y)}">${fmt(lambda_y,1)}</span>`);
+  }
+  h += r2('Classification', `<b class="${clsVcls}">${classLabel}</b>`);
+  h += `</table></div>`;
 
   // Cross-section properties
   h += `<div class="rpt-sec"><div class="rpt-sec-title">Cross-Section Properties</div>` +
-       `<table class="res-tbl"><thead><tr><th>Property</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
-       mkRow3('A<sub>g</sub> (gross)',    fmt(Ag,3),       l4U.replace('⁴','²')) +
-       mkRow3('A<sub>s</sub> (steel)',    fmt(As,3),       l4U.replace('⁴','²')) +
-       mkRow3('A<sub>c</sub> (concrete)',  fmt(Ac,3),       l4U.replace('⁴','²')) +
-       mkRow3('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', fmt(rho_s*100,2), '%') +
-       mkRow3('I<sub>s,x</sub>',          fmt0(Is_x),      l4U) +
-       mkRow3('I<sub>c,x</sub>',          fmt0(Ic_x),      l4U) +
-       (shape==='rect' ? mkRow3('I<sub>s,y</sub>', fmt0(Is_y), l4U) + mkRow3('I<sub>c,y</sub>', fmt0(Ic_y), l4U) : '') +
-       `</tbody></table></div>`;
+       `<table class="res-tbl">` +
+       r2('A<sub>g</sub> (gross)', `${fmt(Ag,1)} ${aU}`) +
+       r2('A<sub>s</sub> (steel tube)', `${fmt(As,1)} ${aU}`) +
+       r2('A<sub>c</sub> (concrete fill)', `${fmt(Ac,1)} ${aU}`) +
+       r2('&rho;<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', `${fmt(rho_s*100,2)}%`) +
+       r2('I<sub>s,x</sub>', `${fmt0(Is_x)} ${i4U}`) +
+       r2('I<sub>c,x</sub>', `${fmt0(Ic_x)} ${i4U}`) +
+       (shape==='rect' ? r2('I<sub>s,y</sub>', `${fmt0(Is_y)} ${i4U}`) + r2('I<sub>c,y</sub>', `${fmt0(Ic_y)} ${i4U}`) : '') +
+       `</table></div>`;
 
   // § I2.2b — Pno
-  const C2label = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
+  const C2str = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2b &mdash; Nominal Squash Load P<sub>no</sub></div>` +
-       `<table class="res-tbl"><thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
-       mkRow3('C<sub>2</sub>', C2label, '—') +
-       mkRow3('P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f\'<sub>c</sub>A<sub>c</sub>', fmt(Pp,1), fU) +
-       (classify!=='compact' ? mkRow3('P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f\'<sub>c</sub>A<sub>c</sub>', fmt(Py,1), fU) : '') +
-       `<tr><td><b>P<sub>no</sub> (${classLabel})</b></td><td><b>${fmt(Pno,1)}</b></td><td>${fU}</td></tr>` +
-       `</tbody></table></div>`;
+       `<table class="res-tbl">` +
+       r2('C<sub>2</sub>', C2str) +
+       r2('P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Pp,1)} ${fU}`) +
+       (classify !== 'compact' ? r2('P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f\'<sub>c</sub>A<sub>c</sub>', `${fmt(Py,1)} ${fU}`) : '') +
+       r2('<b>P<sub>no</sub></b>', `<b class="vok">${fmt(Pno,1)} ${fU}</b>`) +
+       `</table></div>`;
 
-  // § I2.2c/d — Buckling
-  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Available Axial Strength</div>` +
-       `<table class="res-tbl"><thead><tr><th>Term</th><th>Value</th><th>Unit</th></tr></thead><tbody>` +
-       mkRow3('E<sub>c</sub> (concrete)', fmt(Ec,0), k2U) +
-       mkRow3('C<sub>3</sub> = 0.45 + 3·A<sub>s</sub>/A<sub>g</sub>', fmt(C3,3), '—') +
-       mkRow3('EI<sub>eff,x</sub>', sciE(EIeff_x), EIU) +
-       (shape==='rect' ? mkRow3('EI<sub>eff,y</sub>', sciE(EIeff_y), EIU) : '') +
-       mkRow3('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', fmt(Pe_x,1), fU) +
-       (shape==='rect' ? mkRow3('P<sub>e,y</sub>', fmt(Pe_y,1), fU) : '') +
-       mkRow3('P<sub>no</sub>/P<sub>e,gov</sub>', fmt(Pno/Pe_gov,3), Pno/Pe_gov<=2.25 ? '&le; 2.25 &rarr; inelastic' : '&gt; 2.25 &rarr; elastic') +
-       mkRow3('P<sub>n</sub>', fmt(Pn,1), fU) +
-       `<tr><td><b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub>=0.75)</td><td class="vok"><b>${fmt(phiPn,1)}</b></td><td>${fU}</td></tr>` +
-       `</tbody></table></div>`;
+  // § I2.2c/d — Stiffness & Buckling
+  const pnoRat = Pno / Pe_gov;
+  const buckMode = pnoRat <= 2.25 ? '&le; 2.25 (inelastic)' : '&gt; 2.25 (elastic)';
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Axial Strength</div>` +
+       `<table class="res-tbl">` +
+       r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
+       r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
+       r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x)} ${EIU}`) +
+       (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y)} ${EIU}`) : '') +
+       r2('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', `${fmt(Pe_x,1)} ${fU}`) +
+       (shape==='rect' ? r2('P<sub>e,y</sub> = &pi;²EI<sub>eff,y</sub>/(KL<sub>y</sub>)²', `${fmt(Pe_y,1)} ${fU}`) : '') +
+       r2('P<sub>no</sub>/P<sub>e,gov</sub>', `${fmt(pnoRat,3)} &nbsp; ${buckMode}`) +
+       r2('P<sub>n</sub>', `${fmt(Pn,1)} ${fU}`) +
+       r2('<b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub> = 0.75)', `<b class="vok">${fmt(phiPn,1)} ${fU}</b>`) +
+       `</table></div>`;
 
   // § I3.4 — Flexural
-  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I3.4 &mdash; Flexural Strength (PSDM, compact cross-section)</div>` +
-       `<table class="res-tbl"><thead><tr><th>Axis</th><th>M<sub>p</sub> (nominal)</th><th>&phi;M<sub>n</sub> (&phi;<sub>b</sub>=0.90)</th></tr></thead><tbody>` +
-       `<tr><td>Strong axis (x)</td><td>${fmt(Mp_x_d,1)} ${mU}</td><td class="vok"><b>${fmt(phiMn_x_d,1)} ${mU}</b></td></tr>` +
-       (shape==='rect' ? `<tr><td>Weak axis (y)</td><td>${fmt(Mp_y_d,1)} ${mU}</td><td class="vok"><b>${fmt(phiMn_y_d,1)} ${mU}</b></td></tr>` : '') +
-       `</tbody></table></div>`;
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I3.4 &mdash; Flexural Strength (PSDM)</div>` +
+       `<table class="res-tbl">` +
+       r2('M<sub>p,x</sub> (PSDM nominal)', `${fmt(Mp_x_d,1)} ${mU}`) +
+       r2('<b>&phi;<sub>b</sub>M<sub>n,x</sub></b> (&phi;<sub>b</sub> = 0.90)', `<b class="vok">${fmt(phiMn_x_d,1)} ${mU}</b>`) +
+       (shape==='rect' ? r2('M<sub>p,y</sub> (PSDM nominal)', `${fmt(Mp_y_d,1)} ${mU}`) +
+                         r2('<b>&phi;<sub>b</sub>M<sub>n,y</sub></b> (&phi;<sub>b</sub> = 0.90)', `<b class="vok">${fmt(phiMn_y_d,1)} ${mU}</b>`) : '') +
+       `</table></div>`;
 
-  // § I5 / H1-1 — Interaction
+  // § H1-1 — P-M Interaction
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
-       `<table class="res-tbl"><thead><tr><th>Term</th><th>Demand / Capacity</th><th>Equation</th><th>Status</th></tr></thead><tbody>` +
-       mkRow4('P<sub>u</sub> / &phi;P<sub>n</sub>',   fmt(Pu/phiPn,3),      eqUsed, '') +
-       mkRow4('M<sub>ux</sub> / &phi;M<sub>n,x</sub>',fmt(Mux_d/Mcx_d,3),   eqUsed, '') +
-       (Muy > 0 ? mkRow4('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3), eqUsed, '') : '') +
-       `<tr><td colspan="2"><b>DCR (AISC ${eqUsed})</b></td><td><b>${fmt(DCR,3)}</b></td><td>${badge(pass, pass?'OK':'NG')}</td></tr>` +
-       `</tbody></table></div>`;
+       `<table class="res-tbl">` +
+       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(Pu/phiPn,3)) +
+       r2('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_d/Mcx_d,3)) +
+       (Muy > 0 ? r2('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3)) : '') +
+       r2(`AISC Eq. ${eqUsed}`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
+       `</table></div>`;
 
   document.getElementById('res-body').innerHTML = h;
 
