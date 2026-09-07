@@ -1,10 +1,10 @@
-/* shell.js — inject navigation chrome when content pages are accessed directly
+﻿/* shell.js â€” inject navigation chrome when content pages are accessed directly
  * Runs only when window.top === window.self (direct URL, not inside the iframe shell).
- * Safe to add to every pages/*.html — has zero effect when loaded inside the iframe.
+ * Safe to add to every pages/*.html â€” has zero effect when loaded inside the iframe.
  */
 (function () {
   'use strict';
-  if (window.self !== window.top) return; // inside iframe → do nothing
+  if (window.self !== window.top) { document.documentElement.classList.add('sh-ready'); return; } // inside iframe â†’ do nothing
 
   var P = window.location.pathname;
   function _ap() {
@@ -57,7 +57,7 @@
   function a(p)  { return ap === p ? ' sh-active' : ''; }
   function g(ps) { return ps.indexOf(ap) >= 0 ? ' sh-open' : ''; }
 
-  // ── CSS ─────────────────────────────────────────────────────────────────────
+  // â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var styleEl = document.createElement('style');
   styleEl.textContent = [
     ':root{--sh-h:60px;--sh-w:230px}',
@@ -124,7 +124,7 @@
   ].join('');
   document.head.appendChild(styleEl);
 
-  // ── SVG icons ───────────────────────────────────────────────────────────────
+  // â”€â”€ SVG icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var ic = {
     beam:   '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c12 6 12 6 24 0M4 20c12 6 12 6 24 0"/><path d="M4 12v8M28 12v8" opacity=".5"/></svg>',
     devlen: '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="16" x2="29" y2="16"/><circle cx="3" cy="16" r="2.5" fill="currentColor" stroke="none"/><circle cx="29" cy="16" r="2.5" fill="currentColor" stroke="none"/><path d="M9 11v10M16 11v10M23 11v10" stroke-width="1.5" opacity=".5"/></svg>',
@@ -143,7 +143,7 @@
   function grp(icon, label, pages, subs) {
     return '<div class="sh-grp' + g(pages) + '">' +
       '<div class="sh-gh" onclick="this.closest(\'.sh-grp\').classList.toggle(\'sh-open\')">' +
-        '<span>' + icon + '</span>' + label + '<span class="sh-arr">▾</span>' +
+        '<span>' + icon + '</span>' + label + '<span class="sh-arr">â–¾</span>' +
       '</div>' +
       '<div class="sh-gb">' + subs + '</div>' +
     '</div>';
@@ -155,7 +155,7 @@
     return '<a class="sh-item' + a(page) + '" href="' + href + '"><span>' + icon + '</span>' + label + '</a>';
   }
 
-  // ── Sidebar HTML ─────────────────────────────────────────────────────────────
+  // â”€â”€ Sidebar HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var sideHTML =
     '<div class="sh-sec">Concrete Design</div>' +
     grp(ic.beam, 'Beam Design', ['beam'],
@@ -174,8 +174,8 @@
     item('/pages/crack-width',        ic.cw,     'Crack Width',          'crackwidth') +
     item('/pages/foundation',         ic.fnd,    'Foundation Design',    'foundation') +
     grp(ic.rw, 'Retaining Wall', ['retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
-      sub('/pages/retaining-wall-aci-si', 'ACI 318 — SI units',   'retwall-si') +
-      sub('/pages/retaining-wall-aci-us', 'ACI 318 — US units',   'retwall-us') +
+      sub('/pages/retaining-wall-aci-si', 'ACI 318 â€” SI units',   'retwall-si') +
+      sub('/pages/retaining-wall-aci-us', 'ACI 318 â€” US units',   'retwall-us') +
       sub('/pages/retaining-wall-ec2',    'Eurocode 2',            'retwall-ec2') +
       sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',   'retwall-tsc')) +
     '<div class="sh-div"></div>' +
@@ -214,16 +214,16 @@
       sub('/pages/how-to-size-a-steel-column',       'How to Size a Steel Column', 'art-steelcol')) +
     item('/pages/seismic-design-basics', ic.guide, 'Seismic Design Basics', 'art-seismic') +
     grp(ic.guide, 'US Standards', ['us-intro','us-materials','us-loads','us-seismic','us-loadcomb','us-rcdesign','us-steeldesign','us-service','us-retwall'],
-      sub('/pages/articles/us-standards/1-introduction.html',     '1. Introduction',      'us-intro') +
-      sub('/pages/articles/us-standards/2-material-selection.html','2. Material Selection','us-materials') +
-      sub('/pages/articles/us-standards/3-load-determination.html','3. Load Determination','us-loads') +
-      sub('/pages/articles/us-standards/4-seismic-design.html',   '4. Seismic Design',    'us-seismic') +
-      sub('/pages/articles/us-standards/5-load-combinations.html', '5. Load Combinations','us-loadcomb') +
-      sub('/pages/articles/us-standards/6-rc-design-aci.html',    '6. RC Design (ACI 318-25)','us-rcdesign') +
-      sub('/pages/articles/us-standards/7-steel-design-aisc.html','7. Steel Design (AISC 360-22)','us-steeldesign') +
-      sub('/pages/articles/us-standards/8-serviceability.html',   '8. Serviceability Checks','us-service') +
-      sub('/pages/articles/us-standards/9-retaining-wall-aci.html','9. Retaining Wall Design','us-retwall')) +
-    '<div class="sh-foot">ACI 318-25 · Eurocode 2 · IS 456<br>AISC 360-22 · TS 500 · TBDY 2018' +
+      sub('/pages/articles/us-standards/1-introduction',     '1. Introduction',      'us-intro') +
+      sub('/pages/articles/us-standards/2-material-selection','2. Material Selection','us-materials') +
+      sub('/pages/articles/us-standards/3-load-determination','3. Load Determination','us-loads') +
+      sub('/pages/articles/us-standards/4-seismic-design',   '4. Seismic Design',    'us-seismic') +
+      sub('/pages/articles/us-standards/5-load-combinations', '5. Load Combinations','us-loadcomb') +
+      sub('/pages/articles/us-standards/6-rc-design-aci',    '6. RC Design (ACI 318-25)','us-rcdesign') +
+      sub('/pages/articles/us-standards/7-steel-design-aisc','7. Steel Design (AISC 360-22)','us-steeldesign') +
+      sub('/pages/articles/us-standards/8-serviceability',   '8. Serviceability Checks','us-service') +
+      sub('/pages/articles/us-standards/9-retaining-wall-aci','9. Retaining Wall Design','us-retwall')) +
+    '<div class="sh-foot">ACI 318-25 Â· Eurocode 2 Â· IS 456<br>AISC 360-22 Â· TS 500 Â· TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
         '<a href="/contact">Contact</a>' +
@@ -232,7 +232,7 @@
       '</div>' +
     '</div>';
 
-  // ── Build DOM elements ───────────────────────────────────────────────────────
+  // â”€â”€ Build DOM elements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var ham = document.createElement('button');
   ham.className = 'sh-ham';
   ham.setAttribute('aria-label', 'Toggle navigation');
@@ -257,7 +257,7 @@
   side.setAttribute('aria-label', 'Main navigation');
   side.innerHTML = sideHTML;
 
-  // ── Toggle handlers ──────────────────────────────────────────────────────────
+  // â”€â”€ Toggle handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function open()  { side.classList.add('sh-open'); ov.classList.add('sh-open'); ham.classList.add('sh-open'); }
   function close() { side.classList.remove('sh-open'); ov.classList.remove('sh-open'); ham.classList.remove('sh-open'); }
   function toggle(){ side.classList.contains('sh-open') ? close() : open(); }
@@ -268,8 +268,11 @@
     el.addEventListener('click', function () { if (window.innerWidth <= 768) close(); });
   });
 
-  // ── Inject into body ─────────────────────────────────────────────────────────
+  // â”€â”€ Inject into body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.body.prepend(ham, ov, hdr, side);
-  // Hide article-page standalone topbar — shell header replaces it
+  // Hide article-page standalone topbar â€” shell header replaces it
   document.querySelectorAll('.sg-topbar,.art-topbar').forEach(function(el){ el.style.display='none'; });
+  // Reveal body now that sidebar is injected (FOUC prevention)
+  document.documentElement.classList.add('sh-ready');
 })();
+
