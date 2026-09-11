@@ -50,6 +50,11 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
+/* Background tabs */
+.bg-section .bg-pane{display:block;height:0;overflow:hidden;padding:0;}
+.bg-section .bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.bg-toc a.active{background:var(--accent);color:var(--white);border-color:var(--accent);}
+
 /* Section preview SVG */
 .sec-preview{display:flex;justify-content:center;margin-bottom:10px;}
 .sec-preview svg{border:1px solid var(--border);border-radius:6px;background:var(--bg2);}
@@ -289,9 +294,9 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
       <canvas id="pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
     </div>
     <div class="pmm-legend">
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#3b82f6;"></div> Capacity envelope (PSDM)</div>
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#e74c3c;border-top:2px dashed #e74c3c;height:0;"></div> AISC H1-1 design limit</div>
-      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div> Demand</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#93c5fd;"></div> Nominal PSDM envelope (cross-section)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#1d4ed8;"></div> Design envelope (&phi;P<sub>n</sub>, &phi;M<sub>n</sub>)</div>
+      <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
     </div>
   </div>
 </div><!-- /results col -->
@@ -535,6 +540,42 @@ function findMp(pts) {
   return best ? best.M : 0;
 }
 
+// PSDM radial D/C — §I3.4a
+// Finds where the ray from origin through (Mu, Pu) intersects the φ-scaled PSDM envelope.
+// phiPn_col = φcPn (column buckling capacity) — caps the P-axis of the design envelope.
+// phiP = 0.75, phiM = 0.90 applied internally.
+function psdmDCR(pts, Pu, Mu, phiPn_col) {
+  if (!pts || pts.length < 2) return 9999;
+  const phiP = 0.75, phiM = 0.90;
+  // Design envelope: P capped at phiPn_col (buckling limit), M scaled by phiM
+  const dp = pts.map(p => ({ P: Math.min(p.P * phiP, phiPn_col), M: p.M * phiM }));
+  let Pref = 0, Mref = 0;
+  for (const p of dp) { if (p.P > Pref) Pref = p.P; if (p.M > Mref) Mref = p.M; }
+  if (Pref < 1e-10 || Mref < 1e-10) return 9999;
+  // Pure-component shortcuts
+  if (Mu < 1e-8 * Mref) return Pu / Pref;
+  if (Pu < 1e-8 * Pref) return Mu / Mref;
+  // Normalize demand
+  const pu = Pu / Pref, mu = Mu / Mref;
+  // Normalized envelope
+  const np = dp.map(p => ({ m: p.M / Mref, p: p.P / Pref }));
+  // Find smallest positive t: demand = t × (envelope point)  →  DCR = 1/t
+  let best_t = 9999;
+  for (let i = 0; i < np.length - 1; i++) {
+    const A = np[i], B = np[i + 1];
+    const dm = B.m - A.m, dp2 = B.p - A.p;
+    const det = pu * dm - mu * dp2;
+    if (Math.abs(det) < 1e-12) continue;
+    const s = (mu * A.p - pu * A.m) / det;
+    if (s < -1e-9 || s > 1 + 1e-9) continue;
+    const t = Math.abs(mu) >= Math.abs(pu)
+      ? (A.m + s * dm) / mu
+      : (A.p + s * dp2) / pu;
+    if (t > 1e-9 && t < best_t) best_t = t;
+  }
+  return best_t > 100 ? 9999 : 1.0 / best_t;
+}
+
 // ═══════════════════════════════════════════════════
 // MAIN CALCULATION
 // ═══════════════════════════════════════════════════
@@ -647,24 +688,19 @@ function calc() {
   const mPhiXu = phiMn_x * uS;
   const mPhiYu = phiMn_y * uS;
 
-  let DCR = 9999, eqUsed = '—';
-  if (pPhiU > 0) {
-    const pr = Pu / pPhiU;
-    if (pr >= 0.2) { DCR = pr + (8/9)*(Mux/mPhiXu + (mPhiYu > 0 ? Muy/mPhiYu : 0)); eqUsed = 'H1-1a'; }
-    else           { DCR = Pu/(2*pPhiU) + (Mux/mPhiXu + (mPhiYu > 0 ? Muy/mPhiYu : 0)); eqUsed = 'H1-1b'; }
-  }
+  // PSDM interaction check — AISC 360-22 §I3.4a (radial D/C on cross-section envelope)
+  // pts.P is in kips (US) or N (SI). Pu is in kips/kN → scale ×1000 for SI to get N.
+  // pts.M is in kip·in (US) or N·mm (SI). Mux is in kip·in (US) or kN·mm (SI) → scale ×1000 for SI.
+  // Pn is already in kips/N (same as pts.P) since it comes from Pno which has same units.
+  const _rs = isUS ? 1 : 1000; // raw-scale: display→internal force/moment units
+  const DCR_x = psdmDCR(pts_x, Pu * _rs, Mux * _rs, Pn * 0.75);
+  const DCR_y = shape === 'rect'
+    ? psdmDCR(pts_y, Pu * _rs, Muy * _rs, Pn * 0.75)
+    : DCR_x;
+  // Governing DCR: if biaxial bending, both axes must independently satisfy
+  const DCR   = (shape === 'rect' && Muy > 1e-6) ? Math.max(DCR_x, DCR_y) : DCR_x;
+  const eqUsed = 'PSDM §I3.4a';
   const pass = DCR <= 1.0 && classify !== 'not-permitted';
-
-  // Axis-specific DCRs (single-axis check, for P-Mx and P-My tabs)
-  let DCR_x = 9999, DCR_y = 9999;
-  if (pPhiU > 0 && mPhiXu > 0) {
-    const pr = Pu / pPhiU;
-    DCR_x = pr >= 0.2 ? pr + (8/9)*(Mux/mPhiXu) : Pu/(2*pPhiU) + Mux/mPhiXu;
-  }
-  if (pPhiU > 0 && mPhiYu > 0) {
-    const pr = Pu / pPhiU;
-    DCR_y = pr >= 0.2 ? pr + (8/9)*(Muy/mPhiYu) : Pu/(2*pPhiU) + Muy/mPhiYu;
-  }
 
   // ── Unit labels ──
   const fU  = isUS ? 'kips' : 'kN';
@@ -737,7 +773,7 @@ function calc() {
   const dcr_yr = mPhiYu > 0 ? Muy / mPhiYu : 0;
   const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `M<sub>x</sub>/&phi;M<sub>n,x</sub> = ${fmt(dcr_xr,3)}`];
   if (Muy > 0) subParts.push(`M<sub>y</sub>/&phi;M<sub>n,y</sub> = ${fmt(dcr_yr,3)}`);
-  subParts.push(`${classLabel} &middot; Eq. ${eqUsed}`);
+  subParts.push(`${classLabel} &middot; ${eqUsed}`);
   const bannerHTML =
     `<div class="dcr-banner ${dcCls}" style="margin-bottom:8px;">` +
     `<div class="dcr-icon">${pass?'&#10003;':'&#10007;'}</div>` +
@@ -845,13 +881,14 @@ function calc() {
                          r2('<b>&phi;<sub>b</sub>M<sub>n,y</sub></b> (&phi;<sub>b</sub> = 0.90)', `<b class="vok">${fmt(phiMn_y_d,1)} ${mU}</b>`) : '') +
        `</table></div>`;
 
-  // ── § I5 / H1-1 — P-M Interaction Check ──
-  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
+  // ── § I3.4a — PSDM P-M Interaction Check ──
+  const dcr_xd = fmt(DCR_x, 3), dcr_yd = shape==='rect' ? fmt(DCR_y, 3) : '—';
+  h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I3.4a &mdash; P-M Interaction (PSDM Envelope)</div>` +
        `<table class="res-tbl">` +
-       r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(dcr_p,3)) +
-       r2('M<sub>ux</sub> / &phi;M<sub>n,x</sub>', fmt(Mux_d/Mcx_d,3)) +
-       (Muy > 0 ? r2('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3)) : '') +
-       r2(`AISC Eq. ${eqUsed}`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
+       r2('P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> (axial ratio)', fmt(dcr_p, 3)) +
+       r2('P-M<sub>x</sub> PSDM D/C', `<b class="${DCR_x<=1?'vok':'verr'}">${dcr_xd}</b>`) +
+       (shape==='rect' && Muy>0 ? r2('P-M<sub>y</sub> PSDM D/C', `<b class="${DCR_y<=1?'vok':'verr'}">${dcr_yd}</b>`) : '') +
+       r2(`${eqUsed} — Governing D/C`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
        `</table></div>`;
 
   // ── Print PMM canvas ──
@@ -881,8 +918,8 @@ function calc() {
   document.getElementById('rh-code').textContent =
     'AISC 360-22 · ' + (isUS ? 'kip · in' : 'kN · mm');
 
-  lastResult = { pts_x, pts_y, uS,
-                 Pno: Pno*uS, Mp_x: Mp_x*uS, Mp_y: Mp_y*uS,
+  lastResult = { pts_x, pts_y, uS, _rs,
+                 Pno: Pno*uS, Pn_raw: Pn, Mp_x: Mp_x*uS, Mp_y: Mp_y*uS,
                  phiPn: pPhiU, phiMn_x: mPhiXu, phiMn_y: mPhiYu,
                  Pu, Mux, Muy, DCR, DCR_x, DCR_y, eqUsed, fU, mU, pass };
   drawPMM();
@@ -923,9 +960,9 @@ function drawPMM(targetCanvas) {
 
   // Canvas title
   const titles = {
-    x:       shape === 'round' ? 'P – Mx  (Round HSS)' : 'P – Mx  (Neutral Axis parallel to b)',
-    y:       'P – My  (Neutral Axis parallel to h)',
-    biaxial: 'Biaxial Check — AISC H1-1'
+    x:       shape === 'round' ? 'P – Mx  (Round HSS)' : 'P – Mx  (Neutral Axis ∥ to b)',
+    y:       'P – My  (Neutral Axis ∥ to h)',
+    biaxial: 'Biaxial Check — PSDM §I3.4a (governing axis)'
   };
   ctx.fillStyle = '#374151'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
   ctx.fillText(titles[pmmAxis] || titles.x, W/2, 16);
@@ -982,28 +1019,38 @@ function drawPMM(targetCanvas) {
     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
   }
 
-  // AISC H1-1 design limit (red dashed) — kink at 0.2·φPn
-  const kinkP = 0.2 * r.phiPn;
-  const kinkM = 0.9 * phiMn;
-  ctx.beginPath();
-  ctx.moveTo(toX(0),     toY(r.phiPn));
-  ctx.lineTo(toX(kinkM), toY(kinkP));
-  ctx.lineTo(toX(phiMn), toY(0));
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.setLineDash([7,4]); ctx.stroke(); ctx.setLineDash([]);
+  // Design (φ-scaled) PSDM envelope — §I3.4a
+  // P: φc = 0.75, capped at φcPn (column buckling); M: φb = 0.90
+  const dsgPts = pts.map(p => ({ P: Math.min(p.P * 0.75, r.phiPn), M: p.M * 0.90 }));
+  if (dsgPts.length > 1) {
+    // Fill
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(dsgPts[0].P));
+    for (const p of dsgPts) ctx.lineTo(toX(p.M), toY(p.P));
+    const ldp = dsgPts[dsgPts.length - 1];
+    ctx.lineTo(toX(ldp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
+    ctx.fillStyle = 'rgba(29,78,216,0.10)'; ctx.fill();
+    // Stroke
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(dsgPts[0].P));
+    for (const p of dsgPts) ctx.lineTo(toX(p.M), toY(p.P));
+    ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2.2; ctx.setLineDash([]); ctx.stroke();
+  }
 
-  // φPn tick + label
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(pad.left, toY(r.phiPn)); ctx.lineTo(pad.left+10, toY(r.phiPn)); ctx.stroke();
+  // φcPn axis marker
+  const phiPn_draw = r.phiPn;
+  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad.left-6, toY(phiPn_draw)); ctx.lineTo(pad.left+12, toY(phiPn_draw)); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#e74c3c'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-  ctx.fillText('φPn', pad.left+3, toY(r.phiPn)-3);
+  ctx.fillStyle = '#1d4ed8'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('φcPn', pad.left + 14, toY(phiPn_draw) + 4);
 
-  // φMn tick + label
-  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)); ctx.lineTo(toX(phiMn), toY(0)-10); ctx.stroke();
+  // φbMn axis marker
+  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(toX(phiMn), toY(0)+6); ctx.lineTo(toX(phiMn), toY(0)-10); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'center';
-  ctx.fillText('φMn', toX(phiMn), pad.top+ch+28);
+  ctx.fillStyle = '#1d4ed8'; ctx.textAlign = 'center';
+  ctx.fillText('φbMn', toX(phiMn), pad.top + ch + 28);
 
   // Demand point (with crosshairs)
   const dx = toX(Mu), dy = toY(r.Pu);
@@ -1021,14 +1068,12 @@ function drawPMM(targetCanvas) {
   ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = ptColor; ctx.textAlign = 'left';
   ctx.fillText(dcrLabel, dx + 9, dy - 7);
 
-  // Biaxial tab: also show My demand ratio as note
+  // Biaxial tab: show D/C for both axes
   if (isBiaxial && r.phiMn_y > 0) {
-    const eq = r.eqUsed || 'H1-1';
     ctx.font = '10px sans-serif'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
-    const pr_x = r.phiMn_x > 0 ? r.Mux / r.phiMn_x : 0;
-    const pr_y = r.phiMn_y > 0 ? r.Muy / r.phiMn_y : 0;
-    const pr_p = r.phiPn    > 0 ? r.Pu  / r.phiPn   : 0;
-    ctx.fillText('Eq. ' + eq + '  |  P/φPn=' + pr_p.toFixed(3) + '  Mx/φMnx=' + pr_x.toFixed(3) + '  My/φMny=' + pr_y.toFixed(3),
+    const dc_x = isNaN(r.DCR_x) ? '—' : r.DCR_x.toFixed(3);
+    const dc_y = isNaN(r.DCR_y) ? '—' : r.DCR_y.toFixed(3);
+    ctx.fillText('PSDM  |  D/C (P–Mx) = ' + dc_x + '   D/C (P–My) = ' + dc_y + '   Governing = ' + r.DCR.toFixed(3),
                  pad.left + cw/2, pad.top + ch + 36);
   }
 }
