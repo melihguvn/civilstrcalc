@@ -1959,20 +1959,6 @@ function bcRender(r){
     }
   }
 
-  // PMM canvas — AISC / TSDS only (screen)
-  if(r.code==='aisc'||r.code==='tsds'){
-    var tabDefs=[{id:'pmx',lbl:'P &ndash; M<sub>x</sub>'},{id:'pmy',lbl:'P &ndash; M<sub>y</sub>'},{id:'bi',lbl:'Biaxial M<sub>x</sub>&ndash;M<sub>y</sub>'}];
-    var tabsH=tabDefs.map(function(t){return '<button class="pmm-tab'+(bcActivePMMTab===t.id?' active':'')+'" onclick="bcSetPMMTab(\''+t.id+'\',this)">'+t.lbl+'</button>';}).join('');
-    h+='<div class="pmm-wrap">'
-      +'<div class="rpt-sec-title" style="margin-bottom:8px">P-M Interaction Diagram &mdash; AISC &sect;H1-1</div>'
-      +'<div class="pmm-tabs" id="bc-pmm-tabs">'+tabsH+'</div>'
-      +'<canvas id="bc-pmm-canvas" width="560" height="340" style="width:100%;max-width:560px;display:block;margin:0 auto;border-radius:4px;"></canvas>'
-      +'<div class="pmm-leg">'
-      +'<div class="pmm-leg-item"><span style="display:inline-block;width:22px;height:0;border-top:2px dashed #e04444;vertical-align:middle"></span>&ensp;H1-1 limit</div>'
-      +'<div class="pmm-leg-item"><span class="pmm-leg-dot"></span>&ensp;Demand (P<sub>u</sub>, M<sub>u</sub>)</div>'
-      +'</div></div>';
-  }
-
   // Input Summary (common)
   var Lb_disp=r.code==='ec3'?fmt(r.Lb_mm/1000,2):r.code==='is800'?fmt(r.Lb_mm/1000,2):fmt(r.Lb,2);
   var LbU=r.uL;
@@ -2194,6 +2180,16 @@ function bcRender(r){
   }
 
   if(r.code==='aisc'||r.code==='tsds'){
+    var tabDefs2=[{id:'pmx',lbl:'P &ndash; M<sub>x</sub>'},{id:'pmy',lbl:'P &ndash; M<sub>y</sub>'},{id:'bi',lbl:'Biaxial M<sub>x</sub>&ndash;M<sub>y</sub>'}];
+    var tabsH2=tabDefs2.map(function(t){return '<button class="pmm-tab'+(bcActivePMMTab===t.id?' active':'')+'" onclick="bcSetPMMTab(\''+t.id+'\',this)">'+t.lbl+'</button>';}).join('');
+    h+='<div class="pmm-wrap">'
+      +'<div class="rpt-sec-title" style="margin-bottom:8px">P-M Interaction Diagram &mdash; AISC &sect;H1-1</div>'
+      +'<div class="pmm-tabs" id="bc-pmm-tabs">'+tabsH2+'</div>'
+      +'<canvas id="bc-pmm-canvas" style="width:100%;max-width:560px;display:block;margin:0 auto;border-radius:4px;"></canvas>'
+      +'<div class="pmm-leg">'
+      +'<div class="pmm-leg-item"><span style="display:inline-block;width:22px;height:0;border-top:2px dashed #e04444;vertical-align:middle"></span>&ensp;H1-1 limit</div>'
+      +'<div class="pmm-leg-item"><span class="pmm-leg-dot"></span>&ensp;Demand (P<sub>u</sub>, M<sub>u</sub>)</div>'
+      +'</div></div>';
     h+='<div class="print-pmm-wrap"><div class="rpt-sec-title" style="margin-bottom:5px">P-M Interaction Diagram &mdash; AISC &sect;H1-1</div>'
       +'<canvas id="bc-print-pmm" width="560" height="340"></canvas></div>';
   }
@@ -2203,7 +2199,7 @@ function bcRender(r){
   document.getElementById('bc-card').style.display='';
   document.getElementById('bc-body').innerHTML=h;
   if(r.code==='aisc'||r.code==='tsds'){
-    setTimeout(function(){drawSteelPMM(bcActivePMMTab,null);},10);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){drawSteelPMM(bcActivePMMTab,null);});});
   }
 }
 
@@ -2221,13 +2217,23 @@ function drawSteelPMM(tab,targetCanvas){
   if(r.code!=='aisc'&&r.code!=='tsds')return;
   var canvas=targetCanvas||document.getElementById('bc-pmm-canvas');
   if(!canvas)return;
+
+  // HiDPI / devicePixelRatio fix
+  var dpr=(targetCanvas?1:window.devicePixelRatio)||1;
+  var cssW=targetCanvas?560:(canvas.offsetWidth||560);
+  var cssH=Math.round(cssW*340/560);
+  canvas.width=Math.round(cssW*dpr);
+  canvas.height=Math.round(cssH*dpr);
+  if(!targetCanvas){canvas.style.width=cssW+'px';canvas.style.height=cssH+'px';}
+
   var ctx=canvas.getContext('2d');
-  var W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
+  ctx.scale(dpr,dpr);
+  var W=cssW,H=cssH;
 
-  var ml=70,mr=20,mt=36,mb=52;
-  var pw=W-ml-mr, ph=H-mt-mb;
+  var ml=68,mr=18,mt=38,mb=54;
+  var pw=W-ml-mr,ph=H-mt-mb;
 
+  // Background
   ctx.fillStyle='#f7f8fc';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#fff';ctx.fillRect(ml,mt,pw,ph);
 
@@ -2242,21 +2248,21 @@ function drawSteelPMM(tab,targetCanvas){
     demandY=phiMny>0?Muy/phiMny:0;
     xLbl='Mx / φMnx';yLbl='My / φMny';
   } else if(tab==='pmy'){
-    xMax=Math.max(phiMny*1.25,Muy*1.25,0.001);
-    yMax=Math.max(phiAx*1.15,Pu*1.25,0.001);
+    xMax=Math.max(phiMny*1.3,Muy*1.4,1);
+    yMax=Math.max(phiAx*1.2,Pu*1.4,1);
     demandX=Muy;demandY=Pu;
     xLbl='My ('+r.uM+')';yLbl='φP ('+r.uF+')';
   } else {
-    xMax=Math.max(phiMnx*1.25,Mux*1.25,0.001);
-    yMax=Math.max(phiAx*1.15,Pu*1.25,0.001);
+    xMax=Math.max(phiMnx*1.3,Mux*1.4,1);
+    yMax=Math.max(phiAx*1.2,Pu*1.4,1);
     demandX=Mux;demandY=Pu;
     xLbl='Mx ('+r.uM+')';yLbl='φP ('+r.uF+')';
   }
 
-  function px(v){return ml+v/xMax*pw;}
-  function py(v){return mt+ph-v/yMax*ph;}
+  function gx(v){return ml+v/xMax*pw;}
+  function gy(v){return mt+ph-v/yMax*ph;}
 
-  // Grid
+  // Grid lines
   ctx.strokeStyle='#eaedf2';ctx.lineWidth=0.8;
   for(var gi=1;gi<5;gi++){
     ctx.beginPath();ctx.moveTo(ml+gi/4*pw,mt);ctx.lineTo(ml+gi/4*pw,mt+ph);ctx.stroke();
@@ -2269,87 +2275,115 @@ function drawSteelPMM(tab,targetCanvas){
   if(tab==='pmx'||tab==='pmy'){
     var phiM=tab==='pmx'?phiMnx:phiMny;
     var Mk=0.9*phiM,Pk=0.2*phiAx;
-    // Safe region fill
-    ctx.fillStyle='rgba(70,130,200,0.07)';
+    // Safe region fill (blue tint)
+    ctx.fillStyle='rgba(70,130,200,0.08)';
     ctx.beginPath();
-    ctx.moveTo(px(0),py(0));ctx.lineTo(px(0),py(phiAx));
-    ctx.lineTo(px(Mk),py(Pk));ctx.lineTo(px(phiM),py(0));
+    ctx.moveTo(gx(0),gy(0));
+    ctx.lineTo(gx(0),gy(phiAx));
+    ctx.lineTo(gx(Mk),gy(Pk));
+    ctx.lineTo(gx(phiM),gy(0));
     ctx.closePath();ctx.fill();
-    // H1-1 envelope
-    ctx.setLineDash([6,4]);ctx.strokeStyle='#e04444';ctx.lineWidth=2.2;
-    ctx.beginPath();ctx.moveTo(px(0),py(phiAx));ctx.lineTo(px(Mk),py(Pk));ctx.lineTo(px(phiM),py(0));ctx.stroke();
+    // H1-1a segment (Pu/φPn ≥ 0.2) — solid
+    ctx.strokeStyle='#e04444';ctx.lineWidth=2.0;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(gx(0),gy(phiAx));ctx.lineTo(gx(Mk),gy(Pk));ctx.stroke();
+    // H1-1b segment (Pu/φPn < 0.2) — dashed
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(gx(Mk),gy(Pk));ctx.lineTo(gx(phiM),gy(0));ctx.stroke();
     ctx.setLineDash([]);
-    // Kink dot
-    ctx.fillStyle='#e04444';ctx.beginPath();ctx.arc(px(Mk),py(Pk),3.5,0,2*Math.PI);ctx.fill();
-    // Capacity tick labels
-    ctx.strokeStyle='#3a6fa8';ctx.lineWidth=1.8;ctx.fillStyle='#3a6fa8';ctx.font='9.5px monospace';
-    if(phiAx<=yMax*0.98){
-      ctx.beginPath();ctx.moveTo(ml-8,py(phiAx));ctx.lineTo(ml,py(phiAx));ctx.stroke();
-      ctx.textAlign='right';ctx.fillText('φP',ml-10,py(phiAx)+3.5);
+    // Kink marker (white ring)
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(gx(Mk),gy(Pk),4.5,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle='#e04444';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(gx(Mk),gy(Pk),4.5,0,2*Math.PI);ctx.stroke();
+    // φP and φM axis intercept ticks
+    ctx.strokeStyle='#5580b0';ctx.lineWidth=1.5;ctx.fillStyle='#5580b0';
+    var fsz=(W<400?8.5:9.5);
+    ctx.font=fsz+'px sans-serif';
+    // φP tick on y-axis
+    if(phiAx<yMax*0.97){
+      ctx.beginPath();ctx.moveTo(ml-6,gy(phiAx));ctx.lineTo(ml,gy(phiAx));ctx.stroke();
+      ctx.textAlign='right';
+      ctx.fillText('φPn='+Math.round(phiAx),ml-8,gy(phiAx)+3.5);
     }
-    if(phiM<=xMax*0.98){
-      ctx.beginPath();ctx.moveTo(px(phiM),mt+ph);ctx.lineTo(px(phiM),mt+ph+8);ctx.stroke();
-      ctx.textAlign='center';ctx.fillText('φM',px(phiM),mt+ph+20);
+    // φM tick on x-axis
+    if(phiM<xMax*0.97){
+      ctx.beginPath();ctx.moveTo(gx(phiM),mt+ph);ctx.lineTo(gx(phiM),mt+ph+6);ctx.stroke();
+      ctx.textAlign='center';
+      ctx.fillText('φMn='+Math.round(phiM),gx(phiM),mt+ph+18);
     }
+    // Kink annotation (0.2φPn, 0.9φMn)
+    ctx.fillStyle='rgba(90,90,90,0.7)';ctx.font=(fsz-1)+'px sans-serif';
+    var kx=gx(Mk),ky=gy(Pk);
+    var lblSide=kx>(ml+pw/2)?-1:1;
+    ctx.textAlign=lblSide===1?'left':'right';
+    ctx.fillText('(0.9φMn, 0.2φPn)',kx+lblSide*8,ky-6);
   } else {
     // Biaxial: limit mx+my = C
     var C=rP>=0.2?(1-rP)*9/8:(1-rP/2);
     C=Math.max(0.001,C);
-    var cx0=Math.min(C,xMax),cy0=Math.min(C,yMax);
-    ctx.fillStyle='rgba(70,130,200,0.07)';
-    ctx.beginPath();
-    ctx.moveTo(px(0),py(0));ctx.lineTo(px(cx0),py(0));
-    ctx.lineTo(px(0),py(cy0));ctx.closePath();ctx.fill();
-    ctx.setLineDash([6,4]);ctx.strokeStyle='#e04444';ctx.lineWidth=2.2;
-    ctx.beginPath();ctx.moveTo(px(cx0),py(0));ctx.lineTo(px(0),py(cy0));ctx.stroke();
+    var bx0=Math.min(C,xMax),by0=Math.min(C,yMax);
+    ctx.fillStyle='rgba(70,130,200,0.08)';
+    ctx.beginPath();ctx.moveTo(gx(0),gy(0));ctx.lineTo(gx(bx0),gy(0));ctx.lineTo(gx(0),gy(by0));ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#e04444';ctx.lineWidth=2.0;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(gx(bx0),gy(0));ctx.lineTo(gx(0),gy(by0));ctx.stroke();
+    // Unity diagonal reference
+    ctx.strokeStyle='#cbd0d9';ctx.lineWidth=0.9;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(gx(0),gy(Math.min(1,yMax)));ctx.lineTo(gx(Math.min(1,xMax)),gy(0));ctx.stroke();
     ctx.setLineDash([]);
-    // Unity line
-    ctx.strokeStyle='#ccc';ctx.lineWidth=0.8;
-    ctx.beginPath();ctx.moveTo(px(0),py(Math.min(1,yMax)));ctx.lineTo(px(Math.min(1,xMax)),py(0));ctx.stroke();
   }
 
   ctx.restore();
 
-  // Axes border
-  ctx.strokeStyle='#8898b0';ctx.lineWidth=1.2;ctx.strokeRect(ml,mt,pw,ph);
+  // Plot border
+  ctx.strokeStyle='#9aaabb';ctx.lineWidth=1.0;ctx.strokeRect(ml,mt,pw,ph);
 
-  // Tick values
-  ctx.font='10px monospace';ctx.fillStyle='#7a8898';
+  // Axis tick labels
+  var fsBase=W<400?8.5:10;
+  ctx.font=fsBase+'px sans-serif';ctx.fillStyle='#7a8898';
   var nT=4;
   for(var ti=0;ti<=nT;ti++){
     var tvx=ti*xMax/nT,tvy=ti*yMax/nT;
     ctx.textAlign='center';
-    ctx.fillText(tvx<10?tvx.toFixed(1):Math.round(tvx),px(tvx),mt+ph+15);
+    ctx.fillText(tvx<10?tvx.toFixed(1):Math.round(tvx),gx(tvx),mt+ph+15);
     ctx.textAlign='right';
-    ctx.fillText(tvy<10?tvy.toFixed(1):Math.round(tvy),ml-10,py(tvy)+4);
+    ctx.fillText(tvy<10?tvy.toFixed(1):Math.round(tvy),ml-8,gy(tvy)+4);
   }
 
   // Axis labels
-  ctx.font='bold 11px sans-serif';ctx.fillStyle='#4a5568';
-  ctx.textAlign='center';ctx.fillText(xLbl,ml+pw/2,mt+ph+36);
-  ctx.save();ctx.translate(ml-54,mt+ph/2);ctx.rotate(-Math.PI/2);
+  ctx.font='bold '+(fsBase+1)+'px sans-serif';ctx.fillStyle='#3a4a5a';
+  ctx.textAlign='center';ctx.fillText(xLbl,ml+pw/2,mt+ph+38);
+  ctx.save();ctx.translate(ml-52,mt+ph/2);ctx.rotate(-Math.PI/2);
   ctx.textAlign='center';ctx.fillText(yLbl,0,0);ctx.restore();
 
   // Demand crosshairs
-  var dx=px(demandX),dy=py(demandY);
-  ctx.strokeStyle='rgba(224,68,68,0.4)';ctx.lineWidth=0.9;ctx.setLineDash([3,3]);
+  var dx=gx(demandX),dy=gy(demandY);
+  ctx.strokeStyle='rgba(224,68,68,0.35)';ctx.lineWidth=0.8;ctx.setLineDash([3,3]);
   ctx.beginPath();ctx.moveTo(dx,mt);ctx.lineTo(dx,mt+ph);ctx.stroke();
   ctx.beginPath();ctx.moveTo(ml,dy);ctx.lineTo(ml+pw,dy);ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle='#e04444';ctx.beginPath();ctx.arc(dx,dy,5.5,0,2*Math.PI);ctx.fill();
   ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(dx,dy,5.5,0,2*Math.PI);ctx.stroke();
 
-  // DCR label
+  // DCR badge
   var dcrV=r.DCR;
   var dcrTxt='DCR = '+(isNaN(dcrV)?'—':dcrV.toFixed(3))+(dcrV<=1?' ✓':' ✗');
   var dcrCol=dcrV<0.85?'#2e7d52':(dcrV<=1?'#b07000':'#c0392b');
-  ctx.font='bold 12px sans-serif';ctx.fillStyle=dcrCol;ctx.textAlign='right';
-  ctx.fillText(dcrTxt,ml+pw-8,mt+22);
+  ctx.font='bold '+(fsBase+1)+'px sans-serif';ctx.fillStyle=dcrCol;
+  ctx.textAlign='right';ctx.fillText(dcrTxt,ml+pw-8,mt+20);
 
-  // Title
-  var titMap={pmx:'P – Mx Interaction (H1-1)',pmy:'P – My Interaction (H1-1)',bi:'Biaxial Moment Demand'};
-  ctx.font='bold 11px sans-serif';ctx.fillStyle='#1a2332';ctx.textAlign='left';
-  ctx.fillText(titMap[tab]||'P-M Interaction',ml+6,mt+22);
+  // Chart title
+  var titMap={pmx:'P – Mx Interaction (H1-1)',pmy:'P – My Interaction (H1-1)',bi:'Biaxial Mx – My Demand'};
+  ctx.font='bold '+(fsBase+1)+'px sans-serif';ctx.fillStyle='#1a2332';
+  ctx.textAlign='left';ctx.fillText(titMap[tab]||'P-M Interaction',ml+6,mt+20);
+
+  // Legend for pmx/pmy: two line styles
+  if(tab==='pmx'||tab==='pmy'){
+    var lx=ml+8,ly=mt+ph-10;
+    ctx.strokeStyle='#e04444';ctx.lineWidth=1.8;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+18,ly);ctx.stroke();
+    ctx.fillStyle='#666';ctx.font=(fsBase-1)+'px sans-serif';ctx.textAlign='left';
+    ctx.fillText('H1-1a',lx+21,ly+3.5);
+    ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(lx+58,ly);ctx.lineTo(lx+76,ly);ctx.stroke();
+    ctx.setLineDash([]);ctx.fillText('H1-1b',lx+79,ly+3.5);
+  }
 }
 
 window.addEventListener('beforeprint',function(){
