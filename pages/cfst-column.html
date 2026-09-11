@@ -96,6 +96,50 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
 .pmm-legend{display:flex;gap:16px;padding:0 12px 10px;font-size:.7rem;color:var(--text-dim);flex-wrap:wrap;}
 .pmm-leg-item{display:flex;align-items:center;gap:5px;}
 .pmm-leg-line{width:24px;height:2px;}
+
+/* ── Print-only elements (hidden on screen) ── */
+.print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
+.print-pmm-wrap{display:none;}
+.rpt-sec-summary{display:none;}
+.rpt-sec-screen-only{display:block;}
+.print-inp-only{display:none;}
+.print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
+.print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
+
+@media print{
+  @page{margin:6mm 8mm;size:A4;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:white!important;font-size:7pt!important;padding:0!important;line-height:1.3!important;}
+  body>div{padding:0!important;}
+  .no-print{display:none!important;}
+  .print-only{display:flex!important;}
+  .page-title,#cf-empty,.pmm-wrap{display:none!important;}
+  .calc-layout{display:block!important;}
+  .report-card{box-shadow:none!important;border:1px solid #ccc!important;border-radius:3px!important;page-break-inside:avoid;}
+  .report-hdr{border-radius:0!important;padding:5px 10px!important;}
+  .report-hdr h4{font-size:6.5pt!important;}
+  .rh-code{font-size:5pt!important;}
+  .print-btn{display:none!important;}
+  .ri-value{font-size:.95rem!important;}
+  .ri-label{font-size:.58rem!important;}
+  .ri-unit{font-size:.55rem!important;margin-top:0!important;}
+  .dcr-icon{font-size:.9rem!important;}
+  .report-body{padding:4px 10px!important;}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:4px!important;}
+  .rpt-sec-title{padding:1.5px 6px!important;font-size:.52rem!important;margin-bottom:3px!important;}
+  .res-tbl{width:100%!important;}
+  .res-tbl td{padding:1.5px 4px!important;font-size:6pt!important;}
+  .report-warn{padding:2px 5px!important;font-size:.55rem!important;margin-bottom:3px!important;line-height:1.3!important;}
+  .print-only{padding-bottom:4px!important;margin-bottom:4px!important;}
+  .rpt-sec-screen-only{display:none!important;}
+  .rpt-sec-summary{display:block!important;margin:3px 0!important;}
+  .print-inp-only{display:block!important;margin-bottom:4px!important;}
+  .print-pmm-wrap{display:block!important;margin-top:4px!important;}
+  .print-pmm-wrap canvas{width:72%!important;height:auto!important;aspect-ratio:560/380!important;margin:0 auto!important;display:block!important;}
+  .print-pmm-wrap .pmm-print-lbl{margin-bottom:2px!important;}
+  .print-disclaimer{display:block!important;margin-top:3px!important;padding:2px 6px!important;font-size:5pt!important;}
+  .print-footer{display:flex!important;margin-top:3px!important;padding-top:2px!important;font-size:5pt!important;}
+}
 </style>
 <style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
 </head>
@@ -683,39 +727,86 @@ function calc() {
   const r2 = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
 
   // Area/inertia display units — cm² and cm⁴ in SI
-  const aFact  = isUS ? 1 : 0.01;   // mm²→cm²
-  const i4Fact = isUS ? 1 : 1e-4;   // mm⁴→cm⁴
+  const aFact  = isUS ? 1 : 0.01;
+  const i4Fact = isUS ? 1 : 1e-4;
   const aU  = isUS ? 'in²' : 'cm²';
   const i4U = isUS ? 'in⁴' : 'cm⁴';
-  const aDP = isUS ? 1 : 1; // decimal places for area
+  const aDP = isUS ? 1 : 1;
+  const Lunit = isUS ? 'ft' : 'm';
+
+  // Variables for print header / design inputs table
+  const _gradeSel = document.getElementById('steel-grade');
+  const gradeLbl  = _gradeSel.options[_gradeSel.selectedIndex]?.text || '';
+  const _bcxSel   = document.getElementById('inp-bcx');
+  const _bcySel   = document.getElementById('inp-bcy');
+  const KxBCTxt   = _bcxSel.options[_bcxSel.selectedIndex]?.text.trim() || '';
+  const KyBCTxt   = _bcySel.options[_bcySel.selectedIndex]?.text.trim() || '';
+  const dimUnit   = isUS ? 'in' : 'mm';
+  const secTypeStr = shape === 'round' ? 'Round HSS' : 'Rect / Sq HSS';
+  const secDimStr  = shape === 'round'
+    ? `D = ${parseFloat(document.getElementById('inp-D').value)||0} ${dimUnit},  t = ${parseFloat(document.getElementById('inp-t').value)||0} ${dimUnit}`
+    : `B = ${parseFloat(document.getElementById('inp-B').value)||0},  H = ${parseFloat(document.getElementById('inp-H').value)||0},  t = ${parseFloat(document.getElementById('inp-tr').value)||0} ${dimUnit}`;
+
+  // Build tiles + banner HTML (reused for screen and print)
+  const tilesHTML =
+    `<div class="result-box">` +
+    `<div class="result-item"><div class="ri-label">MAX AXIAL &phi;P<sub>n</sub></div><div class="ri-value">${fmt0(pPhiU)}</div><div class="ri-unit">${fU}</div></div>` +
+    `<div class="result-item"><div class="ri-label">M<sub>x</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_x_d,1)}</div><div class="ri-unit">${mU}</div></div>` +
+    (shape==='rect' ? `<div class="result-item"><div class="ri-label">M<sub>y</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_y_d,1)}</div><div class="ri-unit">${mU}</div></div>` : '') +
+    `<div class="result-item ${DCR<=1?'ok':'err'}"><div class="ri-label">D/C RATIO</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">&le; 1.0</div></div>` +
+    `</div>`;
+
+  const dcCls  = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
+  const dcr_p  = pPhiU  > 0 ? Pu  / pPhiU  : 0;
+  const dcr_xr = mPhiXu > 0 ? Mux / mPhiXu : 0;
+  const dcr_yr = mPhiYu > 0 ? Muy / mPhiYu : 0;
+  const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `M<sub>x</sub>/&phi;M<sub>n,x</sub> = ${fmt(dcr_xr,3)}`];
+  if (Muy > 0) subParts.push(`M<sub>y</sub>/&phi;M<sub>n,y</sub> = ${fmt(dcr_yr,3)}`);
+  subParts.push(`${classLabel} &middot; Eq. ${eqUsed}`);
+  const bannerHTML =
+    `<div class="dcr-banner ${dcCls}" style="margin-bottom:8px;">` +
+    `<div class="dcr-icon">${pass?'&#10003;':'&#10007;'}</div>` +
+    `<div class="dcr-text"><strong>${pass?'ADEQUATE':'FAIL'} &mdash; D/C = ${fmt(DCR,3)}</strong>` +
+    `<span>${subParts.join(' &middot; ')}</span></div></div>`;
 
   let h = '';
 
-  // Warn boxes (material limits only if violated)
+  // ── Print-only header ──
+  h += `<div class="print-only">
+    <div>
+      <div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">CFST Column Design Report</div>
+      <div style="font-size:.68rem;color:#666;margin-top:1px;">AISC 360-22 Chapter I &nbsp;&middot;&nbsp; ${isUS?'kip &middot; ft':'kN &middot; m'} &nbsp;&middot;&nbsp; ${secTypeStr}</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <div style="font-size:.68rem;color:#888;font-family:var(--mono);">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      <div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div>
+    </div>
+  </div>`;
+
+  // Warn boxes
   for (const w of warns) h += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
 
-  // Summary tiles
-  h += `<div class="result-box">` +
-       `<div class="result-item"><div class="ri-label">MAX AXIAL &phi;P<sub>n</sub></div><div class="ri-value">${fmt0(pPhiU)}</div><div class="ri-unit">${fU}</div></div>` +
-       `<div class="result-item"><div class="ri-label">M<sub>x</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_x_d,1)}</div><div class="ri-unit">${mU}</div></div>` +
-       (shape==='rect' ? `<div class="result-item"><div class="ri-label">M<sub>y</sub> CAPACITY</div><div class="ri-value">${fmt(phiMn_y_d,1)}</div><div class="ri-unit">${mU}</div></div>` : '') +
-       `<div class="result-item ${DCR <= 1 ? 'ok' : 'err'}"><div class="ri-label">D/C RATIO</div><div class="ri-value">${fmt(DCR,3)}</div><div class="ri-unit">&le; 1.0</div></div>` +
-       `</div>`;
+  // ── Tiles + banner: screen version / print version ──
+  h += `<div class="rpt-sec-screen-only">${tilesHTML}${bannerHTML}</div>`;
+  h += `<div class="rpt-sec-summary">${tilesHTML}${bannerHTML}</div>`;
 
-  // DCR status banner
-  const dcCls = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
-  const dcr_p = pPhiU  > 0 ? Pu  / pPhiU  : 0;
-  const dcr_x = mPhiXu > 0 ? Mux / mPhiXu : 0;
-  const dcr_y = mPhiYu > 0 ? Muy / mPhiYu : 0;
-  const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `M<sub>x</sub>/&phi;M<sub>n,x</sub> = ${fmt(dcr_x,3)}`];
-  if (Muy > 0) subParts.push(`M<sub>y</sub>/&phi;M<sub>n,y</sub> = ${fmt(dcr_y,3)}`);
-  subParts.push(`${classLabel} &middot; Eq. ${eqUsed}`);
-  h += `<div class="dcr-banner ${dcCls}">` +
-       `<div class="dcr-icon">${pass ? '&#10003;' : '&#10007;'}</div>` +
-       `<div class="dcr-text"><strong>${pass ? 'ADEQUATE' : 'FAIL'} &mdash; D/C = ${fmt(DCR,3)}</strong>` +
-       `<span>${subParts.join(' &middot; ')}</span></div></div>`;
+  // ── Design Inputs (print-only) ──
+  h += `<div class="rpt-sec print-inp-only"><div class="rpt-sec-title">Design Inputs</div>` +
+       `<table class="res-tbl">` +
+       r2('Section type', secTypeStr) +
+       r2('Dimensions', secDimStr) +
+       r2('Steel grade', gradeLbl) +
+       r2('F<sub>y</sub>', `${fmt(Fy,0)} ${k2U}`) +
+       r2("f'<sub>c</sub>", `${fc} ${k2U}`) +
+       r2('Column height L', `${fmt(Lval,2)} ${Lunit}`) +
+       r2('K<sub>x</sub> — x–x Axis', KxBCTxt) +
+       (shape==='rect' ? r2('K<sub>y</sub> — y–y Axis', KyBCTxt) : '') +
+       r2('P<sub>u</sub>', `${fmt(Pu,1)} ${fU}`) +
+       r2('M<sub>ux</sub>', `${fmt(Mux_d,1)} ${mU}`) +
+       (Muy > 0 ? r2('M<sub>uy</sub>', `${fmt(Muy_d,1)} ${mU}`) : '') +
+       `</table></div>`;
 
-  // § Table I1.1a — Classification
+  // ── § Table I1.1a — Section Classification ──
   const lamCls = l => l > lambda_max ? 'verr' : l > lambda_r ? 'vwarn' : 'vok';
   const limStr = `(&lambda;<sub>p</sub>&thinsp;=&thinsp;${fmt(lambda_p,1)}, &lambda;<sub>r</sub>&thinsp;=&thinsp;${fmt(lambda_r,1)}, &lambda;<sub>max</sub>&thinsp;=&thinsp;${fmt(lambda_max,1)})`;
   const clsVcls = classify === 'compact' ? 'vok' : classify === 'not-permitted' ? 'verr' : 'vwarn';
@@ -730,7 +821,7 @@ function calc() {
   h += r2('Classification', `<b class="${clsVcls}">${classLabel}</b>`);
   h += `</table></div>`;
 
-  // Cross-section properties (areas in cm² for SI)
+  // ── Cross-Section Properties ──
   h += `<div class="rpt-sec"><div class="rpt-sec-title">Cross-Section Properties</div>` +
        `<table class="res-tbl">` +
        r2('A<sub>g</sub> (gross)', `${fmt(Ag*aFact,aDP)} ${aU}`) +
@@ -742,7 +833,7 @@ function calc() {
        (shape==='rect' ? r2('I<sub>s,y</sub>', `${fmt0(Is_y*i4Fact)} ${i4U}`) + r2('I<sub>c,y</sub>', `${fmt0(Ic_y*i4Fact)} ${i4U}`) : '') +
        `</table></div>`;
 
-  // § I2.2b — Pno
+  // ── § I2.2b — Nominal Squash Load ──
   const C2str = shape === 'round' ? '0.95 (round, confined)' : '0.85 (rectangular)';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2b &mdash; Nominal Squash Load P<sub>no</sub></div>` +
        `<table class="res-tbl">` +
@@ -752,12 +843,11 @@ function calc() {
        r2('<b>P<sub>no</sub></b>', `<b class="vok">${fmt(Pno*uS,1)} ${fU}</b>`) +
        `</table></div>`;
 
-  // § I2.2c/d — Stiffness & Buckling
+  // ── § I2.2c/d — Stiffness, Buckling & Axial Strength ──
   const pnoRat = Pno / Pe_gov;
   const buckMode = pnoRat <= 2.25 ? '&le; 2.25 (inelastic)' : '&gt; 2.25 (elastic)';
-  const KxLbl = document.getElementById('inp-bcx').options[document.getElementById('inp-bcx').selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
-  const KyLbl = document.getElementById('inp-bcy').options[document.getElementById('inp-bcy').selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
-  const Lunit = isUS ? 'ft' : 'm';
+  const KxLbl = _bcxSel.options[_bcxSel.selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
+  const KyLbl = _bcySel.options[_bcySel.selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Axial Strength</div>` +
        `<table class="res-tbl">` +
        r2('L', `${fmt(Lval,2)} ${Lunit}`) +
@@ -774,7 +864,7 @@ function calc() {
        r2('<b>&phi;<sub>c</sub>P<sub>n</sub></b> (&phi;<sub>c</sub> = 0.75)', `<b class="vok">${fmt(pPhiU,1)} ${fU}</b>`) +
        `</table></div>`;
 
-  // § I3.4 — Flexural
+  // ── § I3.4 — Flexural Strength (PSDM) ──
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I3.4 &mdash; Flexural Strength (PSDM)</div>` +
        `<table class="res-tbl">` +
        r2('M<sub>p,x</sub> (PSDM nominal)', `${fmt(Mp_x_d,1)} ${mU}`) +
@@ -783,7 +873,7 @@ function calc() {
                          r2('<b>&phi;<sub>b</sub>M<sub>n,y</sub></b> (&phi;<sub>b</sub> = 0.90)', `<b class="vok">${fmt(phiMn_y_d,1)} ${mU}</b>`) : '') +
        `</table></div>`;
 
-  // § H1-1 — P-M Interaction
+  // ── § I5 / H1-1 — P-M Interaction Check ──
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I5 / H1-1 &mdash; P-M Interaction Check</div>` +
        `<table class="res-tbl">` +
        r2('P<sub>u</sub> / &phi;P<sub>n</sub>', fmt(dcr_p,3)) +
@@ -791,6 +881,16 @@ function calc() {
        (Muy > 0 ? r2('M<sub>uy</sub> / &phi;M<sub>n,y</sub>', fmt(Muy_d/Mcy_d,3)) : '') +
        r2(`AISC Eq. ${eqUsed}`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
        `</table></div>`;
+
+  // ── Print PMM canvas ──
+  h += `<div class="print-pmm-wrap">
+    <div class="pmm-print-lbl" style="font-family:var(--sans);font-size:8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#555;background:#f5f7fa;border-left:3px solid #1a2332;padding:3px 8px;margin-bottom:5px;">P-M Interaction Diagram &mdash; AISC 360-22</div>
+    <canvas id="cfst-print-pmm" width="560" height="380" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>
+  </div>`;
+
+  // ── Disclaimer + footer ──
+  h += `<div class="print-disclaimer">&#9888; For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.</div>`;
+  h += `<div class="print-footer"><span>Generated by <strong>CivilStrCalc.com</strong> &mdash; Free Structural Engineering Tools</span><span>AISC 360-22 CFST Column &nbsp;&middot;&nbsp; ${isUS?'kip &middot; ft':'kN &middot; m'}</span></div>`;
 
   document.getElementById('res-body').innerHTML = h;
 
@@ -826,7 +926,7 @@ function setPmmAxis(ax, btn) {
   drawPMM();
 }
 
-function drawPMM() {
+function drawPMM(targetCanvas) {
   if (!lastResult) return;
   const r   = lastResult;
   const uS  = r.uS || 1;
@@ -843,7 +943,7 @@ function drawPMM() {
   const dcr_show  = isBiaxial ? r.DCR : (axKey === 'x' ? r.DCR_x : r.DCR_y);
   const pass_show = dcr_show <= 1.0;
 
-  const canvas = document.getElementById('pmm-canvas');
+  const canvas = targetCanvas || document.getElementById('pmm-canvas');
   const ctx    = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -960,6 +1060,15 @@ function drawPMM() {
                  pad.left + cw/2, pad.top + ch + 36);
   }
 }
+
+// ═══════════════════════════════════════════════════
+// PRINT — redraw PMM canvas before print dialog
+// ═══════════════════════════════════════════════════
+window.addEventListener('beforeprint', () => {
+  if (!lastResult) return;
+  const pc = document.getElementById('cfst-print-pmm');
+  if (pc) drawPMM(pc);
+});
 
 // ═══════════════════════════════════════════════════
 // INIT
