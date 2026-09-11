@@ -120,7 +120,12 @@ input[type=range]{width:100%;accent-color:var(--accent);}
   .report-warn{padding:3px 7px!important;font-size:.6rem!important;margin-bottom:4px!important;line-height:1.3!important;}
   .cb-svg-wrap{padding:4px!important;}
   .custom-sec-panel,.cust-compact{display:none!important;}
+  .bg-section{display:none!important;}
 }
+/* Background tabs */
+.bg-section .bg-pane{display:block;height:0;overflow:hidden;padding:0;}
+.bg-section .bg-pane.active{height:auto;overflow:visible;padding:22px;}
+.bg-toc a.active{background:var(--accent);color:var(--white);border-color:var(--accent);}
 </style>
 <link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
 <link rel="icon" type="image/x-icon" href="../favicons/favicon.ico">
@@ -347,6 +352,179 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 </div>
 
 </main>
+
+<!-- ══════════ DESIGN BACKGROUND ══════════ -->
+<div class="bg-section no-print">
+  <div class="bg-hdr"><h3>&#128218; Composite Beam Design &mdash; Theory &amp; Code Background</h3></div>
+  <nav class="bg-toc">
+    <a href="#cbg-overview"  onclick="cbBgTab('cbg-overview',this);return false;"  class="active">Overview</a>
+    <a href="#cbg-stud"      onclick="cbBgTab('cbg-stud',this);return false;">Shear Studs §I8</a>
+    <a href="#cbg-flex"      onclick="cbBgTab('cbg-flex',this);return false;">Flexural Strength §I3.2</a>
+    <a href="#cbg-defl"      onclick="cbBgTab('cbg-defl',this);return false;">Deflection &amp; Vibration</a>
+    <a href="#cbg-ex"        onclick="cbBgTab('cbg-ex',this);return false;">Worked Example</a>
+  </nav>
+
+  <!-- ── OVERVIEW ── -->
+  <div class="bg-pane active" id="cbg-overview">
+    <div class="tb">
+      <h4>What Is a Composite Beam?</h4>
+      <p>A composite beam consists of a steel beam structurally connected to a concrete slab through shear connectors (typically headed shear studs). When the concrete and steel act together, the composite section is stiffer and stronger than the steel beam alone — the concrete carries compression and the steel carries tension in positive bending.</p>
+      <p>Metal deck (corrugated steel decking) is the most common slab system in composite floor construction. Deck ribs may run parallel or perpendicular to the beam; the stud capacity is reduced for perpendicular ribs to account for the reduced embedment.</p>
+
+      <h4>Governing Standard — AISC 360-22 Chapter I</h4>
+      <p>Chapter I covers composite beams with concrete-filled or concrete-on-deck slabs. The key provisions are:</p>
+      <ul>
+        <li>§I1 — Scope and general requirements</li>
+        <li>§I3.2 — Flexural strength of composite beams (positive moment)</li>
+        <li>§I8 — Shear connectors — capacity and placement</li>
+        <li>§I3.2d — Partial composite action (η = ΣQn / Qn,full)</li>
+      </ul>
+
+      <h4>Notation</h4>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:8px;">
+        <tr><td>A<sub>s</sub></td><td>Area of steel beam (in² / mm²)</td></tr>
+        <tr><td>F<sub>y</sub></td><td>Yield stress of steel beam (ksi / MPa)</td></tr>
+        <tr><td>f'<sub>c</sub></td><td>Specified compressive strength of concrete (ksi / MPa)</td></tr>
+        <tr><td>b<sub>eff</sub></td><td>Effective slab width — min(L/8, center-to-center spacing / 2) each side</td></tr>
+        <tr><td>Q<sub>n</sub></td><td>Nominal strength of one shear stud</td></tr>
+        <tr><td>ΣQ<sub>n</sub></td><td>Total nominal shear connection between PNA and moment point</td></tr>
+        <tr><td>η</td><td>Partial composite ratio = ΣQ<sub>n</sub> / min(F<sub>y</sub>A<sub>s</sub>, 0.85f'<sub>c</sub>b<sub>eff</sub>t<sub>c</sub>)</td></tr>
+        <tr><td>M<sub>n</sub></td><td>Nominal flexural strength of composite section</td></tr>
+        <tr><td>R<sub>p</sub></td><td>Position factor for shear studs (1.0 deck parallel, 0.75 deck perp.)</td></tr>
+        <tr><td>R<sub>g</sub></td><td>Group factor (1.0 single stud, 0.85 two studs, 0.70 three+)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SHEAR STUDS §I8 ── -->
+  <div class="bg-pane" id="cbg-stud">
+    <div class="tb">
+      <h4>Headed Shear Stud Capacity — §I8.2a</h4>
+      <p>The nominal strength of one headed shear stud:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        Q<sub>n</sub> = 0.5 A<sub>sa</sub> √(f'<sub>c</sub> E<sub>c</sub>) ≤ R<sub>g</sub> R<sub>p</sub> A<sub>sa</sub> F<sub>u</sub>
+      </div>
+      <p>where A<sub>sa</sub> = cross-sectional area of stud, F<sub>u</sub> = tensile strength of stud (65 ksi / 450 MPa for standard A108 studs).</p>
+
+      <h4>Reduction Factors (§I8.2a)</h4>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:6px;">
+        <tr><th style="text-align:left;padding:6px 10px;">Condition</th><th style="padding:6px 10px;text-align:left;">R<sub>g</sub></th><th style="padding:6px 10px;text-align:left;">R<sub>p</sub></th></tr>
+        <tr><td>Deck ribs parallel to beam, 1 stud / rib</td><td>1.0</td><td>1.0</td></tr>
+        <tr><td>Deck ribs perpendicular, 1 stud / rib</td><td>1.0</td><td>0.75</td></tr>
+        <tr><td>Deck ribs perpendicular, 2 studs / rib</td><td>0.85</td><td>0.75</td></tr>
+        <tr><td>Deck ribs perpendicular, 3+ studs / rib</td><td>0.70</td><td>0.75</td></tr>
+        <tr><td>No deck (solid slab), 1 stud</td><td>1.0</td><td>1.0</td></tr>
+        <tr><td>No deck (solid slab), 2 studs side-by-side</td><td>0.85</td><td>1.0</td></tr>
+      </table>
+      <p style="margin-top:8px;">Note: R<sub>p</sub> = 0.75 for perpendicular deck replaced the earlier 0.625 factor. AISC 360-22 (2022 edition) uses 0.75 per §I8.2a; some older references show 0.625.</p>
+
+      <h4>Partial Composite Ratio η — §I3.2d</h4>
+      <p>Full composite action requires placing enough studs between the point of maximum moment and the nearest zero-moment point so that:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        ΣQ<sub>n,full</sub> = min(F<sub>y</sub>A<sub>s</sub>, 0.85f'<sub>c</sub>b<sub>eff</sub>t<sub>c</sub>)
+      </div>
+      <p>Partial composite (η &lt; 1.0) is permitted with η ≥ 0.25. Using fewer studs reduces both strength and stiffness. AISC requires N ≥ N<sub>full</sub> × η.</p>
+
+      <h4>Minimum Stud Spacing</h4>
+      <p>Along beam: 6d<sub>sa</sub> (longitudinal) and 4d<sub>sa</sub> (transverse). Maximum: 8t<sub>slab</sub> or 36 in. Studs may not be placed in a deck rib with height &gt; 3 in unless the rib is ≥ 2 in wide at mid-height.</p>
+    </div>
+  </div>
+
+  <!-- ── FLEXURAL STRENGTH §I3.2 ── -->
+  <div class="bg-pane" id="cbg-flex">
+    <div class="tb">
+      <h4>Plastic Stress Distribution Method — §I3.2</h4>
+      <p>For compact composite sections in positive moment, AISC 360-22 §I3.2 uses the Plastic Stress Distribution Method. The PNA is located so that horizontal equilibrium is satisfied:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        T = C<sub>s</sub> + C<sub>c</sub><br>
+        F<sub>y</sub>A<sub>s</sub> ≥ ΣQ<sub>n</sub> → partial composite controls concrete compression block
+      </div>
+      <p>Cases:</p>
+      <ul>
+        <li><b>PNA in slab</b> (C<sub>c</sub> = F<sub>y</sub>A<sub>s</sub>): concrete compression block depth a = F<sub>y</sub>A<sub>s</sub> / (0.85f'<sub>c</sub>b<sub>eff</sub>)</li>
+        <li><b>PNA in steel top flange</b>: part of top flange is in compression</li>
+        <li><b>PNA in steel web</b>: standard case for partial composite</li>
+      </ul>
+      <p>The nominal moment M<sub>n</sub> is the sum of moment arms of all stress resultants about the PNA. Design strength: φ<sub>b</sub>M<sub>n</sub> with φ<sub>b</sub> = 0.90.</p>
+
+      <h4>Lower-Bound Moment of Inertia I<sub>eff</sub></h4>
+      <p>For deflection calculations under service loads, an effective moment of inertia accounts for partial composite action:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        I<sub>eff</sub> = I<sub>s</sub> + √η × (I<sub>tr</sub> − I<sub>s</sub>)
+      </div>
+      <p>I<sub>s</sub> = moment of inertia of steel beam alone; I<sub>tr</sub> = transformed section MOI (full composite). For full composite η = 1.0, I<sub>eff</sub> = I<sub>tr</sub>.</p>
+
+      <h4>Shear Check — §G2</h4>
+      <p>The web shear is resisted by the steel beam alone (concrete slab does not contribute to shear). Check: φ<sub>v</sub>V<sub>n</sub> = φ<sub>v</sub>× 0.60F<sub>y</sub>A<sub>w</sub>C<sub>v1</sub> per §G2.1, with φ<sub>v</sub> = 1.00 for most W shapes (h/tw ≤ 2.24√(E/F<sub>y</sub>)).</p>
+    </div>
+  </div>
+
+  <!-- ── DEFLECTION & VIBRATION ── -->
+  <div class="bg-pane" id="cbg-defl">
+    <div class="tb">
+      <h4>Deflection Limits</h4>
+      <p>Deflection of composite beams is typically controlled for:</p>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:6px;">
+        <tr><th style="padding:6px 10px;text-align:left;">Condition</th><th style="padding:6px 10px;text-align:left;">Typical Limit</th></tr>
+        <tr><td>Pre-composite (steel beam + wet concrete)</td><td>L/360 (live load only) or L/240 (total)</td></tr>
+        <tr><td>Post-composite (superimposed live load)</td><td>L/360</td></tr>
+        <tr><td>Total post-composite (SDL + LL)</td><td>L/240</td></tr>
+        <tr><td>Pre-composite (construction)</td><td>L/300 or 1.5 in maximum</td></tr>
+      </table>
+      <p style="margin-top:8px;">AISC does not mandate specific deflection limits — the values above are common IBC/ASCE 7 / owner-specified criteria. The calculator checks L/360 for live load and L/240 for total.</p>
+
+      <h4>Pre-Composite Stage</h4>
+      <p>During construction, before the concrete has cured, the steel beam alone carries the dead load of the wet concrete and steel self-weight. Deflection at this stage uses I<sub>s</sub> (bare steel). If pre-composite deflection is large (&gt; L/360), cambering the beam before erection is required. Cambering = ¾ × pre-composite dead-load deflection is a common rule of thumb.</p>
+
+      <h4>Vibration</h4>
+      <p>Floor vibration is not directly checked by AISC 360-22 but is often governed by AISC Design Guide 11. The natural frequency of the composite beam–girder–column system should typically exceed 4 Hz for office floors and 8 Hz for sensitive lab/hospital occupancies. Acceleration limit under walking excitation should be below 0.5% g (office) or 0.1% g (sensitive). These checks are outside the scope of this calculator.</p>
+    </div>
+  </div>
+
+  <!-- ── WORKED EXAMPLE ── -->
+  <div class="bg-pane" id="cbg-ex">
+    <div class="tb">
+      <h4>Worked Example — W18×35 Composite Beam, f'c = 4 ksi, η = 0.75</h4>
+      <p><b>Given:</b> W18×35, A992, F<sub>y</sub> = 50 ksi; f'<sub>c</sub> = 4 ksi; beam span L = 30 ft; tributary width = 10 ft; b<sub>eff</sub> = min(30/8, 10/2) = 3.75 ft each side → total b<sub>eff</sub> = 7.5 ft = 90 in; slab t<sub>c</sub> = 3.5 in above deck; deck ribs perpendicular, h<sub>r</sub> = 3 in; ¾ in × 4.5 in headed studs (A<sub>sa</sub> = 0.4418 in²); η = 0.75; wDL = 1.5 kip/ft, wLL = 1.5 kip/ft.</p>
+
+      <h4>Step 1 — Stud Capacity (§I8.2a)</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>E<sub>c</sub> = 33×145<sup>1.5</sup>×√4</td><td>≈ 3644 ksi</td></tr>
+        <tr><td>0.5 A<sub>sa</sub> √(f'<sub>c</sub>E<sub>c</sub>) = 0.5×0.4418×√(4×3644)</td><td>= 26.7 kips</td></tr>
+        <tr><td>R<sub>g</sub>R<sub>p</sub>A<sub>sa</sub>F<sub>u</sub> = 1.0×0.75×0.4418×65</td><td>= 21.5 kips ← governs</td></tr>
+        <tr><td>Q<sub>n</sub></td><td>= <b>21.5 kips</b></td></tr>
+      </table>
+
+      <h4>Step 2 — Full Composite Horizontal Shear</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>F<sub>y</sub>A<sub>s</sub> = 50 × 10.3</td><td>= 515 kips (W18×35: A<sub>s</sub>=10.3 in²)</td></tr>
+        <tr><td>0.85f'<sub>c</sub>b<sub>eff</sub>t<sub>c</sub> = 0.85×4×90×3.5</td><td>= 1071 kips</td></tr>
+        <tr><td>Q<sub>n,full</sub> = min(515, 1071)</td><td>= <b>515 kips</b></td></tr>
+        <tr><td>ΣQ<sub>n</sub> = η × Q<sub>n,full</sub> = 0.75 × 515</td><td>= 386 kips</td></tr>
+        <tr><td>N studs each half = 386 / 21.5</td><td>= 18 studs (→ 36 total)</td></tr>
+      </table>
+
+      <h4>Step 3 — Flexural Strength M<sub>n</sub></h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>Concrete compression block: a = ΣQ<sub>n</sub> / (0.85f'<sub>c</sub>b<sub>eff</sub>) = 386/(0.85×4×90)</td><td>= 1.26 in (in slab)</td></tr>
+        <tr><td>PNA in steel top flange (check: F<sub>y</sub>A<sub>s</sub>−ΣQ<sub>n</sub> = 515−386 = 129 kips → small part of flange in compression)</td><td></td></tr>
+        <tr><td>M<sub>p,steel</sub> = Z<sub>x</sub>F<sub>y</sub> = 66.5×50/12</td><td>= 277 kip-ft</td></tr>
+        <tr><td>M<sub>n,composite</sub> (by PSDM)</td><td>≈ <b>443 kip-ft</b></td></tr>
+        <tr><td>φ<sub>b</sub>M<sub>n</sub> = 0.90 × 443</td><td>= <b>399 kip-ft</b></td></tr>
+      </table>
+
+      <h4>Step 4 — Demand</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>w<sub>u</sub> = 1.2×1.5 + 1.6×1.5 = 1.8 + 2.4</td><td>= 4.2 kip/ft</td></tr>
+        <tr><td>M<sub>u</sub> = w<sub>u</sub>L²/8 = 4.2×30²/8</td><td>= 473 kip-ft</td></tr>
+        <tr><td>D/C = 473 / 399</td><td>= <b>1.18 — NG</b> (increase η or section)</td></tr>
+      </table>
+      <p><i>To pass: increase η to 1.0 → φ<sub>b</sub>M<sub>n</sub> ≈ 490 kip-ft → D/C ≈ 0.97 OK. Or select W21×44.</i></p>
+    </div>
+  </div>
+
+</div><!-- /bg-section -->
+
 <script>
 'use strict';
 
@@ -1493,6 +1671,14 @@ function cbDrawPlanSVG(N_half, stud_spacing_val, using_double, ribs_with_2, N_ri
 
   svg += '</svg>';
   return svg;
+}
+
+// ── Background tabs ────────────────────────────────────────────────────────────
+function cbBgTab(id, el) {
+  document.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bg-toc a').forEach(function(a){a.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
 }
 
 // ── Initialize ────────────────────────────────────────────────────────────────

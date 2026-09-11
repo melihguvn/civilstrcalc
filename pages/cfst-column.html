@@ -304,6 +304,227 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
 </div><!-- /calc-layout -->
 </main>
 
+<!-- ══════════ DESIGN BACKGROUND ══════════ -->
+<div class="bg-section no-print">
+  <div class="bg-hdr"><h3>&#128218; CFST Column Design &mdash; Theory &amp; Code Background</h3></div>
+  <nav class="bg-toc">
+    <a href="#bg-overview"    onclick="cfstBgTab('bg-overview',this);return false;"    class="active">Overview</a>
+    <a href="#bg-compact"     onclick="cfstBgTab('bg-compact',this);return false;">Compactness §I1.4</a>
+    <a href="#bg-axial"       onclick="cfstBgTab('bg-axial',this);return false;">Axial Strength §I2</a>
+    <a href="#bg-pm"          onclick="cfstBgTab('bg-pm',this);return false;">P-M Interaction §I3.4</a>
+    <a href="#bg-ex"          onclick="cfstBgTab('bg-ex',this);return false;">Worked Example</a>
+  </nav>
+
+  <!-- ── OVERVIEW ── -->
+  <div class="bg-pane active" id="bg-overview">
+    <div class="tb">
+      <h4>What Is a CFST Column?</h4>
+      <p>A Concrete-Filled Steel Tube (CFST) column consists of a hollow steel section — either rectangular/square HSS or circular HSS — filled with plain or reinforced concrete. The steel tube acts as permanent formwork, provides confinement to the core concrete, and resists tension and bending; the concrete core restrains local buckling of the steel wall and carries axial compression.</p>
+      <p>CFST columns combine the high tensile strength of steel with the compressive strength of concrete, resulting in column strengths that typically exceed the sum of the individual capacities. They are common in high-rise building cores, bridge piers, and industrial structures.</p>
+
+      <h4>AISC 360-22 Chapter I — Composite Members</h4>
+      <p>Chapter I of AISC 360-22 governs the design of composite columns. Three cross-section types are covered:</p>
+      <ul>
+        <li><b>Encased composite</b> — steel shape encased in a concrete section (§I2.1a)</li>
+        <li><b>Filled composite (rectangular)</b> — HSS filled with concrete (§I2.2b)</li>
+        <li><b>Filled composite (round)</b> — circular HSS filled with concrete (§I2.2a)</li>
+      </ul>
+      <p>This calculator covers filled composite members (rectangular and circular HSS).</p>
+
+      <h4>Notation</h4>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:8px;">
+        <tr><td>A<sub>s</sub></td><td>Area of steel section (in² / mm²)</td></tr>
+        <tr><td>A<sub>c</sub></td><td>Net area of concrete core (in² / mm²)</td></tr>
+        <tr><td>E<sub>s</sub></td><td>Modulus of elasticity of steel — 29,000 ksi / 200,000 MPa</td></tr>
+        <tr><td>E<sub>c</sub></td><td>Modulus of elasticity of concrete — w<sub>c</sub><sup>1.5</sup>√f'c (ACI 318)</td></tr>
+        <tr><td>F<sub>y</sub></td><td>Yield stress of steel (ksi / MPa)</td></tr>
+        <tr><td>f'<sub>c</sub></td><td>Specified compressive strength of concrete (ksi / MPa)</td></tr>
+        <tr><td>P<sub>no</sub></td><td>Nominal compressive strength without length effects</td></tr>
+        <tr><td>P<sub>n</sub></td><td>Nominal compressive strength accounting for buckling</td></tr>
+        <tr><td>EI<sub>eff</sub></td><td>Effective flexural stiffness for buckling calculation</td></tr>
+        <tr><td>C<sub>2</sub></td><td>Concrete contribution factor: 0.85 (rect), 0.95 (round)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── COMPACTNESS §I1.4 ── -->
+  <div class="bg-pane" id="bg-compact">
+    <div class="tb">
+      <h4>Compactness Classification — AISC 360-22 §I1.4</h4>
+      <p>The steel wall must be checked for local buckling. AISC 360-22 Table I1.1a defines three compactness categories based on the wall slenderness ratio λ = b/t (rectangular) or D/t (circular), compared to limiting values λ<sub>p</sub> (compact) and λ<sub>r</sub> (noncompact).</p>
+
+      <h4>Rectangular HSS (§I1.4a)</h4>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:6px;">
+        <tr><th style="text-align:left;padding:6px 10px;">Category</th><th style="text-align:left;padding:6px 10px;">Limit</th><th style="text-align:left;padding:6px 10px;">Formula</th></tr>
+        <tr><td><b>Compact</b></td><td>b/t ≤ λ<sub>p</sub></td><td>λ<sub>p</sub> = 2.26√(E<sub>s</sub>/F<sub>y</sub>)</td></tr>
+        <tr><td><b>Noncompact</b></td><td>λ<sub>p</sub> &lt; b/t ≤ λ<sub>r</sub></td><td>λ<sub>r</sub> = 3.00√(E<sub>s</sub>/F<sub>y</sub>)</td></tr>
+        <tr><td><b>Slender</b></td><td>b/t &gt; λ<sub>r</sub></td><td>—</td></tr>
+        <tr><td><b>Not Permitted</b></td><td>b/t &gt; 5.00√(E<sub>s</sub>/F<sub>y</sub>)</td><td>§I1.4a</td></tr>
+      </table>
+      <p style="margin-top:8px;"><i>Note: b = clear flat width of the longer wall = B − 2t (or H − 2t, whichever governs).</i></p>
+
+      <h4>Circular HSS (§I1.4a)</h4>
+      <table class="combo-ref-tbl" style="width:100%;margin-top:6px;">
+        <tr><th style="text-align:left;padding:6px 10px;">Category</th><th style="text-align:left;padding:6px 10px;">Limit</th><th style="text-align:left;padding:6px 10px;">Formula</th></tr>
+        <tr><td><b>Compact</b></td><td>D/t ≤ λ<sub>p</sub></td><td>λ<sub>p</sub> = 0.15 E<sub>s</sub>/F<sub>y</sub></td></tr>
+        <tr><td><b>Noncompact</b></td><td>λ<sub>p</sub> &lt; D/t ≤ λ<sub>r</sub></td><td>λ<sub>r</sub> = 0.19 E<sub>s</sub>/F<sub>y</sub></td></tr>
+        <tr><td><b>Slender</b></td><td>D/t &gt; λ<sub>r</sub></td><td>—</td></tr>
+        <tr><td><b>Not Permitted</b></td><td>D/t &gt; 0.31 E<sub>s</sub>/F<sub>y</sub></td><td>§I1.4a</td></tr>
+      </table>
+
+      <h4>Material Limits (§I1.4)</h4>
+      <ul>
+        <li>F<sub>y</sub> ≤ 75 ksi (520 MPa) for the steel section</li>
+        <li>f'<sub>c</sub> between 3 and 10 ksi (21–69 MPa) for normal-weight concrete</li>
+        <li>A<sub>s</sub> / A<sub>g</sub> ≥ 1% (minimum steel area ratio)</li>
+      </ul>
+      <p>Members that are <b>slender</b> or <b>not-permitted</b> cannot use the filled composite provisions of Chapter I. Slender sections have reduced strength; not-permitted sections exceed the code's calibrated range entirely.</p>
+    </div>
+  </div>
+
+  <!-- ── AXIAL STRENGTH §I2 ── -->
+  <div class="bg-pane" id="bg-axial">
+    <div class="tb">
+      <h4>Cross-Section Compressive Strength P<sub>no</sub> — §I2.2</h4>
+      <p>The nominal compressive strength without length effects P<sub>no</sub> depends on the compactness class:</p>
+
+      <p><b>Compact (§I2.2a–b):</b></p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        P<sub>no</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub>
+      </div>
+      <p>C<sub>2</sub> = 0.85 for rectangular HSS, 0.95 for circular HSS. The higher C<sub>2</sub> for circular sections reflects concrete confinement from hoop action.</p>
+
+      <p><b>Noncompact (§I2.2c, Eq. I2-9b):</b></p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        P<sub>no</sub> = P<sub>p</sub> − (P<sub>p</sub> − P<sub>y</sub>) × [(λ − λ<sub>p</sub>) / (λ<sub>r</sub> − λ<sub>p</sub>)]²
+      </div>
+      <p>P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub> &nbsp;(compact strength); &nbsp;P<sub>y</sub> = F<sub>y</sub>A<sub>s</sub> + 0.70f'<sub>c</sub>A<sub>c</sub></p>
+
+      <p><b>Slender (§I2.2d, Eq. I2-9c):</b></p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        P<sub>no</sub> = F<sub>cr</sub>A<sub>s</sub> + 0.70f'<sub>c</sub>A<sub>c</sub>
+      </div>
+      <p>F<sub>cr</sub> is the critical buckling stress of the hollow steel section based on b/t (rect) or D/t (circular) per §I2.2d.</p>
+
+      <h4>Effective Stiffness EI<sub>eff</sub> — §I2.2f</h4>
+      <p>The effective flexural stiffness used for the column buckling calculation:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        EI<sub>eff</sub> = E<sub>s</sub>I<sub>s</sub> + E<sub>s</sub>I<sub>sr</sub> + C<sub>3</sub>E<sub>c</sub>I<sub>c</sub>
+      </div>
+      <p>For filled members (no rebar, I<sub>sr</sub> = 0): C<sub>3</sub> = 0.45 + 3(A<sub>s</sub>/A<sub>g</sub>), capped at 0.9. EI<sub>eff</sub> replaces EI in the classic Euler/AISC flexural buckling equations.</p>
+
+      <h4>Column Strength P<sub>n</sub> — §I2.2 / §E3</h4>
+      <p>The length-dependent compressive strength P<sub>n</sub> follows the same slenderness curves as Chapter E, but uses P<sub>no</sub> in place of F<sub>y</sub>A<sub>g</sub> and EI<sub>eff</sub> in place of EI:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
+        P<sub>e</sub> = π²EI<sub>eff</sub> / (KL)² <br>
+        If P<sub>no</sub>/P<sub>e</sub> ≤ 2.25: &nbsp;P<sub>n</sub> = P<sub>no</sub> × 0.658<sup>P<sub>no</sub>/P<sub>e</sub></sup> <br>
+        If P<sub>no</sub>/P<sub>e</sub> &gt; 2.25: &nbsp;P<sub>n</sub> = 0.877 P<sub>e</sub>
+      </div>
+      <p>Design strength: φ<sub>c</sub>P<sub>n</sub> with φ<sub>c</sub> = 0.75 (LRFD).</p>
+    </div>
+  </div>
+
+  <!-- ── P-M INTERACTION §I3.4 ── -->
+  <div class="bg-pane" id="bg-pm">
+    <div class="tb">
+      <h4>Flexural Strength M<sub>n</sub> — §I3.4</h4>
+      <p>The nominal flexural strength for compact filled composite sections is calculated using the Plastic Stress Distribution Method (PSDM). The full plastic moment M<sub>p</sub> is found by sweeping the plastic neutral axis (PNA) from the center to the bottom of the section, integrating the rectangular stress block contributions from steel (±F<sub>y</sub>) and concrete (C<sub>2</sub>f'<sub>c</sub> compression only). The maximum moment on the P-M envelope typically occurs near the balanced point, not at zero axial force.</p>
+
+      <h4>PSDM Interaction Envelope — §I3.4a</h4>
+      <p>Unlike the bilinear H1-1 formula used for pure steel members, compact CFST sections are checked against the full PSDM cross-section interaction envelope. The envelope is derived by sweeping the PNA and recording (P, M) at each position, producing a smooth convex curve with five key characteristic points:</p>
+
+      <table class="combo-ref-tbl" style="width:100%;margin-top:6px;">
+        <tr><th style="padding:6px 10px;text-align:left;">Point</th><th style="padding:6px 10px;text-align:left;">Axial P</th><th style="padding:6px 10px;text-align:left;">Moment M</th><th style="padding:6px 10px;text-align:left;">Description</th></tr>
+        <tr><td><b>A</b></td><td>P<sub>p</sub> = F<sub>y</sub>A<sub>s</sub> + C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub></td><td>0</td><td>Pure compression (PNA at bottom)</td></tr>
+        <tr><td><b>B</b></td><td>0</td><td>M<sub>p</sub></td><td>Pure bending (equal compression/tension areas)</td></tr>
+        <tr><td><b>C</b></td><td>C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub></td><td>M<sub>p</sub></td><td>Balanced point — same M as B but concrete compression only</td></tr>
+        <tr><td><b>D</b></td><td>P<sub>A</sub>/2</td><td>M<sub>max</sub> ≈ M<sub>p</sub> + extra</td><td>Maximum moment point</td></tr>
+        <tr><td><b>E</b></td><td>0</td><td>0</td><td>Origin</td></tr>
+      </table>
+
+      <h4>φ-Scaled Design Envelope</h4>
+      <p>For LRFD design, the PSDM envelope is scaled by resistance factors:</p>
+      <ul>
+        <li><b>P-axis:</b> φ<sub>c</sub> = 0.75, additionally capped at φ<sub>c</sub>P<sub>n</sub> (the column buckling capacity) to account for slender columns</li>
+        <li><b>M-axis:</b> φ<sub>b</sub> = 0.90</li>
+      </ul>
+      <p>The cap at φ<sub>c</sub>P<sub>n</sub> is critical: for a slender column with P<sub>n</sub> &lt; P<sub>no</sub>, the design P-axis is cut at the lower value, creating a flat horizontal portion at the top of the envelope.</p>
+
+      <h4>Radial D/C Ratio Check</h4>
+      <p>The demand/capacity ratio is computed as the <b>radial D/C on the φ-scaled PSDM envelope</b>:</p>
+      <ol>
+        <li>Cast a ray from the origin through the demand point (M<sub>u</sub>, P<sub>u</sub>)</li>
+        <li>Find where the ray intersects the φ-scaled PSDM envelope — this is the capacity point (M<sub>cap</sub>, P<sub>cap</sub>)</li>
+        <li>DCR = |demand| / |capacity| = distance from origin to demand / distance from origin to intersection</li>
+      </ol>
+      <p>If DCR ≤ 1.0, the member is adequate. This approach is more accurate and less conservative than a bilinear H1-1 formula, especially for points near the pure bending or balanced-point region of the envelope.</p>
+
+      <h4>Biaxial Bending</h4>
+      <p>For rectangular HSS with both M<sub>ux</sub> and M<sub>uy</sub>, each axis is checked independently against its own PSDM envelope (x-axis and y-axis envelopes are different for non-square sections). The governing D/C is the maximum of the two:</p>
+      <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0;">
+        DCR = max(DCR<sub>x</sub>, DCR<sub>y</sub>)
+      </div>
+      <p>For circular HSS, the cross-section is symmetric about all axes, so only one envelope is needed regardless of the M<sub>u</sub> direction.</p>
+    </div>
+  </div>
+
+  <!-- ── WORKED EXAMPLE ── -->
+  <div class="bg-pane" id="bg-ex">
+    <div class="tb">
+      <h4>Worked Example — Rect HSS 10×10×½ (A500 Gr C), f'c = 5 ksi, L = 14 ft</h4>
+      <p><b>Given:</b> Square HSS 10×10, t = 0.500 in, F<sub>y</sub> = 46 ksi, f'<sub>c</sub> = 5.0 ksi, K = 0.65, L = 14 ft, P<sub>u</sub> = 600 kips, M<sub>ux</sub> = 100 kip-ft, M<sub>uy</sub> = 0.</p>
+
+      <h4>Step 1 — Section Properties</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>A<sub>s</sub> = 4×(10−t)×t = 4×9.5×0.5</td><td>= 19.0 in²</td></tr>
+        <tr><td>A<sub>c</sub> = (10−2×0.5)² = 9.0²</td><td>= 81.0 in²</td></tr>
+        <tr><td>A<sub>g</sub> = 10²</td><td>= 100.0 in²</td></tr>
+        <tr><td>ρ = A<sub>s</sub>/A<sub>g</sub></td><td>= 19%  ✓ (≥1%)</td></tr>
+      </table>
+
+      <h4>Step 2 — Compactness (§I1.4)</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>λ = b/t = (10−2×0.5)/0.5</td><td>= 18.0</td></tr>
+        <tr><td>λ<sub>p</sub> = 2.26√(29000/46)</td><td>= 56.7</td></tr>
+        <tr><td>λ &lt; λ<sub>p</sub> → <b>Compact</b></td><td>✓</td></tr>
+      </table>
+
+      <h4>Step 3 — Cross-Section Strength P<sub>no</sub></h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>C<sub>2</sub> (rectangular)</td><td>= 0.85</td></tr>
+        <tr><td>F<sub>y</sub>A<sub>s</sub> = 46 × 19.0</td><td>= 874 kips</td></tr>
+        <tr><td>C<sub>2</sub>f'<sub>c</sub>A<sub>c</sub> = 0.85 × 5.0 × 81.0</td><td>= 344 kips</td></tr>
+        <tr><td>P<sub>no</sub></td><td>= <b>1218 kips</b></td></tr>
+      </table>
+
+      <h4>Step 4 — EI<sub>eff</sub> and Column Strength</h4>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>I<sub>s</sub> (HSS 10×10×½)</td><td>≈ 170 in⁴ (4 plates about centroid)</td></tr>
+        <tr><td>I<sub>c</sub> = 9⁴/12 = 6561/12</td><td>≈ 547 in⁴</td></tr>
+        <tr><td>E<sub>c</sub> = 33×w<sub>c</sub><sup>1.5</sup>√f'c ≈ 33×145<sup>1.5</sup>×√5</td><td>≈ 4074 ksi</td></tr>
+        <tr><td>C<sub>3</sub> = 0.45 + 3×(19/100) = 0.45+0.57</td><td>= 0.90 (capped)</td></tr>
+        <tr><td>EI<sub>eff</sub> = 29000×170 + 0.90×4074×547</td><td>≈ 6,930,000 kip·in²</td></tr>
+        <tr><td>KL = 0.65 × 14 × 12 = 109.2 in</td><td></td></tr>
+        <tr><td>P<sub>e</sub> = π²×EI<sub>eff</sub>/(KL)²</td><td>≈ 5,715 kips</td></tr>
+        <tr><td>P<sub>no</sub>/P<sub>e</sub> = 1218/5715</td><td>= 0.213 &lt; 2.25 → inelastic</td></tr>
+        <tr><td>P<sub>n</sub> = 1218 × 0.658<sup>0.213</sup></td><td>≈ <b>1104 kips</b></td></tr>
+        <tr><td>φ<sub>c</sub>P<sub>n</sub> = 0.75 × 1104</td><td>= <b>828 kips</b></td></tr>
+      </table>
+
+      <h4>Step 5 — P-M Interaction (PSDM §I3.4a)</h4>
+      <p>The plastic moment M<sub>p</sub> is found by PSDM with the PNA at mid-height (equal areas). For a 10×10×½ square HSS filled with f'c = 5 ksi, M<sub>p</sub> ≈ 525 kip·ft. The PSDM envelope is swept numerically and the φ-scaled envelope is formed with φ<sub>c</sub> = 0.75 (P-axis, capped at 828 kips) and φ<sub>b</sub> = 0.90 (M-axis).</p>
+      <table class="combo-ref-tbl" style="width:100%;">
+        <tr><td>P<sub>u</sub> = 600 kips, M<sub>ux</sub> = 100 kip-ft = 1200 kip-in</td><td></td></tr>
+        <tr><td>Ray direction: (M, P) = (1200, 600)</td><td></td></tr>
+        <tr><td>Intersection with φ-PSDM envelope</td><td>≈ (M<sub>cap</sub>, P<sub>cap</sub>)</td></tr>
+        <tr><td>DCR = |demand| / |intersection|</td><td>≈ <b>0.83</b> (OK ✓)</td></tr>
+      </table>
+      <p><i>Note: exact values depend on the full swept PSDM curve — use the calculator above to obtain the precise DCR.</i></p>
+    </div>
+  </div>
+
+</div><!-- /bg-section -->
+
 <script src="../shell.js" defer></script>
 <script>
 // ═══════════════════════════════════════════════════
@@ -1086,6 +1307,16 @@ window.addEventListener('beforeprint', () => {
   const pc = document.getElementById('cfst-print-pmm');
   if (pc) drawPMM(pc);
 });
+
+// ═══════════════════════════════════════════════════
+// DESIGN BACKGROUND TABS
+// ═══════════════════════════════════════════════════
+function cfstBgTab(id, el) {
+  document.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bg-toc a').forEach(function(a){a.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
 
 // ═══════════════════════════════════════════════════
 // INIT
