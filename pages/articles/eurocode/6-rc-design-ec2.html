@@ -108,7 +108,7 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     <h3>Contents</h3>
     <ol>
       <li><a href="#s1">Pre-Sizing Rules of Thumb</a></li>
-      <li><a href="#s2">Beam Design — Flexure &amp; Shear</a></li>
+      <li><a href="#s2">Beam Design — Flexure, Shear &amp; Torsion</a></li>
       <li><a href="#s3">Column Design — Axial + Biaxial</a></li>
       <li><a href="#s4">Slab Design — One-Way, Two-Way, Flat Slab</a></li>
       <li><a href="#s5">Shear Wall Design (EC2 / EC8)</a></li>
@@ -153,11 +153,29 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
         <div class="ps-note">EC2 §9.6.1 minimum 200 mm for double-face reinforcement</div>
       </div>
     </div>
+
+    <h3>Seismic Minimum Dimensions (EC8 §5.4.3 / §5.5.3)</h3>
+    <p>When designing for DCM or DCH, primary seismic members must meet the following minimum geometric requirements in addition to EC2 limits:</p>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Parameter</th><th>DCL (EC2 only)</th><th>DCM</th><th>DCH</th><th>Reference</th></tr></thead>
+        <tbody>
+          <tr><td>Beam width b<sub>w</sub></td><td>≥ 100 mm (practical ≥ 200 mm)</td><td>≥ 200 mm</td><td>≥ 250 mm</td><td>§5.4.1.2.1 / §5.5.1.2.1</td></tr>
+          <tr><td>Column min dimension</td><td>Practical ≥ 200 mm</td><td>≥ 250 mm</td><td>≥ 300 mm</td><td>§5.4.3.2.1 / §5.5.3.2.1</td></tr>
+          <tr><td>Column aspect ratio b<sub>c</sub>/h<sub>c</sub></td><td>—</td><td>≥ 0.25</td><td>≥ 0.25</td><td>§5.4.3.2.1</td></tr>
+          <tr><td>Normalised axial force n<sub>d</sub> = N<sub>Ed</sub>/(A<sub>c</sub>·f<sub>cd</sub>)</td><td>—</td><td>≤ 0.65</td><td>≤ 0.55</td><td>§5.4.3.2.1 / §5.5.3.2.1</td></tr>
+          <tr><td>Shear wall thickness t<sub>w</sub></td><td>≥ max(150 mm, h<sub>s</sub>/25)</td><td>≥ 200 mm</td><td>≥ 200 mm (boundary ≥ 250 mm)</td><td>§9.6.1 / §5.4.3.4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn">
+      <strong>n<sub>d</sub> limit:</strong> If N<sub>Ed</sub>/(A<sub>c</sub>·f<sub>cd</sub>) exceeds the limit, the column section must be enlarged. Over-stressed columns cannot be compensated by adding reinforcement alone.
+    </div>
   </div>
 
   <!-- S2 Beam -->
   <div class="art-section" id="s2">
-    <h2>2. Beam Design — Flexure &amp; Shear</h2>
+    <h2>2. Beam Design — Flexure, Shear &amp; Torsion</h2>
 
     <h3>2.1 Rectangular Stress Block (EC2 §3.1.7)</h3>
     <p>EC2 uses a simplified rectangular stress distribution with depth λx and intensity η·f<sub>cd</sub>:</p>
@@ -249,6 +267,36 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
       <div style="font-size:.82rem;color:#475569;padding-left:8px;margin-top:8px;line-height:1.9;">
         ν<sub>1</sub> = 0.6·(1 − f<sub>ck</sub>/250); &nbsp;z ≈ 0.9d; &nbsp;α<sub>cw</sub> = 1.0 (non-prestressed)<br>
         θ = 21.8°–45° (cot θ = 1.0–2.5); &nbsp;Recommended start: θ = 21.8° (cot θ = 2.5) for economy
+      </div>
+    </div>
+
+    <h3>2.5 Torsion Design (EC2 §6.3)</h3>
+    <p>Torsion must be checked when it contributes to structural equilibrium (equilibrium torsion). Torsion that can be redistributed (compatibility torsion) may be neglected in analysis, provided the member has sufficient ductility and detailing.</p>
+    <div class="formula-block">
+      <div class="f-label">EC2 §6.3 — Torsion resistance</div>
+      <div class="formula-row">
+        <span class="f-sys">T<sub>Rd,c</sub></span>
+        <span class="f-expr">= 2 · A<sub>k</sub> · f<sub>ctd</sub> · t<sub>ef,i</sub></span>
+        <span class="f-unit">kN·m (threshold — §6.3.2(5))</span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">T<sub>Rd,max</sub></span>
+        <span class="f-expr">= 2 · ν · α<sub>cw</sub> · A<sub>k</sub> · t<sub>ef,i</sub> · f<sub>cd</sub> · sin θ · cos θ</span>
+        <span class="f-unit">kN·m</span>
+      </div>
+      <div style="font-size:.82rem;color:#475569;padding-left:8px;margin-top:8px;line-height:1.9;">
+        A<sub>k</sub> = area enclosed by the centreline of the thin-walled section (m²)<br>
+        t<sub>ef,i</sub> = effective wall thickness = A/u (≥ twice the cover to longitudinal bars)<br>
+        ν = 0.6·(1 − f<sub>ck</sub>/250) (strength reduction factor); &nbsp;α<sub>cw</sub> = 1.0 (non-prestressed)<br>
+        f<sub>ctd</sub> = α<sub>ct</sub>·f<sub>ctk,0.05</sub>/γ<sub>C</sub> (design tensile strength)
+      </div>
+    </div>
+    <p>Above the threshold T<sub>Rd,c</sub>, full torsion design is required: closed stirrups (area A<sub>sw</sub>/s) and longitudinal torsion bars (area A<sub>sl</sub>) are needed simultaneously. The combined shear + torsion interaction check is:</p>
+    <div class="formula-block">
+      <div class="f-label">EC2 §6.3.2(4) — Combined shear + torsion</div>
+      <div class="formula-row">
+        <span class="f-sys">Interaction</span>
+        <span class="f-expr">T<sub>Ed</sub>/T<sub>Rd,max</sub> + V<sub>Ed</sub>/V<sub>Rd,max</sub> ≤ 1.0</span>
       </div>
     </div>
 
@@ -415,8 +463,14 @@ table.art-tbl tr:hover td{background:#f0f5fb;}
     </ul>
 
     <div class="callout warn">
-      <strong>Boundary elements:</strong> Required when x<sub>u</sub>/l<sub>w</sub> &gt; (ε<sub>cu2</sub> − ε<sub>sy,d</sub>·ν<sub>u</sub>)/(ε<sub>cu2</sub> + ε<sub>su</sub>). In most walls with normal axial load, boundary confinement is needed at every storey in the critical region for DCH.
+      <strong>Boundary elements — trigger:</strong> Required when x<sub>u</sub>/l<sub>w</sub> &gt; (ε<sub>cu2</sub> − ε<sub>sy,d</sub>·ν<sub>u</sub>)/(ε<sub>cu2</sub> + ε<sub>su</sub>) per EC8 §5.5.3.4.2. In most walls with normal axial load this condition governs in the critical region for DCH.
     </div>
+    <p><strong>DCH boundary element dimensions (EC8 §5.5.3.4.5):</strong></p>
+    <ul>
+      <li>Length: l<sub>c</sub> ≥ max(0.15 · l<sub>w</sub>, 1.5 · b<sub>w</sub>)</li>
+      <li>Thickness: ≥ 200 mm (primary seismic walls)</li>
+      <li>Confinement: ω<sub>wd</sub> ≥ 0.12 with closed hoops at spacing ≤ min(b<sub>o</sub>/3, 6d<sub>bL</sub>, 125 mm)</li>
+    </ul>
   </div>
 
   <!-- S6 Detailing -->
