@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Load Combinations per EN 1990 | CivilStrCalc</title>
+<meta name="description" content="Eurocode load combination principles: ULS equations 6.10 and 6.10a/b, ψ combination factors, seismic combination, SLS combinations, and a worked building example.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/articles/eurocode/5-load-combinations">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "name": "Load Combinations per EN 1990",
+  "description": "ULS equations 6.10 and 6.10a/b, ψ factors, seismic combination, SLS combinations, and a worked example for a typical office building floor.",
+  "publisher": { "@type": "Organization", "name": "CivilStrCalc" },
+  "datePublished": "2026-09-11",
+  "inLanguage": "en"
+}
+</script>
+<link rel="stylesheet" href="../../../css/style.css">
+<style>
+body{background:#f4f6f8;font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:#2c3a4a;margin:0;padding:0;display:block;}
+.art-topbar{background:#1a2332;padding:11px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.art-topbar a{color:#7db9e8;font-size:.78rem;text-decoration:none;}.art-topbar a:hover{text-decoration:underline;}
+.art-topbar .sep{color:rgba(255,255,255,.28);font-size:.78rem;}
+.art-topbar .cur{color:rgba(255,255,255,.65);font-size:.78rem;}
+.art-wrap{max-width:960px;margin:0;padding:32px 32px 56px 28px;}
+.art-hdr{margin-bottom:24px;}
+.art-hdr .series-tag{display:inline-block;background:#e8f4ef;color:#1a6b45;border:1px solid #b3d9c5;border-radius:4px;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;margin-bottom:10px;}
+.art-hdr h1{font-size:1.5rem;font-weight:700;color:#1a2332;margin:0 0 10px;line-height:1.25;}
+.art-hdr .desc{font-size:.88rem;color:#475569;line-height:1.7;margin:0;}
+.art-toc{background:#f8fafc;border:1px solid #dde2e8;border-radius:8px;padding:16px 20px;margin-bottom:28px;}
+.art-toc h3{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#8898aa;margin:0 0 10px;}
+.art-toc ol{margin:0;padding-left:18px;}
+.art-toc li{font-size:.82rem;margin:5px 0;}
+.art-toc a{color:#1a6b45;text-decoration:none;}.art-toc a:hover{text-decoration:underline;}
+.art-section{margin-bottom:32px;scroll-margin-top:12px;}
+.art-section h2{font-size:1rem;font-weight:700;color:#1a2332;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid #1a6b45;}
+.art-section h3{font-size:.88rem;font-weight:600;color:#1a2332;margin:18px 0 8px;}
+.art-section p{font-size:.84rem;color:#475569;line-height:1.72;margin:8px 0;}
+.art-section ul,.art-section ol{font-size:.84rem;color:#475569;line-height:1.72;padding-left:20px;margin:8px 0;}
+.art-section li{margin:5px 0;}
+.art-table-wrap{overflow-x:auto;margin:12px 0;}
+table.art-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+table.art-tbl th{background:#1a2332;color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:.78rem;white-space:nowrap;}
+table.art-tbl td{padding:8px 12px;border-bottom:1px solid #dde2e8;color:#2c3a4a;vertical-align:top;line-height:1.5;}
+table.art-tbl tr:nth-child(even) td{background:#f8fafc;}
+table.art-tbl tr:hover td{background:#f0f5fb;}
+table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
+.formula-block{background:#f0f5fb;border-left:3px solid #1a6b45;border-radius:0 6px 6px 0;padding:14px 18px;margin:12px 0;}
+.formula-block .f-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#8898aa;margin-bottom:10px;}
+.formula-row{display:flex;gap:8px;align-items:baseline;margin:5px 0;flex-wrap:wrap;}
+.f-sys{font-size:.68rem;font-weight:700;background:#1a2332;color:#fff;border-radius:3px;padding:2px 6px;white-space:nowrap;flex-shrink:0;}
+.f-expr{font-size:.86rem;color:#1a2332;font-weight:500;flex:1;}
+.f-unit{background:#e8f4ef;color:#1a6b45;border:1px solid #b3d9c5;border-radius:4px;padding:2px 8px;font-size:.72rem;white-space:nowrap;margin-left:auto;}
+.callout{background:#e8f7ef;border-left:3px solid #1a8a5a;border-radius:0 6px 6px 0;padding:12px 16px;margin:12px 0;font-size:.83rem;color:#1a2332;line-height:1.65;}
+.callout.warn{background:#fff8e6;border-left-color:#d68910;}
+.worked-box{background:#fff;border:1px solid #dde2e8;border-radius:8px;padding:20px 22px;margin:14px 0;}
+.worked-box .wb-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#8898aa;margin-bottom:12px;}
+.worked-box h4{font-size:.84rem;font-weight:700;color:#1a2332;margin:12px 0 5px;}
+.worked-box p,.worked-box li{font-size:.83rem;color:#475569;line-height:1.72;}
+.worked-box ul{padding-left:18px;margin:5px 0;}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed #dde2e8;font-size:.83rem;}
+.result-row .r-label{color:#475569;}
+.result-row .r-val{font-weight:600;color:#1a2332;font-variant-numeric:tabular-nums;}
+.result-row .r-val.gov{color:#1a6b45;}
+.art-cta-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
+.art-cta{display:inline-flex;align-items:center;gap:6px;background:#1a6b45;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:.8rem;font-weight:600;transition:background .14s;}
+.art-cta:hover{background:#145937;}
+.art-cta.sec{background:#fff;color:#1a6b45;border:1px solid #b3d9c5;}.art-cta.sec:hover{background:#f0f7f4;}
+.art-series-nav{display:flex;justify-content:flex-start;border-top:1px solid #dde2e8;padding-top:20px;margin-top:36px;gap:12px;flex-wrap:wrap;}
+.art-nav-btn{display:flex;flex-direction:column;text-decoration:none;padding:12px 16px;border:1px solid #dde2e8;border-radius:8px;background:#fff;transition:all .14s;min-width:160px;}
+.art-nav-btn:hover{border-color:#1a6b45;background:#f0f7f4;}
+.art-nav-btn .nav-dir{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#8898aa;margin-bottom:4px;}
+.art-nav-btn .nav-title{font-size:.82rem;font-weight:600;color:#1a6b45;}
+.art-disclaimer{background:#fef3e2;border:1px solid #fbd38d;border-radius:6px;padding:12px 16px;font-size:.77rem;color:#7c4a00;margin-top:28px;line-height:1.6;}
+@media(max-width:640px){.art-wrap{padding:20px 14px 40px;}.art-hdr h1{font-size:1.2rem;}.art-series-nav{flex-direction:column;}.art-nav-btn{width:100%;}}
+</style>
+<style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
+</head>
+<body>
+<script src="../../../shell.js" defer></script>
+
+<div class="art-topbar">
+  <a href="../../home">CivilStrCalc</a>
+  <span class="sep">›</span>
+  <a href="#">Articles</a>
+  <span class="sep">›</span>
+  <span class="cur">Eurocode Design Guide</span>
+  <span class="sep">›</span>
+  <span class="cur">5. Load Combinations</span>
+</div>
+
+<div class="art-wrap">
+
+  <div class="art-hdr">
+    <div class="series-tag">Eurocode Design Guide · Part 5 of 5</div>
+    <h1>Load Combinations per EN 1990</h1>
+    <p class="desc">Eurocode combination principles — ULS equations 6.10 and 6.10a/6.10b, ψ combination factors, seismic combination, all three SLS combinations, and a complete worked example for an office building floor beam.</p>
+  </div>
+
+  <div class="art-toc">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#s1">Combination Principles</a></li>
+      <li><a href="#s2">ULS — Equation 6.10</a></li>
+      <li><a href="#s3">ULS — Equations 6.10a &amp; 6.10b</a></li>
+      <li><a href="#s4">ψ Combination Factors</a></li>
+      <li><a href="#s5">Seismic Combination</a></li>
+      <li><a href="#s6">SLS Combinations</a></li>
+      <li><a href="#s7">Worked Example</a></li>
+    </ol>
+  </div>
+
+  <!-- S1 -->
+  <div class="art-section" id="s1">
+    <h2>1. Combination Principles</h2>
+    <p>EN 1990 §6.4 governs load combinations for all limit states. The fundamental principle: when multiple variable actions are present, only one is taken at its characteristic value (the <strong>leading variable action</strong> Q<sub>k,1</sub>); all others are reduced by combination factors ψ<sub>0,i</sub>.</p>
+
+    <p>The logic behind ψ<sub>0</sub>: it is statistically unlikely that all variable loads simultaneously reach their characteristic (98th-percentile) values. For an office floor, full live load at the same instant as peak wind is improbable — ψ<sub>0</sub> = 0.7 for offices acknowledges that wind-accompanying imposed load is at most 70% of its peak value.</p>
+
+    <h3>Which Action is Leading?</h3>
+    <p>EN 1990 requires checking all permutations — each variable action must be treated as the leading action in turn, with the rest as accompanying actions. In practice, the combination producing the highest effect governs. Common cases:</p>
+    <ul>
+      <li><strong>Gravity loading:</strong> imposed load Q<sub>k</sub> is usually leading; wind and snow are accompanying (ψ<sub>0</sub>·Q<sub>k,wind</sub> + ψ<sub>0</sub>·Q<sub>k,snow</sub>)</li>
+      <li><strong>Lateral loading:</strong> wind is leading; imposed and snow are accompanying</li>
+      <li><strong>Roof:</strong> snow or wind may govern; both permutations must be checked</li>
+    </ul>
+  </div>
+
+  <!-- S2 -->
+  <div class="art-section" id="s2">
+    <h2>2. ULS — Equation 6.10 (STR/GEO)</h2>
+    <p>The base ULS fundamental combination (EN 1990 Eq. 6.10) applies a single partial factor set to all actions:</p>
+
+    <div class="formula-block">
+      <div class="f-label">EN 1990 Eq. 6.10 — ULS fundamental combination</div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">Σ γ<sub>G,j</sub> · G<sub>k,j</sub> &nbsp;+&nbsp; γ<sub>Q,1</sub> · Q<sub>k,1</sub> &nbsp;+&nbsp; Σ γ<sub>Q,i</sub> · ψ<sub>0,i</sub> · Q<sub>k,i</sub></span>
+      </div>
+      <div style="margin:10px 0 4px;font-size:.8rem;color:#475569;">Recommended partial factors (EN 1990 Table A1.2(B)):</div>
+      <div style="font-size:.82rem;color:#475569;line-height:1.9;padding-left:8px;">
+        γ<sub>G,sup</sub> = 1.35 (unfavourable permanent actions)<br>
+        γ<sub>G,inf</sub> = 1.0 (favourable permanent actions, e.g. stabilising dead weight)<br>
+        γ<sub>Q</sub> = 1.50 (all variable actions)
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Equivalent to ASCE 7:</strong> EN Eq. 6.10 is analogous to ASCE 7 LRFD combination 1.2D + 1.6L. Note the slight difference: EN uses 1.35G + 1.5Q vs ASCE 7's 1.2D + 1.6L. For wind as leading, EN gives 1.35G + 1.5W + 1.5·ψ<sub>0</sub>·L, vs ASCE 7's 1.2D + 1.0W + 1.0L.
+    </div>
+  </div>
+
+  <!-- S3 -->
+  <div class="art-section" id="s3">
+    <h2>3. ULS — Equations 6.10a &amp; 6.10b (Alternative)</h2>
+    <p>EN 1990 §6.4.3.2 offers an alternative to Eq. 6.10: use whichever is more unfavourable of two separate equations. This approach is commonly adopted by National Annexes (UK, Sweden, etc.) because it produces less conservative results for permanent-action-dominated cases.</p>
+
+    <div class="formula-block">
+      <div class="f-label">EN 1990 Eqs. 6.10a and 6.10b — Alternative ULS combination</div>
+      <div class="formula-row">
+        <span class="f-sys">Eq. 6.10a</span>
+        <span class="f-expr">Σ γ<sub>G,j</sub> · G<sub>k,j</sub> &nbsp;+&nbsp; γ<sub>Q,1</sub> · ψ<sub>0,1</sub> · Q<sub>k,1</sub> &nbsp;+&nbsp; Σ γ<sub>Q,i</sub> · ψ<sub>0,i</sub> · Q<sub>k,i</sub></span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Eq. 6.10b</span>
+        <span class="f-expr">Σ ξ · γ<sub>G,j</sub> · G<sub>k,j</sub> &nbsp;+&nbsp; γ<sub>Q,1</sub> · Q<sub>k,1</sub> &nbsp;+&nbsp; Σ γ<sub>Q,i</sub> · ψ<sub>0,i</sub> · Q<sub>k,i</sub></span>
+      </div>
+      <div style="margin:10px 0 4px;font-size:.8rem;color:#475569;">Where:</div>
+      <div style="font-size:.82rem;color:#475569;line-height:1.9;padding-left:8px;">
+        ξ = reduction factor for permanent actions (EN recommended: 0.85; UK NA: 0.925)<br>
+        Eq. 6.10a governs when permanent loads dominate (G &gg; Q)<br>
+        Eq. 6.10b governs when variable loads dominate (Q is large relative to G)<br>
+        Design to max(6.10a, 6.10b) at every cross-section
+      </div>
+    </div>
+
+    <h3>When 6.10a/6.10b Saves Material</h3>
+    <p>For a typical office slab (G<sub>k</sub> = 5 kN/m², Q<sub>k</sub> = 3 kN/m²):</p>
+    <ul>
+      <li><strong>Eq. 6.10:</strong> w<sub>d</sub> = 1.35×5 + 1.5×3 = <strong>11.25 kN/m²</strong></li>
+      <li><strong>Eq. 6.10a</strong> (ψ<sub>0,L</sub> = 0.7): w<sub>d</sub> = 1.35×5 + 1.5×0.7×3 = 6.75 + 3.15 = <strong>9.90 kN/m²</strong></li>
+      <li><strong>Eq. 6.10b</strong> (ξ = 0.85): w<sub>d</sub> = 0.85×1.35×5 + 1.5×3 = 5.74 + 4.50 = <strong>10.24 kN/m²</strong></li>
+      <li><strong>Governing (6.10b):</strong> 10.24 kN/m² — <strong>9% less</strong> than Eq. 6.10</li>
+    </ul>
+  </div>
+
+  <!-- S4 -->
+  <div class="art-section" id="s4">
+    <h2>4. ψ Combination Factors</h2>
+    <p>EN 1990 Table A1.1 provides ψ<sub>0</sub> (combination), ψ<sub>1</sub> (frequent), and ψ<sub>2</sub> (quasi-permanent) for all variable action categories.</p>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead>
+          <tr><th>Action Category</th><th>ψ<sub>0</sub></th><th>ψ<sub>1</sub></th><th>ψ<sub>2</sub></th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Imposed — Residential (A)</strong></td><td>0.7</td><td>0.5</td><td>0.3</td></tr>
+          <tr><td><strong>Imposed — Offices (B)</strong></td><td>0.7</td><td>0.5</td><td>0.3</td></tr>
+          <tr><td><strong>Imposed — Public assembly (C)</strong></td><td>0.7</td><td>0.7</td><td>0.6</td></tr>
+          <tr><td><strong>Imposed — Retail (D)</strong></td><td>0.7</td><td>0.7</td><td>0.6</td></tr>
+          <tr><td><strong>Imposed — Storage (E)</strong></td><td>1.0</td><td>0.9</td><td>0.8</td></tr>
+          <tr><td><strong>Snow — altitude ≤ 1000m</strong></td><td>0.5</td><td>0.2</td><td>0.0</td></tr>
+          <tr><td><strong>Snow — altitude &gt; 1000m</strong></td><td>0.7</td><td>0.5</td><td>0.2</td></tr>
+          <tr><td><strong>Wind</strong></td><td>0.6</td><td>0.2</td><td>0.0</td></tr>
+          <tr><td><strong>Temperature (non-fire)</strong></td><td>0.6</td><td>0.5</td><td>0.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>ψ<sub>2</sub> = 0 for wind and low-altitude snow means these loads make no contribution in the quasi-permanent SLS combination — they are absent on an "average" day. This is important: SLS deflection checks for concrete beams use G<sub>k</sub> + ψ<sub>2</sub>·Q<sub>k</sub> (imposed only), with wind excluded.</p>
+  </div>
+
+  <!-- S5 -->
+  <div class="art-section" id="s5">
+    <h2>5. Seismic Combination</h2>
+    <p>The seismic design situation uses a separate combination. Permanent actions are unfactored (γ = 1.0), and variable actions are reduced to their quasi-permanent level:</p>
+
+    <div class="formula-block">
+      <div class="f-label">EN 1990 Eq. 6.12b — Seismic design situation</div>
+      <div class="formula-row">
+        <span class="f-sys">SI</span>
+        <span class="f-expr">Σ G<sub>k,j</sub> &nbsp;+&nbsp; A<sub>Ed</sub> &nbsp;+&nbsp; Σ ψ<sub>2,i</sub> · Q<sub>k,i</sub></span>
+      </div>
+      <div style="font-size:.82rem;color:#475569;padding-left:8px;margin-top:6px;">
+        A<sub>Ed</sub> = design seismic action = S<sub>d</sub>(T<sub>1</sub>) based forces (from EC8 analysis)<br>
+        ψ<sub>2,i</sub> · Q<sub>k,i</sub> = quasi-permanent variable actions (0.3·L for offices, 0.0 for wind/snow)<br>
+        Seismic mass: m = Σ G<sub>k</sub> + Σ ψ<sub>E,i</sub>·Q<sub>k,i</sub> where ψ<sub>E,i</sub> = φ·ψ<sub>2,i</sub><br>
+        φ = 1.0 (storeys with correlated occupancy); 0.5 (independently occupied); 0.8 otherwise
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>No load factor on G in seismic:</strong> Unlike the fundamental ULS combination, seismic does not amplify permanent actions with γ<sub>G</sub> = 1.35. This reflects that earthquake forces scale with actual mass, not design mass. The seismic action A<sub>Ed</sub> already incorporates appropriate safety through the importance factor γ<sub>I</sub> and the behaviour factor q.
+    </div>
+  </div>
+
+  <!-- S6 -->
+  <div class="art-section" id="s6">
+    <h2>6. SLS Combinations</h2>
+    <p>EN 1990 defines three SLS combinations, used for different serviceability checks:</p>
+
+    <div class="formula-block">
+      <div class="f-label">EN 1990 §6.5.3 — Three SLS combinations</div>
+      <div class="formula-row">
+        <span class="f-sys">Characteristic</span>
+        <span class="f-expr">Σ G<sub>k,j</sub> + Q<sub>k,1</sub> + Σ ψ<sub>0,i</sub>·Q<sub>k,i</sub></span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Frequent</span>
+        <span class="f-expr">Σ G<sub>k,j</sub> + ψ<sub>1,1</sub>·Q<sub>k,1</sub> + Σ ψ<sub>2,i</sub>·Q<sub>k,i</sub></span>
+      </div>
+      <div class="formula-row">
+        <span class="f-sys">Quasi-perm.</span>
+        <span class="f-expr">Σ G<sub>k,j</sub> + Σ ψ<sub>2,i</sub>·Q<sub>k,i</sub></span>
+      </div>
+    </div>
+
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Combination</th><th>Governs for</th><th>EC2 Application</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Characteristic</strong></td><td>Irreversible limit states (first crack, first yield)</td><td>Crack width (prestress zones); stress limitation w/ prestress</td></tr>
+          <tr><td><strong>Frequent</strong></td><td>Reversible limit states, short-term loads</td><td>Crack width in decompression check; stress limitation in RC</td></tr>
+          <tr><td><strong>Quasi-permanent</strong></td><td>Long-term effects (creep, shrinkage)</td><td><strong>Deflection calculation</strong>; long-term crack widths in RC</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Deflection Limit Under Quasi-permanent</h3>
+    <ul>
+      <li>Total deflection: δ<sub>max</sub> ≤ L/250 (quasi-permanent; including creep)</li>
+      <li>After construction: δ<sub>2</sub> ≤ L/500 (deflection affecting partitions; quasi-permanent after partition installation)</li>
+      <li>Effective creep coefficient: EC2 allows simplified creep factor for SLS deflection based on t<sub>0</sub>, RH, and member size</li>
+    </ul>
+  </div>
+
+  <!-- S7 -->
+  <div class="art-section" id="s7">
+    <h2>7. Worked Example — Office Floor Beam</h2>
+
+    <div class="worked-box">
+      <div class="wb-title">Given</div>
+      <ul>
+        <li>Simply supported RC beam, span L = 7.2 m, tributary width 3.0 m</li>
+        <li>Slab self-weight: g<sub>slab</sub> = 3.5 kN/m²; beam self-weight: g<sub>beam</sub> = 7.0 kN/m</li>
+        <li>Superimposed dead: g<sub>SDL</sub> = 1.5 kN/m² (screed + ceiling)</li>
+        <li>Imposed load (office cat. B): q<sub>k</sub> = 3.0 kN/m²</li>
+        <li>No wind or snow on this internal floor beam</li>
+        <li>Using EN Eq. 6.10 (recommended approach)</li>
+      </ul>
+
+      <h4>Step 1 — Characteristic loads (per metre of beam)</h4>
+      <div class="result-row"><span class="r-label">Slab self-weight: 3.5 × 3.0</span><span class="r-val">10.50 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Superimposed dead: 1.5 × 3.0</span><span class="r-val">4.50 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Beam self-weight</span><span class="r-val">7.00 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Total G<sub>k</sub></span><span class="r-val">22.00 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Imposed Q<sub>k</sub>: 3.0 × 3.0</span><span class="r-val">9.00 kN/m</span></div>
+
+      <h4>Step 2 — ULS design load (Eq. 6.10)</h4>
+      <div class="result-row"><span class="r-label">w<sub>d</sub> = 1.35 × G<sub>k</sub> + 1.5 × Q<sub>k</sub></span><span class="r-val gov">1.35×22.00 + 1.5×9.00 = 43.2 kN/m ✓</span></div>
+
+      <h4>Step 3 — Check with Eqs. 6.10a / 6.10b (ξ = 0.85)</h4>
+      <div class="result-row"><span class="r-label">Eq. 6.10a: 1.35×22.0 + 1.5×0.7×9.0</span><span class="r-val">29.70 + 9.45 = 39.15 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Eq. 6.10b: 0.85×1.35×22.0 + 1.5×9.0</span><span class="r-val">25.25 + 13.50 = 38.74 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Governing (6.10a)</span><span class="r-val gov">39.15 kN/m (−9.4% vs Eq. 6.10)</span></div>
+
+      <h4>Step 4 — ULS design bending moment (Eq. 6.10)</h4>
+      <div class="result-row"><span class="r-label">M<sub>Ed</sub> = w<sub>d</sub> × L² / 8 = 43.2 × 7.2² / 8</span><span class="r-val gov">279.9 kN·m</span></div>
+
+      <h4>Step 5 — SLS quasi-permanent load (deflection)</h4>
+      <div class="result-row"><span class="r-label">w<sub>SLS,qp</sub> = G<sub>k</sub> + ψ<sub>2</sub>·Q<sub>k</sub> = 22.0 + 0.3×9.0</span><span class="r-val">24.70 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Allowable total deflection: L/250 = 7200/250</span><span class="r-val gov">≤ 28.8 mm</span></div>
+
+      <h4>Step 6 — SLS crack width (frequent combination, EC2)</h4>
+      <div class="result-row"><span class="r-label">w<sub>SLS,freq</sub> = G<sub>k</sub> + ψ<sub>1</sub>·Q<sub>k</sub> = 22.0 + 0.5×9.0</span><span class="r-val">26.50 kN/m</span></div>
+      <div class="result-row"><span class="r-label">Crack width limit (XC1, indoor): w<sub>k</sub> ≤</span><span class="r-val">0.4 mm</span></div>
+    </div>
+
+    <div class="art-cta-row">
+      <a class="art-cta" href="../../beam">RC Beam Calculator (ACI 318) →</a>
+      <a class="art-cta sec" href="1-introduction">Back to Part 1 →</a>
+    </div>
+
+    <h3>Comparison with ASCE 7 / ACI 318</h3>
+    <div class="art-table-wrap">
+      <table class="art-tbl">
+        <thead><tr><th>Item</th><th>Eurocode (EN 1990)</th><th>ASCE 7 + ACI 318</th></tr></thead>
+        <tbody>
+          <tr><td>Gravity ULS</td><td>1.35G + 1.5Q = 43.2 kN/m</td><td>1.2D + 1.6L = 1.2×22 + 1.6×9 = 40.8 kN/m</td></tr>
+          <tr><td>Wind ULS (leading)</td><td>1.35G + 1.5W + 1.05Q</td><td>1.2D + 1.0W + 1.0L</td></tr>
+          <tr><td>SLS (deflection)</td><td>G + ψ<sub>2</sub>·Q = G + 0.3Q</td><td>D + 0.5L (sustained portion)</td></tr>
+          <tr><td>Resistance factor</td><td>φ = 1.0 (use γ<sub>C</sub>, γ<sub>S</sub>)</td><td>φ = 0.65–0.90 (no γ<sub>M</sub>)</td></tr>
+          <tr><td>Governing combination</td><td class="gov">43.2 kN/m (Eq. 6.10)</td><td>40.8 kN/m (6% less)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The minor difference in total design load reflects similar reliability targets — the Eurocode and ASCE 7 formats are calibrated to achieve approximately the same probability of failure. Neither system is systematically more conservative than the other across all cases.</p>
+  </div>
+
+  <div class="art-series-nav">
+    <a class="art-nav-btn" href="4-seismic-design">
+      <span class="nav-dir">← Previous</span>
+      <span class="nav-title">4. Seismic Design (EC8)</span>
+    </a>
+  </div>
+
+  <div class="art-disclaimer">
+    <strong>Educational use only.</strong> This worked example uses EN recommended partial factors. National Annexes may specify Eq. 6.10a/6.10b and different ψ values. Always apply the governing combination from the applicable National Annex and verify all results against the current EN 1990 text. CivilStrCalc accepts no liability for design decisions based on this content.
+  </div>
+
+</div>
+</body>
+</html>
