@@ -235,28 +235,7 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
 
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px 6px;margin:8px 0;">
       <svg id="sec-svg" viewBox="0 0 200 172" style="width:100%;max-width:220px;display:block;margin:0 auto;"></svg>
-      <div style="font-size:.67rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:3px 0 2px;">Select end conditions per buckling axis below</div>
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label>K<sub>x</sub> &mdash; x&ndash;x Axis</label>
-        <select id="inp-bcx" class="bc-sel" onchange="autoCalc()">
-          <option value="1.00">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
-          <option value="0.80">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
-          <option value="0.65">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
-          <option value="2.00">Cantilever &nbsp;(K = 2.00)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>K<sub>y</sub> &mdash; y&ndash;y Axis</label>
-        <select id="inp-bcy" class="bc-sel" onchange="autoCalc()">
-          <option value="1.00">Pin &ndash; Pin &nbsp;(K = 1.00)</option>
-          <option value="0.80">Pin &ndash; Fixed &nbsp;(K = 0.80)</option>
-          <option value="0.65">Fixed &ndash; Fixed &nbsp;(K = 0.65)</option>
-          <option value="2.00">Cantilever &nbsp;(K = 2.00)</option>
-        </select>
-      </div>
+      <div style="font-size:.67rem;color:var(--text-dim);font-family:var(--sans);text-align:center;margin:3px 0 2px;">Both ends fixed &mdash; K = 0.65</div>
     </div>
 
     <div class="form-div"><div class="form-div-lbl">Applied Loads (LRFD)</div></div>
@@ -571,10 +550,10 @@ function calc() {
     ? 33 * Math.pow(wc,1.5) * Math.sqrt(fc*1000) / 1000
     : 0.043 * Math.pow(wc,1.5) * Math.sqrt(fc);
 
-  // Effective lengths from L × K
-  const Lval = parseFloat(document.getElementById('inp-L').value)   || (isUS ? 14 : 4.0);
-  const Kx   = parseFloat(document.getElementById('inp-bcx').value) || 1.0;
-  const Ky   = parseFloat(document.getElementById('inp-bcy').value) || 1.0;
+  // Effective lengths — both ends fixed, K = 0.65
+  const Lval = parseFloat(document.getElementById('inp-L').value) || (isUS ? 14 : 4.0);
+  const Kx   = 0.65;
+  const Ky   = 0.65;
   const cfac = isUS ? 12 : 1000; // ft→in or m→mm
   const KLx  = Kx * Lval * cfac;
   const KLy  = Ky * Lval * cfac;
@@ -737,10 +716,6 @@ function calc() {
   // Variables for print header / design inputs table
   const _gradeSel = document.getElementById('steel-grade');
   const gradeLbl  = _gradeSel.options[_gradeSel.selectedIndex]?.text || '';
-  const _bcxSel   = document.getElementById('inp-bcx');
-  const _bcySel   = document.getElementById('inp-bcy');
-  const KxBCTxt   = _bcxSel.options[_bcxSel.selectedIndex]?.text.trim() || '';
-  const KyBCTxt   = _bcySel.options[_bcySel.selectedIndex]?.text.trim() || '';
   const dimUnit   = isUS ? 'in' : 'mm';
   const secTypeStr = shape === 'round' ? 'Round HSS' : 'Rect / Sq HSS';
   const secDimStr  = shape === 'round'
@@ -799,8 +774,7 @@ function calc() {
        r2('F<sub>y</sub>', `${fmt(Fy,0)} ${k2U}`) +
        r2("f'<sub>c</sub>", `${fc} ${k2U}`) +
        r2('Column height L', `${fmt(Lval,2)} ${Lunit}`) +
-       r2('K<sub>x</sub> — x–x Axis', KxBCTxt) +
-       (shape==='rect' ? r2('K<sub>y</sub> — y–y Axis', KyBCTxt) : '') +
+       r2('Boundary condition', 'Fixed &ndash; Fixed &nbsp;(K = 0.65)') +
        r2('P<sub>u</sub>', `${fmt(Pu,1)} ${fU}`) +
        r2('M<sub>ux</sub>', `${fmt(Mux_d,1)} ${mU}`) +
        (Muy > 0 ? r2('M<sub>uy</sub>', `${fmt(Muy_d,1)} ${mU}`) : '') +
@@ -846,13 +820,11 @@ function calc() {
   // ── § I2.2c/d — Stiffness, Buckling & Axial Strength ──
   const pnoRat = Pno / Pe_gov;
   const buckMode = pnoRat <= 2.25 ? '&le; 2.25 (inelastic)' : '&gt; 2.25 (elastic)';
-  const KxLbl = _bcxSel.options[_bcxSel.selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
-  const KyLbl = _bcySel.options[_bcySel.selectedIndex]?.text.match(/K = ([0-9.]+)/)?.[1] || '1.00';
   h += `<div class="rpt-sec"><div class="rpt-sec-title">&sect; I2.2c/d &mdash; Stiffness, Buckling &amp; Axial Strength</div>` +
        `<table class="res-tbl">` +
        r2('L', `${fmt(Lval,2)} ${Lunit}`) +
-       r2('KL<sub>x</sub> (K<sub>x</sub> = ' + KxLbl + ')', `${fmt(KLx/(isUS?12:1000),2)} ${Lunit}`) +
-       (shape==='rect' ? r2('KL<sub>y</sub> (K<sub>y</sub> = ' + KyLbl + ')', `${fmt(KLy/(isUS?12:1000),2)} ${Lunit}`) : '') +
+       r2('KL<sub>x</sub> (K<sub>x</sub> = 0.65, Fixed&ndash;Fixed)', `${fmt(KLx/(isUS?12:1000),2)} ${Lunit}`) +
+       (shape==='rect' ? r2('KL<sub>y</sub> (K<sub>y</sub> = 0.65, Fixed&ndash;Fixed)', `${fmt(KLy/(isUS?12:1000),2)} ${Lunit}`) : '') +
        r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
        r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
        r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*EIscale)} ${EIU}`) +
