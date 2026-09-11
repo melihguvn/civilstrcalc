@@ -120,7 +120,16 @@
     '  border-top:1px solid rgba(255,255,255,.06);line-height:1.75}',
     '.sh-foot a{color:rgba(255,255,255,.35);text-decoration:none;font-size:.57rem;',
     '  transition:color .13s;margin-right:6px}',
-    '.sh-foot a:hover{color:rgba(255,255,255,.7)}'
+    '.sh-foot a:hover{color:rgba(255,255,255,.7)}',
+    /* collapsible section headers */
+    '.sh-sec-btn{display:flex;justify-content:space-between;align-items:center;',
+    '  cursor:pointer;padding-right:14px;user-select:none;transition:color .13s}',
+    '.sh-sec-btn:hover{color:rgba(255,255,255,.42)}',
+    '.sh-sec-btn .sh-sarr{font-size:9px;transition:transform .18s;display:inline-block;',
+    '  color:rgba(255,255,255,.3)}',
+    '.sh-sect:not(.sh-open) .sh-sec-btn .sh-sarr{transform:rotate(-90deg)}',
+    '.sh-sect-bd{display:none}',
+    '.sh-sect.sh-open .sh-sect-bd{display:block}'
   ].join('');
   document.head.appendChild(styleEl);
 
@@ -137,7 +146,16 @@
     fnd:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="15" width="18" height="6" rx="1"/><rect x="8" y="9" width="8" height="6" rx="0.5"/><rect x="10" y="4" width="4" height="5" rx="0.5"/></svg>',
     cw:     '<svg width="15" height="15" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="24" height="16" rx="1.5"/><path d="M13 8v5l3 3 3-3V8" stroke-width="1.6" opacity="0.8"/><path d="M4 20h24" stroke-width="1" opacity="0.4"/></svg>',
     uc:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3"/><path d="M12 8v8M9 11l3-3 3 3"/></svg>',
-    guide:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+    guide:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+    /* Steel Design module icons */
+    st_flx: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="8" x2="3" y2="16"/><line x1="21" y1="8" x2="21" y2="16"/><path d="M3 12q9 4 18 0" stroke-width="1.4" opacity=".7"/></svg>',
+    st_axi: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="5" x2="16" y2="5"/><line x1="8" y1="19" x2="16" y2="19"/><rect x="9" y="5" width="6" height="14" rx="0.5"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="10" y1="4" x2="14" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="10" y1="20" x2="14" y2="20"/></svg>',
+    st_bc:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="19"/><line x1="3" y1="19" x2="21" y2="19"/><path d="M4 19l2-16" stroke-width="1" opacity=".35"/><line x1="3" y1="15" x2="9" y2="15" stroke-width="1.4" opacity=".6"/><line x1="9" y1="15" x2="9" y2="19" stroke-width="1.4" opacity=".6"/></svg>',
+    st_ltb: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="12" x2="22" y2="12"/><path d="M2 12l5-4 5 8 5-8 5 4" stroke-width="1.6" opacity=".7"/></svg>',
+    st_trs: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="20" x2="22" y2="20"/><path d="M2 20L12 5 22 20"/><line x1="7" y1="20" x2="12" y2="12.5"/><line x1="17" y1="20" x2="12" y2="12.5"/></svg>',
+    /* Composite Design module icons */
+    comp:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="5" rx="0.5"/><line x1="8" y1="9" x2="8" y2="19"/><line x1="16" y1="9" x2="16" y2="19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="8" y1="9" x2="16" y2="9"/></svg>',
+    cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -154,41 +172,51 @@
   function item(href, icon, label, page) {
     return '<a class="sh-item' + a(page) + '" href="' + href + '"><span>' + icon + '</span>' + label + '</a>';
   }
+  function sect(label, pages, content) {
+    var isOpen = pages.indexOf(ap) >= 0;
+    return '<div class="sh-sect' + (isOpen ? ' sh-open' : '') + '">' +
+      '<div class="sh-sec sh-sec-btn" onclick="this.closest(\'.sh-sect\').classList.toggle(\'sh-open\')">' +
+        label + '<span class="sh-sarr">&#9662;</span>' +
+      '</div>' +
+      '<div class="sh-sect-bd">' + content + '</div>' +
+    '</div>';
+  }
 
   // â”€â”€ Sidebar HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var sideHTML =
-    '<div class="sh-sec">Concrete Design</div>' +
-    grp(ic.beam, 'Beam Design', ['beam'],
-      sub('/pages/beam#flexdesign', 'Flexural Design', 'beam') +
-      sub('/pages/beam#flexcap',    'Flexural Capacity', '') +
-      sub('/pages/beam#shear',      'Shear Design', '') +
-      sub('/pages/beam#torsion',    'Torsion Design', '')) +
-    grp(ic.slab, 'Slab Design', ['slab'],
-      sub('/pages/slab#flexdesign',  'Flexural Design', 'slab') +
-      sub('/pages/slab#flexcap',     'Flexural Capacity', '') +
-      sub('/pages/slab#punchshear',  'Punching Design', '')) +
-    grp(ic.col, 'Column Design', ['column'],
-      sub('/pages/column#pmm',      'PMM Interaction', 'column') +
-      sub('/pages/column#colshear', 'Shear Design', '')) +
-    item('/pages/development-length', ic.devlen, 'Dev. & Splice Length', 'devlen') +
-    item('/pages/crack-width',        ic.cw,     'Crack Width',          'crackwidth') +
-    item('/pages/foundation',         ic.fnd,    'Foundation Design',    'foundation') +
-    grp(ic.rw, 'Retaining Wall', ['retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
-      sub('/pages/retaining-wall-aci-si', 'ACI 318 â€” SI units',   'retwall-si') +
-      sub('/pages/retaining-wall-aci-us', 'ACI 318 â€” US units',   'retwall-us') +
-      sub('/pages/retaining-wall-ec2',    'Eurocode 2',            'retwall-ec2') +
-      sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',   'retwall-tsc')) +
-    '<div class="sh-div"></div>' +
-    '<div class="sh-sec">Steel Design</div>' +
-    grp(ic.st, 'Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss','compbeam','cfstcol'],
-      sub('/pages/steel-flexural',  'Flexural Design',        'steelfd') +
-      sub('/pages/steel-axial',     'Axial (Column) Design',  'steelaxi') +
-      sub('/pages/steel-combined',  'Combined (Beam-Column)', 'steelbc') +
-      sub('/pages/steel-ltb',       'LTB Check',              'steelltb') +
-      sub('/pages/truss-design',    'Truss Design',           'steeltruss') +
-      sub('/pages/composite-beam',  'Composite Beam',         'compbeam') +
-      sub('/pages/cfst-column',     'CFST Column',            'cfstcol')) +
-    '<div class="sh-div"></div>' +
+    sect('Concrete Design', ['beam','slab','column','devlen','crackwidth','foundation','retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
+      grp(ic.beam, 'Beam Design', ['beam'],
+        sub('/pages/beam#flexdesign', 'Flexural Design', 'beam') +
+        sub('/pages/beam#flexcap',    'Flexural Capacity', '') +
+        sub('/pages/beam#shear',      'Shear Design', '') +
+        sub('/pages/beam#torsion',    'Torsion Design', '')) +
+      grp(ic.slab, 'Slab Design', ['slab'],
+        sub('/pages/slab#flexdesign',  'Flexural Design', 'slab') +
+        sub('/pages/slab#flexcap',     'Flexural Capacity', '') +
+        sub('/pages/slab#punchshear',  'Punching Design', '')) +
+      grp(ic.col, 'Column Design', ['column'],
+        sub('/pages/column#pmm',      'PMM Interaction', 'column') +
+        sub('/pages/column#colshear', 'Shear Design', '')) +
+      item('/pages/development-length', ic.devlen, 'Dev. & Splice Length', 'devlen') +
+      item('/pages/crack-width',        ic.cw,     'Crack Width',          'crackwidth') +
+      item('/pages/foundation',         ic.fnd,    'Foundation Design',    'foundation') +
+      grp(ic.rw, 'Retaining Wall', ['retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
+        sub('/pages/retaining-wall-aci-si', 'ACI 318 – SI units', 'retwall-si') +
+        sub('/pages/retaining-wall-aci-us', 'ACI 318 – US units', 'retwall-us') +
+        sub('/pages/retaining-wall-ec2',    'Eurocode 2',              'retwall-ec2') +
+        sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',     'retwall-tsc'))) +
+    '<div class=”sh-div”></div>' +
+    sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
+      item('/pages/steel-flexural', ic.st_flx, 'Flexural Design',        'steelfd') +
+      item('/pages/steel-axial',    ic.st_axi, 'Axial (Column) Design',  'steelaxi') +
+      item('/pages/steel-combined', ic.st_bc,  'Combined (Beam-Column)', 'steelbc') +
+      item('/pages/steel-ltb',      ic.st_ltb, 'LTB Check',              'steelltb') +
+      item('/pages/truss-design',   ic.st_trs, 'Truss Design',           'steeltruss')) +
+    '<div class=”sh-div”></div>' +
+    sect('Composite Design', ['compbeam','cfstcol'],
+      item('/pages/composite-beam', ic.comp, 'Composite Beam Design', 'compbeam') +
+      item('/pages/cfst-column',    ic.cfst, 'CFST Column Design',    'cfstcol')) +
+    '<div class=”sh-div”></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +
     item('/pages/rebar',          ic.rb,    'Rebar Properties',  'rebar') +
