@@ -223,8 +223,28 @@ input[type=range]{width:100%;accent-color:var(--accent);}
         <label>Deck Rib Height h<sub>r</sub> <span id="cb-hr-lbl" class="unit-lbl">[in]</span></label>
         <div class="iw"><input type="number" id="cb-hr" value="3" step="0.25" min="1" oninput="cbAutoCalc()"><span id="cb-hr-us" class="us">in</span></div>
       </div>
-      <div style="font-size:.73rem;color:var(--text-mid);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:5px 8px;margin-bottom:8px;font-family:var(--sans);line-height:1.5;">
-        <span id="cb-wr-note">Typical rib width w<sub>r</sub> = 6 in assumed (deck perpendicular to beam)</span>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Rib Width w<sub>r</sub> <span id="cb-wr-lbl" class="unit-lbl">[in]</span></label>
+          <div class="iw"><input type="number" id="cb-wr" value="6" step="0.5" min="1" oninput="cbAutoCalc()"><span id="cb-wr-us" class="us">in</span></div>
+        </div>
+        <div class="form-group">
+          <label>Rib Pitch s<sub>r</sub> <span id="cb-sr-lbl" class="unit-lbl">[in]</span></label>
+          <div class="iw"><input type="number" id="cb-sr" value="12" step="1" min="6" oninput="cbAutoCalc()"><span id="cb-sr-us" class="us">in</span></div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Stud Position <span style="font-size:.68rem;color:var(--text-dim);font-weight:400;">(AISC &sect;I8.2a &mdash; Table C-I8.2a)</span></label>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:3px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:400;cursor:pointer;">
+            <input type="radio" name="cb-stud-pos" id="cb-pos-unfav" value="unfav" checked onchange="cbAutoCalc()">
+            Unfavorable &mdash; R<sub>p</sub> = 0.625
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:400;cursor:pointer;">
+            <input type="radio" name="cb-stud-pos" id="cb-pos-fav" value="fav" onchange="cbAutoCalc()">
+            Favorable (e<sub>mid</sub>) &mdash; R<sub>p</sub> = 0.75
+          </label>
+        </div>
       </div>
 
       <div class="form-div"><div class="form-div-lbl">Concrete</div></div>
@@ -394,9 +414,10 @@ function cbApplyUnit() {
   document.getElementById('cb-lc-us').textContent   = isUS ? 'kip/ft'  : 'kN/m';
   document.getElementById('cb-alc-lbl').textContent = isUS ? '[psf]'    : '[kN/m²]';
   document.getElementById('cb-alc-us').textContent  = isUS ? 'psf'     : 'kN/m²';
-  document.getElementById('cb-wr-note').innerHTML  = isUS
-    ? 'Typical rib width w<sub>r</sub> = 6 in assumed (deck perpendicular to beam)'
-    : 'Typical rib width w<sub>r</sub> = 152 mm assumed (deck perpendicular to beam)';
+  document.getElementById('cb-wr-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-wr-us').textContent  = isUS ? 'in' : 'mm';
+  document.getElementById('cb-sr-lbl').textContent = isUS ? '[in]' : '[mm]';
+  document.getElementById('cb-sr-us').textContent  = isUS ? 'in' : 'mm';
 
   // Custom section labels
   document.getElementById('cb-cust-d-lbl').textContent  = isUS ? '[in]' : '[mm]';
@@ -414,6 +435,8 @@ function cbApplyUnit() {
     document.getElementById('cb-spacing').value = '10';
     document.getElementById('cb-tc').value      = '3.5';
     document.getElementById('cb-hr').value      = '3';
+    document.getElementById('cb-wr').value      = '6';
+    document.getElementById('cb-sr').value      = '12';
     document.getElementById('cb-fpc').value     = '4';
     document.getElementById('cb-dL').value      = '1.5';
     document.getElementById('cb-lL').value      = '2';
@@ -431,6 +454,8 @@ function cbApplyUnit() {
     document.getElementById('cb-spacing').value = '3';
     document.getElementById('cb-tc').value      = '90';
     document.getElementById('cb-hr').value      = '76';
+    document.getElementById('cb-wr').value      = '152';
+    document.getElementById('cb-sr').value      = '305';
     document.getElementById('cb-fpc').value     = '25';
     document.getElementById('cb-dL').value      = '8';
     document.getElementById('cb-lL').value      = '15';
@@ -720,7 +745,7 @@ function cbCalc() {
   var s   = +document.getElementById('cb-spacing').value;
   var tc  = +document.getElementById('cb-tc').value;
   var hr  = +document.getElementById('cb-hr').value;
-  var wr      = isUS ? 6 : 152;
+  var wr      = +document.getElementById('cb-wr').value || (isUS ? 6 : 152);
   var hs_stud = hr + (isUS ? 1.5 : 38); // stud extends 1.5 in / 38 mm above deck
   var fpc = +document.getElementById('cb-fpc').value;
   var eta_in = +document.getElementById('cb-eta').value / 100;
@@ -794,7 +819,7 @@ function cbCalc() {
   var Asa = Math.PI / 4 * ds * ds;
   var wr_hr_ratio = wr / hr;
   var Rg  = 0.85;
-  var Rp  = 0.75; // perpendicular deck, favorable stud position (AISC §I8.2a)
+  var Rp  = document.getElementById('cb-pos-fav').checked ? 0.75 : 0.625; // AISC §I8.2a Table C-I8.2a
   var Qn_basic = isUS
     ? 0.5 * Asa * Math.sqrt(fpc * Ec)
     : 0.5 * Asa * Math.sqrt(fpc * Ec) / 1000;
@@ -811,7 +836,7 @@ function cbCalc() {
   var bf_allows2    = (bf >= bf_min_2studs);
   var max_per_rib   = (rib_allows2 && bf_allows2) ? 2 : 1;
   var double_row    = (max_per_rib === 2);
-  var deck_pitch    = isUS ? 12 : 305;
+  var deck_pitch    = +document.getElementById('cb-sr').value || (isUS ? 12 : 305);
   var half_span     = isUS ? L * 12 / 2 : L * 1000 / 2;
   var N_ribs_half   = Math.floor(half_span / deck_pitch);
   var N_max         = N_ribs_half * max_per_rib;
@@ -1013,6 +1038,8 @@ function cbCalc() {
      + '<tr><td>Span L</td><td>'+L+(isUS?' ft':' m')+'</td></tr>'
      + '<tr><td>Beam spacing s</td><td>'+s+(isUS?' ft':' m')+'</td></tr>'
      + '<tr><td>t<sub>c</sub> / h<sub>r</sub></td><td>'+tc+' / '+hr+uL+'</td></tr>'
+     + '<tr><td>w<sub>r</sub> / rib pitch</td><td>'+wr+' / '+deck_pitch+uL+'</td></tr>'
+     + '<tr><td>Stud position</td><td>'+(Rp===0.75?'Favorable (e<sub>mid</sub>) &mdash; R<sub>p</sub> = 0.75':'Unfavorable &mdash; R<sub>p</sub> = 0.625')+'</td></tr>'
      + '<tr><td>f\'<sub>c</sub></td><td>'+fpc+(isUS?' ksi':' MPa')+'</td></tr>'
      + '<tr><td>&eta; input</td><td>'+fmt(eta_in*100,0)+'%</td></tr>'
      + '<tr><td>Constr. live L<sub>c</sub></td><td>'+fmt(Lc_line,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
@@ -1032,7 +1059,7 @@ function cbCalc() {
         fmt(ds,isUS?3:0) + uL + ' / ' + fmt(hs_stud,0) + uL + ' / ' + fmt(Fu_stud,0) + (isUS?' ksi':' MPa'))
      + row2('Stud area A<sub>sa</sub>', fmt(Asa, isUS?4:1) + (isUS?' in&sup2;':' mm&sup2;'))
      + row2('Q<sub>n</sub> (' + (Qn_governs==='formula'?'0.5A&radic;(f\'E<sub>c</sub>)':'R<sub>g</sub>R<sub>p</sub>AF<sub>u</sub>') + ' governs)', fmt(Qn,1) + uF)
-     + row2('R<sub>g</sub> / R<sub>p</sub>', fmt(Rg,2) + ' / ' + fmt(Rp,2))
+     + row2('R<sub>g</sub> / R<sub>p</sub>', fmt(Rg,2) + ' / ' + fmt(Rp,2) + ' &nbsp;<span style="font-size:.68rem;color:var(--text-dim);">(' + (Rp===0.75?'favorable e<sub>mid</sub>':'unfavorable') + ', perp. deck &sect;I8.2a)</span>')
      + row2('&eta; input / &eta; actual', fmt(eta_in*100,0) + '% / ' + fmt(eta_actual*100,1) + '%')
      + row2('Studs per half-span &nbsp; required / max', N_half_need + ' / ' + N_max + ' &nbsp;<span class="' + (stud_ok?'td-ok':'td-err') + '">' + (stud_ok?'&#10003; OK':'&#10007; FAIL') + '</span>')
      + row2('I<sub>s</sub> (steel alone)', fmt(isUS?Is:Is/1e4, 0) + uI)
