@@ -882,6 +882,21 @@ function srcFindMp(pts) {
   return best ? best.M : 0;
 }
 
+// Returns design moment capacity (φM) at a given internal axial demand Pu_int
+function srcPhiMnAtPu(pts, Pu_int, phiPn_col) {
+  const phiP = 0.75, phiM = 0.90;
+  const dp = pts.map(p => ({ P: Math.min(p.P*phiP, phiPn_col), M: p.M*phiM }));
+  for (let i = 0; i < dp.length-1; i++) {
+    if (dp[i].P >= Pu_int && dp[i+1].P <= Pu_int) {
+      const dP = dp[i].P - dp[i+1].P;
+      const t = dP > 1e-10 ? (dp[i].P - Pu_int) / dP : 0;
+      return dp[i].M + t * (dp[i+1].M - dp[i].M);
+    }
+  }
+  if (dp[0].P < Pu_int) return 0;
+  return Math.max(...dp.map(p => p.M));
+}
+
 // ─────────────────────────────────────────
 // SECTION PREVIEW SVG
 // ─────────────────────────────────────────
@@ -950,13 +965,15 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
   const pad = { l:70, r:30, t:24, b:54 };
   ctx.clearRect(0,0,W,H2);
 
-  const pts  = srcAxis === 'y' ? pts_y : pts_x;
-  const Mu_d = srcAxis === 'y' ? Muy_d : Mux_d;
+  // In biaxial tab, show the governing axis envelope
+  const govX = !srcLast || (srcLast.DCR_x >= srcLast.DCR_y);
+  const pts  = srcAxis === 'y' ? pts_y : (srcAxis === 'bi' ? (govX ? pts_x : pts_y) : pts_x);
+  const Mu_d = srcAxis === 'y' ? Muy_d : (srcAxis === 'bi' ? (govX ? Mux_d : Muy_d) : Mux_d);
 
   const phiP = 0.75, phiM = 0.90;
   const dphi = pts.map(p => ({ P: Math.min(p.P*phiP, phiPn), M: p.M*phiM }));
 
-  const uS = srcIsUS ? 1/1000 : 1e-6; // kip·in→kip-ft or N·mm→kN·m
+  const uS = srcIsUS ? 1/12 : 1e-6; // kip·in→kip-ft or N·mm→kN·m
   const nom_pts = pts.map(p => ({ P: p.P * (srcIsUS?1:0.001), M: p.M * uS }));
   const phi_pts = dphi.map(p => ({ P: p.P * (srcIsUS?1:0.001), M: p.M * uS }));
 
@@ -1019,15 +1036,11 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
   ctx.save(); ctx.translate(14, pad.t + (H2-pad.t-pad.b)/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(`Axial (${fU})`, 0, 0); ctx.restore();
 
-  // Biaxial circle overlay
-  if (srcAxis === 'bi' && srcLast) {
-    const {pts_x: px, pts_y: py, Pu_d: pd, Mux_d: md, Muy_d: myd, phiPn: pn} = srcLast;
-    // simple ellipse showing both envelope max moments
-    const phiMx = Math.max(...px.map(p=>p.M*phiM)) * uS;
-    const phiMy = Math.max(...py.map(p=>p.M*phiM)) * uS;
-    ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 1.2; ctx.setLineDash([4,3]);
-    ctx.beginPath(); ctx.ellipse(toX(0), toY(0), toX(phiMx)-toX(0), toY(0)-toY(0), 0, 0, 2*Math.PI); ctx.stroke();
-    ctx.setLineDash([]);
+  // Biaxial tab: add title indicating governing axis
+  if (srcAxis === 'bi') {
+    const axLbl = govX ? 'Mₓ' : 'Mᵧ';
+    ctx.fillStyle = '#6b7280'; ctx.font = '10px IBM Plex Sans, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(`Biaxial — governing axis: ${axLbl}`, pad.l + 2, pad.t - 6);
   }
 }
 
@@ -1148,13 +1161,26 @@ function srcCalc() {
   const phiMn_y = 0.90 * Mp_y;
 
   // Unit scaling for display
-  const _rs = srcIsUS ? 1 : 1000; // display force→internal: kips or kN→kips*1 / kN→N*1000
+  // Scale user-input forces to internal units (kips/kip·in for US; N/N·mm for SI)
+  const _rs = srcIsUS ? 1 : 1000;
   const DCR_x = srcPsdmDCR(pts_x, Pu*_rs, Mux*_rs, Pn*0.75);
-  const DCR_y = Muy > 1e-6
+  const DCR_y = Muy > 1e-3
     ? srcPsdmDCR(pts_y, Pu*_rs, Muy*_rs, Pn*0.75)
     : 0;
-  const DCR = Math.max(DCR_x, DCR_y);
-  const pass = DCR <= 1.0 && profileFitsB && profileFitsH && rho_s >= 0.01;
+
+  // Biaxial interaction: when both Mux and Muy are present use linear moment interaction
+  // at the given axial load level (AISC Commentary §C-I3.4)
+  const hasBiax = Mux > 1e-3 && Muy > 1e-3;
+  let DCR_biax = 0;
+  if (hasBiax) {
+    const phiMnx_Pu = srcPhiMnAtPu(pts_x, Pu*_rs, Pn*0.75);
+    const phiMny_Pu = srcPhiMnAtPu(pts_y, Pu*_rs, Pn*0.75);
+    DCR_biax = (phiMnx_Pu > 1e-6 && phiMny_Pu > 1e-6)
+      ? Mux*_rs/phiMnx_Pu + Muy*_rs/phiMny_Pu
+      : 9999;
+  }
+  const DCR = Math.max(DCR_x, DCR_y, DCR_biax);
+  const pass = DCR <= 1.0 && rho_s >= 0.01;
 
   // Unit labels
   const fU  = srcIsUS ? 'kips' : 'kN';
@@ -1190,7 +1216,7 @@ function srcCalc() {
   srcUpdateSVG(B, H, ws, bars, cov);
 
   // Save for PMM
-  srcLast = { pts_x, pts_y, Pu_d: Pu, Mux_d, Muy_d, phiPn, fU, mU };
+  srcLast = { pts_x, pts_y, Pu_d: Pu, Mux_d, Muy_d, phiPn, fU, mU, DCR_x, DCR_y };
 
   // ── Warnings ──
   const rho_r = Ar / Ag;
@@ -1221,12 +1247,15 @@ function srcCalc() {
     `</div>`;
 
   const dcCls = pass ? 'ok' : (DCR < 1.5 ? 'warn' : 'err');
+  let govNote = '';
+  if (hasBiax && DCR === DCR_biax) govNote = ' &nbsp;|&nbsp; <em>biaxial M<sub>x</sub>+M<sub>y</sub> interaction governs</em>';
+  else if (DCR === DCR_y && Muy > 1e-3)     govNote = ' &nbsp;|&nbsp; <em>M<sub>y</sub> axis governs</em>';
   const bannerHTML =
     `<div class="dcr-banner ${dcCls}">` +
     `<div class="dcr-icon">${pass?'✓':'✗'}</div>` +
     `<div class="dcr-text">` +
     `<strong>${pass ? 'ADEQUATE — AISC 360-22 §I2.1 / §I3.4' : 'INADEQUATE — Demand exceeds capacity'}</strong>` +
-    `<span>DCR = ${fmt(DCR,3)} &nbsp;|&nbsp; P<sub>u</sub>/&phi;P<sub>n</sub> = ${fmt(Pu/pPhiU,3)} &nbsp;|&nbsp; M<sub>ux</sub>/&phi;M<sub>n,x</sub> = ${fmt(Mux_d/(phiMx_d||1),3)} &nbsp;|&nbsp; PSDM §I3.4a</span>` +
+    `<span>DCR = ${fmt(DCR,3)} &nbsp;|&nbsp; P<sub>u</sub>/&phi;P<sub>n</sub> = ${fmt(Pu/pPhiU,3)} &nbsp;|&nbsp; DCR<sub>x</sub> = ${fmt(DCR_x,3)} &nbsp;|&nbsp; DCR<sub>y</sub> = ${fmt(DCR_y,3)}${govNote} &nbsp;|&nbsp; PSDM §I3.4a</span>` +
     `</div></div>`;
 
   // ── Section checks table ──
@@ -1234,24 +1263,25 @@ function srcCalc() {
   const chkERR = v => `<span class="verr">✗ ${v}</span>`;
   const chkWRN = v => `<span class="vwarn">⚠ ${v}</span>`;
 
+  const fcLimOK = srcIsUS ? '3–10 ksi'    : '21–69 MPa';
+  const FyLimOK = srcIsUS ? '≤ 75 ksi'   : '≤ 525 MPa';
+  const FyLimER = srcIsUS ? '> 75 ksi'   : '> 525 MPa';
+  const FyrLimOK= srcIsUS ? '≤ 80 ksi'   : '≤ 550 MPa';
+  const FyrLimWR= srcIsUS ? '> 80 ksi — AISC §I1.3' : '> 550 MPa — AISC §I1.3';
   const checksHTML =
     `<div class="rpt-sec">` +
     `<div class="rpt-sec-title">&sect; I2.1a &mdash; Material &amp; Geometric Limits</div>` +
     `<table class="res-tbl">` +
     r2('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>',
        `${(rho_s*100).toFixed(2)}% &nbsp; ${rho_s>=0.01&&rho_s<=0.08 ? chkOK('1% ≤ ρ ≤ 8%') : chkERR('Fails §I1.3')}`) +
-    r2('Profile fits (B direction)',
-       `clr = ${fmt(clr_bf,2)} ${dimU} &nbsp; ${profileFitsB ? chkOK('OK') : chkERR('Too narrow')}`) +
-    r2('Profile fits (H direction)',
-       `clr = ${fmt(clr_d,2)} ${dimU} &nbsp; ${profileFitsH ? chkOK('OK') : chkERR('Too shallow')}`) +
     r2('Rebar–steel clearance',
        `${fmt(minRebarGap,2)} ${dimU} &nbsp; ${minRebarGap >= minClearGap ? chkOK(`≥ ${fmt(minClearGap,0)} ${dimU}`) : chkERR(`< ${fmt(minClearGap,0)} ${dimU}`)}`) +
     r2("f'<sub>c</sub> range",
-       `${fmt(fc,1)} ${k2U} &nbsp; ${(srcIsUS ? fc>=3&&fc<=10 : fc>=21&&fc<=69) ? chkOK('3–10 ksi') : chkWRN('Outside §I1.3 range')}`) +
+       `${fmt(fc,1)} ${k2U} &nbsp; ${(srcIsUS ? fc>=3&&fc<=10 : fc>=21&&fc<=69) ? chkOK(fcLimOK) : chkWRN('Outside §I1.3 range')}`) +
     r2('F<sub>y</sub> limit',
-       `${fmt(Fy,0)} ${k2U} &nbsp; ${Fy <= (srcIsUS?75:525) ? chkOK('≤ 75 ksi') : chkERR('> 75 ksi')}`) +
+       `${fmt(Fy,0)} ${k2U} &nbsp; ${Fy <= (srcIsUS?75:525) ? chkOK(FyLimOK) : chkERR(FyLimER)}`) +
     r2('F<sub>yr</sub> limit',
-       `${fmt(Fyr,0)} ${k2U} &nbsp; ${Fyr <= (srcIsUS?80:550) ? chkOK('≤ 80 ksi') : chkWRN('> 80 ksi — AISC §I1.3')}`) +
+       `${fmt(Fyr,0)} ${k2U} &nbsp; ${Fyr <= (srcIsUS?80:550) ? chkOK(FyrLimOK) : chkWRN(FyrLimWR)}`) +
     `</table></div>`;
 
   // ── Section properties table ──
