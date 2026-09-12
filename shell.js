@@ -23,9 +23,10 @@
     if (/\/steel-combined(\.html)?$/.test(P))          return 'steelbc';
     if (/\/steel-ltb(\.html)?$/.test(P))               return 'steelltb';
     if (/\/truss-design(\.html)?$/.test(P))            return 'steeltruss';
-    if (/\/composite-beam(\.html)?$/.test(P))          return 'compbeam';
-    if (/\/cfst-column(\.html)?$/.test(P))             return 'cfstcol';
-    if (/\/steel(\.html)?$/.test(P))                   return 'steel';
+    if (/\/composite-beam(\.html)?$/.test(P))            return 'compbeam';
+    if (/\/cfst-column(\.html)?$/.test(P))               return 'cfstcol';
+    if (/\/composite-column-src(\.html)?$/.test(P))      return 'srccol';
+    if (/\/steel(\.html)?$/.test(P))                     return 'steel';
     if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
     if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
     if (/\/unit-converter(\.html)?$/.test(P))          return 'unitconv';
@@ -51,6 +52,15 @@
     if (/\/articles\/us-standards\/7-steel-design-aisc(\.html)?$/.test(P)) return 'us-steeldesign';
     if (/\/articles\/us-standards\/8-serviceability(\.html)?$/.test(P))   return 'us-service';
     if (/\/articles\/us-standards\/9-retaining-wall-aci(\.html)?$/.test(P)) return 'us-retwall';
+    if (/\/articles\/eurocode\/1-introduction(\.html)?$/.test(P))          return 'ec-intro';
+    if (/\/articles\/eurocode\/2-material-selection(\.html)?$/.test(P))    return 'ec-materials';
+    if (/\/articles\/eurocode\/3-load-determination(\.html)?$/.test(P))    return 'ec-loads';
+    if (/\/articles\/eurocode\/4-seismic-design(\.html)?$/.test(P))        return 'ec-seismic';
+    if (/\/articles\/eurocode\/5-load-combinations(\.html)?$/.test(P))     return 'ec-loadcomb';
+    if (/\/articles\/eurocode\/6-rc-design-ec2(\.html)?$/.test(P))         return 'ec-rcdesign';
+    if (/\/articles\/eurocode\/7-steel-design-ec3(\.html)?$/.test(P))      return 'ec-steeldesign';
+    if (/\/articles\/eurocode\/8-serviceability(\.html)?$/.test(P))        return 'ec-service';
+    if (/\/articles\/eurocode\/9-retaining-wall-ec7(\.html)?$/.test(P))    return 'ec-retwall';
     return '';
   }
   var ap = _ap();
@@ -97,8 +107,8 @@
     '@media(max-width:768px){.sh-side{top:0;transform:translateX(calc(-1*var(--sh-w)));',
     '  transition:transform .25s ease;z-index:1060}.sh-side.sh-open{transform:translateX(0)}}',
     /* sidebar elements */
-    '.sh-sec{font-family:"IBM Plex Mono",monospace;font-size:.57rem;font-weight:500;',
-    '  letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.24);padding:12px 16px 4px}',
+    '.sh-sec{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:.72rem;font-weight:700;',
+    '  letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.92);padding:12px 16px 5px}',
     '.sh-gh{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;',
     '  border-left:3px solid transparent;color:rgba(255,255,255,.56);font-size:.8rem;',
     '  user-select:none;transition:background .14s}',
@@ -155,7 +165,8 @@
     st_trs: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="20" x2="22" y2="20"/><path d="M2 20L12 5 22 20"/><line x1="7" y1="20" x2="12" y2="12.5"/><line x1="17" y1="20" x2="12" y2="12.5"/></svg>',
     /* Composite Design module icons */
     comp:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="5" rx="0.5"/><line x1="8" y1="9" x2="8" y2="19"/><line x1="16" y1="9" x2="16" y2="19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="8" y1="9" x2="16" y2="9"/></svg>',
-    cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>'
+    cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>',
+    src:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5"/><line x1="8" y1="7" x2="16" y2="7" stroke-width="1.8"/><line x1="8" y1="17" x2="16" y2="17" stroke-width="1.8"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -213,9 +224,10 @@
       item('/pages/steel-ltb',      ic.st_ltb, 'LTB Check',              'steelltb') +
       item('/pages/truss-design',   ic.st_trs, 'Truss Design',           'steeltruss')) +
     '<div class=”sh-div”></div>' +
-    sect('Composite Design', ['compbeam','cfstcol'],
-      item('/pages/composite-beam', ic.comp, 'Composite Beam Design', 'compbeam') +
-      item('/pages/cfst-column',    ic.cfst, 'CFST Column Design',    'cfstcol')) +
+    sect('Composite Design', ['compbeam','cfstcol','srccol'],
+      item('/pages/composite-beam',       ic.comp, 'Composite Beam Design', 'compbeam') +
+      item('/pages/cfst-column',          ic.cfst, 'CFST Column Design',    'cfstcol') +
+      item('/pages/composite-column-src', ic.src,  'SRC Column Design',     'srccol')) +
     '<div class=”sh-div”></div>' +
     '<div class="sh-sec">Reference Tables</div>' +
     item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +
@@ -224,9 +236,8 @@
     item('/pages/unit-converter', ic.uc,    'Unit Converter',    'unitconv') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Design Guides</div>' +
-    item('/pages/ec2-design-guide',   ic.guide, 'Eurocode 2 Guide',   'guide-ec2') +
-    item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',       'guide-is456') +
-    item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',       'guide-ts500') +
+    item('/pages/is456-design-guide', ic.guide, 'IS 456 Guide',   'guide-is456') +
+    item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',   'guide-ts500') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Articles</div>' +
     grp(ic.guide, 'Concrete', ['art-aci-ec2','art-slabs','art-beam','art-devlen','art-loadcomb','art-punch','art-cover'],
@@ -251,6 +262,16 @@
       sub('/pages/articles/us-standards/7-steel-design-aisc','7. Steel Design (AISC 360-22)','us-steeldesign') +
       sub('/pages/articles/us-standards/8-serviceability',   '8. Serviceability Checks','us-service') +
       sub('/pages/articles/us-standards/9-retaining-wall-aci','9. Retaining Wall Design','us-retwall')) +
+    grp(ic.guide, 'Eurocode Design Guide', ['ec-intro','ec-materials','ec-loads','ec-seismic','ec-loadcomb','ec-rcdesign','ec-steeldesign','ec-service','ec-retwall'],
+      sub('/pages/articles/eurocode/1-introduction',      '1. Introduction',           'ec-intro') +
+      sub('/pages/articles/eurocode/2-material-selection','2. Material Selection',     'ec-materials') +
+      sub('/pages/articles/eurocode/3-load-determination','3. Load Determination',     'ec-loads') +
+      sub('/pages/articles/eurocode/4-seismic-design',    '4. Seismic Design (EC 8)',  'ec-seismic') +
+      sub('/pages/articles/eurocode/5-load-combinations', '5. Load Combinations',      'ec-loadcomb') +
+      sub('/pages/articles/eurocode/6-rc-design-ec2',     '6. RC Design (EC 2)',       'ec-rcdesign') +
+      sub('/pages/articles/eurocode/7-steel-design-ec3',  '7. Steel Design (EC 3)',    'ec-steeldesign') +
+      sub('/pages/articles/eurocode/8-serviceability',    '8. Serviceability Checks',  'ec-service') +
+      sub('/pages/articles/eurocode/9-retaining-wall-ec7','9. Retaining Wall (EC 7)',  'ec-retwall')) +
     '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
