@@ -65,24 +65,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .dcr-text{padding:9px 13px;display:flex;flex-direction:column;gap:3px;}
 .dcr-text strong{font-family:var(--sans);font-weight:700;font-size:.82rem;}
 .dcr-text span{font-family:var(--sans);font-size:.71rem;opacity:.9;}
-.ok{background:var(--green-bg);color:var(--green);}
-.warn{background:var(--orange-bg,#fff7e6);color:var(--orange,#c07800);}
-.err{background:var(--red-bg);color:var(--red);}
+.dcr-banner.ok{background:var(--green-bg);color:var(--green);}
+.dcr-banner.warn{background:var(--orange-bg,#fff7e6);color:var(--orange,#c07800);}
+.dcr-banner.err{background:var(--red-bg);color:var(--red);}
 
-.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
-.rpt-sec:last-child{border-bottom:none;}
-.rpt-sec-title{display:inline-block;font-family:var(--sans);font-weight:600;font-size:.63rem;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:3px 10px;border-radius:3px;margin-bottom:8px;}
-.report-warn{display:flex;align-items:flex-start;gap:8px;padding:8px 11px;font-size:.76rem;margin-bottom:10px;background:var(--orange-bg,#fff7e6);border:1px solid var(--orange,#c07800);border-radius:5px;color:var(--orange,#c07800);}
-
-.res-tbl{width:100%;border-collapse:collapse;font-size:.78rem;}
-.res-tbl td{padding:4px 8px;border-bottom:1px solid var(--border);font-family:var(--sans);}
-.res-tbl tr:last-child td{border-bottom:none;}
-.res-tbl td:first-child{color:var(--text-mid);}
-.res-tbl td:nth-child(2){font-family:var(--mono);font-variant-numeric:tabular-nums;}
-.res-tbl td:nth-child(3){color:var(--text-dim);font-size:.72rem;}
-.res-tbl .td-ok{color:var(--green);font-weight:700;}
-.res-tbl .td-err{color:var(--red);font-weight:700;}
-.res-tbl .td-warn{color:var(--orange,#c07800);font-weight:700;}
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;}
+.rpt-sec-title{font-family:var(--sans);font-weight:600;padding:3px 10px;margin-bottom:8px;}
+.report-warn{gap:8px;padding:8px 11px;font-size:.76rem;margin-bottom:10px;}
+.rpt-sec-summary{display:none;}
+.rpt-sec-screen-only{display:block;}
+.print-inp-only{display:none;}
 
 .pmm-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);overflow:hidden;margin-top:16px;}
 .pmm-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
@@ -129,6 +121,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .print-pmm-wrap canvas{width:72%!important;height:auto!important;aspect-ratio:560/380!important;margin:0 auto!important;display:block!important;}
   .print-disclaimer{display:block!important;margin-top:3px!important;padding:2px 6px!important;font-size:5pt!important;}
   .print-footer{display:flex!important;margin-top:3px!important;padding-top:2px!important;font-size:5pt!important;}
+  .rpt-sec-screen-only{display:none!important;}
+  .rpt-sec-summary{display:block!important;}
+  .print-inp-only{display:block!important;}
 }
 </style>
 <style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
@@ -1211,11 +1206,10 @@ function srcCalc() {
   if (fc < (srcIsUS ? 3 : 21)) warns.push("f'<sub>c</sub> < 3 ksi (21 MPa) — below minimum concrete strength per AISC §I1.3.");
   if (fc > (srcIsUS ? 10 : 69)) warns.push("f'<sub>c</sub> > 10 ksi (69 MPa) — above maximum for normal-weight concrete per AISC §I1.3.");
 
-  const warnHTML = warns.map(w =>
-    `<div class="report-warn">&#9888; ${w}</div>`
-  ).join('');
+  let warnHTML = '';
+  for (const w of warns) warnHTML += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
 
-  const r2 = (a,b,c='') => `<tr><td>${a}</td><td>${b}</td>${c?`<td>${c}</td>`:''}</tr>`;
+  const r2 = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
 
   // ── Build tiles + banner ──
   const tilesHTML =
@@ -1236,51 +1230,44 @@ function srcCalc() {
     `</div></div>`;
 
   // ── Section checks table ──
-  const chkOK  = v => `<span class="td-ok">✓ ${v}</span>`;
-  const chkERR = v => `<span class="td-err">✗ ${v}</span>`;
-  const chkWRN = v => `<span class="td-warn">⚠ ${v}</span>`;
+  const chkOK  = v => `<span class="vok">✓ ${v}</span>`;
+  const chkERR = v => `<span class="verr">✗ ${v}</span>`;
+  const chkWRN = v => `<span class="vwarn">⚠ ${v}</span>`;
 
   const checksHTML =
     `<div class="rpt-sec">` +
-    `<div class="rpt-sec-title">Geometric &amp; Material Checks</div>` +
+    `<div class="rpt-sec-title">&sect; I2.1a &mdash; Material &amp; Geometric Limits</div>` +
     `<table class="res-tbl">` +
     r2('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>',
-       `${(rho_s*100).toFixed(2)}%`,
-       rho_s>=0.01&&rho_s<=0.08 ? chkOK('1% ≤ ρ ≤ 8%') : chkERR('Fails §I1.3')) +
+       `${(rho_s*100).toFixed(2)}% &nbsp; ${rho_s>=0.01&&rho_s<=0.08 ? chkOK('1% ≤ ρ ≤ 8%') : chkERR('Fails §I1.3')}`) +
     r2('Profile fits (B direction)',
-       `clr = ${fmt(clr_bf,2)} ${dimU}`,
-       profileFitsB ? chkOK('OK') : chkERR('Too narrow')) +
+       `clr = ${fmt(clr_bf,2)} ${dimU} &nbsp; ${profileFitsB ? chkOK('OK') : chkERR('Too narrow')}`) +
     r2('Profile fits (H direction)',
-       `clr = ${fmt(clr_d,2)} ${dimU}`,
-       profileFitsH ? chkOK('OK') : chkERR('Too shallow')) +
-    r2('Rebar–W clearance',
-       `${fmt(minRebarGap,2)} ${dimU}`,
-       minRebarGap >= minClearGap ? chkOK(`≥ ${fmt(minClearGap,0)} ${dimU}`) : chkERR(`< ${fmt(minClearGap,0)} ${dimU}`)) +
+       `clr = ${fmt(clr_d,2)} ${dimU} &nbsp; ${profileFitsH ? chkOK('OK') : chkERR('Too shallow')}`) +
+    r2('Rebar–steel clearance',
+       `${fmt(minRebarGap,2)} ${dimU} &nbsp; ${minRebarGap >= minClearGap ? chkOK(`≥ ${fmt(minClearGap,0)} ${dimU}`) : chkERR(`< ${fmt(minClearGap,0)} ${dimU}`)}`) +
     r2("f'<sub>c</sub> range",
-       `${fmt(fc,1)} ${k2U}`,
-       (srcIsUS ? fc>=3&&fc<=10 : fc>=21&&fc<=69) ? chkOK('3–10 ksi') : chkWRN('Outside §I1.3 range')) +
+       `${fmt(fc,1)} ${k2U} &nbsp; ${(srcIsUS ? fc>=3&&fc<=10 : fc>=21&&fc<=69) ? chkOK('3–10 ksi') : chkWRN('Outside §I1.3 range')}`) +
     r2('F<sub>y</sub> limit',
-       `${fmt(Fy,0)} ${k2U}`,
-       Fy <= (srcIsUS?75:525) ? chkOK('≤ 75 ksi') : chkERR('> 75 ksi')) +
+       `${fmt(Fy,0)} ${k2U} &nbsp; ${Fy <= (srcIsUS?75:525) ? chkOK('≤ 75 ksi') : chkERR('> 75 ksi')}`) +
     r2('F<sub>yr</sub> limit',
-       `${fmt(Fyr,0)} ${k2U}`,
-       Fyr <= (srcIsUS?80:550) ? chkOK('≤ 80 ksi') : chkWRN('> 80 ksi — AISC §I1.3')) +
+       `${fmt(Fyr,0)} ${k2U} &nbsp; ${Fyr <= (srcIsUS?80:550) ? chkOK('≤ 80 ksi') : chkWRN('> 80 ksi — AISC §I1.3')}`) +
     `</table></div>`;
 
   // ── Section properties table ──
   const propsHTML =
     `<div class="rpt-sec">` +
-    `<div class="rpt-sec-title">Section Properties</div>` +
+    `<div class="rpt-sec-title">&sect; I2.1 &mdash; Cross-Section Properties</div>` +
     `<table class="res-tbl">` +
     r2('Profile',                    `${ws.name}`) +
-    r2('A<sub>g</sub> = B × H',      `${fmt(Ag*aFact,aDP)} ${aUD}`) +
-    r2('A<sub>s</sub> (W section)',   `${fmt(As*aFact,aDP)} ${aUD}`) +
+    r2('A<sub>g</sub> = B &times; H', `${fmt(Ag*aFact,aDP)} ${aUD}`) +
+    r2('A<sub>s</sub> (steel section)', `${fmt(As*aFact,aDP)} ${aUD}`) +
     r2('A<sub>r</sub> (' + n + ' bars)', `${fmt(Ar*aFact,aDP)} ${aUD}`) +
-    r2('A<sub>c</sub> (net concrete)',`${fmt(Ac*aFact,aDP)} ${aUD}`) +
+    r2('A<sub>c</sub> (net concrete)', `${fmt(Ac*aFact,aDP)} ${aUD}`) +
     r2('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub>', `${(rho_s*100).toFixed(2)}%`) +
     r2('E<sub>c</sub>',               `${fmt(Ec,0)} ${k2U}`) +
     r2('C<sub>1</sub>',               `${fmt(C1,3)}`) +
-    r2('I<sub>s,x</sub> (W section)', `${fmt(ws.Ix*i4Fact,i4DP)} ${i4UD}`) +
+    r2('I<sub>s,x</sub> (steel section)', `${fmt(ws.Ix*i4Fact,i4DP)} ${i4UD}`) +
     r2('I<sub>r,x</sub> (rebar)',     `${fmt(Ir_x*i4Fact,i4DP)} ${i4UD}`) +
     r2('I<sub>c,x</sub> (concrete)',  `${fmt(Math.max(0,Ic_x)*i4Fact,i4DP)} ${i4UD}`) +
     r2('EI<sub>eff,x</sub>',         `${(EIeff_x*EIscale).toExponential(3)} ${EIU}`) +
@@ -1290,32 +1277,49 @@ function srcCalc() {
   // ── Strength table ──
   const strengthHTML =
     `<div class="rpt-sec">` +
-    `<div class="rpt-sec-title">Strength Summary</div>` +
+    `<div class="rpt-sec-title">&sect; I2.2 / &sect;I3.4 &mdash; Axial &amp; Flexural Strength</div>` +
     `<table class="res-tbl">` +
     r2('P<sub>no</sub> (squash)',       `${fmt0(pPnoU)} ${fU}`) +
-    r2('KL = K × L',                    `${fmt(SRC_K*Lv,2)} ${Lunit}`) +
-    r2('P<sub>e,x</sub> (Euler, x)',    `${fmt0(pPeXU)} ${fU}`) +
-    r2('P<sub>e,y</sub> (Euler, y)',    `${fmt0(pPeYU)} ${fU}`) +
-    r2('P<sub>n</sub>',                 `${fmt0(pPnU)} ${fU}`) +
-    r2('&phi;<sub>c</sub>P<sub>n</sub>',`${fmt0(pPhiU)} ${fU}`) +
-    r2('M<sub>p,x</sub> (PSDM)',        `${fmt(mMpXu,0)} ${mU}`) +
-    r2('&phi;<sub>b</sub>M<sub>n,x</sub>',`${fmt(phiMx_d,0)} ${mU}`) +
-    r2('M<sub>p,y</sub> (PSDM)',        `${fmt(mMpYu,0)} ${mU}`) +
-    r2('&phi;<sub>b</sub>M<sub>n,y</sub>',`${fmt(phiMy_d,0)} ${mU}`) +
-    r2('DCR (governing)',               `${fmt(DCR,3)}`, `${DCR<=1?chkOK('OK ≤ 1.0'):chkERR('EXCEEDS 1.0')}`) +
+    r2('KL = K &times; L',             `${fmt(SRC_K*Lv,2)} ${Lunit}`) +
+    r2('P<sub>e,x</sub> (Euler, x)',   `${fmt0(pPeXU)} ${fU}`) +
+    r2('P<sub>e,y</sub> (Euler, y)',   `${fmt0(pPeYU)} ${fU}`) +
+    r2('P<sub>n</sub>',                `${fmt0(pPnU)} ${fU}`) +
+    r2('<b>&phi;<sub>c</sub>P<sub>n</sub></b>', `<b class="vok">${fmt0(pPhiU)} ${fU}</b>`) +
+    r2('M<sub>p,x</sub> (PSDM)',       `${fmt(mMpXu,0)} ${mU}`) +
+    r2('<b>&phi;<sub>b</sub>M<sub>n,x</sub></b>', `<b class="vok">${fmt(phiMx_d,0)} ${mU}</b>`) +
+    r2('M<sub>p,y</sub> (PSDM)',       `${fmt(mMpYu,0)} ${mU}`) +
+    r2('<b>&phi;<sub>b</sub>M<sub>n,y</sub></b>', `<b class="vok">${fmt(phiMy_d,0)} ${mU}</b>`) +
+    r2('DCR (governing)',              `${fmt(DCR,3)} &nbsp; ${DCR<=1?chkOK('OK ≤ 1.0'):chkERR('EXCEEDS 1.0')}`) +
     `</table></div>`;
 
   // ── Print header ──
   const gradeSel  = document.getElementById('src-grade');
-  const gradeLbl  = gradeSel.options[gradeSel.selectedIndex]?.text || '';
   const rebarSel  = document.getElementById('src-rebar-grade');
   const rebarLbl  = rebarSel?.options[rebarSel.selectedIndex]?.text?.split(' — ')[0] || '';
   const printHeader =
     `<div class="print-only">` +
     `<div><div class="ph-title">SRC Column Design — AISC 360-22 §I2.1</div>` +
-    `<div class="ph-sub">${ws.name} | B×H = ${B}×${H} ${dimU} | ${n} bars Ø${db} ${dimU} (${rebarLbl}, fy=${Fyr} ${k2U}) | f'c=${fc} ${k2U} | L=${Lv} ${Lunit}</div></div>` +
+    `<div class="ph-sub">${ws.name} | B&times;H = ${B}&times;${H} ${dimU} | ${n} bars &Oslash;${db} ${dimU} (${rebarLbl}, fy=${Fyr} ${k2U}) | f'c=${fc} ${k2U} | L=${Lv} ${Lunit}</div></div>` +
     `<div class="ph-date">${new Date().toLocaleDateString()}</div>` +
     `</div>`;
+
+  // ── Print: Design Inputs ──
+  const printInputs =
+    `<div class="rpt-sec print-inp-only">` +
+    `<div class="rpt-sec-title">Design Inputs</div>` +
+    `<table class="res-tbl">` +
+    r2('Unit system', srcIsUS ? 'US (kip, in)' : 'SI (kN, mm)') +
+    r2('Concrete B &times; H', `${B} &times; ${H} ${dimU}`) +
+    r2("f'<sub>c</sub>", `${fmt(fc,1)} ${k2U}`) +
+    r2('Steel section', ws.name) +
+    r2('F<sub>y</sub>', `${fmt(Fy,0)} ${k2U}`) +
+    r2('Rebar', `${n} bars &Oslash;${db} ${dimU}`) +
+    r2('F<sub>yr</sub>', `${fmt(Fyr,0)} ${k2U}`) +
+    r2('Column length L', `${Lv} ${Lunit}`) +
+    r2('P<sub>u</sub>', `${fmt(Pu*(srcIsUS?0.001:1),1)} ${fU}`) +
+    r2('M<sub>ux</sub>', `${fmt(Mux_d,1)} ${mU}`) +
+    r2('M<sub>uy</sub>', `${fmt(Muy_d,1)} ${mU}`) +
+    `</table></div>`;
 
   const printFooter =
     `<div class="print-footer">` +
@@ -1324,8 +1328,14 @@ function srcCalc() {
     `</div>` +
     `<div class="print-disclaimer">&#9888; PRELIMINARY DESIGN ONLY. Results are for reference and must be verified by a licensed structural engineer. This tool does not account for construction tolerances, connections, second-order effects beyond user-entered moments, seismic detailing, or local code amendments.</div>`;
 
-  document.getElementById('src-res-body').innerHTML =
-    printHeader + warnHTML + tilesHTML + bannerHTML + checksHTML + propsHTML + strengthHTML + printFooter;
+  let h = printHeader + warnHTML;
+  h += `<div class="rpt-sec-screen-only">${tilesHTML}${bannerHTML}</div>`;
+  h += `<div class="rpt-sec-summary">${tilesHTML}${bannerHTML}</div>`;
+  h += printInputs;
+  h += checksHTML + propsHTML + strengthHTML;
+  h += printFooter;
+
+  document.getElementById('src-res-body').innerHTML = h;
 
   document.getElementById('src-rh-code').textContent = `AISC 360-22 · ${srcIsUS ? 'kip · in' : 'kN · mm'}`;
   document.getElementById('src-empty').style.display = 'none';
