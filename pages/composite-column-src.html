@@ -98,6 +98,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
 .report-body{padding:12px 20px;}
 
+/* Responsive canvas — scales down on mobile while keeping aspect ratio */
+.pmm-canvas-wrap canvas{max-width:100%;height:auto;display:block;margin:0 auto;}
+
 @media print{
   @page{margin:6mm 8mm;size:A4;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
@@ -172,16 +175,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div class="iw"><input type="number" id="src-fc" value="5" step="0.5" min="2" max="15" oninput="srcAutoCalc()"><span id="src-u-fc" class="us">ksi</span></div>
     </div>
 
-    <div class="form-div"><div class="form-div-lbl">W Steel Section</div></div>
+    <div class="form-div"><div class="form-div-lbl">Steel Section</div></div>
     <div class="form-group">
       <label>Steel Grade</label>
       <select id="src-grade" onchange="srcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
     </div>
+    <div class="form-group" id="src-sectype-row" style="display:none;">
+      <label>Section Type</label>
+      <select id="src-sectype" onchange="srcPopProfiles();srcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;">
+        <option value="HEA">HEA</option>
+        <option value="HEB">HEB</option>
+        <option value="HEM">HEM</option>
+        <option value="IPE">IPE</option>
+      </select>
+    </div>
     <div class="form-group">
-      <label>W Profile</label>
+      <label>Profile</label>
       <select id="src-profile" onchange="srcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
     </div>
-    <div id="src-prof-info" style="font-size:.72rem;color:var(--text-dim);padding:5px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-top:-4px;margin-bottom:8px;font-family:var(--mono);"></div>
 
     <div class="form-div"><div class="form-div-lbl">Longitudinal Rebar</div></div>
     <div class="form-row-2">
@@ -434,8 +445,11 @@ const SRC_GRADES_US = [
 const SRC_GRADES_SI = [
   {v:'s355', n:'S355', Fy:355},
   {v:'s275', n:'S275', Fy:275},
-  {v:'s235', n:'S235', Fy:235}
+  {v:'s235', n:'S235', Fy:235},
+  {v:'s460', n:'S460', Fy:460}
 ];
+// Section type defaults for SI profiles
+const SRC_SI_DEFAULTS = { HEA:'HEA 200', HEB:'HEB 200', HEM:'HEM 200', IPE:'IPE 360' };
 
 let srcIsUS   = true;
 let srcAxis   = 'x';
@@ -446,6 +460,9 @@ let srcLast   = null;
 // ─────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   srcPopGrades();
+  // section type row: hidden in US mode (default)
+  const stRow = document.getElementById('src-sectype-row');
+  if (stRow) stRow.style.display = 'none';
   srcPopProfiles();
   srcAutoCalc();
 });
@@ -462,9 +479,12 @@ function srcPopGrades() {
 function srcPopProfiles() {
   const sel = document.getElementById('src-profile');
   if (!window.SteelProfiles) { setTimeout(srcPopProfiles, 100); return; }
-  const data = window.SteelProfiles.PROFILES.W.data;
-  sel.innerHTML = data.map(r => `<option value="${r[0]}">${r[0]}</option>`).join('');
-  sel.value = 'W10×49';
+  const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
+  const profData = window.SteelProfiles.PROFILES[type]?.data;
+  if (!profData) return;
+  sel.innerHTML = profData.map(r => `<option value="${r[0]}">${r[0]}</option>`).join('');
+  const def = srcIsUS ? 'W10×49' : (SRC_SI_DEFAULTS[type] || profData[0][0]);
+  sel.value = def;
 }
 
 function srcGetFy() {
@@ -477,16 +497,23 @@ function srcGetFy() {
 function srcGetProfile() {
   const name = document.getElementById('src-profile').value;
   if (!window.SteelProfiles || !name) return null;
-  const data = window.SteelProfiles.PROFILES.W.data;
-  const row = data.find(r => r[0] === name);
+  const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
+  const profData = window.SteelProfiles.PROFILES[type]?.data;
+  if (!profData) return null;
+  const row = profData.find(r => r[0] === name);
   if (!row) return null;
   if (srcIsUS) {
+    // W: [name, d_in, bf_in, tf_in, tw_in, A_in2, W_lbft, Ix_in4, Sx, Zx, rx, Iy_in4, ...]
     return { name: row[0], d: row[1], bf: row[2], tf: row[3], tw: row[4],
              As: row[5], Ix: row[7], Iy: row[11] };
+  } else {
+    // European: [name, d_mm, bf_mm, tw_mm, tf_mm, r_mm, A_cm2, kg/m, Ix_cm4, Sx, Zx, rx, Iy_cm4, ...]
+    return { name: row[0], d: row[1], bf: row[2], tw: row[3], tf: row[4],
+             As: row[6] * 100,   // cm² → mm²
+             Ix: row[8] * 1e4,   // cm⁴ → mm⁴
+             Iy: row[12] * 1e4   // cm⁴ → mm⁴
+    };
   }
-  const mm = 25.4, mm2 = 645.16, mm4 = 416231;
-  return { name: row[0], d: row[1]*mm, bf: row[2]*mm, tf: row[3]*mm, tw: row[4]*mm,
-           As: row[5]*mm2, Ix: row[7]*mm4, Iy: row[11]*mm4 };
 }
 
 // ─────────────────────────────────────────
@@ -518,6 +545,11 @@ function srcUpdateLabels() {
   setU('src-u-M', M); setU('src-lu-M', '['+M+']');
   setU('src-u-My', M); setU('src-lu-My', '['+M+']');
   document.getElementById('src-utag').textContent = srcIsUS ? 'kip · in' : 'kN · mm';
+
+  // Show/hide section type selector
+  const stRow = document.getElementById('src-sectype-row');
+  if (stRow) stRow.style.display = srcIsUS ? 'none' : '';
+  srcPopProfiles();
 
   // Reset defaults for the switched unit system
   const b = srcIsUS ? 24 : 600, h = srcIsUS ? 24 : 600;
@@ -909,15 +941,7 @@ function srcCalc() {
   const ws = srcGetProfile();
   if (!ws) return;
 
-  // Profile info tag
   const dimU = srcIsUS ? 'in' : 'mm';
-  const aU2  = srcIsUS ? 'in²' : 'mm²';
-  const i4U  = srcIsUS ? 'in⁴' : 'mm⁴';
-  const fmtN = (v,d) => v.toFixed(d||1);
-  document.getElementById('src-prof-info').innerHTML =
-    `d = ${fmtN(ws.d)} ${dimU} &nbsp;|&nbsp; b<sub>f</sub> = ${fmtN(ws.bf)} ${dimU} &nbsp;|&nbsp; `+
-    `t<sub>f</sub> = ${fmtN(ws.tf,3)} ${dimU} &nbsp;|&nbsp; t<sub>w</sub> = ${fmtN(ws.tw,3)} ${dimU} &nbsp;|&nbsp; `+
-    `A = ${fmtN(ws.As,2)} ${aU2}`;
 
   // Effective modulus
   const Ec = srcIsUS
@@ -1046,14 +1070,18 @@ function srcCalc() {
   srcLast = { pts_x, pts_y, Pu_d: Pu, Mux_d, Muy_d, phiPn, fU, mU };
 
   // ── Warnings ──
+  const rho_r = Ar / Ag;
   const warns = [];
-  if (rho_s < 0.01) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> < 1% — minimum steel ratio not satisfied (AISC §I1.3). Increase section size or use a larger W profile.');
-  if (rho_s > 0.08) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> > 8% — maximum steel ratio exceeded (AISC §I1.3). Use a smaller W section.');
-  if (!profileFitsB) warns.push(`W flange (b<sub>f</sub> = ${fmt(ws.bf,1)} ${dimU}) + 2×cover too wide for B = ${B} ${dimU}. Increase B or select a narrower profile.`);
-  if (!profileFitsH) warns.push(`W depth (d = ${fmt(ws.d,1)} ${dimU}) + 2×cover too tall for H = ${H} ${dimU}. Increase H or select a shallower profile.`);
-  if (minRebarGap < minClearGap) warns.push(`Clear gap between rebar and W section (${fmt(minRebarGap,1)} ${dimU}) < minimum ${fmt(minClearGap,0)} ${dimU}. Increase cover or reduce bar size.`);
+  if (rho_s < 0.01) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> < 1% — minimum steel area ratio not satisfied (AISC §I1.3). Increase section size or use a larger profile.');
+  if (rho_s > 0.08) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> > 8% — maximum steel area ratio exceeded (AISC §I1.3). Use a smaller steel section.');
+  if (rho_r > 0.08) warns.push('ρ<sub>r</sub> = A<sub>r</sub>/A<sub>g</sub> > 8% — longitudinal rebar ratio exceeds ACI 318 §10.6.1.1 maximum. Reduce bar size or count.');
+  if (!profileFitsB) warns.push(`Steel flange (b<sub>f</sub> = ${fmt(ws.bf,1)} ${dimU}) + 2×cover exceeds B = ${B} ${dimU}. Increase B or select a narrower profile.`);
+  if (!profileFitsH) warns.push(`Steel depth (d = ${fmt(ws.d,1)} ${dimU}) + 2×cover exceeds H = ${H} ${dimU}. Increase H or select a shallower profile.`);
+  if (minRebarGap < minClearGap) warns.push(`Clear gap between rebar surface and steel section (${fmt(minRebarGap,1)} ${dimU}) < minimum ${fmt(minClearGap,0)} ${dimU} (AISC §I2.1a). Increase cover or reduce bar size.`);
   if (Fyr > (srcIsUS ? 80 : 550)) warns.push('F<sub>yr</sub> exceeds 80 ksi (550 MPa) — rebar yield limit per AISC §I1.3.');
   if (Fy > (srcIsUS ? 75 : 525)) warns.push('F<sub>y</sub> exceeds 75 ksi (525 MPa) — steel yield limit per AISC §I1.3.');
+  if (fc < (srcIsUS ? 3 : 21)) warns.push("f'<sub>c</sub> < 3 ksi (21 MPa) — below minimum concrete strength per AISC §I1.3.");
+  if (fc > (srcIsUS ? 10 : 69)) warns.push("f'<sub>c</sub> > 10 ksi (69 MPa) — above maximum for normal-weight concrete per AISC §I1.3.");
 
   const warnHTML = warns.map(w =>
     `<div class="report-warn">&#9888; ${w}</div>`
