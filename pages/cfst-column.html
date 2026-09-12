@@ -797,6 +797,21 @@ function psdmDCR(pts, Pu, Mu, phiPn_col) {
   return best_t > 100 ? 9999 : 1.0 / best_t;
 }
 
+// Interpolates φMn at given Pu on the design envelope — for biaxial §C-I3.4
+function phiMnAtPu(pts, Pu_int, phiPn_col) {
+  const phiP = 0.75, phiM = 0.90;
+  const dp = pts.map(p => ({ P: Math.min(p.P * phiP, phiPn_col), M: p.M * phiM }));
+  for (let i = 0; i < dp.length - 1; i++) {
+    if (dp[i].P >= Pu_int && dp[i + 1].P <= Pu_int) {
+      const dP = dp[i].P - dp[i + 1].P;
+      const t = dP > 1e-10 ? (dp[i].P - Pu_int) / dP : 0;
+      return dp[i].M + t * (dp[i + 1].M - dp[i].M);
+    }
+  }
+  if (dp[0].P < Pu_int) return 0;
+  return Math.max(...dp.map(p => p.M));
+}
+
 // ═══════════════════════════════════════════════════
 // MAIN CALCULATION
 // ═══════════════════════════════════════════════════
@@ -918,9 +933,18 @@ function calc() {
   const DCR_y = shape === 'rect'
     ? psdmDCR(pts_y, Pu * _rs, Muy * _rs, Pn * 0.75)
     : DCR_x;
-  // Governing DCR: if biaxial bending, both axes must independently satisfy
-  const DCR   = (shape === 'rect' && Muy > 1e-6) ? Math.max(DCR_x, DCR_y) : DCR_x;
-  const eqUsed = 'PSDM §I3.4a';
+  // Biaxial linear interaction — AISC Commentary §C-I3.4
+  const hasBiax = shape === 'rect' && Mux > 1e-3 && Muy > 1e-3;
+  let DCR_biax = 0;
+  if (hasBiax) {
+    const phiMnx_Pu = phiMnAtPu(pts_x, Pu * _rs, Pn * 0.75);
+    const phiMny_Pu = phiMnAtPu(pts_y, Pu * _rs, Pn * 0.75);
+    DCR_biax = (phiMnx_Pu > 1e-6 && phiMny_Pu > 1e-6)
+      ? (Mux * _rs) / phiMnx_Pu + (Muy * _rs) / phiMny_Pu
+      : 9999;
+  }
+  const DCR = Math.max(DCR_x, (shape === 'rect' && Muy > 1e-6 ? DCR_y : 0), DCR_biax);
+  const eqUsed = hasBiax && DCR === DCR_biax ? 'Biaxial §C-I3.4' : 'PSDM §I3.4a';
   const pass = DCR <= 1.0 && classify !== 'not-permitted';
 
   // ── Unit labels ──
@@ -992,8 +1016,9 @@ function calc() {
   const dcr_p  = pPhiU  > 0 ? Pu  / pPhiU  : 0;
   const dcr_xr = mPhiXu > 0 ? Mux / mPhiXu : 0;
   const dcr_yr = mPhiYu > 0 ? Muy / mPhiYu : 0;
-  const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `M<sub>x</sub>/&phi;M<sub>n,x</sub> = ${fmt(dcr_xr,3)}`];
-  if (Muy > 0) subParts.push(`M<sub>y</sub>/&phi;M<sub>n,y</sub> = ${fmt(dcr_yr,3)}`);
+  const subParts = [`P/&phi;P<sub>n</sub> = ${fmt(dcr_p,3)}`, `DCR<sub>x</sub> = ${fmt(DCR_x,3)}`];
+  if (shape === 'rect' && Muy > 1e-6) subParts.push(`DCR<sub>y</sub> = ${fmt(DCR_y,3)}`);
+  if (hasBiax) subParts.push(`DCR<sub>biax</sub> = ${fmt(DCR_biax,3)}`);
   subParts.push(`${classLabel} &middot; ${eqUsed}`);
   const bannerHTML =
     `<div class="dcr-banner ${dcCls}" style="margin-bottom:8px;">` +
@@ -1109,6 +1134,7 @@ function calc() {
        r2('P<sub>u</sub> / &phi;<sub>c</sub>P<sub>n</sub> (axial ratio)', fmt(dcr_p, 3)) +
        r2('P-M<sub>x</sub> PSDM D/C', `<b class="${DCR_x<=1?'vok':'verr'}">${dcr_xd}</b>`) +
        (shape==='rect' && Muy>0 ? r2('P-M<sub>y</sub> PSDM D/C', `<b class="${DCR_y<=1?'vok':'verr'}">${dcr_yd}</b>`) : '') +
+       (hasBiax ? r2('Biaxial M<sub>x</sub>+M<sub>y</sub> D/C (§C-I3.4)', `<b class="${DCR_biax<=1?'vok':'verr'}">${fmt(DCR_biax,3)}</b>`) : '') +
        r2(`${eqUsed} — Governing D/C`, `<b class="${pass?'vok':'verr'}">DCR = ${fmt(DCR,3)}</b>`) +
        `</table></div>`;
 
@@ -1142,7 +1168,7 @@ function calc() {
   lastResult = { pts_x, pts_y, uS, _rs,
                  Pno: Pno*uS, Pn_raw: Pn, Mp_x: Mp_x*uS, Mp_y: Mp_y*uS,
                  phiPn: pPhiU, phiMn_x: mPhiXu, phiMn_y: mPhiYu,
-                 Pu, Mux, Muy, DCR, DCR_x, DCR_y, eqUsed, fU, mU, pass };
+                 Pu, Mux, Muy, DCR, DCR_x, DCR_y, DCR_biax, hasBiax, eqUsed, fU, mU, pass };
   drawPMM();
 }
 
@@ -1294,7 +1320,8 @@ function drawPMM(targetCanvas) {
     ctx.font = '10px sans-serif'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
     const dc_x = isNaN(r.DCR_x) ? '—' : r.DCR_x.toFixed(3);
     const dc_y = isNaN(r.DCR_y) ? '—' : r.DCR_y.toFixed(3);
-    ctx.fillText('PSDM  |  D/C (P–Mx) = ' + dc_x + '   D/C (P–My) = ' + dc_y + '   Governing = ' + r.DCR.toFixed(3),
+    const dc_bx = r.hasBiax ? '   DCR_biax = ' + r.DCR_biax.toFixed(3) : '';
+    ctx.fillText('D/C (P–Mx) = ' + dc_x + '   D/C (P–My) = ' + dc_y + dc_bx + '   Governing = ' + r.DCR.toFixed(3),
                  pad.left + cw/2, pad.top + ch + 36);
   }
 }
