@@ -25,7 +25,7 @@
   "publisher": { "@type": "Organization", "name": "CivilStrCalc", "url": "https://civilstrcalc.com" },
   "datePublished": "2026-09-03",
   "dateModified": "2026-09-03",
-  "wordCount": 1600,
+  "wordCount": 2200,
   "inLanguage": "en"
 }
 </script>
@@ -97,12 +97,100 @@ html{scroll-behavior:smooth;}
 
   <div class="sg-card">
   <nav class="sg-toc">
-    <a href="#s4">1. IS 456:2000 Combinations</a>
-    <a href="#s6">2. Three-Code Comparison</a>
-    <a href="#s7">3. Worked Example</a>
+    <a href="#s1">1. Why Load Combinations?</a>
+    <a href="#s2">2. ASCE 7-22 ULS Combinations</a>
+    <a href="#s3">3. EN 1990 ULS Combinations</a>
+    <a href="#s4">4. IS 456:2000 Combinations</a>
+    <a href="#s5">5. SLS (Serviceability) Combinations</a>
+    <a href="#s6">6. Three-Code Comparison</a>
+    <a href="#s7">7. Worked Example</a>
   </nav>
 
-  <div class="note-box" style="margin:0 0 24px;">For ASCE 7-22 / ACI 318-25 ULS combinations, EN 1990 ULS combinations, ψ factors, and SLS combinations see the design guides: <a href="articles/us-standards/5-load-combinations">US Standards — Part 5: Load Combinations</a> · <a href="articles/eurocode/5-load-combinations">Eurocode — Part 5: Load Combinations</a>.</div>
+  <div class="note-box" style="margin:0 0 24px;">For ψ reduction factors, partial factors, and load type definitions, see: <a href="articles/us-standards/5-load-combinations">US Standards — Part 5: Load Combinations</a> · <a href="articles/eurocode/5-load-combinations">Eurocode — Part 5: Load Combinations</a>.</div>
+
+  <!-- 1 -->
+  <section class="sg-section" id="s1">
+    <div class="sg-hdr-row"><h2>1. Why Load Combinations Exist</h2></div>
+    <div class="sg-inner">
+      <p>Individual loads (dead, live, wind, seismic, snow, temperature) never act at their worst-case values simultaneously. Load combinations assign probability-weighted factors to each load type so the combined demand reflects the true statistical risk of simultaneous occurrence.</p>
+      <p>Two design philosophies are in use today:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Philosophy</th><th>Approach</th><th>Used By</th></tr></thead>
+        <tbody>
+          <tr><td><strong>LRFD</strong> (Load and Resistance Factor Design)</td><td>Factored loads on demand side; φ-factor on resistance side</td><td>ASCE 7-22 / AISC 360 / ACI 318</td></tr>
+          <tr><td><strong>Limit State Design (LSD)</strong></td><td>Partial factors γ on loads; partial factors γ on materials</td><td>EN 1990 / EN 1991 (Eurocode)</td></tr>
+          <tr><td><strong>Working Stress / ASD</strong></td><td>Unfactored loads; allowable stress = F<sub>y</sub>/SF</td><td>AISC 360 ASD, older IS codes</td></tr>
+        </tbody>
+      </table>
+      <p>Both LRFD and LSD target the same reliability index β ≈ 3.5 (≈ 1-in-10,000 annual failure probability for typical structural members). They differ in how they split the safety margin between load factors and resistance factors.</p>
+      <h3>Load Notation</h3>
+      <table class="sg-tbl">
+        <thead><tr><th>Symbol</th><th>Load Type</th><th>ASCE 7 Ref.</th></tr></thead>
+        <tbody>
+          <tr><td>D</td><td>Dead load (structural self-weight + permanent superimposed)</td><td>§3</td></tr>
+          <tr><td>L</td><td>Live load (occupancy — floors, roofs, equipment)</td><td>§4</td></tr>
+          <tr><td>L<sub>r</sub></td><td>Roof live load (maintenance, construction)</td><td>§4.3</td></tr>
+          <tr><td>S</td><td>Snow load</td><td>§7</td></tr>
+          <tr><td>W</td><td>Wind load</td><td>§26–31</td></tr>
+          <tr><td>E</td><td>Seismic (earthquake) load</td><td>§12</td></tr>
+          <tr><td>R</td><td>Rain/flood load</td><td>§8</td></tr>
+          <tr><td>H</td><td>Soil/hydrostatic pressure load</td><td>§3.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="sg-section" id="s2">
+    <div class="sg-hdr-row"><h2>2. ASCE 7-22 ULS Load Combinations (LRFD)</h2></div>
+    <div class="sg-inner">
+      <p>ASCE 7-22 §2.3.1 defines seven basic LRFD combinations. All seven must be checked and the governing (maximum) demand used for design:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>#</th><th>ASCE 7-22 Combination</th><th>Primary Case</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1.4D</td><td>Dead load dominates; rarely governs except for self-weight check</td></tr>
+          <tr><td>2</td><td>1.2D + 1.6L + 0.5(L<sub>r</sub> or S or R)</td><td>Gravity dominant — governs most floor beams and columns</td></tr>
+          <tr><td>3</td><td>1.2D + 1.6(L<sub>r</sub> or S or R) + (L or 0.5W)</td><td>Roof live or snow dominant</td></tr>
+          <tr><td>4</td><td>1.2D + 1.0W + L + 0.5(L<sub>r</sub> or S or R)</td><td>Wind dominant (downward)</td></tr>
+          <tr><td>5</td><td>0.9D + 1.0W</td><td>Wind uplift — governs roof connections and anchor bolts</td></tr>
+          <tr><td>6</td><td>1.2D + 1.0E + L + 0.2S</td><td>Seismic dominant (downward)</td></tr>
+          <tr><td>7</td><td>0.9D + 1.0E</td><td>Seismic uplift — governs base plates and hold-downs</td></tr>
+        </tbody>
+      </table>
+      <p>Key interpretation notes:</p>
+      <ul>
+        <li>In Combo 2, L may be reduced to 0.5L per §4.7 for members supporting two or more floors (live load reduction).</li>
+        <li>Seismic load E in Combos 6 and 7 includes a ρ (redundancy) factor and horizontal/vertical components: E = ρQ<sub>E</sub> ± 0.2S<sub>DS</sub>D.</li>
+        <li>For structures where the wind load W is defined as the net wind effect on the windward side, the load factor 1.0W already contains the ASCE 7 directionality factor K<sub>d</sub>.</li>
+        <li>Combo 5 (0.9D + 1.0W) is critical for tall, narrow structures and long-span cantilever roofs where wind suction can reverse the net load.</li>
+      </ul>
+      <div class="note-box">AISC 360-22 uses these same ASCE 7 LRFD combinations directly. ACI 318-25 §5.3 restates identical factors but adds special cases for prestress (P) and fluid (F) loads.</div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="sg-section" id="s3">
+    <div class="sg-hdr-row"><h2>3. EN 1990 ULS Load Combinations (LSD)</h2></div>
+    <div class="sg-inner">
+      <p>Eurocode (EN 1990 §6.4.3) defines the fundamental ULS combination for persistent and transient design situations using two alternative equations (6.10a and 6.10b). The design must use the worse of the two:</p>
+      <div class="fml">Eq. 6.10a: &nbsp;&Sigma; γ<sub>G,j</sub>G<sub>k,j</sub> &nbsp;+&nbsp; γ<sub>Q,1</sub>ψ<sub>0,1</sub>Q<sub>k,1</sub> &nbsp;+&nbsp; &Sigma; γ<sub>Q,i</sub>ψ<sub>0,i</sub>Q<sub>k,i</sub></div>
+      <div class="fml">Eq. 6.10b: &nbsp;&Sigma; ξ·γ<sub>G,j</sub>G<sub>k,j</sub> &nbsp;+&nbsp; γ<sub>Q,1</sub>Q<sub>k,1</sub> &nbsp;+&nbsp; &Sigma; γ<sub>Q,i</sub>ψ<sub>0,i</sub>Q<sub>k,i</sub></div>
+      <p>Standard partial factors (Table A1.2(B) of EN 1990, Reliability Class RC2):</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Factor</th><th>Symbol</th><th>Value</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Permanent load (unfavourable)</td><td>γ<sub>G,sup</sub></td><td>1.35</td><td>Applied to G<sub>k</sub> when it increases the effect</td></tr>
+          <tr><td>Permanent load (favourable)</td><td>γ<sub>G,inf</sub></td><td>1.00</td><td>Applied to G<sub>k</sub> when it reduces the effect</td></tr>
+          <tr><td>Leading variable load</td><td>γ<sub>Q,1</sub></td><td>1.50</td><td>Full factor on the dominant variable load</td></tr>
+          <tr><td>Combination value factor</td><td>ψ<sub>0</sub></td><td>0.5–0.7</td><td>Reduces accompanying variable loads; category A (offices): 0.7</td></tr>
+          <tr><td>Reduction factor (6.10b)</td><td>ξ</td><td>0.85</td><td>Reduces permanent load in 6.10b to compensate for full Q</td></tr>
+        </tbody>
+      </table>
+      <p>For wind (Q<sub>k,wind</sub>) as the leading variable load and imposed floor load (Q<sub>k,L</sub>) as accompanying, the Eq. 6.10b combination becomes:</p>
+      <div class="fml">0.85 × 1.35 × G<sub>k</sub> &nbsp;+&nbsp; 1.50 × Q<sub>k,wind</sub> &nbsp;+&nbsp; 1.50 × 0.6 × Q<sub>k,L</sub></div>
+      <p>Many National Annexes permit using only Eq. 6.10b when ξ=0.85 is specified (e.g., UK NA, Irish NA), simplifying the check to a single combination per load case. The German NA instead uses a modified single equation.</p>
+    </div>
+  </section>
 
   <!-- 4 -->
   <section class="sg-section" id="s4">
@@ -159,6 +247,34 @@ html{scroll-behavior:smooth;}
       </table>
       <p><strong>Result:</strong> Combination 2 (1.2D+1.6L) governs with M<sub>u</sub>=225 kN·m. This is the standard outcome for most gravity-dominated structures with moderate wind. Wind-governed cases typically arise in taller buildings where W is a larger fraction of the total load.</p>
       <p>→ <a href="beam">Beam Design Calculator</a> — computes M<sub>u</sub> and V<sub>u</sub> from all applicable combinations automatically.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="sg-section" id="s5">
+    <div class="sg-hdr-row"><h2>5. Serviceability Limit State (SLS) Combinations</h2></div>
+    <div class="sg-inner">
+      <p>SLS combinations check that a structure remains functional for its occupants under normal service loads — deflections stay within limits, cracks do not impair durability, and vibrations do not cause discomfort. Partial factors are lower than ULS because serviceability failure is not catastrophic.</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Combination Type</th><th>ASCE 7 (ASD)</th><th>EN 1990</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Characteristic (rare)</td><td>D + L (unfactored)</td><td>G<sub>k</sub> + Q<sub>k,1</sub> + ψ<sub>0,i</sub>Q<sub>k,i</sub></td><td>Immediate elastic deflection under peak service load</td></tr>
+          <tr><td>Frequent (quasi-regular)</td><td>D + 0.5L</td><td>G<sub>k</sub> + ψ<sub>1,1</sub>Q<sub>k,1</sub> + ψ<sub>2,i</sub>Q<sub>k,i</sub></td><td>Reversible deflection; repeated loading that can cause fatigue</td></tr>
+          <tr><td>Quasi-permanent (long-term)</td><td>D + 0.25L</td><td>G<sub>k</sub> + ψ<sub>2,1</sub>Q<sub>k,1</sub> + ψ<sub>2,i</sub>Q<sub>k,i</sub></td><td>Creep, long-term deflection, crack width in RC</td></tr>
+        </tbody>
+      </table>
+      <h3>Common Deflection Limits</h3>
+      <table class="sg-tbl">
+        <thead><tr><th>Member Type</th><th>AISC / IBC Limit</th><th>EN 1992 / 1993 Limit</th></tr></thead>
+        <tbody>
+          <tr><td>Floor beam (live load only)</td><td>L/360</td><td>L/300 (frequent)</td></tr>
+          <tr><td>Floor beam (total load)</td><td>L/240</td><td>L/250 (quasi-permanent)</td></tr>
+          <tr><td>Roof beam (live load only)</td><td>L/180</td><td>L/200</td></tr>
+          <tr><td>Curtain wall support (lateral)</td><td>H/400</td><td>H/500</td></tr>
+          <tr><td>Column drift per storey</td><td>H/400 (wind, ASCE 7)</td><td>H/500 (EN 1993)</td></tr>
+        </tbody>
+      </table>
+      <p>SLS combinations are checked with unfactored or lightly-factored loads because the goal is verifying that the structure behaves as intended under typical service conditions, not preventing collapse. RC crack width is always checked under the quasi-permanent combination (ψ<sub>2</sub>), while ponding and drainage slopes typically use the characteristic (rare) combination.</p>
     </div>
   </section>
 

@@ -25,7 +25,7 @@
   "publisher": { "@type": "Organization", "name": "CivilStrCalc", "url": "https://civilstrcalc.com" },
   "datePublished": "2026-09-03",
   "dateModified": "2026-09-03",
-  "wordCount": 1850,
+  "wordCount": 2800,
   "inLanguage": "en"
 }
 </script>
@@ -99,7 +99,12 @@ html{scroll-behavior:smooth;}
   <div class="sg-card">
   <nav class="sg-toc">
     <a href="#s1">1. Ground Motion Basics</a>
-    <a href="#s7">2. Special Seismic Detailing (ACI 318-25 Ch. 18)</a>
+    <a href="#s2">2. Design Response Spectrum</a>
+    <a href="#s3">3. Seismic Design Categories</a>
+    <a href="#s4">4. Equivalent Lateral Force Procedure</a>
+    <a href="#s5">5. Response Modification Factor R</a>
+    <a href="#s6">6. Story Drift Limits</a>
+    <a href="#s7">7. Special Seismic Detailing (ACI 318-25 Ch. 18)</a>
   </nav>
 
   <!-- 1 -->
@@ -116,7 +121,117 @@ html{scroll-behavior:smooth;}
     </div>
   </section>
 
-  <div class="note-box" style="margin:0 0 24px;">For the response spectrum, SDC tables, ELF base shear, R/C<sub>d</sub>/Ω<sub>o</sub> factors, and drift limits under ASCE 7-22, see the <a href="articles/us-standards/4-seismic-design">US Standards Design Guide — Part 4: Seismic Design</a>.</div>
+  <div class="note-box" style="margin:0 0 24px;">For the full SDC tables, R/C<sub>d</sub>/Ω<sub>o</sub> factor tables, and site-class amplification factors under ASCE 7-22, see the <a href="articles/us-standards/4-seismic-design">US Standards Design Guide — Part 4: Seismic Design</a>.</div>
+
+  <!-- 2 -->
+  <section class="sg-section" id="s2">
+    <div class="sg-hdr-row"><h2>2. Design Response Spectrum (ASCE 7-22 §11.4)</h2></div>
+    <div class="sg-inner">
+      <p>A response spectrum is a plot of the maximum acceleration experienced by a single-degree-of-freedom (SDOF) oscillator as a function of its natural period T. Engineers use it to characterize ground motion intensity at the building's natural period rather than using raw time-history records.</p>
+      <p>ASCE 7-22 defines the design spectral acceleration at two reference periods:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Parameter</th><th>Definition</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>S<sub>MS</sub></td><td>MCE<sub>R</sub> spectral acceleration at short period (0.2 s) × site class factor F<sub>a</sub></td><td>From USGS hazard maps × F<sub>a</sub></td></tr>
+          <tr><td>S<sub>M1</sub></td><td>MCE<sub>R</sub> spectral acceleration at 1.0 s × site class factor F<sub>v</sub></td><td>From USGS hazard maps × F<sub>v</sub></td></tr>
+          <tr><td>S<sub>DS</sub></td><td>Design spectral acceleration, short period: S<sub>DS</sub> = ⅔ S<sub>MS</sub></td><td>Used for base shear and SDC classification</td></tr>
+          <tr><td>S<sub>D1</sub></td><td>Design spectral acceleration, 1.0 s: S<sub>D1</sub> = ⅔ S<sub>M1</sub></td><td>Controls long-period response and SDC classification</td></tr>
+        </tbody>
+      </table>
+      <p>The design response spectrum has three zones:</p>
+      <ul>
+        <li><strong>Short-period plateau (T ≤ T<sub>s</sub>):</strong> S<sub>a</sub> = S<sub>DS</sub>. Short, stiff buildings experience constant peak acceleration.</li>
+        <li><strong>Constant-velocity descending region (T<sub>s</sub> &lt; T ≤ T<sub>L</sub>):</strong> S<sub>a</sub> = S<sub>D1</sub>/T. Taller buildings with longer periods experience lower spectral acceleration.</li>
+        <li><strong>Long-period region (T &gt; T<sub>L</sub>):</strong> S<sub>a</sub> = S<sub>D1</sub>·T<sub>L</sub>/T². Applies to very tall or soft structures (T<sub>L</sub> = 4–16 s depending on region).</li>
+      </ul>
+      <div class="note-box">T<sub>s</sub> = S<sub>D1</sub>/S<sub>DS</sub> — the transition period between plateau and descending regions. For a typical US site (S<sub>DS</sub>=1.0 g, S<sub>D1</sub>=0.6 g), T<sub>s</sub>=0.6 s. Buildings shorter than about 6–8 stories usually fall on the plateau and see peak spectral demands.</div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="sg-section" id="s3">
+    <div class="sg-hdr-row"><h2>3. Seismic Design Categories (SDC)</h2></div>
+    <div class="sg-inner">
+      <p>ASCE 7-22 §11.6 assigns every structure an SDC (A through F) based on ground motion intensity and occupancy. The SDC determines what structural system is permitted, what detailing is required, and what analysis procedures apply:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>SDC</th><th>Approximate S<sub>DS</sub></th><th>Approx. S<sub>D1</sub></th><th>Detailing Required</th><th>Risk Category</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>&lt; 0.167 g</td><td>&lt; 0.067 g</td><td>Minimal — basic connections only</td><td>I–IV</td></tr>
+          <tr><td>B</td><td>0.167–0.33 g</td><td>0.067–0.133 g</td><td>Intermediate — some irregularity restrictions</td><td>I–II</td></tr>
+          <tr><td>C</td><td>0.33–0.50 g</td><td>0.133–0.20 g</td><td>Intermediate moment frames / braced frames permitted</td><td>I–II</td></tr>
+          <tr><td>D</td><td>0.50–0.83 g</td><td>0.20–0.30 g</td><td>Special systems required; most of California</td><td>I–III</td></tr>
+          <tr><td>E</td><td>≥ 0.83 g (S<sub>1</sub> &lt; 0.75 g)</td><td>—</td><td>Special systems; height limits apply</td><td>I–II high-seismicity</td></tr>
+          <tr><td>F</td><td>—</td><td>S<sub>1</sub> ≥ 0.75 g</td><td>Most restrictive; base isolators or special systems</td><td>I–IV near-fault</td></tr>
+        </tbody>
+      </table>
+      <p>Key consequence of SDC: in SDC A and B, ordinary concrete and steel frames are permitted. In SDC D–F, only special moment frames (SMF), special concentrically braced frames (SCBF), or special structural walls are permitted for buildings above certain heights. The special detailing requirements are what allow the R factor economy.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="sg-section" id="s4">
+    <div class="sg-hdr-row"><h2>4. Equivalent Lateral Force (ELF) Procedure</h2></div>
+    <div class="sg-inner">
+      <p>The ELF procedure (ASCE 7-22 §12.8) converts dynamic seismic demand into a set of static lateral forces applied at each floor. It is permitted for most regular structures with T ≤ 3.5T<sub>s</sub> and for all SDC B/C structures.</p>
+      <h3>Step 1 — Seismic Base Shear V</h3>
+      <div class="fml">V = C<sub>s</sub> × W<sub>s</sub>&nbsp;&nbsp;&nbsp;&nbsp;[AISC 7-22 Eq. 12.8-1]</div>
+      <p>Where W<sub>s</sub> is the effective seismic weight (dead load + 25% of floor live load in storage, plus snow where ≥ 30 psf). The seismic response coefficient:</p>
+      <div class="fml">C<sub>s</sub> = S<sub>DS</sub> / (R / I<sub>e</sub>)&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-2]</div>
+      <div class="fml">C<sub>s,max</sub> = S<sub>D1</sub> / (T × R / I<sub>e</sub>)&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-3, for T ≤ T<sub>L</sub>]</div>
+      <div class="fml">C<sub>s,min</sub> = max(0.044 S<sub>DS</sub> I<sub>e</sub>, 0.01)&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-5]</div>
+      <h3>Step 2 — Approximate Fundamental Period T<sub>a</sub></h3>
+      <div class="fml">T<sub>a</sub> = C<sub>t</sub> × h<sub>n</sub>^x&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-7]</div>
+      <p>For steel moment frames: C<sub>t</sub>=0.0724, x=0.8. For concrete moment frames: C<sub>t</sub>=0.0466, x=0.9. For all other systems: C<sub>t</sub>=0.0488, x=0.75. h<sub>n</sub> is the height above grade to the highest level in meters.</p>
+      <h3>Step 3 — Vertical Distribution of Forces</h3>
+      <div class="fml">F<sub>x</sub> = C<sub>vx</sub> × V&nbsp;&nbsp;&nbsp;&nbsp;where&nbsp;&nbsp;C<sub>vx</sub> = w<sub>x</sub>h<sub>x</sub>^k / &Sigma;w<sub>i</sub>h<sub>i</sub>^k&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-12]</div>
+      <p>k = 1.0 for T ≤ 0.5 s (linear distribution); k = 2.0 for T ≥ 2.5 s (parabolic — more force in upper floors); interpolated between 0.5 s and 2.5 s. This vertical distribution concentrates forces at upper floors for taller buildings, reflecting the whipping effect of higher modes.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="sg-section" id="s5">
+    <div class="sg-hdr-row"><h2>5. Response Modification Factor R and System Selection</h2></div>
+    <div class="sg-inner">
+      <p>The R factor reduces elastic seismic forces to design-level forces by assuming the structure will undergo controlled ductile yielding rather than remaining elastic. A structure designed for the full elastic demand would require 3–8× more steel or concrete than one designed with ductile detailing.</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Structural System</th><th>R</th><th>C<sub>d</sub></th><th>Ω<sub>o</sub></th><th>Max SDC Permitted</th></tr></thead>
+        <tbody>
+          <tr><td>Special Steel Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td><td>F</td></tr>
+          <tr><td>Intermediate Steel Moment Frame (IMF)</td><td>4.5</td><td>4</td><td>3</td><td>C</td></tr>
+          <tr><td>Ordinary Steel Moment Frame (OMF)</td><td>3.5</td><td>3</td><td>3</td><td>B</td></tr>
+          <tr><td>Special RC Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td><td>F</td></tr>
+          <tr><td>Special Concentrically Braced Frame (SCBF)</td><td>6</td><td>5</td><td>2</td><td>F</td></tr>
+          <tr><td>Buckling-Restrained Braced Frame (BRBF)</td><td>8</td><td>5</td><td>2.5</td><td>F</td></tr>
+          <tr><td>Special RC Shear Wall</td><td>6</td><td>5</td><td>2.5</td><td>F</td></tr>
+          <tr><td>Ordinary RC Shear Wall</td><td>5</td><td>4.5</td><td>2.5</td><td>C</td></tr>
+        </tbody>
+      </table>
+      <p><strong>C<sub>d</sub></strong> (deflection amplification factor) scales elastic displacements back to actual inelastic displacements: δ<sub>actual</sub> = C<sub>d</sub> × δ<sub>elastic</sub> / I<sub>e</sub>. This is used for drift checks.</p>
+      <p><strong>Ω<sub>o</sub></strong> (overstrength factor) amplifies design forces for force-controlled components (columns, connections) that must remain elastic: Ω<sub>o</sub>×E is applied to column axial demands and anchor bolt forces.</p>
+      <div class="note-box">Choosing a higher R value reduces the design seismic demand and saves material cost, but requires more intensive detailing (§ACI 18, AISC 341), more restrictive height limits, and rigorous inspection. The tradeoff is always between first cost and long-term seismic risk.</div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="sg-section" id="s6">
+    <div class="sg-hdr-row"><h2>6. Story Drift Limits (ASCE 7-22 §12.12)</h2></div>
+    <div class="sg-inner">
+      <p>Story drift Δ is the relative lateral displacement between the top and bottom of a story. Excessive drift damages non-structural elements (partitions, facades, mechanical/electrical systems) and can trigger P-Δ instability in tall frames.</p>
+      <p>ASCE 7-22 Table 12.12-1 allowable story drift limits (Δ<sub>a</sub>) as a fraction of story height h<sub>sx</sub>:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Structure Type</th><th>Risk Cat. I–II</th><th>Risk Cat. III</th><th>Risk Cat. IV</th></tr></thead>
+        <tbody>
+          <tr><td>Structures 4 stories or less with light interior partitions</td><td>0.025 h<sub>sx</sub></td><td>0.020 h<sub>sx</sub></td><td>0.015 h<sub>sx</sub></td></tr>
+          <tr><td>All other structures</td><td>0.020 h<sub>sx</sub></td><td>0.015 h<sub>sx</sub></td><td>0.010 h<sub>sx</sub></td></tr>
+          <tr><td>Masonry cantilever shear wall structures</td><td>0.010 h<sub>sx</sub></td><td>0.010 h<sub>sx</sub></td><td>0.010 h<sub>sx</sub></td></tr>
+        </tbody>
+      </table>
+      <h3>P-Δ Stability Check (§12.8.7)</h3>
+      <p>When the stability coefficient θ exceeds 0.10, P-Δ effects must be explicitly included in the analysis:</p>
+      <div class="fml">θ = P<sub>x</sub> × Δ / (V<sub>x</sub> × h<sub>sx</sub> × C<sub>d</sub>)&nbsp;&nbsp;&nbsp;&nbsp;[Eq. 12.8-16]</div>
+      <p>Where P<sub>x</sub> = total vertical design load at and above story x. When θ &gt; 0.10, drifts and member forces must be amplified by 1/(1-θ). When θ &gt; θ<sub>max</sub> (Eq. 12.8-17), the structural system must be redesigned — the story is unstable.</p>
+    </div>
+  </section>
 
   <!-- 7 -->
   <section class="sg-section" id="s7">

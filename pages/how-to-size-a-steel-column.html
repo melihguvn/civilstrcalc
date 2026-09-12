@@ -25,7 +25,7 @@
   "publisher": { "@type": "Organization", "name": "CivilStrCalc", "url": "https://civilstrcalc.com" },
   "datePublished": "2026-09-03",
   "dateModified": "2026-09-03",
-  "wordCount": 1700,
+  "wordCount": 2400,
   "inLanguage": "en"
 }
 </script>
@@ -99,9 +99,12 @@ html{scroll-behavior:smooth;}
   <div class="sg-card">
   <nav class="sg-toc">
     <a href="#s1">1. Column Failure Modes</a>
-    <a href="#s4">2. F<sub>cr</sub> vs KL/r Reference Table</a>
-    <a href="#s6">3. Section Selection Strategy</a>
-    <a href="#s7">4. Worked Example</a>
+    <a href="#s2">2. Step-by-Step Design Procedure</a>
+    <a href="#s3">3. Effective Length K Factors</a>
+    <a href="#s4">4. F<sub>cr</sub> vs KL/r Reference Table</a>
+    <a href="#s5">5. Local Buckling &amp; Slenderness Limits</a>
+    <a href="#s6">6. Section Selection Strategy</a>
+    <a href="#s7">7. Worked Example</a>
   </nav>
 
   <!-- 1 -->
@@ -123,6 +126,58 @@ html{scroll-behavior:smooth;}
 
   <div class="note-box" style="margin:0 0 24px;">For effective length K values, slenderness limits, F<sub>cr</sub> formulas, φ<sub>c</sub>P<sub>n</sub>, and H1-1 interaction equations, see <a href="articles/us-standards/7-steel-design-aisc">US Standards Design Guide — Part 7: Steel Design (AISC 360-22)</a>.</div>
 
+  <!-- 2 -->
+  <section class="sg-section" id="s2">
+    <div class="sg-hdr-row"><h2>2. Step-by-Step Design Procedure (AISC 360-22 Chapter E)</h2></div>
+    <div class="sg-inner">
+      <p>The AISC 360-22 Chapter E compression member design follows a logical sequence. Each step feeds directly into the next:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Step</th><th>Action</th><th>Code Reference</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Determine the factored axial demand P<sub>u</sub> from load combinations (ASCE 7-22 §2.3)</td><td>ASCE 7-22 Eq. 2.3-1 to 2.3-7</td></tr>
+          <tr><td>2</td><td>Establish boundary conditions and compute effective length KL for each axis</td><td>AISC 360-22 Table C-E1.1</td></tr>
+          <tr><td>3</td><td>Select a trial section — W14 shapes are most common for columns</td><td>AISC Steel Construction Manual</td></tr>
+          <tr><td>4</td><td>Compute governing slenderness ratio: KL/r = max(KL<sub>x</sub>/r<sub>x</sub>, KL<sub>y</sub>/r<sub>y</sub>)</td><td>AISC 360-22 §E3</td></tr>
+          <tr><td>5</td><td>Check slenderness limit: KL/r ≤ 200 (recommended maximum)</td><td>AISC 360-22 §E2</td></tr>
+          <tr><td>6</td><td>Compute elastic buckling stress F<sub>e</sub> = π²E / (KL/r)²</td><td>AISC 360-22 Eq. E3-4</td></tr>
+          <tr><td>7</td><td>Determine F<sub>cr</sub>: inelastic (KL/r ≤ 4.71√(E/F<sub>y</sub>)) or elastic zone</td><td>AISC 360-22 Eq. E3-2 or E3-3</td></tr>
+          <tr><td>8</td><td>Compute design strength: φ<sub>c</sub>P<sub>n</sub> = 0.90 × F<sub>cr</sub> × A<sub>g</sub></td><td>AISC 360-22 §E3</td></tr>
+          <tr><td>9</td><td>Check compactness: verify flange and web width-to-thickness ratios meet §E7 limits</td><td>AISC 360-22 Table E7.1</td></tr>
+          <tr><td>10</td><td>DCR = P<sub>u</sub> / φ<sub>c</sub>P<sub>n</sub> ≤ 1.0. If > 1.0, select heavier section and repeat from Step 4.</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <h3>Key Formulas</h3>
+      <div class="fml">F<sub>e</sub> = π²E / (KL/r)²&nbsp;&nbsp;&nbsp;&nbsp;[AISC Eq. E3-4]</div>
+      <div class="fml">If KL/r ≤ 4.71√(E/F<sub>y</sub>):&nbsp;&nbsp;F<sub>cr</sub> = [0.658^(F<sub>y</sub>/F<sub>e</sub>)] × F<sub>y</sub>&nbsp;&nbsp;&nbsp;&nbsp;[AISC Eq. E3-2, Inelastic]</div>
+      <div class="fml">If KL/r &gt; 4.71√(E/F<sub>y</sub>):&nbsp;&nbsp;F<sub>cr</sub> = 0.877 × F<sub>e</sub>&nbsp;&nbsp;&nbsp;&nbsp;[AISC Eq. E3-3, Elastic]</div>
+      <div class="fml">φ<sub>c</sub>P<sub>n</sub> = 0.90 × F<sub>cr</sub> × A<sub>g</sub></div>
+      <p>The inelastic/elastic boundary occurs at KL/r = 4.71√(E/F<sub>y</sub>). For F<sub>y</sub>=345 MPa (A992) and E=200,000 MPa: boundary KL/r = 4.71√(200,000/345) = <strong>113.4</strong>. Columns with KL/r above 113 are in the elastic Euler range.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="sg-section" id="s3">
+    <div class="sg-hdr-row"><h2>3. Effective Length K Factors</h2></div>
+    <div class="sg-inner">
+      <p>The effective length factor K accounts for rotational and translational end restraint. AISC Commentary Table C-E1.1 provides theoretical and recommended design values:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Boundary Condition</th><th>Theoretical K</th><th>Recommended K</th><th>Buckled Shape</th></tr></thead>
+        <tbody>
+          <tr><td>Both ends pinned (braced frame, no rotation restraint)</td><td>1.0</td><td>1.0</td><td>Half sine wave</td></tr>
+          <tr><td>Fixed base, pinned top (one end pinned)</td><td>0.70</td><td>0.80</td><td>Quarter sine wave</td></tr>
+          <tr><td>Fixed base, fixed top (both ends rotationally fixed)</td><td>0.50</td><td>0.65</td><td>Double curvature</td></tr>
+          <tr><td>Fixed base, free top (cantilever column)</td><td>2.00</td><td>2.10</td><td>Quarter sine wave</td></tr>
+          <tr><td>Pinned base, fixed top (sway permitted)</td><td>2.00</td><td>2.00</td><td>Sway mode</td></tr>
+          <tr><td>Fixed base, fixed top, sway permitted</td><td>1.00</td><td>1.20</td><td>S-shape with sway</td></tr>
+        </tbody>
+      </table>
+      <h3>Braced vs. Unbraced Frames</h3>
+      <p><strong>Braced frames (sidesway inhibited):</strong> Lateral bracing prevents sidesway — shear walls, braced bays, or rigid cores carry horizontal loads. Columns in braced frames use K ≤ 1.0. The governing axis is almost always the weak axis (y-y) where bracing is typically at floor levels only.</p>
+      <p><strong>Moment frames (sidesway permitted):</strong> Columns must resist lateral loads through bending. K values exceed 1.0, and effective lengths can be significantly longer than the physical story height. For moment frames, K must be computed from the G-factor alignment charts (AISC Commentary §C-E1) based on the ratio of column stiffness to beam stiffness at each joint.</p>
+      <div class="note-box">Most multi-storey building columns in braced frames use K<sub>x</sub>=0.80 (fixed base, pinned top at beam connection) and K<sub>y</sub>=1.0 (pinned at both floor levels). The weak-axis KL/r<sub>y</sub> almost always governs for W-shapes with typical story heights.</div>
+    </div>
+  </section>
+
   <!-- 4 -->
   <section class="sg-section" id="s4">
     <div class="sg-hdr-row"><h2>4. Critical Buckling Stress F<sub>cr</sub></h2></div>
@@ -142,6 +197,28 @@ html{scroll-behavior:smooth;}
         </tbody>
       </table>
       <p>At KL/r=100, the column carries only 62% of its yield load. At KL/r=200, only 12.5%. This is why very slender columns are avoided — you pay for steel you cannot use.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="sg-section" id="s5">
+    <div class="sg-hdr-row"><h2>5. Local Buckling &amp; Width-to-Thickness Limits (AISC 360-22 §E7)</h2></div>
+    <div class="sg-inner">
+      <p>A column's cross-sectional elements (flanges, web) must be compact enough not to buckle locally before the overall column buckles. AISC 360-22 §E7 defines slenderness limits for compression members:</p>
+      <table class="sg-tbl">
+        <thead><tr><th>Element</th><th>λ (slenderness)</th><th>λ<sub>r</sub> (limit for non-slender)</th><th>Comment</th></tr></thead>
+        <tbody>
+          <tr><td>W-shape flange (uniform compression)</td><td>b<sub>f</sub> / 2t<sub>f</sub></td><td>0.56√(E/F<sub>y</sub>)</td><td>= 13.5 for F<sub>y</sub>=345 MPa</td></tr>
+          <tr><td>W-shape web (uniform compression)</td><td>h / t<sub>w</sub></td><td>1.49√(E/F<sub>y</sub>)</td><td>= 35.9 for F<sub>y</sub>=345 MPa</td></tr>
+          <tr><td>HSS rectangular wall</td><td>b / t</td><td>1.40√(E/F<sub>y</sub>)</td><td>= 33.7 for F<sub>y</sub>=345 MPa</td></tr>
+          <tr><td>HSS circular (round)</td><td>D / t</td><td>0.15E/F<sub>y</sub></td><td>= 87.0 for F<sub>y</sub>=345 MPa</td></tr>
+        </tbody>
+      </table>
+      <p>Most standard AISC W-shapes have non-slender elements for F<sub>y</sub>≤345 MPa. However, high-strength steel (F<sub>y</sub>≥415 MPa) or built-up sections can have slender elements. When λ &gt; λ<sub>r</sub>, a reduced effective area Q must be computed (AISC §E7.2, §E7.3) and applied as:</p>
+      <div class="fml">F<sub>cr</sub> = Q × [0.658^(QF<sub>y</sub>/F<sub>e</sub>)] × F<sub>y</sub>&nbsp;&nbsp;&nbsp;(inelastic, slender element)</div>
+      <h3>Practical Check for W-Shapes</h3>
+      <p>The AISC Steel Construction Manual tabulates λ<sub>f</sub> and λ<sub>w</sub> for every W-shape. The φ<sub>c</sub>P<sub>n</sub> column load tables already account for local buckling — when using these tables you do not need a separate §E7 check. For custom built-up sections, the §E7 check is essential.</p>
+      <p>A quick rule: all standard W14 column sections from W14×48 through W14×730 are <strong>non-slender</strong> for F<sub>y</sub>≤345 MPa. For high-strength steel (A913 Grade 450 MPa), check the W14 flange λ<sub>f</sub> values individually — most heavier W14 shapes (≥W14×61) remain non-slender at 450 MPa, but lighter shapes may not.</p>
     </div>
   </section>
 
