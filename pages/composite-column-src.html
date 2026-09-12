@@ -187,11 +187,54 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <option value="HEB">HEB</option>
         <option value="HEM">HEM</option>
         <option value="IPE">IPE</option>
+        <option value="HD">HD — Heavy Column (EN 10365)</option>
+        <option value="custom">Custom Section</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="src-profile-row">
       <label>Profile</label>
       <select id="src-profile" onchange="srcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
+    </div>
+
+    <div id="src-custom-inputs" style="display:none;">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>d — depth [mm]</label>
+          <div class="iw"><input type="number" id="src-cust-d" value="300" step="1" min="50" oninput="srcAutoCalc()"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>b<sub>f</sub> — flange width [mm]</label>
+          <div class="iw"><input type="number" id="src-cust-bf" value="200" step="1" min="50" oninput="srcAutoCalc()"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>t<sub>f</sub> — flange thickness [mm]</label>
+          <div class="iw"><input type="number" id="src-cust-tf" value="12" step="0.5" min="1" oninput="srcAutoCalc()"><span class="us">mm</span></div>
+        </div>
+        <div class="form-group">
+          <label>t<sub>w</sub> — web thickness [mm]</label>
+          <div class="iw"><input type="number" id="src-cust-tw" value="8" step="0.5" min="1" oninput="srcAutoCalc()"><span class="us">mm</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>A<sub>g,steel</sub> — steel area [mm²]</label>
+        <div class="iw"><input type="number" id="src-cust-Ag" value="7200" step="100" min="100" oninput="srcAutoCalc()"><span class="us">mm²</span></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>I<sub>x</sub> — strong axis [mm⁴]</label>
+          <div class="iw"><input type="number" id="src-cust-Ix" value="90000000" step="1000000" min="1000" oninput="srcAutoCalc()"><span class="us">mm⁴</span></div>
+        </div>
+        <div class="form-group">
+          <label>I<sub>y</sub> — weak axis [mm⁴]</label>
+          <div class="iw"><input type="number" id="src-cust-Iy" value="16000000" step="100000" min="1000" oninput="srcAutoCalc()"><span class="us">mm⁴</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>F<sub>y</sub> — yield strength [MPa]</label>
+        <div class="iw"><input type="number" id="src-cust-Fy" value="355" step="5" min="100" max="700" oninput="srcAutoCalc()"><span class="us">MPa</span></div>
+      </div>
     </div>
 
     <div class="form-div"><div class="form-div-lbl">Longitudinal Rebar</div></div>
@@ -206,9 +249,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="form-group">
-      <label>Rebar Yield F<sub>yr</sub> <span id="src-lu-fyr" class="lu">[ksi]</span></label>
-      <div class="iw"><input type="number" id="src-Fyr" value="60" step="5" min="40" max="100" oninput="srcAutoCalc()"><span id="src-u-fyr" class="us">ksi</span></div>
+      <label>Rebar Grade</label>
+      <select id="src-rebar-grade" onchange="srcUpdateRebarInfo();srcAutoCalc()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer;"></select>
     </div>
+    <div id="src-fyr-info" style="font-size:.72rem;color:var(--text-dim);padding:0 0 6px;font-family:var(--sans);"></div>
 
     <div class="form-div"><div class="form-div-lbl">Cover &amp; Column Height</div></div>
     <div class="form-group">
@@ -449,7 +493,19 @@ const SRC_GRADES_SI = [
   {v:'s460', n:'S460', Fy:460}
 ];
 // Section type defaults for SI profiles
-const SRC_SI_DEFAULTS = { HEA:'HEA 200', HEB:'HEB 200', HEM:'HEM 200', IPE:'IPE 360' };
+const SRC_SI_DEFAULTS = { HEA:'HEA 200', HEB:'HEB 200', HEM:'HEM 200', IPE:'IPE 360', HD:'HD 260×54.1' };
+
+const SRC_REBAR_US = [
+  {v:'g40',  n:'Grade 40',  Fyr:40,  MPa:276},
+  {v:'g60',  n:'Grade 60',  Fyr:60,  MPa:414},
+  {v:'g75',  n:'Grade 75',  Fyr:75,  MPa:517},
+  {v:'g80',  n:'Grade 80',  Fyr:80,  MPa:552},
+  {v:'g100', n:'Grade 100', Fyr:100, MPa:690}
+];
+const SRC_REBAR_SI = [
+  {v:'b420c', n:'B420C', Fyr:420},
+  {v:'b500c', n:'B500C', Fyr:500}
+];
 
 let srcIsUS   = true;
 let srcAxis   = 'x';
@@ -460,6 +516,7 @@ let srcLast   = null;
 // ─────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   srcPopGrades();
+  srcPopRebarGrades();
   // section type row: hidden in US mode (default)
   const stRow = document.getElementById('src-sectype-row');
   if (stRow) stRow.style.display = 'none';
@@ -478,8 +535,19 @@ function srcPopGrades() {
 
 function srcPopProfiles() {
   const sel = document.getElementById('src-profile');
+  const profileRow = document.getElementById('src-profile-row');
+  const customDiv  = document.getElementById('src-custom-inputs');
   if (!window.SteelProfiles) { setTimeout(srcPopProfiles, 100); return; }
   const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
+
+  if (type === 'custom') {
+    if (profileRow) profileRow.style.display = 'none';
+    if (customDiv)  customDiv.style.display = '';
+    return;
+  }
+  if (profileRow) profileRow.style.display = '';
+  if (customDiv)  customDiv.style.display = 'none';
+
   const profData = window.SteelProfiles.PROFILES[type]?.data;
   if (!profData) return;
   sel.innerHTML = profData.map(r => `<option value="${r[0]}">${r[0]}</option>`).join('');
@@ -488,16 +556,66 @@ function srcPopProfiles() {
 }
 
 function srcGetFy() {
+  const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
+  if (!srcIsUS && type === 'custom') {
+    return parseFloat(document.getElementById('src-cust-Fy')?.value) || 355;
+  }
   const v = document.getElementById('src-grade').value;
   const grades = srcIsUS ? SRC_GRADES_US : SRC_GRADES_SI;
   const g = grades.find(x => x.v === v);
   return g ? g.Fy : (srcIsUS ? 50 : 355);
 }
 
+function srcPopRebarGrades() {
+  const sel = document.getElementById('src-rebar-grade');
+  if (!sel) return;
+  const grades = srcIsUS ? SRC_REBAR_US : SRC_REBAR_SI;
+  sel.innerHTML = grades.map(g => {
+    const label = srcIsUS
+      ? `${g.n} — fy = ${g.Fyr} ksi (${g.MPa} MPa)`
+      : `${g.n} — fyk = ${g.Fyr} MPa`;
+    return `<option value="${g.v}">${label}</option>`;
+  }).join('');
+  sel.value = srcIsUS ? 'g60' : 'b420c';
+  srcUpdateRebarInfo();
+}
+
+function srcUpdateRebarInfo() {
+  const info = document.getElementById('src-fyr-info');
+  if (!info) return;
+  const v = document.getElementById('src-rebar-grade')?.value;
+  const grades = srcIsUS ? SRC_REBAR_US : SRC_REBAR_SI;
+  const g = grades.find(x => x.v === v);
+  if (!g) { info.textContent = ''; return; }
+  info.textContent = srcIsUS
+    ? `Selected: fy = ${g.Fyr} ksi (${g.MPa} MPa)`
+    : `Selected: fyk = ${g.Fyr} MPa`;
+}
+
+function srcGetFyr() {
+  const v = document.getElementById('src-rebar-grade')?.value;
+  const grades = srcIsUS ? SRC_REBAR_US : SRC_REBAR_SI;
+  const g = grades.find(x => x.v === v);
+  return g ? g.Fyr : (srcIsUS ? 60 : 420);
+}
+
 function srcGetProfile() {
+  const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
+
+  if (type === 'custom') {
+    const d  = parseFloat(document.getElementById('src-cust-d')?.value)  || 0;
+    const bf = parseFloat(document.getElementById('src-cust-bf')?.value) || 0;
+    const tf = parseFloat(document.getElementById('src-cust-tf')?.value) || 0;
+    const tw = parseFloat(document.getElementById('src-cust-tw')?.value) || 0;
+    const As = parseFloat(document.getElementById('src-cust-Ag')?.value) || 0;
+    const Ix = parseFloat(document.getElementById('src-cust-Ix')?.value) || 0;
+    const Iy = parseFloat(document.getElementById('src-cust-Iy')?.value) || 0;
+    if (!d || !bf || !As) return null;
+    return { name:'Custom', d, bf, tf, tw, As, Ix, Iy };
+  }
+
   const name = document.getElementById('src-profile').value;
   if (!window.SteelProfiles || !name) return null;
-  const type = srcIsUS ? 'W' : (document.getElementById('src-sectype')?.value || 'HEA');
   const profData = window.SteelProfiles.PROFILES[type]?.data;
   if (!profData) return null;
   const row = profData.find(r => r[0] === name);
@@ -507,7 +625,7 @@ function srcGetProfile() {
     return { name: row[0], d: row[1], bf: row[2], tf: row[3], tw: row[4],
              As: row[5], Ix: row[7], Iy: row[11] };
   } else {
-    // European: [name, d_mm, bf_mm, tw_mm, tf_mm, r_mm, A_cm2, kg/m, Ix_cm4, Sx, Zx, rx, Iy_cm4, ...]
+    // European open_en: [name, d_mm, bf_mm, tw_mm, tf_mm, r_mm, A_cm2, kg/m, Ix_cm4, ...]
     return { name: row[0], d: row[1], bf: row[2], tw: row[3], tf: row[4],
              As: row[6] * 100,   // cm² → mm²
              Ix: row[8] * 1e4,   // cm⁴ → mm⁴
@@ -538,7 +656,6 @@ function srcUpdateLabels() {
   setU('src-u-H', d); setU('src-lu-H', '['+d+']');
   setU('src-u-fc', fc); setU('src-lu-fc', '['+fc+']');
   setU('src-u-db', d); setU('src-lu-db', '['+d+']');
-  setU('src-u-fyr', fc); setU('src-lu-fyr', '['+fc+']');
   setU('src-u-cov', d); setU('src-lu-cov', '['+d+']');
   setU('src-u-L', L); setU('src-lu-L', '['+L+']');
   setU('src-u-P', F); setU('src-lu-P', '['+F+']');
@@ -546,10 +663,18 @@ function srcUpdateLabels() {
   setU('src-u-My', M); setU('src-lu-My', '['+M+']');
   document.getElementById('src-utag').textContent = srcIsUS ? 'kip · in' : 'kN · mm';
 
-  // Show/hide section type selector
+  // Show/hide section type selector (hidden in US — W sections only)
   const stRow = document.getElementById('src-sectype-row');
   if (stRow) stRow.style.display = srcIsUS ? 'none' : '';
+  // If switching to US, reset to profile view (no custom in US mode)
+  if (srcIsUS) {
+    const profileRow = document.getElementById('src-profile-row');
+    const customDiv  = document.getElementById('src-custom-inputs');
+    if (profileRow) profileRow.style.display = '';
+    if (customDiv)  customDiv.style.display  = 'none';
+  }
   srcPopProfiles();
+  srcPopRebarGrades();
 
   // Reset defaults for the switched unit system
   const b = srcIsUS ? 24 : 600, h = srcIsUS ? 24 : 600;
@@ -923,7 +1048,7 @@ function srcCalc() {
   const B   = parseFloat(document.getElementById('src-B').value)    || (srcIsUS ? 24 : 600);
   const H   = parseFloat(document.getElementById('src-H').value)    || (srcIsUS ? 24 : 600);
   const fc  = parseFloat(document.getElementById('src-fc').value)   || (srcIsUS ? 5 : 35);
-  const Fyr = parseFloat(document.getElementById('src-Fyr').value)  || (srcIsUS ? 60 : 420);
+  const Fyr = srcGetFyr();
   const db  = parseFloat(document.getElementById('src-db').value)   || (srcIsUS ? 1.0 : 25);
   const n   = Math.max(4, Math.round(parseFloat(document.getElementById('src-nbars').value)||8));
   const cov = parseFloat(document.getElementById('src-cover').value)|| (srcIsUS ? 1.5 : 40);
@@ -1134,6 +1259,9 @@ function srcCalc() {
     r2('F<sub>y</sub> limit',
        `${fmt(Fy,0)} ${k2U}`,
        Fy <= (srcIsUS?75:525) ? chkOK('≤ 75 ksi') : chkERR('> 75 ksi')) +
+    r2('F<sub>yr</sub> limit',
+       `${fmt(Fyr,0)} ${k2U}`,
+       Fyr <= (srcIsUS?80:550) ? chkOK('≤ 80 ksi') : chkWRN('> 80 ksi — AISC §I1.3')) +
     `</table></div>`;
 
   // ── Section properties table ──
@@ -1175,12 +1303,14 @@ function srcCalc() {
     `</table></div>`;
 
   // ── Print header ──
-  const gradeSel = document.getElementById('src-grade');
-  const gradeLbl = gradeSel.options[gradeSel.selectedIndex]?.text || '';
+  const gradeSel  = document.getElementById('src-grade');
+  const gradeLbl  = gradeSel.options[gradeSel.selectedIndex]?.text || '';
+  const rebarSel  = document.getElementById('src-rebar-grade');
+  const rebarLbl  = rebarSel?.options[rebarSel.selectedIndex]?.text?.split(' — ')[0] || '';
   const printHeader =
     `<div class="print-only">` +
     `<div><div class="ph-title">SRC Column Design — AISC 360-22 §I2.1</div>` +
-    `<div class="ph-sub">${ws.name} | B×H = ${B}×${H} ${dimU} | ${n} bars d<sub>b</sub>${db} | f'c=${fc} ${k2U} | L=${Lv} ${Lunit}</div></div>` +
+    `<div class="ph-sub">${ws.name} | B×H = ${B}×${H} ${dimU} | ${n} bars Ø${db} ${dimU} (${rebarLbl}, fy=${Fyr} ${k2U}) | f'c=${fc} ${k2U} | L=${Lv} ${Lunit}</div></div>` +
     `<div class="ph-date">${new Date().toLocaleDateString()}</div>` +
     `</div>`;
 
