@@ -1094,20 +1094,23 @@ function srcCalc() {
   const rho_s   = As/Ag;
   const clr_bf  = (B - ws.bf)/2;   // clear from flange tip to concrete face (on each side)
   const clr_d   = (H - ws.d)/2;    // clear from flange face to concrete face (top/bottom)
-  // Rebar-to-W clearance: smallest gap between any rebar surface and W flange/web
+  // Rebar-to-steel clearance: Euclidean distance from each bar surface to nearest W plate
+  // Uses point-to-rectangle distance in the first quadrant (symmetry)
+  function srcRectDist(px, py, xl, xr, yb, yt) {
+    const cx = Math.max(xl, Math.min(xr, px));
+    const cy = Math.max(yb, Math.min(yt, py));
+    return Math.sqrt((px-cx)*(px-cx) + (py-cy)*(py-cy));
+  }
   let minRebarGap = 1e9;
+  const hd = ws.d/2, hbf = ws.bf/2, htf = ws.tf, htw = ws.tw/2;
   for (const r of bars) {
-    // Horizontal: gap to flange edge = |r.x| - bf/2 - db/2 (for bars at extreme x)
-    const gapX = Math.abs(r.x) - ws.bf/2 - db/2;
-    // Vertical: gap to flange top/bottom = H/2 - ccl from face → already offset
-    // Gap between bar and nearest W plate surface:
-    const insideFl = Math.abs(r.y) < ws.d/2 - ws.tf; // bar is beside web
-    if (insideFl) {
-      const gW = Math.abs(r.x) - ws.tw/2 - db/2;
-      minRebarGap = Math.min(minRebarGap, Math.max(0, gW));
-    } else {
-      minRebarGap = Math.min(minRebarGap, Math.max(0, gapX));
-    }
+    const px = Math.abs(r.x), py = Math.abs(r.y);
+    // Distance to top/bottom flange rectangle (first quadrant)
+    const dFlange = srcRectDist(px, py, 0, hbf, hd - htf, hd);
+    // Distance to web rectangle (first quadrant)
+    const dWeb    = srcRectDist(px, py, 0, htw, 0, hd - htf);
+    const gap = Math.min(dFlange, dWeb) - db/2;
+    minRebarGap = Math.min(minRebarGap, Math.max(0, gap));
   }
   const minClearGap = srcIsUS ? 1.0 : 25.4;
   const minCover    = srcIsUS ? 1.5 : 38.1;
