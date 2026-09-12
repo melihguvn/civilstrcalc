@@ -99,12 +99,9 @@ html{scroll-behavior:smooth;}
   <div class="sg-card">
   <nav class="sg-toc">
     <a href="#s1">1. Column Failure Modes</a>
-    <a href="#s2">2. Effective Length KL</a>
-    <a href="#s3">3. Slenderness Limits</a>
-    <a href="#s4">4. Critical Stress F<sub>cr</sub></a>
-    <a href="#s5">5. Design Strength φ<sub>c</sub>P<sub>n</sub></a>
-    <a href="#s6">6. Section Selection</a>
-    <a href="#s7">7. Worked Example</a>
+    <a href="#s4">2. F<sub>cr</sub> vs KL/r Reference Table</a>
+    <a href="#s6">3. Section Selection Strategy</a>
+    <a href="#s7">4. Worked Example</a>
   </nav>
 
   <!-- 1 -->
@@ -124,57 +121,12 @@ html{scroll-behavior:smooth;}
     </div>
   </section>
 
-  <!-- 2 -->
-  <section class="sg-section" id="s2">
-    <div class="sg-hdr-row"><h2>2. Effective Length KL</h2></div>
-    <div class="sg-inner">
-      <p>The effective length KL accounts for the end boundary conditions of the column. K is the effective length factor:</p>
-      <table class="sg-tbl">
-        <thead><tr><th>End Condition</th><th>Theoretical K</th><th>Recommended K (AISC)</th></tr></thead>
-        <tbody>
-          <tr><td>Both ends pinned (no lateral translation)</td><td>1.0</td><td>1.0</td></tr>
-          <tr><td>Both ends fixed (no lateral translation)</td><td>0.5</td><td>0.65</td></tr>
-          <tr><td>One end fixed, one end pinned</td><td>0.707</td><td>0.80</td></tr>
-          <tr><td>One end fixed, one end free (cantilever)</td><td>2.0</td><td>2.1</td></tr>
-          <tr><td>Both ends pinned, lateral translation possible (sway)</td><td>1.0</td><td>1.2</td></tr>
-          <tr><td>Both ends fixed, lateral translation possible</td><td>1.0</td><td>1.2</td></tr>
-        </tbody>
-      </table>
-      <div class="note-box"><strong>Practical rule:</strong> In a braced frame (lateral bracing prevents sway), K ≤ 1.0. In an unbraced (moment) frame, K > 1.0. Most building columns in braced frames use K=1.0 conservatively. Use AISC alignment charts (Commentary §C-E3) for precise K when column end stiffness ratios differ significantly from 0 or ∞.</div>
-      <p>Check KL in <strong>both</strong> principal axes. The effective length in plan may differ from the story height if intermediate bracing exists. For example, a 6 m column braced at mid-height in the weak direction: KL<sub>y</sub>=3.0 m, KL<sub>x</sub>=6.0 m.</p>
-    </div>
-  </section>
-
-  <!-- 3 -->
-  <section class="sg-section" id="s3">
-    <div class="sg-hdr-row"><h2>3. Slenderness Ratio and Limits</h2></div>
-    <div class="sg-inner">
-      <div class="fml">Slenderness ratio = KL / r
-where r = √(I/A) = radius of gyration (mm)
-Governing axis: the one with the largest KL/r value</div>
-      <p><strong>AISC recommended maximum:</strong> KL/r ≤ 200 (advisory, not mandatory — AISC 360-22 §E2 User Note). Slender columns with KL/r > 200 are inefficient (F<sub>cr</sub> drops sharply) and prone to accidental load sensitivity.</p>
-      <table class="sg-tbl">
-        <thead><tr><th>KL/r Range</th><th>Behaviour</th><th>F<sub>cr</sub> Formula</th></tr></thead>
-        <tbody>
-          <tr><td>≤ 4.71√(E/F<sub>y</sub>) = 113 (F<sub>y</sub>=345 MPa)</td><td>Inelastic buckling</td><td>F<sub>cr</sub> = (0.658<sup>F<sub>y</sub>/F<sub>e</sub></sup>)·F<sub>y</sub></td></tr>
-          <tr><td>&gt; 113</td><td>Elastic buckling</td><td>F<sub>cr</sub> = 0.877·F<sub>e</sub></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <div class="note-box" style="margin:0 0 24px;">For effective length K values, slenderness limits, F<sub>cr</sub> formulas, φ<sub>c</sub>P<sub>n</sub>, and H1-1 interaction equations, see <a href="articles/us-standards/7-steel-design-aisc">US Standards Design Guide — Part 7: Steel Design (AISC 360-22)</a>.</div>
 
   <!-- 4 -->
   <section class="sg-section" id="s4">
     <div class="sg-hdr-row"><h2>4. Critical Buckling Stress F<sub>cr</sub></h2></div>
     <div class="sg-inner">
-      <div class="fml">Euler elastic buckling stress:
-F<sub>e</sub> = π²E / (KL/r)²
-
-Inelastic range (KL/r ≤ 4.71√(E/F<sub>y</sub>)):
-F<sub>cr</sub> = [0.658^(F<sub>y</sub>/F<sub>e</sub>)] · F<sub>y</sub>
-
-Elastic range (KL/r > 4.71√(E/F<sub>y</sub>)):
-F<sub>cr</sub> = 0.877 · F<sub>e</sub></div>
       <h3>F<sub>cr</sub> vs KL/r for F<sub>y</sub>=345 MPa (A992 steel)</h3>
       <table class="sg-tbl">
         <thead><tr><th>KL/r</th><th>F<sub>e</sub> (MPa)</th><th>Zone</th><th>F<sub>cr</sub> (MPa)</th><th>F<sub>cr</sub>/F<sub>y</sub></th></tr></thead>
@@ -190,23 +142,6 @@ F<sub>cr</sub> = 0.877 · F<sub>e</sub></div>
         </tbody>
       </table>
       <p>At KL/r=100, the column carries only 62% of its yield load. At KL/r=200, only 12.5%. This is why very slender columns are avoided — you pay for steel you cannot use.</p>
-    </div>
-  </section>
-
-  <!-- 5 -->
-  <section class="sg-section" id="s5">
-    <div class="sg-hdr-row"><h2>5. Design Compressive Strength φ<sub>c</sub>P<sub>n</sub></h2></div>
-    <div class="sg-inner">
-      <div class="fml">P<sub>n</sub> = F<sub>cr</sub> · A<sub>g</sub>      (nominal compressive strength)
-φ<sub>c</sub>P<sub>n</sub> = 0.90 · F<sub>cr</sub> · A<sub>g</sub>   (design strength, LRFD)
-Design check: φ<sub>c</sub>P<sub>n</sub> ≥ P<sub>u</sub></div>
-      <p>For combined axial + bending (beam-column), use AISC interaction equations H1-1a/H1-1b:</p>
-      <div class="fml">If P<sub>u</sub>/(φ<sub>c</sub>P<sub>n</sub>) ≥ 0.2:
-  P<sub>u</sub>/(φ<sub>c</sub>P<sub>n</sub>) + (8/9)·[M<sub>ux</sub>/(φ<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(φ<sub>b</sub>M<sub>ny</sub>)] ≤ 1.0
-
-If P<sub>u</sub>/(φ<sub>c</sub>P<sub>n</sub>) &lt; 0.2:
-  P<sub>u</sub>/(2φ<sub>c</sub>P<sub>n</sub>) + [M<sub>ux</sub>/(φ<sub>b</sub>M<sub>nx</sub>) + M<sub>uy</sub>/(φ<sub>b</sub>M<sub>ny</sub>)] ≤ 1.0</div>
-      <p>→ <a href="steel-combined">Steel Column Combined Axial + Bending Calculator (AISC 360-22)</a></p>
     </div>
   </section>
 

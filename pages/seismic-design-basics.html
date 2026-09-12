@@ -99,12 +99,7 @@ html{scroll-behavior:smooth;}
   <div class="sg-card">
   <nav class="sg-toc">
     <a href="#s1">1. Ground Motion Basics</a>
-    <a href="#s2">2. Response Spectrum</a>
-    <a href="#s3">3. Seismic Design Categories</a>
-    <a href="#s4">4. Base Shear V = C<sub>s</sub>W</a>
-    <a href="#s5">5. R, C<sub>d</sub>, Ω<sub>o</sub> Factors</a>
-    <a href="#s6">6. Drift Limits</a>
-    <a href="#s7">7. Special Detailing</a>
+    <a href="#s7">2. Special Seismic Detailing (ACI 318-25 Ch. 18)</a>
   </nav>
 
   <!-- 1 -->
@@ -121,117 +116,7 @@ html{scroll-behavior:smooth;}
     </div>
   </section>
 
-  <!-- 2 -->
-  <section class="sg-section" id="s2">
-    <div class="sg-hdr-row"><h2>2. Response Spectrum</h2></div>
-    <div class="sg-inner">
-      <p>A response spectrum is a plot of the peak acceleration (or velocity/displacement) experienced by a single-degree-of-freedom oscillator with a given natural period T and damping ratio ζ, subjected to a specific ground motion. It translates complex time-history motion into a design tool.</p>
-      <p>ASCE 7-22 §11.4.5 defines the design response spectrum using two controlling parameters:</p>
-      <table class="sg-tbl">
-        <thead><tr><th>Parameter</th><th>Description</th><th>Typical range</th></tr></thead>
-        <tbody>
-          <tr><td>S<sub>DS</sub></td><td>Design spectral acceleration, short period (T≈0.2 s)</td><td>0.1g – 2.0g</td></tr>
-          <tr><td>S<sub>D1</sub></td><td>Design spectral acceleration at T=1.0 s</td><td>0.05g – 1.0g</td></tr>
-        </tbody>
-      </table>
-      <div class="fml">Spectral shape:
-  T &lt; T<sub>s</sub>:  S<sub>a</sub> = S<sub>DS</sub>·(0.4 + 0.6T/T<sub>0</sub>)  [rising branch]
-  T<sub>0</sub> ≤ T ≤ T<sub>s</sub>: S<sub>a</sub> = S<sub>DS</sub>           [plateau — controls stiff/short-period buildings]
-  T &gt; T<sub>s</sub>:  S<sub>a</sub> = S<sub>D1</sub>/T              [descending — controls flexible/tall buildings]
-
-  T<sub>0</sub> = 0.2·S<sub>D1</sub>/S<sub>DS</sub>  |  T<sub>s</sub> = S<sub>D1</sub>/S<sub>DS</sub></div>
-      <p>A low-rise stiff RC frame (T≈0.3–0.6 s) typically sits on the plateau — governed by S<sub>DS</sub>. A tall flexible moment frame (T≈2–3 s) sits on the descending branch — governed by S<sub>D1</sub>/T.</p>
-    </div>
-  </section>
-
-  <!-- 3 -->
-  <section class="sg-section" id="s3">
-    <div class="sg-hdr-row"><h2>3. Seismic Design Categories (SDC)</h2></div>
-    <div class="sg-inner">
-      <p>ASCE 7-22 §11.6 assigns each structure to a Seismic Design Category (SDC) A–F based on S<sub>DS</sub>, S<sub>D1</sub>, and occupancy (Risk Category I–IV). The SDC determines the allowable structural systems, detailing requirements, and analysis methods.</p>
-      <table class="sg-tbl">
-        <thead><tr><th>SDC</th><th>Hazard Level</th><th>Allowable Systems</th><th>Detailing</th></tr></thead>
-        <tbody>
-          <tr><td>A</td><td>Very low (S<sub>DS</sub>&lt;0.167g)</td><td>Any</td><td>Ordinary (no special detailing)</td></tr>
-          <tr><td>B</td><td>Low (S<sub>DS</sub>&lt;0.33g)</td><td>Almost any</td><td>Intermediate minimum</td></tr>
-          <tr><td>C</td><td>Moderate</td><td>Most systems; some restrictions</td><td>Intermediate moment frames allowed</td></tr>
-          <tr><td>D</td><td>High (S<sub>DS</sub>≥0.50g)</td><td>No ordinary frames; special or intermediate only</td><td>Special moment frames (SMF), special structural walls</td></tr>
-          <tr><td>E</td><td>High (S<sub>D1</sub>≥0.60g; Risk Cat I/II)</td><td>Highly restricted</td><td>Full special detailing required</td></tr>
-          <tr><td>F</td><td>High (S<sub>D1</sub>≥0.60g; Risk Cat III/IV)</td><td>Most restrictive</td><td>Full special + enhanced inspection</td></tr>
-        </tbody>
-      </table>
-      <div class="note-box">Most US west-coast cities (Los Angeles, Seattle, San Francisco) are SDC D–F. East-coast cities are typically SDC B–C, with some areas reaching D. Structures in SDC A need only a minimum horizontal force check — no seismic detailing.</div>
-    </div>
-  </section>
-
-  <!-- 4 -->
-  <section class="sg-section" id="s4">
-    <div class="sg-hdr-row"><h2>4. Equivalent Lateral Force — Base Shear V = C<sub>s</sub>W</h2></div>
-    <div class="sg-inner">
-      <p>For regular structures with T &lt; 3.5T<sub>s</sub>, the Equivalent Lateral Force (ELF) procedure (ASCE 7-22 §12.8) is the simplest seismic analysis method:</p>
-      <div class="fml">V = C<sub>s</sub> · W
-
-Seismic response coefficient C<sub>s</sub>:
-  C<sub>s</sub> = S<sub>DS</sub> / (R/I<sub>e</sub>)              [basic, governs short-period]
-  C<sub>s,max</sub> = S<sub>D1</sub> / (T·R/I<sub>e</sub>)         [descending branch]
-  C<sub>s,min</sub> = max(0.044·S<sub>DS</sub>·I<sub>e</sub>, 0.01)  [minimum]
-
-W = effective seismic weight (dead load + 25% storage LL + partition allowance)</div>
-      <p>The lateral force V is distributed over the building height as an inverted triangle (approximately) per ASCE 7-22 §12.8.3:</p>
-      <div class="fml">F<sub>x</sub> = C<sub>vx</sub> · V
-C<sub>vx</sub> = w<sub>x</sub>·h<sub>x</sub><sup>k</sup> / Σ(w<sub>i</sub>·h<sub>i</sub><sup>k</sup>)
-k = 1.0 (T ≤ 0.5 s) or 2.0 (T ≥ 2.5 s), interpolated between</div>
-      <p>This produces an overturning moment at the base: OTM = Σ F<sub>x</sub>·h<sub>x</sub>, which the foundations and lateral system must resist.</p>
-    </div>
-  </section>
-
-  <!-- 5 -->
-  <section class="sg-section" id="s5">
-    <div class="sg-hdr-row"><h2>5. R, C<sub>d</sub>, and Ω<sub>o</sub> — The Three Seismic Factors</h2></div>
-    <div class="sg-inner">
-      <p>These three factors in ASCE 7-22 Table 12.2-1 encapsulate a system's ductility and overstrength:</p>
-      <table class="sg-tbl">
-        <thead><tr><th>Factor</th><th>Name</th><th>Meaning</th><th>Typical range</th></tr></thead>
-        <tbody>
-          <tr><td><strong>R</strong></td><td>Response modification factor</td><td>Reduces elastic demand to design force. A higher R means you design for less force, relying on ductility to absorb energy. The structure is expected to yield but not collapse.</td><td>1.5 – 8</td></tr>
-          <tr><td><strong>C<sub>d</sub></strong></td><td>Deflection amplification factor</td><td>Amplifies elastic drift back to the expected inelastic drift. C<sub>d</sub>/R ≈ 0.5–1.0 depending on system.</td><td>1.5 – 6.5</td></tr>
-          <tr><td><strong>Ω<sub>o</sub></strong></td><td>Overstrength factor</td><td>Amplifies the design seismic force for elements that must remain elastic (collectors, foundations under columns, non-ductile connections).</td><td>2.0 – 3.0</td></tr>
-        </tbody>
-      </table>
-      <h3>Common Lateral Systems and Their Factors</h3>
-      <table class="sg-tbl">
-        <thead><tr><th>System</th><th>R</th><th>C<sub>d</sub></th><th>Ω<sub>o</sub></th><th>Max SDC</th></tr></thead>
-        <tbody>
-          <tr><td>Special RC Moment Frame (SMF)</td><td>8</td><td>5.5</td><td>3</td><td>D–F</td></tr>
-          <tr><td>Intermediate RC Moment Frame (IMF)</td><td>5</td><td>4.5</td><td>3</td><td>C</td></tr>
-          <tr><td>Ordinary RC Moment Frame (OMF)</td><td>3</td><td>2.5</td><td>3</td><td>B</td></tr>
-          <tr><td>Special RC Shear Wall</td><td>6</td><td>5</td><td>2.5</td><td>D–F</td></tr>
-          <tr><td>Steel SCBF (Special Concentric Braced Frame)</td><td>6</td><td>5</td><td>2</td><td>D–F</td></tr>
-          <tr><td>Steel SMF</td><td>8</td><td>5.5</td><td>3</td><td>D–F</td></tr>
-        </tbody>
-      </table>
-      <p>A Special RC Moment Frame (R=8) is designed for 8× less force than a structure that remains elastic. This economy comes at the cost of extensive special detailing (confinement hoops, strong-column weak-beam, capacity design) to ensure ductile yielding without collapse.</p>
-    </div>
-  </section>
-
-  <!-- 6 -->
-  <section class="sg-section" id="s6">
-    <div class="sg-hdr-row"><h2>6. Drift Limits</h2></div>
-    <div class="sg-inner">
-      <p>Lateral drift (inter-storey displacement / storey height) must be limited to protect non-structural elements (facades, partitions, MEP) from damage and prevent structural instability (P-Δ effects).</p>
-      <div class="fml">Inelastic drift = C<sub>d</sub> · δ<sub>xe</sub> / I<sub>e</sub>
-where δ<sub>xe</sub> = elastic drift under design seismic forces (from analysis)</div>
-      <table class="sg-tbl">
-        <thead><tr><th>Structure Type</th><th>Risk Category I/II</th><th>Risk Category III</th><th>Risk Category IV</th></tr></thead>
-        <tbody>
-          <tr><td>Structures ≤ 4 stories with interior walls designed for drift</td><td>h<sub>sx</sub>/50 = 2.0%</td><td>h<sub>sx</sub>/67 = 1.5%</td><td>h<sub>sx</sub>/100 = 1.0%</td></tr>
-          <tr><td>All other structures</td><td>h<sub>sx</sub>/50 = 2.0%</td><td>h<sub>sx</sub>/67 = 1.5%</td><td>h<sub>sx</sub>/100 = 1.0%</td></tr>
-          <tr><td>Masonry cantilever shear walls</td><td>h<sub>sx</sub>/100 = 1.0%</td><td>h<sub>sx</sub>/100</td><td>h<sub>sx</sub>/100</td></tr>
-        </tbody>
-      </table>
-      <p><em>h<sub>sx</sub> = storey height.</em> A 3.5 m storey with a 2% limit allows 70 mm of inelastic inter-storey drift — the structure must be able to sustain this without collapse.</p>
-    </div>
-  </section>
+  <div class="note-box" style="margin:0 0 24px;">For the response spectrum, SDC tables, ELF base shear, R/C<sub>d</sub>/Ω<sub>o</sub> factors, and drift limits under ASCE 7-22, see the <a href="articles/us-standards/4-seismic-design">US Standards Design Guide — Part 4: Seismic Design</a>.</div>
 
   <!-- 7 -->
   <section class="sg-section" id="s7">
