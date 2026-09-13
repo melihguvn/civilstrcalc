@@ -119,7 +119,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .report-warn{padding:2px 5px!important;font-size:.55rem!important;margin-bottom:3px!important;line-height:1.3!important;}
   .print-only{padding-bottom:4px!important;margin-bottom:4px!important;}
   .print-pmm-wrap{display:block!important;margin-top:4px!important;}
-  .print-pmm-wrap canvas{width:72%!important;height:auto!important;aspect-ratio:560/380!important;margin:0 auto!important;display:block!important;}
+  .print-pmm-wrap canvas,.print-pmm-wrap img{width:72%!important;height:auto!important;margin:0 auto!important;display:block!important;}
+  .print-pmm-label{text-align:center;font-size:6.5pt;font-weight:600;color:#374151;padding-bottom:2px;}
   .print-disclaimer{display:block!important;margin-top:3px!important;padding:2px 6px!important;font-size:5pt!important;}
   .print-footer{display:flex!important;margin-top:3px!important;padding-top:2px!important;font-size:5pt!important;}
   .rpt-sec-screen-only{display:none!important;}
@@ -297,6 +298,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
       </div>
       <div class="report-body" id="src-res-body"></div>
+      <div class="print-pmm-wrap" id="src-print-pmm-wrap"></div>
     </div>
   </div>
 
@@ -756,7 +758,7 @@ function srcSweepX(B, H, ws, Fy, fc, bars, Fyr, N) {
   const { d, bf, tf, tw } = ws;
 
   for (let i = 0; i <= N; i++) {
-    const yp = H/2 - H*i/N;
+    const yp = -H/2 + H*i/N;   // sweep from bottom (all compression) to top (all tension)
 
     // W plates (top flange, web, bottom flange)
     const tf_r = srcWPlate_x(d/2-tf, d/2, bf, yp);
@@ -812,7 +814,7 @@ function srcSweepY(B, H, ws, Fy, fc, bars, Fyr, N) {
   const { d, bf, tf, tw } = ws;
 
   for (let i = 0; i <= N; i++) {
-    const xp = B/2 - B*i/N;
+    const xp = -B/2 + B*i/N;   // sweep from left (all compression) to right (all tension)
 
     // W section for y-axis: top+bottom flanges = 2*tf in x-direction; web = tw
     const fl_r = srcWPlate_y(-bf/2, bf/2, 2*tf, xp);
@@ -1049,6 +1051,15 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
     ctx.fillStyle = '#6b7280'; ctx.font = '10px IBM Plex Sans, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText(`Biaxial — governing axis: ${axLbl}`, pad.l + 2, pad.t - 6);
   }
+
+  // Update print copy (for PDF/print)
+  const printWrap = document.getElementById('src-print-pmm-wrap');
+  if (printWrap) {
+    const axLblPrint = srcAxis === 'y' ? 'M_y Axis' : (srcAxis === 'bi' ? 'Biaxial (governing axis)' : 'M_x Axis');
+    printWrap.innerHTML =
+      '<div class="print-pmm-label">P-M Interaction Diagram — LRFD &nbsp;|&nbsp; ' + axLblPrint + '</div>' +
+      '<img src="' + canvas.toDataURL('image/png') + '" alt="P-M interaction diagram">';
+  }
 }
 
 // ─────────────────────────────────────────
@@ -1201,7 +1212,7 @@ function srcCalc() {
 
   // Area/inertia display
   const aFact = srcIsUS ? 1 : 1e-2;  // mm²→cm²
-  const i4Fact= srcIsUS ? 1 : 1e-8;  // mm⁴→cm⁴
+  const i4Fact= srcIsUS ? 1 : 1e-4;  // mm⁴→cm⁴  (1 cm⁴ = 1e4 mm⁴)
   const aUD = srcIsUS ? 'in²' : 'cm²';
   const i4UD= srcIsUS ? 'in⁴' : 'cm⁴';
   const aDP = srcIsUS ? 2 : 1;
@@ -1214,10 +1225,10 @@ function srcCalc() {
   const pPnU    = srcIsUS ? Pn        : Pn/1000;
   const pPeXU   = srcIsUS ? Pe_x      : Pe_x/1000;
   const pPeYU   = srcIsUS ? Pe_y      : Pe_y/1000;
-  const mMpXu   = toM(Mp_x   * (srcIsUS?1:1e-3));
-  const mMpYu   = toM(Mp_y   * (srcIsUS?1:1e-3));
-  const phiMx_d = toM(phiMn_x* (srcIsUS?1:1e-3));
-  const phiMy_d = toM(phiMn_y* (srcIsUS?1:1e-3));
+  const mMpXu   = toM(Mp_x);
+  const mMpYu   = toM(Mp_y);
+  const phiMx_d = toM(phiMn_x);
+  const phiMy_d = toM(phiMn_y);
 
   // Update SVG
   srcUpdateSVG(B, H, ws, bars, cov);
