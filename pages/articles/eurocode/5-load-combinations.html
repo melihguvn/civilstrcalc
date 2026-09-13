@@ -448,68 +448,73 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
       if(active.length>0){
         var ulsItems=[];
         var govIdx=-1;
+        // accompanying loads: 1.50·ψ0 (excludes the leading load)
+        function accomp(leadId){
+          var s='';
+          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;s+=' + '+f(1.50*p[0])+'·'+LBL[id];});
+          return s;
+        }
         for(var li_i=0;li_i<active.length;li_i++){
           var leadId=active[li_i];
           var leadLbl=LBL[leadId];
           var p_lead=psi(leadId,psiQ);
+          var co=accomp(leadId);
 
-          // Eq. 6.10  — single-equation approach (alternative to 6.10a/6.10b)
-          // Leading load gets full 1.50; accompanying loads get 1.50·ψ0
-          var f610='1.35·G<sub>k</sub> + 1.50·'+leadLbl;
-          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610+=' + '+f(1.50*p[0])+'·'+LBL[id];});
-          ulsItems.push({type:'Eq. 6.10',formula:f610,note:'lead: '+leadLbl,gov:false});
-
-          // Eq. 6.10a  — two-equation approach; all variable loads multiplied by ψ0
-          var f610a='1.35·G<sub>k</sub> + '+f(1.50*p_lead[0])+'·'+leadLbl;
-          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610a+=' + '+f(1.50*p[0])+'·'+LBL[id];});
-          ulsItems.push({type:'Eq. 6.10a',formula:f610a,note:'lead: '+leadLbl,gov:false});
-
-          // Eq. 6.10b  — reduced G (ξ=0.85), leading at full 1.50, accompanying at 1.50·ψ0
-          var f610b='1.148·G<sub>k</sub> + 1.50·'+leadLbl;
-          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610b+=' + '+f(1.50*p[0])+'·'+LBL[id];});
+          // Eq. 6.10 — unfavourable G (γG,sup=1.35), leading at full 1.50
+          ulsItems.push({type:'Eq. 6.10',formula:'1.35·G<sub>k</sub> + 1.50·'+leadLbl+co,note:'lead: '+leadLbl,gov:false});
+          // Eq. 6.10 — favourable G (γG,inf=1.00): when permanent load is stabilising (uplift/stability check)
+          ulsItems.push({type:'Eq. 6.10 (fav.G)',formula:'1.00·G<sub>k</sub> + 1.50·'+leadLbl+co,note:'lead: '+leadLbl,gov:false});
+          // Eq. 6.10a — two-equation approach; leading also reduced by ψ0
+          ulsItems.push({type:'Eq. 6.10a',formula:'1.35·G<sub>k</sub> + '+f(1.50*p_lead[0])+'·'+leadLbl+co,note:'lead: '+leadLbl,gov:false});
+          // Eq. 6.10b — ξ=0.85 → 1.148·Gk, leading at full 1.50
           var idx610b=ulsItems.length;
-          ulsItems.push({type:'Eq. 6.10b',formula:f610b,note:'lead: '+leadLbl,gov:false});
-          if(govIdx<0) govIdx=idx610b; // first 6.10b is typically governing
+          ulsItems.push({type:'Eq. 6.10b',formula:'1.148·G<sub>k</sub> + 1.50·'+leadLbl+co,note:'lead: '+leadLbl,gov:false});
+          if(govIdx<0) govIdx=idx610b;
         }
         if(active.includes('W')) ulsItems.push({type:'EQU (uplift)',formula:'0.90·G<sub>k</sub> + 1.50·W<sub>k</sub>',note:'wind uplift',gov:false});
         if(govIdx>=0) ulsItems[govIdx].gov=true;
 
-        html+='<div class="ecb-group"><div class="ecb-group-hdr">ULS — Persistent &amp; Transient Design Situation (EN 1990 §6.4.3.2)</div><p style="font-size:.75rem;color:#64748b;margin:0 0 8px;">Eq. 6.10 is the single-equation approach. Eqs. 6.10a &amp; 6.10b are the alternative two-equation approach — use whichever the applicable National Annex specifies. * = likely governing.</p><ul class="ecb-list">';
+        html+='<div class="ecb-group"><div class="ecb-group-hdr">ULS — Persistent &amp; Transient Design Situation (EN 1990 §6.4.3.2)</div><p style="font-size:.75rem;color:#64748b;margin:0 0 8px;">Eq. 6.10 is the single-equation approach — includes both unfavourable (γ<sub>G,sup</sub>=1.35) and favourable (γ<sub>G,inf</sub>=1.00) permanent load cases. Eqs. 6.10a &amp; 6.10b are the alternative two-equation approach. * = likely governing.</p><ul class="ecb-list">';
         ulsItems.forEach(function(it){html+=li(it.type,it.formula,it.note,it.gov);});
         html+='</ul></div>';
       }
 
       // ── Accidental / Seismic ──────────────────────────────────────────────
       if(hasE){
-        var accF='1.00·G<sub>k</sub> + A<sub>Ed</sub>';
-        active.forEach(function(id){var p=psi(id,psiQ);if(p[2]>0) accF+=' + '+f(p[2])+'·'+LBL[id];});
+        var psi2part='';
+        active.forEach(function(id){var p=psi(id,psiQ);if(p[2]>0) psi2part+=' + '+f(p[2])+'·'+LBL[id];});
         html+='<div class="ecb-group"><div class="ecb-group-hdr">Accidental Design Situation — Seismic (EN 1990 §6.4.3.4)</div><ul class="ecb-list">';
-        html+=li('Accidental',accF,'ψ₂ on variable loads',false);
-        html+=li('Accidental (uplift)','1.00·G<sub>k</sub> + A<sub>Ed</sub>','destabilising case',false);
+        html+=li('Seismic (+A<sub>Ed</sub>)','1.00·G<sub>k</sub> + A<sub>Ed</sub>'+psi2part,'ψ₂ on variable loads',false);
+        html+=li('Seismic (−A<sub>Ed</sub>)','1.00·G<sub>k</sub> − A<sub>Ed</sub>'+psi2part,'reverse seismic direction',false);
+        if(psi2part!==''){
+          html+=li('Seismic (+A<sub>Ed</sub>)','1.00·G<sub>k</sub> + A<sub>Ed</sub>','no variable accompaniment',false);
+          html+=li('Seismic (−A<sub>Ed</sub>)','1.00·G<sub>k</sub> − A<sub>Ed</sub>','no variable accompaniment',false);
+        }
         html+='</ul></div>';
       }
 
       // ── SLS ───────────────────────────────────────────────────────────────
       if(active.length>0){
-        var leadId=active[0], p_lead=psi(leadId,psiQ);
-        // SLS Characteristic: leading Qk full, accompanying ψ0·Qk
-        var charF='G<sub>k</sub> + '+LBL[leadId];
-        active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;charF+=' + '+f(p[0])+'·'+LBL[id];});
-
-        // SLS Frequent: leading ψ1·Qk, accompanying ψ2·Qk
-        var freqF='G<sub>k</sub> + '+f(p_lead[1])+'·'+LBL[leadId];
-        active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[2]===0)return;freqF+=' + '+f(p[2])+'·'+LBL[id];});
-
-        // SLS Quasi-permanent: ψ2·Qk for all
+        html+='<div class="ecb-group"><div class="ecb-group-hdr">SLS — Serviceability Combinations (EN 1990 §6.5.3)</div><ul class="ecb-list">';
+        // Characteristic & Frequent: each active load acts as leading in turn
+        active.forEach(function(leadId){
+          var leadLbl=LBL[leadId];
+          var p_lead=psi(leadId,psiQ);
+          // Characteristic: leading full, accompanying ψ0
+          var charF='G<sub>k</sub> + '+leadLbl;
+          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;charF+=' + '+f(p[0])+'·'+LBL[id];});
+          html+=li('Char. (lead: '+leadLbl+')',charF,'immediate / elastic deflection',false);
+          // Frequent: leading ψ1, accompanying ψ2
+          var freqF='G<sub>k</sub> + '+f(p_lead[1])+'·'+leadLbl;
+          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[2]===0)return;freqF+=' + '+f(p[2])+'·'+LBL[id];});
+          html+=li('Freq. (lead: '+leadLbl+')',freqF,'reversible deflection, vibration',false);
+        });
+        // Quasi-permanent: ψ2 on all (no leading load distinction)
         var qpF='G<sub>k</sub>';
         var hasQP=false;
         active.forEach(function(id){var p=psi(id,psiQ);if(p[2]===0)return;hasQP=true;qpF+=' + '+f(p[2])+'·'+LBL[id];});
         if(!hasQP) qpF='G<sub>k</sub>  (no variable load contributes)';
-
-        html+='<div class="ecb-group"><div class="ecb-group-hdr">SLS — Serviceability Combinations (EN 1990 §6.5.3)</div><ul class="ecb-list">';
-        html+=li('Characteristic',charF,'immediate deflection',false);
-        html+=li('Frequent',freqF,'reversible deflection, vibration',false);
-        html+=li('Quasi-permanent',qpF,'creep, crack width',false);
+        html+=li('Quasi-permanent',qpF,'creep, crack width, long-term deflection',false);
         html+='</ul></div>';
       }
 
