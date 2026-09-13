@@ -800,7 +800,8 @@ function srcSweepX(B, H, ws, Fy, fc, bars, Fyr, N) {
     const P = Fy*(Ws_above - Ws_below) + 0.85*fc*Ac_above + Rp;
     const M = Fy*Ws_Ayc + Fy*Ws_Ayb + 0.85*fc*Ac_above*Math.abs(Ac_Ay) + Rm;
 
-    pts.push({ P: Math.max(0, P), M: Math.abs(M) });
+    if (P >= 0) { pts.push({ P, M: Math.abs(M) }); }
+    else { pts.push({ P: 0, M: Math.abs(M) }); break; }  // one P=0 point then stop
   }
   return pts;
 }
@@ -852,7 +853,8 @@ function srcSweepY(B, H, ws, Fy, fc, bars, Fyr, N) {
     const P = Fy*(Ws_above - Ws_below) + 0.85*fc*Ac_above + Rp;
     const M = Fy*Ws_Axc + Fy*Ws_Axb + 0.85*fc*Ac_above*Math.abs(Ac_Ax) + Rm;
 
-    pts.push({ P: Math.max(0, P), M: Math.abs(M) });
+    if (P >= 0) { pts.push({ P, M: Math.abs(M) }); }
+    else { pts.push({ P: 0, M: Math.abs(M) }); break; }  // one P=0 point then stop
   }
   return pts;
 }
@@ -1003,20 +1005,32 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
   }
 
   // Nominal envelope
-  ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  nom_pts.forEach((p,i) => i===0 ? ctx.moveTo(toX(p.M),toY(p.P)) : ctx.lineTo(toX(p.M),toY(p.P)));
-  ctx.stroke();
+  if (nom_pts.length > 1) {
+    const lnp = nom_pts[nom_pts.length - 1];
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(nom_pts[0].P));
+    nom_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
+    ctx.lineTo(toX(lnp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
+    ctx.fillStyle = 'rgba(147,197,253,0.10)'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(nom_pts[0].P));
+    nom_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
+    ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
 
   // Design envelope fill + line
-  ctx.fillStyle = 'rgba(29,78,216,0.06)';
-  ctx.beginPath();
-  phi_pts.forEach((p,i) => i===0 ? ctx.moveTo(toX(p.M),toY(p.P)) : ctx.lineTo(toX(p.M),toY(p.P)));
-  ctx.lineTo(toX(0), toY(0)); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  phi_pts.forEach((p,i) => i===0 ? ctx.moveTo(toX(p.M),toY(p.P)) : ctx.lineTo(toX(p.M),toY(p.P)));
-  ctx.stroke();
+  if (phi_pts.length > 1) {
+    const ldp = phi_pts[phi_pts.length - 1];
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(phi_pts[0].P));
+    phi_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
+    ctx.lineTo(toX(ldp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
+    ctx.fillStyle = 'rgba(29,78,216,0.06)'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(phi_pts[0].P));
+    phi_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
+    ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2; ctx.stroke();
+  }
 
   // Demand point
   ctx.fillStyle = '#16a34a';
