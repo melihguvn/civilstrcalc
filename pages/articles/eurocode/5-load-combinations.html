@@ -367,7 +367,7 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
     .ecb-list li{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:.83rem;}
     .ecb-list li:last-child{border-bottom:none;}
     .ecb-type{flex-shrink:0;width:110px;font-size:.72rem;font-weight:600;color:#64748b;}
-    .ecb-formula{font-family:monospace;color:#1a2332;line-height:1.5;}
+    .ecb-formula{font-family:'IBM Plex Sans',sans-serif;font-size:.84rem;color:#1a2332;line-height:1.5;}
     .ecb-note{font-size:.72rem;color:#94a3b8;margin-left:auto;white-space:nowrap;}
     .ecb-gov{background:#fffbeb;border-radius:3px;padding:1px 4px;}
     .ecb-gov .ecb-type{color:#b45309;}
@@ -414,7 +414,7 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
   (function(){
     var PSI_Q={A:[0.7,0.5,0.3],B:[0.7,0.5,0.3],C:[0.7,0.7,0.6],D:[0.7,0.7,0.6],E:[1.0,0.9,0.8],F:[0.7,0.7,0.6],G:[0.7,0.5,0.3],H:[0.0,0.0,0.0]};
     var PSI={W:[0.6,0.2,0.0],S:[0.5,0.2,0.0],T:[0.6,0.5,0.0]};
-    var LBL={G:'Gk',Q:'Qk',W:'Wk',S:'Sk',T:'Tk',E:'AEd'};
+    var LBL={G:'G<sub>k</sub>',Q:'Q<sub>k</sub>',W:'W<sub>k</sub>',S:'S<sub>k</sub>',T:'T<sub>k</sub>',E:'A<sub>Ed</sub>'};
     function f(v){return v%1===0?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,'');}
     function psi(id,psiQ){return id==='Q'?psiQ:PSI[id]||[0,0,0];}
 
@@ -453,18 +453,18 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
           var p_lead=psi(leadId,psiQ);
 
           // 6.10a  — all variable loads multiplied by ψ0 (show computed product)
-          var f610a='1.35·Gk + '+f(1.50*p_lead[0])+'·'+leadLbl;
+          var f610a='1.35·G<sub>k</sub> + '+f(1.50*p_lead[0])+'·'+leadLbl;
           active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610a+=' + '+f(1.50*p[0])+'·'+LBL[id];});
           ulsItems.push({type:'Eq. 6.10a',formula:f610a,note:'lead: '+leadLbl,gov:false});
 
           // 6.10b  — leading load at full 1.50, accompanying reduced by ψ0
-          var f610b='1.148·Gk + 1.50·'+leadLbl;
+          var f610b='1.148·G<sub>k</sub> + 1.50·'+leadLbl;
           active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610b+=' + '+f(1.50*p[0])+'·'+LBL[id];});
           var idx610b=ulsItems.length;
           ulsItems.push({type:'Eq. 6.10b',formula:f610b,note:'lead: '+leadLbl,gov:false});
           if(govIdx<0) govIdx=idx610b; // first 6.10b (leading Q or first load) is likely governing
         }
-        if(active.includes('W')) ulsItems.push({type:'EQU (uplift)',formula:'0.90·Gk + 1.50·Wk',note:'wind uplift',gov:false});
+        if(active.includes('W')) ulsItems.push({type:'EQU (uplift)',formula:'0.90·G<sub>k</sub> + 1.50·W<sub>k</sub>',note:'wind uplift',gov:false});
         if(govIdx>=0) ulsItems[govIdx].gov=true;
 
         html+='<div class="ecb-group"><div class="ecb-group-hdr">ULS — Persistent &amp; Transient Design Situation (EN 1990 §6.4.3.2)</div><ul class="ecb-list">';
@@ -474,11 +474,11 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
 
       // ── Accidental / Seismic ──────────────────────────────────────────────
       if(hasE){
-        var accF='1.00·Gk + AEd';
+        var accF='1.00·G<sub>k</sub> + A<sub>Ed</sub>';
         active.forEach(function(id){var p=psi(id,psiQ);if(p[2]>0) accF+=' + '+f(p[2])+'·'+LBL[id];});
         html+='<div class="ecb-group"><div class="ecb-group-hdr">Accidental Design Situation — Seismic (EN 1990 §6.4.3.4)</div><ul class="ecb-list">';
         html+=li('Accidental',accF,'ψ₂ on variable loads',false);
-        html+=li('Accidental (uplift)','1.00·Gk + AEd','destabilising case',false);
+        html+=li('Accidental (uplift)','1.00·G<sub>k</sub> + A<sub>Ed</sub>','destabilising case',false);
         html+='</ul></div>';
       }
 
@@ -486,18 +486,18 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
       if(active.length>0){
         var leadId=active[0], p_lead=psi(leadId,psiQ);
         // SLS Characteristic: leading Qk full, accompanying ψ0·Qk
-        var charF='Gk + '+LBL[leadId];
+        var charF='G<sub>k</sub> + '+LBL[leadId];
         active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;charF+=' + '+f(p[0])+'·'+LBL[id];});
 
         // SLS Frequent: leading ψ1·Qk, accompanying ψ2·Qk
-        var freqF='Gk + '+f(p_lead[1])+'·'+LBL[leadId];
+        var freqF='G<sub>k</sub> + '+f(p_lead[1])+'·'+LBL[leadId];
         active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[2]===0)return;freqF+=' + '+f(p[2])+'·'+LBL[id];});
 
         // SLS Quasi-permanent: ψ2·Qk for all
-        var qpF='Gk';
+        var qpF='G<sub>k</sub>';
         var hasQP=false;
         active.forEach(function(id){var p=psi(id,psiQ);if(p[2]===0)return;hasQP=true;qpF+=' + '+f(p[2])+'·'+LBL[id];});
-        if(!hasQP) qpF='Gk  (no variable load contributes)';
+        if(!hasQP) qpF='G<sub>k</sub>  (no variable load contributes)';
 
         html+='<div class="ecb-group"><div class="ecb-group-hdr">SLS — Serviceability Combinations (EN 1990 §6.5.3)</div><ul class="ecb-list">';
         html+=li('Characteristic',charF,'immediate deflection',false);
