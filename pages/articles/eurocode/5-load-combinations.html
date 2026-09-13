@@ -399,7 +399,7 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
             <label><input type="checkbox" id="cq-W" onchange="ecbBuild()"> W — Wind</label>
             <label><input type="checkbox" id="cq-S" onchange="ecbBuild()"> S — Snow</label>
             <label><input type="checkbox" id="cq-E" onchange="ecbBuild()"> E — Seismic (accidental)</label>
-            <small style="margin-left:23px;font-size:.71rem;color:#64748b;line-height:1.5;">A<sub>Ed</sub> = design seismic action per EN 1998-1.<br>Not a fixed multiplier — determined by site-specific<br>hazard analysis (PGA, soil class, importance factor).</small>
+            <small style="margin-left:23px;font-size:.71rem;color:#64748b;line-height:1.5;">E<sub>d</sub> = design seismic action per EN 1998-1.<br>X and Y components combined via 100%+30% rule<br>(EN 1998-1 §4.3.3.5.1) — same as TBDY §4.4.2.2.</small>
             <label><input type="checkbox" id="cq-T" onchange="ecbBuild()"> T — Temperature</label>
           </div>
         </div>
@@ -408,14 +408,14 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
     </div>
 
     <div id="ecb-out"></div>
-    <p style="font-size:.72rem;color:#94a3b8;margin-top:6px;">ψ values per EN 1991-1-1 Table A1.1 (recommended; National Annexes may differ). Snow ≤1000 m a.s.l. assumed. A<sub>Ed</sub> from EN 1998-1 site analysis. * = likely governing combination.</p>
+    <p style="font-size:.72rem;color:#94a3b8;margin-top:6px;">ψ values per EN 1991-1-1 Table A1.1 (recommended; National Annexes may differ). Snow ≤1000 m a.s.l. assumed. E<sub>d</sub> = design seismic action per EN 1998-1 — determined by site-specific hazard analysis; X and Y components combined via 100%+30% rule (EN 1998-1 §4.3.3.5.1). * = likely governing combination.</p>
   </div>
 
   <script>
   (function(){
     var PSI_Q={A:[0.7,0.5,0.3],B:[0.7,0.5,0.3],C:[0.7,0.7,0.6],D:[0.7,0.7,0.6],E:[1.0,0.9,0.8],F:[0.7,0.7,0.6],G:[0.7,0.5,0.3],H:[0.0,0.0,0.0]};
     var PSI={W:[0.6,0.2,0.0],S:[0.5,0.2,0.0],T:[0.6,0.5,0.0]};
-    var LBL={G:'G<sub>k</sub>',Q:'Q<sub>k</sub>',W:'W<sub>k</sub>',S:'S<sub>k</sub>',T:'T<sub>k</sub>',E:'A<sub>Ed</sub>'};
+    var LBL={G:'G<sub>k</sub>',Q:'Q<sub>k</sub>',W:'W<sub>k</sub>',S:'S<sub>k</sub>',T:'T<sub>k</sub>',E:'E<sub>d</sub>'};
     function f(v){return v%1===0?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,'');}
     function psi(id,psiQ){return id==='Q'?psiQ:PSI[id]||[0,0,0];}
 
@@ -484,11 +484,11 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
         var psi2part='';
         active.forEach(function(id){var p=psi(id,psiQ);if(p[2]>0) psi2part+=' + '+f(p[2])+'·'+LBL[id];});
         html+='<div class="ecb-group"><div class="ecb-group-hdr">Accidental Design Situation — Seismic (EN 1990 §6.4.3.4)</div><ul class="ecb-list">';
-        html+=li('Seismic (+A<sub>Ed</sub>)','1.00·G<sub>k</sub> + A<sub>Ed</sub>'+psi2part,'ψ₂ on variable loads',false);
-        html+=li('Seismic (−A<sub>Ed</sub>)','1.00·G<sub>k</sub> − A<sub>Ed</sub>'+psi2part,'reverse seismic direction',false);
+        html+=li('Seismic (+E<sub>d</sub>)','1.00·G<sub>k</sub> + E<sub>d</sub>'+psi2part,'ψ₂ on variable loads',false);
+        html+=li('Seismic (−E<sub>d</sub>)','1.00·G<sub>k</sub> − E<sub>d</sub>'+psi2part,'reverse seismic direction',false);
         if(psi2part!==''){
-          html+=li('Seismic (+A<sub>Ed</sub>)','1.00·G<sub>k</sub> + A<sub>Ed</sub>','no variable accompaniment',false);
-          html+=li('Seismic (−A<sub>Ed</sub>)','1.00·G<sub>k</sub> − A<sub>Ed</sub>','no variable accompaniment',false);
+          html+=li('Seismic (+E<sub>d</sub>)','1.00·G<sub>k</sub> + E<sub>d</sub>','no variable accompaniment',false);
+          html+=li('Seismic (−E<sub>d</sub>)','1.00·G<sub>k</sub> − E<sub>d</sub>','no variable accompaniment',false);
         }
         html+='</ul></div>';
       }
