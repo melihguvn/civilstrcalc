@@ -452,14 +452,14 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
           var leadLbl=LBL[leadId];
           var p_lead=psi(leadId,psiQ);
 
-          // 6.10a
-          var f610a='1.35·Gk + 1.50·'+f(p_lead[0])+'·'+leadLbl;
-          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610a+=' + 1.50·'+f(p[0])+'·'+LBL[id];});
+          // 6.10a  — all variable loads multiplied by ψ0 (show computed product)
+          var f610a='1.35·Gk + '+f(1.50*p_lead[0])+'·'+leadLbl;
+          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610a+=' + '+f(1.50*p[0])+'·'+LBL[id];});
           ulsItems.push({type:'Eq. 6.10a',formula:f610a,note:'lead: '+leadLbl,gov:false});
 
-          // 6.10b
+          // 6.10b  — leading load at full 1.50, accompanying reduced by ψ0
           var f610b='1.148·Gk + 1.50·'+leadLbl;
-          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610b+=' + 1.50·'+f(p[0])+'·'+LBL[id];});
+          active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;f610b+=' + '+f(1.50*p[0])+'·'+LBL[id];});
           var idx610b=ulsItems.length;
           ulsItems.push({type:'Eq. 6.10b',formula:f610b,note:'lead: '+leadLbl,gov:false});
           if(govIdx<0) govIdx=idx610b; // first 6.10b (leading Q or first load) is likely governing
@@ -485,12 +485,15 @@ table.art-tbl td.gov{font-weight:700;color:#1a6b45;}
       // ── SLS ───────────────────────────────────────────────────────────────
       if(active.length>0){
         var leadId=active[0], p_lead=psi(leadId,psiQ);
+        // SLS Characteristic: leading Qk full, accompanying ψ0·Qk
         var charF='Gk + '+LBL[leadId];
         active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[0]===0)return;charF+=' + '+f(p[0])+'·'+LBL[id];});
 
+        // SLS Frequent: leading ψ1·Qk, accompanying ψ2·Qk
         var freqF='Gk + '+f(p_lead[1])+'·'+LBL[leadId];
         active.forEach(function(id){if(id===leadId)return;var p=psi(id,psiQ);if(p[2]===0)return;freqF+=' + '+f(p[2])+'·'+LBL[id];});
 
+        // SLS Quasi-permanent: ψ2·Qk for all
         var qpF='Gk';
         var hasQP=false;
         active.forEach(function(id){var p=psi(id,psiQ);if(p[2]===0)return;hasQP=true;qpF+=' + '+f(p[2])+'·'+LBL[id];});
