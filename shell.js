@@ -26,6 +26,7 @@
     if (/\/composite-beam(\.html)?$/.test(P))            return 'compbeam';
     if (/\/cfst-column(\.html)?$/.test(P))               return 'cfstcol';
     if (/\/composite-column-src(\.html)?$/.test(P))      return 'srccol';
+    if (/\/seismic-loads(\.html)?$/.test(P))             return 'seismicloads';
     if (/\/steel(\.html)?$/.test(P))                     return 'steel';
     if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
     if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
@@ -166,7 +167,9 @@
     /* Composite Design module icons */
     comp:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="5" rx="0.5"/><line x1="8" y1="9" x2="8" y2="19"/><line x1="16" y1="9" x2="16" y2="19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="8" y1="9" x2="16" y2="9"/></svg>',
     cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>',
-    src:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5"/><line x1="8" y1="7" x2="16" y2="7" stroke-width="1.8"/><line x1="8" y1="17" x2="16" y2="17" stroke-width="1.8"/></svg>'
+    src:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5"/><line x1="8" y1="7" x2="16" y2="7" stroke-width="1.8"/><line x1="8" y1="17" x2="16" y2="17" stroke-width="1.8"/></svg>',
+    /* Load Calculations */
+    seismic:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-7 4 14 3-10 2 3h5"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -229,7 +232,10 @@
       item('/pages/cfst-column',          ic.cfst, 'CFST Column Design',    'cfstcol') +
       item('/pages/composite-column-src', ic.src,  'SRC Column Design',     'srccol')) +
     '<div class=”sh-div”></div>' +
-    '<div class="sh-sec">Reference Tables</div>' +
+    sect('Load Calculations', ['seismicloads'],
+      item('/pages/seismic-loads', ic.seismic, 'Seismic Base Shear', 'seismicloads')) +
+    '<div class=”sh-div”></div>' +
+    '<div class=”sh-sec”>Reference Tables</div>' +
     item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +
     item('/pages/rebar',          ic.rb,    'Rebar Properties',  'rebar') +
     item('/pages/concrete',       ic.cn,    'Concrete Classes',  'concrete') +

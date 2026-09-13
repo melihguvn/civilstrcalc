@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seismic Base Shear Calculator — ASCE 7-22 ELF | CivilStrCalc</title>
+<meta name="description" content="Seismic base shear calculator per ASCE 7-22 §12.8 Equivalent Lateral Force procedure. Cs, V=CsW, vertical distribution Fx. US Customary and SI units.">
+<meta name="keywords" content="seismic base shear calculator, ASCE 7-22, equivalent lateral force, ELF, Cs seismic coefficient, base shear, vertical distribution">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/seismic-loads">
+<meta property="og:title" content="Seismic Base Shear Calculator — ASCE 7-22 ELF">
+<meta property="og:description" content="Calculate seismic base shear per ASCE 7-22 §12.8 ELF. Cs, V, and vertical story forces.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/seismic-loads">
+<meta property="og:site_name" content="CivilStrCalc">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Seismic Base Shear Calculator — ASCE 7-22 ELF",
+  "description": "Seismic base shear per ASCE 7-22 §12.8 Equivalent Lateral Force procedure. Seismic response coefficient Cs, base shear V=CsW, vertical distribution.",
+  "url": "https://civilstrcalc.com/pages/seismic-loads",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://civilstrcalc.com" },
+    { "@type": "ListItem", "position": 2, "name": "Load Calculations", "item": "https://civilstrcalc.com/pages/seismic-loads" },
+    { "@type": "ListItem", "position": 3, "name": "Seismic Base Shear", "item": "https://civilstrcalc.com/pages/seismic-loads" }
+  ]
+}
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+.unit-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content;}
+.unit-toggle button{padding:5px 18px;background:var(--white);border:none;cursor:pointer;font-size:.78rem;font-family:inherit;color:var(--text-dim);transition:background .14s,color .14s;}
+.unit-toggle button.active{background:#1a6b45;color:#fff;font-weight:600;}
+
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:640px){.calc-grid{grid-template-columns:1fr;}}
+
+.inp-row{display:flex;flex-direction:column;gap:4px;}
+.inp-row label{font-size:.73rem;font-weight:600;color:var(--text-dim);letter-spacing:.03em;}
+.inp-row input,.inp-row select{padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:.82rem;font-family:inherit;background:var(--white);color:var(--text);width:100%;box-sizing:border-box;}
+.inp-row input:focus,.inp-row select:focus{outline:none;border-color:#1a6b45;box-shadow:0 0 0 2px rgba(26,107,69,.12);}
+.inp-hint{font-size:.68rem;color:var(--text-dim);opacity:.75;margin-top:1px;}
+
+.section-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:16px;}
+.section-card h3{font-size:.73rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+.res-card{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.res-card-hdr{background:#1a2332;color:#fff;padding:11px 18px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.res-tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.res-tbl tr:not(:last-child){border-bottom:1px solid var(--border);}
+.res-tbl td{padding:7px 16px;color:var(--text);}
+.res-tbl td:first-child{color:var(--text-dim);width:60%;}
+.res-tbl td:last-child{font-weight:500;text-align:right;}
+.res-tbl .vok{color:#1a6b45;font-weight:700;}
+.res-tbl .vwarn{color:#b45309;font-weight:700;}
+.res-tbl .vbig{font-size:.95rem;}
+
+.governs-badge{display:inline-block;font-size:.63rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;}
+.gov-green{background:#dcfce7;color:#166534;}
+.gov-yellow{background:#fef9c3;color:#854d0e;}
+
+.dist-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.dist-table th{background:#f0f4f8;padding:7px 12px;text-align:right;font-weight:600;color:var(--text-dim);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;}
+.dist-table th:first-child{text-align:left;}
+.dist-table td{padding:6px 12px;border-top:1px solid var(--border);text-align:right;color:var(--text);}
+.dist-table td:first-child{text-align:left;font-weight:500;}
+.dist-table tfoot td{font-weight:700;background:#f8fafb;border-top:2px solid var(--border);}
+
+.story-rows-wrap{margin-bottom:8px;}
+.story-row{display:grid;grid-template-columns:32px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:6px;}
+.story-row-n{font-size:.75rem;color:var(--text-dim);text-align:center;padding-top:6px;}
+.story-row input{padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;font-family:inherit;background:var(--white);color:var(--text);width:100%;box-sizing:border-box;}
+.story-row input:focus{outline:none;border-color:#1a6b45;}
+.btn-rm{background:none;border:1px solid #fca5a5;border-radius:4px;color:#dc2626;cursor:pointer;padding:4px 8px;font-size:.72rem;line-height:1;}
+.btn-rm:hover{background:#fee2e2;}
+.btn-add{margin-top:4px;padding:6px 14px;background:var(--white);border:1px solid var(--border);border-radius:5px;font-size:.75rem;color:var(--text-dim);cursor:pointer;font-family:inherit;transition:background .13s;}
+.btn-add:hover{background:#f0f4f8;color:var(--text);}
+
+.calc-btn{width:100%;padding:10px;background:#1a6b45;color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;letter-spacing:.02em;margin-top:4px;}
+.calc-btn:hover{background:#155c3a;}
+
+.notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;font-size:.76rem;color:#1e40af;line-height:1.65;margin-bottom:14px;}
+.warn-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:10px 14px;font-size:.76rem;color:#9a3412;line-height:1.65;margin-bottom:14px;}
+
+.related-tools{margin-top:32px;padding:20px;background:var(--white);border:1px solid var(--border);border-radius:8px;}
+.related-tools h3{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim);margin:0 0 12px;}
+.rt-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.rt-link{display:inline-block;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:.74rem;color:var(--text-dim);text-decoration:none;transition:background .13s,color .13s,border-color .13s;}
+.rt-link:hover{background:#f0f4f8;color:var(--text);border-color:#b0bec5;}
+</style>
+</head>
+<body>
+<main style="max-width:820px;margin:0 auto;padding:24px 20px 48px;">
+
+  <!-- Header -->
+  <div style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+      <h1 style="font-size:1.15rem;font-weight:700;color:var(--text);margin:0;">Seismic Base Shear — ASCE 7-22 §12.8</h1>
+      <div class="unit-toggle">
+        <button id="btn-us" class="active" onclick="setUnit('us')">US (kips, ft)</button>
+        <button id="btn-si" onclick="setUnit('si')">SI (kN, m)</button>
+      </div>
+    </div>
+    <p style="font-size:.8rem;color:var(--text-dim);margin:0;">Equivalent Lateral Force (ELF) procedure. Seismic response coefficient C<sub>s</sub>, base shear V = C<sub>s</sub>W, and vertical distribution F<sub>x</sub> per ASCE 7-22 §12.8.</p>
+  </div>
+
+  <!-- AdSense -->
+  <ins class="adsbygoogle" style="display:block;margin-bottom:16px;" data-ad-client="ca-pub-7519835488454582" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+
+  <!-- SECTION 1: Site seismicity -->
+  <div class="section-card">
+    <h3>Site Seismicity Parameters</h3>
+    <div class="notice">
+      Obtain S<sub>DS</sub> and S<sub>D1</sub> from <a href="https://hazards.atcouncil.org" target="_blank" rel="noopener" style="color:#1e40af;">ATC Hazards</a> or USGS for your site. Enter design-level values (2/3 of MCE<sub>R</sub>).
+    </div>
+    <div class="calc-grid">
+      <div class="inp-row">
+        <label>S<sub>DS</sub> — Short-period design spectral acceleration (g)</label>
+        <input type="number" id="inp-SDS" value="1.00" min="0" step="0.01">
+        <div class="inp-hint">Design spectral accel. at 0.2 s. Typical range 0.20–2.00 g.</div>
+      </div>
+      <div class="inp-row">
+        <label>S<sub>D1</sub> — 1-second design spectral acceleration (g)</label>
+        <input type="number" id="inp-SD1" value="0.60" min="0" step="0.01">
+        <div class="inp-hint">Design spectral accel. at 1.0 s. Typical range 0.10–1.50 g.</div>
+      </div>
+      <div class="inp-row">
+        <label>S<sub>1</sub> — Mapped 1-s MCE<sub>R</sub> spectral acceleration (g)</label>
+        <input type="number" id="inp-S1" value="0.60" min="0" step="0.01">
+        <div class="inp-hint">Used only for minimum C<sub>s</sub> check when S₁ ≥ 0.6 g (§12.8.1.1).</div>
+      </div>
+      <div class="inp-row">
+        <label>T<sub>L</sub> — Long-period transition period (s)</label>
+        <input type="number" id="inp-TL" value="8" min="4" step="1">
+        <div class="inp-hint">From ASCE 7-22 Figure 22-14 to 22-17. Commonly 4–16 s.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Building -->
+  <div class="section-card">
+    <h3>Building Parameters</h3>
+    <div class="calc-grid">
+      <div class="inp-row">
+        <label>Risk Category</label>
+        <select id="inp-RC" onchange="onRCChange()">
+          <option value="I">I — Minor hazard (storage, agriculture)</option>
+          <option value="II" selected>II — Typical buildings (default)</option>
+          <option value="III">III — Substantial hazard (schools, assembly)</option>
+          <option value="IV">IV — Essential facilities (hospitals, emergency)</option>
+        </select>
+      </div>
+      <div class="inp-row">
+        <label>Importance Factor I<sub>e</sub></label>
+        <input type="number" id="inp-Ie" value="1.00" min="0.5" max="1.5" step="0.01">
+        <div class="inp-hint">I: 1.00 · II: 1.00 · III: 1.25 · IV: 1.50 (Table 1.5-2)</div>
+      </div>
+      <div class="inp-row">
+        <label>Structural system</label>
+        <select id="inp-sys" onchange="onSysChange()">
+          <optgroup label="Moment Frames">
+            <option value="8,0.028,0.8">Special steel moment frame (R=8)</option>
+            <option value="8,0.016,0.9">Special RC moment frame (R=8)</option>
+            <option value="4.5,0.028,0.8">Intermediate steel moment frame (R=4.5)</option>
+            <option value="5,0.016,0.9">Intermediate RC moment frame (R=5)</option>
+            <option value="3.5,0.028,0.8">Ordinary steel moment frame (R=3.5)</option>
+            <option value="3,0.016,0.9">Ordinary RC moment frame (R=3)</option>
+          </optgroup>
+          <optgroup label="Shear Walls">
+            <option value="6,0.02,0.75" selected>Special RC shear walls (R=6)</option>
+            <option value="5,0.02,0.75">Ordinary RC shear walls (R=5)</option>
+            <option value="6.5,0.02,0.75">Special steel plate shear walls (R=6.5)</option>
+          </optgroup>
+          <optgroup label="Braced Frames">
+            <option value="6,0.03,0.75">Special steel concentrically braced (R=6)</option>
+            <option value="3.25,0.03,0.75">Ordinary steel concentrically braced (R=3.25)</option>
+            <option value="8,0.03,0.75">Special steel eccentrically braced (R=8)</option>
+            <option value="8,0.03,0.75">Buckling-restrained braced frame (R=8)</option>
+          </optgroup>
+          <optgroup label="Dual Systems">
+            <option value="7,0.02,0.75">Dual: Special RC shear wall + special RC MF (R=7)</option>
+            <option value="8,0.028,0.8">Dual: BRBF + special steel MF (R=8)</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="3,0.02,0.75">Bearing wall system — RC walls (R=3)</option>
+            <option value="2,0.02,0.75">Custom R — enter below</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="inp-row">
+        <label>R — Response modification coefficient</label>
+        <input type="number" id="inp-R" value="6" min="1" max="10" step="0.25">
+        <div class="inp-hint">From ASCE 7-22 Table 12.2-1. Updated when system is selected.</div>
+      </div>
+      <div class="inp-row">
+        <label id="lbl-W">W — Effective seismic weight (kips)</label>
+        <input type="number" id="inp-W" value="5000" min="0" step="10">
+        <div class="inp-hint">Total dead load + applicable portions of live, snow (§12.7.2).</div>
+      </div>
+      <div class="inp-row">
+        <label id="lbl-hn">h<sub>n</sub> — Total building height (ft)</label>
+        <input type="number" id="inp-hn" value="60" min="0" step="1">
+        <div class="inp-hint">Height from base to highest level. Used for approximate period T<sub>a</sub>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Period -->
+  <div class="section-card">
+    <h3>Building Period</h3>
+    <div class="calc-grid">
+      <div class="inp-row">
+        <label>Period method</label>
+        <select id="inp-Tmethod" onchange="onTmethodChange()">
+          <option value="approx" selected>Approximate T<sub>a</sub> (ASCE 7-22 §12.8.2.1)</option>
+          <option value="manual">User-defined T</option>
+        </select>
+      </div>
+      <div class="inp-row" id="row-Tapprox">
+        <label>C<sub>t</sub> and x (auto from system)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input type="number" id="inp-Ct" value="0.02" step="0.001" min="0.005" max="0.06">
+          <input type="number" id="inp-x" value="0.75" step="0.01" min="0.5" max="1.0">
+        </div>
+        <div class="inp-hint">C<sub>t</sub> (left) and x (right) from ASCE 7-22 Table 12.8-2.</div>
+      </div>
+      <div class="inp-row" id="row-Tmanual" style="display:none;">
+        <label>T — Fundamental period (s)</label>
+        <input type="number" id="inp-Tuser" value="1.0" min="0.05" step="0.05">
+        <div class="inp-hint">Computed from analysis or from ASCE 7-22 §12.8.2.</div>
+      </div>
+    </div>
+    <div style="font-size:.74rem;color:var(--text-dim);margin-top:10px;">
+      Note: T used in design shall not exceed C<sub>u</sub>·T<sub>a</sub> (§12.8.2). C<sub>u</sub> from Table 12.8-1 (typically 1.4–1.7 depending on S<sub>D1</sub>).
+    </div>
+  </div>
+
+  <!-- SECTION 4: Story distribution -->
+  <div class="section-card">
+    <h3>Story Weights & Heights — Vertical Distribution (§12.8.3)</h3>
+    <p style="font-size:.76rem;color:var(--text-dim);margin:0 0 12px;">Enter each story's weight and height above base. Leave empty to skip vertical distribution and compute only base shear V.</p>
+    <div style="display:grid;grid-template-columns:32px 1fr 1fr auto;gap:8px;margin-bottom:4px;">
+      <div></div>
+      <div style="font-size:.7rem;font-weight:600;color:var(--text-dim);letter-spacing:.04em;text-transform:uppercase;" id="lbl-wx">Story Weight w<sub>x</sub> (kips)</div>
+      <div style="font-size:.7rem;font-weight:600;color:var(--text-dim);letter-spacing:.04em;text-transform:uppercase;" id="lbl-hx">Height h<sub>x</sub> (ft)</div>
+      <div></div>
+    </div>
+    <div class="story-rows-wrap" id="story-rows"></div>
+    <button class="btn-add" onclick="addStory()">+ Add story</button>
+  </div>
+
+  <button class="calc-btn" onclick="calc()">Calculate Base Shear</button>
+
+  <!-- RESULTS -->
+  <div id="results" style="display:none;margin-top:20px;">
+
+    <div class="res-card">
+      <div class="res-card-hdr">Period — §12.8.2</div>
+      <table class="res-tbl">
+        <tbody id="res-period"></tbody>
+      </table>
+    </div>
+
+    <div class="res-card">
+      <div class="res-card-hdr">Seismic Response Coefficient C<sub>s</sub> — §12.8.1</div>
+      <table class="res-tbl">
+        <tbody id="res-cs"></tbody>
+      </table>
+    </div>
+
+    <div class="res-card">
+      <div class="res-card-hdr">Base Shear V — §12.8.1</div>
+      <table class="res-tbl">
+        <tbody id="res-V"></tbody>
+      </table>
+    </div>
+
+    <div id="dist-wrap" style="display:none;">
+      <div class="res-card">
+        <div class="res-card-hdr">Vertical Distribution F<sub>x</sub> — §12.8.3</div>
+        <div style="overflow-x:auto;">
+          <table class="dist-table">
+            <thead>
+              <tr>
+                <th>Story</th>
+                <th id="th-wx">w<sub>x</sub> (k)</th>
+                <th id="th-hx">h<sub>x</sub> (ft)</th>
+                <th>w<sub>x</sub>·h<sub>x</sub><sup>k</sup></th>
+                <th>C<sub>vx</sub></th>
+                <th id="th-Fx">F<sub>x</sub> (k)</th>
+                <th id="th-Vx">V<sub>x</sub> (k)</th>
+              </tr>
+            </thead>
+            <tbody id="res-dist"></tbody>
+            <tfoot id="res-dist-foot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-article Ad -->
+    <ins class="adsbygoogle" style="display:block;text-align:center;" data-ad-layout="in-article" data-ad-format="fluid" data-ad-client="ca-pub-7519835488454582" data-ad-slot="auto"></ins>
+    <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+
+    <div class="res-card">
+      <div class="res-card-hdr">Code Reference Summary</div>
+      <table class="res-tbl">
+        <tbody id="res-ref"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="related-tools no-print">
+    <h3>Related Calculators &amp; Guides</h3>
+    <div class="rt-grid">
+      <a class="rt-link" href="load-combinations-guide">Load Combinations Guide</a>
+      <a class="rt-link" href="retaining-wall-tsc">Retaining Wall (TBDY 2018)</a>
+      <a class="rt-link" href="seismic-design-basics">Seismic Design Basics Guide</a>
+      <a class="rt-link" href="articles/us-standards/4-seismic-design">US Standards: Seismic Design</a>
+      <a class="rt-link" href="articles/eurocode/4-seismic-design">Eurocode: Seismic Design</a>
+      <a class="rt-link" href="articles/us-standards/5-load-combinations">US Standards: Load Combinations</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+var isUS = true;
+
+var RC_Ie = { I:1.00, II:1.00, III:1.25, IV:1.50 };
+
+function setUnit(u) {
+  isUS = (u === 'us');
+  document.getElementById('btn-us').classList.toggle('active', isUS);
+  document.getElementById('btn-si').classList.toggle('active', !isUS);
+  document.getElementById('lbl-W').textContent  = isUS ? 'W — Effective seismic weight (kips)' : 'W — Effective seismic weight (kN)';
+  document.getElementById('lbl-hn').textContent = isUS ? 'hn — Total building height (ft)' : 'hn — Total building height (m)';
+  document.getElementById('lbl-wx').innerHTML   = isUS ? 'Story Weight w<sub>x</sub> (kips)' : 'Story Weight w<sub>x</sub> (kN)';
+  document.getElementById('lbl-hx').innerHTML   = isUS ? 'Height h<sub>x</sub> (ft)' : 'Height h<sub>x</sub> (m)';
+  document.getElementById('th-wx').innerHTML    = isUS ? 'w<sub>x</sub> (k)' : 'w<sub>x</sub> (kN)';
+  document.getElementById('th-hx').innerHTML    = isUS ? 'h<sub>x</sub> (ft)' : 'h<sub>x</sub> (m)';
+  document.getElementById('th-Fx').innerHTML    = isUS ? 'F<sub>x</sub> (k)' : 'F<sub>x</sub> (kN)';
+  document.getElementById('th-Vx').innerHTML    = isUS ? 'V<sub>x</sub> (k)' : 'V<sub>x</sub> (kN)';
+  var wDef = isUS ? 5000 : 22000;
+  var hDef = isUS ? 60   : 18;
+  document.getElementById('inp-W').value  = wDef;
+  document.getElementById('inp-hn').value = hDef;
+  rebuildStoryDefaults();
+  calc();
+}
+
+function onRCChange() {
+  var rc = document.getElementById('inp-RC').value;
+  document.getElementById('inp-Ie').value = RC_Ie[rc] || 1.00;
+}
+
+function onSysChange() {
+  var v = document.getElementById('inp-sys').value;
+  var parts = v.split(',');
+  if (parts.length >= 3) {
+    document.getElementById('inp-R').value  = parts[0];
+    document.getElementById('inp-Ct').value = parts[1];
+    document.getElementById('inp-x').value  = parts[2];
+  }
+}
+
+function onTmethodChange() {
+  var m = document.getElementById('inp-Tmethod').value;
+  document.getElementById('row-Tapprox').style.display = (m === 'approx') ? '' : 'none';
+  document.getElementById('row-Tmanual').style.display = (m === 'manual') ? '' : 'none';
+}
+
+// ── Story rows ───────────────────────────────────────────────────────────────
+var storyCount = 0;
+
+function addStory(w, h) {
+  storyCount++;
+  var n = storyCount;
+  var wrap = document.getElementById('story-rows');
+  var div = document.createElement('div');
+  div.className = 'story-row';
+  div.id = 'srow-' + n;
+  div.innerHTML =
+    '<div class="story-row-n">' + n + '</div>' +
+    '<input type="number" id="sw-' + n + '" min="0" step="10" value="' + (w || (isUS ? 1000 : 4500)) + '" placeholder="weight">' +
+    '<input type="number" id="sh-' + n + '" min="0" step="1"  value="' + (h || (isUS ? n*12 : n*3.6).toFixed(1)) + '" placeholder="height">' +
+    '<button class="btn-rm" onclick="removeStory(' + n + ')">✕</button>';
+  wrap.appendChild(div);
+}
+
+function removeStory(n) {
+  var el = document.getElementById('srow-' + n);
+  if (el) el.remove();
+}
+
+function getStories() {
+  var list = [];
+  var rows = document.querySelectorAll('.story-row');
+  rows.forEach(function(row) {
+    var id = row.id.replace('srow-', '');
+    var wEl = document.getElementById('sw-' + id);
+    var hEl = document.getElementById('sh-' + id);
+    if (!wEl || !hEl) return;
+    var w = parseFloat(wEl.value);
+    var h = parseFloat(hEl.value);
+    if (!isNaN(w) && !isNaN(h) && w > 0 && h >= 0) {
+      list.push({ w: w, h: h, label: 'Story ' + id });
+    }
+  });
+  return list;
+}
+
+function rebuildStoryDefaults() {
+  var rows = document.querySelectorAll('.story-row');
+  rows.forEach(function(row) {
+    var id = row.id.replace('srow-', '');
+    var wEl = document.getElementById('sw-' + id);
+    var hEl = document.getElementById('sh-' + id);
+    if (wEl) wEl.value = isUS ? 1000 : 4500;
+    if (hEl) hEl.value = isUS ? (parseInt(id)*12) : (parseInt(id)*3.6).toFixed(1);
+  });
+}
+
+// ── Cu table (ASCE 7-22 Table 12.8-1) ───────────────────────────────────────
+function getCu(SD1) {
+  if (SD1 >= 0.4)  return 1.4;
+  if (SD1 >= 0.3)  return 1.4 + (0.4-SD1)/(0.4-0.3)*0.1;  // linear interp to 1.5
+  if (SD1 >= 0.2)  return 1.5;
+  if (SD1 >= 0.15) return 1.5 + (0.2-SD1)/(0.2-0.15)*0.2; // interp to 1.7
+  return 1.7;
+}
+
+// ── Formatter ────────────────────────────────────────────────────────────────
+function f(v, d) { return isNaN(v) ? '—' : v.toFixed(d === undefined ? 3 : d); }
+function row2(label, val, cls) {
+  return '<tr><td>' + label + '</td><td class="' + (cls||'') + '">' + val + '</td></tr>';
+}
+function badge(txt, cls) {
+  return '<span class="governs-badge ' + cls + '">' + txt + '</span>';
+}
+
+// ── MAIN CALC ─────────────────────────────────────────────────────────────────
+function calc() {
+  var SDS = parseFloat(document.getElementById('inp-SDS').value) || 0;
+  var SD1 = parseFloat(document.getElementById('inp-SD1').value) || 0;
+  var S1  = parseFloat(document.getElementById('inp-S1').value)  || 0;
+  var TL  = parseFloat(document.getElementById('inp-TL').value)  || 8;
+  var Ie  = parseFloat(document.getElementById('inp-Ie').value)  || 1.0;
+  var R   = parseFloat(document.getElementById('inp-R').value)   || 6;
+  var W   = parseFloat(document.getElementById('inp-W').value)   || 0;
+  var hn  = parseFloat(document.getElementById('inp-hn').value)  || 0;
+
+  if (SDS <= 0 || SD1 <= 0 || R <= 0 || W <= 0 || hn <= 0) return;
+
+  // ── Period ──────────────────────────────────────────────────────────────────
+  var tMethod = document.getElementById('inp-Tmethod').value;
+  var Ta, Cu, T_design, T_note;
+  if (tMethod === 'approx') {
+    var Ct = parseFloat(document.getElementById('inp-Ct').value) || 0.02;
+    var x  = parseFloat(document.getElementById('inp-x').value)  || 0.75;
+    Ta = Ct * Math.pow(hn, x);
+    Cu = getCu(SD1);
+    T_design = Ta;  // conservative: use Ta (not Cu·Ta) unless analysis-based T is available
+    T_note = 'T<sub>a</sub> = C<sub>t</sub>·h<sub>n</sub><sup>x</sup> = ' + f(Ct,4) + '·' + f(hn,1) + '<sup>' + f(x,2) + '</sup>';
+  } else {
+    var Tuser = parseFloat(document.getElementById('inp-Tuser').value) || 1.0;
+    var Ct2 = parseFloat(document.getElementById('inp-Ct').value) || 0.02;
+    var x2  = parseFloat(document.getElementById('inp-x').value)  || 0.75;
+    Ta = Ct2 * Math.pow(hn, x2);
+    Cu = getCu(SD1);
+    T_design = Math.min(Tuser, Cu * Ta);
+    T_note = 'User T = ' + f(Tuser,3) + ' s; capped at C<sub>u</sub>·T<sub>a</sub> = ' + f(Cu,2) + '·' + f(Ta,3) + ' = ' + f(Cu*Ta,3) + ' s';
+  }
+  var hUnit = isUS ? 'ft' : 'm';
+  var fUnit = isUS ? 'kips' : 'kN';
+
+  // ── Cs computations ─────────────────────────────────────────────────────────
+  var RIe = R / Ie;
+
+  // Eq. 12.8-2: base Cs
+  var Cs_base = SDS / RIe;
+
+  // Eq. 12.8-3 / 12.8-4: upper bound (T vs TL)
+  var Cs_upper;
+  if (T_design <= TL) {
+    Cs_upper = SD1 / (T_design * RIe);
+  } else {
+    Cs_upper = SD1 * TL / (T_design * T_design * RIe);
+  }
+
+  // Eq. 12.8-5: minimum Cs
+  var Cs_min1 = 0.044 * SDS * Ie;
+  var Cs_min1_floor = 0.01;
+  var Cs_min = Math.max(Cs_min1, Cs_min1_floor);
+
+  // Eq. 12.8-6: minimum Cs when S1 ≥ 0.6g
+  var Cs_min_S1 = (S1 >= 0.6) ? (0.5 * S1 / RIe) : 0;
+
+  // Governing Cs
+  var Cs_calc = Math.min(Cs_base, Cs_upper);     // §12.8-1: shall not exceed upper bound
+  var Cs = Math.max(Cs_calc, Cs_min, Cs_min_S1); // §12.8-1: shall not be less than minimums
+
+  var governs = '';
+  if (Cs === Cs_base)    governs = 'base (Eq. 12.8-2)';
+  else if (Cs === Cs_upper) governs = 'upper bound (Eq. 12.8-3/4)';  // shouldn't happen after max
+  if (Cs > Cs_calc) {
+    if (Cs === Cs_min_S1 && S1 >= 0.6) governs = 'minimum for S₁ ≥ 0.6g (Eq. 12.8-6)';
+    else governs = 'minimum (Eq. 12.8-5)';
+  }
+  // If Cs_calc = min(base,upper) = upper < base, then Cs = upper (before min check)
+  if (Cs_upper < Cs_base && Cs === Cs_upper) governs = 'upper bound (Eq. 12.8-3/4)';
+
+  // Re-evaluate: whichever equation controls
+  var Cs_from_base  = Cs_base;
+  var Cs_from_upper = Cs_upper;
+  var Cs_preliminary = Math.min(Cs_from_base, Cs_from_upper);
+  Cs = Math.max(Cs_preliminary, Cs_min, Cs_min_S1);
+
+  if      (Cs === Cs_min_S1 && S1 >= 0.6 && Cs_min_S1 > Cs_min && Cs_min_S1 > Cs_preliminary) governs = 'Min for S₁ ≥ 0.6 g (Eq. 12.8-6)';
+  else if (Cs === Cs_min && Cs_min > Cs_preliminary)    governs = 'Minimum (Eq. 12.8-5)';
+  else if (Cs === Cs_from_upper && Cs_from_upper < Cs_from_base) governs = 'Upper bound (Eq. 12.8-3/4)';
+  else    governs = 'Base equation (Eq. 12.8-2)';
+
+  // ── Base shear ──────────────────────────────────────────────────────────────
+  var V = Cs * W;
+
+  // ── Exponent k ──────────────────────────────────────────────────────────────
+  var k;
+  if (T_design <= 0.5)      k = 1.0;
+  else if (T_design >= 2.5) k = 2.0;
+  else                      k = 1.0 + (T_design - 0.5);  // linear interp
+
+  // ── Render results ──────────────────────────────────────────────────────────
+  document.getElementById('results').style.display = '';
+
+  // Period table
+  var pHTML = '';
+  pHTML += row2('C<sub>t</sub> (Table 12.8-2)', f(parseFloat(document.getElementById('inp-Ct').value)||0.02,4));
+  pHTML += row2('x (Table 12.8-2)', f(parseFloat(document.getElementById('inp-x').value)||0.75,2));
+  pHTML += row2('h<sub>n</sub> (' + hUnit + ')', f(hn,2));
+  pHTML += row2('T<sub>a</sub> = C<sub>t</sub>·h<sub>n</sub><sup>x</sup> (s)', f(Ta,3));
+  pHTML += row2('C<sub>u</sub> (Table 12.8-1)', f(Cu,2));
+  pHTML += row2('C<sub>u</sub>·T<sub>a</sub> (s)', f(Cu*Ta,3));
+  if (tMethod === 'manual') {
+    var Tu = parseFloat(document.getElementById('inp-Tuser').value)||1;
+    pHTML += row2('T (user-defined, s)', f(Tu,3));
+    pHTML += row2('<b>T<sub>design</sub> = min(T, C<sub>u</sub>·T<sub>a</sub>) (s)</b>', '<b>' + f(T_design,3) + '</b>');
+  } else {
+    pHTML += row2('<b>T<sub>design</sub> = T<sub>a</sub> (s)</b>', '<b class="vok">' + f(T_design,3) + '</b>');
+  }
+  document.getElementById('res-period').innerHTML = pHTML;
+
+  // Cs table
+  var cHTML = '';
+  cHTML += row2('R / I<sub>e</sub>', f(RIe,3));
+  cHTML += row2('C<sub>s,base</sub> = S<sub>DS</sub> / (R/I<sub>e</sub>) (Eq. 12.8-2)', f(Cs_base,4));
+  if (T_design <= TL)
+    cHTML += row2('C<sub>s,upper</sub> = S<sub>D1</sub> / (T·R/I<sub>e</sub>) (Eq. 12.8-3)', f(Cs_upper,4));
+  else
+    cHTML += row2('C<sub>s,upper</sub> = S<sub>D1</sub>·T<sub>L</sub> / (T²·R/I<sub>e</sub>) (Eq. 12.8-4)', f(Cs_upper,4));
+  cHTML += row2('C<sub>s,min1</sub> = 0.044·S<sub>DS</sub>·I<sub>e</sub> ≥ 0.01 (Eq. 12.8-5)', f(Cs_min,4));
+  if (S1 >= 0.6)
+    cHTML += row2('C<sub>s,min2</sub> = 0.5·S₁ / (R/I<sub>e</sub>) (Eq. 12.8-6, S₁ ≥ 0.6 g)', f(Cs_min_S1,4));
+  cHTML += row2('<b>C<sub>s</sub> (governing)</b>',
+    '<b class="vok vbig">' + f(Cs,4) + '</b>' + badge(governs, 'gov-green'));
+  document.getElementById('res-cs').innerHTML = cHTML;
+
+  // V table
+  var vHTML = '';
+  vHTML += row2('C<sub>s</sub>', f(Cs,4));
+  vHTML += row2('W (' + fUnit + ')', f(W,1));
+  vHTML += row2('<b>V = C<sub>s</sub>·W (' + fUnit + ')</b>',
+    '<b class="vok vbig">' + f(V,1) + '</b>');
+  vHTML += row2('V / W', f(V/W*100,2) + ' %');
+  document.getElementById('res-V').innerHTML = vHTML;
+
+  // Vertical distribution
+  var stories = getStories();
+  var distWrap = document.getElementById('dist-wrap');
+  if (stories.length >= 2) {
+    distWrap.style.display = '';
+    // Sort stories ascending by height (base to roof)
+    stories.sort(function(a,b){ return a.h - b.h; });
+
+    // Compute Σ(wx·hx^k)
+    var sum_whk = stories.reduce(function(s,st){ return s + st.w * Math.pow(st.h,k); }, 0);
+
+    var tbody = document.getElementById('res-dist');
+    var tfoot = document.getElementById('res-dist-foot');
+    var distHTML = '';
+    var cumV = 0;
+    var cumFx = [];
+    // Collect from roof down for story shear
+    var fxArr = stories.map(function(st){
+      var Cvx = sum_whk > 0 ? (st.w * Math.pow(st.h,k)) / sum_whk : 0;
+      return { st:st, Cvx:Cvx, Fx: Cvx * V };
+    });
+    // Story shear: sum of Fx from this level up
+    for (var i = fxArr.length-1; i >= 0; i--) {
+      var cumFxI = 0;
+      for (var j = i; j < fxArr.length; j++) cumFxI += fxArr[j].Fx;
+      fxArr[i].Vx = cumFxI;
+    }
+    // Display top-to-bottom
+    for (var ii = fxArr.length-1; ii >= 0; ii--) {
+      var row = fxArr[ii];
+      distHTML += '<tr>' +
+        '<td>' + row.st.label + '</td>' +
+        '<td>' + f(row.st.w,1) + '</td>' +
+        '<td>' + f(row.st.h,2) + '</td>' +
+        '<td>' + f(row.st.w * Math.pow(row.st.h,k),1) + '</td>' +
+        '<td>' + f(row.Cvx,4) + '</td>' +
+        '<td><b>' + f(row.Fx,1) + '</b></td>' +
+        '<td>' + f(row.Vx,1) + '</td>' +
+      '</tr>';
+    }
+    var sumFx = fxArr.reduce(function(s,r){ return s+r.Fx; },0);
+    tbody.innerHTML = distHTML;
+    tfoot.innerHTML = '<tr>' +
+      '<td>Total</td>' +
+      '<td>' + f(stories.reduce(function(s,r){ return s+r.w; },0),1) + '</td>' +
+      '<td>—</td>' +
+      '<td>' + f(sum_whk,1) + '</td>' +
+      '<td>1.0000</td>' +
+      '<td><b>' + f(sumFx,1) + '</b></td>' +
+      '<td>—</td>' +
+    '</tr>';
+  } else {
+    distWrap.style.display = 'none';
+  }
+
+  // Reference summary
+  var rc = document.getElementById('inp-RC').value;
+  var sysEl = document.getElementById('inp-sys');
+  var sysName = sysEl.options[sysEl.selectedIndex].text;
+  var refHTML = '';
+  refHTML += row2('Standard', 'ASCE 7-22');
+  refHTML += row2('Procedure', 'Equivalent Lateral Force (ELF) — §12.8');
+  refHTML += row2('Risk Category / I<sub>e</sub>', rc + ' / ' + f(Ie,2));
+  refHTML += row2('Structural system', sysName);
+  refHTML += row2('R / I<sub>e</sub> = ' + f(R,2) + ' / ' + f(Ie,2), f(RIe,3));
+  refHTML += row2('S<sub>DS</sub> / S<sub>D1</sub> / S₁ (g)', f(SDS,3) + ' / ' + f(SD1,3) + ' / ' + f(S1,3));
+  refHTML += row2('T<sub>design</sub> (s)', f(T_design,3) + (T_design <= TL ? ' ≤ T<sub>L</sub>' : ' > T<sub>L</sub>'));
+  refHTML += row2('k (distribution exponent)', f(k,3));
+  refHTML += row2('<b>C<sub>s</sub></b>', '<b>' + f(Cs,4) + '</b>');
+  refHTML += row2('<b>V (' + fUnit + ')</b>', '<b class="vok">' + f(V,1) + '</b>');
+  document.getElementById('res-ref').innerHTML = refHTML;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(function init() {
+  addStory(1000, 12);
+  addStory(1000, 24);
+  addStory(1000, 36);
+  addStory(1000, 48);
+  addStory(1000, 60);
+  calc();
+})();
+</script>
+
+<script src="../shell.js" defer></script>
+</body>
+</html>
