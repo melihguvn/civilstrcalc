@@ -295,8 +295,7 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
       <canvas id="pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
     </div>
     <div class="pmm-legend">
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#93c5fd;"></div> Nominal PSDM envelope (cross-section)</div>
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#1d4ed8;"></div> Design envelope (&phi;P<sub>n</sub>, &phi;M<sub>n</sub>)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#1d4ed8;"></div> Design envelope (&phi;<sub>c</sub>P<sub>n</sub>, &phi;<sub>b</sub>M<sub>n</sub>) — AISC §I3.4a</div>
       <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div> Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
     </div>
   </div>
@@ -1259,21 +1258,7 @@ function drawPMM(targetCanvas) {
     ctx.textAlign = 'center'; ctx.fillText(f1(toMd(Mmax*i/4)), toX(Mmax*i/4), pad.top+ch+14);
   }
 
-  // PSDM capacity envelope (fill + stroke)
-  if (pts.length > 1) {
-    ctx.beginPath();
-    ctx.moveTo(toX(0), toY(pts[0].P));
-    for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
-    const lp = pts[pts.length-1];
-    ctx.lineTo(toX(lp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
-    ctx.fillStyle = 'rgba(59,130,246,0.10)'; ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(toX(0), toY(pts[0].P));
-    for (const p of pts) ctx.lineTo(toX(p.M), toY(p.P));
-    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
-  }
-
-  // Design (φ-scaled) PSDM envelope — §I3.4a
+  // Design (φ-scaled) PSDM envelope — §I3.4a — the only curve used for DCR
   // P: φc = 0.75, capped at φcPn (column buckling); M: φb = 0.90
   const dsgPts = pts.map(p => ({ P: Math.min(p.P * 0.75, r.phiPn), M: p.M * 0.90 }));
   if (dsgPts.length > 1) {

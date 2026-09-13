@@ -315,8 +315,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <canvas id="src-pmm-canvas" width="560" height="380" role="img" aria-label="P-M interaction diagram"></canvas>
     </div>
     <div class="pmm-legend">
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#93c5fd;"></div>Nominal PSDM envelope</div>
-      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#1d4ed8;"></div>Design envelope (&phi;P<sub>n</sub>, &phi;M<sub>n</sub>)</div>
+      <div class="pmm-leg-item"><div class="pmm-leg-line" style="background:#1d4ed8;"></div>Design envelope (&phi;<sub>c</sub>P<sub>n</sub>, &phi;<sub>b</sub>M<sub>n</sub>) — AISC §I3.4a</div>
       <div class="pmm-leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block;"></div>Demand (P<sub>u</sub>, M<sub>u</sub>)</div>
     </div>
   </div>
@@ -1004,32 +1003,18 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
     ctx.beginPath(); ctx.moveTo(pad.l,yg); ctx.lineTo(W-pad.r,yg); ctx.stroke();
   }
 
-  // Nominal envelope
-  if (nom_pts.length > 1) {
-    const lnp = nom_pts[nom_pts.length - 1];
-    ctx.beginPath();
-    ctx.moveTo(toX(0), toY(nom_pts[0].P));
-    nom_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
-    ctx.lineTo(toX(lnp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
-    ctx.fillStyle = 'rgba(147,197,253,0.10)'; ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(toX(0), toY(nom_pts[0].P));
-    nom_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
-    ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 1.5; ctx.stroke();
-  }
-
-  // Design envelope fill + line
+  // Design envelope (φ-scaled, φcPn-capped) — the only curve used for DCR
   if (phi_pts.length > 1) {
     const ldp = phi_pts[phi_pts.length - 1];
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(phi_pts[0].P));
     phi_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
     ctx.lineTo(toX(ldp.M), toY(0)); ctx.lineTo(toX(0), toY(0)); ctx.closePath();
-    ctx.fillStyle = 'rgba(29,78,216,0.06)'; ctx.fill();
+    ctx.fillStyle = 'rgba(29,78,216,0.08)'; ctx.fill();
     ctx.beginPath();
     ctx.moveTo(toX(0), toY(phi_pts[0].P));
     phi_pts.forEach(p => ctx.lineTo(toX(p.M), toY(p.P)));
-    ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2.2; ctx.stroke();
   }
 
   // Demand point
