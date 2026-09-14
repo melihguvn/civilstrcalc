@@ -140,6 +140,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <div class="calc-layout">
 
+<!-- ══════════ TOP WARNING BANNER ══════════ -->
+<div id="src-warn-top" style="display:none;margin-bottom:14px;"></div>
+
 <!-- ══════════ INPUT CARD ══════════ -->
 <div class="card no-print">
   <div class="card-hdr">
@@ -925,12 +928,12 @@ function srcUpdateSVG(B, H, ws, bars, cover) {
   const svg = document.getElementById('src-sec-svg');
   if (!svg) return;
   const vW = 220, vH = 180, cx = 110, cy = 90;
-  const maxW = 120, maxH = 100;
+  const maxDimSV = 100;
   const aspect = B/H;
   let sw, sh;
-  if (aspect >= 1) { sw = maxW; sh = Math.max(20, maxW/aspect); }
-  else             { sh = maxH; sw = Math.max(20, maxH*aspect); }
-  sw = Math.min(sw, maxW); sh = Math.min(sh, maxH);
+  if (aspect >= 1) { sw = maxDimSV; sh = maxDimSV / aspect; }
+  else             { sh = maxDimSV; sw = maxDimSV * aspect; }
+  sw = Math.max(sw, 18); sh = Math.max(sh, 18);
   const scX = sw/B, scY = sh/H;
 
   let s = '';
@@ -981,13 +984,24 @@ function srcUpdateSVG(B, H, ws, bars, cover) {
 // ─────────────────────────────────────────
 function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
   const canvas = document.getElementById('src-pmm-canvas');
-  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
   const W = 560, H2 = 380;
-  const pad = { l:70, r:30, t:24, b:54 };
+  if (canvas.width !== W * dpr || canvas.height !== H2 * dpr) {
+    canvas.width = W * dpr; canvas.height = H2 * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H2 + 'px';
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = { l:70, r:30, t:28, b:54 };
   ctx.clearRect(0,0,W,H2);
 
-  // In biaxial tab, show the governing axis envelope
+  // Canvas title
   const govX = !srcLast || (srcLast.DCR_x >= srcLast.DCR_y);
+  const axTitles = { x:'P – Mₓ  (PSDM §I3.4a)', y:'P – Mᵧ  (PSDM §I3.4a)', bi:'Biaxial Check — governing axis: ' + (govX ? 'Mₓ' : 'Mᵧ') };
+  ctx.fillStyle = '#374151'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(axTitles[srcAxis] || axTitles.x, pad.l + (W-pad.l-pad.r)/2, 16);
+
+  // In biaxial tab, show the governing axis envelope
   const pts  = srcAxis === 'y' ? pts_y : (srcAxis === 'bi' ? (govX ? pts_x : pts_y) : pts_x);
   const Mu_d = srcAxis === 'y' ? Muy_d : (srcAxis === 'bi' ? (govX ? Mux_d : Muy_d) : Mux_d);
 
@@ -1028,39 +1042,45 @@ function srcDrawPMM(pts_x, pts_y, Pu_d, Mux_d, Muy_d, phiPn, fU, mU) {
     ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2.2; ctx.stroke();
   }
 
-  // Demand point
-  ctx.fillStyle = '#16a34a';
-  ctx.beginPath(); ctx.arc(toX(Mu_d), toY(Pu_d), 6, 0, 2*Math.PI); ctx.fill();
-
   // Axes
   ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.4;
   ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H2-pad.b); ctx.lineTo(W-pad.r,H2-pad.b); ctx.stroke();
 
-  // Labels
-  ctx.fillStyle = '#374151'; ctx.font = '11px IBM Plex Sans, sans-serif';
+  // Tick labels
+  ctx.fillStyle = '#374151'; ctx.font = '10px monospace';
   ctx.textAlign = 'right';
   for (let g=0; g<=4; g++) {
     const v = maxP*g/4;
-    ctx.fillText(v.toFixed(0), pad.l-6, toY(v)+4);
+    ctx.fillText(v < 100 ? v.toFixed(1) : Math.round(v), pad.l-5, toY(v)+4);
   }
   ctx.textAlign = 'center';
   for (let g=0; g<=4; g++) {
     const v = maxM*g/4;
-    ctx.fillText(v.toFixed(0), toX(v), H2-pad.b+16);
+    ctx.fillText(v < 100 ? v.toFixed(1) : Math.round(v), toX(v), H2-pad.b+15);
   }
 
-  ctx.font = '11px IBM Plex Sans, sans-serif'; ctx.fillStyle = '#6b7280';
+  // Axis labels
+  const Mlbl = srcAxis === 'y' ? `Mᵧ (${mU})` : `Mₓ (${mU})`;
+  ctx.font = '11px IBM Plex Sans, sans-serif'; ctx.fillStyle = '#4a5568';
   ctx.textAlign = 'center';
-  ctx.fillText(`Moment (${mU})`, pad.l + (W-pad.l-pad.r)/2, H2-8);
+  ctx.fillText(Mlbl, pad.l + (W-pad.l-pad.r)/2, H2-6);
   ctx.save(); ctx.translate(14, pad.t + (H2-pad.t-pad.b)/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText(`Axial (${fU})`, 0, 0); ctx.restore();
+  ctx.fillText('P (' + fU + ')', 0, 0); ctx.restore();
 
-  // Biaxial tab: add title indicating governing axis
-  if (srcAxis === 'bi') {
-    const axLbl = govX ? 'Mₓ' : 'Mᵧ';
-    ctx.fillStyle = '#6b7280'; ctx.font = '10px IBM Plex Sans, sans-serif'; ctx.textAlign = 'left';
-    ctx.fillText(`Biaxial — governing axis: ${axLbl}`, pad.l + 2, pad.t - 6);
-  }
+  // Demand point with crosshairs and D/C
+  const srcDCR_show = srcLast ? (srcAxis === 'y' ? srcLast.DCR_y : srcLast.DCR_x) : 0;
+  const ptPass = srcDCR_show <= 1.0;
+  const ptColor = ptPass ? '#16a34a' : '#dc2626';
+  const dx = toX(Mu_d), dy = toY(Pu_d);
+  ctx.strokeStyle = ptColor; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(pad.l, dy); ctx.lineTo(dx, dy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(dx, H2-pad.b); ctx.lineTo(dx, dy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(dx, dy, 6, 0, 2*Math.PI);
+  ctx.fillStyle = ptColor; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = ptColor; ctx.textAlign = 'left';
+  ctx.fillText('D/C = ' + (isNaN(srcDCR_show) ? '?' : srcDCR_show.toFixed(2)), dx + 9, dy - 7);
 
   // Update print copy (for PDF/print)
   const printWrap = document.getElementById('src-print-pmm-wrap');
@@ -1251,6 +1271,7 @@ function srcCalc() {
   const warns = [];
   if (rho_s < 0.01) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> < 1% — minimum steel area ratio not satisfied (AISC §I1.3). Increase section size or use a larger profile.');
   if (rho_s > 0.08) warns.push('ρ<sub>s</sub> = A<sub>s</sub>/A<sub>g</sub> > 8% — maximum steel area ratio exceeded (AISC §I1.3). Use a smaller steel section.');
+  if (rho_r < 0.004) warns.push('ρ<sub>r</sub> = A<sub>r</sub>/A<sub>g</sub> < 0.4% — minimum longitudinal rebar ratio not satisfied (ACI 318 §10.6.1.1). Increase bar size or count.');
   if (rho_r > 0.08) warns.push('ρ<sub>r</sub> = A<sub>r</sub>/A<sub>g</sub> > 8% — longitudinal rebar ratio exceeds ACI 318 §10.6.1.1 maximum. Reduce bar size or count.');
   if (!profileFitsB) warns.push(`Steel flange (b<sub>f</sub> = ${fmt(ws.bf,1)} ${dimU}) + 2×cover exceeds B = ${B} ${dimU}. Increase B or select a narrower profile.`);
   if (!profileFitsH) warns.push(`Steel depth (d = ${fmt(ws.d,1)} ${dimU}) + 2×cover exceeds H = ${H} ${dimU}. Increase H or select a shallower profile.`);
@@ -1259,6 +1280,19 @@ function srcCalc() {
   if (Fy > (srcIsUS ? 75 : 525)) warns.push('F<sub>y</sub> exceeds 75 ksi (525 MPa) — steel yield limit per AISC §I1.3.');
   if (fc < (srcIsUS ? 3 : 21)) warns.push("f'<sub>c</sub> < 3 ksi (21 MPa) — below minimum concrete strength per AISC §I1.3.");
   if (fc > (srcIsUS ? 10 : 69)) warns.push("f'<sub>c</sub> > 10 ksi (69 MPa) — above maximum for normal-weight concrete per AISC §I1.3.");
+
+  // Top-of-page warning banner (outside report card)
+  const warnTopEl = document.getElementById('src-warn-top');
+  if (warns.length > 0) {
+    warnTopEl.innerHTML = warns.map(w =>
+      `<div style="display:flex;gap:10px;align-items:flex-start;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:10px 14px;margin-bottom:8px;font-size:.78rem;color:#9a3412;line-height:1.6;">` +
+      `<span style="font-size:1rem;flex-shrink:0;">⚠</span><div><b>Warning (AISC §I2.1a / ACI 318)</b><br>${w}</div></div>`
+    ).join('');
+    warnTopEl.style.display = '';
+  } else {
+    warnTopEl.innerHTML = '';
+    warnTopEl.style.display = 'none';
+  }
 
   let warnHTML = '';
   for (const w of warns) warnHTML += `<div class="report-warn"><span>&#9888;</span><div>${w}</div></div>`;
@@ -1390,7 +1424,7 @@ function srcCalc() {
   h += `<div class="rpt-sec-screen-only">${tilesHTML}${bannerHTML}</div>`;
   h += `<div class="rpt-sec-summary">${tilesHTML}${bannerHTML}</div>`;
   h += printInputs;
-  h += checksHTML + propsHTML + strengthHTML;
+  h += propsHTML + strengthHTML;
   h += printFooter;
 
   document.getElementById('src-res-body').innerHTML = h;

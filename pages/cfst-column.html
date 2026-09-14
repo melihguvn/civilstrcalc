@@ -686,12 +686,12 @@ function updateSVG() {
     const B = parseFloat(document.getElementById('inp-B').value) || 10;
     const H = parseFloat(document.getElementById('inp-H').value) || 10;
     const t = parseFloat(document.getElementById('inp-tr').value) || 0.5;
-    const maxW = 100, maxH = 80;
+    const maxDim = 90;
     const aspect = B / H;
     let bw, bh;
-    if (aspect >= 1) { bw = maxW; bh = Math.max(20, maxW / aspect); }
-    else             { bh = maxH; bw = Math.max(20, maxH * aspect); }
-    bw = Math.min(bw, maxW); bh = Math.min(bh, maxH);
+    if (aspect >= 1) { bw = maxDim; bh = maxDim / aspect; }
+    else             { bh = maxDim; bw = maxDim * aspect; }
+    bw = Math.max(bw, 18); bh = Math.max(bh, 18);
     const scale = Math.min(bw/B, bh/H);
     const t2 = Math.max(3, Math.min(t*scale, Math.min(bw,bh)*0.38));
     const rx = cx - bw/2, ry = cy - bh/2;
@@ -1219,8 +1219,14 @@ function drawPMM(targetCanvas) {
   const pass_show = dcr_show <= 1.0;
 
   const canvas = targetCanvas || document.getElementById('pmm-canvas');
-  const ctx    = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  const W = 560, H = 380;
+  if (canvas.width !== W * dpr || canvas.height !== H * dpr) {
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
 
