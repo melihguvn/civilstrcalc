@@ -279,30 +279,30 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <label>Structural System — Table 12.2-1</label>
           <select id="inp-sys" onchange="onSysChange();calc();">
             <optgroup label="Moment Frames">
-              <option value="8,0.028,0.8">Special steel MF (R=8)</option>
-              <option value="8,0.016,0.9">Special RC MF (R=8)</option>
-              <option value="4.5,0.028,0.8">Intermediate steel MF (R=4.5)</option>
-              <option value="5,0.016,0.9">Intermediate RC MF (R=5)</option>
-              <option value="3.5,0.028,0.8">Ordinary steel MF (R=3.5)</option>
-              <option value="3,0.016,0.9">Ordinary RC MF (R=3)</option>
+              <option value="8,0.028,0.0724,0.8">Special steel MF (R=8)</option>
+              <option value="8,0.016,0.0466,0.9">Special RC MF (R=8)</option>
+              <option value="4.5,0.028,0.0724,0.8">Intermediate steel MF (R=4.5)</option>
+              <option value="5,0.016,0.0466,0.9">Intermediate RC MF (R=5)</option>
+              <option value="3.5,0.028,0.0724,0.8">Ordinary steel MF (R=3.5)</option>
+              <option value="3,0.016,0.0466,0.9">Ordinary RC MF (R=3)</option>
             </optgroup>
             <optgroup label="Shear Walls">
-              <option value="6,0.02,0.75" selected>Special RC shear walls (R=6)</option>
-              <option value="5,0.02,0.75">Ordinary RC shear walls (R=5)</option>
-              <option value="6.5,0.02,0.75">Special steel plate shear walls (R=6.5)</option>
+              <option value="6,0.02,0.0488,0.75" selected>Special RC shear walls (R=6)</option>
+              <option value="5,0.02,0.0488,0.75">Ordinary RC shear walls (R=5)</option>
+              <option value="6.5,0.02,0.0488,0.75">Special steel plate shear walls (R=6.5)</option>
             </optgroup>
             <optgroup label="Braced Frames">
-              <option value="6,0.03,0.75">Special steel CBF (R=6)</option>
-              <option value="3.25,0.03,0.75">Ordinary steel CBF (R=3.25)</option>
-              <option value="8,0.03,0.75">Special steel EBF / BRBF (R=8)</option>
+              <option value="6,0.02,0.0488,0.75">Special steel CBF (R=6)</option>
+              <option value="3.25,0.02,0.0488,0.75">Ordinary steel CBF (R=3.25)</option>
+              <option value="8,0.03,0.0731,0.75">Special steel EBF / BRBF (R=8)</option>
             </optgroup>
             <optgroup label="Dual Systems">
-              <option value="7,0.02,0.75">Dual: Spec. RC SW + spec. RC MF (R=7)</option>
-              <option value="8,0.028,0.8">Dual: BRBF + special steel MF (R=8)</option>
+              <option value="7,0.02,0.0488,0.75">Dual: Spec. RC SW + spec. RC MF (R=7)</option>
+              <option value="8,0.028,0.0724,0.8">Dual: BRBF + special steel MF (R=8)</option>
             </optgroup>
             <optgroup label="Other">
-              <option value="3,0.02,0.75">Bearing wall — RC (R=3)</option>
-              <option value="2,0.02,0.75">Custom — enter R below</option>
+              <option value="3,0.02,0.0488,0.75">Bearing wall — RC (R=3)</option>
+              <option value="2,0.02,0.0488,0.75">Custom — enter R below</option>
             </optgroup>
           </select>
         </div>
@@ -349,8 +349,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="calc-grid" style="margin-bottom:6px;">
           <div class="inp-row">
             <label>C<sub>t</sub> — period coefficient</label>
-            <input type="number" id="inp-Ct" value="0.02" step="0.001" min="0.005" max="0.06" oninput="updateCap();calc();">
-            <div class="inp-hint">Steel MF: 0.028 · RC MF: 0.016 · Others: 0.02</div>
+            <input type="number" id="inp-Ct" value="0.02" step="0.001" min="0.005" max="0.10" oninput="updateCap();calc();">
+            <div class="inp-hint" id="hint-Ct">Steel MF: 0.028 · RC MF: 0.016 · Others: 0.02</div>
           </div>
           <div class="inp-row">
             <label>x — period exponent</label>
@@ -912,6 +912,15 @@ function setUnit(u) {
   document.getElementById('th-Vx').textContent  = isUS?'Vx (k)':'Vx (kN)';
   document.getElementById('inp-W').value  = isUS?5000:22000;
   document.getElementById('inp-hn').value = isUS?60:18;
+  // Sync Ct to correct unit-system value from the selected system dropdown
+  var sysParts = document.getElementById('inp-sys').value.split(',');
+  if (sysParts.length>=4) {
+    document.getElementById('inp-Ct').value = isUS ? sysParts[1] : sysParts[2];
+    document.getElementById('inp-x').value  = sysParts[3];
+  }
+  document.getElementById('hint-Ct').textContent =
+    isUS ? 'Steel MF: 0.028 · RC MF: 0.016 · Others: 0.02'
+         : 'Steel MF: 0.0724 · RC MF: 0.0466 · Others: 0.0488';
   rebuildStoryDefaults();
   updateCap();
   calc();
@@ -922,7 +931,11 @@ function onRCChange() {
 }
 function onSysChange() {
   var parts=document.getElementById('inp-sys').value.split(',');
-  if (parts.length>=3){document.getElementById('inp-R').value=parts[0];document.getElementById('inp-Ct').value=parts[1];document.getElementById('inp-x').value=parts[2];}
+  if (parts.length>=4){
+    document.getElementById('inp-R').value  = parts[0];
+    document.getElementById('inp-Ct').value = isUS ? parts[1] : parts[2];
+    document.getElementById('inp-x').value  = parts[3];
+  }
   updateCap();
 }
 
