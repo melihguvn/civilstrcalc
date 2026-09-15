@@ -1048,10 +1048,11 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   var Ts = SD1 / SDS;
   var T0 = 0.2 * Ts;
 
-  // Axis range
-  var Tmax = Math.max(Txd, Tyd, Ts) * 2.2;
+  // Axis range — always show entered periods with margin, no hard 5 s cap
+  var Tmax = Math.max(Txd, Tyd, Ts) * 1.4;
   Tmax = Math.max(Tmax, 1.5);
-  Tmax = Math.min(Tmax, Math.min(TL, 5));
+  Tmax = Math.min(Tmax, TL);                       // cap at TL (spectrum ends there)
+  Tmax = Math.max(Tmax, Txd * 1.1, Tyd * 1.1);    // always show entered periods
   var Samax = SDS * 1.2;
 
   function tx(T)  { return ml + (T  / Tmax) * pw; }
@@ -1071,7 +1072,7 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   // Grid
   ctx.lineWidth = 1;
   ctx.strokeStyle = gridClr;
-  var tStep = Tmax <= 1.5 ? 0.25 : Tmax <= 3 ? 0.5 : 1;
+  var tStep = Tmax <= 1.5 ? 0.25 : Tmax <= 3 ? 0.5 : Tmax <= 8 ? 1 : 2;
   for (var t = 0; t <= Tmax + 0.001; t += tStep) {
     ctx.beginPath(); ctx.moveTo(tx(t), mt); ctx.lineTo(tx(t), mt+ph); ctx.stroke();
   }
