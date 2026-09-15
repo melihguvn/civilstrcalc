@@ -123,6 +123,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .dist-table td:first-child{text-align:left;font-weight:500;}
 .dist-table tfoot td{font-weight:700;background:#f8fafb;border-top:2px solid var(--border);}
 
+/* ── Background article ──────────────────────── */
+.bg-article{max-width:860px;margin:18px auto 0;padding:0 4px 32px;}
+.bg-article h2{font-size:.95rem;font-weight:700;color:var(--text);margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.bg-article h3{font-size:.8rem;font-weight:700;color:var(--text);margin:18px 0 6px;letter-spacing:.01em;}
+.bg-article p{font-size:.78rem;color:var(--text);line-height:1.65;margin:0 0 9px;}
+.bg-article ul{font-size:.78rem;color:var(--text);line-height:1.65;margin:0 0 9px;padding-left:20px;}
+.bg-article li{margin-bottom:4px;}
+.bg-article strong{font-weight:600;}
+
 /* ── Misc ────────────────────────────────────── */
 .warn-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;padding:6px 11px;font-size:.71rem;color:#9a3412;line-height:1.5;margin-bottom:8px;display:none;}
 .related-tools{margin-top:16px;padding:12px 14px;background:var(--white);border:1px solid var(--border);border-radius:7px;}
@@ -446,6 +455,57 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <a class="rt-link" href="articles/us-standards/5-load-combinations">US Standards: Load Combinations</a>
     </div>
   </div>
+
+  <!-- Background content -->
+  <article class="bg-article">
+    <h2>ASCE 7-22 Equivalent Lateral Force Procedure — Technical Background</h2>
+
+    <h3>What Is the Equivalent Lateral Force Procedure?</h3>
+    <p>The Equivalent Lateral Force (ELF) procedure, defined in ASCE 7-22 §12.8, converts the dynamic effects of earthquake ground motion into a single static base shear force <strong>V = C<sub>s</sub> · W</strong>. Despite its simplicity, the ELF method captures the fundamental behavior of regular structures and is permitted for all Seismic Design Categories (SDC) provided the building satisfies the regularity and height requirements of Table 12.6-1. For irregular or taller structures in SDC D–F, ASCE 7-22 §12.6 may require the Modal Response Spectrum Analysis (MRSA) instead.</p>
+
+    <h3>Design Ground Motion Parameters</h3>
+    <p>The starting point for any ELF calculation is the mapped spectral accelerations S<sub>S</sub> (0.2 s, short-period) and S<sub>1</sub> (1.0 s) obtained from the USGS Design Maps tool for the site coordinates and risk-targeted maximum considered earthquake (MCE<sub>R</sub>). These values are then modified by site amplification factors F<sub>a</sub> and F<sub>v</sub> from ASCE 7-22 Tables 11.4-1 and 11.4-2 to account for local soil conditions:</p>
+    <ul>
+      <li>S<sub>MS</sub> = F<sub>a</sub> · S<sub>S</sub> — short-period MCE<sub>R</sub> adjusted for site class</li>
+      <li>S<sub>M1</sub> = F<sub>v</sub> · S<sub>1</sub> — 1-second MCE<sub>R</sub> adjusted for site class</li>
+      <li>S<sub>DS</sub> = ⅔ · S<sub>MS</sub> — design-level short-period spectral acceleration</li>
+      <li>S<sub>D1</sub> = ⅔ · S<sub>M1</sub> — design-level 1-second spectral acceleration</li>
+    </ul>
+    <p>Site Class D (stiff soil) is the default where subsurface data are unavailable. Site Class F requires a site-specific ground motion study under §20.2 and cannot be handled with the standard tables. For Site Class E with S<sub>S</sub> ≥ 1.0 g, §20.2.1 may also require a site-specific study.</p>
+
+    <h3>Building Period and the C<sub>u</sub>·T<sub>a</sub> Cap</h3>
+    <p>The building period strongly controls the seismic demand. An accurate period — from eigenvalue analysis or measured ambient vibration — is always preferable. However, ASCE 7-22 §12.8.2 imposes an upper limit on the period that may be used in design: <strong>T<sub>design</sub> = min(T<sub>user</sub>, C<sub>u</sub>·T<sub>a</sub>)</strong>, where T<sub>a</sub> is the approximate period from Eq. 12.8-7 (T<sub>a</sub> = C<sub>t</sub>·h<sub>n</sub><sup>x</sup>) and C<sub>u</sub> is a period elongation coefficient from Table 12.8-1 that decreases from 1.7 (low seismicity) to 1.4 (S<sub>D1</sub> ≥ 0.4 g). The cap prevents unconservative designs where an analytically derived period may be overestimated. This calculator accepts separate periods T<sub>x</sub> and T<sub>y</sub> for the two principal directions, since buildings often have significantly different stiffnesses in plan.</p>
+
+    <h3>Seismic Response Coefficient C<sub>s</sub></h3>
+    <p>The seismic response coefficient is the ratio of base shear to seismic weight. It is bounded by four equations in §12.8.1:</p>
+    <ul>
+      <li><strong>Eq. 12.8-2 (base):</strong> C<sub>s</sub> = S<sub>DS</sub> / (R/I<sub>e</sub>) — controls for short-period structures</li>
+      <li><strong>Eq. 12.8-3 (upper, T ≤ T<sub>L</sub>):</strong> C<sub>s</sub> = S<sub>D1</sub> / (T · R/I<sub>e</sub>) — governs when the period is in the descending branch of the spectrum</li>
+      <li><strong>Eq. 12.8-4 (upper, T &gt; T<sub>L</sub>):</strong> C<sub>s</sub> = S<sub>D1</sub>·T<sub>L</sub> / (T² · R/I<sub>e</sub>) — applies for very long-period structures</li>
+      <li><strong>Eq. 12.8-5 (minimum):</strong> C<sub>s</sub> ≥ max(0.044·S<sub>DS</sub>·I<sub>e</sub>, 0.01) — prevents unrealistically small demands</li>
+      <li><strong>Eq. 12.8-6 (minimum for S<sub>1</sub> ≥ 0.6 g):</strong> C<sub>s</sub> ≥ 0.5·S<sub>1</sub> / (R/I<sub>e</sub>) — applies near active fault zones</li>
+    </ul>
+    <p>The governing (highest) value of C<sub>s</sub> is used. In practice, most mid-rise buildings fall in the descending branch (Eq. 12.8-3), so a longer period yields a lower C<sub>s</sub> — but only down to the minimum floor set by Eq. 12.8-5.</p>
+
+    <h3>Base Shear and Vertical Distribution</h3>
+    <p>The total design base shear is <strong>V = C<sub>s</sub> · W</strong>, where W is the effective seismic weight (dead load plus applicable portions of live, storage, and snow loads per §12.7.2). The base shear is then distributed vertically among all stories using Eq. 12.8-11:</p>
+    <p style="text-align:center;font-style:italic;">F<sub>x</sub> = C<sub>vx</sub> · V &nbsp;&nbsp; where &nbsp;&nbsp; C<sub>vx</sub> = w<sub>x</sub>·h<sub>x</sub><sup>k</sup> / Σ(w<sub>i</sub>·h<sub>i</sub><sup>k</sup>)</p>
+    <p>The exponent k = 1 for T ≤ 0.5 s, k = 2 for T ≥ 2.5 s, and interpolates linearly in between. A higher k concentrates more force at upper stories, reflecting the increased participation of higher modes in flexible structures. The cumulative story shear V<sub>x</sub> at each level is the sum of all F<sub>x</sub> forces at and above that level.</p>
+
+    <h3>Modal Analysis Scale Factor — §12.9.1.4</h3>
+    <p>When MRSA or linear dynamic analysis is used instead of ELF, ASCE 7-22 §12.9.1.4 requires that the modal base shear not fall below 85% of the ELF value. If V<sub>modal</sub> &lt; 0.85 · V<sub>ELF</sub>, all modal forces, story shears, and member demands must be multiplied by the scale factor:</p>
+    <p style="text-align:center;font-style:italic;">C<sub>f</sub> = 0.85 · V<sub>ELF</sub> / V<sub>modal</sub> ≥ 1.0</p>
+    <p>The 85% threshold is fixed in ASCE 7-22 and does not depend on building irregularity or Seismic Design Category — unlike some other national codes. When V<sub>modal</sub> ≥ 0.85 · V<sub>ELF</sub>, no scaling is needed (C<sub>f</sub> = 1.0). This check is performed separately for the X and Y directions since the modal and ELF base shears differ by direction.</p>
+
+    <h3>Importance Factor and Risk Category</h3>
+    <p>The importance factor I<sub>e</sub> amplifies seismic demand for buildings whose failure would have disproportionate consequences. ASCE 7-22 Table 1.5-2 sets I<sub>e</sub> = 1.00 for Risk Categories I and II (ordinary buildings), 1.25 for Category III (schools, assembly occupancies with more than 300 occupants), and 1.50 for Category IV (essential facilities such as hospitals, fire stations, and emergency response centers). A higher I<sub>e</sub> increases C<sub>s</sub> by reducing the effective R/I<sub>e</sub> ratio, so essential facilities are designed for proportionally larger seismic forces.</p>
+
+    <h3>Response Modification Factor R</h3>
+    <p>The response modification factor R reflects a structural system's expected ductility and overstrength. Special moment frames (R = 8) and special shear walls (R = 6–7) are designed to sustain large inelastic deformations; their high R values significantly reduce design forces relative to elastic demand. Ordinary systems carry lower R values and must therefore resist larger fractions of the elastic force. Selecting a high-R system is advantageous for reducing member sizes, but it comes with strict detailing requirements enforced by ACI 318 or AISC 341 — the associated height limits, redundancy requirements, and drift checks must all be satisfied.</p>
+
+    <h3>Seismic Design Category</h3>
+    <p>The Seismic Design Category (SDC) — determined from S<sub>DS</sub>, S<sub>D1</sub>, and Risk Category per ASCE 7-22 §11.6 — governs which lateral systems are permitted, whether irregularities are allowed, and what analysis procedure is required. SDC A and B impose minimal seismic requirements; SDC C introduces restrictions on certain ordinary systems; SDC D–F require special detailing, prohibit many system types, and mandate MRSA for irregular or taller structures. The ELF procedure is permitted for SDC D–F only when Table 12.6-1 criteria are met (regular, T &lt; 3.5·T<sub>s</sub>, and not exceeding the height thresholds for the selected system).</p>
+  </article>
 </main>
 
 <script>
