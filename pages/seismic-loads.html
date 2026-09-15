@@ -210,8 +210,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="unit-switcher">
           <span class="unit-lbl">Units</span>
           <div class="unit-btns">
-            <button id="btn-us" class="unit-btn active" onclick="setUnit('us')">US (kip-ft, in)</button>
-            <button id="btn-si" class="unit-btn" onclick="setUnit('si')">SI (kN-m, mm)</button>
+            <button id="btn-us" class="unit-btn" onclick="setUnit('us')">US (kip-ft, in)</button>
+            <button id="btn-si" class="unit-btn active" onclick="setUnit('si')">SI (kN-m, mm)</button>
           </div>
         </div>
         <div class="sc-hdr">Ground Motion Parameters</div>
@@ -314,12 +314,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <input type="number" id="inp-R" value="6" min="1" max="10" step="0.25" oninput="calc();">
           </div>
           <div class="inp-row">
-            <label id="lbl-W">W (kips)</label>
-            <input type="number" id="inp-W" value="5000" min="0" step="10" oninput="calc();">
+            <label id="lbl-W">W (kN)</label>
+            <input type="number" id="inp-W" value="22000" min="0" step="10" oninput="calc();">
           </div>
           <div class="inp-row">
-            <label id="lbl-hn">h<sub>n</sub> (ft)</label>
-            <input type="number" id="inp-hn" value="60" min="0" step="1" oninput="updateCap();calc();">
+            <label id="lbl-hn">h<sub>n</sub> (m)</label>
+            <input type="number" id="inp-hn" value="18" min="0" step="1" oninput="updateCap();calc();">
           </div>
         </div>
       </div>
@@ -351,8 +351,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="calc-grid" style="margin-bottom:6px;">
           <div class="inp-row">
             <label>C<sub>t</sub> — period coefficient</label>
-            <input type="number" id="inp-Ct" value="0.02" step="0.001" min="0.005" max="0.10" oninput="updateCap();calc();">
-            <div class="inp-hint" id="hint-Ct">Steel MF: 0.028 · RC MF: 0.016 · Others: 0.02</div>
+            <input type="number" id="inp-Ct" value="0.0488" step="0.001" min="0.005" max="0.10" oninput="updateCap();calc();">
+            <div class="inp-hint" id="hint-Ct">Steel MF: 0.0724 · RC MF: 0.0466 · Others: 0.0488</div>
           </div>
           <div class="inp-row">
             <label>x — period exponent</label>
@@ -399,8 +399,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div style="font-size:.68rem;color:var(--text-dim);margin-bottom:6px;">Enter each story's weight and height. X-direction V used for distribution.</div>
           <div style="display:grid;grid-template-columns:24px 1fr 1fr auto;gap:6px;margin-bottom:3px;">
             <div></div>
-            <div style="font-size:.65rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;" id="lbl-wx">w<sub>x</sub> (kips)</div>
-            <div style="font-size:.65rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;" id="lbl-hx">h<sub>x</sub> (ft)</div>
+            <div style="font-size:.65rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;" id="lbl-wx">w<sub>x</sub> (kN)</div>
+            <div style="font-size:.65rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;" id="lbl-hx">h<sub>x</sub> (m)</div>
             <div></div>
           </div>
           <div id="story-rows"></div>
@@ -796,7 +796,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 </div>
 
 <script>
-var isUS = true;
+var isUS = false;
 var RC_Ie = { I:1.00, II:1.00, III:1.25, IV:1.50 };
 
 // ── ASCE 7-22 Table 11.4-1: Fa ───────────────────────────────────────────────
@@ -1757,9 +1757,8 @@ function ec8PrintReport() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function init(){
   updateGM();
-  updateCap();
-  addStory(1000,12); addStory(1000,24); addStory(1000,36); addStory(1000,48); addStory(1000,60);
-  calc();
+  addStory(); addStory(); addStory(); addStory(); addStory();
+  setUnit('si'); // sets SI as default: labels, Ct, W, hn, story weights, updateCap, calc
   ec8UpdateGM();
   ec8UpdateTa();
   ec8Calc();
