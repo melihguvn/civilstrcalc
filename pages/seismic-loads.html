@@ -352,6 +352,20 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <!-- ═══ RIGHT: Results ══════════════════════════════════════════════════════ -->
     <div id="results">
 
+      <!-- Spectrum chart -->
+      <div class="res-card">
+        <div class="res-card-hdr">Design Response Spectrum — §11.4.5</div>
+        <div style="padding:10px 12px 8px;">
+          <canvas id="spectrum-canvas" style="width:100%;display:block;border-radius:4px;"></canvas>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:.66rem;color:var(--text-dim);align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1a6b45" stroke-width="2.5"/></svg>Spectrum</span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>x</sub></span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>y</sub></span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/></svg>T<sub>s</sub>, T<sub>0</sub></span>
+          </div>
+        </div>
+      </div>
+
       <div class="res-card">
         <div class="res-card-hdr">Period — §12.8.2</div>
         <table class="res-tbl3">
@@ -630,6 +644,162 @@ function computeCs(SDS, SD1, S1, T_design, TL, RIe) {
   return {base:Cs_base, upper:Cs_upper, min1:Cs_min1};
 }
 
+// ── Design Response Spectrum chart ───────────────────────────────────────────
+function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY) {
+  var canvas = document.getElementById('spectrum-canvas');
+  if (!canvas) return;
+  var container = canvas.parentElement;
+  var W = container.clientWidth - 24;
+  if (W < 120) return;
+  var H = 210;
+  canvas.width  = W * (window.devicePixelRatio || 1);
+  canvas.height = H * (window.devicePixelRatio || 1);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  var ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+
+  var bg      = isDark ? '#1c2a3a' : '#f8fafb';
+  var gridClr = isDark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)';
+  var axClr   = isDark ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.25)';
+  var lblClr  = isDark ? '#8ca0b8' : '#6b7280';
+  var dimClr  = isDark ? '#4a6080' : '#cbd5e1';
+
+  var ml=50, mr=12, mt=14, mb=38;
+  var pw = W - ml - mr, ph = H - mt - mb;
+
+  var Ts = SD1 / SDS;
+  var T0 = 0.2 * Ts;
+
+  // Axis range
+  var Tmax = Math.max(Txd, Tyd, Ts) * 2.2;
+  Tmax = Math.max(Tmax, 1.5);
+  Tmax = Math.min(Tmax, Math.min(TL, 5));
+  var Samax = SDS * 1.2;
+
+  function tx(T)  { return ml + (T  / Tmax) * pw; }
+  function ty(Sa) { return mt + ph - Math.min(Math.max((Sa / Samax) * ph, 0), ph); }
+  function saAt(T) {
+    if (T <= 0) return SDS * 0.4;
+    if (T < T0) return SDS * (0.4 + 0.6 * T / T0);
+    if (T < Ts) return SDS;
+    if (T < TL) return SD1 / T;
+    return SD1 * TL / (T * T);
+  }
+
+  // Background
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = gridClr;
+  var tStep = Tmax <= 1.5 ? 0.25 : Tmax <= 3 ? 0.5 : 1;
+  for (var t = 0; t <= Tmax + 0.001; t += tStep) {
+    ctx.beginPath(); ctx.moveTo(tx(t), mt); ctx.lineTo(tx(t), mt+ph); ctx.stroke();
+  }
+  var saStep = SDS >= 1.2 ? 0.4 : SDS >= 0.6 ? 0.2 : 0.1;
+  for (var sa = 0; sa <= Samax; sa += saStep) {
+    var yg = ty(sa);
+    ctx.beginPath(); ctx.moveTo(ml, yg); ctx.lineTo(ml+pw, yg); ctx.stroke();
+  }
+
+  // Ts and T0 markers
+  ctx.setLineDash([3,3]);
+  ctx.strokeStyle = dimClr;
+  ctx.lineWidth = 1;
+  [T0, Ts].forEach(function(t) {
+    if (t > Tmax) return;
+    ctx.beginPath(); ctx.moveTo(tx(t), mt); ctx.lineTo(tx(t), mt+ph); ctx.stroke();
+    ctx.fillStyle = dimClr;
+    ctx.font = '9px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(t < Ts ? 'T₀' : 'Ts', tx(t), mt - 3);
+  });
+  ctx.setLineDash([]);
+
+  // Spectrum curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#1a6b45';
+  ctx.lineWidth = 2.5;
+  var step = Tmax / 400;
+  for (var i = 0; i <= 400; i++) {
+    var T = i * step;
+    var x = tx(T), y = ty(saAt(T));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Tx / Ty vertical lines and points
+  function drawPeriod(Tdes, color, lbl, lblOffset) {
+    if (Tdes <= 0 || Tdes > Tmax) return;
+    ctx.setLineDash([6,3]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(tx(Tdes), mt); ctx.lineTo(tx(Tdes), mt+ph); ctx.stroke();
+    ctx.setLineDash([]);
+    // Point on curve
+    var Sa = saAt(Tdes);
+    ctx.beginPath();
+    ctx.arc(tx(Tdes), ty(Sa), 4.5, 0, Math.PI*2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    // Label above point
+    ctx.fillStyle = color;
+    ctx.font = 'bold 10px system-ui,sans-serif';
+    ctx.textAlign = tx(Tdes) + 20 > ml+pw ? 'right' : 'left';
+    var lx = tx(Tdes) + (ctx.textAlign==='left' ? 6 : -6);
+    ctx.fillText(lbl, lx, ty(Sa) - 7 + lblOffset);
+  }
+
+  var sameT = Math.abs(Txd - Tyd) < 0.001;
+  drawPeriod(Txd, '#2563eb', sameT ? 'Tx=Ty' : 'Tx', 0);
+  if (!sameT) drawPeriod(Tyd, '#d97706', 'Ty', 0);
+
+  // Axes
+  ctx.strokeStyle = axClr;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(ml, mt); ctx.lineTo(ml, mt+ph); ctx.lineTo(ml+pw, mt+ph);
+  ctx.stroke();
+
+  // T-axis labels
+  ctx.fillStyle = lblClr;
+  ctx.font = '10px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  for (var t2 = 0; t2 <= Tmax + 0.001; t2 += tStep) {
+    ctx.fillText(t2.toFixed(t2 < 1 ? 2 : 1), tx(t2), mt+ph+13);
+  }
+  // Sa-axis labels
+  ctx.textAlign = 'right';
+  for (var sa2 = 0; sa2 <= Samax; sa2 += saStep) {
+    var yy = ty(sa2); if (yy < mt - 2) continue;
+    ctx.fillText(sa2.toFixed(2), ml-5, yy+3);
+  }
+
+  // Axis titles
+  ctx.font = '10px system-ui,sans-serif';
+  ctx.fillStyle = lblClr;
+  ctx.textAlign = 'center';
+  ctx.fillText('T (s)', ml + pw/2, H - 4);
+  ctx.save();
+  ctx.translate(11, mt + ph/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Sa (g)', 0, 0);
+  ctx.restore();
+
+  // SDS annotation
+  if (ty(SDS) > mt + 2 && ty(SDS) < mt + ph - 2) {
+    ctx.fillStyle = '#1a6b45';
+    ctx.font = '9px system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('SDS='+SDS.toFixed(3), ml+4, ty(SDS)-4);
+  }
+}
+
 // ── MAIN CALC ─────────────────────────────────────────────────────────────────
 function calc() {
   var SS  = parseFloat(document.getElementById('inp-SS').value)  || 0;
@@ -691,6 +861,9 @@ function calc() {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   document.getElementById('results').style.display='';
+
+  // Spectrum chart
+  drawSpectrum(SDS, SD1, TL, Txd, Tyd, Rx.Cs, Ry.Cs);
 
   // Period table
   var pHTML='';
