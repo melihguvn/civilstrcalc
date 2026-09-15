@@ -139,6 +139,49 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rt-grid{display:flex;flex-wrap:wrap;gap:5px;}
 .rt-link{display:inline-block;padding:3px 10px;border:1px solid var(--border);border-radius:20px;font-size:.71rem;color:var(--text-dim);text-decoration:none;transition:background .13s,color .13s,border-color .13s;}
 .rt-link:hover{background:#f0f4f8;color:var(--text);border-color:#b0bec5;}
+
+/* ── PDF button ─────────────────────────────── */
+.pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;background:#1a2332;color:#fff;border:none;border-radius:5px;font-size:.73rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .14s;margin-bottom:8px;float:right;}
+.pdf-btn:hover{background:#243044;}
+.pdf-btn svg{flex-shrink:0;}
+
+/* ── PDF Report (print only) ─────────────────── */
+#pdf-report{display:none;}
+.rpt{font-family:'Helvetica Neue',Arial,sans-serif;font-size:8pt;color:#111;line-height:1.45;background:#fff;min-height:267mm;}
+.rpt-hdr{background:#1a2332;color:#fff;padding:9pt 13pt;display:flex;justify-content:space-between;align-items:center;margin-bottom:9pt;}
+.rpt-title{font-size:12pt;font-weight:700;margin-bottom:2pt;}
+.rpt-sub{font-size:7.5pt;opacity:.8;}
+.rpt-logo{font-size:9pt;font-weight:700;color:#4ade80;letter-spacing:.06em;white-space:nowrap;}
+.rpt-sec{margin-bottom:7pt;}
+.rpt-sh{font-size:6.5pt;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#1a6b45;border-bottom:1pt solid #1a6b45;padding-bottom:2pt;margin-bottom:4pt;}
+.rpt-g2{display:grid;grid-template-columns:repeat(2,1fr);gap:4pt;}
+.rpt-g3{display:grid;grid-template-columns:repeat(3,1fr);gap:4pt;}
+.rpt-g4{display:grid;grid-template-columns:repeat(4,1fr);gap:3pt;}
+.rpt-kv{background:#f8fafb;border:0.5pt solid #dde1e7;border-radius:2pt;padding:3pt 5pt;}
+.rpt-kv-l{font-size:6pt;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:1pt;}
+.rpt-kv-v{font-size:8.5pt;font-weight:700;color:#111;}
+.rpt-t{width:100%;border-collapse:collapse;font-size:7.5pt;}
+.rpt-t th{background:#f0f4f8;padding:2.5pt 6pt;font-size:6pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;border:0.5pt solid #dde1e7;text-align:center;}
+.rpt-t th:first-child{text-align:left;}
+.rpt-t td{padding:2.5pt 6pt;border:0.5pt solid #dde1e7;color:#111;vertical-align:middle;}
+.rpt-t td:not(:first-child){text-align:center;font-weight:500;}
+.rpt-t tr:last-child td{background:#f0fdf4;font-weight:700;}
+.rpt-eq{background:#f0fdf4;border:1pt solid #86efac;border-radius:3pt;padding:5pt 10pt;display:flex;align-items:center;justify-content:space-between;margin-bottom:5pt;}
+.rpt-eq-lhs{font-size:13pt;font-weight:700;color:#1a6b45;letter-spacing:.02em;}
+.rpt-eq-ref{font-size:6.5pt;color:#6b7280;}
+.rpt-vrow{display:grid;grid-template-columns:1fr 1fr;gap:6pt;}
+.rpt-vbox{background:#f0fdf4;border:1pt solid #86efac;border-radius:3pt;padding:5pt 9pt;text-align:center;}
+.rpt-vdir{font-size:6pt;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#4b5563;margin-bottom:1pt;}
+.rpt-vval{font-size:14pt;font-weight:700;color:#1a6b45;}
+.rpt-veq{font-size:6.5pt;color:#4b5563;margin-top:2pt;}
+.rpt-img{width:100%;border:0.5pt solid #dde1e7;border-radius:3pt;display:block;}
+.rpt-ft{display:flex;justify-content:space-between;border-top:0.5pt solid #dde1e7;padding-top:5pt;margin-top:8pt;font-size:6.5pt;color:#9ca3af;}
+
+@media print{
+  body>*{display:none!important;}
+  #pdf-report{display:block!important;}
+  @page{margin:10mm 12mm;size:A4;}
+}
 </style>
 </head>
 <body>
@@ -361,6 +404,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <!-- ═══ RIGHT: Results ══════════════════════════════════════════════════════ -->
     <div id="results">
 
+      <div style="overflow:hidden;">
+        <button class="pdf-btn" onclick="printReport()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Save as PDF
+        </button>
+      </div>
+
       <!-- Spectrum chart -->
       <div class="res-card">
         <div class="res-card-hdr">Design Response Spectrum — §11.4.5</div>
@@ -507,6 +557,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <p>The Seismic Design Category (SDC) — determined from S<sub>DS</sub>, S<sub>D1</sub>, and Risk Category per ASCE 7-22 §11.6 — governs which lateral systems are permitted, whether irregularities are allowed, and what analysis procedure is required. SDC A and B impose minimal seismic requirements; SDC C introduces restrictions on certain ordinary systems; SDC D–F require special detailing, prohibit many system types, and mandate MRSA for irregular or taller structures. The ELF procedure is permitted for SDC D–F only when Table 12.6-1 criteria are met (regular, T &lt; 3.5·T<sub>s</sub>, and not exceeding the height thresholds for the selected system).</p>
   </article>
 </main>
+
+<!-- ── PDF Report ─────────────────────────────────────────────────────────── -->
+<div id="pdf-report">
+  <div class="rpt">
+    <div class="rpt-hdr">
+      <div>
+        <div class="rpt-title">Seismic Base Shear Calculation</div>
+        <div class="rpt-sub">ASCE 7-22 §12.8 — Equivalent Lateral Force Procedure</div>
+      </div>
+      <div class="rpt-logo">CivilStrCalc.com</div>
+    </div>
+    <div id="rpt-body"></div>
+    <div class="rpt-ft">
+      <span>civilstrcalc.com — ASCE 7-22 §12.8 ELF Calculator</span>
+      <span id="rpt-date"></span>
+    </div>
+  </div>
+</div>
 
 <script>
 var isUS = true;
@@ -1023,6 +1091,110 @@ function calc() {
   refHTML+=row2('<b>Cs,x / Cs,y</b>', '<b>'+f(Rx.Cs,4)+' / '+f(Ry.Cs,4)+'</b>');
   refHTML+=row2('<b>Vx / Vy ('+fUnit+')</b>', '<b class="vok">'+f(Vx,1)+' / '+f(Vy,1)+'</b>');
   document.getElementById('res-ref').innerHTML=refHTML;
+
+  // Build PDF report (ready for print)
+  buildReport({SS:SS,S1:S1,sc:sc,TL:TL,Ie:Ie,R:R,W:W,hn:hn,Ct:Ct,x:x,
+    Tx:Tx,Ty:Ty,Txd:Txd,Tyd:Tyd,Ta:Ta,Cu:Cu,CuTa:CuTa,
+    SDS:SDS,SD1:SD1,Fa:Fa,Fv:Fv,SMS:SMS,SM1:SM1,
+    RIe:RIe,Rx:Rx,Ry:Ry,Vx:Vx,Vy:Vy,fUnit:fUnit,
+    rc:rc,sysName:sysName});
+}
+
+// ── PDF Report builder ────────────────────────────────────────────────────────
+function rptKV(l,v){return '<div class="rpt-kv"><div class="rpt-kv-l">'+l+'</div><div class="rpt-kv-v">'+v+'</div></div>';}
+function rptR3(l,a,b){return '<tr><td>'+l+'</td><td>'+a+'</td><td>'+b+'</td></tr>';}
+
+function buildReport(p) {
+  var h = '';
+
+  // ── Row 1: Ground motion (4 cols) + Building (4 cols) side by side
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7pt;margin-bottom:7pt;">';
+
+  // Ground motion block
+  h += '<div>';
+  h += '<div class="rpt-sh">Ground Motion Parameters — §11.4</div>';
+  h += '<div class="rpt-g4">';
+  h += rptKV('SS (g)', f(p.SS,3));
+  h += rptKV('S1 (g)', f(p.S1,3));
+  h += rptKV('Site Class', p.sc);
+  h += rptKV('TL (s)', f(p.TL,1));
+  h += rptKV('Fa', f(p.Fa,3));
+  h += rptKV('Fv', f(p.Fv,3));
+  h += rptKV('SDS (g)', f(p.SDS,3));
+  h += rptKV('SD1 (g)', f(p.SD1,3));
+  h += '</div></div>';
+
+  // Building block
+  h += '<div>';
+  h += '<div class="rpt-sh">Building Parameters</div>';
+  h += '<div class="rpt-g4">';
+  h += rptKV('Risk Cat.', p.rc);
+  h += rptKV('Ie', f(p.Ie,2));
+  h += rptKV('R', f(p.R,2));
+  h += rptKV('R / Ie', f(p.RIe,3));
+  h += rptKV('W ('+p.fUnit+')', f(p.W,1));
+  h += rptKV('hn ('+(isUS?'ft':'m')+')', f(p.hn,1));
+  h += rptKV('Ct', f(p.Ct,3));
+  h += rptKV('x', f(p.x,2));
+  h += '</div></div>';
+  h += '</div>';
+
+  // ── Row 2: Period table + Cs table side by side
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7pt;margin-bottom:7pt;">';
+
+  // Period
+  h += '<div>';
+  h += '<div class="rpt-sh">Building Period — §12.8.2</div>';
+  h += '<table class="rpt-t"><thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
+  h += rptR3('T<sub>entered</sub> (s)', f(p.Tx,3), f(p.Ty,3));
+  if (p.Ta) {
+    h += rptR3('T<sub>a</sub> = Ct·hn<sup>x</sup> (s)', f(p.Ta,3), f(p.Ta,3));
+    h += rptR3('C<sub>u</sub>', f(p.Cu,2), f(p.Cu,2));
+    h += rptR3('C<sub>u</sub>·T<sub>a</sub> cap (s)', f(p.CuTa,3), f(p.CuTa,3));
+  }
+  h += rptR3('<b>T<sub>design</sub> (s)</b>', f(p.Txd,3), f(p.Tyd,3));
+  h += '</tbody></table></div>';
+
+  // Cs
+  h += '<div>';
+  h += '<div class="rpt-sh">Seismic Response Coefficient Cs — §12.8.1</div>';
+  h += '<table class="rpt-t"><thead><tr><th>Equation</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
+  h += rptR3('Cs,base = SDS/(R/Ie)  [Eq.12.8-2]', f(p.Rx.base,4), f(p.Ry.base,4));
+  h += rptR3('Cs,upper  [Eq.'+p.Rx.eqUpper+'/'+p.Ry.eqUpper+']', f(p.Rx.upper,4), f(p.Ry.upper,4));
+  h += rptR3('Cs,min = max(0.044·SDS·Ie, 0.01)', f(p.Rx.min1,4), f(p.Ry.min1,4));
+  if (p.S1 >= 0.6) h += rptR3('Cs,min2 = 0.5·S1/(R/Ie)  [Eq.12.8-6]', f(p.Rx.min2,4), f(p.Ry.min2,4));
+  h += rptR3('<b>Cs (governing)</b>', '<b style="color:#1a6b45;">'+f(p.Rx.Cs,4)+'</b>', '<b style="color:#1a6b45;">'+f(p.Ry.Cs,4)+'</b>');
+  h += '</tbody></table></div>';
+  h += '</div>';
+
+  // ── Row 3: ELF equation + V boxes
+  h += '<div class="rpt-sec">';
+  h += '<div class="rpt-sh">Base Shear — ASCE 7-22 §12.8.1</div>';
+  h += '<div class="rpt-eq"><div class="rpt-eq-lhs"><b>V = C<sub>s</sub> · W</b></div><div class="rpt-eq-ref">Eq. 12.8-1</div></div>';
+  h += '<div class="rpt-vrow">';
+  h += '<div class="rpt-vbox"><div class="rpt-vdir">X Direction</div>';
+  h += '<div class="rpt-vval">'+f(p.Vx,1)+' '+p.fUnit+'</div>';
+  h += '<div class="rpt-veq">'+f(p.Rx.Cs,4)+' &times; '+f(p.W,1)+' = '+f(p.Vx,1)+'</div></div>';
+  h += '<div class="rpt-vbox"><div class="rpt-vdir">Y Direction</div>';
+  h += '<div class="rpt-vval">'+f(p.Vy,1)+' '+p.fUnit+'</div>';
+  h += '<div class="rpt-veq">'+f(p.Ry.Cs,4)+' &times; '+f(p.W,1)+' = '+f(p.Vy,1)+'</div></div>';
+  h += '</div></div>';
+
+  // ── Row 4: Spectrum chart
+  h += '<div class="rpt-sec" style="margin-top:6pt;">';
+  h += '<div class="rpt-sh">Design Response Spectrum — §11.4.5</div>';
+  h += '<img id="rpt-spectrum-img" class="rpt-img" src="" alt="Design Response Spectrum">';
+  h += '</div>';
+
+  document.getElementById('rpt-body').innerHTML = h;
+  document.getElementById('rpt-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function printReport() {
+  var canvas = document.getElementById('spectrum-canvas');
+  var img = document.getElementById('rpt-spectrum-img');
+  if (canvas && img) img.src = canvas.toDataURL('image/png');
+  window.print();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
