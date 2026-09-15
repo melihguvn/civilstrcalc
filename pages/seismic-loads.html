@@ -714,10 +714,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
       <!-- ═══ EC8 RIGHT ══════════════════════════════════════════════════════ -->
       <div id="ec8-results">
-        <div style="overflow:hidden;">
-          <button class="pdf-btn" onclick="ec8PrintReport()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
-            Save as PDF
+        <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+          <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+          <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">EN 1998-1 · kN · m</span>
+          <button class="pdf-btn" onclick="ec8PrintReport()" style="margin:0;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Print / PDF
           </button>
         </div>
 
@@ -786,35 +788,35 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
        ═══════════════════════════════════════════════════════════════════════ -->
   <div class="sub-pane" id="pane-tbdy">
 
-    <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Taban Kesme — TBDY 2018 §4.8</h2>
-    <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Eşdeğer Deprem Yükü Yöntemi — Vt = W × SaR(T1), iki doğrultu.</p>
+    <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Base Shear — TBDY 2018 §4.8</h2>
+    <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Equivalent Lateral Force Method — Vt = W × SaR(T1), two directions.</p>
 
     <div class="page-layout">
       <!-- ═══ TBDY LEFT ═════════════════════════════════════════════════════ -->
       <div>
         <!-- Ground Motion -->
         <div class="section-card">
-          <div class="sc-hdr">Yer Hareketi Parametreleri</div>
+          <div class="sc-hdr">Ground Motion Parameters</div>
           <div class="calc-grid" style="margin-bottom:8px;">
             <div class="inp-row">
-              <label>S<sub>S</sub> — Kısa Periyot Spektral İvme (g)</label>
+              <label>S<sub>S</sub> — Short-period Spectral Acceleration (g)</label>
               <input type="number" id="tbdy-SS" value="1.00" min="0" step="0.01" oninput="tbdyUpdateGM();tbdyCalc();">
-              <div class="inp-hint">AFAD TD-2 haritasından (0.2 s)</div>
+              <div class="inp-hint">From AFAD TD-2 hazard map (0.2 s)</div>
             </div>
             <div class="inp-row">
-              <label>S<sub>1</sub> — 1.0 s Spektral İvme (g)</label>
+              <label>S<sub>1</sub> — 1.0 s Spectral Acceleration (g)</label>
               <input type="number" id="tbdy-S1" value="0.30" min="0" step="0.01" oninput="tbdyUpdateGM();tbdyCalc();">
-              <div class="inp-hint">AFAD TD-2 haritasından (1.0 s)</div>
+              <div class="inp-hint">From AFAD TD-2 hazard map (1.0 s)</div>
             </div>
           </div>
           <div class="inp-row">
-            <label>Yerel Zemin Sınıfı (§3.1)</label>
+            <label>Local Site Class (§3.1)</label>
             <select id="tbdy-ZS" onchange="tbdyUpdateGM();tbdyCalc();">
-              <option value="ZA">ZA — Sağlam/çok sıkı ana kaya (vs &gt; 1500 m/s)</option>
-              <option value="ZB">ZB — Sığ kaya / çok sert zemin</option>
-              <option value="ZC" selected>ZC — Sık kum/çakıl, sert kil</option>
-              <option value="ZD">ZD — Orta sıkı kum, kum-çakıl, sert kil</option>
-              <option value="ZE">ZE — Yumuşak kil/silt</option>
+              <option value="ZA">ZA — Rock / Very stiff soil (vs &gt; 1500 m/s)</option>
+              <option value="ZB">ZB — Shallow rock / Very hard soil</option>
+              <option value="ZC" selected>ZC — Dense sand/gravel, stiff clay</option>
+              <option value="ZD">ZD — Medium-dense sand/gravel, stiff clay</option>
+              <option value="ZE">ZE — Soft clay/silt</option>
             </select>
           </div>
           <div class="gm-computed" style="grid-template-columns:repeat(6,1fr);margin-top:7px;">
@@ -829,68 +831,70 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
         <!-- Building Parameters -->
         <div class="section-card">
-          <div class="sc-hdr">Yapı Parametreleri</div>
+          <div class="sc-hdr">Building Parameters</div>
           <div class="calc-grid" style="margin-bottom:8px;">
             <div class="inp-row">
-              <label>Bina Kullanım Sınıfı (BKS) → I</label>
+              <label>Occupancy Class (BKS) — I</label>
               <select id="tbdy-BKS" onchange="tbdyCalc();">
-                <option value="1.0">BKS 1 — Konut/büro (I = 1.0)</option>
-                <option value="1.2">BKS 2 — Okul/toplantı (I = 1.2)</option>
-                <option value="1.5">BKS 3 — Hastane/kritik (I = 1.5)</option>
+                <option value="1.0">BKS 1 — Residential/Office (I = 1.0)</option>
+                <option value="1.2">BKS 2 — School/Assembly (I = 1.2)</option>
+                <option value="1.5">BKS 3 — Hospital/Critical (I = 1.5)</option>
               </select>
+              <div class="inp-hint" style="visibility:hidden;" aria-hidden="true">ph</div>
             </div>
             <div class="inp-row">
-              <label>W — Sismik Ağırlık (kN)</label>
+              <label>W — Seismic Weight (kN)</label>
               <input type="number" id="tbdy-W" value="10000" min="0" step="100" oninput="tbdyCalc();">
               <div class="inp-hint">G + n·Q (§4.3.1)</div>
             </div>
           </div>
           <div class="calc-grid" style="margin-bottom:8px;">
             <div class="inp-row">
-              <label>Taşıyıcı Sistem → R, D</label>
+              <label>Structural System — R, D</label>
               <select id="tbdy-sys" onchange="tbdyCalc();">
-                <option value="8,3">Yük.Sün. BA Moment Çerçevesi (A11) — R=8, D=3</option>
-                <option value="4,2">Sın.Sün. BA Moment Çerçevesi (A12) — R=4, D=2</option>
-                <option value="7,2.5">Yük.Sün. BA Perde+Çerçeve (A13) — R=7, D=2.5</option>
-                <option value="6,2.5">Yük.Sün. BA Perdeli Sistem (A14) — R=6, D=2.5</option>
-                <option value="8,3">Yük.Sün. Çelik Moment Çerçevesi (B11) — R=8, D=3</option>
-                <option value="4,2">Sın.Sün. Çelik Moment Çerçevesi (B12) — R=4, D=2</option>
-                <option value="8,3">Yük.Sün. Çelik Çapraz Çerçeve (B13) — R=8, D=3</option>
+                <option value="8,3">High-ductility RC Moment Frame (A11) — R=8, D=3</option>
+                <option value="4,2">Limited-ductility RC Moment Frame (A12) — R=4, D=2</option>
+                <option value="7,2.5">High-ductility RC Wall+Frame (A13) — R=7, D=2.5</option>
+                <option value="6,2.5">High-ductility RC Wall System (A14) — R=6, D=2.5</option>
+                <option value="8,3">High-ductility Steel Moment Frame (B11) — R=8, D=3</option>
+                <option value="4,2">Limited-ductility Steel Moment Frame (B12) — R=4, D=2</option>
+                <option value="8,3">High-ductility Steel Braced Frame (B13) — R=8, D=3</option>
               </select>
+              <div class="inp-hint" style="visibility:hidden;" aria-hidden="true">ph</div>
             </div>
             <div class="inp-row">
-              <label>N — Kat Sayısı (ΔF<sub>N</sub> için)</label>
+              <label>N — Number of Stories (for ΔF<sub>N</sub>)</label>
               <input type="number" id="tbdy-N" value="5" min="1" step="1" oninput="tbdyCalc();">
-              <div class="inp-hint">T1 &gt; 0.70 s ise ek tavan kuvveti</div>
+              <div class="inp-hint">Apex force applied when T1 &gt; 0.70 s</div>
             </div>
           </div>
         </div>
 
         <!-- Period -->
         <div class="section-card">
-          <div class="sc-hdr">Yapı Periyodu</div>
+          <div class="sc-hdr">Building Period</div>
           <div class="calc-grid" style="margin-bottom:8px;">
             <div class="inp-row">
-              <label>T<sub>1x</sub> — X Periyodu (s)</label>
+              <label>T<sub>1x</sub> — X Period (s)</label>
               <input type="number" id="tbdy-T1x" value="0.80" min="0" step="0.01" oninput="tbdyCalc();">
             </div>
             <div class="inp-row">
-              <label>T<sub>1y</sub> — Y Periyodu (s)</label>
+              <label>T<sub>1y</sub> — Y Period (s)</label>
               <input type="number" id="tbdy-T1y" value="0.90" min="0" step="0.01" oninput="tbdyCalc();">
             </div>
           </div>
-          <div class="sc-hdr" style="margin-top:4px;font-size:.67rem;padding-bottom:5px;">Ampirik Periyot — §4.8.1 &nbsp; T<sub>a</sub> = C<sub>t</sub> · H<sup>0.9</sup></div>
+          <div class="sc-hdr" style="margin-top:4px;font-size:.67rem;padding-bottom:5px;">Approximate Period — §4.8.1 &nbsp; T<sub>a</sub> = C<sub>t</sub> · H<sup>0.9</sup></div>
           <div class="calc-grid-3">
             <div class="inp-row">
               <label>C<sub>t</sub></label>
               <select id="tbdy-Ct" onchange="tbdyUpdateTa();tbdyCalc();">
-                <option value="0.1">0.100 — Çelik Moment Çerçevesi</option>
-                <option value="0.08" selected>0.080 — BA Moment Çerçevesi</option>
-                <option value="0.07">0.070 — Perde/Diğer</option>
+                <option value="0.1">0.100 — Steel Moment Frame</option>
+                <option value="0.08" selected>0.080 — RC Moment Frame</option>
+                <option value="0.07">0.070 — Wall/Other</option>
               </select>
             </div>
             <div class="inp-row">
-              <label>H — Toplam Yükseklik (m)</label>
+              <label>H — Total Height (m)</label>
               <input type="number" id="tbdy-H" value="15" min="0" step="1" oninput="tbdyUpdateTa();tbdyCalc();">
             </div>
             <div class="inp-row">
@@ -898,49 +902,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
               <input type="text" id="tbdy-Ta-disp" readonly style="background:var(--surface,#f8fafb);color:var(--text-dim);">
             </div>
           </div>
-          <div class="inp-hint" style="margin-top:5px;">C<sub>u</sub> = 1.4 (sabit) — T<sub>design</sub> = min(T<sub>1</sub>, 1.4·T<sub>a</sub>)</div>
+          <div class="inp-hint" style="margin-top:5px;">C<sub>u</sub> = 1.4 (fixed) — T<sub>design</sub> = min(T<sub>1</sub>, 1.4·T<sub>a</sub>)</div>
         </div>
 
-        <button class="calc-btn" onclick="tbdyCalc()">Taban Kesme Hesapla</button>
+        <button class="calc-btn" onclick="tbdyCalc()">Calculate Base Shear</button>
       </div>
 
       <!-- ═══ TBDY RIGHT ════════════════════════════════════════════════════ -->
       <div id="tbdy-results">
-        <div style="overflow:hidden;">
-          <button class="pdf-btn" onclick="tbdyPrintReport()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
-            PDF Kaydet
+        <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+          <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+          <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">TBDY 2018 · kN</span>
+          <button class="pdf-btn" onclick="tbdyPrintReport()" style="margin:0;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Print / PDF
           </button>
         </div>
 
         <div class="res-card">
-          <div class="res-card-hdr">Tasarım Yanıt Spektrumu — §2.2.3</div>
+          <div class="res-card-hdr">Design Response Spectrum — §2.2.3</div>
           <canvas id="tbdy-canvas" style="display:block;width:100%;"></canvas>
           <div style="display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px 8px;font-size:.66rem;color:var(--text-dim);align-items:center;">
-            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1a6b45" stroke-width="2.5"/></svg>Elastik S<sub>ae</sub>(T)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1a6b45" stroke-width="2.5"/></svg>Elastic S<sub>ae</sub>(T)</span>
             <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>1x</sub></span>
             <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>1y</sub></span>
           </div>
         </div>
 
         <div class="res-card">
-          <div class="res-card-hdr">Periyot ve Azaltma Katsayısı — §4.3.2</div>
+          <div class="res-card-hdr">Period and Reduction Factor — §4.3.2</div>
           <table class="res-tbl3">
-            <thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead>
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
             <tbody id="tbdy-res-period"></tbody>
           </table>
         </div>
 
         <div class="res-card">
-          <div class="res-card-hdr">Taban Kesme — §4.8</div>
+          <div class="res-card-hdr">Base Shear — §4.8</div>
           <table class="res-tbl3">
-            <thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead>
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
             <tbody id="tbdy-res-vt"></tbody>
           </table>
         </div>
 
         <div class="res-card">
-          <div class="res-card-hdr">Kod Referans Özeti</div>
+          <div class="res-card-hdr">Code Reference Summary</div>
           <table class="res-tbl"><tbody id="tbdy-res-ref"></tbody></table>
         </div>
       </div>
@@ -1062,10 +1068,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
       <!-- ═══ IS RIGHT ══════════════════════════════════════════════════════ -->
       <div id="is-results">
-        <div style="overflow:hidden;">
-          <button class="pdf-btn" onclick="isPrintReport()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
-            Save as PDF
+        <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+          <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+          <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">IS 1893:2016 · kN</span>
+          <button class="pdf-btn" onclick="isPrintReport()" style="margin:0;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Print / PDF
           </button>
         </div>
 
@@ -2286,15 +2294,15 @@ function tbdyCalc() {
 
   // Period & Ra table
   var pH='';
-  pH+=row3('T<sub>1x</sub> / T<sub>1y</sub> girilmiş (s)', f(T1x,3), f(T1y,3));
+  pH+=row3('T<sub>1x</sub> / T<sub>1y</sub> entered (s)', f(T1x,3), f(T1y,3));
   if (CuTa) {
     pH+=row3('T<sub>a</sub> = C<sub>t</sub>·H<sup>0.9</sup> (s)', f(Ta,3), f(Ta,3));
     pH+=row3('C<sub>u</sub>·T<sub>a</sub> = 1.4·T<sub>a</sub> (s)', f(CuTa,3), f(CuTa,3));
-    var cX=T1x>CuTa?'<span class="vwarn">Kısıtlandı</span>':'<span class="vok">OK</span>';
-    var cY=T1y>CuTa?'<span class="vwarn">Kısıtlandı</span>':'<span class="vok">OK</span>';
-    pH+=row3('Periyot kontrolü', cX, cY);
+    var cX=T1x>CuTa?'<span class="vwarn">Capped</span>':'<span class="vok">OK</span>';
+    var cY=T1y>CuTa?'<span class="vwarn">Capped</span>':'<span class="vok">OK</span>';
+    pH+=row3('Period check', cX, cY);
   }
-  pH+=row3('<b>T<sub>tasarım</sub> (s)</b>','<b class="vok">'+f(T1xd,3)+'</b>','<b class="vok">'+f(T1yd,3)+'</b>');
+  pH+=row3('<b>T<sub>design</sub> (s)</b>','<b class="vok">'+f(T1xd,3)+'</b>','<b class="vok">'+f(T1yd,3)+'</b>');
   pH+=row3('S<sub>ae</sub>(T) elastik (g)', f(dx.Sae,4), f(dy.Sae,4));
   pH+=row3('R<sub>a</sub>(T) — §4.3.2', f(dx.Ra,3), f(dy.Ra,3));
   pH+=row3('<b>S<sub>aR</sub>(T) = S<sub>ae</sub>/R<sub>a</sub> (g)</b>',
@@ -2311,15 +2319,15 @@ function tbdyCalc() {
   var govY3=VtyRaw>=VtyMin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
   vH+=row3('<b>V<sub>t</sub> (kN)</b>',
     '<b class="vok vbig">'+f(Vtx,1)+'</b>'+govX3,'<b class="vok vbig">'+f(Vty,1)+'</b>'+govY3);
-  vH+=row3('ΔF<sub>N</sub> ek tavan kuvveti (kN)', f(DFNx,1), f(DFNy,1));
+  vH+=row3('ΔF<sub>N</sub> apex force (kN)', f(DFNx,1), f(DFNy,1));
   document.getElementById('tbdy-res-vt').innerHTML=vH;
 
   // Reference summary
   var bksEl=document.getElementById('tbdy-BKS');
   var rH='';
-  rH+=row2('Yönetmelik','TBDY 2018');
-  rH+=row2('Yöntem','Eşdeğer Deprem Yükü — §4.8');
-  rH+=row2('Yerel Zemin Sınıfı', zs);
+  rH+=row2('Code','TBDY 2018');
+  rH+=row2('Method','Equivalent Lateral Force — §4.8');
+  rH+=row2('Local Site Class', zs);
   rH+=row2('BKS / I', bksEl.options[bksEl.selectedIndex].text.split('—')[0].trim()+' / '+f(I,2));
   rH+=row2('R / D', f(R,1)+' / '+f(D,1));
   rH+=row2('F<sub>S</sub> / F<sub>1</sub>', f(FS,3)+' / '+f(F1,3));
@@ -2337,53 +2345,53 @@ function tbdyCalc() {
 
 function tbdyBuildReport(p) {
   var sub=document.getElementById('rpt-subtitle'), ftl=document.getElementById('rpt-ft-left');
-  if (sub) sub.textContent='TBDY 2018 §4.8 — Eşdeğer Deprem Yükü Yöntemi';
-  if (ftl) ftl.textContent='civilstrcalc.com — TBDY 2018 Taban Kesme Hesabı';
+  if (sub) sub.textContent='TBDY 2018 §4.8 — Equivalent Lateral Force Method';
+  if (ftl) ftl.textContent='civilstrcalc.com — TBDY 2018 Base Shear';
   var h='';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
-  h+='<div><div class="rpt-sh">Yer Hareketi Parametreleri</div><div class="rpt-g4">';
+  h+='<div><div class="rpt-sh">Ground Motion Parameters</div><div class="rpt-g4">';
   h+=rptKV('SS (g)',f(p.SS,3));h+=rptKV('S1 (g)',f(p.S1,3));
-  h+=rptKV('Zemin',p.zs);h+=rptKV('FS',f(p.FS,3));
+  h+=rptKV('Site Class',p.zs);h+=rptKV('FS',f(p.FS,3));
   h+=rptKV('F1',f(p.F1,3));h+=rptKV('SDS (g)',f(p.SDS,3));
   h+=rptKV('SD1 (g)',f(p.SD1,3));h+=rptKV('TL (s)',f(p.TL,1));
   h+='</div></div>';
-  h+='<div><div class="rpt-sh">Yapı Parametreleri</div><div class="rpt-g4">';
+  h+='<div><div class="rpt-sh">Building Parameters</div><div class="rpt-g4">';
   h+=rptKV('I',f(p.I,2));h+=rptKV('R',f(p.R,1));
   h+=rptKV('D',f(p.D,1));h+=rptKV('R/I',f(p.R/p.I,3));
   h+=rptKV('W (kN)',f(p.W,1));h+=rptKV('TA (s)',f(p.TA,3));
-  h+=rptKV('TB (s)',f(p.TB,3));h+=rptKV('N (kat)',p.N);
+  h+=rptKV('TB (s)',f(p.TB,3));h+=rptKV('N (stories)',p.N);
   h+='</div></div></div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
-  h+='<div><div class="rpt-sh">Periyot ve Azaltma — §4.3.2</div>';
-  h+='<table class="rpt-t"><thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead><tbody>';
-  h+=rptR3('T1 girilmiş (s)',f(p.T1x,3),f(p.T1y,3));
+  h+='<div><div class="rpt-sh">Period & Reduction — §4.3.2</div>';
+  h+='<table class="rpt-t"><thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
+  h+=rptR3('T1 entered (s)',f(p.T1x,3),f(p.T1y,3));
   if(p.CuTa) h+=rptR3('1.4·Ta (s)',f(p.CuTa,3),f(p.CuTa,3));
-  h+=rptR3('T tasarım (s)',f(p.T1xd,3),f(p.T1yd,3));
+  h+=rptR3('T design (s)',f(p.T1xd,3),f(p.T1yd,3));
   h+=rptR3('Sae(T) (g)',f(p.dx.Sae,4),f(p.dy.Sae,4));
   h+=rptR3('Ra(T)',f(p.dx.Ra,3),f(p.dy.Ra,3));
   h+=rptR3('<b>SaR(T) (g)</b>','<b style="color:#1a6b45;">'+f(p.dx.SaR,4)+'</b>','<b style="color:#1a6b45;">'+f(p.dy.SaR,4)+'</b>');
   h+='</tbody></table></div>';
-  h+='<div><div class="rpt-sh">Taban Kesme — §4.8</div>';
-  h+='<table class="rpt-t"><thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead><tbody>';
+  h+='<div><div class="rpt-sh">Base Shear — §4.8</div>';
+  h+='<table class="rpt-t"><thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
   h+=rptR3('Vt,raw (kN)',f(p.W*p.dx.SaR,1),f(p.W*p.dy.SaR,1));
   h+=rptR3('Vt,min (kN)',f(p.VtxMin,1),f(p.VtyMin,1));
   h+=rptR3('<b>Vt (kN)</b>','<b style="color:#1a6b45;">'+f(p.Vtx,1)+'</b>','<b style="color:#1a6b45;">'+f(p.Vty,1)+'</b>');
   h+=rptR3('ΔFN (kN)',f(p.DFNx,1),f(p.DFNy,1));
   h+='</tbody></table></div></div>';
-  h+='<div class="rpt-sec"><div class="rpt-sh">Taban Kesme Denklemi — §4.8.3</div>';
+  h+='<div class="rpt-sec"><div class="rpt-sh">Base Shear Equation — §4.8.3</div>';
   h+='<div class="rpt-eq"><span class="rpt-eq-lhs"><b>Vt = W &times; SaR(T1)</b></span><span class="rpt-eq-ref">TBDY 2018 §4.8.3</span></div>';
   h+='<div class="rpt-vrow">';
-  h+='<div class="rpt-vbox"><div class="rpt-vdir">X Yönü</div>';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">X Direction</div>';
   h+='<div class="rpt-vval">'+f(p.Vtx,1)+' kN</div>';
   h+='<div class="rpt-veq">'+f(p.W,1)+' &times; '+f(p.dx.SaR,4)+' = '+f(p.Vtx,1)+'</div></div>';
-  h+='<div class="rpt-vbox"><div class="rpt-vdir">Y Yönü</div>';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">Y Direction</div>';
   h+='<div class="rpt-vval">'+f(p.Vty,1)+' kN</div>';
   h+='<div class="rpt-veq">'+f(p.W,1)+' &times; '+f(p.dy.SaR,4)+' = '+f(p.Vty,1)+'</div></div>';
   h+='</div></div>';
-  h+='<div class="rpt-sec" style="margin-top:5pt;"><div class="rpt-sh">Tasarım Yanıt Spektrumu — §2.2.3</div>';
-  h+='<img id="tbdy-rpt-img" class="rpt-img" src="" alt="TBDY Spektrum"></div>';
+  h+='<div class="rpt-sec" style="margin-top:5pt;"><div class="rpt-sh">Design Response Spectrum — §2.2.3</div>';
+  h+='<img id="tbdy-rpt-img" class="rpt-img" src="" alt="TBDY Spectrum"></div>';
   document.getElementById('rpt-body').innerHTML=h;
-  document.getElementById('rpt-date').textContent=new Date().toLocaleDateString('tr-TR',{year:'numeric',month:'short',day:'numeric'});
+  document.getElementById('rpt-date').textContent=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 }
 
 function tbdyPrintReport() {
