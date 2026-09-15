@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Seismic Base Shear Calculator — ASCE 7-22 ELF | CivilStrCalc</title>
-<meta name="description" content="Seismic base shear calculator per ASCE 7-22 §12.8 Equivalent Lateral Force procedure. Cs, V=CsW, vertical distribution Fx. US Customary and SI units.">
-<meta name="keywords" content="seismic base shear calculator, ASCE 7-22, equivalent lateral force, ELF, Cs seismic coefficient, base shear, vertical distribution">
+<title>Seismic Base Shear Calculator — ASCE 7-22 &amp; EN 1998-1 | CivilStrCalc</title>
+<meta name="description" content="Seismic base shear calculator per ASCE 7-22 §12.8 ELF and EN 1998-1 §4.3.3 Lateral Force Method. Two-direction analysis, design spectrum, PDF report.">
+<meta name="keywords" content="seismic base shear calculator, ASCE 7-22, EN 1998-1, Eurocode 8, equivalent lateral force, ELF, lateral force method, Cs, Sd, base shear">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://civilstrcalc.com/pages/seismic-loads">
 <meta property="og:title" content="Seismic Base Shear Calculator — ASCE 7-22 ELF">
@@ -189,9 +189,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <body>
 <main style="padding:14px 18px 32px;">
 
-  <h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Seismic Base Shear — ASCE 7-22 §12.8</h1>
-  <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">ELF procedure — V = C<sub>s</sub>·W, story forces F<sub>x</sub> per §12.8. Modal scaling check per §12.9.1.4.</p>
+  <h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Seismic Base Shear Calculator</h1>
+  <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 6px;">ELF base shear per ASCE 7-22 §12.8 or EN 1998-1 §4.3.3 — two directions, PDF report.</p>
 
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchStd('asce',this)">ASCE 7-22</button>
+    <button class="sub-tab" onclick="switchStd('ec8',this)">EN 1998-1 (EC8)</button>
+  </div>
+
+  <div class="sub-pane active" id="pane-asce">
   <div class="page-layout">
 
     <!-- ═══ LEFT ════════════════════════════════════════════════════════════════ -->
@@ -558,6 +564,220 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <h3>Seismic Design Category</h3>
     <p>The Seismic Design Category (SDC) — determined from S<sub>DS</sub>, S<sub>D1</sub>, and Risk Category per ASCE 7-22 §11.6 — governs which lateral systems are permitted, whether irregularities are allowed, and what analysis procedure is required. SDC A and B impose minimal seismic requirements; SDC C introduces restrictions on certain ordinary systems; SDC D–F require special detailing, prohibit many system types, and mandate MRSA for irregular or taller structures. The ELF procedure is permitted for SDC D–F only when Table 12.6-1 criteria are met (regular, T &lt; 3.5·T<sub>s</sub>, and not exceeding the height thresholds for the selected system).</p>
   </article>
+  </div><!-- /pane-asce -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       EC8 PANE — EN 1998-1:2004 §4.3.3 Lateral Force Method
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="sub-pane" id="pane-ec8">
+
+    <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Seismic Base Shear — EN 1998-1 §4.3.3</h2>
+    <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Lateral Force Method — F<sub>b</sub> = S<sub>d</sub>(T<sub>1</sub>) · W · λ, two principal directions.</p>
+
+    <div class="page-layout">
+      <!-- ═══ EC8 LEFT ══════════════════════════════════════════════════════ -->
+      <div>
+        <div class="warn-box" id="ec8-warn"></div>
+
+        <!-- Ground Motion -->
+        <div class="section-card">
+          <div class="unit-switcher">
+            <span class="unit-lbl">Units</span>
+            <div class="unit-btns">
+              <button id="ec8-btn-si" class="unit-btn active" onclick="ec8SetUnit('si')">SI (kN-m)</button>
+              <button id="ec8-btn-us" class="unit-btn" onclick="ec8SetUnit('us')">US (kip-ft)</button>
+            </div>
+          </div>
+          <div class="sc-hdr">Ground Motion Parameters</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>a<sub>gR</sub> — Reference PGA (g)</label>
+              <input type="number" id="ec8-agR" value="0.20" min="0" step="0.01" oninput="ec8UpdateGM();ec8Calc();">
+              <div class="inp-hint">From National Annex hazard map</div>
+            </div>
+            <div class="inp-row">
+              <label>Spectrum Type (§3.2.2.5)</label>
+              <select id="ec8-stype" onchange="ec8UpdateGM();ec8Calc();">
+                <option value="1" selected>Type 1 — M<sub>s</sub> &gt; 5.5</option>
+                <option value="2">Type 2 — M<sub>s</sub> ≤ 5.5</option>
+              </select>
+            </div>
+          </div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>Ground Type (§3.1, Table 3.1)</label>
+              <select id="ec8-gt" onchange="ec8UpdateGM();ec8Calc();">
+                <option value="A">A — Rock (v<sub>s,30</sub> &gt; 800 m/s)</option>
+                <option value="B">B — Dense sand/gravel</option>
+                <option value="C" selected>C — Medium-dense (default)</option>
+                <option value="D">D — Loose cohesionless</option>
+                <option value="E">E — Alluvium over rock</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>Importance Class (Table 4.3)</label>
+              <select id="ec8-ic" onchange="ec8UpdateGM();ec8Calc();">
+                <option value="I">I — γ<sub>I</sub> = 0.8 (minor)</option>
+                <option value="II" selected>II — γ<sub>I</sub> = 1.0 (ordinary)</option>
+                <option value="III">III — γ<sub>I</sub> = 1.2 (public)</option>
+                <option value="IV">IV — γ<sub>I</sub> = 1.4 (essential)</option>
+              </select>
+            </div>
+          </div>
+          <div class="gm-computed" style="grid-template-columns:repeat(5,1fr);margin-top:7px;">
+            <div class="gm-cell"><div class="gm-lbl">a<sub>g</sub> (g)</div><div class="gm-val gm-hi" id="ec8-ag">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">S</div><div class="gm-val" id="ec8-S">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">T<sub>B</sub> (s)</div><div class="gm-val" id="ec8-TB">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">T<sub>C</sub> (s)</div><div class="gm-val" id="ec8-TC">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">T<sub>D</sub> (s)</div><div class="gm-val" id="ec8-TD">—</div></div>
+          </div>
+        </div>
+
+        <!-- Building -->
+        <div class="section-card">
+          <div class="sc-hdr">Building Parameters</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>Seismic Weight W</label>
+              <input type="number" id="ec8-W" value="10000" min="0" step="100" oninput="ec8Calc();">
+              <div class="inp-hint" id="ec8-W-hint">kN (mass × g, dead + ψ·live)</div>
+            </div>
+            <div class="inp-row">
+              <label>Number of stories n</label>
+              <input type="number" id="ec8-n" value="5" min="1" step="1" oninput="ec8Calc();">
+              <div class="inp-hint">λ = 0.85 if n &gt; 2 and T<sub>1</sub> ≤ 2T<sub>C</sub></div>
+            </div>
+          </div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>Behavior factor q (§5.2.2)</label>
+              <input type="number" id="ec8-q" value="3.9" min="1" max="10" step="0.1" oninput="ec8Calc();">
+            </div>
+            <div class="inp-row">
+              <label>Damping ratio ξ (%)</label>
+              <input type="number" id="ec8-xi" value="5" min="1" max="30" step="0.5" oninput="ec8Calc();">
+              <div class="inp-hint">η = √(10/(5+ξ)) ≥ 0.55</div>
+            </div>
+          </div>
+          <div class="inp-row" style="margin-top:6px;">
+            <label>Structural system — q preset</label>
+            <select id="ec8-sys" onchange="ec8OnSysChange();ec8Calc();">
+              <option value="">— User-defined —</option>
+              <option value="1.5">DCL — Low Ductility: q = 1.5</option>
+              <option value="3.0">DCM Uncoupled Walls: q = 3.0</option>
+              <option value="3.9" selected>DCM Moment Frame: q = 3.9</option>
+              <option value="4.5">DCM Dual (Frame-Wall): q = 4.5</option>
+              <option value="5.85">DCH Moment Frame: q = 5.85</option>
+              <option value="6.0">DCH Coupled Walls: q = 6.0</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Period -->
+        <div class="section-card">
+          <div class="sc-hdr">Building Period</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>T<sub>1,x</sub> — Period X dir. (s)</label>
+              <input type="number" id="ec8-T1x" value="0.80" min="0" step="0.01" oninput="ec8Calc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>1,y</sub> — Period Y dir. (s)</label>
+              <input type="number" id="ec8-T1y" value="0.90" min="0" step="0.01" oninput="ec8Calc();">
+            </div>
+          </div>
+          <div class="sc-hdr" style="margin-top:4px;font-size:.67rem;padding-bottom:5px;">Approximate Period — §4.3.3.2.2 &nbsp; T<sub>1</sub> = C<sub>t</sub>·H<sup>3/4</sup></div>
+          <div class="calc-grid-3">
+            <div class="inp-row">
+              <label>C<sub>t</sub></label>
+              <select id="ec8-Ct" onchange="ec8UpdateTa();ec8Calc();">
+                <option value="0.085">0.085 — Steel MRF</option>
+                <option value="0.075" selected>0.075 — RC MRF / Eccentric braced</option>
+                <option value="0.050">0.050 — Other</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>H — height (m)</label>
+              <input type="number" id="ec8-H" value="15" min="0" step="1" oninput="ec8UpdateTa();ec8Calc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>a</sub> = C<sub>t</sub>·H<sup>3/4</sup></label>
+              <input type="text" id="ec8-Ta" readonly style="background:var(--surface);color:var(--text-dim);">
+            </div>
+          </div>
+        </div>
+
+        <button class="calc-btn" onclick="ec8Calc()">Calculate Base Shear</button>
+      </div>
+
+      <!-- ═══ EC8 RIGHT ══════════════════════════════════════════════════════ -->
+      <div id="ec8-results">
+        <div style="overflow:hidden;">
+          <button class="pdf-btn" onclick="ec8PrintReport()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
+            Save as PDF
+          </button>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Design Response Spectrum — §3.2.2.5</div>
+          <canvas id="ec8-canvas" style="display:block;width:100%;"></canvas>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Period and λ Correction — §4.3.3.2.2</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="ec8-res-period"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Design Spectrum Sd(T) — §3.2.2.5</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="ec8-res-sd"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Base Shear Fb = Sd(T1) · W · λ — §4.3.3.2.2</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="ec8-res-fb"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Code Reference Summary</div>
+          <table class="res-tbl"><tbody id="ec8-res-ref"></tbody></table>
+        </div>
+      </div>
+    </div><!-- /page-layout EC8 -->
+
+    <!-- Background article EC8 -->
+    <article class="bg-article">
+      <h2>EN 1998-1 Lateral Force Method — Technical Background</h2>
+
+      <h3>Scope and Applicability</h3>
+      <p>The Lateral Force Method of Analysis (LFMA), defined in EN 1998-1:2004 §4.3.3.2, is the Eurocode equivalent of the ASCE 7-22 Equivalent Lateral Force procedure. It converts earthquake ground motion into a single static base shear force applied at each story level. The method is applicable when the building response can be approximated by a single dominant mode in each principal direction — in practice, when the fundamental period T<sub>1</sub> ≤ 2·T<sub>C</sub> (or ≤ 4·T<sub>C</sub> per §4.3.3.2.1(a)(i)) and the structure is regular in elevation. For irregular buildings or structures exceeding these limits, EN 1998-1 requires Multi-Modal Response Spectrum Analysis (§4.3.3.3).</p>
+
+      <h3>Design Ground Acceleration and Soil Amplification</h3>
+      <p>The design base acceleration a<sub>gR</sub> is a nationally determined parameter from the probabilistic seismic hazard map in the relevant National Annex, corresponding to a 10% probability of exceedance in 50 years (475-year return period for Importance Class II). The design acceleration for the structure is a<sub>g</sub> = γ<sub>I</sub> · a<sub>gR</sub>, where γ<sub>I</sub> is the importance factor (Table 4.3): 0.8 for Class I (minor importance), 1.0 for Class II (ordinary), 1.2 for Class III (large public assemblies), and 1.4 for Class IV (essential facilities). The soil amplification factor S (Tables 3.2–3.3) accounts for local site conditions and typically amplifies the ground motion by 15–80% for soft soils compared to rock.</p>
+
+      <h3>Design Response Spectrum</h3>
+      <p>EN 1998-1 §3.2.2.5 defines two spectrum shapes — Type 1 for regions of moderate-to-high seismicity (surface-wave magnitude M<sub>s</sub> &gt; 5.5) and Type 2 for low-seismicity regions (M<sub>s</sub> ≤ 5.5). Each spectrum has four branches: a rising portion (0 to T<sub>B</sub>), a constant acceleration plateau (T<sub>B</sub> to T<sub>C</sub>), a descending 1/T branch (T<sub>C</sub> to T<sub>D</sub>), and a 1/T² branch beyond T<sub>D</sub>. The plateau ordinate is a<sub>g</sub> · S · 2.5/q · η, where q is the behavior factor and η = √(10/(5+ξ)) is the damping correction (η ≥ 0.55). A lower bound β · a<sub>g</sub> (β = 0.2) prevents unrealistically small spectral ordinates at long periods.</p>
+
+      <h3>Behavior Factor q and Ductility Classes</h3>
+      <p>The behavior factor q accounts for inelastic energy dissipation and overstrength, equivalent in concept to ASCE 7-22's R factor. EN 1998-1 §5.2.2 defines three ductility classes: DCL (Low, q ≤ 1.5), DCM (Medium, q up to 4.5), and DCH (High, q up to 6.5 for special moment frames). Higher q values reduce design forces but require progressively more stringent material, detailing, and capacity-design rules under EN 1998-1 §5.4–5.6. DCM and DCH structures must satisfy the capacity-design requirement that plastic hinges form in designated ductile members before brittle failure modes are triggered.</p>
+
+      <h3>Base Shear and λ Correction</h3>
+      <p>The total design base shear is <strong>F<sub>b</sub> = S<sub>d</sub>(T<sub>1</sub>) · m · λ</strong>, where m is the total seismic mass (= W/g in SI), and λ is a correction factor equal to 0.85 when T<sub>1</sub> ≤ 2T<sub>C</sub> and the building has more than two stories (otherwise λ = 1.0). The 0.85 factor reflects the effective modal mass of the first mode being less than the total mass for multi-story buildings. Story forces are then distributed linearly: F<sub>i</sub> = F<sub>b</sub> · (z<sub>i</sub>·m<sub>i</sub>) / Σ(z<sub>j</sub>·m<sub>j</sub>), which corresponds to k = 1 in the ASCE 7-22 distribution (no higher-mode correction term).</p>
+
+      <h3>Comparison with ASCE 7-22</h3>
+      <p>Both codes share the same conceptual framework — seismic demand from a design spectrum reduced by a system factor (R or q) — but differ in several important ways. EN 1998-1 uses a National Annex for site-specific spectral ordinates rather than USGS mapped values. The soil amplification in EN 1998-1 is a single S factor vs. separate F<sub>a</sub>/F<sub>v</sub> in ASCE 7-22. The EC8 λ factor has no direct ASCE counterpart. EN 1998-1 does not impose a C<sub>u</sub>·T<sub>a</sub> upper-period cap, though national annexes may introduce similar limits. The story force distribution uses k = 1 in EC8 (linear) vs. the variable k in ASCE 7-22 that captures higher-mode effects in flexible structures.</p>
+    </article>
+  </div><!-- /pane-ec8 -->
 </main>
 
 <!-- ── PDF Report ─────────────────────────────────────────────────────────── -->
@@ -566,13 +786,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="rpt-hdr">
       <div>
         <div class="rpt-title">Seismic Base Shear Calculation</div>
-        <div class="rpt-sub">ASCE 7-22 §12.8 — Equivalent Lateral Force Procedure</div>
+        <div class="rpt-sub" id="rpt-subtitle">ASCE 7-22 §12.8 — Equivalent Lateral Force Procedure</div>
       </div>
       <div class="rpt-logo">CivilStrCalc.com</div>
     </div>
     <div id="rpt-body"></div>
     <div class="rpt-ft">
-      <span>civilstrcalc.com — ASCE 7-22 §12.8 ELF Calculator</span>
+      <span id="rpt-ft-left">civilstrcalc.com — ASCE 7-22 §12.8 ELF Calculator</span>
       <span id="rpt-date"></span>
     </div>
   </div>
@@ -776,6 +996,7 @@ function computeCs(SDS, SD1, S1, T_design, TL, RIe) {
 
 // ── Design Response Spectrum chart ───────────────────────────────────────────
 var _rptParams = null;
+var _ascRptP   = null;
 
 function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   _rptParams = {SDS:SDS, SD1:SD1, TL:TL, Txd:Txd, Tyd:Tyd};
@@ -1103,12 +1324,12 @@ function calc() {
   refHTML+=row2('<b>Vx / Vy ('+fUnit+')</b>', '<b class="vok">'+f(Vx,1)+' / '+f(Vy,1)+'</b>');
   document.getElementById('res-ref').innerHTML=refHTML;
 
-  // Build PDF report (ready for print)
-  buildReport({SS:SS,S1:S1,sc:sc,TL:TL,Ie:Ie,R:R,W:W,hn:hn,Ct:Ct,x:x,
+  // Store for PDF (built on demand in printReport)
+  _ascRptP = {SS:SS,S1:S1,sc:sc,TL:TL,Ie:Ie,R:R,W:W,hn:hn,Ct:Ct,x:x,
     Tx:Tx,Ty:Ty,Txd:Txd,Tyd:Tyd,Ta:Ta,Cu:Cu,CuTa:CuTa,
     SDS:SDS,SD1:SD1,Fa:Fa,Fv:Fv,SMS:SMS,SM1:SM1,
     RIe:RIe,Rx:Rx,Ry:Ry,Vx:Vx,Vy:Vy,fUnit:fUnit,
-    rc:rc,sysName:sysName});
+    rc:rc,sysName:sysName};
 }
 
 // ── PDF Report builder ────────────────────────────────────────────────────────
@@ -1116,6 +1337,10 @@ function rptKV(l,v){return '<div class="rpt-kv"><div class="rpt-kv-l">'+l+'</div
 function rptR3(l,a,b){return '<tr><td>'+l+'</td><td>'+a+'</td><td>'+b+'</td></tr>';}
 
 function buildReport(p) {
+  var sub = document.getElementById('rpt-subtitle');
+  var ftl = document.getElementById('rpt-ft-left');
+  if (sub) sub.textContent = 'ASCE 7-22 §12.8 — Equivalent Lateral Force Procedure';
+  if (ftl) ftl.textContent = 'civilstrcalc.com — ASCE 7-22 §12.8 ELF Calculator';
   var h = '';
 
   // ── Row 1: Ground motion (4 cols) + Building (4 cols) side by side
@@ -1202,6 +1427,7 @@ function buildReport(p) {
 }
 
 function printReport() {
+  if (_ascRptP) buildReport(_ascRptP);
   var img = document.getElementById('rpt-spectrum-img');
   if (img) {
     if (_rptParams) {
@@ -1217,12 +1443,316 @@ function printReport() {
   setTimeout(function(){ window.print(); }, 200);
 }
 
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchStd(std, btn) {
+  document.querySelectorAll('.sub-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.sub-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('pane-'+std).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EC8 — EN 1998-1:2004 §4.3.3 Lateral Force Method
+// ══════════════════════════════════════════════════════════════════════════════
+var ec8_isUS = false;
+var ec8_rptP = null;
+var ec8_rptSp = null; // last spectrum params for off-screen redraw
+
+var EC8_IC = { I:0.8, II:1.0, III:1.2, IV:1.4 };
+
+// EN 1998-1 Tables 3.2 (Type 1) and 3.3 (Type 2)
+var EC8_SP = {
+  '1': { A:{S:1.00,TB:0.15,TC:0.40,TD:2.0}, B:{S:1.20,TB:0.15,TC:0.50,TD:2.0},
+          C:{S:1.15,TB:0.20,TC:0.60,TD:2.0}, D:{S:1.35,TB:0.20,TC:0.80,TD:2.0},
+          E:{S:1.40,TB:0.15,TC:0.50,TD:2.0} },
+  '2': { A:{S:1.00,TB:0.05,TC:0.25,TD:1.2}, B:{S:1.35,TB:0.05,TC:0.25,TD:1.2},
+          C:{S:1.50,TB:0.10,TC:0.25,TD:1.2}, D:{S:1.80,TB:0.10,TC:0.30,TD:1.2},
+          E:{S:1.60,TB:0.05,TC:0.25,TD:1.2} }
+};
+
+function ec8SetUnit(u) {
+  ec8_isUS = (u==='us');
+  document.getElementById('ec8-btn-us').classList.toggle('active', ec8_isUS);
+  document.getElementById('ec8-btn-si').classList.toggle('active', !ec8_isUS);
+  document.getElementById('ec8-W-hint').textContent = ec8_isUS ? 'kips (dead + ψ·live)' : 'kN (mass × g, dead + ψ·live)';
+  ec8Calc();
+}
+
+function ec8GetP() {
+  var st = document.getElementById('ec8-stype').value;
+  var gt = document.getElementById('ec8-gt').value;
+  return EC8_SP[st] && EC8_SP[st][gt] ? EC8_SP[st][gt] : {S:1.0,TB:0.15,TC:0.4,TD:2.0};
+}
+
+function ec8Sd(T, ag, p, q, eta, beta) {
+  var plateau = ag * p.S * 2.5 / q * eta;
+  if (T <= 0)    return ag * p.S * (2/3);
+  if (T < p.TB)  return ag * p.S * (2/3 + T/p.TB * (2.5/q*eta - 2/3));
+  if (T < p.TC)  return plateau;
+  if (T < p.TD)  return Math.max(plateau * p.TC/T,    beta*ag);
+  return               Math.max(plateau * p.TC*p.TD/(T*T), beta*ag);
+}
+
+function ec8UpdateGM() {
+  var agR = parseFloat(document.getElementById('ec8-agR').value)||0;
+  var gI  = EC8_IC[document.getElementById('ec8-ic').value]||1.0;
+  var ag  = gI*agR;
+  var p   = ec8GetP();
+  document.getElementById('ec8-ag').textContent = f(ag,3);
+  document.getElementById('ec8-S').textContent  = f(p.S,2);
+  document.getElementById('ec8-TB').textContent = f(p.TB,2);
+  document.getElementById('ec8-TC').textContent = f(p.TC,2);
+  document.getElementById('ec8-TD').textContent = f(p.TD,1);
+}
+
+function ec8UpdateTa() {
+  var Ct = parseFloat(document.getElementById('ec8-Ct').value)||0.075;
+  var H  = parseFloat(document.getElementById('ec8-H').value)||0;
+  var Ta = H>0 ? Ct*Math.pow(H,0.75) : 0;
+  document.getElementById('ec8-Ta').value = Ta>0 ? f(Ta,3)+' s' : '—';
+}
+
+function ec8OnSysChange() {
+  var v = document.getElementById('ec8-sys').value;
+  if (v) document.getElementById('ec8-q').value = v;
+}
+
+function ec8DrawSpectrum(ag, p, q, eta, beta, T1x, T1y, fixedCanvas) {
+  ec8_rptSp = {ag:ag, p:p, q:q, eta:eta, beta:beta, T1x:T1x, T1y:T1y};
+  var canvas = fixedCanvas || document.getElementById('ec8-canvas');
+  if (!canvas) return;
+  var W, H;
+  if (fixedCanvas) {
+    W = 630; H = 200; canvas.width = W; canvas.height = H;
+  } else {
+    var cont = canvas.parentElement;
+    W = (cont && cont.clientWidth>24) ? cont.clientWidth-24 : 600;
+    H = 210;
+    canvas.width = W*(window.devicePixelRatio||1);
+    canvas.height = H*(window.devicePixelRatio||1);
+    canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  }
+  var ctx = canvas.getContext('2d');
+  if (!fixedCanvas) ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+  var isDark = !fixedCanvas && (document.documentElement.getAttribute('data-theme')==='dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches));
+  var bg=isDark?'#1c2a3a':'#f8fafb', gridC=isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+  var axC=isDark?'rgba(255,255,255,.25)':'rgba(0,0,0,.25)', lblC=isDark?'#8ca0b8':'#6b7280';
+  var dimC=isDark?'#4a6080':'#cbd5e1';
+  var ml=50,mr=12,mt=14,mb=38, pw=W-ml-mr, ph=H-mt-mb;
+  var plateau = ag*p.S*2.5/q*eta;
+  var Tmax = Math.max(T1x,T1y,p.TC)*2.5; Tmax=Math.max(Tmax,2); Tmax=Math.min(Tmax,p.TD*1.1,5);
+  var Samax = Math.max(plateau*1.3, ag*0.5);
+  function txe(T){return ml+(T/Tmax)*pw;}
+  function tye(Sa){return mt+ph-Math.min(Math.max((Sa/Samax)*ph,0),ph);}
+  function sdA(T){return ec8Sd(T,ag,p,q,eta,beta);}
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  ctx.lineWidth=1; ctx.strokeStyle=gridC;
+  var tStep=Tmax<=2?0.25:Tmax<=4?0.5:1;
+  for(var t=0;t<=Tmax+.001;t+=tStep){ctx.beginPath();ctx.moveTo(txe(t),mt);ctx.lineTo(txe(t),mt+ph);ctx.stroke();}
+  var saStep=Samax>0.6?0.1:Samax>0.3?0.05:0.02;
+  for(var sa=0;sa<=Samax;sa+=saStep){ctx.beginPath();ctx.moveTo(ml,tye(sa));ctx.lineTo(ml+pw,tye(sa));ctx.stroke();}
+  ctx.setLineDash([3,3]); ctx.strokeStyle=dimC; ctx.lineWidth=1;
+  [p.TB,p.TC].forEach(function(tv,i){
+    if(tv>Tmax) return;
+    ctx.beginPath();ctx.moveTo(txe(tv),mt);ctx.lineTo(txe(tv),mt+ph);ctx.stroke();
+    ctx.fillStyle=dimC; ctx.font='9px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(i===0?'TB':'TC',txe(tv),mt-3);
+  });
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.strokeStyle='#1a6b45'; ctx.lineWidth=2.5;
+  for(var i=0;i<=400;i++){var T=i*Tmax/400;var x2=txe(T),y2=tye(sdA(T));if(i===0)ctx.moveTo(x2,y2);else ctx.lineTo(x2,y2);}
+  ctx.stroke();
+  function dpPt(Td,color,lbl){
+    if(Td<=0||Td>Tmax) return;
+    ctx.setLineDash([6,3]); ctx.strokeStyle=color; ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(txe(Td),mt);ctx.lineTo(txe(Td),mt+ph);ctx.stroke();
+    ctx.setLineDash([]);
+    var Sd2=sdA(Td);
+    ctx.beginPath();ctx.arc(txe(Td),tye(Sd2),4.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.fillStyle=color; ctx.font='bold 10px system-ui,sans-serif';
+    ctx.textAlign=txe(Td)+20>ml+pw?'right':'left';
+    ctx.fillText(lbl,txe(Td)+(ctx.textAlign==='left'?6:-6),tye(Sd2)-7);
+  }
+  var sT=(Math.abs(T1x-T1y)<0.001);
+  dpPt(T1x,'#2563eb',sT?'T1x=T1y':'T1x'); if(!sT) dpPt(T1y,'#d97706','T1y');
+  ctx.strokeStyle=axC; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+  ctx.fillStyle=lblC; ctx.font='10px system-ui,sans-serif'; ctx.textAlign='center';
+  for(var t2=0;t2<=Tmax+.001;t2+=tStep) ctx.fillText(t2.toFixed(t2<1?2:1),txe(t2),mt+ph+13);
+  ctx.textAlign='right';
+  for(var sa2=0;sa2<=Samax;sa2+=saStep){var yy=tye(sa2);if(yy<mt-2) continue;ctx.fillText(sa2.toFixed(2),ml-5,yy+3);}
+  ctx.font='10px system-ui,sans-serif'; ctx.fillStyle=lblC; ctx.textAlign='center';
+  ctx.fillText('T (s)',ml+pw/2,H-4);
+  ctx.save();ctx.translate(11,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Sd (g)',0,0);ctx.restore();
+  if(tye(plateau)>mt+2&&tye(plateau)<mt+ph-2){
+    ctx.fillStyle='#1a6b45'; ctx.font='9px system-ui,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('ag·S·2.5/q='+plateau.toFixed(3),ml+4,tye(plateau)-4);
+  }
+}
+
+function ec8Calc() {
+  var agR = parseFloat(document.getElementById('ec8-agR').value)||0;
+  var q   = parseFloat(document.getElementById('ec8-q').value)||1.5;
+  var W   = parseFloat(document.getElementById('ec8-W').value)||0;
+  var n   = parseInt(document.getElementById('ec8-n').value)||1;
+  var xi  = parseFloat(document.getElementById('ec8-xi').value)||5;
+  var T1x = parseFloat(document.getElementById('ec8-T1x').value)||0;
+  var T1y = parseFloat(document.getElementById('ec8-T1y').value)||0;
+  if (agR<=0||q<=0||W<=0||T1x<=0||T1y<=0) return;
+  var gI   = EC8_IC[document.getElementById('ec8-ic').value]||1.0;
+  var ag   = gI*agR;
+  var p    = ec8GetP();
+  var eta  = Math.max(Math.sqrt(10/(5+xi)), 0.55);
+  var beta = 0.2;
+  var fUnit = ec8_isUS ? 'kips' : 'kN';
+  var SdX = ec8Sd(T1x,ag,p,q,eta,beta);
+  var SdY = ec8Sd(T1y,ag,p,q,eta,beta);
+  var lamX = (n>2 && T1x<=2*p.TC) ? 0.85 : 1.0;
+  var lamY = (n>2 && T1y<=2*p.TC) ? 0.85 : 1.0;
+  var FbX = SdX*W*lamX, FbY = SdY*W*lamY;
+  ec8DrawSpectrum(ag,p,q,eta,beta,T1x,T1y);
+  // Period / λ table
+  var pH='';
+  pH+=row3('T<sub>1</sub> entered (s)', f(T1x,3), f(T1y,3));
+  pH+=row3('2·T<sub>C</sub> limit (s)', f(2*p.TC,3), f(2*p.TC,3));
+  pH+=row3('T<sub>1</sub> vs 2·T<sub>C</sub>',
+    T1x<=2*p.TC?'<span class="vok">≤ 2T<sub>C</sub></span>':'<span class="vwarn">&gt; 2T<sub>C</sub></span>',
+    T1y<=2*p.TC?'<span class="vok">≤ 2T<sub>C</sub></span>':'<span class="vwarn">&gt; 2T<sub>C</sub></span>');
+  pH+=row3('<b>λ</b>', '<b class="vok">'+f(lamX,2)+'</b>', '<b class="vok">'+f(lamY,2)+'</b>');
+  document.getElementById('ec8-res-period').innerHTML=pH;
+  // Sd table
+  var gt  = document.getElementById('ec8-gt').value;
+  var st  = document.getElementById('ec8-stype').value;
+  var sH='';
+  sH+=row3('a<sub>gR</sub> (g)', f(agR,3), f(agR,3));
+  sH+=row3('γ<sub>I</sub>', f(gI,2), f(gI,2));
+  sH+=row3('a<sub>g</sub> = γ<sub>I</sub>·a<sub>gR</sub> (g)', f(ag,3), f(ag,3));
+  sH+=row3('S (Ground '+gt+')', f(p.S,2), f(p.S,2));
+  sH+=row3('η (damping, ξ='+xi+'%)', f(eta,3), f(eta,3));
+  sH+=row3('q (behavior factor)', f(q,2), f(q,2));
+  sH+=row3('Plateau a<sub>g</sub>·S·2.5/q·η (g)', f(ag*p.S*2.5/q*eta,4), f(ag*p.S*2.5/q*eta,4));
+  sH+=row3('<b>S<sub>d</sub>(T<sub>1</sub>) (g)</b>',
+    '<b class="vok vbig">'+f(SdX,4)+'</b>', '<b class="vok vbig">'+f(SdY,4)+'</b>');
+  document.getElementById('ec8-res-sd').innerHTML=sH;
+  // Fb table
+  var fH='';
+  fH+=row3('S<sub>d</sub>(T<sub>1</sub>) (g)', f(SdX,4), f(SdY,4));
+  fH+=row3('W ('+fUnit+')', f(W,1), f(W,1));
+  fH+=row3('λ', f(lamX,2), f(lamY,2));
+  fH+=row3('<b>F<sub>b</sub> = S<sub>d</sub>·W·λ ('+fUnit+')</b>',
+    '<b class="vok vbig">'+f(FbX,1)+'</b>', '<b class="vok vbig">'+f(FbY,1)+'</b>');
+  fH+=row3('F<sub>b</sub> / W', f(FbX/W*100,2)+' %', f(FbY/W*100,2)+' %');
+  document.getElementById('ec8-res-fb').innerHTML=fH;
+  // Reference summary
+  var stypeStr = st==='1' ? 'Type 1 (Ms > 5.5)' : 'Type 2 (Ms ≤ 5.5)';
+  var icSel = document.getElementById('ec8-ic');
+  var icStr = icSel.value;
+  var rH='';
+  rH+=row2('Standard','EN 1998-1:2004');
+  rH+=row2('Procedure','Lateral Force Method — §4.3.3');
+  rH+=row2('Spectrum / Ground Type', stypeStr+', Type '+gt);
+  rH+=row2('Importance Class / γ<sub>I</sub>', icStr+' / '+f(gI,2));
+  rH+=row2('a<sub>g</sub> (g)', f(ag,3));
+  rH+=row2('S / T<sub>B</sub> / T<sub>C</sub> / T<sub>D</sub>', f(p.S,2)+' / '+f(p.TB,2)+' / '+f(p.TC,2)+' / '+f(p.TD,1));
+  rH+=row2('q / η', f(q,2)+' / '+f(eta,3));
+  rH+=row2('T<sub>1,x</sub> / T<sub>1,y</sub> (s)', f(T1x,3)+' / '+f(T1y,3));
+  rH+=row2('λ<sub>x</sub> / λ<sub>y</sub>', f(lamX,2)+' / '+f(lamY,2));
+  rH+=row2('<b>S<sub>d,x</sub> / S<sub>d,y</sub> (g)</b>', '<b>'+f(SdX,4)+' / '+f(SdY,4)+'</b>');
+  rH+=row2('<b>F<sub>bx</sub> / F<sub>by</sub> ('+fUnit+')</b>', '<b class="vok">'+f(FbX,1)+' / '+f(FbY,1)+'</b>');
+  document.getElementById('ec8-res-ref').innerHTML=rH;
+  // Store for PDF
+  ec8_rptP = {agR:agR,gI:gI,ag:ag,p:p,stypeStr:stypeStr,gt:gt,icStr:icStr,
+    q:q,eta:eta,xi:xi,W:W,n:n,fUnit:fUnit,T1x:T1x,T1y:T1y,
+    lamX:lamX,lamY:lamY,SdX:SdX,SdY:SdY,FbX:FbX,FbY:FbY};
+}
+
+// ── EC8 PDF report builder ────────────────────────────────────────────────────
+function ec8BuildReport(p) {
+  var sub = document.getElementById('rpt-subtitle');
+  var ftl = document.getElementById('rpt-ft-left');
+  if (sub) sub.textContent = 'EN 1998-1:2004 §4.3.3 — Lateral Force Method';
+  if (ftl) ftl.textContent = 'civilstrcalc.com — EN 1998-1 EC8 Calculator';
+  var h = '';
+  // Row 1: Ground motion + Building
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
+  h += '<div><div class="rpt-sh">Ground Motion — §3.2.2.5</div><div class="rpt-g4">';
+  h += rptKV('agR (g)', f(p.agR,3));
+  h += rptKV('γI', f(p.gI,2));
+  h += rptKV('ag (g)', f(p.ag,3));
+  h += rptKV('Spectrum', p.stypeStr.split(' ')[0]+' '+p.stypeStr.split(' ')[1]);
+  h += rptKV('Ground', p.gt);
+  h += rptKV('S', f(p.p.S,2));
+  h += rptKV('TC (s)', f(p.p.TC,2));
+  h += rptKV('TD (s)', f(p.p.TD,1));
+  h += '</div></div>';
+  h += '<div><div class="rpt-sh">Building Parameters</div><div class="rpt-g4">';
+  h += rptKV('Imp. Class', p.icStr);
+  h += rptKV('q', f(p.q,2));
+  h += rptKV('η', f(p.eta,3));
+  h += rptKV('ξ (%)', f(p.xi,1));
+  h += rptKV('W ('+p.fUnit+')', f(p.W,1));
+  h += rptKV('n stories', p.n);
+  h += rptKV('TB (s)', f(p.p.TB,2));
+  h += rptKV('β', '0.20');
+  h += '</div></div>';
+  h += '</div>';
+  // Row 2: Period/λ + Sd tables
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
+  h += '<div><div class="rpt-sh">Period and λ — §4.3.3.2.2</div>';
+  h += '<table class="rpt-t"><thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
+  h += rptR3('T1 entered (s)', f(p.T1x,3), f(p.T1y,3));
+  h += rptR3('2·TC limit (s)', f(2*p.p.TC,3), f(2*p.p.TC,3));
+  h += rptR3('λ', f(p.lamX,2), f(p.lamY,2));
+  h += '</tbody></table></div>';
+  h += '<div><div class="rpt-sh">Design Spectrum Sd(T) — §3.2.2.5</div>';
+  h += '<table class="rpt-t"><thead><tr><th>Equation</th><th>X Dir.</th><th>Y Dir.</th></tr></thead><tbody>';
+  h += rptR3('ag·S·2.5/q·η (plateau, g)', f(p.ag*p.p.S*2.5/p.q*p.eta,4), f(p.ag*p.p.S*2.5/p.q*p.eta,4));
+  h += rptR3('<b>Sd(T1) (g)</b>', '<b style="color:#1a6b45;">'+f(p.SdX,4)+'</b>', '<b style="color:#1a6b45;">'+f(p.SdY,4)+'</b>');
+  h += '</tbody></table></div>';
+  h += '</div>';
+  // Row 3: ELF equation + Fb boxes
+  h += '<div class="rpt-sec">';
+  h += '<div class="rpt-sh">Base Shear — EN 1998-1 §4.3.3.2.2</div>';
+  h += '<div class="rpt-eq"><span class="rpt-eq-lhs"><b>Fb = Sd(T1) · W · λ</b></span><span class="rpt-eq-ref">EN 1998-1:2004 §4.3.3.2.2</span></div>';
+  h += '<div class="rpt-vrow">';
+  h += '<div class="rpt-vbox"><div class="rpt-vdir">X Direction</div>';
+  h += '<div class="rpt-vval">'+f(p.FbX,1)+' '+p.fUnit+'</div>';
+  h += '<div class="rpt-veq">'+f(p.SdX,4)+' &times; '+f(p.W,1)+' &times; '+f(p.lamX,2)+' = '+f(p.FbX,1)+'</div></div>';
+  h += '<div class="rpt-vbox"><div class="rpt-vdir">Y Direction</div>';
+  h += '<div class="rpt-vval">'+f(p.FbY,1)+' '+p.fUnit+'</div>';
+  h += '<div class="rpt-veq">'+f(p.SdY,4)+' &times; '+f(p.W,1)+' &times; '+f(p.lamY,2)+' = '+f(p.FbY,1)+'</div></div>';
+  h += '</div></div>';
+  // Row 4: Spectrum chart
+  h += '<div class="rpt-sec" style="margin-top:5pt;">';
+  h += '<div class="rpt-sh">Design Response Spectrum — §3.2.2.5</div>';
+  h += '<img id="ec8-rpt-img" class="rpt-img" src="" alt="EC8 Design Response Spectrum">';
+  h += '</div>';
+  document.getElementById('rpt-body').innerHTML = h;
+  document.getElementById('rpt-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function ec8PrintReport() {
+  if (ec8_rptP) ec8BuildReport(ec8_rptP);
+  var img = document.getElementById('ec8-rpt-img');
+  if (img && ec8_rptSp) {
+    var sp = ec8_rptSp;
+    var oc = document.createElement('canvas');
+    ec8DrawSpectrum(sp.ag, sp.p, sp.q, sp.eta, sp.beta, sp.T1x, sp.T1y, oc);
+    img.src = oc.toDataURL('image/png');
+  }
+  setTimeout(function(){ window.print(); }, 200);
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function init(){
   updateGM();
   updateCap();
   addStory(1000,12); addStory(1000,24); addStory(1000,36); addStory(1000,48); addStory(1000,60);
   calc();
+  ec8UpdateGM();
+  ec8UpdateTa();
+  ec8Calc();
 })();
 </script>
 <script src="../shell.js" defer></script>
