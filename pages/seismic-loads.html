@@ -282,14 +282,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <select id="inp-sys" onchange="onSysChange();calc();">
             <optgroup label="Moment Frames">
               <option value="8,0.028,0.0724,0.8">Special steel MF (R=8)</option>
-              <option value="8,0.016,0.0466,0.9">Special RC MF (R=8)</option>
+              <option value="8,0.016,0.0466,0.9" selected>Special RC MF (R=8)</option>
               <option value="4.5,0.028,0.0724,0.8">Intermediate steel MF (R=4.5)</option>
               <option value="5,0.016,0.0466,0.9">Intermediate RC MF (R=5)</option>
               <option value="3.5,0.028,0.0724,0.8">Ordinary steel MF (R=3.5)</option>
               <option value="3,0.016,0.0466,0.9">Ordinary RC MF (R=3)</option>
             </optgroup>
             <optgroup label="Shear Walls">
-              <option value="6,0.02,0.0488,0.75" selected>Special RC shear walls (R=6)</option>
+              <option value="6,0.02,0.0488,0.75">Special RC shear walls (R=6)</option>
               <option value="5,0.02,0.0488,0.75">Ordinary RC shear walls (R=5)</option>
               <option value="6.5,0.02,0.0488,0.75">Special steel plate shear walls (R=6.5)</option>
             </optgroup>
@@ -311,7 +311,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="calc-grid-3">
           <div class="inp-row">
             <label>R</label>
-            <input type="number" id="inp-R" value="6" min="1" max="10" step="0.25" oninput="calc();">
+            <input type="number" id="inp-R" value="8" min="1" max="10" step="0.25" oninput="calc();">
           </div>
           <div class="inp-row">
             <label id="lbl-W">W (kN)</label>
@@ -351,12 +351,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div class="calc-grid" style="margin-bottom:6px;">
           <div class="inp-row">
             <label>C<sub>t</sub> — period coefficient</label>
-            <input type="number" id="inp-Ct" value="0.0488" step="0.001" min="0.005" max="0.10" oninput="updateCap();calc();">
+            <input type="number" id="inp-Ct" value="0.0466" step="0.001" min="0.005" max="0.10" oninput="updateCap();calc();">
             <div class="inp-hint" id="hint-Ct">Steel MF: 0.0724 · RC MF: 0.0466 · Others: 0.0488</div>
           </div>
           <div class="inp-row">
             <label>x — period exponent</label>
-            <input type="number" id="inp-x" value="0.75" step="0.01" min="0.5" max="1.0" oninput="updateCap();calc();">
+            <input type="number" id="inp-x" value="0.9" step="0.01" min="0.5" max="1.0" oninput="updateCap();calc();">
             <div class="inp-hint">Steel MF: 0.8 · RC MF: 0.9 · Others: 0.75</div>
           </div>
         </div>
@@ -414,10 +414,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <!-- ═══ RIGHT: Results ══════════════════════════════════════════════════════ -->
     <div id="results">
 
-      <div style="overflow:hidden;">
-        <button class="pdf-btn" onclick="printReport()">
+      <!-- Results header bar (matches steel module style) -->
+      <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+        <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+        <span id="res-std-badge" style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">ASCE 7-22 · kN · m</span>
+        <button class="pdf-btn" onclick="printReport()" style="margin:0;flex-shrink:0;">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
-          Save as PDF
+          Print / PDF
         </button>
       </div>
 
@@ -925,6 +928,7 @@ function setUnit(u) {
     isUS ? 'Steel MF: 0.028 · RC MF: 0.016 · Others: 0.02'
          : 'Steel MF: 0.0724 · RC MF: 0.0466 · Others: 0.0488';
   rebuildStoryDefaults();
+  updateResBadge();
   updateCap();
   calc();
 }
@@ -1454,11 +1458,20 @@ function printReport() {
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
+function updateResBadge() {
+  var activeStd = document.querySelector('.sub-tab.active');
+  var std = activeStd && activeStd.textContent.indexOf('EN') !== -1 ? 'EN 1998-1' : 'ASCE 7-22';
+  var units = isUS ? 'kip · ft' : 'kN · m';
+  var el = document.getElementById('res-std-badge');
+  if (el) el.textContent = std + ' · ' + units;
+}
+
 function switchStd(std, btn) {
   document.querySelectorAll('.sub-pane').forEach(function(p){ p.classList.remove('active'); });
   document.querySelectorAll('.sub-tab').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('pane-'+std).classList.add('active');
   if (btn) btn.classList.add('active');
+  updateResBadge();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
