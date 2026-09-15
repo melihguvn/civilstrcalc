@@ -581,13 +581,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
         <!-- Ground Motion -->
         <div class="section-card">
-          <div class="unit-switcher">
-            <span class="unit-lbl">Units</span>
-            <div class="unit-btns">
-              <button id="ec8-btn-si" class="unit-btn active" onclick="ec8SetUnit('si')">SI (kN-m)</button>
-              <button id="ec8-btn-us" class="unit-btn" onclick="ec8SetUnit('us')">US (kip-ft)</button>
-            </div>
-          </div>
           <div class="sc-hdr">Ground Motion Parameters</div>
           <div class="calc-grid" style="margin-bottom:8px;">
             <div class="inp-row">
@@ -640,7 +633,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="inp-row">
               <label>Seismic Weight W</label>
               <input type="number" id="ec8-W" value="10000" min="0" step="100" oninput="ec8Calc();">
-              <div class="inp-hint" id="ec8-W-hint">kN (mass × g, dead + ψ·live)</div>
+              <div class="inp-hint">kN &nbsp;(G + ψ₂·Q, §3.2.4)</div>
             </div>
             <div class="inp-row">
               <label>Number of stories n</label>
@@ -652,6 +645,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="inp-row">
               <label>Behavior factor q (§5.2.2)</label>
               <input type="number" id="ec8-q" value="3.9" min="1" max="10" step="0.1" oninput="ec8Calc();">
+              <div class="inp-hint" style="visibility:hidden;" aria-hidden="true">ph</div>
             </div>
             <div class="inp-row">
               <label>Damping ratio ξ (%)</label>
@@ -1605,7 +1599,7 @@ function ec8Calc() {
   var p    = ec8GetP();
   var eta  = Math.max(Math.sqrt(10/(5+xi)), 0.55);
   var beta = 0.2;
-  var fUnit = ec8_isUS ? 'kips' : 'kN';
+  var fUnit = 'kN';
   var SdX = ec8Sd(T1x,ag,p,q,eta,beta);
   var SdY = ec8Sd(T1y,ag,p,q,eta,beta);
   var lamX = (n>2 && T1x<=2*p.TC) ? 0.85 : 1.0;
