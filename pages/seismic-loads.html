@@ -195,6 +195,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="switchStd('asce',this)">ASCE 7-22</button>
     <button class="sub-tab" onclick="switchStd('ec8',this)">EN 1998-1 (EC8)</button>
+    <button class="sub-tab" onclick="switchStd('tbdy',this)">TBDY 2018</button>
+    <button class="sub-tab" onclick="switchStd('is',this)">IS 1893:2016</button>
   </div>
 
   <div class="sub-pane active" id="pane-asce">
@@ -778,6 +780,329 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>Both codes share the same conceptual framework — seismic demand from a design spectrum reduced by a system factor (R or q) — but differ in several important ways. EN 1998-1 uses a National Annex for site-specific spectral ordinates rather than USGS mapped values. The soil amplification in EN 1998-1 is a single S factor vs. separate F<sub>a</sub>/F<sub>v</sub> in ASCE 7-22. The EC8 λ factor has no direct ASCE counterpart. EN 1998-1 does not impose a C<sub>u</sub>·T<sub>a</sub> upper-period cap, though national annexes may introduce similar limits. The story force distribution uses k = 1 in EC8 (linear) vs. the variable k in ASCE 7-22 that captures higher-mode effects in flexible structures.</p>
     </article>
   </div><!-- /pane-ec8 -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       TBDY 2018 PANE — Türk Bina Deprem Yönetmeliği 2018
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="sub-pane" id="pane-tbdy">
+
+    <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Taban Kesme — TBDY 2018 §4.8</h2>
+    <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Eşdeğer Deprem Yükü Yöntemi — Vt = W × SaR(T1), iki doğrultu.</p>
+
+    <div class="page-layout">
+      <!-- ═══ TBDY LEFT ═════════════════════════════════════════════════════ -->
+      <div>
+        <!-- Ground Motion -->
+        <div class="section-card">
+          <div class="sc-hdr">Yer Hareketi Parametreleri</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>S<sub>S</sub> — Kısa Periyot Spektral İvme (g)</label>
+              <input type="number" id="tbdy-SS" value="1.00" min="0" step="0.01" oninput="tbdyUpdateGM();tbdyCalc();">
+              <div class="inp-hint">AFAD TD-2 haritasından (0.2 s)</div>
+            </div>
+            <div class="inp-row">
+              <label>S<sub>1</sub> — 1.0 s Spektral İvme (g)</label>
+              <input type="number" id="tbdy-S1" value="0.30" min="0" step="0.01" oninput="tbdyUpdateGM();tbdyCalc();">
+              <div class="inp-hint">AFAD TD-2 haritasından (1.0 s)</div>
+            </div>
+          </div>
+          <div class="inp-row">
+            <label>Yerel Zemin Sınıfı (§3.1)</label>
+            <select id="tbdy-ZS" onchange="tbdyUpdateGM();tbdyCalc();">
+              <option value="ZA">ZA — Sağlam/çok sıkı ana kaya (vs &gt; 1500 m/s)</option>
+              <option value="ZB">ZB — Sığ kaya / çok sert zemin</option>
+              <option value="ZC" selected>ZC — Sık kum/çakıl, sert kil</option>
+              <option value="ZD">ZD — Orta sıkı kum, kum-çakıl, sert kil</option>
+              <option value="ZE">ZE — Yumuşak kil/silt</option>
+            </select>
+          </div>
+          <div class="gm-computed" style="grid-template-columns:repeat(6,1fr);margin-top:7px;">
+            <div class="gm-cell"><div class="gm-lbl">F<sub>S</sub></div><div class="gm-val" id="tbdy-FS">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">F<sub>1</sub></div><div class="gm-val" id="tbdy-F1">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">S<sub>DS</sub> (g)</div><div class="gm-val gm-hi" id="tbdy-SDS">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">S<sub>D1</sub> (g)</div><div class="gm-val gm-hi" id="tbdy-SD1">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">T<sub>A</sub> (s)</div><div class="gm-val" id="tbdy-TA">—</div></div>
+            <div class="gm-cell"><div class="gm-lbl">T<sub>B</sub> (s)</div><div class="gm-val" id="tbdy-TB">—</div></div>
+          </div>
+        </div>
+
+        <!-- Building Parameters -->
+        <div class="section-card">
+          <div class="sc-hdr">Yapı Parametreleri</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>Bina Kullanım Sınıfı (BKS) → I</label>
+              <select id="tbdy-BKS" onchange="tbdyCalc();">
+                <option value="1.0">BKS 1 — Konut/büro (I = 1.0)</option>
+                <option value="1.2">BKS 2 — Okul/toplantı (I = 1.2)</option>
+                <option value="1.5">BKS 3 — Hastane/kritik (I = 1.5)</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>W — Sismik Ağırlık (kN)</label>
+              <input type="number" id="tbdy-W" value="10000" min="0" step="100" oninput="tbdyCalc();">
+              <div class="inp-hint">G + n·Q (§4.3.1)</div>
+            </div>
+          </div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>Taşıyıcı Sistem → R, D</label>
+              <select id="tbdy-sys" onchange="tbdyCalc();">
+                <option value="8,3">Yük.Sün. BA Moment Çerçevesi (A11) — R=8, D=3</option>
+                <option value="4,2">Sın.Sün. BA Moment Çerçevesi (A12) — R=4, D=2</option>
+                <option value="7,2.5">Yük.Sün. BA Perde+Çerçeve (A13) — R=7, D=2.5</option>
+                <option value="6,2.5">Yük.Sün. BA Perdeli Sistem (A14) — R=6, D=2.5</option>
+                <option value="8,3">Yük.Sün. Çelik Moment Çerçevesi (B11) — R=8, D=3</option>
+                <option value="4,2">Sın.Sün. Çelik Moment Çerçevesi (B12) — R=4, D=2</option>
+                <option value="8,3">Yük.Sün. Çelik Çapraz Çerçeve (B13) — R=8, D=3</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>N — Kat Sayısı (ΔF<sub>N</sub> için)</label>
+              <input type="number" id="tbdy-N" value="5" min="1" step="1" oninput="tbdyCalc();">
+              <div class="inp-hint">T1 &gt; 0.70 s ise ek tavan kuvveti</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Period -->
+        <div class="section-card">
+          <div class="sc-hdr">Yapı Periyodu</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>T<sub>1x</sub> — X Periyodu (s)</label>
+              <input type="number" id="tbdy-T1x" value="0.80" min="0" step="0.01" oninput="tbdyCalc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>1y</sub> — Y Periyodu (s)</label>
+              <input type="number" id="tbdy-T1y" value="0.90" min="0" step="0.01" oninput="tbdyCalc();">
+            </div>
+          </div>
+          <div class="sc-hdr" style="margin-top:4px;font-size:.67rem;padding-bottom:5px;">Ampirik Periyot — §4.8.1 &nbsp; T<sub>a</sub> = C<sub>t</sub> · H<sup>0.9</sup></div>
+          <div class="calc-grid-3">
+            <div class="inp-row">
+              <label>C<sub>t</sub></label>
+              <select id="tbdy-Ct" onchange="tbdyUpdateTa();tbdyCalc();">
+                <option value="0.1">0.100 — Çelik Moment Çerçevesi</option>
+                <option value="0.08" selected>0.080 — BA Moment Çerçevesi</option>
+                <option value="0.07">0.070 — Perde/Diğer</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>H — Toplam Yükseklik (m)</label>
+              <input type="number" id="tbdy-H" value="15" min="0" step="1" oninput="tbdyUpdateTa();tbdyCalc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>a</sub> = C<sub>t</sub>·H<sup>0.9</sup></label>
+              <input type="text" id="tbdy-Ta-disp" readonly style="background:var(--surface,#f8fafb);color:var(--text-dim);">
+            </div>
+          </div>
+          <div class="inp-hint" style="margin-top:5px;">C<sub>u</sub> = 1.4 (sabit) — T<sub>design</sub> = min(T<sub>1</sub>, 1.4·T<sub>a</sub>)</div>
+        </div>
+
+        <button class="calc-btn" onclick="tbdyCalc()">Taban Kesme Hesapla</button>
+      </div>
+
+      <!-- ═══ TBDY RIGHT ════════════════════════════════════════════════════ -->
+      <div id="tbdy-results">
+        <div style="overflow:hidden;">
+          <button class="pdf-btn" onclick="tbdyPrintReport()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
+            PDF Kaydet
+          </button>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Tasarım Yanıt Spektrumu — §2.2.3</div>
+          <canvas id="tbdy-canvas" style="display:block;width:100%;"></canvas>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px 8px;font-size:.66rem;color:var(--text-dim);align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1a6b45" stroke-width="2.5"/></svg>Elastik S<sub>ae</sub>(T)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>1x</sub></span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>1y</sub></span>
+          </div>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Periyot ve Azaltma Katsayısı — §4.3.2</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead>
+            <tbody id="tbdy-res-period"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Taban Kesme — §4.8</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead>
+            <tbody id="tbdy-res-vt"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Kod Referans Özeti</div>
+          <table class="res-tbl"><tbody id="tbdy-res-ref"></tbody></table>
+        </div>
+      </div>
+    </div><!-- /page-layout TBDY -->
+  </div><!-- /pane-tbdy -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       IS 1893:2016 PANE — Indian Standard Seismic Design
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="sub-pane" id="pane-is">
+
+    <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Seismic Base Shear — IS 1893:2016</h2>
+    <p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Cl. 6.4 — Design Horizontal Seismic Coefficient A<sub>h</sub>, two principal directions.</p>
+
+    <div class="page-layout">
+      <!-- ═══ IS LEFT ════════════════════════════════════════════════════════ -->
+      <div>
+        <div class="section-card">
+          <div class="sc-hdr">Seismic Zone &amp; Site</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>Seismic Zone (Table 3)</label>
+              <select id="is-zone" onchange="isCalc();">
+                <option value="0.10">Zone II — Z = 0.10</option>
+                <option value="0.16" selected>Zone III — Z = 0.16</option>
+                <option value="0.24">Zone IV — Z = 0.24</option>
+                <option value="0.36">Zone V — Z = 0.36</option>
+              </select>
+              <div class="inp-hint">Zone factor Z from IS 1893 Table 3</div>
+            </div>
+            <div class="inp-row">
+              <label>Soil Type (Cl. 6.4.5)</label>
+              <select id="is-soil" onchange="isCalc();">
+                <option value="I" selected>Type I — Rock / Hard soil</option>
+                <option value="II">Type II — Medium soil</option>
+                <option value="III">Type III — Soft soil</option>
+              </select>
+              <div class="inp-hint">Governs Sa/g spectral shape</div>
+            </div>
+          </div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>Importance Factor I (Table 8)</label>
+              <select id="is-I" onchange="isCalc();">
+                <option value="1.0" selected>1.0 — General (residential, commercial)</option>
+                <option value="1.2">1.2 — Schools, hospitals, assembly</option>
+                <option value="1.5">1.5 — Critical (fire station, power plant)</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>Response Reduction R (Table 9)</label>
+              <select id="is-R" onchange="isCalc();">
+                <option value="5.0" selected>5.0 — RC / Steel SMRF</option>
+                <option value="3.0">3.0 — RC / Steel OMRF</option>
+                <option value="5.0">5.0 — RC Shear Wall + SMRF</option>
+                <option value="4.0">4.0 — RC Shear Wall + OMRF / System</option>
+                <option value="1.5">1.5 — Unreinforced Masonry</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-hdr">Building Parameters</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>W — Seismic Weight (kN)</label>
+              <input type="number" id="is-W" value="10000" min="0" step="100" oninput="isCalc();">
+              <div class="inp-hint">Dead + applicable live (Cl. 7.4)</div>
+            </div>
+            <div class="inp-row">
+              <label style="visibility:hidden;" aria-hidden="true">—</label>
+              <div style="padding:5px 0;font-size:.73rem;color:var(--text-dim);">V<sub>B,min</sub> = 0.01·W applied automatically</div>
+              <div class="inp-hint" style="visibility:hidden;" aria-hidden="true">ph</div>
+            </div>
+          </div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>T<sub>x</sub> — Period X dir. (s)</label>
+              <input type="number" id="is-Tx" value="0.80" min="0" step="0.01" oninput="isCalc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>y</sub> — Period Y dir. (s)</label>
+              <input type="number" id="is-Ty" value="0.90" min="0" step="0.01" oninput="isCalc();">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-hdr">Approximate Period — Cl. 7.6</div>
+          <div class="calc-grid" style="margin-bottom:8px;">
+            <div class="inp-row">
+              <label>Frame Type</label>
+              <select id="is-ftype" onchange="isUpdateTa();isCalc();">
+                <option value="rc">RC Frame — T<sub>a</sub> = 0.075·h<sup>0.75</sup></option>
+                <option value="steel">Steel Frame — T<sub>a</sub> = 0.085·h<sup>0.75</sup></option>
+                <option value="other">Other — T<sub>a</sub> = 0.09·h / √d</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <label>h — Height (m)</label>
+              <input type="number" id="is-h" value="15" min="0" step="1" oninput="isUpdateTa();isCalc();">
+            </div>
+          </div>
+          <div class="calc-grid" id="is-d-row" style="display:none;">
+            <div class="inp-row">
+              <label>d — Base dim. in dir. of force (m)</label>
+              <input type="number" id="is-d" value="12" min="0" step="0.5" oninput="isUpdateTa();isCalc();">
+            </div>
+            <div class="inp-row">
+              <label>T<sub>a</sub> (computed)</label>
+              <input type="text" id="is-Ta-disp" readonly style="background:var(--surface,#f8fafb);color:var(--text-dim);">
+            </div>
+          </div>
+        </div>
+
+        <button class="calc-btn" onclick="isCalc()">Calculate Base Shear</button>
+      </div>
+
+      <!-- ═══ IS RIGHT ══════════════════════════════════════════════════════ -->
+      <div id="is-results">
+        <div style="overflow:hidden;">
+          <button class="pdf-btn" onclick="isPrintReport()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V8M8 12l4 4 4-4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
+            Save as PDF
+          </button>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Design Response Spectrum — Cl. 6.4.5</div>
+          <canvas id="is-canvas" style="display:block;width:100%;"></canvas>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px 8px;font-size:.66rem;color:var(--text-dim);align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1a6b45" stroke-width="2.5"/></svg>Sa/g (selected soil)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>x</sub></span>
+            <span style="display:flex;align-items:center;gap:5px;"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5,3"/></svg>T<sub>y</sub></span>
+          </div>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Seismic Parameters — Cl. 6.4.2</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="is-res-params"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Base Shear V<sub>B</sub> = A<sub>h</sub> · W — Cl. 6.4.2</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="is-res-vb"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card">
+          <div class="res-card-hdr">Code Reference Summary</div>
+          <table class="res-tbl"><tbody id="is-res-ref"></tbody></table>
+        </div>
+      </div>
+    </div><!-- /page-layout IS -->
+  </div><!-- /pane-is -->
+
 </main>
 
 <!-- ── PDF Report ─────────────────────────────────────────────────────────── -->
@@ -1460,8 +1785,13 @@ function printReport() {
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function updateResBadge() {
-  var activeStd = document.querySelector('.sub-tab.active');
-  var std = activeStd && activeStd.textContent.indexOf('EN') !== -1 ? 'EN 1998-1' : 'ASCE 7-22';
+  var activeBtn = document.querySelector('.sub-tab.active');
+  var txt = activeBtn ? activeBtn.textContent : '';
+  var std;
+  if      (txt.indexOf('EN') !== -1)   std = 'EN 1998-1';
+  else if (txt.indexOf('TBDY') !== -1) std = 'TBDY 2018';
+  else if (txt.indexOf('IS') !== -1)   std = 'IS 1893:2016';
+  else                                  std = 'ASCE 7-22';
   var units = isUS ? 'kip · ft' : 'kN · m';
   var el = document.getElementById('res-std-badge');
   if (el) el.textContent = std + ' · ' + units;
@@ -1768,6 +2098,519 @@ function ec8PrintReport() {
   setTimeout(function(){ window.print(); }, 200);
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// TBDY 2018 — Türk Bina Deprem Yönetmeliği
+// ══════════════════════════════════════════════════════════════════════════════
+var TBDY_SS_BP = [0.25, 0.50, 0.75, 1.00, 1.25, 1.50];
+var TBDY_S1_BP = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60];
+var TBDY_FS = {
+  ZA:[0.8,0.8,0.8,0.8,0.8,0.8], ZB:[0.9,0.9,0.9,0.9,0.9,0.9],
+  ZC:[1.3,1.3,1.2,1.2,1.2,1.2], ZD:[1.6,1.4,1.2,1.1,1.0,1.0],
+  ZE:[2.4,1.7,1.3,1.1,0.9,0.8]
+};
+var TBDY_F1 = {
+  ZA:[0.8,0.8,0.8,0.8,0.8,0.8], ZB:[0.8,0.8,0.8,0.8,0.8,0.8],
+  ZC:[1.5,1.5,1.5,1.5,1.5,1.4], ZD:[2.4,2.2,2.0,1.9,1.8,1.7],
+  ZE:[4.2,3.3,2.8,2.4,2.2,2.0]
+};
+var tbdy_rptP  = null;
+var tbdy_rptSp = null;
+
+function tbdyInterp(x, xs, ys) {
+  if (x <= xs[0]) return ys[0];
+  if (x >= xs[xs.length-1]) return ys[ys.length-1];
+  for (var i = 0; i < xs.length-1; i++) {
+    if (x <= xs[i+1]) { var t=(x-xs[i])/(xs[i+1]-xs[i]); return ys[i]+t*(ys[i+1]-ys[i]); }
+  }
+  return ys[ys.length-1];
+}
+
+function tbdyUpdateGM() {
+  var SS = parseFloat(document.getElementById('tbdy-SS').value)||0;
+  var S1 = parseFloat(document.getElementById('tbdy-S1').value)||0;
+  var zs = document.getElementById('tbdy-ZS').value;
+  if (!TBDY_FS[zs]) return;
+  var FS  = tbdyInterp(SS, TBDY_SS_BP, TBDY_FS[zs]);
+  var F1  = tbdyInterp(S1, TBDY_S1_BP, TBDY_F1[zs]);
+  var SDS = FS * SS, SD1 = F1 * S1;
+  var TB  = SDS > 0 ? SD1 / SDS : 0;
+  var TA  = 0.2 * TB;
+  document.getElementById('tbdy-FS').textContent  = f(FS, 3);
+  document.getElementById('tbdy-F1').textContent  = f(F1, 3);
+  document.getElementById('tbdy-SDS').textContent = f(SDS, 3);
+  document.getElementById('tbdy-SD1').textContent = f(SD1, 3);
+  document.getElementById('tbdy-TA').textContent  = f(TA, 3);
+  document.getElementById('tbdy-TB').textContent  = f(TB, 3);
+}
+
+function tbdyUpdateTa() {
+  var Ct = parseFloat(document.getElementById('tbdy-Ct').value)||0.08;
+  var H  = parseFloat(document.getElementById('tbdy-H').value)||0;
+  var Ta = H > 0 ? Ct * Math.pow(H, 0.9) : 0;
+  document.getElementById('tbdy-Ta-disp').value = Ta > 0 ? f(Ta,3)+' s' : '—';
+}
+
+function tbdySae(T, SDS, SD1, TA, TB, TL) {
+  if (T <= 0)   return 0.4 * SDS;
+  if (T < TA)   return (0.4 + 0.6 * T / TA) * SDS;
+  if (T < TB)   return SDS;
+  if (T <= TL)  return SD1 / T;
+  return SD1 * TL / (T * T);
+}
+
+function tbdyRa(T, R, I, D, TB) {
+  var RoI = R / I;
+  if (T >= TB) return RoI;
+  return D + (RoI - D) * (T / TB);
+}
+
+function tbdyDrawSpectrum(SDS, SD1, TA, TB, TL, T1x, T1y, SaRx, SaRy, fixedCanvas) {
+  tbdy_rptSp = {SDS:SDS,SD1:SD1,TA:TA,TB:TB,TL:TL,T1x:T1x,T1y:T1y,SaRx:SaRx,SaRy:SaRy};
+  var canvas = fixedCanvas || document.getElementById('tbdy-canvas');
+  if (!canvas) return;
+  var cW, cH;
+  if (fixedCanvas) {
+    cW=630; cH=200; canvas.width=cW; canvas.height=cH;
+  } else {
+    var cont = canvas.parentElement;
+    cW = (cont && cont.clientWidth>24) ? cont.clientWidth-24 : 600;
+    cH = 210;
+    canvas.width = cW*(window.devicePixelRatio||1);
+    canvas.height = cH*(window.devicePixelRatio||1);
+    canvas.style.width = cW+'px'; canvas.style.height = cH+'px';
+  }
+  var ctx = canvas.getContext('2d');
+  if (!fixedCanvas) ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+  var isDark = !fixedCanvas && (document.documentElement.getAttribute('data-theme')==='dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches));
+  var bg=isDark?'#1c2a3a':'#f8fafb', gridC=isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+  var axC=isDark?'rgba(255,255,255,.25)':'rgba(0,0,0,.25)', lblC=isDark?'#8ca0b8':'#6b7280';
+  var dimC=isDark?'#4a6080':'#cbd5e1';
+  var ml=50,mr=12,mt=14,mb=38, pw=cW-ml-mr, ph=cH-mt-mb;
+  var Tmax = Math.max(T1x,T1y,TB)*2.5; Tmax=Math.max(Tmax,2); Tmax=Math.min(Tmax,Math.min(TL,6));
+  Tmax = Math.max(Tmax, T1x*1.1, T1y*1.1);
+  var Samax = SDS * 1.25;
+  function tx(T)  { return ml+(T/Tmax)*pw; }
+  function ty(Sa) { return mt+ph-Math.min(Math.max((Sa/Samax)*ph,0),ph); }
+  function saAt(T){ return tbdySae(T,SDS,SD1,TA,TB,TL); }
+  ctx.fillStyle=bg; ctx.fillRect(0,0,cW,cH);
+  ctx.lineWidth=1; ctx.strokeStyle=gridC;
+  var tStep=Tmax<=2?0.25:Tmax<=4?0.5:1;
+  for(var t=0;t<=Tmax+.001;t+=tStep){ctx.beginPath();ctx.moveTo(tx(t),mt);ctx.lineTo(tx(t),mt+ph);ctx.stroke();}
+  var saStep=SDS>=1.0?0.25:SDS>=0.5?0.1:0.05;
+  for(var sa=0;sa<=Samax;sa+=saStep){ctx.beginPath();ctx.moveTo(ml,ty(sa));ctx.lineTo(ml+pw,ty(sa));ctx.stroke();}
+  ctx.setLineDash([3,3]); ctx.strokeStyle=dimC; ctx.lineWidth=1;
+  [TA,TB].forEach(function(tv,i){
+    if(!tv||tv>Tmax) return;
+    ctx.beginPath();ctx.moveTo(tx(tv),mt);ctx.lineTo(tx(tv),mt+ph);ctx.stroke();
+    ctx.fillStyle=dimC; ctx.font='9px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(i===0?'TA':'TB',tx(tv),mt-3);
+  });
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.strokeStyle='#1a6b45'; ctx.lineWidth=2.5;
+  for(var i=0;i<=400;i++){var T=i*Tmax/400;var cx2=tx(T),cy2=ty(saAt(T));if(i===0)ctx.moveTo(cx2,cy2);else ctx.lineTo(cx2,cy2);}
+  ctx.stroke();
+  function dpPt(Td,color,lbl){
+    if(Td<=0||Td>Tmax) return;
+    ctx.setLineDash([6,3]); ctx.strokeStyle=color; ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(tx(Td),mt);ctx.lineTo(tx(Td),mt+ph);ctx.stroke();
+    ctx.setLineDash([]);
+    var Sa=saAt(Td);
+    ctx.beginPath();ctx.arc(tx(Td),ty(Sa),4.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.fillStyle=color; ctx.font='bold 10px system-ui,sans-serif';
+    ctx.textAlign=tx(Td)+20>ml+pw?'right':'left';
+    ctx.fillText(lbl,tx(Td)+(ctx.textAlign==='left'?6:-6),ty(Sa)-7);
+  }
+  var sameTt=Math.abs(T1x-T1y)<0.001;
+  dpPt(T1x,'#2563eb',sameTt?'T1x=T1y':'T1x');
+  if(!sameTt) dpPt(T1y,'#d97706','T1y');
+  ctx.strokeStyle=axC; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+  ctx.fillStyle=lblC; ctx.font='10px system-ui,sans-serif'; ctx.textAlign='center';
+  for(var t2=0;t2<=Tmax+.001;t2+=tStep) ctx.fillText(t2.toFixed(t2<1?2:1),tx(t2),mt+ph+13);
+  ctx.textAlign='right';
+  for(var sa2=0;sa2<=Samax;sa2+=saStep){var yy=ty(sa2);if(yy<mt-2)continue;ctx.fillText(sa2.toFixed(2),ml-5,yy+3);}
+  ctx.font='10px system-ui,sans-serif'; ctx.fillStyle=lblC; ctx.textAlign='center';
+  ctx.fillText('T (s)',ml+pw/2,cH-4);
+  ctx.save();ctx.translate(11,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Sa (g)',0,0);ctx.restore();
+  if(ty(SDS)>mt+2&&ty(SDS)<mt+ph-2){
+    ctx.fillStyle='#1a6b45'; ctx.font='9px system-ui,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('SDS='+SDS.toFixed(3),ml+4,ty(SDS)-4);
+  }
+}
+
+function tbdyCalc() {
+  var SS  = parseFloat(document.getElementById('tbdy-SS').value)||0;
+  var S1  = parseFloat(document.getElementById('tbdy-S1').value)||0;
+  var zs  = document.getElementById('tbdy-ZS').value;
+  var I   = parseFloat(document.getElementById('tbdy-BKS').value)||1.0;
+  var W   = parseFloat(document.getElementById('tbdy-W').value)||0;
+  var N   = parseInt(document.getElementById('tbdy-N').value)||1;
+  var T1x = parseFloat(document.getElementById('tbdy-T1x').value)||0;
+  var T1y = parseFloat(document.getElementById('tbdy-T1y').value)||0;
+  var Ct  = parseFloat(document.getElementById('tbdy-Ct').value)||0.08;
+  var H   = parseFloat(document.getElementById('tbdy-H').value)||0;
+  var sysParts = document.getElementById('tbdy-sys').value.split(',');
+  var R = parseFloat(sysParts[0])||6;
+  var D = parseFloat(sysParts[1])||2.5;
+
+  if (!TBDY_FS[zs]||SS<=0||S1<=0||W<=0||T1x<=0||T1y<=0) return;
+
+  var FS  = tbdyInterp(SS, TBDY_SS_BP, TBDY_FS[zs]);
+  var F1  = tbdyInterp(S1, TBDY_S1_BP, TBDY_F1[zs]);
+  var SDS = FS*SS, SD1=F1*S1;
+  var TL  = 6.0;
+  var TB  = SDS>0 ? SD1/SDS : 0;
+  var TA  = 0.2*TB;
+  var Cu  = 1.4;
+  var Ta  = H>0 ? Ct*Math.pow(H,0.9) : null;
+  var CuTa= Ta ? Cu*Ta : null;
+
+  var T1xd = CuTa ? Math.min(T1x,CuTa) : T1x;
+  var T1yd = CuTa ? Math.min(T1y,CuTa) : T1y;
+
+  function calcDir(T1d) {
+    var Sae = tbdySae(T1d, SDS, SD1, TA, TB, TL);
+    var Ra  = tbdyRa(T1d, R, I, D, TB);
+    var SaR = Sae / Ra;
+    return {Sae:Sae, Ra:Ra, SaR:SaR};
+  }
+  var dx = calcDir(T1xd), dy = calcDir(T1yd);
+  var VtxRaw=W*dx.SaR, VtyRaw=W*dy.SaR;
+  var VtxMin=0.04*I*SDS*W, VtyMin=0.04*I*SDS*W;
+  var Vtx=Math.max(VtxRaw,VtxMin), Vty=Math.max(VtyRaw,VtyMin);
+  var DFNx=T1xd>0.70 ? 0.0075*N*Vtx : 0;
+  var DFNy=T1yd>0.70 ? 0.0075*N*Vty : 0;
+
+  tbdyDrawSpectrum(SDS, SD1, TA, TB, TL, T1xd, T1yd, dx.SaR, dy.SaR);
+
+  // Period & Ra table
+  var pH='';
+  pH+=row3('T<sub>1x</sub> / T<sub>1y</sub> girilmiş (s)', f(T1x,3), f(T1y,3));
+  if (CuTa) {
+    pH+=row3('T<sub>a</sub> = C<sub>t</sub>·H<sup>0.9</sup> (s)', f(Ta,3), f(Ta,3));
+    pH+=row3('C<sub>u</sub>·T<sub>a</sub> = 1.4·T<sub>a</sub> (s)', f(CuTa,3), f(CuTa,3));
+    var cX=T1x>CuTa?'<span class="vwarn">Kısıtlandı</span>':'<span class="vok">OK</span>';
+    var cY=T1y>CuTa?'<span class="vwarn">Kısıtlandı</span>':'<span class="vok">OK</span>';
+    pH+=row3('Periyot kontrolü', cX, cY);
+  }
+  pH+=row3('<b>T<sub>tasarım</sub> (s)</b>','<b class="vok">'+f(T1xd,3)+'</b>','<b class="vok">'+f(T1yd,3)+'</b>');
+  pH+=row3('S<sub>ae</sub>(T) elastik (g)', f(dx.Sae,4), f(dy.Sae,4));
+  pH+=row3('R<sub>a</sub>(T) — §4.3.2', f(dx.Ra,3), f(dy.Ra,3));
+  pH+=row3('<b>S<sub>aR</sub>(T) = S<sub>ae</sub>/R<sub>a</sub> (g)</b>',
+    '<b class="vok">'+f(dx.SaR,4)+'</b>','<b class="vok">'+f(dy.SaR,4)+'</b>');
+  document.getElementById('tbdy-res-period').innerHTML=pH;
+
+  // Base shear table
+  var vH='';
+  vH+=row3('S<sub>aR</sub>(T) (g)', f(dx.SaR,4), f(dy.SaR,4));
+  vH+=row3('W (kN)', f(W,1), f(W,1));
+  vH+=row3('V<sub>t,raw</sub> = W·S<sub>aR</sub> (kN)', f(VtxRaw,1), f(VtyRaw,1));
+  vH+=row3('V<sub>t,min</sub> = 0.04·I·S<sub>DS</sub>·W (kN)', f(VtxMin,1), f(VtyMin,1));
+  var govX3=VtxRaw>=VtxMin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
+  var govY3=VtyRaw>=VtyMin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
+  vH+=row3('<b>V<sub>t</sub> (kN)</b>',
+    '<b class="vok vbig">'+f(Vtx,1)+'</b>'+govX3,'<b class="vok vbig">'+f(Vty,1)+'</b>'+govY3);
+  vH+=row3('ΔF<sub>N</sub> ek tavan kuvveti (kN)', f(DFNx,1), f(DFNy,1));
+  document.getElementById('tbdy-res-vt').innerHTML=vH;
+
+  // Reference summary
+  var bksEl=document.getElementById('tbdy-BKS');
+  var rH='';
+  rH+=row2('Yönetmelik','TBDY 2018');
+  rH+=row2('Yöntem','Eşdeğer Deprem Yükü — §4.8');
+  rH+=row2('Yerel Zemin Sınıfı', zs);
+  rH+=row2('BKS / I', bksEl.options[bksEl.selectedIndex].text.split('—')[0].trim()+' / '+f(I,2));
+  rH+=row2('R / D', f(R,1)+' / '+f(D,1));
+  rH+=row2('F<sub>S</sub> / F<sub>1</sub>', f(FS,3)+' / '+f(F1,3));
+  rH+=row2('S<sub>DS</sub> / S<sub>D1</sub> (g)', f(SDS,3)+' / '+f(SD1,3));
+  rH+=row2('T<sub>A</sub> / T<sub>B</sub> / T<sub>L</sub> (s)', f(TA,3)+' / '+f(TB,3)+' / '+f(TL,1));
+  rH+=row2('T<sub>1x,des</sub> / T<sub>1y,des</sub> (s)', f(T1xd,3)+' / '+f(T1yd,3));
+  rH+=row2('<b>S<sub>aRx</sub> / S<sub>aRy</sub> (g)</b>','<b>'+f(dx.SaR,4)+' / '+f(dy.SaR,4)+'</b>');
+  rH+=row2('<b>V<sub>tx</sub> / V<sub>ty</sub> (kN)</b>','<b class="vok">'+f(Vtx,1)+' / '+f(Vty,1)+'</b>');
+  document.getElementById('tbdy-res-ref').innerHTML=rH;
+
+  tbdy_rptP={SS:SS,S1:S1,zs:zs,FS:FS,F1:F1,SDS:SDS,SD1:SD1,TA:TA,TB:TB,TL:TL,
+    I:I,R:R,D:D,W:W,N:N,Ta:Ta,CuTa:CuTa,T1x:T1x,T1y:T1y,T1xd:T1xd,T1yd:T1yd,
+    dx:dx,dy:dy,Vtx:Vtx,Vty:Vty,VtxMin:VtxMin,VtyMin:VtyMin,DFNx:DFNx,DFNy:DFNy};
+}
+
+function tbdyBuildReport(p) {
+  var sub=document.getElementById('rpt-subtitle'), ftl=document.getElementById('rpt-ft-left');
+  if (sub) sub.textContent='TBDY 2018 §4.8 — Eşdeğer Deprem Yükü Yöntemi';
+  if (ftl) ftl.textContent='civilstrcalc.com — TBDY 2018 Taban Kesme Hesabı';
+  var h='';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
+  h+='<div><div class="rpt-sh">Yer Hareketi Parametreleri</div><div class="rpt-g4">';
+  h+=rptKV('SS (g)',f(p.SS,3));h+=rptKV('S1 (g)',f(p.S1,3));
+  h+=rptKV('Zemin',p.zs);h+=rptKV('FS',f(p.FS,3));
+  h+=rptKV('F1',f(p.F1,3));h+=rptKV('SDS (g)',f(p.SDS,3));
+  h+=rptKV('SD1 (g)',f(p.SD1,3));h+=rptKV('TL (s)',f(p.TL,1));
+  h+='</div></div>';
+  h+='<div><div class="rpt-sh">Yapı Parametreleri</div><div class="rpt-g4">';
+  h+=rptKV('I',f(p.I,2));h+=rptKV('R',f(p.R,1));
+  h+=rptKV('D',f(p.D,1));h+=rptKV('R/I',f(p.R/p.I,3));
+  h+=rptKV('W (kN)',f(p.W,1));h+=rptKV('TA (s)',f(p.TA,3));
+  h+=rptKV('TB (s)',f(p.TB,3));h+=rptKV('N (kat)',p.N);
+  h+='</div></div></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
+  h+='<div><div class="rpt-sh">Periyot ve Azaltma — §4.3.2</div>';
+  h+='<table class="rpt-t"><thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead><tbody>';
+  h+=rptR3('T1 girilmiş (s)',f(p.T1x,3),f(p.T1y,3));
+  if(p.CuTa) h+=rptR3('1.4·Ta (s)',f(p.CuTa,3),f(p.CuTa,3));
+  h+=rptR3('T tasarım (s)',f(p.T1xd,3),f(p.T1yd,3));
+  h+=rptR3('Sae(T) (g)',f(p.dx.Sae,4),f(p.dy.Sae,4));
+  h+=rptR3('Ra(T)',f(p.dx.Ra,3),f(p.dy.Ra,3));
+  h+=rptR3('<b>SaR(T) (g)</b>','<b style="color:#1a6b45;">'+f(p.dx.SaR,4)+'</b>','<b style="color:#1a6b45;">'+f(p.dy.SaR,4)+'</b>');
+  h+='</tbody></table></div>';
+  h+='<div><div class="rpt-sh">Taban Kesme — §4.8</div>';
+  h+='<table class="rpt-t"><thead><tr><th>Parametre</th><th>X Yönü</th><th>Y Yönü</th></tr></thead><tbody>';
+  h+=rptR3('Vt,raw (kN)',f(p.W*p.dx.SaR,1),f(p.W*p.dy.SaR,1));
+  h+=rptR3('Vt,min (kN)',f(p.VtxMin,1),f(p.VtyMin,1));
+  h+=rptR3('<b>Vt (kN)</b>','<b style="color:#1a6b45;">'+f(p.Vtx,1)+'</b>','<b style="color:#1a6b45;">'+f(p.Vty,1)+'</b>');
+  h+=rptR3('ΔFN (kN)',f(p.DFNx,1),f(p.DFNy,1));
+  h+='</tbody></table></div></div>';
+  h+='<div class="rpt-sec"><div class="rpt-sh">Taban Kesme Denklemi — §4.8.3</div>';
+  h+='<div class="rpt-eq"><span class="rpt-eq-lhs"><b>Vt = W &times; SaR(T1)</b></span><span class="rpt-eq-ref">TBDY 2018 §4.8.3</span></div>';
+  h+='<div class="rpt-vrow">';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">X Yönü</div>';
+  h+='<div class="rpt-vval">'+f(p.Vtx,1)+' kN</div>';
+  h+='<div class="rpt-veq">'+f(p.W,1)+' &times; '+f(p.dx.SaR,4)+' = '+f(p.Vtx,1)+'</div></div>';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">Y Yönü</div>';
+  h+='<div class="rpt-vval">'+f(p.Vty,1)+' kN</div>';
+  h+='<div class="rpt-veq">'+f(p.W,1)+' &times; '+f(p.dy.SaR,4)+' = '+f(p.Vty,1)+'</div></div>';
+  h+='</div></div>';
+  h+='<div class="rpt-sec" style="margin-top:5pt;"><div class="rpt-sh">Tasarım Yanıt Spektrumu — §2.2.3</div>';
+  h+='<img id="tbdy-rpt-img" class="rpt-img" src="" alt="TBDY Spektrum"></div>';
+  document.getElementById('rpt-body').innerHTML=h;
+  document.getElementById('rpt-date').textContent=new Date().toLocaleDateString('tr-TR',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function tbdyPrintReport() {
+  if (tbdy_rptP) tbdyBuildReport(tbdy_rptP);
+  var img=document.getElementById('tbdy-rpt-img');
+  if (img && tbdy_rptSp) {
+    var sp=tbdy_rptSp, oc=document.createElement('canvas');
+    tbdyDrawSpectrum(sp.SDS,sp.SD1,sp.TA,sp.TB,sp.TL,sp.T1x,sp.T1y,sp.SaRx,sp.SaRy,oc);
+    img.src=oc.toDataURL('image/png');
+  }
+  setTimeout(function(){window.print();},200);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// IS 1893:2016 — Indian Standard Seismic Design
+// ══════════════════════════════════════════════════════════════════════════════
+var is_rptP  = null;
+var is_rptSp = null;
+
+function isSag(T, soilType) {
+  if (soilType==='I') {   // Rock / Hard
+    if (T<=0.10) return 1+15*T;
+    if (T<=0.40) return 2.5;
+    if (T<=4.00) return 1.00/T;
+    return 0.25;
+  } else if (soilType==='II') { // Medium
+    if (T<=0.10) return 1+15*T;
+    if (T<=0.55) return 2.5;
+    if (T<=4.00) return 1.375/T;
+    return 0.344;
+  } else {                // III — Soft
+    if (T<=0.10) return 1+15*T;
+    if (T<=0.67) return 2.5;
+    if (T<=4.00) return 1.675/T;
+    return 0.419;
+  }
+}
+
+function isUpdateTa() {
+  var ftype=document.getElementById('is-ftype').value;
+  var h=parseFloat(document.getElementById('is-h').value)||0;
+  var dRow=document.getElementById('is-d-row');
+  dRow.style.display=(ftype==='other')?'':'none';
+  var Ta=0;
+  if (ftype==='rc')    Ta=h>0?0.075*Math.pow(h,0.75):0;
+  if (ftype==='steel') Ta=h>0?0.085*Math.pow(h,0.75):0;
+  if (ftype==='other') {
+    var d=parseFloat(document.getElementById('is-d').value)||0;
+    Ta=(h>0&&d>0)?0.09*h/Math.sqrt(d):0;
+  }
+  document.getElementById('is-Ta-disp').value=Ta>0?f(Ta,3)+' s':'—';
+}
+
+function isDrawSpectrum(soilType, Tx, Ty, fixedCanvas) {
+  is_rptSp={soilType:soilType,Tx:Tx,Ty:Ty};
+  var canvas=fixedCanvas||document.getElementById('is-canvas');
+  if (!canvas) return;
+  var cW,cH;
+  if (fixedCanvas) {
+    cW=630;cH=200;canvas.width=cW;canvas.height=cH;
+  } else {
+    var cont=canvas.parentElement;
+    cW=(cont&&cont.clientWidth>24)?cont.clientWidth-24:600;
+    cH=210;
+    canvas.width=cW*(window.devicePixelRatio||1);
+    canvas.height=cH*(window.devicePixelRatio||1);
+    canvas.style.width=cW+'px';canvas.style.height=cH+'px';
+  }
+  var ctx=canvas.getContext('2d');
+  if (!fixedCanvas) ctx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
+  var isDark=!fixedCanvas&&(document.documentElement.getAttribute('data-theme')==='dark'||
+    (!document.documentElement.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme:dark)').matches));
+  var bg=isDark?'#1c2a3a':'#f8fafb', gridC=isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+  var axC=isDark?'rgba(255,255,255,.25)':'rgba(0,0,0,.25)', lblC=isDark?'#8ca0b8':'#6b7280';
+  var ml=50,mr=12,mt=14,mb=38,pw=cW-ml-mr,ph=cH-mt-mb;
+  var Tmax=Math.max(Tx,Ty)*2; Tmax=Math.max(Tmax,2); Tmax=Math.min(Tmax,4);
+  Tmax=Math.max(Tmax,Tx*1.1,Ty*1.1);
+  var Samax=3.0;
+  function tx(T) {return ml+(T/Tmax)*pw;}
+  function ty(Sa){return mt+ph-Math.min(Math.max((Sa/Samax)*ph,0),ph);}
+  ctx.fillStyle=bg;ctx.fillRect(0,0,cW,cH);
+  ctx.lineWidth=1;ctx.strokeStyle=gridC;
+  for(var t=0;t<=Tmax+.001;t+=0.5){ctx.beginPath();ctx.moveTo(tx(t),mt);ctx.lineTo(tx(t),mt+ph);ctx.stroke();}
+  for(var sa=0;sa<=Samax;sa+=0.5){ctx.beginPath();ctx.moveTo(ml,ty(sa));ctx.lineTo(ml+pw,ty(sa));ctx.stroke();}
+  // All three soil curves — others as faint bg
+  ['I','II','III'].forEach(function(st){
+    if(st===soilType) return;
+    ctx.beginPath();ctx.strokeStyle=isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)';ctx.lineWidth=1;
+    for(var i=0;i<=300;i++){var T=i*Tmax/300;var cx2=tx(T),cy2=ty(isSag(T,st));if(i===0)ctx.moveTo(cx2,cy2);else ctx.lineTo(cx2,cy2);}
+    ctx.stroke();
+  });
+  // Selected soil — green, thick
+  ctx.beginPath();ctx.strokeStyle='#1a6b45';ctx.lineWidth=2.5;
+  for(var i=0;i<=400;i++){var T=i*Tmax/400;var cx2=tx(T),cy2=ty(isSag(T,soilType));if(i===0)ctx.moveTo(cx2,cy2);else ctx.lineTo(cx2,cy2);}
+  ctx.stroke();
+  function dpPt2(Td,color,lbl){
+    if(Td<=0||Td>Tmax) return;
+    ctx.setLineDash([6,3]);ctx.strokeStyle=color;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(tx(Td),mt);ctx.lineTo(tx(Td),mt+ph);ctx.stroke();
+    ctx.setLineDash([]);
+    var Sa=isSag(Td,soilType);
+    ctx.beginPath();ctx.arc(tx(Td),ty(Sa),4.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.fillStyle=color;ctx.font='bold 10px system-ui,sans-serif';
+    ctx.textAlign=tx(Td)+20>ml+pw?'right':'left';
+    ctx.fillText(lbl,tx(Td)+(ctx.textAlign==='left'?6:-6),ty(Sa)-7);
+  }
+  var sameTis=Math.abs(Tx-Ty)<0.001;
+  dpPt2(Tx,'#2563eb',sameTis?'Tx=Ty':'Tx');
+  if(!sameTis) dpPt2(Ty,'#d97706','Ty');
+  ctx.strokeStyle=axC;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+  ctx.fillStyle=lblC;ctx.font='10px system-ui,sans-serif';ctx.textAlign='center';
+  for(var t2=0;t2<=Tmax+.001;t2+=0.5) ctx.fillText(t2.toFixed(t2<1?2:1),tx(t2),mt+ph+13);
+  ctx.textAlign='right';
+  for(var sa2=0;sa2<=Samax;sa2+=0.5){var yy=ty(sa2);if(yy<mt-2)continue;ctx.fillText(sa2.toFixed(1),ml-5,yy+3);}
+  ctx.font='10px system-ui,sans-serif';ctx.fillStyle=lblC;ctx.textAlign='center';
+  ctx.fillText('T (s)',ml+pw/2,cH-4);
+  ctx.save();ctx.translate(11,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Sa/g',0,0);ctx.restore();
+}
+
+function isCalc() {
+  var Z    = parseFloat(document.getElementById('is-zone').value)||0.16;
+  var soil = document.getElementById('is-soil').value;
+  var I    = parseFloat(document.getElementById('is-I').value)||1.0;
+  var R    = parseFloat(document.getElementById('is-R').value)||5.0;
+  var W    = parseFloat(document.getElementById('is-W').value)||0;
+  var Tx   = parseFloat(document.getElementById('is-Tx').value)||0;
+  var Ty   = parseFloat(document.getElementById('is-Ty').value)||0;
+  if (W<=0||Tx<=0||Ty<=0) return;
+
+  var SaGx=isSag(Tx,soil), SaGy=isSag(Ty,soil);
+  var Ahx=(Z/2)*(I/R)*SaGx, Ahy=(Z/2)*(I/R)*SaGy;
+  var VBx=Ahx*W, VBy=Ahy*W;
+  var VBmin=0.01*W;
+  var VBxFin=Math.max(VBx,VBmin), VByFin=Math.max(VBy,VBmin);
+
+  isDrawSpectrum(soil,Tx,Ty);
+
+  // Parameters table
+  var pH='';
+  pH+=row3('Z (Zone Factor)',f(Z,2),f(Z,2));
+  pH+=row3('I (Importance)',f(I,2),f(I,2));
+  pH+=row3('R (Response Reduction)',f(R,2),f(R,2));
+  pH+=row3('Z/(2·R/I) = Z·I/(2R)',f(Z*I/(2*R),5),f(Z*I/(2*R),5));
+  pH+=row3('T (s)',f(Tx,3),f(Ty,3));
+  pH+=row3('Sa/g (Cl. 6.4.5)',f(SaGx,4),f(SaGy,4));
+  pH+=row3('<b>A<sub>h</sub> = (Z/2)·(I/R)·(Sa/g)</b>',
+    '<b class="vok">'+f(Ahx,5)+'</b>','<b class="vok">'+f(Ahy,5)+'</b>');
+  document.getElementById('is-res-params').innerHTML=pH;
+
+  // VB table
+  var vH='';
+  vH+=row3('A<sub>h</sub>',f(Ahx,5),f(Ahy,5));
+  vH+=row3('W (kN)',f(W,1),f(W,1));
+  vH+=row3('V<sub>B,raw</sub> = A<sub>h</sub>·W (kN)',f(VBx,1),f(VBy,1));
+  vH+=row3('V<sub>B,min</sub> = 0.01·W (kN)',f(VBmin,1),f(VBmin,1));
+  var govXi=VBx>=VBmin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
+  var govYi=VBy>=VBmin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
+  vH+=row3('<b>V<sub>B</sub> (kN)</b>',
+    '<b class="vok vbig">'+f(VBxFin,1)+'</b>'+govXi,'<b class="vok vbig">'+f(VByFin,1)+'</b>'+govYi);
+  vH+=row3('V<sub>B</sub> / W',f(VBxFin/W*100,2)+' %',f(VByFin/W*100,2)+' %');
+  document.getElementById('is-res-vb').innerHTML=vH;
+
+  // Reference summary
+  var zoneEl=document.getElementById('is-zone');
+  var soilEl=document.getElementById('is-soil');
+  var rH='';
+  rH+=row2('Standard','IS 1893 (Part 1): 2016');
+  rH+=row2('Method','Equivalent Static Method — Cl. 6.4');
+  rH+=row2('Zone / Z',zoneEl.options[zoneEl.selectedIndex].text.split('—')[0].trim()+' / '+f(Z,2));
+  rH+=row2('Soil Type',soilEl.options[soilEl.selectedIndex].text);
+  rH+=row2('I / R',f(I,2)+' / '+f(R,2));
+  rH+=row2('T<sub>x</sub> / T<sub>y</sub> (s)',f(Tx,3)+' / '+f(Ty,3));
+  rH+=row2('Sa/g<sub>x</sub> / Sa/g<sub>y</sub>',f(SaGx,4)+' / '+f(SaGy,4));
+  rH+=row2('<b>A<sub>hx</sub> / A<sub>hy</sub></b>','<b>'+f(Ahx,5)+' / '+f(Ahy,5)+'</b>');
+  rH+=row2('<b>V<sub>Bx</sub> / V<sub>By</sub> (kN)</b>','<b class="vok">'+f(VBxFin,1)+' / '+f(VByFin,1)+'</b>');
+  document.getElementById('is-res-ref').innerHTML=rH;
+
+  is_rptP={Z:Z,soil:soil,I:I,R:R,W:W,Tx:Tx,Ty:Ty,SaGx:SaGx,SaGy:SaGy,
+    Ahx:Ahx,Ahy:Ahy,VBx:VBx,VBy:VBy,VBmin:VBmin,VBxFin:VBxFin,VByFin:VByFin};
+}
+
+function isBuildReport(p) {
+  var sub=document.getElementById('rpt-subtitle'),ftl=document.getElementById('rpt-ft-left');
+  if(sub) sub.textContent='IS 1893 (Part 1): 2016 — Equivalent Static Method';
+  if(ftl) ftl.textContent='civilstrcalc.com — IS 1893:2016 Base Shear Calculator';
+  var h='';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:5pt;">';
+  h+='<div><div class="rpt-sh">Seismic Parameters — Cl. 6.4</div><div class="rpt-g4">';
+  h+=rptKV('Z',f(p.Z,2));h+=rptKV('I',f(p.I,2));
+  h+=rptKV('R',f(p.R,2));h+=rptKV('Z·I/(2R)',f(p.Z*p.I/(2*p.R),5));
+  h+=rptKV('Soil','Type '+p.soil);h+=rptKV('W (kN)',f(p.W,1));
+  h+=rptKV('Tx (s)',f(p.Tx,3));h+=rptKV('Ty (s)',f(p.Ty,3));
+  h+='</div></div>';
+  h+='<div><div class="rpt-sh">Spectral Acceleration — Cl. 6.4.5</div><div class="rpt-g4">';
+  h+=rptKV('Sa/g (X)',f(p.SaGx,4));h+=rptKV('Sa/g (Y)',f(p.SaGy,4));
+  h+=rptKV('Ah (X)',f(p.Ahx,5));h+=rptKV('Ah (Y)',f(p.Ahy,5));
+  h+=rptKV('VB,min (kN)',f(p.VBmin,1));h+=rptKV('—','—');
+  h+=rptKV('VBx (kN)',f(p.VBxFin,1));h+=rptKV('VBy (kN)',f(p.VByFin,1));
+  h+='</div></div></div>';
+  h+='<div class="rpt-sec"><div class="rpt-sh">Base Shear — IS 1893 Cl. 6.4.2</div>';
+  h+='<div class="rpt-eq"><span class="rpt-eq-lhs"><b>V<sub>B</sub> = A<sub>h</sub> &times; W &nbsp; where &nbsp; A<sub>h</sub> = (Z/2)&middot;(I/R)&middot;(Sa/g)</b></span><span class="rpt-eq-ref">IS 1893 (Part 1):2016 Cl. 6.4.2</span></div>';
+  h+='<div class="rpt-vrow">';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">X Direction</div>';
+  h+='<div class="rpt-vval">'+f(p.VBxFin,1)+' kN</div>';
+  h+='<div class="rpt-veq">'+f(p.Ahx,5)+' &times; '+f(p.W,1)+' = '+f(p.VBxFin,1)+'</div></div>';
+  h+='<div class="rpt-vbox"><div class="rpt-vdir">Y Direction</div>';
+  h+='<div class="rpt-vval">'+f(p.VByFin,1)+' kN</div>';
+  h+='<div class="rpt-veq">'+f(p.Ahy,5)+' &times; '+f(p.W,1)+' = '+f(p.VByFin,1)+'</div></div>';
+  h+='</div></div>';
+  h+='<div class="rpt-sec" style="margin-top:5pt;"><div class="rpt-sh">Design Response Spectrum — Cl. 6.4.5</div>';
+  h+='<img id="is-rpt-img" class="rpt-img" src="" alt="IS 1893 Spectrum"></div>';
+  document.getElementById('rpt-body').innerHTML=h;
+  document.getElementById('rpt-date').textContent=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function isPrintReport() {
+  if(is_rptP) isBuildReport(is_rptP);
+  var img=document.getElementById('is-rpt-img');
+  if(img&&is_rptSp){
+    var sp=is_rptSp,oc=document.createElement('canvas');
+    isDrawSpectrum(sp.soilType,sp.Tx,sp.Ty,oc);
+    img.src=oc.toDataURL('image/png');
+  }
+  setTimeout(function(){window.print();},200);
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function init(){
   updateGM();
@@ -1776,6 +2619,11 @@ function ec8PrintReport() {
   ec8UpdateGM();
   ec8UpdateTa();
   ec8Calc();
+  tbdyUpdateGM();
+  tbdyUpdateTa();
+  tbdyCalc();
+  isUpdateTa();
+  isCalc();
 })();
 </script>
 <script src="../shell.js" defer></script>
