@@ -878,10 +878,11 @@ function cpRoofWW_gable(theta, hL) {
   return [Cn, Cp];
 }
 
-// Leeward roof Cp for gable (function of theta only)
+// Leeward roof Cp for gable (function of theta only) — interpolated per Fig. 27.3-1
 function cpRoofLW_gable(theta) {
   if (theta <= 10) return -0.3;
-  if (theta <= 15) return -0.5;
+  if (theta <= 15) return -0.3 + (-0.5 - (-0.3)) * (theta - 10) / 5;
+  if (theta <= 20) return -0.5 + (-0.6 - (-0.5)) * (theta - 15) / 5;
   return -0.6;
 }
 
@@ -1074,8 +1075,9 @@ function calcCh28(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var qh = isUS ? calcQh_US(Kh,Kzt,Ke,V_mph) : calcQh_SI(Kh,Kzt,Ke,V_raw*(isUS?1:1));
   if (!isUS) qh = calcQh_SI(Kh,Kzt,Ke,V_raw);
   else qh = calcQh_US(Kh,Kzt,Ke,V_mph);
-  var a_ft = Math.min(0.1*B_ft, 0.4*h_ft);
-  a_ft = Math.max(a_ft, Math.max(0.04*B_ft, 3));
+  var dim_min = Math.min(B_ft, L_ft); // least horizontal dimension (§26.3)
+  var a_ft = Math.min(0.1*dim_min, 0.4*h_ft);
+  a_ft = Math.max(a_ft, Math.max(0.04*dim_min, 3));
   var a = isUS ? a_ft : a_ft*0.3048;
   var rIdx = roofTypeIdx(document.getElementById('sel-rooftype').value, theta);
   var roofT = document.getElementById('sel-rooftype').value;
@@ -1088,8 +1090,10 @@ function calcCh28(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
       var pPos=qh*(gcpf+GCpi), pNeg=qh*(gcpf-GCpi);
       var isRoof=(z==='4'||z==='4E'||z==='5'||z==='5E');
       var minP=isUS?(isRoof?8:16):(isRoof?0.383:0.766);
-      var pPosM=Math.max(pPos,minP);
-      res[z]={gcpf:gcpf, pPos:pPosM, pNeg:pNeg, isMinApplied:pPosM>pPos+0.01};
+      var pPosM=(pPos>=0)?Math.max(pPos,minP):Math.min(pPos,-minP);
+      var pNegM=(pNeg<=0)?Math.min(pNeg,-minP):Math.max(pNeg,minP);
+      res[z]={gcpf:gcpf, pPos:pPosM, pNeg:pNegM,
+              isMinApplied:(Math.abs(pPosM)>Math.abs(pPos)+0.01)||(Math.abs(pNegM)>Math.abs(pNeg)+0.01)};
     });
     return res;
   }
@@ -1116,7 +1120,7 @@ function calcCh28(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
     ['K<sub>h</sub>','Exp. '+expo+', h='+f(h_ft,1)+' ft → Table 26.10-1',f(Kh,3)],
     ['q<sub>h</sub>',eq+'·Kd·Kh·Kzt·Ke·V²',f(qh,2)+' '+u],
     ['GC<sub>pi</sub>','Internal pressure coeff. (§26.13)','±'+f(GCpi,2)],
-    ['a','min(0.1B,0.4h) ≥ max(0.04B,3 ft)',f(a,2)+' '+hu]
+    ['a','min(0.1·min(B,L), 0.4h) ≥ max(0.04·min(B,L), 3 ft)',f(a,2)+' '+hu]
   ];
   document.getElementById('c28-steps').innerHTML=rows.map(function(r){return '<div class="step-row"><div class="step-sym">'+r[0]+'</div><div class="step-eq">'+r[1]+'</div><div class="step-val">'+r[2]+'</div></div>';}).join('');
 
@@ -1164,15 +1168,18 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
     G=gfRes.Gf; Gf_detail=gfRes;
   }
 
-  // Cp values
-  var LB=L_ft>0?L_ft/B_ft:1;
+  // Cp values — wind ⊥ ridge (matches LC1 of Ch.28; typically governs)
+  // ASCE L/B: L = B_module (parallel to wind), B = L_module (perp. to wind)
+  var LB=B_ft>0?B_ft/L_ft:1;
   var Cp_ww=0.8, Cp_lw=cpLW(LB), Cp_sw=-0.7;
-  var hL=L_ft>0?h_ft/L_ft:0.5;
+  // h/L for windward roof: L = horizontal distance from WW eave to ridge
+  var hL_flat=B_ft>0?h_ft/B_ft:0.5;       // flat: L = wind-parallel dim = B_module
+  var hL_gable=B_ft>0?h_ft/(B_ft/2):0.5; // gable/hip: L = half-width to ridge
   var Cp_roof_ww, Cp_roof_ww_pos=null, Cp_roof_lw;
   if (theta<=5) {
-    Cp_roof_ww=cpRoofFlat_WW(hL); Cp_roof_lw=cpRoofFlat_LW(hL);
+    Cp_roof_ww=cpRoofFlat_WW(hL_flat); Cp_roof_lw=cpRoofFlat_LW(hL_flat);
   } else {
-    var rwArr=cpRoofWW_gable(theta,hL);
+    var rwArr=cpRoofWW_gable(theta,hL_gable);
     Cp_roof_ww=rwArr[0]; Cp_roof_ww_pos=rwArr[1];
     Cp_roof_lw=cpRoofLW_gable(theta);
   }
@@ -1183,7 +1190,7 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var profile=heights.map(function(z_ft) {
     var Kz_z=calcKz(z_ft,expo);
     var qz=isUS?calcQh_US(Kz_z,Kzt,Ke,V_mph):calcQh_SI(Kz_z,Kzt,Ke,V_raw);
-    var pww=qz*G*Cp_ww - qh*GCpi; // positive net (inward)
+    var pww=qz*G*Cp_ww + qh*GCpi; // governing inward (§27.3.1: internal suction adds)
     return {z:isUS?z_ft:z_ft*0.3048, Kz:Kz_z, qz:qz, pww:Math.max(pww,isUS?16:0.766)};
   });
 
@@ -1205,6 +1212,7 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   }
 
   var surfs=[
+    {name:'Windward wall (at h)', Cp:Cp_ww, isRoof:false},
     {name:'Leeward wall', Cp:Cp_lw, isRoof:false},
     {name:'Side wall', Cp:Cp_sw, isRoof:false},
     {name:'Windward roof', Cp:Cp_roof_ww, isRoof:true},
@@ -1214,7 +1222,7 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
 
   var u=isUS?'psf':'kPa', hu=isUS?'ft':'m';
   _rptData={proc:'ch27',qh:qh,G:G,profile:profile,surfs:surfs,Cp_ww:Cp_ww,Cp_lw:Cp_lw,GCpi:GCpi,
-    h_raw:h_raw,B_raw:B_raw,L_raw:L_raw,V_raw:V_raw,theta:theta,expo:expo,Kzt:Kzt,Ke:Ke,LB:LB,hL:hL,Gf_detail:Gf_detail};
+    h_raw:h_raw,B_raw:B_raw,L_raw:L_raw,V_raw:V_raw,theta:theta,expo:expo,Kzt:Kzt,Ke:Ke,LB:LB,hL:hL_flat,Gf_detail:Gf_detail};
 
   document.getElementById('c27-qh').textContent=f(qh,2);
   document.getElementById('c27-qh-u').textContent=u;
@@ -1237,7 +1245,7 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
     ['K<sub>h</sub>','Exp. '+expo+', h='+f(h_ft,1)+' ft → Table 26.10-1',f(Kh,3)],
     ['q<sub>h</sub>',eq+'·Kd·Kh·Kzt·Ke·V²',f(qh,2)+' '+u],
     ['G'+(isRigid?'':' → G<sub>f</sub>'),'Gust factor (§26.11'+(isRigid?'.4':'.5')+')',f(G,3)],
-    ['L/B','Ratio (leeward Cp interp.)',f(LB,2)],
+    ['L/B','Wind ⊥ ridge: B<sub>plan</sub>/L<sub>plan</sub> (Fig. 27.3-1)',f(LB,2)],
     ['C<sub>p,lw</sub>','Leeward wall, Fig. 27.3-1',fSign(Cp_lw,2)],
     ['GC<sub>pi</sub>','Internal pressure (§26.13)','±'+f(GCpi,2)]
   ];
