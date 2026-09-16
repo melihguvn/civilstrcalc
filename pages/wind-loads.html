@@ -206,11 +206,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <!-- Roof type (Ch.28 + Ch.30) -->
     <div id="inp-rooftype" class="inp-row" style="margin-bottom:8px;">
       <label>Roof Type</label>
-      <div class="radio-group">
-        <label class="radio-row"><input type="radio" name="rooftype" value="flat" onchange="calc();"><span>Flat / Low-slope<small>θ ≤ 5° or specified flat</small></span></label>
-        <label class="radio-row"><input type="radio" name="rooftype" value="gable" checked onchange="calc();"><span>Gable roof<small>Symmetric, ridge at center</small></span></label>
-        <label class="radio-row"><input type="radio" name="rooftype" value="hip" onchange="calc();"><span>Hip roof<small>All four slopes</small></span></label>
-      </div>
+      <select id="sel-rooftype" onchange="calc();">
+        <option value="flat">Flat / Low-slope (θ ≤ 5°)</option>
+        <option value="gable" selected>Gable roof</option>
+        <option value="hip">Hip roof</option>
+      </select>
     </div>
 
     <div class="inp-warn" id="warn-h60">⚠ h > 60 ft — Ch. 28 / Ch. 30 not applicable; switch to Ch. 27.</div>
@@ -242,10 +242,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <!-- Exposure (shared) -->
   <div class="section-card">
     <div class="sc-hdr">3. Exposure Category — §26.7</div>
-    <div class="radio-group">
-      <label class="radio-row"><input type="radio" name="expo" value="B" onchange="calc();"><span>B — Urban/suburban, wooded<small>z₀ ≈ 0.30 m</small></span></label>
-      <label class="radio-row"><input type="radio" name="expo" value="C" checked onchange="calc();"><span>C — Open terrain, scattered obstructions ← default<small>z₀ ≈ 0.10 m</small></span></label>
-      <label class="radio-row"><input type="radio" name="expo" value="D" onchange="calc();"><span>D — Flat, open water, mudflats<small>z₀ ≈ 0.01 m</small></span></label>
+    <div class="inp-row">
+      <label>Exposure Category</label>
+      <select id="sel-expo" onchange="calc();">
+        <option value="B">B — Urban/suburban, wooded (z₀ ≈ 0.30 m)</option>
+        <option value="C" selected>C — Open terrain, scattered obstructions</option>
+        <option value="D">D — Flat, open water / mudflats (z₀ ≈ 0.01 m)</option>
+      </select>
     </div>
   </div>
 
@@ -274,19 +277,25 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <!-- Enclosure (shared) -->
   <div class="section-card">
     <div class="sc-hdr">5. Enclosure Classification — §26.12</div>
-    <div class="radio-group">
-      <label class="radio-row"><input type="radio" name="encl" value="enclosed" checked onchange="calc();"><span>Enclosed<small>GC<sub>pi</sub> = ±0.18</small></span></label>
-      <label class="radio-row"><input type="radio" name="encl" value="partial" onchange="calc();"><span>Partially enclosed<small>GC<sub>pi</sub> = ±0.55</small></span></label>
-      <label class="radio-row"><input type="radio" name="encl" value="open" onchange="calc();"><span>Partially open / open<small>GC<sub>pi</sub> = 0.0</small></span></label>
+    <div class="inp-row">
+      <label>Enclosure Classification</label>
+      <select id="sel-encl" onchange="calc();">
+        <option value="enclosed" selected>Enclosed (GCpi = ±0.18)</option>
+        <option value="partial">Partially enclosed (GCpi = ±0.55)</option>
+        <option value="open">Open / Partially open (GCpi = 0.0)</option>
+      </select>
     </div>
   </div>
 
   <!-- Ch.27 extras -->
   <div id="inp-ch27" class="section-card" hidden>
     <div class="sc-hdr">6. Building Flexibility — §26.11</div>
-    <div class="radio-group" style="margin-bottom:8px;">
-      <label class="radio-row"><input type="radio" name="flex" value="rigid" checked onchange="toggleFlex();calc();"><span>Rigid building<small>n₁ ≥ 1 Hz · G = 0.85 (fixed)</small></span></label>
-      <label class="radio-row"><input type="radio" name="flex" value="flexible" onchange="toggleFlex();calc();"><span>Flexible building<small>n₁ &lt; 1 Hz · G<sub>f</sub> computed §26.11.5</small></span></label>
+    <div class="inp-row" style="margin-bottom:8px;">
+      <label>Building Type</label>
+      <select id="sel-flex" onchange="toggleFlex();calc();">
+        <option value="rigid" selected>Rigid (n1 &ge; 1 Hz, G = 0.85 fixed)</option>
+        <option value="flexible">Flexible (n1 &lt; 1 Hz, Gf computed §26.11.5)</option>
+      </select>
     </div>
     <div id="inp-flex-params" hidden>
       <div class="calc-grid">
@@ -617,7 +626,7 @@ function calcQh_US(Kz, Kzt, Ke, V_mph) { return 0.00256 * Kd * Kz * Kzt * Ke * V
 function calcQh_SI(Kz, Kzt, Ke, V_ms)  { return 0.000613 * Kd * Kz * Kzt * Ke * V_ms * V_ms; }
 
 function gcpiVal() {
-  var enc = document.querySelector('input[name=encl]:checked').value;
+  var enc = document.getElementById('sel-encl').value;
   return enc==='enclosed' ? 0.18 : enc==='partial' ? 0.55 : 0.0;
 }
 
@@ -669,7 +678,7 @@ function selectProc(p) {
 }
 
 function toggleFlex() {
-  var isFlex = document.querySelector('input[name=flex]:checked').value === 'flexible';
+  var isFlex = document.getElementById('sel-flex').value === 'flexible';
   document.getElementById('inp-flex-params').hidden = !isFlex;
 }
 
@@ -716,9 +725,9 @@ function calc() {
   var V_raw  = parseFloat(document.getElementById('inp-V').value)||0;
   var Kzt    = parseFloat(document.getElementById('inp-Kzt').value)||1.0;
   var Ke     = parseFloat(document.getElementById('inp-Ke').value)||1.0;
-  var expo   = document.querySelector('input[name=expo]:checked').value;
+  var expo   = document.getElementById('sel-expo').value;
   var GCpi   = gcpiVal();
-  var encl   = document.querySelector('input[name=encl]:checked').value;
+  var encl   = document.getElementById('sel-encl').value;
 
   // Convert to US-ft/mph internally
   var h_ft  = isUS ? h_raw  : h_raw  * 3.28084;
@@ -754,8 +763,8 @@ function calcCh28(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var a_ft = Math.min(0.1*B_ft, 0.4*h_ft);
   a_ft = Math.max(a_ft, Math.max(0.04*B_ft, 3));
   var a = isUS ? a_ft : a_ft*0.3048;
-  var rIdx = roofTypeIdx(document.querySelector('input[name=rooftype]:checked').value, theta);
-  var roofT = document.querySelector('input[name=rooftype]:checked').value;
+  var rIdx = roofTypeIdx(document.getElementById('sel-rooftype').value, theta);
+  var roofT = document.getElementById('sel-rooftype').value;
 
   function zonePressures(gcpfTable) {
     var zones=['1','1E','2','2E','3','3E','4','4E','5','5E'];
@@ -832,8 +841,7 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var qh=isUS?calcQh_US(Kh,Kzt,Ke,V_mph):calcQh_SI(Kh,Kzt,Ke,V_raw);
 
   // Gust factor
-  var isFlexEl=document.querySelector('input[name=flex]:checked');
-  var isRigid=(isFlexEl?isFlexEl.value:'')==='flexible'?false:true;
+  var isRigid = document.getElementById('sel-flex').value !== 'flexible';
   var G=0.85, Gf_detail=null;
   if (!isRigid) {
     var n1=parseFloat(document.getElementById('inp-n1').value)||0.5;
