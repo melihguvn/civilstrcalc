@@ -236,24 +236,27 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
 
       <!-- ── AUTO panel ── -->
-      <div id="vpanel-auto" style="grid-column:1/-1;display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(70px,1fr) minmax(70px,1fr) auto;gap:6px 8px;align-items:end;">
-        <div>
+      <div id="vpanel-auto" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:flex-end;">
+        <div style="flex:2;min-width:80px;">
           <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">ZIP Code (US)</div>
           <input type="text" id="inp-zip" placeholder="e.g. 10001" maxlength="5"
-            style="width:100%;box-sizing:border-box;" oninput="clearASCECache();">
+            style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;font-family:inherit;background:var(--white);color:var(--text);"
+            oninput="clearASCECache();">
         </div>
-        <div style="font-size:.72rem;color:var(--text-dim);padding-bottom:8px;text-align:center;">or</div>
-        <div>
+        <div style="padding-bottom:9px;font-size:.72rem;color:var(--text-dim);flex-shrink:0;">or</div>
+        <div style="flex:1;min-width:65px;">
           <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">Latitude</div>
-          <input type="number" id="inp-lat" placeholder="38.90" step="0.001"
-            style="width:100%;box-sizing:border-box;" oninput="clearASCECache();">
+          <input type="number" id="inp-lat" placeholder="38.9" step="0.001"
+            style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;font-family:inherit;background:var(--white);color:var(--text);"
+            oninput="clearASCECache();">
         </div>
-        <div>
+        <div style="flex:1;min-width:65px;">
           <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">Longitude</div>
-          <input type="number" id="inp-lng" placeholder="-77.03" step="0.001"
-            style="width:100%;box-sizing:border-box;" oninput="clearASCECache();">
+          <input type="number" id="inp-lng" placeholder="-77." step="0.001"
+            style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;font-family:inherit;background:var(--white);color:var(--text);"
+            oninput="clearASCECache();">
         </div>
-        <div style="display:flex;gap:5px;">
+        <div style="display:flex;gap:5px;flex-shrink:0;">
           <button id="btn-fetch-wind" onclick="fetchASCEWind()"
             style="padding:0 13px;height:34px;font-size:.78rem;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">
             Get Wind Speed</button>
@@ -261,7 +264,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             style="padding:0 10px;height:34px;font-size:1rem;background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:5px;cursor:pointer;">
             ◎</button>
         </div>
-        <div id="vasce-status" style="grid-column:1/-1;font-size:.72rem;color:var(--text-dim);min-height:15px;margin-top:2px;"></div>
+        <div id="vasce-status" style="width:100%;font-size:.72rem;color:var(--text-dim);min-height:15px;margin-top:2px;"></div>
       </div>
 
       <!-- ── V input (always visible) ── -->
@@ -742,8 +745,7 @@ async function fetchASCEWind() {
     if (st) st.textContent = 'Looking up ZIP code…';
     try {
       var gr = await fetch('https://nominatim.openstreetmap.org/search?postalcode=' + zip +
-                           '&countrycode=US&format=json&limit=1',
-                           {headers:{'Accept':'application/json','User-Agent':'civilstrcalc.com'}});
+                           '&countrycode=US&format=json&limit=1');
       var gd = await gr.json();
       if (!gd.length) { if (st) st.textContent = '✕  ZIP code not found.'; return; }
       lat = parseFloat(gd[0].lat); lng = parseFloat(gd[0].lon);
@@ -761,17 +763,21 @@ async function fetchASCEWind() {
   if (st) st.textContent = 'Fetching ASCE 7-22 wind speeds…';
   if (btn) btn.disabled = true;
   var directUrl = 'https://asce7hazardtool.online/api/data?lat=' + lat + '&lng=' + lng;
-  var proxyUrl  = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+  var proxies = [
+    directUrl,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl),
+    'https://corsproxy.io/?' + encodeURIComponent(directUrl)
+  ];
   var data = null;
-  for (var attempt = 0; attempt < 2; attempt++) {
+  for (var attempt = 0; attempt < proxies.length; attempt++) {
     try {
-      var res = await fetch(attempt === 0 ? directUrl : proxyUrl,
-                            {signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+      var res = await fetch(proxies[attempt],
+                            {signal: AbortSignal.timeout ? AbortSignal.timeout(9000) : undefined});
+      if (!res.ok) continue;
       var json = await res.json();
       if (json.windSpeeds) { data = json.windSpeeds; break; }
-      /* proxy wraps response in {contents} */
-      if (json.contents) { var inner = JSON.parse(json.contents); if (inner.windSpeeds) { data = inner.windSpeeds; break; } }
-    } catch(e) { /* try next */ }
+      if (json.contents) { try { var inner = JSON.parse(json.contents); if (inner.windSpeeds) { data = inner.windSpeeds; break; } } catch(pe){} }
+    } catch(e) { /* try next proxy */ }
   }
   if (btn) btn.disabled = false;
   if (data) {
