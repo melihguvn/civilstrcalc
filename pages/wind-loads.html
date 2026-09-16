@@ -221,21 +221,70 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="section-card">
     <div class="sc-hdr">2. Wind Speed &amp; Risk Category — §26.5</div>
     <div class="calc-grid">
+
+      <!-- ── source toggle ── -->
+      <div class="inp-row" style="grid-column:1/-1;flex-direction:column;align-items:flex-start;gap:6px;">
+        <label>Wind Speed Source</label>
+        <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+          <button id="vsrc-btn-auto"   onclick="setVSrc('auto')"
+            style="padding:5px 14px;font-size:.78rem;background:var(--accent);color:#fff;border:none;cursor:pointer;transition:background .15s;">
+            ⊙ Auto — ASCE 7-22 Map (US)</button>
+          <button id="vsrc-btn-manual" onclick="setVSrc('manual')"
+            style="padding:5px 14px;font-size:.78rem;background:var(--bg-card);color:var(--text);border:none;cursor:pointer;border-left:1px solid var(--border);transition:background .15s;">
+            ✎ Manual entry</button>
+        </div>
+      </div>
+
+      <!-- ── AUTO panel ── -->
+      <div id="vpanel-auto" style="grid-column:1/-1;">
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:110px;">
+            <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">ZIP Code (US)</div>
+            <input type="text" id="inp-zip" placeholder="e.g. 10001" maxlength="5"
+              style="width:100%;" oninput="clearASCECache();">
+          </div>
+          <div style="color:var(--text-dim);font-size:.75rem;padding-bottom:8px;flex-shrink:0;">or</div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">Latitude</div>
+            <input type="number" id="inp-lat" placeholder="38.90" step="0.001"
+              style="width:100%;" oninput="clearASCECache();">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:3px;">Longitude</div>
+            <input type="number" id="inp-lng" placeholder="-77.03" step="0.001"
+              style="width:100%;" oninput="clearASCECache();">
+          </div>
+          <div style="display:flex;gap:5px;padding-bottom:1px;">
+            <button id="btn-fetch-wind" onclick="fetchASCEWind()"
+              style="padding:6px 14px;font-size:.78rem;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;">
+              Fetch V</button>
+            <button onclick="geolocateWind()" title="Use my location"
+              style="padding:6px 10px;font-size:.9rem;background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:5px;cursor:pointer;">
+              ◎</button>
+          </div>
+        </div>
+        <div id="vasce-status" style="margin-top:6px;font-size:.72rem;color:var(--text-dim);min-height:15px;"></div>
+      </div>
+
+      <!-- ── V input (always visible) ── -->
       <div class="inp-row">
         <label id="lbl-V">V — Basic wind speed (mph)</label>
         <input type="number" id="inp-V" value="115" min="50" max="250" step="5" oninput="calc();">
-        <div class="inp-hint">From ASCE 7-22 wind maps §26.5</div>
+        <div class="inp-hint" id="v-hint">From ASCE 7-22 wind maps §26.5</div>
       </div>
+
+      <!-- ── Risk Category ── -->
       <div class="inp-row">
         <label>Risk Category</label>
-        <select id="inp-RC" onchange="calc();">
+        <select id="inp-RC" onchange="onRCChange();">
           <option value="I">I — Low hazard</option>
           <option value="II" selected>II — Standard occupancy</option>
           <option value="III">III — Substantial hazard</option>
           <option value="IV">IV — Essential facility</option>
         </select>
-        <div class="inp-hint">Use appropriate wind map</div>
+        <div class="inp-hint">Use appropriate wind map for Risk Category</div>
       </div>
+
     </div>
   </div>
 
@@ -642,6 +691,105 @@ var activeLC = 1;
 var currentProc = 'ch28';
 var _rptData = null;
 var Kd = 0.85;
+
+// ─── Wind speed source (Auto / Manual) ────────────────────
+var _vSrc = 'auto';           // 'auto' | 'manual'
+var _asceWindCache = null;    // { riskCat1, riskCat2, riskCat3, riskCat4 } in mph
+
+function setVSrc(src) {
+  _vSrc = src;
+  var auto = document.getElementById('vpanel-auto');
+  var btnA = document.getElementById('vsrc-btn-auto');
+  var btnM = document.getElementById('vsrc-btn-manual');
+  if (auto)  auto.hidden  = (src !== 'auto');
+  if (btnA) { btnA.style.background  = src==='auto'   ? 'var(--accent)' : 'var(--bg-card)';
+              btnA.style.color        = src==='auto'   ? '#fff'           : 'var(--text)'; }
+  if (btnM) { btnM.style.background  = src==='manual' ? 'var(--accent)' : 'var(--bg-card)';
+              btnM.style.color        = src==='manual' ? '#fff'           : 'var(--text)'; }
+}
+
+function clearASCECache() {
+  _asceWindCache = null;
+  var st = document.getElementById('vasce-status');
+  if (st) st.textContent = '';
+}
+
+function onRCChange() {
+  if (_vSrc === 'auto' && _asceWindCache) applyASCEWind(_asceWindCache);
+  calc();
+}
+
+function applyASCEWind(data) {
+  var rc  = (document.getElementById('inp-RC')||{}).value || 'II';
+  var map = {I:'riskCat1', II:'riskCat2', III:'riskCat3', IV:'riskCat4'};
+  var V   = data[map[rc] || 'riskCat2'];
+  if (!V) return;
+  var Vr  = Math.round(V);
+  document.getElementById('inp-V').value = Vr;
+  var fig = {I:'26.5-1A', II:'26.5-1B', III:'26.5-1C', IV:'26.5-1D'}[rc] || '26.5-1B';
+  var st  = document.getElementById('vasce-status');
+  if (st) st.textContent = '✓  V = ' + Vr + ' mph · Risk Cat. ' + rc + ' · ASCE 7-22 Fig. ' + fig;
+  var hint = document.getElementById('v-hint');
+  if (hint) hint.textContent = 'Auto-fetched — ASCE 7-22 Fig. ' + fig;
+  calc();
+}
+
+async function fetchASCEWind() {
+  var st  = document.getElementById('vasce-status');
+  var btn = document.getElementById('btn-fetch-wind');
+  var lat, lng;
+
+  var zip = ((document.getElementById('inp-zip')||{}).value||'').trim();
+  if (/^\d{5}$/.test(zip)) {
+    if (st) st.textContent = 'Looking up ZIP code…';
+    try {
+      var gr = await fetch('https://nominatim.openstreetmap.org/search?postalcode=' + zip +
+                           '&countrycode=US&format=json&limit=1',
+                           {headers:{'Accept':'application/json','User-Agent':'civilstrcalc.com'}});
+      var gd = await gr.json();
+      if (!gd.length) { if (st) st.textContent = '✕  ZIP code not found.'; return; }
+      lat = parseFloat(gd[0].lat); lng = parseFloat(gd[0].lon);
+      document.getElementById('inp-lat').value = lat.toFixed(4);
+      document.getElementById('inp-lng').value = lng.toFixed(4);
+    } catch(e) { if (st) st.textContent = '✕  Geocoding error: ' + e.message; return; }
+  } else {
+    lat = parseFloat((document.getElementById('inp-lat')||{}).value);
+    lng = parseFloat((document.getElementById('inp-lng')||{}).value);
+    if (isNaN(lat) || isNaN(lng)) {
+      if (st) st.textContent = '✕  Enter a US ZIP code or lat/lng coordinates.'; return;
+    }
+  }
+
+  if (st) st.textContent = 'Fetching ASCE 7-22 wind speeds…';
+  if (btn) btn.disabled = true;
+  try {
+    var res  = await fetch('https://asce7hazardtool.online/api/data?lat=' + lat + '&lng=' + lng);
+    var data = await res.json();
+    if (!data.windSpeeds) {
+      if (st) st.textContent = '✕  Location outside US coverage area.'; return;
+    }
+    _asceWindCache = data.windSpeeds;
+    applyASCEWind(_asceWindCache);
+  } catch(e) {
+    if (st) st.textContent = '✕  API error: ' + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function geolocateWind() {
+  var st = document.getElementById('vasce-status');
+  if (!navigator.geolocation) { if (st) st.textContent = '✕  Geolocation not supported.'; return; }
+  if (st) st.textContent = 'Getting your location…';
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    document.getElementById('inp-lat').value = pos.coords.latitude.toFixed(4);
+    document.getElementById('inp-lng').value = pos.coords.longitude.toFixed(4);
+    if (document.getElementById('inp-zip')) document.getElementById('inp-zip').value = '';
+    fetchASCEWind();
+  }, function(err) {
+    if (st) st.textContent = '✕  ' + err.message;
+  });
+}
 
 // Exposure params: [alpha, zg_ft, zmin_ft, c, l_ft, eps, bbar, ahat]
 var EXPO = {
@@ -1547,6 +1695,7 @@ function printReport() {
 // INIT
 // ═══════════════════════════════════════════════════════════
 (function init() {
+  setVSrc('auto');
   selectProc('ch28');
   window.addEventListener('resize', function() {
     if (_rptData&&_rptData.lc1) drawBuilding(_rptData.lc1,_rptData.qh,_rptData.theta,_rptData.roofT);
