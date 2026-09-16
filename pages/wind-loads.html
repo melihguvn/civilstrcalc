@@ -220,7 +220,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <!-- Wind Speed & Risk (shared) -->
   <div class="section-card">
     <div class="sc-hdr">2. Wind Speed &amp; Risk Category — §26.5</div>
-    <div class="calc-grid">
+    <div class="calc-grid" style="align-items:start;">
 
       <!-- ── source toggle ── -->
       <div class="inp-row" style="grid-column:1/-1;flex-direction:column;align-items:flex-start;gap:6px;">
@@ -735,6 +735,15 @@ function applyASCEWind(data) {
   calc();
 }
 
+function _fetchTimed(url, ms) {
+  return new Promise(function(resolve, reject) {
+    var done = false;
+    var timer = setTimeout(function() { if (!done) { done = true; reject(new Error('timeout')); } }, ms);
+    fetch(url).then(function(r) { if (!done) { done = true; clearTimeout(timer); resolve(r); } },
+                   function(e) { if (!done) { done = true; clearTimeout(timer); reject(e); } });
+  });
+}
+
 async function fetchASCEWind() {
   var st  = document.getElementById('vasce-status');
   var btn = document.getElementById('btn-fetch-wind');
@@ -744,8 +753,8 @@ async function fetchASCEWind() {
   if (/^\d{5}$/.test(zip)) {
     if (st) st.textContent = 'Looking up ZIP code…';
     try {
-      var gr = await fetch('https://nominatim.openstreetmap.org/search?postalcode=' + zip +
-                           '&countrycode=US&format=json&limit=1');
+      var gr = await _fetchTimed('https://nominatim.openstreetmap.org/search?postalcode=' + zip +
+                           '&countrycode=US&format=json&limit=1', 8000);
       var gd = await gr.json();
       if (!gd.length) { if (st) st.textContent = '✕  ZIP code not found.'; return; }
       lat = parseFloat(gd[0].lat); lng = parseFloat(gd[0].lon);
@@ -763,20 +772,29 @@ async function fetchASCEWind() {
   if (st) st.textContent = 'Fetching ASCE 7-22 wind speeds…';
   if (btn) btn.disabled = true;
   var directUrl = 'https://asce7hazardtool.online/api/data?lat=' + lat + '&lng=' + lng;
+  // Each entry: {url, unwrap} — unwrap extracts windSpeeds from different response shapes
   var proxies = [
-    directUrl,
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl),
-    'https://corsproxy.io/?' + encodeURIComponent(directUrl)
+    {url: directUrl,
+     unwrap: function(j){ return j.windSpeeds||null; }},
+    {url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl),
+     unwrap: function(j){ return j.windSpeeds||null; }},
+    {url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(directUrl),
+     unwrap: function(j){ return j.windSpeeds||null; }},
+    {url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(directUrl),
+     unwrap: function(j){ try{ var i=JSON.parse(j.contents); return i.windSpeeds||null; }catch(e){return null;} }},
+    {url: 'https://corsproxy.io/?' + encodeURIComponent(directUrl),
+     unwrap: function(j){ return j.windSpeeds||null; }}
   ];
   var data = null;
   for (var attempt = 0; attempt < proxies.length; attempt++) {
+    var p = proxies[attempt];
+    if (st) st.textContent = 'Fetching… (attempt ' + (attempt+1) + '/' + proxies.length + ')';
     try {
-      var res = await fetch(proxies[attempt],
-                            {signal: AbortSignal.timeout ? AbortSignal.timeout(9000) : undefined});
+      var res = await _fetchTimed(p.url, 8000);
       if (!res.ok) continue;
       var json = await res.json();
-      if (json.windSpeeds) { data = json.windSpeeds; break; }
-      if (json.contents) { try { var inner = JSON.parse(json.contents); if (inner.windSpeeds) { data = inner.windSpeeds; break; } } catch(pe){} }
+      var ws = p.unwrap(json);
+      if (ws) { data = ws; break; }
     } catch(e) { /* try next proxy */ }
   }
   if (btn) btn.disabled = false;
