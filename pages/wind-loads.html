@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wind Load Calculator — ASCE 7-22 Ch. 28 | CivilStrCalc</title>
+<meta name="description" content="Wind load calculator per ASCE 7-22 Chapter 28 Envelope Procedure for low-rise buildings (h ≤ 60 ft / 18 m). Flat, gable, and hip roofs. Design pressures for all MWFRS zones.">
+<meta name="keywords" content="wind load calculator, ASCE 7-22, Chapter 28, envelope procedure, low-rise buildings, MWFRS, GCpf, velocity pressure, Kh, Kzt, wind pressure zones">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://civilstrcalc.com/pages/wind-loads">
+<meta property="og:title" content="Wind Load Calculator — ASCE 7-22 Ch. 28 Envelope Procedure">
+<meta property="og:description" content="Design wind pressures for low-rise buildings per ASCE 7-22 Ch. 28.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civilstrcalc.com/pages/wind-loads">
+<meta property="og:site_name" content="CivilStrCalc">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Wind Load Calculator — ASCE 7-22 Chapter 28","description":"Design wind pressures for low-rise buildings using ASCE 7-22 Chapter 28 Envelope Procedure.","url":"https://civilstrcalc.com/pages/wind-loads","applicationCategory":"UtilityApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+<link rel="icon" type="image/svg+xml" href="../favicons/favicon.svg">
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css?v=5">
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+.unit-switcher{display:flex;align-items:center;gap:10px;padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--border);}
+.unit-lbl{font-size:.71rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;}
+.unit-btns{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.unit-btn{padding:5px 13px;background:var(--white);border:none;border-right:1px solid var(--border);cursor:pointer;font-size:.75rem;font-family:inherit;color:var(--text-dim);transition:background .14s,color .14s;white-space:nowrap;}
+.unit-btn:last-child{border-right:none;}
+.unit-btn.active{background:#1a5c8e;color:#fff;font-weight:600;}
+
+.page-layout{display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start;}
+@media(max-width:860px){.page-layout{grid-template-columns:1fr;}}
+
+.section-card{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:11px 14px;margin-bottom:8px;}
+.sc-hdr{display:flex;align-items:center;justify-content:space-between;font-size:.71rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:9px;}
+
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;}
+.calc-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;}
+@media(max-width:500px){.calc-grid,.calc-grid-3{grid-template-columns:1fr;}}
+
+.inp-row{display:flex;flex-direction:column;gap:3px;}
+.inp-row label{font-size:.69rem;font-weight:600;color:var(--text-dim);letter-spacing:.02em;line-height:1.3;}
+.inp-row input,.inp-row select{padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;font-family:inherit;background:var(--white);color:var(--text);width:100%;box-sizing:border-box;}
+.inp-row input:focus,.inp-row select:focus{outline:none;border-color:#1a5c8e;box-shadow:0 0 0 2px rgba(26,92,142,.12);}
+.inp-hint{font-size:.63rem;color:var(--text-dim);opacity:.72;margin-top:1px;line-height:1.35;}
+.inp-warn{font-size:.65rem;color:#b45309;margin-top:3px;display:none;}
+.inp-warn.show{display:block;}
+
+.radio-group{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.radio-row{display:flex;align-items:flex-start;gap:7px;}
+.radio-row input[type=radio]{margin-top:3px;accent-color:#1a5c8e;flex-shrink:0;}
+.radio-row label{font-size:.77rem;color:var(--text);cursor:pointer;line-height:1.4;}
+.radio-row label small{font-size:.67rem;color:var(--text-dim);display:block;}
+
+.calc-btn{width:100%;padding:9px;background:#1a5c8e;color:#fff;border:none;border-radius:6px;font-size:.84rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;letter-spacing:.02em;margin-top:4px;}
+.calc-btn:hover{background:#154f7a;}
+
+.warn-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;padding:7px 11px;font-size:.71rem;color:#9a3412;line-height:1.5;margin-bottom:8px;display:none;}
+.warn-box.show{display:block;}
+
+/* Result cards */
+.res-card{background:var(--white);border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:8px;}
+.res-card-hdr{background:var(--surface,#f8fafb);border-bottom:1px solid var(--border);border-left:3px solid #1a5c8e;padding:7px 12px;font-size:.67rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;justify-content:space-between;}
+
+/* Step-by-step box */
+.step-box{padding:9px 12px;}
+.step-row{display:flex;align-items:baseline;gap:6px;font-size:.78rem;padding:3px 0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-sym{font-weight:600;color:var(--text);min-width:110px;}
+.step-eq{color:var(--text-dim);flex:1;}
+.step-val{font-weight:700;color:#1a5c8e;white-space:nowrap;}
+
+/* Pressure table */
+.ptbl{width:100%;border-collapse:collapse;font-size:.76rem;}
+.ptbl th{background:#f0f4f8;padding:5px 8px;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);text-align:left;}
+.ptbl th:not(:first-child){text-align:center;}
+.ptbl td{padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.ptbl td:not(:first-child){text-align:center;font-weight:500;font-variant-numeric:tabular-nums;}
+.ptbl .zone-sep td{background:#f8fafb;font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding:3px 8px;}
+.p-pos{color:#1a5c8e;font-weight:700;}
+.p-neg{color:#dc2626;font-weight:700;}
+.p-min-note{font-size:.60rem;color:#b45309;margin-left:2px;}
+
+/* Load case tabs */
+.lc-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.lc-tab{flex:1;padding:6px;background:var(--white);border:1px solid var(--border);border-radius:5px;font-size:.73rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:inherit;text-align:center;transition:background .13s,color .13s;}
+.lc-tab.active{background:#1a5c8e;color:#fff;border-color:#1a5c8e;}
+
+/* Summary tiles */
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.sum-tile{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;}
+.sum-lbl{font-size:.60rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px;}
+.sum-val{font-size:.93rem;font-weight:700;color:#1a5c8e;}
+.sum-unit{font-size:.65rem;color:var(--text-dim);}
+
+.pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;background:#1a2332;color:#fff;border:none;border-radius:5px;font-size:.73rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .14s;margin:0;flex-shrink:0;}
+.pdf-btn:hover{background:#243044;}
+.pdf-btn svg{flex-shrink:0;}
+
+.scope-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:6px 11px;font-size:.70rem;color:#1e40af;line-height:1.5;margin-bottom:8px;}
+.disclaimer{background:#f8fafb;border:1px solid var(--border);border-radius:5px;padding:6px 11px;font-size:.68rem;color:var(--text-dim);line-height:1.5;margin-top:8px;}
+
+#pdf-report{display:none;}
+.rpt{font-family:'Helvetica Neue',Arial,sans-serif;font-size:7.5pt;color:#111;line-height:1.3;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.rpt-hdr{background:#1a2332;color:#fff;padding:5pt 10pt;display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt;}
+.rpt-title{font-size:9.5pt;font-weight:700;margin-bottom:1pt;}
+.rpt-sub{font-size:6.5pt;opacity:.8;}
+.rpt-logo{font-size:7.5pt;font-weight:700;color:#7dd3a8;letter-spacing:.06em;white-space:nowrap;}
+.rpt-sec{margin-bottom:4pt;}
+.rpt-sh{font-size:5.5pt;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#1a5c8e;border-bottom:.75pt solid #1a5c8e;padding-bottom:1.5pt;margin-bottom:3pt;}
+.rpt-g4{display:grid;grid-template-columns:repeat(4,1fr);gap:2pt;}
+.rpt-kv{background:#f8fafb;border:.5pt solid #dde1e7;border-radius:1.5pt;padding:2pt 3.5pt;}
+.rpt-kv-l{font-size:5pt;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5pt;}
+.rpt-kv-v{font-size:7.5pt;font-weight:700;color:#111;}
+.rpt-t{width:100%;border-collapse:collapse;font-size:6.5pt;}
+.rpt-t th{background:#f0f4f8;padding:1.5pt 4pt;font-size:5.5pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;border:.5pt solid #dde1e7;text-align:center;}
+.rpt-t th:first-child,.rpt-t td:first-child{text-align:left;}
+.rpt-t td{padding:1.5pt 4pt;border:.5pt solid #dde1e7;color:#111;}
+.rpt-t td:not(:first-child){text-align:center;font-weight:500;}
+.rpt-ft{display:flex;justify-content:space-between;border-top:.5pt solid #dde1e7;padding-top:3pt;margin-top:4pt;font-size:5.5pt;color:#9ca3af;}
+@media print{
+  body>*{display:none!important;}
+  #pdf-report{display:block!important;}
+  @page{margin:10mm 12mm;size:A4;}
+}
+</style>
+</head>
+<body>
+<main style="padding:14px 18px 32px;">
+
+<h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Wind Load Calculator — ASCE 7-22 Ch. 28</h1>
+<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 8px;">Envelope Procedure for low-rise buildings — design wind pressures for all MWFRS zones.</p>
+
+<div class="scope-note">
+  <strong>Scope:</strong> Enclosed / partially enclosed buildings with flat, gable, or hip roof. Mean roof height h&nbsp;≤&nbsp;60&nbsp;ft (18&nbsp;m) and h&nbsp;≤&nbsp;least horizontal dimension. For taller buildings use Directional Procedure (Ch. 27).
+</div>
+
+<div class="warn-box" id="warn-box"></div>
+
+<div class="page-layout">
+
+  <!-- ═══ LEFT ═══════════════════════════════════════════════════════════════ -->
+  <div>
+
+    <!-- Units -->
+    <div class="section-card">
+      <div class="unit-switcher">
+        <span class="unit-lbl">Units</span>
+        <div class="unit-btns">
+          <button id="btn-us" class="unit-btn active" onclick="setUnit('us')">US (psf, mph, ft)</button>
+          <button id="btn-si" class="unit-btn" onclick="setUnit('si')">SI (kPa, m/s, m)</button>
+        </div>
+      </div>
+
+      <!-- 1. Building Geometry -->
+      <div class="sc-hdr">1. Building Geometry — §26.3</div>
+      <div class="calc-grid" style="margin-bottom:8px;">
+        <div class="inp-row">
+          <label id="lbl-L">L — Length along ridge (ft)</label>
+          <input type="number" id="inp-L" value="60" min="1" step="1" oninput="calc();">
+          <div class="inp-hint">Parallel to ridge direction</div>
+        </div>
+        <div class="inp-row">
+          <label id="lbl-B">B — Width ⊥ to ridge (ft)</label>
+          <input type="number" id="inp-B" value="40" min="1" step="1" oninput="calc();">
+          <div class="inp-hint">Perpendicular to ridge</div>
+        </div>
+      </div>
+      <div class="calc-grid" style="margin-bottom:8px;">
+        <div class="inp-row">
+          <label id="lbl-h">h — Mean roof height (ft)</label>
+          <input type="number" id="inp-h" value="20" min="1" max="200" step="1" oninput="calc();">
+          <div class="inp-hint" id="hint-h">h ≤ 60 ft for this procedure</div>
+        </div>
+        <div class="inp-row">
+          <label>θ — Roof pitch (degrees)</label>
+          <input type="number" id="inp-theta" value="15" min="0" max="45" step="1" oninput="calc();">
+          <div class="inp-hint">0° = flat; gable/hip: actual slope</div>
+        </div>
+      </div>
+      <div class="inp-row" style="margin-bottom:8px;">
+        <label>Roof Type</label>
+        <div class="radio-group">
+          <label class="radio-row"><input type="radio" name="rooftype" value="flat" onchange="calc();"> <span>Flat / Low-slope <small>θ ≤ 5° or specified flat</small></span></label>
+          <label class="radio-row"><input type="radio" name="rooftype" value="gable" checked onchange="calc();"> <span>Gable roof <small>Symmetric, ridge at center</small></span></label>
+          <label class="radio-row"><input type="radio" name="rooftype" value="hip" onchange="calc();"> <span>Hip roof <small>All four slopes</small></span></label>
+        </div>
+      </div>
+      <div class="inp-warn" id="warn-h">⚠ h > 60 ft — use Directional Procedure (Ch. 27).</div>
+      <div class="inp-warn" id="warn-hb">⚠ h > B — low-rise condition not met for this procedure.</div>
+    </div>
+
+    <!-- 2. Wind Speed & Risk -->
+    <div class="section-card">
+      <div class="sc-hdr">2. Wind Speed &amp; Risk Category — §26.5</div>
+      <div class="calc-grid" style="margin-bottom:8px;">
+        <div class="inp-row">
+          <label id="lbl-V">V — Basic wind speed (mph)</label>
+          <input type="number" id="inp-V" value="115" min="50" max="250" step="5" oninput="calc();">
+          <div class="inp-hint">From ASCE 7-22 wind maps §26.5</div>
+        </div>
+        <div class="inp-row">
+          <label>Risk Category</label>
+          <select id="inp-RC" onchange="calc();">
+            <option value="I">I — Low hazard (agricultural)</option>
+            <option value="II" selected>II — Standard (residential, commercial)</option>
+            <option value="III">III — Substantial (schools, assembly)</option>
+            <option value="IV">IV — Essential (hospitals, emergency)</option>
+          </select>
+          <div class="inp-hint">Governs the wind map V to use</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Exposure -->
+    <div class="section-card">
+      <div class="sc-hdr">3. Exposure Category — §26.7</div>
+      <div class="radio-group">
+        <label class="radio-row"><input type="radio" name="expo" value="B" onchange="calc();"> <span>B — Urban/suburban, wooded terrain <small>z₀≈0.30 m, K<sub>h</sub> lower</small></span></label>
+        <label class="radio-row"><input type="radio" name="expo" value="C" checked onchange="calc();"> <span>C — Open terrain, scattered obstructions ← default <small>z₀≈0.10 m, most common</small></span></label>
+        <label class="radio-row"><input type="radio" name="expo" value="D" onchange="calc();"> <span>D — Flat, open water or mudflats <small>z₀≈0.01 m, highest K<sub>h</sub></small></span></label>
+      </div>
+    </div>
+
+    <!-- 4. Site Factors -->
+    <div class="section-card">
+      <div class="sc-hdr">4. Site Factors</div>
+      <div class="calc-grid" style="margin-bottom:8px;">
+        <div class="inp-row">
+          <label>K<sub>zt</sub> — Topographic factor (§26.8)</label>
+          <input type="number" id="inp-Kzt" value="1.0" min="1.0" max="3.5" step="0.05" oninput="calc();">
+          <div class="inp-hint">Flat terrain: 1.0 · Hill/ridge: compute §26.8</div>
+        </div>
+        <div class="inp-row">
+          <label>K<sub>e</sub> — Ground elev. factor (§26.9)</label>
+          <input type="number" id="inp-Ke" value="1.0" min="0.8" max="1.0" step="0.01" oninput="calc();">
+          <div class="inp-hint">Sea level: 1.0 · High elevation: &lt;1.0</div>
+        </div>
+      </div>
+      <div class="inp-row">
+        <label>K<sub>d</sub> — Directionality factor (§26.6)</label>
+        <input type="number" id="inp-Kd" value="0.85" min="0.85" max="1.0" step="0.01" oninput="calc();" readonly style="background:var(--surface,#f8fafb);color:var(--text-dim);">
+        <div class="inp-hint">Buildings: 0.85 (fixed per §26.6, Table 26.6-1)</div>
+      </div>
+    </div>
+
+    <!-- 5. Enclosure -->
+    <div class="section-card">
+      <div class="sc-hdr">5. Enclosure Classification — §26.12</div>
+      <div class="radio-group">
+        <label class="radio-row"><input type="radio" name="encl" value="enclosed" checked onchange="calc();"> <span>Enclosed building <small>GC<sub>pi</sub> = ±0.18</small></span></label>
+        <label class="radio-row"><input type="radio" name="encl" value="partial" onchange="calc();"> <span>Partially enclosed building <small>GC<sub>pi</sub> = ±0.55</small></span></label>
+        <label class="radio-row"><input type="radio" name="encl" value="open" onchange="calc();"> <span>Partially open / open <small>GC<sub>pi</sub> = 0.0</small></span></label>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calc()">Calculate Wind Pressures</button>
+
+  </div><!-- /left -->
+
+  <!-- ═══ RIGHT ══════════════════════════════════════════════════════════════ -->
+  <div id="results">
+
+    <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+      <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+      <span id="res-badge" style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">ASCE 7-22 · Ch. 28 · psf</span>
+      <button class="pdf-btn" onclick="printReport()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Print / PDF
+      </button>
+    </div>
+
+    <!-- Summary tiles -->
+    <div class="summary-row">
+      <div class="sum-tile">
+        <div class="sum-lbl">q<sub>h</sub> velocity pressure</div>
+        <div class="sum-val" id="out-qh">—</div>
+        <div class="sum-unit" id="out-qh-u">psf</div>
+      </div>
+      <div class="sum-tile">
+        <div class="sum-lbl">K<sub>h</sub> exposure coeff.</div>
+        <div class="sum-val" id="out-Kh">—</div>
+        <div class="sum-unit">Table 26.10-1</div>
+      </div>
+      <div class="sum-tile">
+        <div class="sum-lbl">End zone width a</div>
+        <div class="sum-val" id="out-a">—</div>
+        <div class="sum-unit" id="out-a-u">ft</div>
+      </div>
+    </div>
+
+    <!-- Building diagram -->
+    <div class="res-card">
+      <div class="res-card-hdr">Building Pressure Diagram — MWFRS Zones</div>
+      <canvas id="bldg-canvas" style="display:block;width:100%;"></canvas>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;padding:5px 12px 8px;font-size:.65rem;color:var(--text-dim);align-items:center;">
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:14px;height:10px;background:#bfdbfe;border:1px solid #93c5fd;display:inline-block;border-radius:2px;"></span>Pressure (+)</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:14px;height:10px;background:#fecaca;border:1px solid #fca5a5;display:inline-block;border-radius:2px;"></span>Suction (−)</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:14px;height:10px;background:#fef08a;border:1px solid #fde047;display:inline-block;border-radius:2px;"></span>End zone (higher)</span>
+        <span style="color:var(--text-dim);">Load Case 1 shown</span>
+      </div>
+    </div>
+
+    <!-- Step-by-step -->
+    <div class="res-card">
+      <div class="res-card-hdr">Step-by-Step Calculation — Eq. 26.10-1, 28.3-1</div>
+      <div class="step-box" id="step-box"></div>
+    </div>
+
+    <!-- Load case tabs + pressure table -->
+    <div class="lc-tabs">
+      <button class="lc-tab active" id="tab-lc1" onclick="switchLC(1,this)">Load Case 1 — Wind ⊥ Ridge</button>
+      <button class="lc-tab" id="tab-lc2" onclick="switchLC(2,this)">Load Case 2 — Wind ∥ Ridge</button>
+    </div>
+
+    <div class="res-card">
+      <div class="res-card-hdr" id="lc-hdr">External Pressure — Load Case 1 (§28.3)</div>
+      <div style="overflow-x:auto;">
+        <table class="ptbl">
+          <thead>
+            <tr>
+              <th style="width:28%;">Zone / Surface</th>
+              <th>GCpf</th>
+              <th id="th-ppos">p⁺ (psf) <br><span style="font-weight:400;font-size:.6rem;text-transform:none;letter-spacing:0;">GCpf+|GCpi|</span></th>
+              <th id="th-pneg">p⁻ (psf) <br><span style="font-weight:400;font-size:.6rem;text-transform:none;letter-spacing:0;">GCpf−|GCpi|</span></th>
+            </tr>
+          </thead>
+          <tbody id="ptbl-body"></tbody>
+        </table>
+      </div>
+      <div style="padding:6px 10px 8px;font-size:.65rem;color:var(--text-dim);">
+        Minimum p: ±16 psf walls · ±8 psf roof (§28.3.4) · GC<sub>pi</sub> = <span id="out-GCpi">±0.18</span>
+      </div>
+    </div>
+
+    <div class="res-card">
+      <div class="res-card-hdr">Code Reference Summary</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+        <tbody id="ref-body"></tbody>
+      </table>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Preliminary design only.</strong> Verify all inputs and results against ASCE 7-22 before use in construction documents. This tool implements the Envelope Procedure (Ch. 28) for MWFRS only — it does not cover components &amp; cladding (Ch. 30) or buildings outside its scope. The engineer of record is responsible for final design decisions.
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /page-layout -->
+
+</main>
+
+<!-- ═══ PDF Report ══════════════════════════════════════════════════════════ -->
+<div id="pdf-report">
+<div class="rpt">
+  <div class="rpt-hdr">
+    <div>
+      <div class="rpt-title">Wind Load Report — ASCE 7-22 Ch. 28 Envelope Procedure</div>
+      <div class="rpt-sub" id="rpt-subtitle">Low-rise MWFRS Design Wind Pressures</div>
+    </div>
+    <div class="rpt-logo">civilstrcalc.com</div>
+  </div>
+  <div id="rpt-body"></div>
+  <div class="rpt-ft">
+    <span id="rpt-ft-left">civilstrcalc.com — Wind Load Report</span>
+    <span id="rpt-date"></span>
+  </div>
+</div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+var isUS = true;
+var activeLC = 1;
+var _rptData = null;
+
+// ─────────────────────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────────────────────
+var Kd = 0.85;
+
+// Exposure params: [alpha, zg_ft, zmin_ft]
+var EXPO = {
+  B: [7.0, 1200, 30],
+  C: [9.5,  900, 15],
+  D: [11.5, 700,  7]
+};
+
+// GCpf values from ASCE 7-22 Figure 28.3-1
+// Indices: [flat/0-5°, gable5-20°, gable20-45°, hip]
+// LC1 = wind perpendicular to ridge
+var GCPF_LC1 = {
+  '1':  [ 0.40,  0.40,  0.53,  0.40],  // Windward wall (interior)
+  '1E': [ 0.61,  0.61,  0.80,  0.61],  // Windward wall (end zone)
+  '2':  [-0.69, -0.69, -0.69, -0.69],  // Leeward wall (interior)
+  '2E': [-1.07, -1.07, -1.07, -1.07],  // Leeward wall (end zone)
+  '3':  [-0.37, -0.37, -0.48, -0.37],  // Side wall (interior)
+  '3E': [-0.53, -0.53, -0.69, -0.53],  // Side wall (end zone)
+  '4':  [-0.29, -0.43,  0.21, -0.45],  // Windward roof (interior)
+  '4E': [-0.43, -0.61,  0.27, -0.48],  // Windward roof (end zone)
+  '5':  [-0.45, -0.38, -0.43, -0.45],  // Leeward roof (interior)
+  '5E': [-0.45, -0.54, -0.61, -0.48]   // Leeward roof (end zone)
+};
+
+// LC2 = wind parallel to ridge — all roof types
+// Zone 3 and 3E are now windward (long side walls); roof is uniform suction
+var GCPF_LC2 = {
+  '1':  [-0.45, -0.45, -0.45, -0.45],  // WW end wall → see suction (now side)
+  '1E': [-0.48, -0.48, -0.48, -0.48],
+  '2':  [-0.69, -0.69, -0.69, -0.69],  // LW end wall
+  '2E': [-1.07, -1.07, -1.07, -1.07],
+  '3':  [ 0.40,  0.40,  0.53,  0.40],  // Long side wall → windward in LC2
+  '3E': [ 0.61,  0.61,  0.80,  0.61],  // Long side wall end zone → windward end
+  '4':  [-0.45, -0.45, -0.45, -0.45],  // Roof (parallel wind — uniform suction)
+  '4E': [-0.48, -0.48, -0.48, -0.48],
+  '5':  [-0.45, -0.45, -0.45, -0.45],  // Roof (parallel wind)
+  '5E': [-0.48, -0.48, -0.48, -0.48]
+};
+
+var ZONE_LABELS = {
+  '1':  'Zone 1 — Windward wall (interior)',
+  '1E': 'Zone 1E — Windward wall (end zone)',
+  '2':  'Zone 2 — Leeward wall (interior)',
+  '2E': 'Zone 2E — Leeward wall (end zone)',
+  '3':  'Zone 3 — Side wall (interior)',
+  '3E': 'Zone 3E — Side wall (end zone)',
+  '4':  'Zone 4 — Windward roof (interior)',
+  '4E': 'Zone 4E — Windward roof (end zone)',
+  '5':  'Zone 5 — Leeward roof (interior)',
+  '5E': 'Zone 5E — Leeward roof (end zone)'
+};
+var ZONE_LABELS_LC2 = {
+  '1':  'Zone 1 — End wall (interior)',
+  '1E': 'Zone 1E — End wall (end zone)',
+  '2':  'Zone 2 — Leeward end wall (interior)',
+  '2E': 'Zone 2E — Leeward end wall (end zone)',
+  '3':  'Zone 3 — Windward long wall (interior)',
+  '3E': 'Zone 3E — Windward long wall (end zone)',
+  '4':  'Zone 4 — Roof (interior)',
+  '4E': 'Zone 4E — Roof (end zone)',
+  '5':  'Zone 5 — Roof (interior)',
+  '5E': 'Zone 5E — Roof (end zone)'
+};
+
+// ─────────────────────────────────────────────────────────────
+// UNIT HELPERS
+// ─────────────────────────────────────────────────────────────
+function setUnit(u) {
+  isUS = (u === 'us');
+  document.getElementById('btn-us').classList.toggle('active', isUS);
+  document.getElementById('btn-si').classList.toggle('active', !isUS);
+
+  var lV = document.getElementById('lbl-V');
+  var lL = document.getElementById('lbl-L');
+  var lB = document.getElementById('lbl-B');
+  var lh = document.getElementById('lbl-h');
+  var hh = document.getElementById('hint-h');
+
+  if (isUS) {
+    lV.textContent = 'V — Basic wind speed (mph)';
+    lL.textContent = 'L — Length along ridge (ft)';
+    lB.textContent = 'B — Width ⊥ to ridge (ft)';
+    lh.textContent = 'h — Mean roof height (ft)';
+    hh.textContent = 'h ≤ 60 ft for this procedure';
+    document.getElementById('inp-V').value = Math.round(parseFloat(document.getElementById('inp-V').value) * 2.237 * 10) / 10 || 115;
+    document.getElementById('inp-L').value = Math.round(parseFloat(document.getElementById('inp-L').value) * 3.281) || 60;
+    document.getElementById('inp-B').value = Math.round(parseFloat(document.getElementById('inp-B').value) * 3.281) || 40;
+    document.getElementById('inp-h').value = Math.round(parseFloat(document.getElementById('inp-h').value) * 3.281) || 20;
+    document.getElementById('res-badge').textContent = 'ASCE 7-22 · Ch. 28 · psf';
+  } else {
+    lV.textContent = 'V — Basic wind speed (m/s)';
+    lL.textContent = 'L — Length along ridge (m)';
+    lB.textContent = 'B — Width ⊥ to ridge (m)';
+    lh.textContent = 'h — Mean roof height (m)';
+    hh.textContent = 'h ≤ 18 m for this procedure';
+    document.getElementById('inp-V').value = Math.round(parseFloat(document.getElementById('inp-V').value) / 2.237 * 10) / 10 || 51;
+    document.getElementById('inp-L').value = +(parseFloat(document.getElementById('inp-L').value) / 3.281).toFixed(1) || 18;
+    document.getElementById('inp-B').value = +(parseFloat(document.getElementById('inp-B').value) / 3.281).toFixed(1) || 12;
+    document.getElementById('inp-h').value = +(parseFloat(document.getElementById('inp-h').value) / 3.281).toFixed(1) || 6;
+    document.getElementById('res-badge').textContent = 'ASCE 7-22 · Ch. 28 · kPa';
+  }
+  calc();
+}
+
+// ─────────────────────────────────────────────────────────────
+// CORE HELPERS
+// ─────────────────────────────────────────────────────────────
+function f(v, d) { return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d) : '—'; }
+function fSign(v, d) {
+  if (typeof v !== 'number' || !isFinite(v)) return '—';
+  return (v >= 0 ? '+' : '') + v.toFixed(d);
+}
+
+function calcKh(h_ft, expo) {
+  var e = EXPO[expo];
+  var alpha = e[0], zg = e[1], zmin = e[2];
+  var z = Math.max(h_ft, zmin);
+  return 2.01 * Math.pow(z / zg, 2 / alpha);
+}
+
+function roofTypeIdx(roofType, theta) {
+  if (roofType === 'flat') return 0;
+  if (roofType === 'hip')  return 3;
+  // gable
+  if (theta <= 5)  return 0;
+  if (theta <= 20) return 1;
+  return 2; // 20-45
+}
+
+function gcpi() {
+  var enc = document.querySelector('input[name=encl]:checked').value;
+  if (enc === 'enclosed') return 0.18;
+  if (enc === 'partial')  return 0.55;
+  return 0.0; // open
+}
+
+function pMinWall_US()  { return 16; }   // psf  §28.3.4
+function pMinRoof_US()  { return  8; }   // psf  §28.3.4
+function pMinWall_kPa() { return 16 * 0.04788; }  // 0.766 kPa
+function pMinRoof_kPa() { return  8 * 0.04788; }  // 0.383 kPa
+
+// ─────────────────────────────────────────────────────────────
+// MAIN CALCULATION
+// ─────────────────────────────────────────────────────────────
+function calc() {
+  // Read inputs
+  var L_raw   = parseFloat(document.getElementById('inp-L').value) || 0;
+  var B_raw   = parseFloat(document.getElementById('inp-B').value) || 0;
+  var h_raw   = parseFloat(document.getElementById('inp-h').value) || 0;
+  var theta   = parseFloat(document.getElementById('inp-theta').value) || 0;
+  var V_raw   = parseFloat(document.getElementById('inp-V').value) || 0;
+  var Kzt     = parseFloat(document.getElementById('inp-Kzt').value) || 1.0;
+  var Ke      = parseFloat(document.getElementById('inp-Ke').value)  || 1.0;
+  var roofT   = document.querySelector('input[name=rooftype]:checked').value;
+  var expo    = document.querySelector('input[name=expo]:checked').value;
+  var GCpi    = gcpi();
+
+  // Convert to US internally for Kh formula (ft-based)
+  var h_ft = isUS ? h_raw : h_raw * 3.2808;
+  var B_ft = isUS ? B_raw : B_raw * 3.2808;
+  var L_ft = isUS ? L_raw : L_raw * 3.2808;
+  var V_mph = isUS ? V_raw : V_raw * 2.2369;
+
+  // Warnings
+  var warnEl  = document.getElementById('warn-box');
+  var warnH   = document.getElementById('warn-h');
+  var warnHB  = document.getElementById('warn-hb');
+  var warns = [];
+  if (h_ft > 60) { warnH.classList.add('show'); warns.push('h > 60 ft — use Ch. 27 Directional Procedure.'); } else { warnH.classList.remove('show'); }
+  if (h_ft > B_ft && B_ft > 0) { warnHB.classList.add('show'); warns.push('h > B — low-rise condition not met; verify Ch. 27 applicability.'); } else { warnHB.classList.remove('show'); }
+  if (warns.length) { warnEl.textContent = '⚠ ' + warns.join(' '); warnEl.classList.add('show'); }
+  else              { warnEl.classList.remove('show'); }
+
+  // Step 1: Kh
+  var Kh = calcKh(h_ft, expo);
+
+  // Step 2: qh (US: psf; SI: kPa)
+  var qh_psf = 0.00256 * Kd * Kh * Kzt * Ke * V_mph * V_mph;
+  var qh_kPa = 0.000613 * Kd * Kh * Kzt * Ke * (V_raw * (isUS ? 0.44704 : 1)) * (V_raw * (isUS ? 0.44704 : 1));
+  // Use direct SI formula if SI
+  if (!isUS) {
+    var V_ms = V_raw;
+    qh_kPa = 0.000613 * Kd * Kh * Kzt * Ke * V_ms * V_ms;
+  }
+  var qh = isUS ? qh_psf : qh_kPa;
+
+  // Step 3: End zone width a
+  var a_ft = Math.min(0.1 * B_ft, 0.4 * h_ft);
+  a_ft = Math.max(a_ft, Math.max(0.04 * B_ft, 3));
+  var a = isUS ? a_ft : a_ft * 0.3048;
+
+  // Step 4: Roof type index
+  var rIdx = roofTypeIdx(roofT, theta);
+
+  // Step 5: Pressures for each zone
+  function zonePressures(gcpfTable) {
+    var zones = ['1','1E','2','2E','3','3E','4','4E','5','5E'];
+    var res = {};
+    zones.forEach(function(z) {
+      var gcpf = gcpfTable[z][rIdx];
+      var pPos = qh * (gcpf + GCpi);  // +GCpi → additive for suction
+      var pNeg = qh * (gcpf - GCpi);  // -GCpi → suction increases
+      // Apply minimums
+      var isRoof = z === '4' || z === '4E' || z === '5' || z === '5E';
+      var minP = isUS ? (isRoof ? pMinRoof_US() : pMinWall_US()) : (isRoof ? pMinRoof_kPa() : pMinWall_kPa());
+      var pPosMin = isRoof ? Math.max(pPos, minP) : Math.max(pPos, minP); // min +pressure
+      var pNegMin = pNeg; // negative (suction) — min doesn't apply same way
+      res[z] = { gcpf: gcpf, pPos: pPosMin, pNeg: pNegMin, raw_pPos: pPos, raw_pNeg: pNeg, isMin: (isRoof ? pPos < minP && gcpf >= 0 : pPos < minP) };
+      res[z].isMinApplied = (Math.abs(pPos - pPosMin) > 0.01);
+    });
+    return res;
+  }
+
+  var lc1 = zonePressures(GCPF_LC1);
+  var lc2 = zonePressures(GCPF_LC2);
+
+  // Store data for PDF and diagram
+  _rptData = { L_raw:L_raw, B_raw:B_raw, h_raw:h_raw, theta:theta, V_raw:V_raw, Kh:Kh, Kzt:Kzt, Ke:Ke,
+    qh:qh, a:a, GCpi:GCpi, expo:expo, roofT:roofT, rIdx:rIdx, lc1:lc1, lc2:lc2 };
+
+  // ─── Update UI ───────────────────────────────────────────
+  document.getElementById('out-qh').textContent = fSign(qh, 2);
+  document.getElementById('out-qh-u').textContent = isUS ? 'psf' : 'kPa';
+  document.getElementById('out-Kh').textContent = f(Kh, 3);
+  document.getElementById('out-a').textContent = f(a, 2);
+  document.getElementById('out-a-u').textContent = isUS ? 'ft' : 'm';
+  document.getElementById('out-GCpi').textContent = '±' + f(GCpi, 2);
+
+  // Pressure table column headers
+  var pUnit = isUS ? 'psf' : 'kPa';
+  document.getElementById('th-ppos').innerHTML = 'p⁺ (' + pUnit + ')<br><span style="font-weight:400;font-size:.6rem;text-transform:none;letter-spacing:0;">GCpf+|GCpi|</span>';
+  document.getElementById('th-pneg').innerHTML = 'p⁻ (' + pUnit + ')<br><span style="font-weight:400;font-size:.6rem;text-transform:none;letter-spacing:0;">GCpf−|GCpi|</span>';
+
+  // Step-by-step
+  renderSteps(Kh, Kzt, Ke, qh, a, GCpi, expo, h_ft, V_mph, a_ft);
+
+  // Render active LC table
+  renderTable(activeLC === 1 ? lc1 : lc2, activeLC === 1 ? ZONE_LABELS : ZONE_LABELS_LC2);
+
+  // Reference summary
+  renderRef(expo, roofT, theta, rIdx, GCpi);
+
+  // Building diagram
+  drawBuilding(lc1, qh, theta, roofT);
+}
+
+// ─────────────────────────────────────────────────────────────
+// STEP-BY-STEP
+// ─────────────────────────────────────────────────────────────
+function renderSteps(Kh, Kzt, Ke, qh, a, GCpi, expo, h_ft, V_mph, a_ft) {
+  var u = isUS ? 'psf' : 'kPa';
+  var vu = isUS ? 'mph' : 'm/s';
+  var hu = isUS ? 'ft' : 'm';
+  var stepRows = [
+    ['K<sub>d</sub>', 'Directionality (Table 26.6-1)', f(Kd, 2)],
+    ['K<sub>zt</sub>', 'Topographic factor (§26.8)', f(Kzt, 3)],
+    ['K<sub>e</sub>', 'Ground elevation factor (§26.9)', f(Ke, 3)],
+    ['K<sub>h</sub>', 'Exp. ' + expo + ', h = ' + f(h_ft, 1) + ' ft → Table 26.10-1', f(Kh, 3)],
+    ['q<sub>h</sub>', (isUS ? '0.00256·K<sub>d</sub>·K<sub>h</sub>·K<sub>zt</sub>·K<sub>e</sub>·V²' : '0.000613·K<sub>d</sub>·K<sub>h</sub>·K<sub>zt</sub>·K<sub>e</sub>·V²') + ' = ' +
+       (isUS ? '0.00256' : '0.000613') + '×' + f(Kd,2) + '×' + f(Kh,3) + '×' + f(Kzt,2) + '×' + f(Ke,2) + '×V²', f(qh,2) + ' ' + u],
+    ['GC<sub>pi</sub>', 'Internal pressure coeff. (§26.13)', '±' + f(GCpi, 2)],
+    ['a', 'End zone width: min(0.1B, 0.4h) ≥ max(0.04B, 3 ft)', f(isUS ? a : a, 2) + ' ' + hu]
+  ];
+  var h = '';
+  stepRows.forEach(function(r) {
+    h += '<div class="step-row">';
+    h += '<div class="step-sym">' + r[0] + '</div>';
+    h += '<div class="step-eq">' + r[1] + '</div>';
+    h += '<div class="step-val">' + r[2] + '</div>';
+    h += '</div>';
+  });
+  document.getElementById('step-box').innerHTML = h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRESSURE TABLE
+// ─────────────────────────────────────────────────────────────
+function renderTable(zones, labels) {
+  var rows = ['1','1E','2','2E','3','3E','4','4E','5','5E'];
+  var sections = [
+    {label:'Walls', rows:['1','1E','2','2E','3','3E']},
+    {label:'Roof', rows:['4','4E','5','5E']}
+  ];
+  var h = '';
+  sections.forEach(function(sec) {
+    h += '<tr class="zone-sep"><td colspan="4">' + sec.label + '</td></tr>';
+    sec.rows.forEach(function(z) {
+      var d = zones[z];
+      var posClass = d.pPos > 0 ? 'p-pos' : 'p-neg';
+      var negClass = d.pNeg < 0 ? 'p-neg' : 'p-pos';
+      var minNote = d.isMinApplied ? '<span class="p-min-note">*min</span>' : '';
+      h += '<tr>';
+      h += '<td style="font-size:.73rem;">' + (labels[z] || z) + '</td>';
+      h += '<td>' + fSign(d.gcpf, 2) + '</td>';
+      h += '<td class="' + posClass + '">' + fSign(d.pPos, 1) + minNote + '</td>';
+      h += '<td class="' + negClass + '">' + fSign(d.pNeg, 1) + '</td>';
+      h += '</tr>';
+    });
+  });
+  document.getElementById('ptbl-body').innerHTML = h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// REFERENCE SUMMARY
+// ─────────────────────────────────────────────────────────────
+var ROOF_NAMES = ['Flat / Low-slope (0–5°)', 'Gable (5–20°)', 'Gable (20–45°)', 'Hip (0–45°)'];
+var EXPO_DESC  = {B:'Suburban/Wooded', C:'Open terrain', D:'Open water'};
+var ENCL_MAP   = {enclosed:'Enclosed (GCpi=±0.18)', partial:'Partially enclosed (GCpi=±0.55)', open:'Open (GCpi=0.0)'};
+function row2(l, v) { return '<tr><td style="padding:5px 12px;font-size:.78rem;color:var(--text-dim);width:50%;">' + l + '</td><td style="padding:5px 12px;font-size:.78rem;font-weight:500;text-align:right;">' + v + '</td></tr>'; }
+function renderRef(expo, roofT, theta, rIdx, GCpi) {
+  var encl = document.querySelector('input[name=encl]:checked').value;
+  var h = '';
+  h += row2('Code', 'ASCE 7-22 Ch. 26 + Ch. 28');
+  h += row2('Procedure', 'Envelope (§28.3), MWFRS only');
+  h += row2('Exposure', expo + ' — ' + EXPO_DESC[expo]);
+  h += row2('Roof type / GCpf row', ROOF_NAMES[rIdx]);
+  h += row2('Enclosure', ENCL_MAP[encl]);
+  h += row2('Directionality K<sub>d</sub>', '0.85 (Table 26.6-1)');
+  document.getElementById('ref-body').innerHTML = h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOAD CASE SWITCH
+// ─────────────────────────────────────────────────────────────
+function switchLC(n, btn) {
+  activeLC = n;
+  document.getElementById('tab-lc1').classList.toggle('active', n===1);
+  document.getElementById('tab-lc2').classList.toggle('active', n===2);
+  document.getElementById('lc-hdr').textContent = n===1
+    ? 'External Pressure — Load Case 1 (Wind ⊥ Ridge)'
+    : 'External Pressure — Load Case 2 (Wind ∥ Ridge)';
+  if (_rptData) {
+    renderTable(n===1 ? _rptData.lc1 : _rptData.lc2, n===1 ? ZONE_LABELS : ZONE_LABELS_LC2);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// BUILDING DIAGRAM (Canvas)
+// ─────────────────────────────────────────────────────────────
+function drawBuilding(lc1, qh, theta, roofT) {
+  var canvas = document.getElementById('bldg-canvas');
+  if (!canvas) return;
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  var dpr = window.devicePixelRatio || 1;
+  var cW = canvas.parentElement.clientWidth - 24;
+  canvas.style.width = cW + 'px';
+  var cH = Math.round(cW * 0.48);
+  canvas.style.height = cH + 'px';
+  canvas.width = cW * dpr; canvas.height = cH * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  var bg = isDark ? '#1c2a3a' : '#f8fafb';
+  var gridC = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+  var lblC = isDark ? '#8ca0b8' : '#6b7280';
+  var lineC = isDark ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.45)';
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, cW, cH);
+
+  // Simple 2D front elevation of building
+  var ml=20, mt=20, mr=20, mb=30;
+  var pw = cW - ml - mr;
+  var ph_total = cH - mt - mb;
+
+  // Building proportions: show B (width) x h (height) + roof
+  var B_rel = 1.0; // normalized width = pw
+  var h_rel = 0.55; // wall height as fraction of total height
+  var roof_rel = 0.45; // roof
+  var th_rad = theta * Math.PI / 180;
+  var roofHrel = (roofT === 'flat') ? 0.05 : Math.min(0.45, 0.5 * Math.tan(th_rad));
+
+  var wallH = ph_total * 0.55;
+  var roofH = ph_total * Math.min(0.38, roofHrel);
+
+  var bL = ml; var bR = ml + pw;
+  var bBot = mt + ph_total;
+  var bTop = bBot - wallH;
+  var ridgeY = bTop - roofH;
+  var ridgeX = ml + pw / 2;
+
+  // Zone colors
+  function zoneColor(gcpf) {
+    if (gcpf > 0.05) return isDark ? 'rgba(96,165,250,0.35)' : 'rgba(191,219,254,0.7)';  // pressure (blue)
+    return isDark ? 'rgba(252,165,165,0.35)' : 'rgba(254,202,202,0.7)'; // suction (red)
+  }
+  var endW = Math.round(pw * 0.18); // end zone width on diagram
+
+  // End zones: yellow
+  var endClr = isDark ? 'rgba(253,224,71,0.25)' : 'rgba(254,240,138,0.7)';
+  var gcpf1  = lc1['1']  ? lc1['1'].gcpf  : 0;
+  var gcpf1E = lc1['1E'] ? lc1['1E'].gcpf : 0;
+  var gcpf2  = lc1['2']  ? lc1['2'].gcpf  : 0;
+  var gcpf4  = lc1['4']  ? lc1['4'].gcpf  : 0;
+  var gcpf5  = lc1['5']  ? lc1['5'].gcpf  : 0;
+
+  // Draw walls
+  // Windward wall (left = Zone 1, interior; right strip = Zone 1E would be on windward end)
+  ctx.fillStyle = zoneColor(gcpf1);
+  ctx.fillRect(bL + endW, bTop, pw - 2*endW, wallH);
+  // End zones (windward side) — show as yellow for visual clarity
+  ctx.fillStyle = endClr;
+  ctx.fillRect(bL, bTop, endW, wallH);
+  ctx.fillRect(bR - endW, bTop, endW, wallH);
+
+  // Draw wall outline
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1.5;
+  ctx.strokeRect(bL, bTop, pw, wallH);
+  ctx.beginPath(); ctx.moveTo(bL + endW, bTop); ctx.lineTo(bL + endW, bBot); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bR - endW, bTop); ctx.lineTo(bR - endW, bBot); ctx.stroke();
+
+  // Draw roof
+  if (roofT === 'flat') {
+    var rY = bTop - roofH;
+    ctx.fillStyle = zoneColor(gcpf4);
+    ctx.fillRect(bL, rY, pw, roofH);
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1.5;
+    ctx.strokeRect(bL, rY, pw, roofH);
+  } else if (roofT === 'gable') {
+    // Windward (left) slope
+    ctx.beginPath();
+    ctx.moveTo(bL, bTop); ctx.lineTo(bL, bTop - wallH * 0);
+    ctx.moveTo(bL, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(bR, bTop);
+    // Fill windward half
+    ctx.fillStyle = zoneColor(gcpf4);
+    ctx.beginPath();
+    ctx.moveTo(bL + endW, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(ridgeX - endW, ridgeY);
+    ctx.lineTo(bL + endW, bTop); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = zoneColor(gcpf4);
+    ctx.beginPath();
+    ctx.moveTo(bL + endW, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(bL + endW, bTop); ctx.closePath();
+
+    // Simple fill: left slope
+    ctx.fillStyle = zoneColor(gcpf4);
+    ctx.beginPath(); ctx.moveTo(bL, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(ridgeX, bTop); ctx.lineTo(bL, bTop); ctx.closePath(); ctx.fill();
+    // Right slope
+    ctx.fillStyle = zoneColor(gcpf5);
+    ctx.beginPath(); ctx.moveTo(ridgeX, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(bR, bTop); ctx.closePath(); ctx.fill();
+    // Roof outline
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(bL, bTop); ctx.lineTo(ridgeX, ridgeY); ctx.lineTo(bR, bTop); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ridgeX, ridgeY); ctx.lineTo(ridgeX, bTop); ctx.stroke();
+  } else { // hip
+    var hipInset = pw * 0.2;
+    ctx.fillStyle = zoneColor(gcpf4);
+    ctx.beginPath(); ctx.moveTo(bL, bTop); ctx.lineTo(bL + hipInset, ridgeY); ctx.lineTo(bR - hipInset, ridgeY); ctx.lineTo(bR, bTop); ctx.lineTo(ridgeX, bTop); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = zoneColor(gcpf5);
+    ctx.beginPath(); ctx.moveTo(bL, bTop); ctx.lineTo(bL + hipInset, ridgeY); ctx.lineTo(bL, bTop); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = lineC; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(bL, bTop); ctx.lineTo(bL + hipInset, ridgeY); ctx.lineTo(bR - hipInset, ridgeY); ctx.lineTo(bR, bTop); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bL + hipInset, ridgeY); ctx.lineTo(bR - hipInset, ridgeY); ctx.stroke();
+  }
+
+  // Wind arrow (left side)
+  var arrowY = bTop + wallH / 2;
+  ctx.strokeStyle = '#1a5c8e'; ctx.lineWidth = 2;
+  ctx.fillStyle = '#1a5c8e';
+  for (var i = 0; i < 3; i++) {
+    var ay = arrowY - 14 + i * 14;
+    var ax1 = ml - 16; var ax2 = bL;
+    ctx.beginPath(); ctx.moveTo(ax1, ay); ctx.lineTo(ax2, ay); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax2, ay); ctx.lineTo(ax2 - 5, ay - 4); ctx.lineTo(ax2 - 5, ay + 4); ctx.closePath(); ctx.fill();
+  }
+
+  // Zone labels in diagram
+  ctx.fillStyle = isDark ? '#e2e8f0' : '#374151';
+  ctx.font = '10px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Zone 1', ml + pw/2, bTop + wallH/2 + 4);
+  ctx.fillStyle = isDark ? '#fde047' : '#854d0e';
+  ctx.font = '9px system-ui,sans-serif';
+  ctx.fillText('1E', ml + endW/2, bTop + wallH/2 + 4);
+  ctx.fillText('3E', bR - endW/2, bTop + wallH/2 + 4);
+
+  // Pressure values next to zones
+  ctx.fillStyle = isDark ? '#93c5fd' : '#1d4ed8';
+  ctx.font = 'bold 10px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  if (_rptData && _rptData.lc1) {
+    var p1 = _rptData.lc1['1'];
+    if (p1) ctx.fillText(fSign(p1.pPos, 1), ml + pw/2, bTop + wallH*0.7);
+    var p4 = _rptData.lc1['4'];
+    if (roofT !== 'flat' && p4) {
+      ctx.fillStyle = p4.gcpf < 0 ? (isDark ? '#fca5a5' : '#dc2626') : (isDark ? '#93c5fd' : '#1d4ed8');
+      ctx.fillText(fSign(p4.pNeg, 1), ml + pw/4, ridgeY + (bTop - ridgeY)*0.5);
+    }
+  }
+
+  // Legend: V label
+  ctx.fillStyle = '#1a5c8e'; ctx.font = 'bold 11px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('V →', ml - 8, bTop - 8);
+
+  // X-axis label
+  ctx.fillStyle = lblC; ctx.font = '10px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Load Case 1 — Wind ⊥ Ridge (front elevation)', cW/2, cH - 6);
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRINT / PDF
+// ─────────────────────────────────────────────────────────────
+function printReport() {
+  if (!_rptData) { calc(); }
+  var p = _rptData;
+  if (!p) return;
+
+  var sub = document.getElementById('rpt-subtitle');
+  var ftl = document.getElementById('rpt-ft-left');
+  var rd  = document.getElementById('rpt-date');
+  if (sub) sub.textContent = 'ASCE 7-22 Ch. 28 Envelope Procedure — MWFRS Design Wind Pressures';
+  if (ftl) ftl.textContent = 'civilstrcalc.com — Wind Load Report';
+  if (rd)  rd.textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+
+  function rptKV(l,v) { return '<div class="rpt-kv"><div class="rpt-kv-l">'+l+'</div><div class="rpt-kv-v">'+v+'</div></div>'; }
+  function rptR4(a,b,c,d) { return '<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+d+'</td></tr>'; }
+  var u = isUS ? 'psf' : 'kPa';
+  var vu = isUS ? 'mph' : 'm/s';
+  var hu = isUS ? 'ft' : 'm';
+  var encl = document.querySelector('input[name=encl]:checked').value;
+
+  var h = '';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4pt;margin-bottom:4pt;">';
+  h += '<div><div class="rpt-sh">Inputs</div><div class="rpt-g4">';
+  h += rptKV('V (' + vu + ')', f(p.V_raw, 1));
+  h += rptKV('L (' + hu + ')', f(p.L_raw, 1));
+  h += rptKV('B (' + hu + ')', f(p.B_raw, 1));
+  h += rptKV('h (' + hu + ')', f(p.h_raw, 1));
+  h += rptKV('θ (°)', f(p.theta, 0));
+  h += rptKV('Roof type', ROOF_NAMES[p.rIdx]);
+  h += rptKV('Exposure', p.expo);
+  h += rptKV('Enclosure', encl);
+  h += '</div></div>';
+  h += '<div><div class="rpt-sh">Computed Factors</div><div class="rpt-g4">';
+  h += rptKV('Kd', f(Kd, 2));
+  h += rptKV('Kh', f(p.Kh, 3));
+  h += rptKV('Kzt', f(p.Kzt, 3));
+  h += rptKV('Ke', f(p.Ke, 3));
+  h += rptKV('qh (' + u + ')', f(p.qh, 2));
+  h += rptKV('GCpi', '±' + f(p.GCpi, 2));
+  h += rptKV('a (' + hu + ')', f(p.a, 2));
+  h += rptKV('Eq.', '26.10-1');
+  h += '</div></div></div>';
+
+  function rptZoneTable(zones, labels, title) {
+    var t = '<div class="rpt-sh">' + title + '</div>';
+    t += '<table class="rpt-t"><thead><tr><th>Zone</th><th>GCpf</th><th>p+ (' + u + ')</th><th>p- (' + u + ')</th></tr></thead><tbody>';
+    ['1','1E','2','2E','3','3E','4','4E','5','5E'].forEach(function(z) {
+      var d = zones[z];
+      t += rptR4(labels[z] || z, fSign(d.gcpf,2), fSign(d.pPos,1), fSign(d.pNeg,1));
+    });
+    t += '</tbody></table>';
+    return t;
+  }
+
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4pt;margin-bottom:4pt;">';
+  h += '<div>' + rptZoneTable(p.lc1, ZONE_LABELS, 'LC1 — Wind ⊥ Ridge (Fig. 28.3-1)') + '</div>';
+  h += '<div>' + rptZoneTable(p.lc2, ZONE_LABELS_LC2, 'LC2 — Wind ∥ Ridge (Fig. 28.3-1)') + '</div>';
+  h += '</div>';
+  h += '<div style="font-size:5.5pt;color:#9ca3af;margin-top:3pt;">Minimum pressures applied per §28.3.4: walls ≥ ' + (isUS?'±16 psf':'±0.77 kPa') + ', roof ≥ ' + (isUS?'±8 psf':'±0.38 kPa') + '. Preliminary design only — engineer of record to verify.</div>';
+  document.getElementById('rpt-body').innerHTML = h;
+  window.print();
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+(function init() {
+  calc();
+  window.addEventListener('resize', function() { if (_rptData) drawBuilding(_rptData.lc1, _rptData.qh, _rptData.theta, _rptData.roofT); });
+})();
+</script>
+</body>
+</html>
