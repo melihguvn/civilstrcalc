@@ -26,10 +26,9 @@
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
-/* ── Procedure selector (override global .sub-tab accent) ── */
-.sub-tab.active{color:#1a5c8e;border-bottom-color:#1a5c8e;}
-.sub-tab:hover{color:#1a5c8e;}
-.sub-tab small{display:block;font-size:.60rem;font-weight:400;opacity:.82;margin-top:1px;color:var(--text-dim);}
+/* ── Radio label overflow fix ── */
+.radio-row span{flex:1;min-width:0;font-size:.77rem;color:var(--text);line-height:1.4;}
+.radio-row span small{font-size:.67rem;color:var(--text-dim);display:block;}
 
 /* ── Units ── */
 .unit-switcher{display:flex;align-items:center;gap:10px;padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--border);}
@@ -42,6 +41,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 /* ── Layout ── */
 .page-layout{display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start;}
 @media(max-width:900px){.page-layout{grid-template-columns:1fr;}}
+.page-layout>div{min-width:0;}
 
 .section-card{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:11px 14px;margin-bottom:8px;}
 .sc-hdr{display:flex;align-items:center;justify-content:space-between;font-size:.71rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:9px;}
@@ -146,29 +146,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <main style="padding:14px 18px 32px;">
 
 <h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Wind Load Calculator — ASCE 7-22</h1>
-<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Ch. 27 Directional · Ch. 28 Envelope · Ch. 30 Components &amp; Cladding · Parapets</p>
-
-<!-- ── Procedure selector ───────────────────────────────────── -->
-<div class="sub-tabs">
-  <button class="sub-tab" id="ptab-ch28" onclick="selectProc('ch28')">
-    Envelope Procedure<small>Ch. 28 · h ≤ 60 ft</small>
-  </button>
-  <button class="sub-tab" id="ptab-ch27" onclick="selectProc('ch27')">
-    Directional Procedure<small>Ch. 27 · All heights</small>
-  </button>
-  <button class="sub-tab" id="ptab-ch30" onclick="selectProc('ch30')">
-    C&amp;C<small>Ch. 30 · h ≤ 60 ft</small>
-  </button>
-  <button class="sub-tab" id="ptab-prpt" onclick="selectProc('prpt')">
-    Parapets<small>§27.3.5 / §30.9</small>
-  </button>
-</div>
-
-<!-- Scope notes (one per procedure) -->
-<div id="scope-ch28" class="scope-note"><strong>Ch. 28 Envelope Procedure:</strong> Low-rise enclosed/partially enclosed buildings, h ≤ 60 ft and h ≤ least horizontal dimension, flat/gable/hip roofs. GCpf includes gust effect. MWFRS only.</div>
-<div id="scope-ch27" class="scope-note" hidden><strong>Ch. 27 Directional Procedure:</strong> Regular buildings of any height. Wind pressure varies with height on windward wall. Separate Cp for each surface. Gust factor G = 0.85 (rigid) or Gf (flexible, n₁ &lt; 1 Hz).</div>
-<div id="scope-ch30" class="scope-note" hidden><strong>Ch. 30 Part 1 — Components &amp; Cladding:</strong> Individual cladding elements (glass, panels, fasteners) for low-rise buildings h ≤ 60 ft. GCp from Figures 30.3-1/30.3-2 as function of effective wind area A_eff.</div>
-<div id="scope-prpt" class="scope-note" hidden><strong>Parapets — §27.3.5 / §30.9:</strong> Net wind pressure on parapet MWFRS using GCpn = +1.5 (windward) or −1.0 (leeward). Velocity pressure evaluated at top of parapet (h + h_p).</div>
+<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Ch. 27 · Ch. 28 · Ch. 30 · Parapets</p>
 
 <div class="warn-box" id="warn-box"></div>
 
@@ -184,6 +162,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <button id="btn-us" class="unit-btn active" onclick="setUnit('us')">US (psf, mph, ft)</button>
         <button id="btn-si" class="unit-btn" onclick="setUnit('si')">SI (kPa, m/s, m)</button>
       </div>
+    </div>
+
+    <!-- Procedure selector -->
+    <div class="inp-row" style="margin-bottom:10px;">
+      <label>Calculation Procedure</label>
+      <select id="proc-select" onchange="selectProc(this.value)">
+        <option value="ch28">Ch. 28 — Envelope Procedure (MWFRS, h ≤ 60 ft)</option>
+        <option value="ch27">Ch. 27 — Directional Procedure (MWFRS, all heights)</option>
+        <option value="ch30">Ch. 30 — Components &amp; Cladding (h ≤ 60 ft)</option>
+        <option value="prpt">Parapets — §27.3.5 / §30.9</option>
+      </select>
+      <div class="inp-hint" id="scope-inline">Low-rise MWFRS · h ≤ 60 ft · GCpf includes gust effect</div>
     </div>
 
     <!-- Building Geometry (shared) -->
@@ -647,18 +637,29 @@ var STD_HTS = [15,20,25,30,40,50,60,70,80,90,100,120,140,160,180,200,250,300,350
 // ═══════════════════════════════════════════════════════════
 // PROCEDURE SELECTION
 // ═══════════════════════════════════════════════════════════
+var SCOPE_TEXTS = {
+  ch28: 'Low-rise MWFRS · h ≤ 60 ft · GCpf includes gust effect',
+  ch27: 'All heights MWFRS · height-varying pressure profile · G = 0.85 or Gf',
+  ch30: 'C&C elements · h ≤ 60 ft · GCp by effective wind area',
+  prpt: 'Parapet net pressure · qp at (h + hp) · GCpn = +1.5 / −1.0'
+};
+
 function selectProc(p) {
   currentProc = p;
+  // Sync dropdown
+  var sel = document.getElementById('proc-select');
+  if (sel) sel.value = p;
+  // Update inline scope hint
+  var sh = document.getElementById('scope-inline');
+  if (sh) sh.textContent = SCOPE_TEXTS[p] || '';
+  // Show/hide result panels and proc-specific inputs
   ['ch28','ch27','ch30','prpt'].forEach(function(id) {
-    document.getElementById('ptab-'+id).classList.toggle('active', id===p);
     var rs = document.getElementById('res-'+id);
     if (rs) rs.hidden = (id!==p);
-    var sc = document.getElementById('scope-'+id);
-    if (sc) sc.hidden = (id!==p);
     var inp = document.getElementById('inp-'+id);
     if (inp) inp.hidden = (id!==p);
   });
-  // Roof type: hide for Ch.27 (not needed in same way), show for Ch.28/30
+  // Roof type: hide for Ch.27 and Parapets
   var rt = document.getElementById('inp-rooftype');
   if (rt) rt.hidden = (p==='ch27'||p==='prpt');
   // Update badge
