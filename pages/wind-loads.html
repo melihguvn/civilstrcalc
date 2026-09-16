@@ -168,8 +168,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="inp-row" style="margin-bottom:10px;">
       <label>Calculation Procedure</label>
       <select id="proc-select" onchange="selectProc(this.value)">
-        <option value="ch28">Ch. 28 — Envelope Procedure (MWFRS, h ≤ 60 ft)</option>
         <option value="ch27">Ch. 27 — Directional Procedure (MWFRS, all heights)</option>
+        <option value="ch28" selected>Ch. 28 — Envelope Procedure (MWFRS, h ≤ 60 ft)</option>
         <option value="ch30">Ch. 30 — Components &amp; Cladding (h ≤ 60 ft)</option>
         <option value="prpt">Parapets — §27.3.5 / §30.9</option>
       </select>
@@ -444,37 +444,67 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div>
     <div class="res-card">
       <div class="res-card-hdr">C&amp;C Zone Diagram — Fig. 30.3-1/30.3-2</div>
-      <svg viewBox="0 0 480 200" style="display:block;width:100%;max-height:200px;" aria-label="C&C zone diagram">
-        <defs><marker id="arr30" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
-        <!-- building outline -->
-        <rect x="60" y="40" width="360" height="120" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
-        <!-- roof peak -->
-        <polyline points="60,40 240,10 420,40" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
-        <!-- wall zones: 5=corner (medium grey), 4=field (light grey) -->
-        <rect x="60" y="40" width="45" height="120" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
-        <rect x="375" y="40" width="45" height="120" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
-        <rect x="105" y="40" width="270" height="120" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
-        <!-- roof zones: 3=dark grey, 2=medium grey, 1=light grey -->
-        <polygon points="60,40 105,40 120,22 95,10" fill="#94a3b8" stroke="#64748b" stroke-width="1"/>
-        <polygon points="420,40 375,40 360,22 385,10" fill="#94a3b8" stroke="#64748b" stroke-width="1"/>
-        <polygon points="105,40 375,40 360,22 120,22" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
-        <polygon points="120,22 360,22 240,10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
-        <!-- zone labels -->
-        <text x="82" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">5</text>
-        <text x="398" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">5</text>
-        <text x="240" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#64748b">4</text>
-        <text x="90" y="35" text-anchor="middle" font-size="9" font-weight="700" fill="#1e293b">3</text>
-        <text x="390" y="35" text-anchor="middle" font-size="9" font-weight="700" fill="#1e293b">3</text>
-        <text x="240" y="34" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">2</text>
-        <text x="240" y="18" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b">1</text>
-        <!-- wind arrow -->
-        <line x1="15" y1="100" x2="54" y2="100" stroke="#64748b" stroke-width="2" marker-end="url(#arr30)"/>
-        <text x="10" y="88" font-size="11" font-weight="700" fill="#64748b">V→</text>
+      <svg viewBox="0 0 520 210" style="display:block;width:100%;" aria-label="C&C zone diagram">
+        <defs>
+          <marker id="a30" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><polygon points="0,0 5,2.5 0,5" fill="#64748b"/></marker>
+          <marker id="a30b" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><polygon points="5,0 0,2.5 5,5" fill="#64748b"/></marker>
+          <!-- diagonal hatch for zone 2/5 -->
+          <pattern id="h25" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="5" stroke="#94a3b8" stroke-width="1"/>
+          </pattern>
+          <!-- cross-hatch for zone 3 -->
+          <pattern id="h3" patternUnits="userSpaceOnUse" width="5" height="5">
+            <line x1="0" y1="0" x2="5" y2="5" stroke="#94a3b8" stroke-width="0.8"/>
+            <line x1="5" y1="0" x2="0" y2="5" stroke="#94a3b8" stroke-width="0.8"/>
+          </pattern>
+        </defs>
+
+        <!-- ── wall: zone 4 field (plain) ── -->
+        <rect x="90" y="50" width="300" height="120" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+        <!-- wall: zone 5 left corner -->
+        <rect x="90" y="50" width="40" height="120" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="90" y="50" width="40" height="120" fill="url(#h25)" opacity="0.7"/>
+        <!-- wall: zone 5 right corner -->
+        <rect x="350" y="50" width="40" height="120" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="350" y="50" width="40" height="120" fill="url(#h25)" opacity="0.7"/>
+
+        <!-- ── roof: zone 1 field ── -->
+        <polygon points="90,50 240,8 390,50" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+        <!-- roof: zone 2 edge band -->
+        <polygon points="90,50 130,50 240,24 350,50 390,50 240,8" fill="#e2e8f0" stroke="none"/>
+        <polygon points="90,50 130,50 240,24 350,50 390,50 240,8" fill="url(#h25)" opacity="0.6"/>
+        <polygon points="90,50 130,50 240,24 350,50 390,50 240,8" fill="none" stroke="#94a3b8" stroke-width="0.8"/>
+        <!-- roof: zone 3 corners -->
+        <polygon points="90,50 130,50 106,26" fill="#d1d5db" stroke="#94a3b8" stroke-width="0.8"/>
+        <polygon points="90,50 130,50 106,26" fill="url(#h3)" opacity="0.8"/>
+        <polygon points="390,50 350,50 374,26" fill="#d1d5db" stroke="#94a3b8" stroke-width="0.8"/>
+        <polygon points="390,50 350,50 374,26" fill="url(#h3)" opacity="0.8"/>
+
+        <!-- ── zone labels ── -->
+        <text x="195" y="115" text-anchor="middle" font-size="12" font-weight="600" font-family="system-ui,sans-serif" fill="#475569">4</text>
+        <text x="110" y="115" text-anchor="middle" font-size="11" font-weight="600" font-family="system-ui,sans-serif" fill="#374151">5</text>
+        <text x="370" y="115" text-anchor="middle" font-size="11" font-weight="600" font-family="system-ui,sans-serif" fill="#374151">5</text>
+        <text x="240" y="40" text-anchor="middle" font-size="10" font-weight="600" font-family="system-ui,sans-serif" fill="#475569">1</text>
+        <text x="163" y="47" text-anchor="middle" font-size="9" font-weight="600" font-family="system-ui,sans-serif" fill="#374151">2</text>
+        <text x="317" y="47" text-anchor="middle" font-size="9" font-weight="600" font-family="system-ui,sans-serif" fill="#374151">2</text>
+        <text x="99"  y="40" text-anchor="middle" font-size="8"  font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">3</text>
+        <text x="381" y="40" text-anchor="middle" font-size="8"  font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">3</text>
+
+        <!-- ── dimension "a" ── -->
+        <line x1="90" y1="178" x2="130" y2="178" stroke="#64748b" stroke-width="1" marker-start="url(#a30b)" marker-end="url(#a30)"/>
+        <text x="110" y="191" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="#64748b">a</text>
+
+        <!-- ── wind arrow ── -->
+        <line x1="30" y1="110" x2="82" y2="110" stroke="#475569" stroke-width="1.8" marker-end="url(#a30)"/>
+        <text x="24" y="106" text-anchor="end" font-size="10" font-weight="600" font-family="system-ui,sans-serif" fill="#475569">V</text>
+
+        <!-- ── caption ── -->
+        <text x="240" y="205" text-anchor="middle" font-size="8.5" font-family="system-ui,sans-serif" fill="#94a3b8">C&amp;C pressure zones — Fig. 30.3-1 (walls) / 30.3-2 (roof)</text>
       </svg>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:5px 12px 8px;font-size:.63rem;color:var(--text-dim);align-items:center;">
-        <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:12px;height:9px;background:#f1f5f9;border:1px solid #94a3b8;display:inline-block;border-radius:2px;"></span>Zone 1/4 (field)</span>
-        <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:12px;height:9px;background:#cbd5e1;border:1px solid #94a3b8;display:inline-block;border-radius:2px;"></span>Zone 2/5 (edge/corner)</span>
-        <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:12px;height:9px;background:#94a3b8;border:1px solid #64748b;display:inline-block;border-radius:2px;"></span>Zone 3 (roof corner)</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding:4px 12px 8px;font-size:.62rem;color:var(--text-dim);align-items:center;">
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:10px;background:#f1f5f9;border:1px solid #94a3b8;display:inline-block;"></span>Zone 1/4 — Field</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:10px;background:repeating-linear-gradient(45deg,#94a3b8,#94a3b8 1px,#e2e8f0 1px,#e2e8f0 4px);border:1px solid #94a3b8;display:inline-block;"></span>Zone 2/5 — Edge / Corner</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:10px;background:repeating-linear-gradient(45deg,#94a3b8,#94a3b8 1px,#d1d5db 1px,#d1d5db 4px);border:1px solid #94a3b8;display:inline-block;transform:scaleX(-1);"></span>Zone 3 — Roof Corner</span>
       </div>
     </div>
     <div class="res-card">
@@ -497,42 +527,73 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div>
     <div class="res-card">
       <div class="res-card-hdr">Parapet Pressure Diagram — §27.3.5</div>
-      <svg viewBox="0 0 480 180" style="display:block;width:100%;max-height:180px;" aria-label="Parapet pressure diagram">
+      <svg viewBox="0 0 520 220" style="display:block;width:100%;" aria-label="Parapet pressure diagram">
         <defs>
-          <marker id="arrP" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker>
-          <marker id="arrPd" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" fill="#475569"/></marker>
+          <marker id="aP"  markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><polygon points="0,0 5,2.5 0,5" fill="#475569"/></marker>
+          <marker id="aPr" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><polygon points="5,0 0,2.5 5,5" fill="#475569"/></marker>
+          <marker id="aPdim" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><polygon points="0,0 5,2.5 0,5" fill="#94a3b8"/></marker>
+          <marker id="aPdimr" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><polygon points="5,0 0,2.5 5,5" fill="#94a3b8"/></marker>
+          <!-- diagonal hatch for masonry/concrete fill -->
+          <pattern id="hPar" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="5" stroke="#94a3b8" stroke-width="1"/>
+          </pattern>
+          <!-- ground hatch -->
+          <pattern id="hGnd" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="1.5"/>
+          </pattern>
         </defs>
-        <!-- building body -->
-        <rect x="130" y="90" width="220" height="70" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
-        <!-- windward parapet (darker) -->
-        <rect x="130" y="60" width="22" height="30" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
-        <!-- leeward parapet (lighter) -->
-        <rect x="328" y="60" width="22" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
-        <!-- roof line -->
-        <line x1="130" y1="90" x2="350" y2="90" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
-        <!-- labels -->
-        <text x="141" y="78" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">WW</text>
-        <text x="339" y="78" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b">LW</text>
-        <!-- height annotations -->
-        <line x1="100" y1="90" x2="100" y2="160" stroke="#94a3b8" stroke-width="1"/>
-        <line x1="96" y1="90" x2="104" y2="90" stroke="#94a3b8" stroke-width="1"/>
-        <line x1="96" y1="160" x2="104" y2="160" stroke="#94a3b8" stroke-width="1"/>
-        <text x="90" y="128" text-anchor="middle" font-size="9" fill="#64748b" transform="rotate(-90,90,128)">h</text>
-        <line x1="100" y1="60" x2="100" y2="90" stroke="#64748b" stroke-width="1"/>
-        <line x1="96" y1="60" x2="104" y2="60" stroke="#64748b" stroke-width="1"/>
-        <text x="84" y="76" text-anchor="middle" font-size="9" fill="#475569">hp</text>
-        <!-- GCpn arrow → WW (pressure inward) -->
-        <line x1="60" y1="75" x2="124" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arrP)"/>
-        <text x="52" y="72" font-size="9" font-weight="700" fill="#334155">+1.5</text>
-        <!-- GCpn arrow ← LW (suction outward) -->
-        <line x1="420" y1="75" x2="358" y2="75" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrPd)"/>
-        <text x="428" y="72" font-size="9" font-weight="700" fill="#64748b">−1.0</text>
-        <!-- wind arrow -->
-        <line x1="15" y1="125" x2="54" y2="125" stroke="#64748b" stroke-width="2" marker-end="url(#arrP)"/>
-        <text x="10" y="113" font-size="11" font-weight="700" fill="#64748b">V→</text>
-        <!-- ground -->
-        <line x1="90" y1="160" x2="460" y2="160" stroke="#94a3b8" stroke-width="2"/>
-        <text x="240" y="175" text-anchor="middle" font-size="9" fill="#94a3b8">qp evaluated at (h + hp) — §27.3.5</text>
+
+        <!-- ── building body (elevation view) ── -->
+        <rect x="140" y="95" width="240" height="90" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+
+        <!-- ── windward parapet ── -->
+        <rect x="140" y="60" width="26" height="35" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+        <rect x="140" y="60" width="26" height="35" fill="url(#hPar)" opacity="0.5"/>
+
+        <!-- ── leeward parapet ── -->
+        <rect x="354" y="60" width="26" height="35" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+        <rect x="354" y="60" width="26" height="35" fill="url(#hPar)" opacity="0.5"/>
+
+        <!-- ── roof line (dashed) ── -->
+        <line x1="166" y1="95" x2="354" y2="95" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="5,4"/>
+
+        <!-- ── ground line + hatch ── -->
+        <line x1="100" y1="185" x2="440" y2="185" stroke="#475569" stroke-width="2"/>
+        <rect x="100" y="185" width="340" height="14" fill="url(#hGnd)"/>
+
+        <!-- ── dim: hp (WW parapet height) ── -->
+        <line x1="122" y1="60" x2="122" y2="95" stroke="#94a3b8" stroke-width="0.9" marker-start="url(#aPdimr)" marker-end="url(#aPdim)"/>
+        <text x="114" y="80" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="#64748b" transform="rotate(-90,114,80)">hp</text>
+
+        <!-- ── dim: h (building height) ── -->
+        <line x1="122" y1="95" x2="122" y2="185" stroke="#94a3b8" stroke-width="0.9" marker-start="url(#aPdimr)" marker-end="url(#aPdim)"/>
+        <text x="108" y="140" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="#64748b" transform="rotate(-90,108,140)">h</text>
+
+        <!-- ── reference level: h + hp ── -->
+        <line x1="136" y1="60" x2="392" y2="60" stroke="#64748b" stroke-width="0.8" stroke-dasharray="3,3"/>
+        <text x="395" y="63" font-size="8" font-family="system-ui,sans-serif" fill="#64748b">z = h+hp</text>
+
+        <!-- ── WW label ── -->
+        <text x="153" y="82" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,sans-serif" fill="#1e293b">WW</text>
+        <!-- ── LW label ── -->
+        <text x="367" y="82" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,sans-serif" fill="#374151">LW</text>
+
+        <!-- ── GCpn +1.5 pressure arrow (→ into WW parapet) ── -->
+        <line x1="50" y1="75" x2="134" y2="75" stroke="#334155" stroke-width="2" marker-end="url(#aP)"/>
+        <text x="44" y="70" text-anchor="end" font-size="10" font-weight="700" font-family="system-ui,sans-serif" fill="#1e293b">+1.5</text>
+        <text x="44" y="82" text-anchor="end" font-size="7.5" font-family="system-ui,sans-serif" fill="#64748b">GCpn</text>
+
+        <!-- ── GCpn −1.0 suction arrow (← away from LW parapet) ── -->
+        <line x1="470" y1="75" x2="386" y2="75" stroke="#64748b" stroke-width="1.8" marker-end="url(#aPr)"/>
+        <text x="476" y="70" text-anchor="start" font-size="10" font-weight="700" font-family="system-ui,sans-serif" fill="#374151">−1.0</text>
+        <text x="476" y="82" text-anchor="start" font-size="7.5" font-family="system-ui,sans-serif" fill="#94a3b8">GCpn</text>
+
+        <!-- ── wind arrow ── -->
+        <line x1="30" y1="145" x2="134" y2="145" stroke="#475569" stroke-width="1.8" marker-end="url(#aP)"/>
+        <text x="28" y="141" text-anchor="end" font-size="10" font-weight="600" font-family="system-ui,sans-serif" fill="#475569">V</text>
+
+        <!-- ── caption ── -->
+        <text x="260" y="210" text-anchor="middle" font-size="8.5" font-family="system-ui,sans-serif" fill="#94a3b8">Parapet net pressure — qp at (h + hp) — §27.3.5 / §30.9</text>
       </svg>
     </div>
     <div class="res-card">
@@ -798,7 +859,7 @@ function setUnit(u) {
   var lim = isUS ? '60 ft' : '18 m';
   var ps = document.getElementById('proc-select');
   if (ps) {
-    ps.options[0].text = 'Ch. 28 — Envelope Procedure (MWFRS, h ≤ '+lim+')';
+    ps.options[1].text = 'Ch. 28 — Envelope Procedure (MWFRS, h ≤ '+lim+')';
     ps.options[2].text = 'Ch. 30 — Components & Cladding (h ≤ '+lim+')';
   }
   selectProc(currentProc);
@@ -1288,95 +1349,148 @@ function drawCh27Building(profile, qh, G, Cp_lw, Cp_roof_ww, theta) {
   var canvas = document.getElementById('c27-canvas'); if (!canvas) return;
   var isDark = document.documentElement.getAttribute('data-theme')==='dark'||
     (!document.documentElement.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme:dark)').matches);
-  var cW = canvas.parentElement.clientWidth || 600;
-  var cH = Math.max(200, Math.round(cW * 0.36));
-  canvas.width = cW; canvas.height = cH;
+  var cW = canvas.parentElement.clientWidth || 620;
+  var cH = Math.max(210, Math.round(cW * 0.38));
+  canvas.width = cW * (window.devicePixelRatio||1);
+  canvas.height = cH * (window.devicePixelRatio||1);
+  canvas.style.width = cW + 'px'; canvas.style.height = cH + 'px';
   var ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
 
-  var bg = isDark ? '#1e293b' : '#f8fafc';
-  var lineC = isDark ? '#475569' : '#94a3b8';
-  var lblC = isDark ? '#94a3b8' : '#64748b';
-  ctx.fillStyle = bg; ctx.fillRect(0,0,cW,cH);
+  var bg    = isDark ? '#0f172a' : '#f8fafc';
+  var lineC = isDark ? '#475569' : '#64748b';
+  var fillC = isDark ? '#334155' : '#e2e8f0';
+  var lblC  = isDark ? '#94a3b8' : '#475569';
+  var dimC  = isDark ? '#64748b' : '#94a3b8';
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, cW, cH);
 
-  var ml=70, mr=70, mt=18, mb=24;
-  var bW = Math.round(cW*0.30); // building width
+  /* layout */
+  var ml = 58, mr = 80, mt = 30, mb = 28;
+  var bW = Math.round(cW * 0.28);
   var bH = cH - mt - mb;
-  var bX = ml + Math.round(cW*0.12); // left edge of building
+  var bX = ml + Math.round(cW * 0.14);
   var bY = mt;
-
-  // Max pressure for scaling bars
+  var n  = profile.length;
   var maxPww = 0;
   profile.forEach(function(r){ if (r.pww > maxPww) maxPww = r.pww; });
-  var barMaxW = bX - 8; // max bar extends to left margin
-  var lwBarW = Math.min(60, mr - 10);
+  var pZone = bX - 6;          // right edge of pressure diagram
+  var pMaxW = pZone - ml - 2;  // maximum width of pressure polygon
 
-  // Draw windward bars (height-varying, blue)
-  var n = profile.length;
+  /* helper: z → canvas y */
+  function zy(z){ return bY + bH * (1 - z / profile[n-1].z); }
+  /* helper: pww → x offset from building left edge */
+  function pw(p){ return Math.round(p / maxPww * pMaxW); }
+
+  /* ── windward pressure polygon (filled + outlined) ── */
+  ctx.beginPath();
+  ctx.moveTo(bX, bY + bH); // bottom of building
   for (var i = 0; i < n; i++) {
-    var y0 = bY + bH * (1 - (i < n-1 ? (profile[i].z / profile[n-1].z) : 1));
-    var y1 = i < n-1 ? bY + bH * (1 - profile[i].z / profile[n-1].z) :
-             (i > 0 ? bY + bH * (1 - profile[i-1].z / profile[n-1].z) : bY + bH);
-    if (i === 0) y1 = bY + bH;
-    var bw = Math.round((profile[i].pww / maxPww) * barMaxW);
-    var alpha = 0.18 + 0.45 * (profile[i].pww / maxPww);
-    ctx.fillStyle = 'rgba(100,116,139,' + alpha.toFixed(2) + ')';
-    ctx.fillRect(bX - bw, Math.min(y0,y1), bw, Math.abs(y1-y0));
+    ctx.lineTo(bX - pw(profile[i].pww), zy(profile[i].z));
+  }
+  ctx.lineTo(bX, bY);
+  ctx.closePath();
+  ctx.fillStyle = isDark ? 'rgba(100,116,139,0.30)' : 'rgba(100,116,139,0.18)';
+  ctx.fill();
+  ctx.strokeStyle = isDark ? '#64748b' : '#94a3b8';
+  ctx.lineWidth = 1.2; ctx.stroke();
+
+  /* pressure profile tick arrows at each height step */
+  for (var i = 0; i < n; i++) {
+    var ty = zy(profile[i].z);
+    var tx = bX - pw(profile[i].pww);
+    // short horizontal tick from polygon edge → building face
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bX - 2, ty);
+    ctx.strokeStyle = dimC; ctx.lineWidth = 0.7; ctx.stroke();
   }
 
-  // Draw leeward bar (constant, red)
-  var lwCp = Math.abs(Cp_lw);
-  var lwW = Math.round(lwCp * lwBarW * 1.2);
-  ctx.fillStyle = 'rgba(148,163,184,0.45)';
+  /* ── leeward pressure block ── */
+  var lwP  = Math.abs(qh * G * Cp_lw);
+  var lwW  = Math.round(lwP / maxPww * pMaxW * 0.65);
+  ctx.fillStyle = isDark ? 'rgba(148,163,184,0.22)' : 'rgba(148,163,184,0.28)';
   ctx.fillRect(bX + bW, bY, lwW, bH);
+  ctx.strokeStyle = dimC; ctx.lineWidth = 1; ctx.strokeRect(bX + bW, bY, lwW, bH);
 
-  // Draw roof bar (hatched grey)
-  var roofH = Math.round(bH * 0.10);
-  var rfCp = Cp_roof_ww !== null ? Cp_roof_ww : -0.7;
-  ctx.fillStyle = 'rgba(148,163,184,0.35)';
+  /* ── roof pressure block (suction upward) ── */
+  var roofH = Math.round(bH * 0.12);
+  ctx.fillStyle = isDark ? 'rgba(148,163,184,0.18)' : 'rgba(148,163,184,0.22)';
   ctx.fillRect(bX, bY - roofH, bW, roofH);
+  ctx.strokeStyle = dimC; ctx.lineWidth = 0.8;
+  ctx.setLineDash([3,3]); ctx.strokeRect(bX, bY - roofH, bW, roofH); ctx.setLineDash([]);
 
-  // Building outline
-  ctx.strokeStyle = lineC; ctx.lineWidth = 1.5;
+  /* ── building solid outline ── */
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1.8;
   ctx.strokeRect(bX, bY, bW, bH);
 
-  // Roof outline
-  ctx.beginPath(); ctx.moveTo(bX, bY); ctx.lineTo(bX+bW/2, bY-roofH-6); ctx.lineTo(bX+bW, bY);
-  ctx.strokeStyle = lineC; ctx.lineWidth = 1.2; ctx.stroke();
+  /* ── roof gable line ── */
+  ctx.beginPath(); ctx.moveTo(bX, bY);
+  ctx.lineTo(bX + bW/2, bY - roofH - 4); ctx.lineTo(bX + bW, bY);
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1.4; ctx.stroke();
 
-  // Height tick labels on left of building
-  ctx.fillStyle = lblC; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'right';
-  var u = isUS ? 'ft' : 'm';
-  for (var j = 0; j < profile.length; j += Math.ceil(profile.length / 4)) {
-    var yt = bY + bH * (1 - profile[j].z / profile[n-1].z);
-    ctx.fillStyle = lblC; ctx.fillText(Math.round(profile[j].z) + ' ' + u, bX - barMaxW - 2, yt + 3);
-    ctx.beginPath(); ctx.moveTo(bX-2, yt); ctx.lineTo(bX+2, yt);
-    ctx.strokeStyle = lineC; ctx.lineWidth = 0.8; ctx.stroke();
+  /* ── ground line + hatch ── */
+  var gY = bY + bH;
+  ctx.strokeStyle = lineC; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(ml - 10, gY); ctx.lineTo(cW - 8, gY); ctx.stroke();
+  ctx.strokeStyle = dimC; ctx.lineWidth = 1;
+  for (var gi = 0; gi < 12; gi++) {
+    var gx = ml - 4 + gi * Math.round((cW - ml) / 12);
+    ctx.beginPath(); ctx.moveTo(gx, gY); ctx.lineTo(gx - 7, gY + 8); ctx.stroke();
   }
 
-  // Pressure labels
-  ctx.font = 'bold 9px system-ui,sans-serif'; ctx.textAlign = 'center';
-  var topPww = profile[profile.length-1];
-  ctx.fillStyle = lblC;
-  ctx.fillText(f(topPww.pww,1)+(isUS?' psf':' kPa'), bX - barMaxW/2, bY + 12);
+  /* ── height dimension line on left ── */
+  ctx.strokeStyle = dimC; ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.moveTo(ml - 14, bY); ctx.lineTo(ml - 14, gY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ml - 18, bY); ctx.lineTo(ml - 10, bY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ml - 18, gY); ctx.lineTo(ml - 10, gY); ctx.stroke();
+  ctx.save(); ctx.translate(ml - 26, (bY + gY) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = lblC; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('h', 0, 3); ctx.restore();
 
-  var lwP = Math.abs(qh * G * Cp_lw);
-  ctx.fillStyle = lblC;
-  ctx.fillText('−'+f(lwP,1), bX + bW + lwW/2 + 4, bY + bH/2);
+  /* ── height labels at profile steps ── */
+  var u = isUS ? 'ft' : 'm';
+  var step = Math.max(1, Math.ceil(n / 5));
+  ctx.font = '8.5px system-ui,sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = dimC;
+  for (var j = 0; j < n; j += step) {
+    var yt = zy(profile[j].z);
+    ctx.fillText(Math.round(profile[j].z) + ' ' + u, bX - pMaxW - 4, yt + 3);
+    ctx.beginPath(); ctx.moveTo(bX - 2, yt); ctx.lineTo(bX + 2, yt);
+    ctx.strokeStyle = dimC; ctx.lineWidth = 0.7; ctx.stroke();
+  }
 
-  // Wind arrow
+  /* ── top pressure label ── */
+  var topR = profile[n-1];
+  ctx.font = 'bold 9px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lblC;
+  ctx.fillText(f(topR.pww, 1) + (isUS ? ' psf' : ' kPa'), bX - pw(topR.pww) / 2, bY - 4);
+
+  /* ── leeward pressure label ── */
+  ctx.font = '9px system-ui,sans-serif'; ctx.fillStyle = lblC;
+  ctx.fillText('−' + f(lwP, 1), bX + bW + lwW / 2, bY + bH / 2 + 4);
+
+  /* ── wind arrow ── */
+  var arrowY = bY + bH * 0.55;
+  var arrowTip = bX - pMaxW - 5;
+  var arrowStart = Math.max(6, arrowTip - 38);
   ctx.strokeStyle = isDark ? '#94a3b8' : '#475569';
   ctx.lineWidth = 1.8;
-  ctx.beginPath(); ctx.moveTo(10, bY + bH*0.6); ctx.lineTo(bX - barMaxW - 4, bY + bH*0.6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(arrowStart, arrowY); ctx.lineTo(arrowTip, arrowY); ctx.stroke();
   ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-  ctx.beginPath(); ctx.moveTo(bX - barMaxW - 4, bY + bH*0.6);
-  ctx.lineTo(bX - barMaxW - 11, bY + bH*0.6 - 4);
-  ctx.lineTo(bX - barMaxW - 11, bY + bH*0.6 + 4); ctx.closePath(); ctx.fill();
-  ctx.font = 'bold 10px system-ui,sans-serif'; ctx.textAlign = 'left';
-  ctx.fillText('V→', 12, bY + bH*0.6 - 6);
+  ctx.beginPath();
+  ctx.moveTo(arrowTip, arrowY);
+  ctx.lineTo(arrowTip - 8, arrowY - 4);
+  ctx.lineTo(arrowTip - 8, arrowY + 4);
+  ctx.closePath(); ctx.fill();
+  ctx.font = 'bold 10px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+  ctx.fillText('V', arrowStart + (arrowTip - arrowStart) / 2, arrowY - 6);
 
-  // Caption
-  ctx.fillStyle = lblC; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('Windward pressure varies with height · Leeward & roof use qₕ', cW/2, cH-4);
+  /* ── labels: WW / LW / Roof ── */
+  ctx.font = '8.5px system-ui,sans-serif'; ctx.fillStyle = lblC;
+  ctx.textAlign = 'center';
+  ctx.fillText('Windward', bX - pMaxW / 2, bY + bH + 14);
+  ctx.fillText('Leeward', bX + bW + lwW / 2, bY + bH + 14);
+
+  /* ── caption ── */
+  ctx.fillStyle = dimC; ctx.font = '8px system-ui,sans-serif';
+  ctx.fillText('Pressure profile — Ch.27 Directional Procedure · ASCE 7-22 §27.3', cW / 2, cH - 5);
 }
 
 // ═══════════════════════════════════════════════════════════
