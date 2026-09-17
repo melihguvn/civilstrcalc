@@ -140,13 +140,29 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rpt-t td:not(:first-child){text-align:center;font-weight:500;}
 .rpt-ft{display:flex;justify-content:space-between;border-top:.5pt solid #dde1e7;padding-top:3pt;margin-top:4pt;font-size:5.5pt;color:#9ca3af;}
 @media print{body>*{display:none!important;}#pdf-report{display:block!important;}@page{margin:10mm 12mm;size:A4;}}
+
+/* ── EN 1991-1-4 table & value helpers ── */
+.res-tbl3{width:100%;border-collapse:collapse;font-size:.76rem;}
+.res-tbl3 th{background:#f0f4f8;padding:5px 8px;font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);text-align:left;}
+.res-tbl3 th:not(:first-child){text-align:center;}
+.res-tbl3 td{padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.res-tbl3 td:not(:first-child){text-align:center;font-weight:500;font-variant-numeric:tabular-nums;}
+.vok{color:#1a6b45;}.vwarn{color:#b45309;}
+.vbig{font-size:.92rem;}
 </style>
 </head>
 <body>
 <main style="padding:14px 18px 32px;">
 
-<h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Wind Load Calculator — ASCE 7-22</h1>
-<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Ch. 27 · Ch. 28 · Ch. 30 · Parapets</p>
+<h1 style="font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 3px;">Wind Load Calculator</h1>
+<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 6px;">ASCE 7-22 Ch.27/28/30 · EN 1991-1-4</p>
+
+<div class="sub-tabs">
+  <button class="sub-tab active" onclick="switchWind('asce',this)">ASCE 7-22</button>
+  <button class="sub-tab" onclick="switchWind('en',this)">EN 1991-1-4</button>
+</div>
+
+<div class="sub-pane active" id="wpane-asce">
 
 <div class="warn-box" id="warn-box"></div>
 
@@ -669,6 +685,171 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 </div><!-- /results -->
 </div><!-- /page-layout -->
+</div><!-- /wpane-asce -->
+
+<!-- ═══ EN 1991-1-4 PANE ═══ -->
+<div class="sub-pane" id="wpane-en">
+
+<h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Wind Load Calculator — EN 1991-1-4</h2>
+<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Peak velocity pressure qp · External/internal pressures · Zone forces — EN 1991-1-4:2005+A1:2010</p>
+
+<div class="page-layout">
+<!-- ═══ EN LEFT ═══ -->
+<div>
+  <!-- 1. Building Geometry -->
+  <div class="section-card">
+    <div class="sc-hdr">1. Building Geometry</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>b — Crosswind width (m)</label>
+        <input type="number" id="en-b" value="12" min="1" step="0.5" oninput="enCalc();">
+      </div>
+      <div class="inp-row">
+        <label>d — Along-wind depth (m)</label>
+        <input type="number" id="en-d" value="15" min="1" step="0.5" oninput="enCalc();">
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>h — Building height (m)</label>
+        <input type="number" id="en-h" value="10" min="1" step="0.5" oninput="enCalc();">
+      </div>
+      <div class="inp-row">
+        <label>θ — Roof pitch (degrees)</label>
+        <input type="number" id="en-theta" value="0" min="0" max="45" step="1" oninput="enCalc();">
+        <div class="inp-hint">0° = flat roof</div>
+      </div>
+    </div>
+    <div class="inp-row" style="margin-bottom:8px;">
+      <label>Roof Type</label>
+      <select id="en-roof" onchange="enCalc();">
+        <option value="flat">Flat (θ = 0°–5°)</option>
+        <option value="duo">Duopitch (gable)</option>
+        <option value="mono">Monopitch</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 2. Wind Speed -->
+  <div class="section-card">
+    <div class="sc-hdr">2. Wind Speed — §4.2</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>v<sub>b,0</sub> — Fundamental basic wind speed (m/s)</label>
+        <input type="number" id="en-vb0" value="26" min="5" max="80" step="0.5" oninput="enCalc();">
+        <div class="inp-hint">From national wind map / NA</div>
+      </div>
+      <div class="inp-row">
+        <label>c<sub>dir</sub> — Directional factor</label>
+        <input type="number" id="en-cdir" value="1.0" min="0.7" max="1.0" step="0.05" oninput="enCalc();">
+        <div class="inp-hint">Recommended: 1.0</div>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>c<sub>season</sub> — Season factor</label>
+      <input type="number" id="en-cseason" value="1.0" min="0.5" max="1.0" step="0.05" oninput="enCalc();">
+      <div class="inp-hint">Recommended: 1.0</div>
+    </div>
+  </div>
+
+  <!-- 3. Terrain Category -->
+  <div class="section-card">
+    <div class="sc-hdr">3. Terrain Category — §4.3.2 Table 4.1</div>
+    <div class="radio-group">
+      <div class="radio-row"><input type="radio" name="en-terrain" id="en-t0" value="0" onchange="enCalc();"><label for="en-t0"><span>Category 0 — Sea / coastal <small>z₀=0.003 m, z_min=1 m</small></span></label></div>
+      <div class="radio-row"><input type="radio" name="en-terrain" id="en-t1" value="I" onchange="enCalc();"><label for="en-t1"><span>Category I — Open (lakes, farmland) <small>z₀=0.01 m, z_min=1 m</small></span></label></div>
+      <div class="radio-row"><input type="radio" name="en-terrain" id="en-t2" value="II" checked onchange="enCalc();"><label for="en-t2"><span>Category II — Low vegetation, scattered obstacles <small>z₀=0.05 m, z_min=2 m</small></span></label></div>
+      <div class="radio-row"><input type="radio" name="en-terrain" id="en-t3" value="III" onchange="enCalc();"><label for="en-t3"><span>Category III — Suburban, forest <small>z₀=0.3 m, z_min=5 m</small></span></label></div>
+      <div class="radio-row"><input type="radio" name="en-terrain" id="en-t4" value="IV" onchange="enCalc();"><label for="en-t4"><span>Category IV — Urban (&gt;15% buildings &gt;15 m) <small>z₀=1.0 m, z_min=10 m</small></span></label></div>
+    </div>
+  </div>
+
+  <!-- 4. Orography & cscd -->
+  <div class="section-card">
+    <div class="sc-hdr">4. Orography &amp; Structural Factor — §4.3.3 / §6</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>c<sub>0</sub> — Orography factor</label>
+        <input type="number" id="en-c0" value="1.0" min="1.0" max="2.0" step="0.05" oninput="enCalc();">
+        <div class="inp-hint">1.0 = flat terrain; &gt;1.0 for hills</div>
+      </div>
+      <div class="inp-row">
+        <label>c<sub>s</sub>c<sub>d</sub> — Structural factor</label>
+        <input type="number" id="en-cscd" value="1.0" min="0.7" max="1.5" step="0.05" oninput="enCalc();">
+        <div class="inp-hint">1.0 for rigid buildings h &lt; 15 m</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Internal Pressure -->
+  <div class="section-card">
+    <div class="sc-hdr">5. Internal Pressure — §7.2.9</div>
+    <div class="radio-group" style="margin-bottom:8px;">
+      <div class="radio-row"><input type="radio" name="en-enc" id="en-enc-closed" value="closed" checked onchange="enUpdateEnc();enCalc();"><label for="en-enc-closed"><span>No dominant opening <small>c_pi = +0.2 / −0.3 (both cases)</small></span></label></div>
+      <div class="radio-row"><input type="radio" name="en-enc" id="en-enc-open" value="open" onchange="enUpdateEnc();enCalc();"><label for="en-enc-open"><span>Dominant face opening <small>Enter area ratio μ below</small></span></label></div>
+    </div>
+    <div id="en-mu-row" class="inp-row" style="display:none;">
+      <label>μ — Opening area ratio (dominant/sum of others)</label>
+      <input type="number" id="en-mu" value="0.5" min="0.25" max="5.0" step="0.05" oninput="enCalc();">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EN RIGHT ═══ -->
+<div id="en-results">
+  <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+    <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
+    <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">EN 1991-1-4 · kN · m</span>
+  </div>
+
+  <!-- Summary tiles -->
+  <div id="en-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;"></div>
+
+  <!-- Step by step -->
+  <div class="res-card">
+    <div class="res-card-hdr">Step-by-Step Calculation — §4.3–4.5</div>
+    <div class="step-box" id="en-steps"></div>
+  </div>
+
+  <!-- Zone pressure table -->
+  <div class="res-card">
+    <div class="res-card-hdr">External Pressure Coefficients &amp; Net Pressures</div>
+    <div style="padding:8px 12px;">
+      <table class="ptbl" id="en-zone-tbl">
+        <thead>
+          <tr>
+            <th>Zone</th>
+            <th>Surface</th>
+            <th>c<sub>pe,10</sub></th>
+            <th>c<sub>pi</sub></th>
+            <th>w<sub>net</sub> (kN/m²)</th>
+          </tr>
+        </thead>
+        <tbody id="en-zone-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Building diagram SVG -->
+  <div class="res-card">
+    <div class="res-card-hdr">Building Plan — Wind Zones (EN 1991-1-4 §7.2)</div>
+    <div style="padding:10px;" id="en-diagram"></div>
+  </div>
+
+  <!-- Total forces -->
+  <div class="res-card" id="en-force-card">
+    <div class="res-card-hdr">Total Wind Force — §5.3</div>
+    <div class="step-box" id="en-forces"></div>
+  </div>
+
+  <!-- Scope note -->
+  <div class="scope-note">
+    Recommended values used per EN 1991-1-4:2005+A1:2010. National Annex may modify c<sub>dir</sub>, c<sub>season</sub>, k<sub>I</sub> and other parameters. Verify with the applicable NA before use.
+  </div>
+</div>
+</div><!-- /page-layout EN -->
+
+</div><!-- /wpane-en -->
 </main>
 
 <!-- ═══ PDF REPORT ═══ -->
@@ -1729,6 +1910,303 @@ function printReport() {
   h+='<div style="font-size:5.5pt;color:#9ca3af;margin-top:4pt;">Preliminary design only. Verify against ASCE 7-22. Engineer of record responsible for final design.</div>';
   document.getElementById('rpt-body').innerHTML=h;
   window.print();
+}
+
+// ═══════════════════════════════════════════════════════════
+// EN 1991-1-4 CALCULATOR
+// ═══════════════════════════════════════════════════════════
+
+var EN_TERRAIN = {
+  '0':  {z0:0.003, zmin:1},
+  'I':  {z0:0.010, zmin:1},
+  'II': {z0:0.050, zmin:2},
+  'III':{z0:0.300, zmin:5},
+  'IV': {z0:1.000, zmin:10}
+};
+
+// cpe,10 for Zone E (leeward wall) vs h/d — EN 1991-1-4 Table 7.1
+function enCpeE(hd) {
+  if (hd <= 0.25) return -0.3;
+  if (hd <= 1.0)  return -0.3 + (-0.5 - (-0.3)) * (hd - 0.25) / (1.0 - 0.25);
+  if (hd <= 5.0)  return -0.5 + (-0.7 - (-0.5)) * (hd - 1.0) / (5.0 - 1.0);
+  return -0.7;
+}
+
+// Flat roof cpe,10 zones (no parapet, §7.2.3 Table 7.2)
+function enFlatRoofCpe() {
+  return {F:-1.8, G:-1.2, H:-0.7, Ipos:0.2, Ineg:-0.2};
+}
+
+// Duopitch cpe,10 interpolation — EN 1991-1-4 Table 7.4a (wind direction 0°)
+// Returns {F:[neg,pos], G:[neg,pos], H:[neg,pos], I:neg, J:[neg,pos]}
+function enDuoCpe(theta) {
+  // Key angles and cpe,10 values from Table 7.4a (wind 0°)
+  var pts = [
+    {a:5,  F:[-1.7,-2.5], G:[-1.2,NaN], H:[-0.6,NaN], I:[-0.6,NaN], J:[+0.2,NaN]},
+    {a:15, F:[-0.9,+0.2], G:[-0.8,+0.2], H:[-0.3,NaN], I:[-0.4,NaN], J:[-1.0,0.0]},
+    {a:30, F:[-0.5,+0.7], G:[-0.5,+0.7], H:[-0.2,+0.4], I:[-0.4,NaN], J:[0.0,+0.0]},
+    {a:45, F:[+0.7,+0.7], G:[+0.7,+0.7], H:[+0.6,+0.6], I:[-0.2,NaN], J:[0.0,NaN]},
+    {a:60, F:[+0.7,+0.7], G:[+0.7,+0.7], H:[+0.7,+0.7], I:[-0.2,NaN], J:[0.0,NaN]},
+    {a:75, F:[+0.8,+0.8], G:[+0.8,+0.8], H:[+0.8,+0.8], I:[-0.2,NaN], J:[0.0,NaN]}
+  ];
+  // clamp
+  var t = Math.max(5, Math.min(75, theta));
+  // find bracket
+  var lo = pts[0], hi = pts[pts.length-1];
+  for (var i = 0; i < pts.length-1; i++) {
+    if (t >= pts[i].a && t <= pts[i+1].a) { lo = pts[i]; hi = pts[i+1]; break; }
+  }
+  if (lo.a === hi.a) return lo;
+  var r = (t - lo.a) / (hi.a - lo.a);
+  function interp(a, b) {
+    if (a === undefined || b === undefined) return undefined;
+    if (isNaN(a) || isNaN(b)) return NaN;
+    return a + (b - a) * r;
+  }
+  function interpArr(a, b) { return [interp(a[0],b[0]), interp(a[1],b[1])]; }
+  return {
+    F: interpArr(lo.F, hi.F),
+    G: interpArr(lo.G, hi.G),
+    H: interpArr(lo.H, hi.H),
+    I: [interp(lo.I[0], hi.I[0]), NaN],
+    J: [interp(lo.J[0], hi.J[0]), interp(lo.J[1], hi.J[1])]
+  };
+}
+
+function enUpdateEnc() {
+  var enc = document.querySelector('input[name="en-enc"]:checked').value;
+  document.getElementById('en-mu-row').style.display = enc === 'open' ? '' : 'none';
+}
+
+function enStep(sym, eq, val, unit) {
+  return '<div class="step-row"><span class="step-sym">'+sym+'</span><span class="step-eq">'+eq+'</span><span class="step-val">'+val+(unit?' '+unit:'')+'</span></div>';
+}
+
+function enTile(lbl, val, unit) {
+  return '<div class="sum-tile"><div class="sum-lbl">'+lbl+'</div><div class="sum-val">'+val+'</div><div class="sum-unit">'+unit+'</div></div>';
+}
+
+function enFmt(v, d) { return isNaN(v) ? '—' : v.toFixed(d); }
+
+function enCalc() {
+  var b    = parseFloat(document.getElementById('en-b').value)||0;
+  var d    = parseFloat(document.getElementById('en-d').value)||0;
+  var h    = parseFloat(document.getElementById('en-h').value)||0;
+  var theta= parseFloat(document.getElementById('en-theta').value)||0;
+  var roof = document.getElementById('en-roof').value;
+  var vb0  = parseFloat(document.getElementById('en-vb0').value)||0;
+  var cdir = parseFloat(document.getElementById('en-cdir').value)||1.0;
+  var cseason = parseFloat(document.getElementById('en-cseason').value)||1.0;
+  var c0   = parseFloat(document.getElementById('en-c0').value)||1.0;
+  var cscd = parseFloat(document.getElementById('en-cscd').value)||1.0;
+  var terrVal = document.querySelector('input[name="en-terrain"]:checked').value;
+  var enc  = document.querySelector('input[name="en-enc"]:checked').value;
+  var mu   = parseFloat(document.getElementById('en-mu').value)||0.5;
+
+  if (b<=0||d<=0||h<=0||vb0<=0) return;
+
+  var terr = EN_TERRAIN[terrVal];
+  var z0 = terr.z0, zmin = terr.zmin;
+  var z0II = 0.05;
+
+  // Basic wind velocity
+  var vb = cdir * cseason * vb0;
+
+  // Basic velocity pressure
+  var rho = 1.25; // kg/m³
+  var qb = 0.5 * rho * vb * vb; // Pa
+
+  // Reference height ze = h (conservative, §7.2.2)
+  var ze = h;
+  var zeff = Math.max(ze, zmin);
+
+  // Terrain factor
+  var kr = 0.19 * Math.pow(z0 / z0II, 0.07);
+
+  // Roughness factor
+  var cr = kr * Math.log(zeff / z0);
+
+  // Mean wind velocity
+  var vm = cr * c0 * vb;
+
+  // Turbulence intensity
+  var kI = 1.0;
+  var Iv = kI / (c0 * Math.log(zeff / z0));
+
+  // Peak velocity pressure — §4.5 Eq. 4.8
+  var qp = (1 + 7 * Iv) * 0.5 * rho * vm * vm; // Pa
+  var qp_kN = qp / 1000;
+
+  // Exposure factor ce = qp/qb
+  var ce = qb > 0 ? qp / qb : 0;
+
+  // Internal pressure
+  var cpi_pos, cpi_neg;
+  if (enc === 'closed') {
+    cpi_pos = 0.2;
+    cpi_neg = -0.3;
+  } else {
+    // Dominant opening: approximate cpi per EN 1991-1-4 §7.2.9
+    if (mu >= 2) cpi_pos = 0.9;
+    else if (mu >= 1) cpi_pos = 0.5 + (0.9 - 0.5) * (mu - 1);
+    else cpi_pos = 0.2 + (0.5 - 0.2) * Math.max(0, mu - 0.25) / 0.75;
+    cpi_pos = Math.min(0.9, Math.max(0.2, cpi_pos));
+    cpi_neg = -0.3;
+  }
+
+  // Zone geometry — walls
+  var e = Math.min(b, 2*h);
+  var hd = h / d;
+
+  // External cpe for walls
+  var cpe_D = 0.8;
+  var cpe_E = enCpeE(hd);
+  var cpe_A = -1.2, cpe_B = -0.8, cpe_C = -0.5;
+
+  // Net pressures: w = qp(ze) × (cpe - cpi)
+  // Use both cpi cases, report worst
+  function wnet(cpe, cpi) { return qp_kN * (cpe - cpi); }
+
+  // ── Build zone table rows ──
+  var zones = [];
+  // Windward wall D
+  zones.push({z:'D', surf:'Windward wall', cpe:cpe_D, cpi_p:cpi_pos, cpi_n:cpi_neg,
+    wpos: wnet(cpe_D, cpi_neg), wneg: wnet(cpe_D, cpi_pos)});
+  // Leeward wall E
+  zones.push({z:'E', surf:'Leeward wall', cpe:cpe_E, cpi_p:cpi_pos, cpi_n:cpi_neg,
+    wpos: wnet(cpe_E, cpi_neg), wneg: wnet(cpe_E, cpi_pos)});
+  // Side walls A, B, C
+  zones.push({z:'A', surf:'Side wall (corner e/5)', cpe:cpe_A, cpi_p:cpi_pos, cpi_n:cpi_neg,
+    wpos: wnet(cpe_A, cpi_neg), wneg: wnet(cpe_A, cpi_pos)});
+  if (e < d) {
+    zones.push({z:'B', surf:'Side wall (e/5 to e)', cpe:cpe_B, cpi_p:cpi_pos, cpi_n:cpi_neg,
+      wpos: wnet(cpe_B, cpi_neg), wneg: wnet(cpe_B, cpi_pos)});
+    if (d > e) {
+      zones.push({z:'C', surf:'Side wall (beyond e)', cpe:cpe_C, cpi_p:cpi_pos, cpi_n:cpi_neg,
+        wpos: wnet(cpe_C, cpi_neg), wneg: wnet(cpe_C, cpi_pos)});
+    }
+  }
+  // Roof zones
+  if (roof === 'flat' || theta < 5) {
+    var fr = enFlatRoofCpe();
+    [{z:'F',s:'Flat roof — corner',c:fr.F},{z:'G',s:'Flat roof — edge',c:fr.G},
+     {z:'H',s:'Flat roof — interior',c:fr.H},{z:'I',s:'Flat roof — leeward',c:fr.Ineg}
+    ].forEach(function(zr){
+      zones.push({z:zr.z, surf:zr.s, cpe:zr.c, cpi_p:cpi_pos, cpi_n:cpi_neg,
+        wpos: wnet(zr.c, cpi_neg), wneg: wnet(zr.c, cpi_pos)});
+    });
+  } else if (roof === 'duo') {
+    var dc = enDuoCpe(theta);
+    var rz = [{z:'F',s:'Duopitch — F',c:dc.F},{z:'G',s:'Duopitch — G',c:dc.G},
+              {z:'H',s:'Duopitch — H',c:dc.H},{z:'I',s:'Duopitch — I',c:dc.I}];
+    rz.forEach(function(zr){
+      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
+      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
+      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
+      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
+      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
+        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
+        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
+    });
+  }
+
+  // ── Governing wall pressure (worst suction or pressure)
+  var govWall = Math.max(Math.abs(zones[0].wpos||0), Math.abs(zones[0].wneg||0));
+  govWall = Math.max(govWall, Math.abs(zones[1].wpos||0), Math.abs(zones[1].wneg||0));
+
+  // ── Total horizontal force (D + E faces combined, simplified)
+  // Fw = cscd × (we,D + |we,E|) × h × b
+  var weD = qp_kN * (cpe_D - cpi_neg); // max windward pressure
+  var weE_abs = Math.abs(qp_kN * (cpe_E - cpi_pos)); // max leeward suction magnitude
+  var Fw_kN = cscd * (weD + weE_abs) * h * b;
+
+  // ═══ RENDER ═══
+
+  // Summary tiles
+  document.getElementById('en-summary').innerHTML =
+    enTile('v<sub>b</sub>', enFmt(vb,1), 'm/s') +
+    enTile('q<sub>p</sub>(h)', enFmt(qp_kN,4), 'kN/m²') +
+    enTile('F<sub>w</sub>', enFmt(Fw_kN,1), 'kN');
+
+  // Steps
+  var sH = '';
+  sH += enStep('v<sub>b</sub>', 'c<sub>dir</sub>×c<sub>season</sub>×v<sub>b,0</sub> = '+enFmt(cdir,2)+'×'+enFmt(cseason,2)+'×'+enFmt(vb0,1), enFmt(vb,2), 'm/s');
+  sH += enStep('q<sub>b</sub>', '½×1.25×v<sub>b</sub>² = ½×1.25×'+enFmt(vb,1)+'²', enFmt(qb,1)+' Pa = '+enFmt(qb/1000,4), 'kN/m²');
+  sH += enStep('z<sub>e</sub>', 'Reference height (conservative)', enFmt(ze,1), 'm');
+  sH += enStep('z<sub>eff</sub>', 'max(z<sub>e</sub>, z<sub>min</sub>) = max('+enFmt(ze,1)+', '+zmin+')', enFmt(zeff,1), 'm');
+  sH += enStep('k<sub>r</sub>', '0.19×(z₀/0.05)⁰·⁰⁷ = 0.19×('+z0+'/0.05)⁰·⁰⁷', enFmt(kr,4), '');
+  sH += enStep('c<sub>r</sub>(z)', 'k<sub>r</sub>×ln(z<sub>eff</sub>/z₀) = '+enFmt(kr,4)+'×ln('+enFmt(zeff,1)+'/'+z0+')', enFmt(cr,3), '');
+  sH += enStep('v<sub>m</sub>(z)', 'c<sub>r</sub>×c₀×v<sub>b</sub> = '+enFmt(cr,3)+'×'+enFmt(c0,2)+'×'+enFmt(vb,2), enFmt(vm,2), 'm/s');
+  sH += enStep('I<sub>v</sub>(z)', 'k<sub>I</sub>/(c₀×ln(z/z₀)) = 1.0/('+enFmt(c0,2)+'×ln('+enFmt(zeff,1)+'/'+z0+'))', enFmt(Iv,3), '');
+  sH += enStep('q<sub>p</sub>(z)', '[1+7×I<sub>v</sub>]×½×ρ×v<sub>m</sub>² = [1+7×'+enFmt(Iv,3)+']×½×1.25×'+enFmt(vm,2)+'²', enFmt(qp,1)+' Pa = <b>'+enFmt(qp_kN,4)+'</b>', 'kN/m²');
+  sH += enStep('c<sub>e</sub>(z)', 'q<sub>p</sub>/q<sub>b</sub> = '+enFmt(qp,1)+'/'+enFmt(qb,1), enFmt(ce,3), '');
+  sH += enStep('c<sub>pi</sub>', enc==='closed'?'Enclosed building (§7.2.9)':'Dominant opening (μ='+enFmt(mu,2)+')', '+'+enFmt(cpi_pos,2)+' / '+enFmt(cpi_neg,2), '');
+  document.getElementById('en-steps').innerHTML = sH;
+
+  // Zone table
+  var ztH = '';
+  var isWall = true;
+  zones.forEach(function(z) {
+    var isRoof = ['F','G','H','I','J'].indexOf(z.z) >= 0;
+    if (isRoof && isWall) {
+      ztH += '<tr class="zone-sep"><td colspan="5">── Roof ──</td></tr>';
+      isWall = false;
+    }
+    var cpeStr = z.cpeRange || enFmt(z.cpe,2);
+    // governing net pressure (max absolute)
+    var wGov = Math.abs(z.wpos||0) > Math.abs(z.wneg||0) ? z.wpos : z.wneg;
+    var cls = wGov > 0 ? 'p-pos' : 'p-neg';
+    ztH += '<tr><td>'+z.z+'</td><td style="font-size:.71rem;">'+z.surf+'</td><td>'+cpeStr+'</td><td>'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2)+'</td><td class="'+cls+'">'+enFmt(wGov,3)+'</td></tr>';
+  });
+  document.getElementById('en-zone-body').innerHTML = ztH;
+
+  // SVG diagram — building plan (top view showing zones)
+  var svgW = 300, svgH = 200;
+  var margin = 30, bW = svgW - 2*margin, bH = svgH - 2*margin;
+  // e-dimension
+  var eRel = Math.min(e, d) / d * bH; // scaled e in SVG
+  var eF = Math.min(e/5, d) / d * bH;
+
+  var svg = '<svg width="100%" viewBox="0 0 '+svgW+' '+svgH+'" style="font-family:inherit;max-width:360px;display:block;margin:auto;">';
+  // Background building rectangle
+  svg += '<rect x="'+margin+'" y="'+margin+'" width="'+bW+'" height="'+bH+'" fill="#f8fafb" stroke="#94a3b8" stroke-width="1.5"/>';
+  // Zone A (side wall strip near windward edge)
+  var aW = Math.min(e/5/d*bH, bH);
+  // Zone D (windward face - left side)
+  svg += '<rect x="'+(margin-18)+'" y="'+margin+'" width="18" height="'+bH+'" fill="#bfdbfe" stroke="#1a5c8e" stroke-width="1"/>';
+  svg += '<text x="'+(margin-9)+'" y="'+(margin+bH/2)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e40af" dominant-baseline="middle" transform="rotate(-90,'+(margin-9)+','+(margin+bH/2)+')">D +</text>';
+  // Zone E (leeward face - right side)
+  svg += '<rect x="'+(margin+bW)+'" y="'+margin+'" width="18" height="'+bH+'" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>';
+  svg += '<text x="'+(margin+bW+9)+'" y="'+(margin+bH/2)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626" dominant-baseline="middle" transform="rotate(-90,'+(margin+bW+9)+','+(margin+bH/2)+')">E −</text>';
+  // Zone A strips (top and bottom of building, parallel to wind)
+  svg += '<rect x="'+margin+'" y="'+margin+'" width="'+bW+'" height="'+Math.min(aW,bH/4)+'" fill="#fef3c7" stroke="#d97706" stroke-width="0.7" opacity="0.7"/>';
+  svg += '<text x="'+(margin+bW/2)+'" y="'+(margin+Math.min(aW,bH/4)/2)+'" text-anchor="middle" font-size="9" fill="#92400e" dominant-baseline="middle">A</text>';
+  svg += '<rect x="'+margin+'" y="'+(margin+bH-Math.min(aW,bH/4))+'" width="'+bW+'" height="'+Math.min(aW,bH/4)+'" fill="#fef3c7" stroke="#d97706" stroke-width="0.7" opacity="0.7"/>';
+  svg += '<text x="'+(margin+bW/2)+'" y="'+(margin+bH-Math.min(aW,bH/4)/2)+'" text-anchor="middle" font-size="9" fill="#92400e" dominant-baseline="middle">A</text>';
+  // Wind arrow
+  svg += '<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1e40af"/></marker></defs>';
+  svg += '<line x1="4" y1="'+(svgH/2)+'" x2="'+(margin-22)+'" y2="'+(svgH/2)+'" stroke="#1e40af" stroke-width="2" marker-end="url(#arr)"/>';
+  svg += '<text x="4" y="'+(svgH/2-6)+'" font-size="9" fill="#1e40af">Wind</text>';
+  // Labels
+  svg += '<text x="'+(margin+bW/2)+'" y="'+(svgH-8)+'" text-anchor="middle" font-size="8" fill="#6b7280">d = '+enFmt(d,1)+' m (along-wind)</text>';
+  svg += '<text x="'+(svgW-6)+'" y="'+(margin+bH/2)+'" text-anchor="middle" font-size="8" fill="#6b7280" dominant-baseline="middle" transform="rotate(-90,'+(svgW-6)+','+(margin+bH/2)+')">b = '+enFmt(b,1)+' m</text>';
+  svg += '</svg>';
+  document.getElementById('en-diagram').innerHTML = svg;
+
+  // Total force
+  var fH = '';
+  fH += enStep('w<sub>e,D</sub>', 'q<sub>p</sub>×(c<sub>pe,D</sub>−c<sub>pi,min</sub>) = '+enFmt(qp_kN,4)+'×('+enFmt(cpe_D,2)+'−('+enFmt(cpi_neg,2)+'))', enFmt(weD,3), 'kN/m²');
+  fH += enStep('w<sub>e,E</sub>', 'q<sub>p</sub>×(c<sub>pe,E</sub>−c<sub>pi,max</sub>) = '+enFmt(qp_kN,4)+'×('+enFmt(cpe_E,2)+'−'+enFmt(cpi_pos,2)+')', enFmt(qp_kN*(cpe_E-cpi_pos),3), 'kN/m²');
+  fH += enStep('F<sub>w</sub>', 'c<sub>s</sub>c<sub>d</sub>×(w<sub>D</sub>+|w<sub>E</sub>|)×h×b = '+enFmt(cscd,2)+'×('+enFmt(weD,3)+'+'+enFmt(weE_abs,3)+')×'+enFmt(h,1)+'×'+enFmt(b,1), '<b class="vok vbig">'+enFmt(Fw_kN,1)+'</b>', 'kN');
+  document.getElementById('en-forces').innerHTML = fH;
+}
+
+function switchWind(std, btn) {
+  document.querySelectorAll('.sub-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.sub-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('wpane-'+std).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (std === 'en') enCalc();
 }
 
 // ═══════════════════════════════════════════════════════════
