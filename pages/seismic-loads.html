@@ -1351,13 +1351,21 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     W = 630; H = 200;
     canvas.width = W; canvas.height = H;
   } else {
-    var container = canvas.parentElement;
-    W = (container && container.clientWidth > 24) ? container.clientWidth - 24 : 600;
     H = 210;
+    canvas.style.height = H + 'px';
+    // canvas has width:100% in HTML — read the CSS-rendered width
+    W = canvas.clientWidth || canvas.offsetWidth;
+    if (!W || W < 50) {
+      // Results section was just un-hidden; browser hasn't reflowed yet.
+      // Retry after layout is committed.
+      requestAnimationFrame(function() {
+        drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, null);
+      });
+      return;
+    }
     canvas.width  = W * (window.devicePixelRatio || 1);
     canvas.height = H * (window.devicePixelRatio || 1);
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
+    // Do NOT override canvas.style.width — keep CSS width:100% so it stays responsive
   }
   var ctx = canvas.getContext('2d');
   if (!fixedCanvas) ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
@@ -2614,6 +2622,20 @@ function isPrintReport() {
   }
   setTimeout(function(){window.print();},200);
 }
+
+// ── Redraw spectrum on resize so canvas always fills its container ─────────────
+(function(){
+  var _resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(function() {
+      if (_rptParams) {
+        var p = _rptParams;
+        drawSpectrum(p.SDS, p.SD1, p.TL, p.Txd, p.Tyd, 0, 0, null);
+      }
+    }, 120);
+  });
+})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function init(){
