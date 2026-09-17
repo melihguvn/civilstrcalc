@@ -142,9 +142,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 @media print{body>*{display:none!important;}#pdf-report{display:block!important;}@page{margin:10mm 12mm;size:A4;}}
 
 /* ── EN secondary tabs ── */
-.en-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
-.en-tab{padding:4px 12px;border:1px solid var(--border);border-radius:5px;font-size:.71rem;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim);letter-spacing:.03em;transition:background .15s,color .15s;}
-.en-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .en-inner-pane{display:none;}.en-inner-pane.active{display:block;}
 
 /* ── EN 1991-1-4 table & value helpers ── */
@@ -701,16 +698,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <p style="font-size:.72rem;color:rgba(255,255,255,.65);margin:0;">Peak velocity pressure q<sub style="color:rgba(255,255,255,.65);">p</sub> · External/internal pressures · Zone forces — EN 1991-1-4:2005+A1:2010</p>
 </div>
 
-<div class="en-tabs">
-  <button class="en-tab active" onclick="switchEN('building',this)">Complete Building</button>
-  <button class="en-tab" onclick="switchEN('wall',this)">Free-standing Wall</button>
-  <button class="en-tab" onclick="switchEN('mono',this)">Monopitch Roof</button>
-  <button class="en-tab" onclick="switchEN('rect',this)">Rect. Element</button>
+<div class="inp-row" style="margin-bottom:10px;">
+  <label>Calculation Procedure</label>
+  <select id="en-proc-select" onchange="switchEN(this.value)">
+    <option value="building">Complete Building — §7.2 (walls + roof)</option>
+    <option value="wall">Free-standing Wall &amp; Parapet — §7.4</option>
+    <option value="mono">Monopitch Roof — §7.3</option>
+    <option value="rect">Rectangular Element — §7.6</option>
+  </select>
+  <div class="inp-hint" id="en-scope-inline">Complete building · Walls A–E · Flat / duopitch / monopitch roof F–J</div>
 </div>
 
 <div class="en-inner-pane active" id="en-pane-building">
-<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Complete Building — EN 1991-1-4 §7.2</h3>
-<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">Peak velocity pressure · Wall zones A–E · Flat / duopitch / monopitch roof zones F–J</p>
 <div class="page-layout">
 <!-- ═══ EN LEFT ═══ -->
 <div>
@@ -870,8 +869,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ═══ EN FREE-STANDING WALL §7.4 ═══ -->
 <div class="en-inner-pane" id="en-pane-wall">
-<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Free-standing Walls &amp; Parapets — EN 1991-1-4 §7.4</h3>
-<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">Net pressure coefficient c<sub>p,net</sub> for zones A–D · Table 7.9</p>
 
 <div class="page-layout">
 <!-- LEFT -->
@@ -964,8 +961,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ═══ EN MONOPITCH ROOF §7.3 ═══ -->
 <div class="en-inner-pane" id="en-pane-mono">
-<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Monopitch Roofs — EN 1991-1-4 §7.3</h3>
-<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">External pressure zones F–I for wind directions θ=0° and θ=180°</p>
 
 <div class="page-layout">
 <!-- LEFT -->
@@ -1064,8 +1059,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 <!-- ═══ EN RECTANGULAR ELEMENT §7.6 ═══ -->
 <div class="en-inner-pane" id="en-pane-rect">
-<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Prismatic Elements — Rectangular Cross-section — EN 1991-1-4 §7.6</h3>
-<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">Force coefficient c<sub>f</sub> and total wind force F<sub>w</sub> on rectangular structural elements</p>
 
 <div class="page-layout">
 <!-- LEFT -->
@@ -2497,11 +2490,19 @@ function enCalc() {
 // ═══════════════════════════════════════════════════════════
 // EN SECONDARY TAB SWITCH
 // ═══════════════════════════════════════════════════════════
-function switchEN(id, btn) {
+function switchEN(id) {
   document.querySelectorAll('.en-inner-pane').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.en-tab').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('en-pane-'+id).classList.add('active');
-  if (btn) btn.classList.add('active');
+  var sel = document.getElementById('en-proc-select');
+  if (sel && sel.value !== id) sel.value = id;
+  var hints = {
+    building: 'Complete building · Walls A–E · Flat / duopitch / monopitch roof F–J',
+    wall:     'Free-standing walls & parapets · Zones A–D · Table 7.9',
+    mono:     'Monopitch roof · Zones F–I · Wind θ=0° and 180° · Table 7.3a',
+    rect:     'Prismatic elements · Rectangular cross-section · cf from Fig. 7.23'
+  };
+  var h = document.getElementById('en-scope-inline');
+  if (h) h.textContent = hints[id] || '';
   if (id==='wall') wallCalc();
   else if (id==='mono') monoCalc();
   else if (id==='rect') rectCalc();
