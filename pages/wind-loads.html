@@ -2361,27 +2361,33 @@ function enCalc() {
   // Side walls A, B, C
   zones.push({z:'A', surf:'Side wall (corner e/5)', cpe:cpe_A, cpi_p:cpi_pos, cpi_n:cpi_neg,
     wpos: wnet(cpe_A, cpi_neg), wneg: wnet(cpe_A, cpi_pos)});
-  if (e < d) {
+  if (d > e/5) {
     zones.push({z:'B', surf:'Side wall (e/5 to e)', cpe:cpe_B, cpi_p:cpi_pos, cpi_n:cpi_neg,
       wpos: wnet(cpe_B, cpi_neg), wneg: wnet(cpe_B, cpi_pos)});
-    if (d > e) {
-      zones.push({z:'C', surf:'Side wall (beyond e)', cpe:cpe_C, cpi_p:cpi_pos, cpi_n:cpi_neg,
-        wpos: wnet(cpe_C, cpi_neg), wneg: wnet(cpe_C, cpi_pos)});
-    }
+  }
+  if (d > e) {
+    zones.push({z:'C', surf:'Side wall (beyond e)', cpe:cpe_C, cpi_p:cpi_pos, cpi_n:cpi_neg,
+      wpos: wnet(cpe_C, cpi_neg), wneg: wnet(cpe_C, cpi_pos)});
   }
   // Roof zones
   if (roof === 'flat' || theta < 5) {
     var fr = enFlatRoofCpe();
     [{z:'F',s:'Flat roof — corner',c:fr.F},{z:'G',s:'Flat roof — edge',c:fr.G},
-     {z:'H',s:'Flat roof — interior',c:fr.H},{z:'I',s:'Flat roof — leeward',c:fr.Ineg}
+     {z:'H',s:'Flat roof — interior',c:fr.H},{z:'I',s:'Flat roof — leeward',c:[fr.Ineg,fr.Ipos]}
     ].forEach(function(zr){
-      zones.push({z:zr.z, surf:zr.s, cpe:zr.c, cpi_p:cpi_pos, cpi_n:cpi_neg,
-        wpos: wnet(zr.c, cpi_neg), wneg: wnet(zr.c, cpi_pos)});
+      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
+      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
+      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
+      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
+      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
+        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
+        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
     });
   } else if (roof === 'duo') {
     var dc = enDuoCpe(theta);
     var rz = [{z:'F',s:'Duopitch — F',c:dc.F},{z:'G',s:'Duopitch — G',c:dc.G},
-              {z:'H',s:'Duopitch — H',c:dc.H},{z:'I',s:'Duopitch — I',c:dc.I}];
+              {z:'H',s:'Duopitch — H',c:dc.H},{z:'I',s:'Duopitch — I',c:dc.I},
+              {z:'J',s:'Duopitch — J (leeward slope)',c:dc.J}];
     rz.forEach(function(zr){
       var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
       var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
@@ -2679,7 +2685,7 @@ function wallCalc() {
 function monoTableCpe(alpha) {
   var pts = [
     {a:5,   d0:{F:-1.7,G:-1.2,H:-0.6,I:-0.6}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
-    {a:15,  d0:{F:-0.9,G:-0.8,H:-0.3,I:-0.4}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
+    {a:15,  d0:{F:[-0.9,+0.2],G:[-0.8,+0.2],H:-0.3,I:-0.4}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
     {a:30,  d0:{F:[-0.5,+0.7],G:[-0.5,+0.7],H:[-0.2,+0.4],I:-0.4}, d180:{F:[-1.1,+0.8],G:[-0.8,+0.8],H:[-0.8,+0.8],I:[-0.6,+0.8]}},
     {a:45,  d0:{F:+0.7,G:+0.7,H:+0.6,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
     {a:60,  d0:{F:+0.7,G:+0.7,H:+0.7,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
@@ -2727,8 +2733,9 @@ function monoCalc() {
   function wnet(cpe_v, cpi) { return qp_kN*(cpe_v - cpi); }
   function fmtCpe(v){ if(Array.isArray(v)) return enFmt(v[0],2)+'/'+enFmt(v[1],2); return enFmt(v,2); }
   function wnetGov(v,cpi_n,cpi_p){
-    if(Array.isArray(v)) return Math.abs(wnet(v[0],cpi_n))>Math.abs(wnet(v[1],cpi_p))?wnet(v[0],cpi_n):wnet(v[1],cpi_p);
-    return wnet(v, v<0?cpi_n:cpi_p);
+    // Governing: negative cpe uses cpi_pos (adds suction); positive cpe uses cpi_neg (adds pressure)
+    if(Array.isArray(v)) return Math.abs(wnet(v[0],cpi_p))>Math.abs(wnet(v[1],cpi_n))?wnet(v[0],cpi_p):wnet(v[1],cpi_n);
+    return wnet(v, v<0?cpi_p:cpi_n);
   }
 
   // Summary
