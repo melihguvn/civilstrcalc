@@ -141,6 +141,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rpt-ft{display:flex;justify-content:space-between;border-top:.5pt solid #dde1e7;padding-top:3pt;margin-top:4pt;font-size:5.5pt;color:#9ca3af;}
 @media print{body>*{display:none!important;}#pdf-report{display:block!important;}@page{margin:10mm 12mm;size:A4;}}
 
+/* ── EN secondary tabs ── */
+.en-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.en-tab{padding:4px 12px;border:1px solid var(--border);border-radius:5px;font-size:.71rem;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim);letter-spacing:.03em;transition:background .15s,color .15s;}
+.en-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.en-inner-pane{display:none;}.en-inner-pane.active{display:block;}
+
 /* ── EN 1991-1-4 table & value helpers ── */
 .res-tbl3{width:100%;border-collapse:collapse;font-size:.76rem;}
 .res-tbl3 th{background:#f0f4f8;padding:5px 8px;font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);text-align:left;}
@@ -691,8 +697,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 <div class="sub-pane" id="wpane-en">
 
 <h2 style="font-size:.98rem;font-weight:700;color:var(--text);margin:8px 0 3px;">Wind Load Calculator — EN 1991-1-4</h2>
-<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 10px;">Peak velocity pressure qp · External/internal pressures · Zone forces — EN 1991-1-4:2005+A1:2010</p>
+<p style="font-size:.74rem;color:var(--text-dim);margin:0 0 8px;">Peak velocity pressure qp · External/internal pressures · Zone forces — EN 1991-1-4:2005+A1:2010</p>
 
+<div class="en-tabs">
+  <button class="en-tab active" onclick="switchEN('building',this)">Complete Building</button>
+  <button class="en-tab" onclick="switchEN('wall',this)">Free-standing Wall</button>
+  <button class="en-tab" onclick="switchEN('mono',this)">Monopitch Roof</button>
+  <button class="en-tab" onclick="switchEN('rect',this)">Rect. Element</button>
+</div>
+
+<div class="en-inner-pane active" id="en-pane-building">
 <div class="page-layout">
 <!-- ═══ EN LEFT ═══ -->
 <div>
@@ -848,6 +862,278 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   </div>
 </div>
 </div><!-- /page-layout EN -->
+</div><!-- /en-pane-building -->
+
+<!-- ═══ EN FREE-STANDING WALL §7.4 ═══ -->
+<div class="en-inner-pane" id="en-pane-wall">
+<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Free-standing Walls &amp; Parapets — EN 1991-1-4 §7.4</h3>
+<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">Net pressure coefficient c<sub>p,net</sub> for zones A–D · Table 7.9</p>
+
+<div class="page-layout">
+<!-- LEFT -->
+<div>
+  <!-- Wind speed (shared) -->
+  <div class="section-card">
+    <div class="sc-hdr">Wind Speed &amp; Terrain — §4.3</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>v<sub>b,0</sub> — Basic wind speed (m/s)</label>
+        <input type="number" id="wall-vb0" value="26" min="5" max="80" step="0.5" oninput="wallCalc();">
+      </div>
+      <div class="inp-row">
+        <label>Terrain category</label>
+        <select id="wall-terrain" onchange="wallCalc();">
+          <option value="0">0 — Sea/coastal (z₀=0.003 m)</option>
+          <option value="I">I — Open (z₀=0.01 m)</option>
+          <option value="II" selected>II — Low vegetation (z₀=0.05 m)</option>
+          <option value="III">III — Suburban/forest (z₀=0.3 m)</option>
+          <option value="IV">IV — Urban (z₀=1.0 m)</option>
+        </select>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>c<sub>0</sub> — Orography factor</label>
+      <input type="number" id="wall-c0" value="1.0" min="1.0" max="2.0" step="0.05" oninput="wallCalc();">
+    </div>
+  </div>
+
+  <!-- Wall geometry -->
+  <div class="section-card">
+    <div class="sc-hdr">Wall Geometry — §7.4</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>h — Wall height (m)</label>
+        <input type="number" id="wall-h" value="3" min="0.5" step="0.1" oninput="wallCalc();">
+      </div>
+      <div class="inp-row">
+        <label>l — Wall length (m)</label>
+        <input type="number" id="wall-l" value="10" min="1" step="0.5" oninput="wallCalc();">
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>l<sub>1</sub> — Return corner length (m)</label>
+        <input type="number" id="wall-l1" value="0" min="0" step="0.1" oninput="wallCalc();">
+        <div class="inp-hint">0 = no return corner</div>
+      </div>
+      <div class="inp-row">
+        <label>φ — Solidity ratio</label>
+        <input type="number" id="wall-phi" value="1.0" min="0.1" max="1.0" step="0.05" oninput="wallCalc();">
+        <div class="inp-hint">1.0 = solid wall</div>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>Wall type</label>
+      <select id="wall-type" onchange="wallCalc();">
+        <option value="wall">Free-standing wall</option>
+        <option value="parapet">Parapet (attached to building)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div id="wall-results">
+  <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+    <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;">Result</span>
+    <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;">EN 1991-1-4 §7.4 · kN · m</span>
+  </div>
+  <div id="wall-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;"></div>
+  <div class="res-card">
+    <div class="res-card-hdr">Step-by-Step</div>
+    <div class="step-box" id="wall-steps"></div>
+  </div>
+  <div class="res-card">
+    <div class="res-card-hdr">Zone Pressures — Table 7.9</div>
+    <div style="padding:8px 12px;">
+      <table class="ptbl">
+        <thead><tr><th>Zone</th><th>c<sub>p,net</sub></th><th>Width</th><th>F<sub>w</sub> (kN/m)</th></tr></thead>
+        <tbody id="wall-zone-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="scope-note">Per EN 1991-1-4:2005+A1:2010 §7.4 Table 7.9. Solidity reduction: multiply c<sub>p,net</sub> by φ for porous walls. Verify with applicable National Annex.</div>
+</div>
+</div><!-- /page-layout wall -->
+</div><!-- /en-pane-wall -->
+
+<!-- ═══ EN MONOPITCH ROOF §7.3 ═══ -->
+<div class="en-inner-pane" id="en-pane-mono">
+<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Monopitch Roofs — EN 1991-1-4 §7.3</h3>
+<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">External pressure zones F–I for wind directions θ=0° and θ=180°</p>
+
+<div class="page-layout">
+<!-- LEFT -->
+<div>
+  <div class="section-card">
+    <div class="sc-hdr">Wind Speed &amp; Terrain</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>v<sub>b,0</sub> — Basic wind speed (m/s)</label>
+        <input type="number" id="mono-vb0" value="26" min="5" max="80" step="0.5" oninput="monoCalc();">
+      </div>
+      <div class="inp-row">
+        <label>Terrain category</label>
+        <select id="mono-terrain" onchange="monoCalc();">
+          <option value="0">0 — Sea/coastal</option>
+          <option value="I">I — Open</option>
+          <option value="II" selected>II — Low vegetation</option>
+          <option value="III">III — Suburban/forest</option>
+          <option value="IV">IV — Urban</option>
+        </select>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>c<sub>0</sub> — Orography factor</label>
+      <input type="number" id="mono-c0" value="1.0" min="1.0" max="2.0" step="0.05" oninput="monoCalc();">
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="sc-hdr">Roof Geometry — §7.3</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>b — Width (crosswind, m)</label>
+        <input type="number" id="mono-b" value="12" min="1" step="0.5" oninput="monoCalc();">
+      </div>
+      <div class="inp-row">
+        <label>d — Depth (along-wind, m)</label>
+        <input type="number" id="mono-d" value="15" min="1" step="0.5" oninput="monoCalc();">
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>h — Eave height (m)</label>
+        <input type="number" id="mono-h" value="6" min="1" step="0.5" oninput="monoCalc();">
+      </div>
+      <div class="inp-row">
+        <label>α — Roof pitch (degrees)</label>
+        <input type="number" id="mono-alpha" value="15" min="5" max="75" step="1" oninput="monoCalc();">
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="sc-hdr">Internal Pressure — §7.2.9</div>
+    <div class="radio-group">
+      <div class="radio-row"><input type="radio" name="mono-enc" id="mono-enc-cl" value="closed" checked onchange="monoCalc();"><label for="mono-enc-cl"><span>Enclosed — c<sub>pi</sub> = +0.2 / −0.3</span></label></div>
+      <div class="radio-row"><input type="radio" name="mono-enc" id="mono-enc-op" value="open" onchange="monoCalc();"><label for="mono-enc-op"><span>Open sided — c<sub>pi</sub> = 0.0</span></label></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div>
+  <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+    <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;">Result</span>
+    <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;">EN 1991-1-4 §7.3 · kN/m²</span>
+  </div>
+  <div id="mono-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;"></div>
+  <div class="res-card">
+    <div class="res-card-hdr">Step-by-Step (q<sub>p</sub>)</div>
+    <div class="step-box" id="mono-steps"></div>
+  </div>
+  <div class="res-card">
+    <div class="res-card-hdr">Zone Pressures — θ = 0° (wind on low eave)</div>
+    <div style="padding:8px 12px;">
+      <table class="ptbl">
+        <thead><tr><th>Zone</th><th>c<sub>pe,10</sub></th><th>c<sub>pi</sub></th><th>w<sub>net</sub> (kN/m²)</th></tr></thead>
+        <tbody id="mono-zone-0"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="res-card">
+    <div class="res-card-hdr">Zone Pressures — θ = 180° (wind on high eave)</div>
+    <div style="padding:8px 12px;">
+      <table class="ptbl">
+        <thead><tr><th>Zone</th><th>c<sub>pe,10</sub></th><th>c<sub>pi</sub></th><th>w<sub>net</sub> (kN/m²)</th></tr></thead>
+        <tbody id="mono-zone-180"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="scope-note">cpe,10 interpolated from EN 1991-1-4 Table 7.3a. Where two values are shown, both cases (+/−) must be considered.</div>
+</div>
+</div><!-- /page-layout mono -->
+</div><!-- /en-pane-mono -->
+
+<!-- ═══ EN RECTANGULAR ELEMENT §7.6 ═══ -->
+<div class="en-inner-pane" id="en-pane-rect">
+<h3 style="font-size:.88rem;font-weight:700;color:var(--text);margin:0 0 3px;">Prismatic Elements — Rectangular Cross-section — EN 1991-1-4 §7.6</h3>
+<p style="font-size:.73rem;color:var(--text-dim);margin:0 0 8px;">Force coefficient c<sub>f</sub> and total wind force F<sub>w</sub> on rectangular structural elements</p>
+
+<div class="page-layout">
+<!-- LEFT -->
+<div>
+  <div class="section-card">
+    <div class="sc-hdr">Wind Speed &amp; Terrain</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>v<sub>b,0</sub> — Basic wind speed (m/s)</label>
+        <input type="number" id="rect-vb0" value="26" min="5" max="80" step="0.5" oninput="rectCalc();">
+      </div>
+      <div class="inp-row">
+        <label>Terrain category</label>
+        <select id="rect-terrain" onchange="rectCalc();">
+          <option value="0">0 — Sea/coastal</option>
+          <option value="I">I — Open</option>
+          <option value="II" selected>II — Low vegetation</option>
+          <option value="III">III — Suburban/forest</option>
+          <option value="IV">IV — Urban</option>
+        </select>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>c<sub>0</sub> — Orography factor</label>
+      <input type="number" id="rect-c0" value="1.0" min="1.0" max="2.0" step="0.05" oninput="rectCalc();">
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="sc-hdr">Element Geometry — §7.6</div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>d — Dimension along wind (m)</label>
+        <input type="number" id="rect-d" value="0.5" min="0.05" step="0.05" oninput="rectCalc();">
+      </div>
+      <div class="inp-row">
+        <label>b — Dimension crosswind (m)</label>
+        <input type="number" id="rect-b" value="0.3" min="0.05" step="0.05" oninput="rectCalc();">
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:8px;">
+      <div class="inp-row">
+        <label>l — Element height / length (m)</label>
+        <input type="number" id="rect-l" value="10" min="1" step="0.5" oninput="rectCalc();">
+        <div class="inp-hint">Used for qp reference height and A<sub>ref</sub></div>
+      </div>
+      <div class="inp-row">
+        <label>r — Corner radius (m)</label>
+        <input type="number" id="rect-r" value="0" min="0" step="0.01" oninput="rectCalc();">
+        <div class="inp-hint">0 = sharp corners; r/b ≤ 0.5</div>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>c<sub>s</sub>c<sub>d</sub> — Structural factor</label>
+      <input type="number" id="rect-cscd" value="1.0" min="0.7" max="1.5" step="0.05" oninput="rectCalc();">
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div>
+  <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+    <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;">Result</span>
+    <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;">EN 1991-1-4 §7.6 · kN</span>
+  </div>
+  <div id="rect-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;"></div>
+  <div class="res-card">
+    <div class="res-card-hdr">Step-by-Step — §7.6</div>
+    <div class="step-box" id="rect-steps"></div>
+  </div>
+  <div class="scope-note">c<sub>f,0</sub> from EN 1991-1-4 Figure 7.23. ψ<sub>r</sub> reduction for rounded corners per §7.6. End-effect factor ψ<sub>λ</sub>=1.0 (conservative). Verify with applicable National Annex.</div>
+</div>
+</div><!-- /page-layout rect -->
+</div><!-- /en-pane-rect -->
 
 </div><!-- /wpane-en -->
 </main>
@@ -2199,6 +2485,270 @@ function enCalc() {
   fH += enStep('w<sub>e,E</sub>', 'q<sub>p</sub>×(c<sub>pe,E</sub>−c<sub>pi,max</sub>) = '+enFmt(qp_kN,4)+'×('+enFmt(cpe_E,2)+'−'+enFmt(cpi_pos,2)+')', enFmt(qp_kN*(cpe_E-cpi_pos),3), 'kN/m²');
   fH += enStep('F<sub>w</sub>', 'c<sub>s</sub>c<sub>d</sub>×(w<sub>D</sub>+|w<sub>E</sub>|)×h×b = '+enFmt(cscd,2)+'×('+enFmt(weD,3)+'+'+enFmt(weE_abs,3)+')×'+enFmt(h,1)+'×'+enFmt(b,1), '<b class="vok vbig">'+enFmt(Fw_kN,1)+'</b>', 'kN');
   document.getElementById('en-forces').innerHTML = fH;
+}
+
+// ═══════════════════════════════════════════════════════════
+// EN SECONDARY TAB SWITCH
+// ═══════════════════════════════════════════════════════════
+function switchEN(id, btn) {
+  document.querySelectorAll('.en-inner-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.en-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('en-pane-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id==='wall') wallCalc();
+  else if (id==='mono') monoCalc();
+  else if (id==='rect') rectCalc();
+  else enCalc();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FREE-STANDING WALL §7.4
+// ═══════════════════════════════════════════════════════════
+function wallCalc() {
+  var vb0   = parseFloat(document.getElementById('wall-vb0').value)||0;
+  var terrV = document.getElementById('wall-terrain').value;
+  var c0    = parseFloat(document.getElementById('wall-c0').value)||1.0;
+  var h     = parseFloat(document.getElementById('wall-h').value)||0;
+  var l     = parseFloat(document.getElementById('wall-l').value)||0;
+  var l1    = parseFloat(document.getElementById('wall-l1').value)||0;
+  var phi   = parseFloat(document.getElementById('wall-phi').value)||1.0;
+  if (vb0<=0||h<=0||l<=0) return;
+
+  var terr = EN_TERRAIN[terrV], z0=terr.z0, zmin=terr.zmin;
+  var zeff = Math.max(h, zmin);
+  var kr   = 0.19*Math.pow(z0/0.05, 0.07);
+  var cr   = kr*Math.log(zeff/z0);
+  var vm   = cr*c0*vb0;
+  var Iv   = 1.0/(c0*Math.log(zeff/z0));
+  var qp   = (1+7*Iv)*0.5*1.25*vm*vm;
+  var qp_kN= qp/1000;
+
+  var lh = l/h;
+
+  // Table 7.9 cp,net for solid wall (phi=1) vs l/h
+  var cpA, cpB, cpC, cpD;
+  if (lh <= 1) { cpA=2.3; cpB=1.4; cpC=1.2; cpD=1.2; }
+  else if (lh <= 3) {
+    var r=(lh-1)/2;
+    cpA=2.3+(2.9-2.3)*r; cpB=1.4+(1.7-1.4)*r; cpC=1.2; cpD=1.2;
+  } else if (lh <= 10) {
+    var r=(lh-3)/7;
+    cpA=2.9+(3.4-2.9)*r; cpB=1.7+(2.1-1.7)*r; cpC=1.2+(1.7-1.2)*r; cpD=1.2;
+  } else if (lh <= 20) {
+    var r=(lh-10)/10;
+    cpA=3.4; cpB=2.1+(2.7-2.1)*r; cpC=1.7+(2.2-1.7)*r; cpD=1.2;
+  } else { cpA=3.4; cpB=2.7; cpC=2.2; cpD=1.2; }
+
+  // Apply phi reduction for porous walls
+  cpA*=phi; cpB*=phi; cpC*=phi; cpD*=phi;
+
+  // Zone widths
+  var zA = Math.min(l/4, h);
+  var zB = zA;
+  var zRem = l - zA - zB;
+  var hasCandD = zRem > 0;
+  var zC = hasCandD ? Math.min(zRem/2, h) : 0;
+  var zD = hasCandD ? zRem - zC : 0;
+
+  // Force per unit height
+  var FA = qp_kN*cpA*zA;
+  var FB = qp_kN*cpB*zB;
+  var FC = hasCandD ? qp_kN*cpC*zC : 0;
+  var FD = hasCandD ? qp_kN*cpD*zD : 0;
+  var Ftot = (FA+FB+FC+FD)*h;
+
+  // Summary tiles
+  document.getElementById('wall-summary').innerHTML =
+    enTile('q<sub>p</sub>(h)', enFmt(qp_kN,4), 'kN/m²') +
+    enTile('c<sub>p,net,max</sub>', enFmt(cpA,2), 'Zone A') +
+    enTile('F<sub>w,tot</sub>', enFmt(Ftot,1), 'kN');
+
+  // Steps
+  var sH='';
+  sH += enStep('z<sub>eff</sub>', 'max(h,z<sub>min</sub>) = max('+enFmt(h,1)+','+zmin+')', enFmt(zeff,1), 'm');
+  sH += enStep('k<sub>r</sub>', '0.19×(z₀/0.05)⁰·⁰⁷', enFmt(kr,4), '');
+  sH += enStep('c<sub>r</sub>', 'k<sub>r</sub>×ln(z<sub>eff</sub>/z₀)', enFmt(cr,3), '');
+  sH += enStep('v<sub>m</sub>', 'c<sub>r</sub>×c₀×v<sub>b,0</sub>', enFmt(vm,2), 'm/s');
+  sH += enStep('I<sub>v</sub>', '1/(c₀×ln(z/z₀))', enFmt(Iv,3), '');
+  sH += enStep('q<sub>p</sub>', '[1+7I<sub>v</sub>]×½×1.25×v<sub>m</sub>²', '<b>'+enFmt(qp_kN,4)+'</b>', 'kN/m²');
+  sH += enStep('l/h', enFmt(l,1)+'/'+enFmt(h,1), enFmt(lh,2), '→ Table 7.9');
+  document.getElementById('wall-steps').innerHTML = sH;
+
+  // Zone table
+  var zt='';
+  function wRow(z, cp, width, force) {
+    zt += '<tr><td>'+z+'</td><td>'+enFmt(cp,2)+'</td><td>'+enFmt(width,2)+' m</td><td class="p-neg">'+enFmt(force,2)+'</td></tr>';
+  }
+  wRow('A (end)',cpA,zA,qp_kN*cpA*zA);
+  wRow('B',cpB,zB,qp_kN*cpB*zB);
+  if(hasCandD&&zC>0) wRow('C',cpC,zC,qp_kN*cpC*zC);
+  if(hasCandD&&zD>0) wRow('D',cpD,zD,qp_kN*cpD*zD);
+  zt += '<tr style="font-weight:700;"><td colspan="3">Total F<sub>w</sub> (×height '+enFmt(h,1)+' m)</td><td class="p-neg">'+enFmt(Ftot,1)+' kN</td></tr>';
+  document.getElementById('wall-zone-body').innerHTML = zt;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MONOPITCH ROOF §7.3
+// ═══════════════════════════════════════════════════════════
+// EN 1991-1-4 Table 7.3a — Monopitch roof cpe,10
+function monoTableCpe(alpha) {
+  var pts = [
+    {a:5,   d0:{F:-1.7,G:-1.2,H:-0.6,I:-0.6}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
+    {a:15,  d0:{F:-0.9,G:-0.8,H:-0.3,I:-0.4}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
+    {a:30,  d0:{F:[-0.5,+0.7],G:[-0.5,+0.7],H:[-0.2,+0.4],I:-0.4}, d180:{F:[-1.1,+0.8],G:[-0.8,+0.8],H:[-0.8,+0.8],I:[-0.6,+0.8]}},
+    {a:45,  d0:{F:+0.7,G:+0.7,H:+0.6,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
+    {a:60,  d0:{F:+0.7,G:+0.7,H:+0.7,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
+    {a:75,  d0:{F:+0.8,G:+0.8,H:+0.8,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}}
+  ];
+  var t = Math.max(5, Math.min(75, alpha));
+  var lo=pts[0], hi=pts[pts.length-1];
+  for(var i=0;i<pts.length-1;i++){if(t>=pts[i].a&&t<=pts[i+1].a){lo=pts[i];hi=pts[i+1];break;}}
+  if(lo.a===hi.a) return {deg0:lo.d0, deg180:lo.d180};
+  var r=(t-lo.a)/(hi.a-lo.a);
+  function iv(a,b){
+    var av=Array.isArray(a)?a:[a,a], bv=Array.isArray(b)?b:[b,b];
+    var n=av[0]+(bv[0]-av[0])*r, p=av[1]+(bv[1]-av[1])*r;
+    return (Math.abs(p-n)<0.001)?n:[n,p];
+  }
+  function id(lo,hi){return {F:iv(lo.F,hi.F),G:iv(lo.G,hi.G),H:iv(lo.H,hi.H),I:iv(lo.I,hi.I)};}
+  return {deg0:id(lo.d0,hi.d0), deg180:id(lo.d180,hi.d180)};
+}
+
+function monoCalc() {
+  var vb0   = parseFloat(document.getElementById('mono-vb0').value)||0;
+  var terrV = document.getElementById('mono-terrain').value;
+  var c0    = parseFloat(document.getElementById('mono-c0').value)||1.0;
+  var b     = parseFloat(document.getElementById('mono-b').value)||0;
+  var d     = parseFloat(document.getElementById('mono-d').value)||0;
+  var h     = parseFloat(document.getElementById('mono-h').value)||0;
+  var alpha = parseFloat(document.getElementById('mono-alpha').value)||15;
+  var enc   = document.querySelector('input[name="mono-enc"]:checked').value;
+  if(vb0<=0||b<=0||d<=0||h<=0) return;
+
+  var cpi_pos = enc==='closed'?0.2:0.0;
+  var cpi_neg = enc==='closed'?-0.3:0.0;
+
+  var terr=EN_TERRAIN[terrV], z0=terr.z0, zmin=terr.zmin;
+  var zeff=Math.max(h,zmin);
+  var kr=0.19*Math.pow(z0/0.05,0.07);
+  var cr=kr*Math.log(zeff/z0);
+  var vm=cr*c0*vb0;
+  var Iv=1.0/(c0*Math.log(zeff/z0));
+  var qp=(1+7*Iv)*0.5*1.25*vm*vm;
+  var qp_kN=qp/1000;
+
+  var cpe = monoTableCpe(alpha);
+
+  function wnet(cpe_v, cpi) { return qp_kN*(cpe_v - cpi); }
+  function fmtCpe(v){ if(Array.isArray(v)) return enFmt(v[0],2)+'/'+enFmt(v[1],2); return enFmt(v,2); }
+  function wnetGov(v,cpi_n,cpi_p){
+    if(Array.isArray(v)) return Math.abs(wnet(v[0],cpi_n))>Math.abs(wnet(v[1],cpi_p))?wnet(v[0],cpi_n):wnet(v[1],cpi_p);
+    return wnet(v, v<0?cpi_n:cpi_p);
+  }
+
+  // Summary
+  var govW = wnetGov(cpe.deg0.F, cpi_neg, cpi_pos);
+  document.getElementById('mono-summary').innerHTML =
+    enTile('q<sub>p</sub>(h)', enFmt(qp_kN,4), 'kN/m²') +
+    enTile('α', enFmt(alpha,0)+'°', 'roof pitch') +
+    enTile('w<sub>F,gov</sub>', enFmt(govW,3), 'kN/m²');
+
+  // Steps
+  var sH='';
+  sH += enStep('z<sub>eff</sub>','max(h,z<sub>min</sub>)=max('+enFmt(h,1)+','+zmin+')',enFmt(zeff,1),'m');
+  sH += enStep('c<sub>r</sub>','k<sub>r</sub>×ln(z<sub>eff</sub>/z₀)',enFmt(cr,3),'');
+  sH += enStep('v<sub>m</sub>','c<sub>r</sub>×c₀×v<sub>b,0</sub>',enFmt(vm,2),'m/s');
+  sH += enStep('q<sub>p</sub>','[1+7I<sub>v</sub>]×½×1.25×v<sub>m</sub>²','<b>'+enFmt(qp_kN,4)+'</b>','kN/m²');
+  sH += enStep('c<sub>pi</sub>',enc==='closed'?'Enclosed building':'Open sided','+'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2),'');
+  document.getElementById('mono-steps').innerHTML=sH;
+
+  // Zone tables
+  function buildZoneTable(zones_cpe, bodyId) {
+    var zt='';
+    ['F','G','H','I'].forEach(function(z){
+      var cv = zones_cpe[z];
+      var wg = wnetGov(cv, cpi_neg, cpi_pos);
+      var cls = wg>0?'p-pos':'p-neg';
+      zt += '<tr><td>'+z+'</td><td>'+fmtCpe(cv)+'</td><td>'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2)+'</td><td class="'+cls+'">'+enFmt(wg,3)+'</td></tr>';
+    });
+    document.getElementById(bodyId).innerHTML=zt;
+  }
+  buildZoneTable(cpe.deg0,'mono-zone-0');
+  buildZoneTable(cpe.deg180,'mono-zone-180');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RECTANGULAR ELEMENT §7.6
+// ═══════════════════════════════════════════════════════════
+// cf,0 from EN 1991-1-4 Figure 7.23 (d/b ratio)
+function rectCf0(db) {
+  var pts = [[0.1,2.0],[0.2,1.85],[0.5,1.6],[1.0,1.35],[2.0,1.2],[5.0,1.05],[10,1.0]];
+  if(db<=pts[0][0]) return pts[0][1];
+  if(db>=pts[pts.length-1][0]) return pts[pts.length-1][1];
+  for(var i=0;i<pts.length-1;i++){
+    if(db>=pts[i][0]&&db<=pts[i+1][0]){
+      var r=(db-pts[i][0])/(pts[i+1][0]-pts[i][0]);
+      return pts[i][1]+(pts[i+1][1]-pts[i][1])*r;
+    }
+  }
+  return 1.0;
+}
+
+function rectCalc() {
+  var vb0   = parseFloat(document.getElementById('rect-vb0').value)||0;
+  var terrV = document.getElementById('rect-terrain').value;
+  var c0    = parseFloat(document.getElementById('rect-c0').value)||1.0;
+  var d     = parseFloat(document.getElementById('rect-d').value)||0;
+  var b     = parseFloat(document.getElementById('rect-b').value)||0;
+  var l_el  = parseFloat(document.getElementById('rect-l').value)||0;
+  var r     = parseFloat(document.getElementById('rect-r').value)||0;
+  var cscd  = parseFloat(document.getElementById('rect-cscd').value)||1.0;
+  if(vb0<=0||d<=0||b<=0||l_el<=0) return;
+
+  var terr=EN_TERRAIN[terrV], z0=terr.z0, zmin=terr.zmin;
+  var zeff=Math.max(l_el, zmin);
+  var kr=0.19*Math.pow(z0/0.05,0.07);
+  var cr=kr*Math.log(zeff/z0);
+  var vm=cr*c0*vb0;
+  var Iv=1.0/(c0*Math.log(zeff/z0));
+  var qp=(1+7*Iv)*0.5*1.25*vm*vm;
+  var qp_kN=qp/1000;
+
+  var db = d/b;
+  var cf0 = rectCf0(db);
+
+  // psi_r: reduction for rounded corners (§7.6, Figure 7.24 approximation)
+  var rb = Math.min(r/b, 0.5);
+  var psi_r;
+  if(rb===0) psi_r=1.0;
+  else if(rb<=0.02) psi_r=1.0;
+  else if(rb<=0.1) psi_r=1.0-(rb-0.02)/0.08*0.15;
+  else psi_r=Math.max(0.5, 1.0-0.4*(rb/0.5));
+
+  // psi_lambda (end effect) = 1.0 conservative
+  var psi_lam = 1.0;
+
+  var cf = cf0 * psi_r * psi_lam;
+  var Aref = b * l_el; // crosswind face area
+  var Fw = cscd * cf * qp_kN * Aref;
+
+  document.getElementById('rect-summary').innerHTML =
+    enTile('q<sub>p</sub>', enFmt(qp_kN,4), 'kN/m²') +
+    enTile('c<sub>f</sub>', enFmt(cf,3), '') +
+    enTile('F<sub>w</sub>', enFmt(Fw,2), 'kN');
+
+  var sH='';
+  sH += enStep('z<sub>eff</sub>','max(l,z<sub>min</sub>)=max('+enFmt(l_el,1)+','+zmin+')',enFmt(zeff,1),'m');
+  sH += enStep('c<sub>r</sub>','k<sub>r</sub>×ln(z<sub>eff</sub>/z₀)',enFmt(cr,3),'');
+  sH += enStep('q<sub>p</sub>','[1+7I<sub>v</sub>]×½×1.25×v<sub>m</sub>²','<b>'+enFmt(qp_kN,4)+'</b>','kN/m²');
+  sH += enStep('d/b',enFmt(d,3)+'/'+enFmt(b,3),enFmt(db,3),'→ Fig. 7.23');
+  sH += enStep('c<sub>f,0</sub>','From Figure 7.23 (d/b = '+enFmt(db,2)+')',enFmt(cf0,3),'');
+  sH += enStep('ψ<sub>r</sub>','Corner reduction (r/b = '+enFmt(rb,3)+')',enFmt(psi_r,3),'');
+  sH += enStep('ψ<sub>λ</sub>','End-effect factor (conservative)',enFmt(psi_lam,2),'');
+  sH += enStep('c<sub>f</sub>','c<sub>f,0</sub>×ψ<sub>r</sub>×ψ<sub>λ</sub> = '+enFmt(cf0,3)+'×'+enFmt(psi_r,3)+'×'+enFmt(psi_lam,2),'<b>'+enFmt(cf,3)+'</b>','');
+  sH += enStep('A<sub>ref</sub>','b×l = '+enFmt(b,3)+'×'+enFmt(l_el,1),enFmt(Aref,3),'m²');
+  sH += enStep('F<sub>w</sub>','c<sub>s</sub>c<sub>d</sub>×c<sub>f</sub>×q<sub>p</sub>×A<sub>ref</sub> = '+enFmt(cscd,2)+'×'+enFmt(cf,3)+'×'+enFmt(qp_kN,4)+'×'+enFmt(Aref,3),'<b class="vok vbig">'+enFmt(Fw,2)+'</b>','kN');
+  document.getElementById('rect-steps').innerHTML=sH;
 }
 
 function switchWind(std, btn) {
