@@ -1434,12 +1434,12 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     canvas.width = W; canvas.height = H;
   } else {
     H = 210;
-    // Set CSS to 100% first so the browser computes the layout width
-    canvas.style.width  = '100%';
+    // Read container's inner width directly — avoids setting canvas to 100% which
+    // triggers the ResizeObserver and creates a feedback loop that grows the canvas.
+    // Matches the approach used by ec8DrawSpectrum / tbdyDrawSpectrum.
+    var cont = canvas.parentElement;
+    W = (cont && cont.clientWidth > 24) ? cont.clientWidth - 24 : 0;
     canvas.style.height = H + 'px';
-    // offsetWidth reads the CSS-rendered width after forcing reflow —
-    // correct even right after display:none → visible
-    W = canvas.offsetWidth || 0;
     if (W < 50) {
       requestAnimationFrame(function() {
         drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, null);
@@ -1458,7 +1458,7 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     }
     canvas.width  = W * (window.devicePixelRatio || 1);
     canvas.height = H * (window.devicePixelRatio || 1);
-    canvas.style.width  = W + 'px'; // lock to measured size; ResizeObserver resets to 100% on resize
+    canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
   }
   var ctx = canvas.getContext('2d');
