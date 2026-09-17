@@ -298,7 +298,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <optgroup label="Braced Frames">
               <option value="6,0.02,0.0488,0.75">Special steel CBF (R=6)</option>
               <option value="3.25,0.02,0.0488,0.75">Ordinary steel CBF (R=3.25)</option>
-              <option value="8,0.03,0.0731,0.75">Special steel EBF / BRBF (R=8)</option>
+              <option value="8,0.02,0.0488,0.75">Special steel EBF / BRBF (R=8)</option>
             </optgroup>
             <optgroup label="Dual Systems">
               <option value="7,0.02,0.0488,0.75">Dual: Spec. RC SW + spec. RC MF (R=7)</option>
@@ -1382,12 +1382,11 @@ function updateCap() {
 
 // ── Cu table (ASCE 7-22 Table 12.8-1) ────────────────────────────────────────
 function getCu(SD1) {
-  if (isNaN(SD1)||SD1<=0) return 1.4;
-  if (SD1>=0.4)  return 1.4;
-  if (SD1>=0.3)  return 1.4+(0.4-SD1)/(0.1)*0.1;
-  if (SD1>=0.2)  return 1.5;
-  if (SD1>=0.15) return 1.5+(0.2-SD1)/(0.05)*0.2;
-  return 1.7;
+  if (isNaN(SD1)||SD1<=0.1) return 1.7;
+  if (SD1>=0.3)  return 1.4;
+  if (SD1>=0.2)  return 1.5-(SD1-0.2)/0.1*0.1;
+  if (SD1>=0.15) return 1.6-(SD1-0.15)/0.05*0.1;
+  return 1.7-(SD1-0.1)/0.05*0.1;
 }
 
 // ── Unit switcher ─────────────────────────────────────────────────────────────
@@ -1742,7 +1741,7 @@ function calc() {
   var k;
   if (Txd<=0.5) k=1.0;
   else if (Txd>=2.5) k=2.0;
-  else k=1.0+(Txd-0.5);
+  else k=1.0+(Txd-0.5)/2.0;
 
   // ── Render ────────────────────────────────────────────────────────────────────
   document.getElementById('results').style.display='';
@@ -1844,7 +1843,7 @@ function calc() {
   refHTML+=row2('I<sub>e</sub> / R / R/I<sub>e</sub>', f(Ie,2)+' / '+f(R,2)+' / '+f(RIe,3));
   refHTML+=row2('S<sub>DS</sub> / S<sub>D1</sub> (g)', f(SDS,3)+' / '+f(SD1,3));
   refHTML+=row2('T<sub>design,x</sub> / T<sub>design,y</sub> (s)', f(Txd,3)+' / '+f(Tyd,3));
-  refHTML+=row2('k (X / Y)', f(k,3)+' / '+f((function(){var k2;if(Tyd<=0.5)k2=1;else if(Tyd>=2.5)k2=2;else k2=1+(Tyd-0.5);return k2;}()),3));
+  refHTML+=row2('k (X / Y)', f(k,3)+' / '+f((function(){var k2;if(Tyd<=0.5)k2=1;else if(Tyd>=2.5)k2=2;else k2=1+(Tyd-0.5)/2.0;return k2;}()),3));
   refHTML+=row2('<b>Cs,x / Cs,y</b>', '<b>'+f(Rx.Cs,4)+' / '+f(Ry.Cs,4)+'</b>');
   refHTML+=row2('<b>Vx / Vy ('+fUnit+')</b>', '<b class="vok">'+f(Vx,1)+' / '+f(Vy,1)+'</b>');
   document.getElementById('res-ref').innerHTML=refHTML;
@@ -2488,7 +2487,7 @@ function tbdyCalc() {
   }
   var dx = calcDir(T1xd), dy = calcDir(T1yd);
   var VtxRaw=W*dx.SaR, VtyRaw=W*dy.SaR;
-  var VtxMin=0.04*I*SDS*W, VtyMin=0.04*I*SDS*W;
+  var VtxMin=0.04*I*W, VtyMin=0.04*I*W;
   var Vtx=Math.max(VtxRaw,VtxMin), Vty=Math.max(VtyRaw,VtyMin);
   var DFNx=T1xd>0.70 ? 0.0075*N*Vtx : 0;
   var DFNy=T1yd>0.70 ? 0.0075*N*Vty : 0;
@@ -2644,13 +2643,13 @@ function isSag(T, soilType) {
   } else if (soilType==='II') { // Medium
     if (T<=0.10) return 1+15*T;
     if (T<=0.55) return 2.5;
-    if (T<=4.00) return 1.375/T;
-    return 0.344;
+    if (T<=4.00) return 1.36/T;
+    return 0.34;
   } else {                // III — Soft
     if (T<=0.10) return 1+15*T;
     if (T<=0.67) return 2.5;
-    if (T<=4.00) return 1.675/T;
-    return 0.419;
+    if (T<=4.00) return 1.67/T;
+    return 0.418;
   }
 }
 
