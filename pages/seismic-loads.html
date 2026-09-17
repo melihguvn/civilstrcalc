@@ -410,8 +410,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
 
-      <button class="calc-btn" onclick="calc()">Calculate Base Shear</button>
-
       <div class="related-tools no-print">
         <h3>Related Calculators &amp; Guides</h3>
         <div class="rt-grid">
@@ -709,8 +707,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
 
-        <button class="calc-btn" onclick="ec8Calc()">Calculate Base Shear</button>
-
         <div class="related-tools no-print">
           <h3>Related Calculators &amp; Guides</h3>
           <div class="rt-grid">
@@ -918,8 +914,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <div class="inp-hint" style="margin-top:5px;">C<sub>u</sub> = 1.4 (fixed) — T<sub>design</sub> = min(T<sub>1</sub>, 1.4·T<sub>a</sub>)</div>
         </div>
 
-        <button class="calc-btn" onclick="tbdyCalc()">Calculate Base Shear</button>
-
         <div class="related-tools no-print">
           <h3>Related Calculators &amp; Guides</h3>
           <div class="rt-grid">
@@ -1117,8 +1111,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             </div>
           </div>
         </div>
-
-        <button class="calc-btn" onclick="isCalc()">Calculate Base Shear</button>
 
         <div class="related-tools no-print">
           <h3>Related Calculators &amp; Guides</h3>
@@ -1927,6 +1919,9 @@ function switchStd(std, btn) {
   document.getElementById('pane-'+std).classList.add('active');
   if (btn) btn.classList.add('active');
   updateResBadge();
+  if      (std==='ec8')  ec8Calc();
+  else if (std==='tbdy') tbdyCalc();
+  else if (std==='is')   isCalc();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2004,8 +1999,10 @@ function ec8DrawSpectrum(ag, p, q, eta, beta, T1x, T1y, fixedCanvas) {
     W = 630; H = 200; canvas.width = W; canvas.height = H;
   } else {
     var cont = canvas.parentElement;
-    W = (cont && cont.clientWidth>24) ? cont.clientWidth-24 : 600;
+    W = (cont && cont.clientWidth>0) ? cont.clientWidth : 600;
     H = 210;
+    canvas.style.height = H+'px';
+    if (W < 50) { requestAnimationFrame(function(){ec8DrawSpectrum(ag,p,q,eta,beta,T1x,T1y);}); return; }
     canvas.width = W*(window.devicePixelRatio||1);
     canvas.height = H*(window.devicePixelRatio||1);
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
@@ -2297,8 +2294,10 @@ function tbdyDrawSpectrum(SDS, SD1, TA, TB, TL, T1x, T1y, SaRx, SaRy, fixedCanva
     cW=630; cH=200; canvas.width=cW; canvas.height=cH;
   } else {
     var cont = canvas.parentElement;
-    cW = (cont && cont.clientWidth>24) ? cont.clientWidth-24 : 600;
+    cW = (cont && cont.clientWidth>0) ? cont.clientWidth : 600;
     cH = 210;
+    canvas.style.height = cH+'px';
+    if (cW < 50) { requestAnimationFrame(function(){tbdyDrawSpectrum(SDS,SD1,TA,TB,TL,T1x,T1y,SaRx,SaRy);}); return; }
     canvas.width = cW*(window.devicePixelRatio||1);
     canvas.height = cH*(window.devicePixelRatio||1);
     canvas.style.width = cW+'px'; canvas.style.height = cH+'px';
@@ -2569,8 +2568,10 @@ function isDrawSpectrum(soilType, Tx, Ty, fixedCanvas) {
     cW=630;cH=200;canvas.width=cW;canvas.height=cH;
   } else {
     var cont=canvas.parentElement;
-    cW=(cont&&cont.clientWidth>24)?cont.clientWidth-24:600;
+    cW=(cont&&cont.clientWidth>0)?cont.clientWidth:600;
     cH=210;
+    canvas.style.height=cH+'px';
+    if(cW<50){requestAnimationFrame(function(){isDrawSpectrum(soilType,Tx,Ty);});return;}
     canvas.width=cW*(window.devicePixelRatio||1);
     canvas.height=cH*(window.devicePixelRatio||1);
     canvas.style.width=cW+'px';canvas.style.height=cH+'px';
