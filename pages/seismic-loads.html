@@ -1352,32 +1352,32 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     W = 630; H = 200;
     canvas.width = W; canvas.height = H;
   } else {
-    var container = canvas.parentElement;
     H = 210;
+    // Set CSS to 100% first so the browser computes the layout width
+    canvas.style.width  = '100%';
     canvas.style.height = H + 'px';
-    // getBoundingClientRect forces synchronous reflow — returns correct width
-    // even immediately after display:none → visible transition
-    var rect = container ? container.getBoundingClientRect() : null;
-    W = rect ? Math.round(rect.width) : 0;
-    if (!W || W < 50) {
+    // offsetWidth reads the CSS-rendered width after forcing reflow —
+    // correct even right after display:none → visible
+    W = canvas.offsetWidth || 0;
+    if (W < 50) {
       requestAnimationFrame(function() {
         drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, null);
       });
       return;
     }
-    // Watch container for size changes (window resize, panel toggle, etc.)
-    if (!_spectrumRO && 'ResizeObserver' in window && container) {
+    // Watch parent for size changes so canvas stays full-width on resize
+    if (!_spectrumRO && 'ResizeObserver' in window && canvas.parentElement) {
       _spectrumRO = new ResizeObserver(function() {
         if (_rptParams) {
           var p = _rptParams;
           drawSpectrum(p.SDS, p.SD1, p.TL, p.Txd, p.Tyd, 0, 0, null);
         }
       });
-      _spectrumRO.observe(container);
+      _spectrumRO.observe(canvas.parentElement);
     }
     canvas.width  = W * (window.devicePixelRatio || 1);
     canvas.height = H * (window.devicePixelRatio || 1);
-    canvas.style.width  = W + 'px';
+    canvas.style.width  = W + 'px'; // lock to measured size; ResizeObserver resets to 100% on resize
     canvas.style.height = H + 'px';
   }
   var ctx = canvas.getContext('2d');
