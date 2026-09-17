@@ -2391,6 +2391,19 @@ function enCalc() {
         wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
         cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
     });
+  } else if (roof === 'mono') {
+    var mc = monoTableCpe(theta);
+    var mz = [{z:'F',s:'Monopitch — F (θ=0°)',c:mc.deg0.F},{z:'G',s:'Monopitch — G',c:mc.deg0.G},
+              {z:'H',s:'Monopitch — H',c:mc.deg0.H},{z:'I',s:'Monopitch — I',c:mc.deg0.I}];
+    mz.forEach(function(zr){
+      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
+      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
+      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
+      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
+      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
+        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
+        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
+    });
   }
 
   // ── Governing wall pressure (worst suction or pressure)
