@@ -780,13 +780,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>The design base acceleration a<sub>gR</sub> is a nationally determined parameter from the probabilistic seismic hazard map in the relevant National Annex, corresponding to a 10% probability of exceedance in 50 years (475-year return period for Importance Class II). The design acceleration for the structure is a<sub>g</sub> = γ<sub>I</sub> · a<sub>gR</sub>, where γ<sub>I</sub> is the importance factor (Table 4.3): 0.8 for Class I (minor importance), 1.0 for Class II (ordinary), 1.2 for Class III (large public assemblies), and 1.4 for Class IV (essential facilities). The soil amplification factor S (Tables 3.2–3.3) accounts for local site conditions and typically amplifies the ground motion by 15–80% for soft soils compared to rock.</p>
 
       <h3>Design Response Spectrum</h3>
-      <p>EN 1998-1 §3.2.2.5 defines two spectrum shapes — Type 1 for regions of moderate-to-high seismicity (surface-wave magnitude M<sub>s</sub> &gt; 5.5) and Type 2 for low-seismicity regions (M<sub>s</sub> ≤ 5.5). Each spectrum has four branches: a rising portion (0 to T<sub>B</sub>), a constant acceleration plateau (T<sub>B</sub> to T<sub>C</sub>), a descending 1/T branch (T<sub>C</sub> to T<sub>D</sub>), and a 1/T² branch beyond T<sub>D</sub>. The plateau ordinate is a<sub>g</sub> · S · 2.5/q · η, where q is the behavior factor and η = √(10/(5+ξ)) is the damping correction (η ≥ 0.55). A lower bound β · a<sub>g</sub> (β = 0.2) prevents unrealistically small spectral ordinates at long periods.</p>
+      <p>EN 1998-1 §3.2.2.5 defines two spectrum shapes — Type 1 for regions of moderate-to-high seismicity (surface-wave magnitude M<sub>s</sub> &gt; 5.5) and Type 2 for low-seismicity regions (M<sub>s</sub> ≤ 5.5). Each spectrum has four branches: a rising portion (0 to T<sub>B</sub>), a constant acceleration plateau (T<sub>B</sub> to T<sub>C</sub>), a descending 1/T branch (T<sub>C</sub> to T<sub>D</sub>), and a 1/T² branch beyond T<sub>D</sub>. The plateau value (governing for most buildings) is:</p>
+      <p style="text-align:center;font-style:italic;">S<sub>d</sub>(T) = a<sub>g</sub> · S · (2.5/q) · η &nbsp;&nbsp; (T<sub>B</sub> ≤ T ≤ T<sub>C</sub>)</p>
+      <p>where q is the behavior factor and η = √(10/(5+ξ)) is the damping correction (η ≥ 0.55). A lower bound β · a<sub>g</sub> (β = 0.2) prevents unrealistically small spectral ordinates at long periods.</p>
 
       <h3>Behavior Factor q and Ductility Classes</h3>
       <p>The behavior factor q accounts for inelastic energy dissipation and overstrength, equivalent in concept to ASCE 7-22's R factor. EN 1998-1 §5.2.2 defines three ductility classes: DCL (Low, q ≤ 1.5), DCM (Medium, q up to 4.5), and DCH (High, q up to 6.5 for special moment frames). Higher q values reduce design forces but require progressively more stringent material, detailing, and capacity-design rules under EN 1998-1 §5.4–5.6. DCM and DCH structures must satisfy the capacity-design requirement that plastic hinges form in designated ductile members before brittle failure modes are triggered.</p>
 
       <h3>Base Shear and λ Correction</h3>
-      <p>The total design base shear is <strong>F<sub>b</sub> = S<sub>d</sub>(T<sub>1</sub>) · m · λ</strong>, where m is the total seismic mass (= W/g in SI), and λ is a correction factor equal to 0.85 when T<sub>1</sub> ≤ 2T<sub>C</sub> and the building has more than two stories (otherwise λ = 1.0). The 0.85 factor reflects the effective modal mass of the first mode being less than the total mass for multi-story buildings. Story forces are then distributed linearly: F<sub>i</sub> = F<sub>b</sub> · (z<sub>i</sub>·m<sub>i</sub>) / Σ(z<sub>j</sub>·m<sub>j</sub>), which corresponds to k = 1 in the ASCE 7-22 distribution (no higher-mode correction term).</p>
+      <p>The total design base shear is:</p>
+      <p style="text-align:center;font-style:italic;">F<sub>b</sub> = S<sub>d</sub>(T<sub>1</sub>) · W · λ</p>
+      <p>where W is the seismic weight (= m·g), and λ is a correction factor equal to 0.85 when T<sub>1</sub> ≤ 2T<sub>C</sub> and the building has more than two stories (otherwise λ = 1.0). The 0.85 factor reflects the effective modal mass of the first mode being less than the total mass for multi-story buildings. Story forces are then distributed linearly:</p>
+      <p style="text-align:center;font-style:italic;">F<sub>i</sub> = F<sub>b</sub> · (z<sub>i</sub>·m<sub>i</sub>) / Σ(z<sub>j</sub>·m<sub>j</sub>)</p>
+      <p>which corresponds to k = 1 in the ASCE 7-22 distribution (no higher-mode correction term).</p>
 
       <h3>Comparison with ASCE 7-22</h3>
       <p>Both codes share the same conceptual framework — seismic demand from a design spectrum reduced by a system factor (R or q) — but differ in several important ways. EN 1998-1 uses a National Annex for site-specific spectral ordinates rather than USGS mapped values. The soil amplification in EN 1998-1 is a single S factor vs. separate F<sub>a</sub>/F<sub>v</sub> in ASCE 7-22. The EC8 λ factor has no direct ASCE counterpart. EN 1998-1 does not impose a C<sub>u</sub>·T<sub>a</sub> upper-period cap, though national annexes may introduce similar limits. The story force distribution uses k = 1 in EC8 (linear) vs. the variable k in ASCE 7-22 that captures higher-mode effects in flexible structures.</p>
@@ -865,14 +871,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
               <div class="inp-hint">Table 4.1 (A11: 8, A12: 4, A13: 7)</div>
             </div>
             <div class="inp-row">
-              <label>N — Stories (ΔF<sub>N</sub>)</label>
-              <input type="number" id="tbdy-N" value="5" min="1" step="1" oninput="tbdyCalc();">
-              <div class="inp-hint">Apex force: T1 &gt; 0.70 s</div>
-            </div>
-            <div class="inp-row">
               <label>D — Overstrength</label>
               <input type="number" id="tbdy-D" value="3" min="1" max="5" step="0.5" oninput="tbdyCalc();">
               <div class="inp-hint">Table 4.1 (A11: 3, A12: 2, A13: 2.5)</div>
+            </div>
+            <div class="inp-row">
+              <label>N — Stories (ΔF<sub>N</sub>)</label>
+              <input type="number" id="tbdy-N" value="5" min="1" step="1" oninput="tbdyCalc();">
+              <div class="inp-hint">Apex force: T1 &gt; 0.70 s</div>
             </div>
           </div>
         </div>
@@ -970,13 +976,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     </div><!-- /page-layout TSC -->
 
     <article class="bg-article">
-      <h2>TBDY 2018 (TSC 2018) Eşdeğer Deprem Yükü — Technical Background</h2>
+      <h2>TBDY 2018 (TSC 2018) Equivalent Earthquake Load Method — Technical Background</h2>
 
       <h3>Overview and Applicability</h3>
-      <p>The Turkish Seismic Code 2018 (Türkiye Bina Deprem Yönetmeliği, TBDY 2018) governs seismic design of buildings in Turkey. §4.8 defines the Equivalent Earthquake Load Method (Eşdeğer Deprem Yükü Yöntemi), computing design base shear as <strong>V<sub>t</sub> = m<sub>t</sub>·S<sub>aR</sub>(T<sub>1</sub>)</strong>. The method applies to regular buildings with fundamental period T<sub>1</sub> ≤ 1.0 s and height within BKS class limits (32 m for BKS II, 40 m for BKS III). Irregular or taller structures require Modal Response Spectrum Analysis per §4.8.4.</p>
+      <p>The Turkish Building Earthquake Code 2018 (TBDY 2018) governs seismic design of buildings in Turkey. §4.8 defines the Equivalent Earthquake Load Method, computing design base shear as:</p>
+      <p style="text-align:center;font-style:italic;">V<sub>t</sub> = m<sub>t</sub> · S<sub>aR</sub>(T<sub>1</sub>)</p>
+      <p>The method applies to regular buildings with fundamental period T<sub>1</sub> ≤ 1.0 s and height within BKS class limits (32 m for BKS II, 40 m for BKS III). Irregular or taller structures require Modal Response Spectrum Analysis per §4.8.4.</p>
 
       <h3>Probabilistic Seismic Hazard Levels</h3>
-      <p>TBDY 2018 defines four probabilistic seismic hazard levels. The standard design earthquake DD-2 corresponds to 10% probability of exceedance in 50 years (475-year return period), equivalent to the design basis in ASCE 7-22 and EN 1998-1. Spectral accelerations S<sub>S</sub> (0.2 s) and S<sub>1</sub> (1.0 s) are taken from Turkey's national probabilistic hazard map (AFAD Deprem Tehlike Haritası), provided at 0.5 km geographic resolution. Additional levels DD-1 (2% in 50 yr), DD-3 (50% in 50 yr), and DD-4 (68% in 50 yr) are used for performance-based structural assessment.</p>
+      <p>TBDY 2018 defines four probabilistic seismic hazard levels. The standard design earthquake DD-2 corresponds to 10% probability of exceedance in 50 years (475-year return period), equivalent to the design basis in ASCE 7-22 and EN 1998-1. Spectral accelerations S<sub>S</sub> (0.2 s) and S<sub>1</sub> (1.0 s) are taken from Turkey's national probabilistic seismic hazard map (AFAD), provided at 0.5 km geographic resolution. Additional levels DD-1 (2% in 50 yr), DD-3 (50% in 50 yr), and DD-4 (68% in 50 yr) are used for performance-based structural assessment.</p>
 
       <h3>Design Spectrum — §2.2.3</h3>
       <p>The elastic design spectrum S<sub>ae</sub>(T) is constructed after site amplification. Local spectral parameters are defined as S<sub>DS</sub> = S<sub>S</sub>·F<sub>SS</sub> and S<sub>D1</sub> = S<sub>1</sub>·F<sub>1</sub>, where F<sub>SS</sub> and F<sub>1</sub> are site amplification factors from TBDY 2018 Tables 2.1–2.2. The spectrum follows four branches: rising (0 to T<sub>A</sub>), constant acceleration plateau S<sub>DS</sub> (T<sub>A</sub> to T<sub>B</sub>), descending 1/T branch (T<sub>B</sub> to T<sub>L</sub>), and long-period 1/T² branch beyond T<sub>L</sub>. Corner periods are T<sub>A</sub> = 0.2·S<sub>D1</sub>/S<sub>DS</sub> and T<sub>B</sub> = S<sub>D1</sub>/S<sub>DS</sub>.</p>
@@ -985,10 +993,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>TBDY 2018 §4.8.1 gives the approximate period as <strong>T<sub>a</sub> = C<sub>t</sub>·H<sup>0.9</sup></strong>, where H is the total building height in meters and C<sub>t</sub> is a coefficient based on the structural system type. The exponent is fixed at 0.9 for all systems (unlike ASCE 7-22 which uses system-dependent exponents). The period used in design is capped at T<sub>1</sub> ≤ k·T<sub>a</sub>, where k varies by seismic zone and site class per Table 4.2, preventing unconservative use of an overestimated analytical period.</p>
 
       <h3>Seismic Load Reduction Factor R<sub>a</sub>(T) — §4.3.4</h3>
-      <p>TBDY 2018's period-dependent reduction factor R<sub>a</sub>(T) is a key distinction from ASCE 7-22 and EC8. For T &lt; T<sub>B</sub>, R<sub>a</sub>(T) = 1 + (R/D − 1)·T/T<sub>B</sub>, rising linearly from 1.0 at T = 0 to R/D at T = T<sub>B</sub>. For T ≥ T<sub>B</sub>, R<sub>a</sub>(T) = R/D. The ductility factor R (structural system property) and strength excess factor D (overstrength, ≥ 1.0) are defined in Table 4.1. The design spectral acceleration is S<sub>aR</sub>(T) = S<sub>ae</sub>(T)/R<sub>a</sub>(T). This formulation explicitly limits ductility reduction at very short periods where non-linear demand is reduced.</p>
+      <p>TBDY 2018's period-dependent reduction factor R<sub>a</sub>(T) is a key distinction from ASCE 7-22 and EC8. The ductility factor R (structural system property) and strength excess factor D (overstrength, ≥ 1.0) are defined in Table 4.1. R<sub>a</sub>(T) rises linearly from D at T = 0 to R/D at T = T<sub>B</sub>, then stays constant:</p>
+      <p style="text-align:center;font-style:italic;">R<sub>a</sub>(T) = D + (R/D − D)·(T/T<sub>B</sub>) &nbsp;&nbsp; (T &lt; T<sub>B</sub>)</p>
+      <p style="text-align:center;font-style:italic;">R<sub>a</sub>(T) = R/D &nbsp;&nbsp; (T ≥ T<sub>B</sub>)</p>
+      <p>The design spectral acceleration is then S<sub>aR</sub>(T) = S<sub>ae</sub>(T)/R<sub>a</sub>(T). This formulation explicitly limits ductility reduction at very short periods where non-linear demand is reduced.</p>
 
       <h3>Base Shear and Minimum — §4.8.3</h3>
-      <p>The design base shear is <strong>V<sub>t</sub> = m<sub>t</sub>·S<sub>aR</sub>(T<sub>1</sub>)</strong>. A minimum base shear applies: S<sub>aR</sub>(T<sub>1</sub>) shall not fall below 0.04·g·I, where I is the building importance factor (I = 1.5 for BKS I essential facilities, 1.2 for BKS II, 1.0 for BKS III ordinary buildings). Story forces are distributed linearly proportional to story weights and heights, equivalent to k = 1 in ASCE 7-22 notation. The resultant lateral forces are applied separately in each principal direction.</p>
+      <p>The design base shear is:</p>
+      <p style="text-align:center;font-style:italic;">V<sub>t</sub> = m<sub>t</sub> · S<sub>aR</sub>(T<sub>1</sub>) &nbsp;&nbsp; where &nbsp;&nbsp; S<sub>aR</sub>(T) = S<sub>ae</sub>(T) / R<sub>a</sub>(T)</p>
+      <p>A minimum base shear applies: S<sub>aR</sub>(T<sub>1</sub>) shall not fall below 0.04·g·I, where I is the building importance factor (I = 1.5 for BKS I essential facilities, 1.2 for BKS II, 1.0 for BKS III ordinary buildings). Story forces are distributed linearly proportional to story weights and heights, equivalent to k = 1 in ASCE 7-22 notation. The resultant lateral forces are applied separately in each principal direction.</p>
 
       <h3>Comparison with ASCE 7-22 and EC8</h3>
       <p>TBDY 2018 shares its spectrum branch structure with ASCE 7-22 (four branches, T<sub>L</sub> transition) but uses Turkey's national AFAD hazard map instead of USGS data. The period-dependent R<sub>a</sub>(T) factor, distinct from EC8's constant q and ASCE's constant R/I<sub>e</sub>, provides a more gradual transition in the short-period region. The explicit separation of ductility (R) and overstrength (D) is unique to TBDY among these three codes — ASCE 7-22 combines both in a single R factor, and EC8 incorporates overstrength into system-level q values in its national annexes. Building classification by performance objective (BKS I–III) maps to ASCE 7-22 Risk Categories (IV, III, I–II) and EC8 Importance Classes (IV, III, I–II).</p>
@@ -1165,7 +1178,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <h2>IS 1893:2016 (Part 1) Seismic Design — Technical Background</h2>
 
       <h3>Overview and Scope</h3>
-      <p>IS 1893:2016 (Part 1) — Criteria for Earthquake Resistant Design of Structures — is the primary Indian seismic design standard. Clause 6.4 defines the Seismic Coefficient Method (SCM), which computes design base shear as <strong>V<sub>B</sub> = A<sub>h</sub>·W</strong>, where A<sub>h</sub> is the design horizontal seismic coefficient and W is the seismic weight. The method applies to buildings up to 500 m in Zone II and up to 90 m in Zones III–V with regular configuration; taller or irregular structures in higher zones require dynamic analysis per Cl. 6.4.3.</p>
+      <p>IS 1893:2016 (Part 1) — Criteria for Earthquake Resistant Design of Structures — is the primary Indian seismic design standard. Clause 6.4 defines the Seismic Coefficient Method (SCM), computing design base shear as:</p>
+      <p style="text-align:center;font-style:italic;">V<sub>B</sub> = A<sub>h</sub> · W</p>
+      <p>where A<sub>h</sub> is the design horizontal seismic coefficient and W is the seismic weight. The method applies to buildings up to 500 m in Zone II and up to 90 m in Zones III–V with regular configuration; taller or irregular structures in higher zones require dynamic analysis per Cl. 6.4.3.</p>
 
       <h3>Seismic Zones and Zone Factor Z</h3>
       <p>India is divided into four seismic zones (II, III, IV, V) based on historical seismicity and geology. The zone factor Z represents the Maximum Considered Earthquake (MCE) peak ground acceleration at rock sites: Z = 0.10 g (Zone II), 0.16 g (Zone III), 0.24 g (Zone IV), and 0.36 g (Zone V). The design basis earthquake (DBE) corresponds to half the MCE, embedded in the A<sub>h</sub> formula as the Z/2 term. Zone boundaries were established in IS 1893:2002 and retained in the 2016 revision with minor updates.</p>
@@ -1182,7 +1197,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>IS 1893:2016 provides empirical period formulas: T<sub>a</sub> = 0.075·h<sup>0.75</sup> for RC moment-resisting frames (bare, without masonry infill), T<sub>a</sub> = 0.085·h<sup>0.75</sup> for steel frames, and T<sub>a</sub> = 0.09·h/√d for all other structural systems, where h is the building height in meters and d is the plan dimension in the direction of analysis. The user may supply an analytically derived period, but IS 1893 does not impose a strict upper cap equivalent to ASCE 7-22's C<sub>u</sub>·T<sub>a</sub>. However, Cl. 7.8.2a requires that the design base shear from the Seismic Coefficient Method not fall below that from dynamic analysis, achieving a similar conservative floor on design forces.</p>
 
       <h3>Base Shear Distribution — Cl. 7.7.1</h3>
-      <p>Story seismic forces are distributed according to a parabolic pattern: Q<sub>i</sub> = V<sub>B</sub>·(w<sub>i</sub>·h<sub>i</sub>²) / Σ(w<sub>j</sub>·h<sub>j</sub>²), which corresponds to exponent k = 2 in ASCE 7-22 notation. This fixed quadratic distribution differs from ASCE 7-22's variable k (1 to 2) and EC8's linear k = 1. The quadratic shape concentrates more force at upper stories and is more conservative for stiff structures than a linear distribution.</p>
+      <p>Story seismic forces are distributed according to a parabolic (quadratic) pattern:</p>
+      <p style="text-align:center;font-style:italic;">Q<sub>i</sub> = V<sub>B</sub> · (w<sub>i</sub>·h<sub>i</sub>²) / Σ(w<sub>j</sub>·h<sub>j</sub>²)</p>
+      <p>This corresponds to exponent k = 2 in ASCE 7-22 notation. The fixed quadratic distribution differs from ASCE 7-22's variable k (1 to 2) and EC8's linear k = 1. The quadratic shape concentrates more force at upper stories and is more conservative for stiff structures than a linear distribution.</p>
 
       <h3>Comparison with ASCE 7-22 and EC8</h3>
       <p>IS 1893 uses a simpler two-level seismicity representation (Z·I/R vs. ASCE's S<sub>DS</sub>/(R/I<sub>e</sub>)) and does not independently amplify spectral ordinates for site class — only T<sub>C</sub> shifts. ASCE 7-22 and EC8 apply full-amplitude soil amplification factors (F<sub>a</sub>/F<sub>v</sub> and S, respectively) that can significantly change spectral ordinates at all periods. The absence of a long-period 1/T² branch in IS 1893 is a structural difference with real consequences for long-period structures. The fixed k = 2 force distribution in IS 1893 is more conservative than EC8's k = 1 but matches ASCE 7-22's k = 2 for T ≥ 2.5 s; for moderate-period buildings where ASCE uses 1 &lt; k &lt; 2, IS 1893 is comparatively conservative.</p>
