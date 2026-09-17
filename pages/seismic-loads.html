@@ -1341,6 +1341,7 @@ function computeCs(SDS, SD1, S1, T_design, TL, RIe) {
 // ── Design Response Spectrum chart ───────────────────────────────────────────
 var _rptParams = null;
 var _ascRptP   = null;
+var _spectrumRO = null; // ResizeObserver for canvas container
 
 function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   _rptParams = {SDS:SDS, SD1:SD1, TL:TL, Txd:Txd, Tyd:Tyd};
@@ -1353,14 +1354,26 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   } else {
     var container = canvas.parentElement;
     H = 210;
-    W = container ? container.clientWidth : 0;
-    if (W < 50) {
-      // Results section was just un-hidden; browser hasn't reflowed yet.
-      // Retry after layout is committed so we get the real container width.
+    canvas.style.height = H + 'px';
+    // getBoundingClientRect forces synchronous reflow — returns correct width
+    // even immediately after display:none → visible transition
+    var rect = container ? container.getBoundingClientRect() : null;
+    W = rect ? Math.round(rect.width) : 0;
+    if (!W || W < 50) {
       requestAnimationFrame(function() {
         drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, null);
       });
       return;
+    }
+    // Watch container for size changes (window resize, panel toggle, etc.)
+    if (!_spectrumRO && 'ResizeObserver' in window && container) {
+      _spectrumRO = new ResizeObserver(function() {
+        if (_rptParams) {
+          var p = _rptParams;
+          drawSpectrum(p.SDS, p.SD1, p.TL, p.Txd, p.Tyd, 0, 0, null);
+        }
+      });
+      _spectrumRO.observe(container);
     }
     canvas.width  = W * (window.devicePixelRatio || 1);
     canvas.height = H * (window.devicePixelRatio || 1);
@@ -1386,9 +1399,9 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
   var Ts = SD1 / SDS;
   var T0 = 0.2 * Ts;
 
-  // Axis range — always show at least 4 s so the chart fills its container
+  // Axis range — always show at least 3 s; extend if periods are large
   var Tmax = Math.max(Txd, Tyd, Ts) * 3.0;
-  Tmax = Math.max(Tmax, 4.0);
+  Tmax = Math.max(Tmax, 3.0);
   Tmax = Math.min(Tmax, TL);                       // cap at TL (spectrum ends there)
   Tmax = Math.max(Tmax, Txd * 1.2, Tyd * 1.2);    // always show entered periods
   var Samax = SDS * 1.2;
@@ -2623,19 +2636,6 @@ function isPrintReport() {
   setTimeout(function(){window.print();},200);
 }
 
-// ── Redraw spectrum on resize so canvas always fills its container ─────────────
-(function(){
-  var _resizeTimer;
-  window.addEventListener('resize', function() {
-    clearTimeout(_resizeTimer);
-    _resizeTimer = setTimeout(function() {
-      if (_rptParams) {
-        var p = _rptParams;
-        drawSpectrum(p.SDS, p.SD1, p.TL, p.Txd, p.Tyd, 0, 0, null);
-      }
-    }, 120);
-  });
-})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function init(){
