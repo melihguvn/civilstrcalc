@@ -1351,13 +1351,12 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     W = 630; H = 200;
     canvas.width = W; canvas.height = H;
   } else {
+    var container = canvas.parentElement;
     H = 210;
-    canvas.style.height = H + 'px';
-    // canvas has width:100% in HTML — read the CSS-rendered width
-    W = canvas.clientWidth || canvas.offsetWidth;
-    if (!W || W < 50) {
+    W = container ? container.clientWidth : 0;
+    if (W < 50) {
       // Results section was just un-hidden; browser hasn't reflowed yet.
-      // Retry after layout is committed.
+      // Retry after layout is committed so we get the real container width.
       requestAnimationFrame(function() {
         drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, null);
       });
@@ -1365,7 +1364,8 @@ function drawSpectrum(SDS, SD1, TL, Txd, Tyd, CsX, CsY, fixedCanvas) {
     }
     canvas.width  = W * (window.devicePixelRatio || 1);
     canvas.height = H * (window.devicePixelRatio || 1);
-    // Do NOT override canvas.style.width — keep CSS width:100% so it stays responsive
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
   }
   var ctx = canvas.getContext('2d');
   if (!fixedCanvas) ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
