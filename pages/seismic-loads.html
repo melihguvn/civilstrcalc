@@ -673,14 +673,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
 
-        <!-- ELF Equation -->
-        <div class="section-card">
-          <div class="sc-hdr">Lateral Force Method of Analysis — §4.3.3.2</div>
-          <div style="font-size:.76rem;margin-bottom:4px;"><b>F<sub>b</sub> = S<sub>d</sub>(T<sub>1</sub>) · W · λ</b></div>
-          <div style="font-size:.69rem;color:var(--text-dim);">S<sub>d</sub>(T) = a<sub>g</sub> · S · (2.5/q) · η &nbsp; for T<sub>B</sub> ≤ T ≤ T<sub>C</sub></div>
-          <div style="font-size:.69rem;color:var(--text-dim);margin-top:2px;">λ = 0.85 if n &gt; 2 and T<sub>1</sub> ≤ 2T<sub>C</sub>, else λ = 1.0</div>
-        </div>
-
         <!-- Period -->
         <div class="section-card">
           <div class="sc-hdr">Building Period</div>
@@ -711,6 +703,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="inp-row">
               <label>T<sub>a</sub> = C<sub>t</sub>·H<sup>3/4</sup></label>
               <input type="text" id="ec8-Ta" readonly style="background:var(--surface);color:var(--text-dim);">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-hdr">Modal Analysis Scale Check — §4.3.3.3 <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem;">(optional)</span></div>
+          <div style="font-size:.69rem;color:var(--text-dim);margin-bottom:8px;">If V<sub>modal</sub> &lt; 0.9·F<sub>b,ELF</sub>, all response quantities must be scaled up by C<sub>f</sub> = 0.9·F<sub>b,ELF</sub>/V<sub>modal</sub>.</div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>V<sub>modal,x</sub> (kN)</label>
+              <input type="number" id="ec8-Vmx" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="ec8Calc();">
+            </div>
+            <div class="inp-row">
+              <label>V<sub>modal,y</sub> (kN)</label>
+              <input type="number" id="ec8-Vmy" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="ec8Calc();">
             </div>
           </div>
         </div>
@@ -763,6 +770,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <table class="res-tbl3">
             <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
             <tbody id="ec8-res-fb"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card" id="ec8-modal-card" style="display:none;">
+          <div class="res-card-hdr">Modal Scale Factor Cf — §4.3.3.3</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="ec8-res-modal"></tbody>
           </table>
         </div>
 
@@ -887,14 +902,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
 
-        <!-- ELF Equation -->
-        <div class="section-card">
-          <div class="sc-hdr">Equivalent Lateral Force Method — §4.8.2</div>
-          <div style="font-size:.76rem;margin-bottom:4px;"><b>V<sub>t</sub> = m<sub>t</sub> · S<sub>aR</sub>(T<sub>1</sub>)</b></div>
-          <div style="font-size:.69rem;color:var(--text-dim);">S<sub>aR</sub>(T) = S<sub>ae</sub>(T) / R<sub>a</sub>(T)</div>
-          <div style="font-size:.69rem;color:var(--text-dim);margin-top:2px;">R<sub>a</sub>(T) = D + (R/D − D)·T/T<sub>B</sub> for T &lt; T<sub>B</sub> &nbsp;|&nbsp; R<sub>a</sub>(T) = R/D for T ≥ T<sub>B</sub></div>
-        </div>
-
         <!-- Period -->
         <div class="section-card">
           <div class="sc-hdr">Building Period</div>
@@ -928,6 +935,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             </div>
           </div>
           <div class="inp-hint" style="margin-top:5px;">C<sub>u</sub> = 1.4 (fixed) — T<sub>design</sub> = min(T<sub>1</sub>, 1.4·T<sub>a</sub>)</div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-hdr">Modal Analysis Scale Check — §4.8.4 <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem;">(optional)</span></div>
+          <div style="font-size:.69rem;color:var(--text-dim);margin-bottom:8px;">If V<sub>modal</sub> &lt; 0.9·V<sub>t,ELF</sub>, all response quantities must be scaled up by C<sub>f</sub> = 0.9·V<sub>t,ELF</sub>/V<sub>modal</sub>.</div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>V<sub>modal,x</sub> (kN)</label>
+              <input type="number" id="tbdy-Vmx" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="tbdyCalc();">
+            </div>
+            <div class="inp-row">
+              <label>V<sub>modal,y</sub> (kN)</label>
+              <input type="number" id="tbdy-Vmy" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="tbdyCalc();">
+            </div>
+          </div>
         </div>
 
         <div class="related-tools no-print">
@@ -975,6 +997,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <table class="res-tbl3">
             <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
             <tbody id="tbdy-res-vt"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card" id="tbdy-modal-card" style="display:none;">
+          <div class="res-card-hdr">Modal Scale Factor Cf — §4.8.4</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="tbdy-res-modal"></tbody>
           </table>
         </div>
 
@@ -1100,14 +1130,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
         </div>
 
-        <!-- ELF Equation -->
-        <div class="section-card">
-          <div class="sc-hdr">Seismic Coefficient Method — Cl. 6.4.2</div>
-          <div style="font-size:.76rem;margin-bottom:4px;"><b>V<sub>B</sub> = A<sub>h</sub> · W</b></div>
-          <div style="font-size:.69rem;color:var(--text-dim);">A<sub>h</sub> = (Z/2) · (I/R) · (S<sub>a</sub>/g)</div>
-          <div style="font-size:.69rem;color:var(--text-dim);margin-top:2px;">V<sub>B,min</sub> = 0.01 · W &nbsp;(Cl. 7.2.2)</div>
-        </div>
-
         <div class="section-card">
           <div class="sc-hdr">Approximate Period — Cl. 7.6</div>
           <div class="calc-grid" style="margin-bottom:8px;">
@@ -1132,6 +1154,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="inp-row">
               <label>T<sub>a</sub> (computed)</label>
               <input type="text" id="is-Ta-disp" readonly style="background:var(--surface,#f8fafb);color:var(--text-dim);">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-hdr">Dynamic Analysis Scale Check — Cl. 7.8.2a <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem;">(optional)</span></div>
+          <div style="font-size:.69rem;color:var(--text-dim);margin-bottom:8px;">If V<sub>SRSS</sub> &lt; V<sub>B,ELF</sub>, all dynamic forces must be scaled up by C<sub>f</sub> = V<sub>B,ELF</sub>/V<sub>SRSS</sub>. (No reduction allowed.)</div>
+          <div class="calc-grid">
+            <div class="inp-row">
+              <label>V<sub>SRSS,x</sub> (kN)</label>
+              <input type="number" id="is-Vmx" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="isCalc();">
+            </div>
+            <div class="inp-row">
+              <label>V<sub>SRSS,y</sub> (kN)</label>
+              <input type="number" id="is-Vmy" value="" min="0" step="1" placeholder="Leave blank to skip" oninput="isCalc();">
             </div>
           </div>
         </div>
@@ -1180,6 +1217,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <table class="res-tbl3">
             <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
             <tbody id="is-res-vb"></tbody>
+          </table>
+        </div>
+
+        <div class="res-card" id="is-modal-card" style="display:none;">
+          <div class="res-card-hdr">Dynamic Scale Factor Cf — Cl. 7.8.2a</div>
+          <table class="res-tbl3">
+            <thead><tr><th>Parameter</th><th>X Dir.</th><th>Y Dir.</th></tr></thead>
+            <tbody id="is-res-modal"></tbody>
           </table>
         </div>
 
@@ -2160,6 +2205,26 @@ function ec8Calc() {
   rH+=row2('<b>S<sub>d,x</sub> / S<sub>d,y</sub> (g)</b>', '<b>'+f(SdX,4)+' / '+f(SdY,4)+'</b>');
   rH+=row2('<b>F<sub>bx</sub> / F<sub>by</sub> ('+fUnit+')</b>', '<b class="vok">'+f(FbX,1)+' / '+f(FbY,1)+'</b>');
   document.getElementById('ec8-res-ref').innerHTML=rH;
+  // Modal scale check — §4.3.3.3
+  var ec8Vmx=parseFloat(document.getElementById('ec8-Vmx').value);
+  var ec8Vmy=parseFloat(document.getElementById('ec8-Vmy').value);
+  var ec8ModalCard=document.getElementById('ec8-modal-card');
+  if (!isNaN(ec8Vmx)&&ec8Vmx>0&&!isNaN(ec8Vmy)&&ec8Vmy>0) {
+    ec8ModalCard.style.display='';
+    var minFbX=0.9*FbX, minFbY=0.9*FbY;
+    var CfX=Math.max(minFbX/ec8Vmx,1.0), CfY=Math.max(minFbY/ec8Vmy,1.0);
+    var mH='';
+    mH+=row3('F<sub>b,ELF</sub> (kN)',f(FbX,1),f(FbY,1));
+    mH+=row3('0.9·F<sub>b,ELF</sub> — minimum (kN)',f(minFbX,1),f(minFbY,1));
+    mH+=row3('V<sub>modal</sub> (kN)',f(ec8Vmx,1),f(ec8Vmy,1));
+    var scX=ec8Vmx<minFbX?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    var scY=ec8Vmy<minFbY?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    mH+=row3('Status',scX,scY);
+    mH+=row3('<b>Cf = max(0.9·F<sub>b,ELF</sub>/V<sub>modal</sub>, 1.0)</b>',
+      '<b class="'+(CfX>1?'vwarn':'vok')+'">'+f(CfX,3)+'</b>',
+      '<b class="'+(CfY>1?'vwarn':'vok')+'">'+f(CfY,3)+'</b>');
+    document.getElementById('ec8-res-modal').innerHTML=mH;
+  } else { ec8ModalCard.style.display='none'; }
   // Store for PDF
   ec8_rptP = {agR:agR,gI:gI,ag:ag,p:p,stypeStr:stypeStr,gt:gt,icStr:icStr,
     q:q,eta:eta,xi:xi,W:W,n:n,fUnit:fUnit,T1x:T1x,T1y:T1y,
@@ -2476,6 +2541,27 @@ function tbdyCalc() {
   rH+=row2('<b>V<sub>tx</sub> / V<sub>ty</sub> (kN)</b>','<b class="vok">'+f(Vtx,1)+' / '+f(Vty,1)+'</b>');
   document.getElementById('tbdy-res-ref').innerHTML=rH;
 
+  // Modal scale check — §4.8.4
+  var tbdyVmx=parseFloat(document.getElementById('tbdy-Vmx').value);
+  var tbdyVmy=parseFloat(document.getElementById('tbdy-Vmy').value);
+  var tbdyModalCard=document.getElementById('tbdy-modal-card');
+  if (!isNaN(tbdyVmx)&&tbdyVmx>0&&!isNaN(tbdyVmy)&&tbdyVmy>0) {
+    tbdyModalCard.style.display='';
+    var minVtX=0.9*Vtx, minVtY=0.9*Vty;
+    var CfX=Math.max(minVtX/tbdyVmx,1.0), CfY=Math.max(minVtY/tbdyVmy,1.0);
+    var mH='';
+    mH+=row3('V<sub>t,ELF</sub> (kN)',f(Vtx,1),f(Vty,1));
+    mH+=row3('0.9·V<sub>t,ELF</sub> — minimum (kN)',f(minVtX,1),f(minVtY,1));
+    mH+=row3('V<sub>modal</sub> (kN)',f(tbdyVmx,1),f(tbdyVmy,1));
+    var scX=tbdyVmx<minVtX?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    var scY=tbdyVmy<minVtY?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    mH+=row3('Status',scX,scY);
+    mH+=row3('<b>Cf = max(0.9·V<sub>t,ELF</sub>/V<sub>modal</sub>, 1.0)</b>',
+      '<b class="'+(CfX>1?'vwarn':'vok')+'">'+f(CfX,3)+'</b>',
+      '<b class="'+(CfY>1?'vwarn':'vok')+'">'+f(CfY,3)+'</b>');
+    document.getElementById('tbdy-res-modal').innerHTML=mH;
+  } else { tbdyModalCard.style.display='none'; }
+
   tbdy_rptP={SS:SS,S1:S1,zs:zs,FS:FS,F1:F1,SDS:SDS,SD1:SD1,TA:TA,TB:TB,TL:TL,
     I:I,R:R,D:D,W:W,N:N,Ta:Ta,CuTa:CuTa,T1x:T1x,T1y:T1y,T1xd:T1xd,T1yd:T1yd,
     dx:dx,dy:dy,Vtx:Vtx,Vty:Vty,VtxMin:VtxMin,VtyMin:VtyMin,DFNx:DFNx,DFNy:DFNy};
@@ -2709,6 +2795,25 @@ function isCalc() {
   rH+=row2('<b>A<sub>hx</sub> / A<sub>hy</sub></b>','<b>'+f(Ahx,5)+' / '+f(Ahy,5)+'</b>');
   rH+=row2('<b>V<sub>Bx</sub> / V<sub>By</sub> (kN)</b>','<b class="vok">'+f(VBxFin,1)+' / '+f(VByFin,1)+'</b>');
   document.getElementById('is-res-ref').innerHTML=rH;
+
+  // Dynamic scale check — Cl. 7.8.2a
+  var isVmx=parseFloat(document.getElementById('is-Vmx').value);
+  var isVmy=parseFloat(document.getElementById('is-Vmy').value);
+  var isModalCard=document.getElementById('is-modal-card');
+  if (!isNaN(isVmx)&&isVmx>0&&!isNaN(isVmy)&&isVmy>0) {
+    isModalCard.style.display='';
+    var CfX=Math.max(VBxFin/isVmx,1.0), CfY=Math.max(VByFin/isVmy,1.0);
+    var mH='';
+    mH+=row3('V<sub>B,ELF</sub> (kN)',f(VBxFin,1),f(VByFin,1));
+    mH+=row3('V<sub>SRSS</sub> (kN)',f(isVmx,1),f(isVmy,1));
+    var scX=isVmx<VBxFin?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    var scY=isVmy<VByFin?'<span class="vwarn">Scale up required</span>':'<span class="vok">OK — no scale</span>';
+    mH+=row3('Status',scX,scY);
+    mH+=row3('<b>Cf = max(V<sub>B,ELF</sub>/V<sub>SRSS</sub>, 1.0)</b>',
+      '<b class="'+(CfX>1?'vwarn':'vok')+'">'+f(CfX,3)+'</b>',
+      '<b class="'+(CfY>1?'vwarn':'vok')+'">'+f(CfY,3)+'</b>');
+    document.getElementById('is-res-modal').innerHTML=mH;
+  } else { isModalCard.style.display='none'; }
 
   is_rptP={Z:Z,soil:soil,I:I,R:R,W:W,Tx:Tx,Ty:Ty,SaGx:SaGx,SaGy:SaGy,
     Ahx:Ahx,Ahy:Ahy,VBx:VBx,VBy:VBy,VBmin:VBmin,VBxFin:VBxFin,VByFin:VByFin};
