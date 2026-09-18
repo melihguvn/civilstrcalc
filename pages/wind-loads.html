@@ -852,12 +852,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <th>Zone</th>
             <th>Surface</th>
             <th>c<sub>pe,10</sub></th>
-            <th>c<sub>pi</sub></th>
-            <th>w<sub>net</sub> (kN/m²)</th>
+            <th>w<sup>+</sup> (kN/m²)</th>
+            <th>w<sup>−</sup> (kN/m²)</th>
           </tr>
         </thead>
         <tbody id="en-zone-body"></tbody>
       </table>
+      <div style="padding:4px 2px 2px;font-size:.63rem;color:var(--text-dim);">
+        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · positive = outward pressure (basınç) · negative = suction/uplift (emme)
+      </div>
     </div>
   </div>
 
@@ -2405,64 +2408,61 @@ function enCalc() {
 
   // ── Build zone table rows ──
   var zones = [];
+  function wallZ(lbl, surf, cpe) {
+    zones.push({z:lbl, surf:surf, cpe:cpe, cpeStr:enFmt(cpe,2),
+      wpos: wnet(cpe, cpi_neg), wneg: wnet(cpe, cpi_pos)});
+  }
   // Windward wall D
-  zones.push({z:'D', surf:'Windward wall', cpe:cpe_D, cpi_p:cpi_pos, cpi_n:cpi_neg,
-    wpos: wnet(cpe_D, cpi_neg), wneg: wnet(cpe_D, cpi_pos)});
+  wallZ('D','Windward wall (D)', cpe_D);
   // Leeward wall E
-  zones.push({z:'E', surf:'Leeward wall', cpe:cpe_E, cpi_p:cpi_pos, cpi_n:cpi_neg,
-    wpos: wnet(cpe_E, cpi_neg), wneg: wnet(cpe_E, cpi_pos)});
+  wallZ('E','Leeward wall (E)', cpe_E);
   // Side walls A, B, C
-  zones.push({z:'A', surf:'Side wall (corner e/5)', cpe:cpe_A, cpi_p:cpi_pos, cpi_n:cpi_neg,
-    wpos: wnet(cpe_A, cpi_neg), wneg: wnet(cpe_A, cpi_pos)});
-  if (d > e/5) {
-    zones.push({z:'B', surf:'Side wall (e/5 to e)', cpe:cpe_B, cpi_p:cpi_pos, cpi_n:cpi_neg,
-      wpos: wnet(cpe_B, cpi_neg), wneg: wnet(cpe_B, cpi_pos)});
+  wallZ('A','Side wall — corner (A, e/5)', cpe_A);
+  if (d > e/5) { wallZ('B','Side wall — middle (B, e/5 to e)', cpe_B); }
+  if (d > e)   { wallZ('C','Side wall — far (C, beyond e)',    cpe_C); }
+  // Helper: push one zone with correct w+/w- from cArr = [cpe_neg, cpe_pos]
+  function pushZ(z_lbl, surf, cArr, sep) {
+    var cn = Array.isArray(cArr) ? cArr[0] : cArr;
+    var cp = (Array.isArray(cArr) && cArr.length > 1 && !isNaN(cArr[1])) ? cArr[1] : NaN;
+    var cpe_max = isNaN(cp) ? cn : Math.max(cn, cp);  // most positive (for w+)
+    var cpe_min = isNaN(cp) ? cn : Math.min(cn, cp);  // most negative (for w-)
+    var cpe_gov = Math.abs(cpe_max) >= Math.abs(cpe_min) ? cpe_max : cpe_min;
+    zones.push({
+      z: z_lbl, surf: surf, cpe: cpe_gov,
+      cpeStr: !isNaN(cp) ? enFmt(cn,2)+' / '+enFmt(cp,2) : enFmt(cn,2),
+      wpos: qp_kN * (cpe_max - cpi_neg),  // max outward (basınç/pressure)
+      wneg: qp_kN * (cpe_min - cpi_pos),  // max inward  (emme/suction)
+      sep: sep || false
+    });
   }
-  if (d > e) {
-    zones.push({z:'C', surf:'Side wall (beyond e)', cpe:cpe_C, cpi_p:cpi_pos, cpi_n:cpi_neg,
-      wpos: wnet(cpe_C, cpi_neg), wneg: wnet(cpe_C, cpi_pos)});
-  }
+
   // Roof zones
-  if (roof === 'flat' || theta < 5) {
+  if (roof === 'flat') {
     var fr = enFlatRoofCpe();
-    [{z:'F',s:'Flat roof — corner',c:fr.F},{z:'G',s:'Flat roof — edge',c:fr.G},
-     {z:'H',s:'Flat roof — interior',c:fr.H},{z:'I',s:'Flat roof — leeward',c:[fr.Ineg,fr.Ipos]}
-    ].forEach(function(zr){
-      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
-      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
-      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
-      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
-      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
-        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
-        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
-    });
+    pushZ('F','Flat roof — corner (F)',  fr.F);
+    pushZ('G','Flat roof — edge (G)',    fr.G);
+    pushZ('H','Flat roof — interior (H)',fr.H);
+    pushZ('I','Flat roof — leeward (I)', [fr.Ineg, fr.Ipos]);
   } else if (roof === 'duo') {
-    var dc = enDuoCpe(theta);
-    var rz = [{z:'F',s:'Duopitch — F',c:dc.F},{z:'G',s:'Duopitch — G',c:dc.G},
-              {z:'H',s:'Duopitch — H',c:dc.H},{z:'I',s:'Duopitch — I',c:dc.I},
-              {z:'J',s:'Duopitch — J (leeward slope)',c:dc.J}];
-    rz.forEach(function(zr){
-      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
-      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
-      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
-      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
-      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
-        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
-        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
-    });
+    // Duopitch — use Table 7.4a; clamp theta to [5,75]
+    var dc = enDuoCpe(Math.max(5, theta));
+    pushZ('F','Duopitch — F (windward slope)', dc.F);
+    pushZ('G','Duopitch — G (windward slope)', dc.G);
+    pushZ('H','Duopitch — H (windward slope)', dc.H);
+    pushZ('I','Duopitch — I (leeward slope)',  dc.I);
+    pushZ('J','Duopitch — J (leeward slope)',  dc.J);
   } else if (roof === 'mono') {
-    var mc = monoTableCpe(theta);
-    var mz = [{z:'F',s:'Monopitch — F (θ=0°)',c:mc.deg0.F},{z:'G',s:'Monopitch — G',c:mc.deg0.G},
-              {z:'H',s:'Monopitch — H',c:mc.deg0.H},{z:'I',s:'Monopitch — I',c:mc.deg0.I}];
-    mz.forEach(function(zr){
-      var cArr = Array.isArray(zr.c) ? zr.c : [zr.c, NaN];
-      var cpeNeg = isNaN(cArr[0]) ? NaN : cArr[0];
-      var cpePos = isNaN(cArr[1]) ? NaN : cArr[1];
-      var cpe_gov = (!isNaN(cpeNeg)&&!isNaN(cpePos)) ? (Math.abs(cpeNeg)>Math.abs(cpePos)?cpeNeg:cpePos) : (isNaN(cpeNeg)?cpePos:cpeNeg);
-      zones.push({z:zr.z, surf:zr.s, cpe:cpe_gov, cpi_p:cpi_pos, cpi_n:cpi_neg,
-        wpos: wnet(cpe_gov, cpi_neg), wneg: wnet(cpe_gov, cpi_pos),
-        cpeRange: (!isNaN(cArr[0])&&!isNaN(cArr[1])) ? enFmt(cArr[0],2)+'/'+enFmt(cArr[1],2) : undefined});
-    });
+    // Monopitch — Table 7.5; clamp theta to [5,75]
+    var mc = monoTableCpe(Math.max(5, theta));
+    // Wind from low side (θ_wind = 0°)
+    pushZ('F','Monopitch F — wind from low eave (θ=0°)',  mc.deg0.F, true);
+    pushZ('G','Monopitch G — wind from low eave (θ=0°)',  mc.deg0.G);
+    pushZ('H','Monopitch H — wind from low eave (θ=0°)',  mc.deg0.H);
+    pushZ('I','Monopitch I — wind from low eave (θ=0°)',  mc.deg0.I);
+    // Wind from high side (θ_wind = 180°)
+    pushZ('F','Monopitch F — wind from high eave (θ=180°)', mc.deg180.F, true);
+    pushZ('G','Monopitch G — wind from high eave (θ=180°)', mc.deg180.G);
+    pushZ('H','Monopitch H — wind from high eave (θ=180°)', mc.deg180.H);
   }
 
   // ── Governing wall pressure (worst suction or pressure)
@@ -2501,17 +2501,27 @@ function enCalc() {
   // Zone table
   var ztH = '';
   var isWall = true;
+  var monoSection = 0; // 0=not mono, 1=first section, 2=second section
   zones.forEach(function(z) {
     var isRoof = ['F','G','H','I','J'].indexOf(z.z) >= 0;
     if (isRoof && isWall) {
       ztH += '<tr class="zone-sep"><td colspan="5">── Roof ──</td></tr>';
       isWall = false;
     }
-    var cpeStr = z.cpeRange || enFmt(z.cpe,2);
-    // governing net pressure (max absolute)
-    var wGov = Math.abs(z.wpos||0) > Math.abs(z.wneg||0) ? z.wpos : z.wneg;
-    var cls = wGov > 0 ? 'p-pos' : 'p-neg';
-    ztH += '<tr><td>'+z.z+'</td><td style="font-size:.71rem;">'+z.surf+'</td><td>'+cpeStr+'</td><td>'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2)+'</td><td class="'+cls+'">'+enFmt(wGov,3)+'</td></tr>';
+    if (roof === 'mono' && z.sep && !isWall) {
+      monoSection++;
+      if (monoSection === 1) ztH += '<tr class="zone-sep"><td colspan="5">── Wind from low eave (θ=0°) ──</td></tr>';
+      if (monoSection === 2) ztH += '<tr class="zone-sep"><td colspan="5">── Wind from high eave (θ=180°) ──</td></tr>';
+    }
+    var clsP = (z.wpos||0) >= 0 ? 'p-pos' : 'p-neg';
+    var clsN = (z.wneg||0) >= 0 ? 'p-pos' : 'p-neg';
+    ztH += '<tr>'
+      + '<td>'+z.z+'</td>'
+      + '<td style="font-size:.71rem;">'+z.surf+'</td>'
+      + '<td>'+z.cpeStr+'</td>'
+      + '<td class="'+clsP+'">'+enFmt(z.wpos,3)+'</td>'
+      + '<td class="'+clsN+'">'+enFmt(z.wneg,3)+'</td>'
+      + '</tr>';
   });
   document.getElementById('en-zone-body').innerHTML = ztH;
 
@@ -2764,15 +2774,16 @@ function wallCalc() {
 // ═══════════════════════════════════════════════════════════
 // MONOPITCH ROOF §7.3
 // ═══════════════════════════════════════════════════════════
-// EN 1991-1-4 Table 7.3a — Monopitch roof cpe,10
+// EN 1991-1-4:2005 Table 7.5 — Monopitch roof cpe,10
 function monoTableCpe(alpha) {
   var pts = [
-    {a:5,   d0:{F:-1.7,G:-1.2,H:-0.6,I:-0.6}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
-    {a:15,  d0:{F:[-0.9,+0.2],G:[-0.8,+0.2],H:-0.3,I:-0.4}, d180:{F:-2.5,G:-1.3,H:-0.8,I:-0.5}},
-    {a:30,  d0:{F:[-0.5,+0.7],G:[-0.5,+0.7],H:[-0.2,+0.4],I:-0.4}, d180:{F:[-1.1,+0.8],G:[-0.8,+0.8],H:[-0.8,+0.8],I:[-0.6,+0.8]}},
-    {a:45,  d0:{F:+0.7,G:+0.7,H:+0.6,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
-    {a:60,  d0:{F:+0.7,G:+0.7,H:+0.7,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}},
-    {a:75,  d0:{F:+0.8,G:+0.8,H:+0.8,I:-0.2}, d180:{F:[-1.3,+1.0],G:[-0.9,+1.0],H:[-0.9,+1.0],I:[-0.5,+0.7]}}
+    // d0 = wind from low eave (θ=0°), d180 = wind from high eave (θ=180°)
+    {a: 5, d0:{F:-1.7,          G:-1.2,          H:-0.6,          I:-0.6}, d180:{F:-2.3,          G:-1.3,          H:-0.8,          I:-0.6}},
+    {a:15, d0:{F:[-2.5,+0.2],   G:[-1.5,+0.2],   H:-0.7,          I:-0.6}, d180:{F:-2.5,          G:-1.5,          H:-0.7,          I:-0.6}},
+    {a:30, d0:{F:[-1.1,+0.5],   G:[-0.5,+0.7],   H:[-0.3,+0.4],   I:-0.5}, d180:{F:[-1.5,+0.8],   G:[-1.2,+0.8],   H:[-0.8,+0.8],   I:-0.4}},
+    {a:45, d0:{F:+0.7,          G:+0.7,           H:+0.6,          I:-0.2}, d180:{F:[-1.3,+1.0],   G:[-0.9,+1.0],   H:[-0.9,+1.0],   I:-0.2}},
+    {a:60, d0:{F:+0.7,          G:+0.7,           H:+0.7,          I:-0.2}, d180:{F:[-1.3,+1.0],   G:[-0.9,+1.0],   H:[-0.9,+1.0],   I:-0.2}},
+    {a:75, d0:{F:+0.8,          G:+0.8,           H:+0.8,          I:-0.2}, d180:{F:[-1.3,+1.0],   G:[-0.9,+1.0],   H:[-0.9,+1.0],   I:-0.2}}
   ];
   var t = Math.max(5, Math.min(75, alpha));
   var lo=pts[0], hi=pts[pts.length-1];
