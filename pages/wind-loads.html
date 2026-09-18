@@ -2981,7 +2981,7 @@ function duoCalc() {
   // SVG zone diagram (plan + side elevation)
   (function() {
     var eV = Math.min(b, 2*h);
-    var svgW=530, svgH=238;
+    var svgW=530, svgH=270;
     var plox=55, ploy=52, plW=210, plH=138;
     var e10px = Math.min(eV/10, d*0.45) * (plW/Math.max(d,0.001));
     var e4px  = Math.min(eV/4,  b*0.45) * (plH/Math.max(b,0.001));
@@ -3020,7 +3020,7 @@ function duoCalc() {
        '<line x1="'+plox+'" y1="'+(dimY-2)+'" x2="'+plox+'" y2="'+(dimY+2)+'" stroke="#92400e" stroke-width="0.8"/>'+
        '<line x1="'+(plox+e10px)+'" y1="'+(dimY-2)+'" x2="'+(plox+e10px)+'" y2="'+(dimY+2)+'" stroke="#92400e" stroke-width="0.8"/>'+
        '<text x="'+(plox+e10px/2)+'" y="'+(dimY+10)+'" text-anchor="middle" font-size="6.5" fill="#92400e">e/10='+enFmt(eV/10,1)+'m</text>';
-    s+='<text x="'+(plox+halfD)+'" y="'+(dimY+10)+'" text-anchor="middle" font-size="6.5" fill="#64748b">ridge</text>';
+    s+='<text x="'+(plox+halfD)+'" y="'+(dimY+19)+'" text-anchor="middle" font-size="6.5" fill="#64748b">ridge</text>';
     if(j10px>10){
       s+='<line x1="'+(plox+halfD)+'" y1="'+dimY+'" x2="'+(plox+halfD+j10px)+'" y2="'+dimY+'" stroke="#6b21a8" stroke-width="0.8"/>'+
          '<line x1="'+(plox+halfD)+'" y1="'+(dimY-2)+'" x2="'+(plox+halfD)+'" y2="'+(dimY+2)+'" stroke="#6b21a8" stroke-width="0.8"/>'+
@@ -3034,43 +3034,61 @@ function duoCalc() {
        '<line x1="'+(e4dimX-2)+'" y1="'+(ploy+e4px)+'" x2="'+(e4dimX+2)+'" y2="'+(ploy+e4px)+'" stroke="#7f1d1d" stroke-width="0.8"/>';
     if(e4px>12) s+='<text x="'+(e4dimX-4)+'" y="'+(ploy+e4px/2)+'" text-anchor="end" dominant-baseline="middle" font-size="6" fill="#7f1d1d">e/4</text>';
     // --- SIDE ELEVATION ---
-    var elox=plox+plW+55, eloy=ploy, elW=120, elH=plH;
-    var eaveY=eloy+Math.round(elH*0.62), groundY=eloy+elH, ridgeX=elox+elW/2;
-    s+='<text x="'+(elox+elW/2)+'" y="'+(eloy-22)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#374151">Side Elevation</text>';
+    var elox=plox+plW+55, elW=130, elH=plH;
+    // Compute ridge height from actual pitch angle
+    var alpha_rad=Math.PI*alpha/180;
+    var ridgeH_m=(d/2)*Math.tan(alpha_rad);
+    var ridgeH_clamped=Math.min(ridgeH_m, 3*h); // cap to avoid clipping
+    var groundY=ploy+elH;
+    var topMarg=18; // px above ridge for "ridge" label
+    var availH=elH-topMarg;
+    var scaleE=availH/Math.max(h+ridgeH_clamped, h*1.05);
+    var wallPx=h*scaleE;
+    var ridgePx=ridgeH_clamped*scaleE;
+    var eaveY=groundY-wallPx;
+    var ridgeY=eaveY-ridgePx;
+    var ridgeX=elox+elW/2;
+    s+='<text x="'+ridgeX+'" y="'+(ploy-22)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#374151">Side Elevation</text>';
     // Ground hatch
     s+='<line x1="'+(elox-6)+'" y1="'+groundY+'" x2="'+(elox+elW+6)+'" y2="'+groundY+'" stroke="#6b7280" stroke-width="1.5"/>';
     for(var gi=0;gi<7;gi++){var gxi=elox+gi*(elW+12)/7;s+='<line x1="'+gxi+'" y1="'+groundY+'" x2="'+(gxi-5)+'" y2="'+(groundY+5)+'" stroke="#6b7280" stroke-width="0.8"/>';}
-    // Walls & roof
+    // Walls & roof fill
+    s+='<polygon points="'+elox+','+eaveY+' '+ridgeX+','+ridgeY+' '+(elox+elW)+','+eaveY+' '+(elox+elW)+','+groundY+' '+elox+','+groundY+'" fill="rgba(186,230,253,0.18)" stroke="none"/>';
     s+='<line x1="'+elox+'" y1="'+eaveY+'" x2="'+elox+'" y2="'+groundY+'" stroke="#475569" stroke-width="1.5"/>';
     s+='<line x1="'+(elox+elW)+'" y1="'+eaveY+'" x2="'+(elox+elW)+'" y2="'+groundY+'" stroke="#475569" stroke-width="1.5"/>';
-    s+='<polyline points="'+elox+','+eaveY+' '+ridgeX+','+eloy+' '+(elox+elW)+','+eaveY+'" fill="rgba(186,230,253,0.25)" stroke="#475569" stroke-width="1.5"/>';
-    s+='<text x="'+ridgeX+'" y="'+(eloy-4)+'" text-anchor="middle" font-size="7" fill="#475569">ridge</text>';
-    s+='<text x="'+(elox+elW*0.22)+'" y="'+(eloy+(eaveY-eloy)*0.42)+'" text-anchor="middle" font-size="6" fill="#1e40af">upwind</text>';
-    s+='<text x="'+(elox+elW*0.22)+'" y="'+(eloy+(eaveY-eloy)*0.58)+'" text-anchor="middle" font-size="6" fill="#1e40af">face</text>';
-    s+='<text x="'+(elox+elW*0.78)+'" y="'+(eloy+(eaveY-eloy)*0.42)+'" text-anchor="middle" font-size="6" fill="#64748b">downwind</text>';
-    s+='<text x="'+(elox+elW*0.78)+'" y="'+(eloy+(eaveY-eloy)*0.58)+'" text-anchor="middle" font-size="6" fill="#64748b">face</text>';
-    // Wind arrow (elevation)
-    s+='<line x1="'+(elox-26)+'" y1="'+(eaveY+8)+'" x2="'+(elox-3)+'" y2="'+(eaveY+8)+'" stroke="#1e3a8a" stroke-width="1.5" marker-end="url(#dmar2)"/>';
-    s+='<text x="'+(elox-28)+'" y="'+(eaveY+1)+'" font-size="6.5" fill="#1e3a8a" font-weight="600">wind</text>';
-    s+='<text x="'+(elox-28)+'" y="'+(eaveY+18)+'" font-size="6.5" fill="#1e3a8a">θ=0°</text>';
-    // h dim
-    var hdX=elox+elW+14;
+    s+='<polyline points="'+elox+','+eaveY+' '+ridgeX+','+ridgeY+' '+(elox+elW)+','+eaveY+'" fill="none" stroke="#475569" stroke-width="1.5"/>';
+    s+='<text x="'+ridgeX+'" y="'+(ridgeY-4)+'" text-anchor="middle" font-size="7" fill="#475569">ridge</text>';
+    // Slope face labels — midpoint of each slope
+    var slopeMidX1=elox+elW*0.25, slopeMidY1=(eaveY+ridgeY)/2;
+    var slopeMidX2=elox+elW*0.75, slopeMidY2=(eaveY+ridgeY)/2;
+    if(ridgePx>20){
+      s+='<text x="'+slopeMidX1+'" y="'+(slopeMidY1-4)+'" text-anchor="middle" font-size="6" fill="#1e40af">upwind</text>';
+      s+='<text x="'+slopeMidX1+'" y="'+(slopeMidY1+6)+'" text-anchor="middle" font-size="6" fill="#1e40af">face</text>';
+      s+='<text x="'+slopeMidX2+'" y="'+(slopeMidY2-4)+'" text-anchor="middle" font-size="6" fill="#64748b">downwind</text>';
+      s+='<text x="'+slopeMidX2+'" y="'+(slopeMidY2+6)+'" text-anchor="middle" font-size="6" fill="#64748b">face</text>';
+    }
+    // Wind arrow (elevation) — at mid-wall height
+    var windArrowY=(eaveY+groundY)/2;
+    s+='<line x1="'+(elox-26)+'" y1="'+windArrowY+'" x2="'+(elox-3)+'" y2="'+windArrowY+'" stroke="#1e3a8a" stroke-width="1.5" marker-end="url(#dmar2)"/>';
+    s+='<text x="'+(elox-28)+'" y="'+(windArrowY-7)+'" text-anchor="middle" font-size="6.5" fill="#1e3a8a" font-weight="600">wind</text>';
+    s+='<text x="'+(elox-28)+'" y="'+(windArrowY+14)+'" text-anchor="middle" font-size="6.5" fill="#1e3a8a">θ=0°</text>';
+    // h dim (wall height)
+    var hdX=elox+elW+16;
     s+='<line x1="'+hdX+'" y1="'+eaveY+'" x2="'+hdX+'" y2="'+groundY+'" stroke="#475569" stroke-width="0.8"/>'+
        '<line x1="'+(hdX-2)+'" y1="'+eaveY+'" x2="'+(hdX+2)+'" y2="'+eaveY+'" stroke="#475569" stroke-width="0.8"/>'+
        '<line x1="'+(hdX-2)+'" y1="'+groundY+'" x2="'+(hdX+2)+'" y2="'+groundY+'" stroke="#475569" stroke-width="0.8"/>'+
        '<text x="'+(hdX+8)+'" y="'+((eaveY+groundY)/2)+'" dominant-baseline="middle" font-size="7" fill="#475569">h='+enFmt(h,1)+'m</text>';
-    s+='<text x="'+(elox+elW/2)+'" y="'+(groundY+14)+'" text-anchor="middle" font-size="7" fill="#94a3b8">d = '+enFmt(d,1)+' m</text>';
+    s+='<text x="'+ridgeX+'" y="'+(groundY+14)+'" text-anchor="middle" font-size="7" fill="#94a3b8">d = '+enFmt(d,1)+' m</text>';
     // alpha arc at left eave
-    var radA=Math.PI*alpha/180, arcR=15;
-    var ax1=elox+arcR, ay1=eaveY;
-    var ax2=elox+arcR*Math.cos(radA), ay2=eaveY-arcR*Math.sin(radA);
-    s+='<path d="M '+ax1+' '+ay1+' A '+arcR+' '+arcR+' 0 0 0 '+ax2+' '+ay2+'" fill="none" stroke="#be185d" stroke-width="0.9"/>';
-    s+='<text x="'+(elox+arcR+3)+'" y="'+(eaveY-4)+'" font-size="7" fill="#be185d">+α='+enFmt(alpha,0)+'°</text>';
+    var arcR=14;
+    var ax2e=elox+arcR*Math.cos(alpha_rad), ay2e=eaveY-arcR*Math.sin(alpha_rad);
+    s+='<path d="M '+(elox+arcR)+' '+eaveY+' A '+arcR+' '+arcR+' 0 0 0 '+ax2e+' '+ay2e+'" fill="none" stroke="#be185d" stroke-width="0.9"/>';
+    s+='<text x="'+(elox+arcR+5)+'" y="'+(eaveY-6)+'" font-size="7" fill="#be185d">+α='+enFmt(alpha,0)+'°</text>';
     // Legend
-    var lx=plox+plW+56, ly=svgH-32;
+    var lx=plox+plW+56, ly=ploy+plH+22;
     [['#fca5a5','F (corner)'],['#fed7aa','G (windward strip)'],['#bae6fd','H (windward)'],['#e9d5ff','J (near ridge)'],['#bbf7d0','I (leeward)']].forEach(function(it,i){
-      s+='<rect x="'+lx+'" y="'+(ly+i*13)+'" width="9" height="9" fill="'+it[0]+'" stroke="#64748b" stroke-width="0.4" rx="1"/>';
-      s+='<text x="'+(lx+12)+'" y="'+(ly+i*13+4)+'" dominant-baseline="middle" font-size="6.5" fill="#374151">'+it[1]+'</text>';
+      s+='<rect x="'+lx+'" y="'+(ly+i*14)+'" width="9" height="9" fill="'+it[0]+'" stroke="#64748b" stroke-width="0.4" rx="1"/>';
+      s+='<text x="'+(lx+13)+'" y="'+(ly+i*14+5)+'" dominant-baseline="middle" font-size="7" fill="#374151">'+it[1]+'</text>';
     });
     // e note
     s+='<text x="'+plox+'" y="'+(svgH-4)+'" font-size="7" fill="#64748b">e = min(b, 2h) = min('+enFmt(b,1)+', '+enFmt(2*h,1)+') = '+enFmt(eV,1)+' m</text>';
