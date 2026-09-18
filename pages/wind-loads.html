@@ -2463,8 +2463,8 @@ function enCalc() {
   document.getElementById('en-zone-body').innerHTML = ztH;
 
   // SVG zone plan diagram (EN 1991-1-4 §7.2/7.3) — wall zones A-E, roof zones F-I
-  var svgW = 440, svgH = 300;
-  var ox = 50, oy = 40;
+  var svgW = 440, svgH = 330;
+  var ox = 50, oy = 58;
   var bW = 278, bH = 178;
   var ws = 16;
 
@@ -2473,11 +2473,11 @@ function enCalc() {
   var scY = bH / Math.max(b, 0.001);
 
   // Zone extents in SVG px
-  var xe5 = Math.min(eV/5, d) * scX;              // A zone x-width
-  var xe  = Math.min(eV,   d) * scX;              // A+B zone x-width
-  var rgd = Math.min(eV/10, d * 0.45) * scX;      // F/G depth along-wind
-  var rfw = Math.min(eV/4,  b * 0.45) * scY;      // F zone height crosswind
-  var rid = Math.min(eV/10, d * 0.45) * scX;      // I zone depth
+  var xe5 = Math.min(eV/5, d) * scX;                      // A zone x-width
+  var xe  = Math.min(eV,   d) * scX;                      // A+B zone x-width
+  var rgd = Math.min(eV/10, d * 0.45) * scX;              // F/G depth along-wind (e/10)
+  var rfw = Math.min(eV/4,  b * 0.45) * scY;              // F zone height crosswind (e/4)
+  var rid = Math.max(0, d - eV/2) * scX;                  // I zone depth (d − e/2)
 
   function lblZ(x, y, t, col, sz) {
     return '<text x="'+x+'" y="'+y+'" text-anchor="middle" dominant-baseline="middle" font-size="'+(sz||10)+'" font-weight="700" fill="'+col+'">'+t+'</text>';
@@ -2534,6 +2534,35 @@ function enCalc() {
   // Wind arrow
   svg += '<line x1="5" y1="'+(oy+bH/2)+'" x2="'+(ox-ws-4)+'" y2="'+(oy+bH/2)+'" stroke="#1e3a8a" stroke-width="2" marker-end="url(#wmar)"/>';
   svg += '<text x="5" y="'+(oy+bH/2-9)+'" font-size="8" fill="#1e3a8a" font-weight="600">Wind</text>';
+
+  // ── Roof zone depth annotations (above wall strip) ─────────────────────
+  var rdimY = oy-ws-6, rdimTY = rdimY-9;
+  // F, G — e/10
+  svg += '<line x1="'+ox+'" y1="'+rdimY+'" x2="'+(ox+rgd)+'" y2="'+rdimY+'" stroke="#92400e" stroke-width="0.8"/>'+
+         '<line x1="'+ox+'" y1="'+(rdimY-2)+'" x2="'+ox+'" y2="'+(rdimY+2)+'" stroke="#92400e" stroke-width="0.8"/>'+
+         '<line x1="'+(ox+rgd)+'" y1="'+(rdimY-2)+'" x2="'+(ox+rgd)+'" y2="'+(rdimY+2)+'" stroke="#92400e" stroke-width="0.8"/>'+
+         '<text x="'+(ox+rgd/2)+'" y="'+rdimTY+'" text-anchor="middle" font-size="6.5" fill="#92400e">F,G: e/10='+enFmt(eV/10,1)+'m</text>';
+  // H — e/2 − e/10
+  var hx1=ox+rgd, hx2=ox+bW-rid;
+  if (hx2-hx1 > 20) {
+    svg += '<line x1="'+hx1+'" y1="'+rdimY+'" x2="'+hx2+'" y2="'+rdimY+'" stroke="#0c4a6e" stroke-width="0.8"/>'+
+           '<line x1="'+hx1+'" y1="'+(rdimY-2)+'" x2="'+hx1+'" y2="'+(rdimY+2)+'" stroke="#0c4a6e" stroke-width="0.8"/>'+
+           '<line x1="'+hx2+'" y1="'+(rdimY-2)+'" x2="'+hx2+'" y2="'+(rdimY+2)+'" stroke="#0c4a6e" stroke-width="0.8"/>'+
+           '<text x="'+((hx1+hx2)/2)+'" y="'+rdimTY+'" text-anchor="middle" font-size="6.5" fill="#0c4a6e">H: '+enFmt(Math.max(0,eV/2-eV/10),1)+'m</text>';
+  }
+  // I — d − e/2
+  if (rid > 5) {
+    svg += '<line x1="'+(ox+bW-rid)+'" y1="'+rdimY+'" x2="'+(ox+bW)+'" y2="'+rdimY+'" stroke="#14532d" stroke-width="0.8"/>'+
+           '<line x1="'+(ox+bW-rid)+'" y1="'+(rdimY-2)+'" x2="'+(ox+bW-rid)+'" y2="'+(rdimY+2)+'" stroke="#14532d" stroke-width="0.8"/>'+
+           '<line x1="'+(ox+bW)+'" y1="'+(rdimY-2)+'" x2="'+(ox+bW)+'" y2="'+(rdimY+2)+'" stroke="#14532d" stroke-width="0.8"/>'+
+           '<text x="'+(ox+bW-rid/2)+'" y="'+rdimTY+'" text-anchor="middle" font-size="6.5" fill="#14532d">I: d−e/2='+enFmt(Math.max(0,d-eV/2),1)+'m</text>';
+  }
+  // F crosswind height (e/4) — rotated label inside each F corner zone
+  if (rfw > 20) {
+    var fcx = ox+rgd/2;
+    svg += '<text x="'+fcx+'" y="'+(oy+rfw/2)+'" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#7f1d1d" transform="rotate(-90 '+fcx+' '+(oy+rfw/2)+')">e/4='+enFmt(eV/4,1)+'m</text>';
+    svg += '<text x="'+fcx+'" y="'+(oy+bH-rfw/2)+'" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#7f1d1d" transform="rotate(-90 '+fcx+' '+(oy+bH-rfw/2)+')">e/4='+enFmt(eV/4,1)+'m</text>';
+  }
 
   // Dimension annotations
   var dimY = oy+bH+ws+10;
