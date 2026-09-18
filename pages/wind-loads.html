@@ -1060,21 +1060,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div id="mono-diagram" style="padding:4px 0;"></div>
   </div>
   <div class="res-card">
-    <div class="res-card-hdr">Zone Pressures — θ = 0° (wind on low eave)</div>
+    <div class="res-card-hdr">Zone Pressures — θ = 0° &amp; 180°</div>
     <div style="padding:8px 12px;">
       <table class="ptbl">
-        <thead><tr><th>Zone</th><th>c<sub>pe,10</sub></th><th>c<sub>pi</sub></th><th>w<sub>net</sub> (kN/m²)</th></tr></thead>
-        <tbody id="mono-zone-0"></tbody>
+        <thead><tr><th>Zone</th><th>Surface</th><th>c<sub>pe,10</sub></th><th>w<sup>+</sup> (kN/m²)</th><th>w<sup>−</sup> (kN/m²)</th></tr></thead>
+        <tbody id="mono-zone-body"></tbody>
       </table>
-    </div>
-  </div>
-  <div class="res-card">
-    <div class="res-card-hdr">Zone Pressures — θ = 180° (wind on high eave)</div>
-    <div style="padding:8px 12px;">
-      <table class="ptbl">
-        <thead><tr><th>Zone</th><th>c<sub>pe,10</sub></th><th>c<sub>pi</sub></th><th>w<sub>net</sub> (kN/m²)</th></tr></thead>
-        <tbody id="mono-zone-180"></tbody>
-      </table>
+      <div style="padding:4px 2px 2px;font-size:.63rem;color:var(--text-dim);">
+        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub>−c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub>−c<sub>pi,max</sub>) · "—" = no net outward pressure case
+      </div>
     </div>
   </div>
   <div class="scope-note">cpe,10 interpolated from EN 1991-1-4 Table 7.3a. Where two values are shown, both cases (+/−) must be considered.</div>
@@ -3149,16 +3143,18 @@ function monoCalc() {
 
   var cpe = monoTableCpe(alpha);
 
-  function wnet(cpe_v, cpi) { return qp_kN*(cpe_v - cpi); }
-  function fmtCpe(v){ if(Array.isArray(v)) return enFmt(v[0],2)+'/'+enFmt(v[1],2); return enFmt(v,2); }
-  function wnetGov(v,cpi_n,cpi_p){
-    // Governing: negative cpe uses cpi_pos (adds suction); positive cpe uses cpi_neg (adds pressure)
-    if(Array.isArray(v)) return Math.abs(wnet(v[0],cpi_p))>Math.abs(wnet(v[1],cpi_n))?wnet(v[0],cpi_p):wnet(v[1],cpi_n);
-    return wnet(v, v<0?cpi_p:cpi_n);
+  function wpos_m(cArr) {
+    var cpe_max = Array.isArray(cArr) ? Math.max(cArr[0], isNaN(cArr[1])?cArr[0]:cArr[1]) : cArr;
+    return qp_kN * (cpe_max - cpi_neg);
   }
+  function wneg_m(cArr) {
+    var cpe_min = Array.isArray(cArr) ? Math.min(cArr[0], isNaN(cArr[1])?cArr[0]:cArr[1]) : cArr;
+    return qp_kN * (cpe_min - cpi_pos);
+  }
+  function fmtCpe(v){ if(Array.isArray(v)) return enFmt(v[0],2)+' / '+enFmt(v[1],2); return enFmt(v,2); }
 
   // Summary
-  var govW = wnetGov(cpe.deg0.F, cpi_neg, cpi_pos);
+  var govW = Math.abs(wpos_m(cpe.deg0.F)) >= Math.abs(wneg_m(cpe.deg0.F)) ? wpos_m(cpe.deg0.F) : wneg_m(cpe.deg0.F);
   document.getElementById('mono-summary').innerHTML =
     enTile('q<sub>p</sub>(h)', enFmt(qp_kN,4), 'kN/m²') +
     enTile('α', enFmt(alpha,0)+'°', 'roof pitch') +
@@ -3173,19 +3169,21 @@ function monoCalc() {
   sH += enStep('c<sub>pi</sub>',enc==='closed'?'Enclosed building':'Open sided','+'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2),'');
   document.getElementById('mono-steps').innerHTML=sH;
 
-  // Zone tables
-  function buildZoneTable(zones_cpe, bodyId) {
-    var zt='';
-    ['F','G','H','I'].forEach(function(z){
-      var cv = zones_cpe[z];
-      var wg = wnetGov(cv, cpi_neg, cpi_pos);
-      var cls = wg>0?'p-pos':'p-neg';
-      zt += '<tr><td>'+z+'</td><td>'+fmtCpe(cv)+'</td><td>'+enFmt(cpi_pos,2)+'/'+enFmt(cpi_neg,2)+'</td><td class="'+cls+'">'+enFmt(wg,3)+'</td></tr>';
-    });
-    document.getElementById(bodyId).innerHTML=zt;
-  }
-  buildZoneTable(cpe.deg0,'mono-zone-0');
-  buildZoneTable(cpe.deg180,'mono-zone-180');
+  // Zone table — combined θ=0° and θ=180°, duo-style w+/w- columns
+  var zt='';
+  zt += '<tr class="zone-sep"><td colspan="5">θ = 0° — Wind on low eave</td></tr>';
+  ['F','G','H','I'].forEach(function(z){
+    var cv=cpe.deg0[z], wp=wpos_m(cv), wn=wneg_m(cv);
+    var clsp=wp>0?'p-pos':'', clsn=wn>=0?'p-pos':'p-neg';
+    zt+='<tr><td>'+z+'</td><td>Monopitch — '+z+'</td><td>'+fmtCpe(cv)+'</td><td class="'+clsp+'">'+(wp>0?enFmt(wp,3):'—')+'</td><td class="'+clsn+'">'+enFmt(wn,3)+'</td></tr>';
+  });
+  zt += '<tr class="zone-sep"><td colspan="5">θ = 180° — Wind on high eave</td></tr>';
+  ['F','G','H','I'].forEach(function(z){
+    var cv=cpe.deg180[z], wp=wpos_m(cv), wn=wneg_m(cv);
+    var clsp=wp>0?'p-pos':'', clsn=wn>=0?'p-pos':'p-neg';
+    zt+='<tr><td>'+z+'</td><td>Monopitch — '+z+'</td><td>'+fmtCpe(cv)+'</td><td class="'+clsp+'">'+(wp>0?enFmt(wp,3):'—')+'</td><td class="'+clsn+'">'+enFmt(wn,3)+'</td></tr>';
+  });
+  document.getElementById('mono-zone-body').innerHTML=zt;
 
   // Zone diagram
   (function(){
