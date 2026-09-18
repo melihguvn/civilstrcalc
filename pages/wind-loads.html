@@ -382,6 +382,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         </div>
       </div>
     </div>
+    <div class="inp-row" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+      <label>Wind Direction — §27.3.5</label>
+      <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <button id="wd27-btn-0"  class="unit-btn active" onclick="setWindDir27(0)" style="flex:1;">Wind ⊥ to L-face</button>
+        <button id="wd27-btn-90" class="unit-btn"        onclick="setWindDir27(90)" style="flex:1;">Wind ⊥ to B-face</button>
+      </div>
+      <div class="inp-hint" id="wd27-hint">Along-wind depth = B — §27.3.5 requires checking both directions</div>
+    </div>
   </div>
 
   <!-- Ch.30 extras -->
@@ -468,6 +476,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <button class="lc-tab active" id="tab-lc1" onclick="switchLC(1)">LC 1 — Wind ⊥ Ridge</button>
       <button class="lc-tab" id="tab-lc2" onclick="switchLC(2)">LC 2 — Wind ∥ Ridge</button>
     </div>
+    <div style="padding:4px 10px 2px;font-size:.63rem;color:var(--text-dim);">LC 1 and LC 2 together envelope both 0° and 90° wind directions per §28.3.1 — no separate direction toggle required for Ch. 28.</div>
     <div class="res-card">
       <div class="res-card-hdr" id="c28-lc-hdr">External Pressure — LC 1 (§28.3)</div>
       <div style="overflow-x:auto;"><table class="ptbl"><thead><tr><th style="width:32%;">Zone / Surface</th><th>GCpf</th><th id="c28-th-pp">p⁺ (psf)</th><th id="c28-th-pn">p⁻ (psf)</th></tr></thead><tbody id="c28-ptbl"></tbody></table></div>
@@ -741,6 +750,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <option value="duo">Duopitch (gable)</option>
         <option value="mono">Monopitch</option>
       </select>
+    </div>
+    <div class="inp-row" style="margin-top:2px;padding-top:8px;border-top:1px solid var(--border);">
+      <label>Wind Direction — §7.2.2</label>
+      <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <button id="en-wd-0"  class="unit-btn active" onclick="setENWindDir(0)" style="flex:1;">θ = 0° — Wind ⊥ to b</button>
+        <button id="en-wd-90" class="unit-btn"        onclick="setENWindDir(90)" style="flex:1;">θ = 90° — Wind ⊥ to d</button>
+      </div>
+      <div class="inp-hint" id="en-wd-hint">b = crosswind · d = along-wind · e = min(b, 2h)</div>
     </div>
   </div>
 
@@ -1156,6 +1173,8 @@ var activeLC = 1;
 var currentProc = 'ch28';
 var _rptData = null;
 var Kd = 0.85;
+var windDir27 = 0;   // 0 = wind ⊥ L-face (default), 90 = wind ⊥ B-face
+var enWindDir = 0;   // 0 = wind ⊥ b (default), 90 = wind ⊥ d (b↔d swap)
 
 // ─── Wind speed source (Auto / Manual) ────────────────────
 var _vSrc = 'auto';           // 'auto' | 'manual'
@@ -1471,6 +1490,24 @@ function toggleFlex() {
   document.getElementById('inp-flex-params').hidden = !isFlex;
 }
 
+function setWindDir27(dir) {
+  windDir27 = dir;
+  document.getElementById('wd27-btn-0').classList.toggle('active', dir === 0);
+  document.getElementById('wd27-btn-90').classList.toggle('active', dir === 90);
+  var h = document.getElementById('wd27-hint');
+  if (h) h.textContent = dir === 0
+    ? 'Along-wind depth = B — §27.3.5 requires checking both directions'
+    : 'Along-wind depth = L — §27.3.5 requires checking both directions';
+  calc();
+}
+
+function setENWindDir(dir) {
+  enWindDir = dir;
+  document.getElementById('en-wd-0').classList.toggle('active', dir === 0);
+  document.getElementById('en-wd-90').classList.toggle('active', dir === 90);
+  enCalc();
+}
+
 // ═══════════════════════════════════════════════════════════
 // UNIT TOGGLE
 // ═══════════════════════════════════════════════════════════
@@ -1640,23 +1677,27 @@ function calcCh27(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var Kh=calcKz(h_ft,expo);
   var qh=isUS?calcQh_US(Kh,Kzt,Ke,V_mph):calcQh_SI(Kh,Kzt,Ke,V_raw);
 
+  // Wind direction: effective along-wind and cross-wind dimensions
+  var B_eff = (windDir27 === 90) ? L_ft : B_ft;  // along-wind depth
+  var L_eff = (windDir27 === 90) ? B_ft : L_ft;  // cross-wind width
+
   // Gust factor
   var isRigid = document.getElementById('sel-flex').value !== 'flexible';
   var G=0.85, Gf_detail=null;
   if (!isRigid) {
     var n1=parseFloat(document.getElementById('inp-n1').value)||0.5;
     var beta=parseFloat(document.getElementById('inp-beta').value)||0.02;
-    var gfRes=computeGf(h_ft,B_ft,L_ft,n1,beta,expo,V_mph);
+    var gfRes=computeGf(h_ft,B_eff,L_eff,n1,beta,expo,V_mph);
     G=gfRes.Gf; Gf_detail=gfRes;
   }
 
   // Cp values — wind ⊥ ridge (matches LC1 of Ch.28; typically governs)
   // ASCE L/B: L = B_module (parallel to wind), B = L_module (perp. to wind)
-  var LB=B_ft>0?B_ft/L_ft:1;
+  var LB=B_eff>0?B_eff/L_eff:1;
   var Cp_ww=0.8, Cp_lw=cpLW(LB), Cp_sw=-0.7;
   // h/L for windward roof: L = horizontal distance from WW eave to ridge
-  var hL_flat=B_ft>0?h_ft/B_ft:0.5;       // flat: L = wind-parallel dim = B_module
-  var hL_gable=B_ft>0?h_ft/(B_ft/2):0.5; // gable/hip: L = half-width to ridge
+  var hL_flat=B_eff>0?h_ft/B_eff:0.5;       // flat: L = wind-parallel dim = B_eff
+  var hL_gable=B_eff>0?h_ft/(B_eff/2):0.5; // gable/hip: L = half-width to ridge
   var Cp_roof_ww, Cp_roof_ww_pos=null, Cp_roof_lw;
   if (theta<=5) {
     Cp_roof_ww=cpRoofFlat_WW(hL_flat); Cp_roof_lw=cpRoofFlat_LW(hL_flat);
@@ -2272,8 +2313,11 @@ function enTile(lbl, val, unit) {
 function enFmt(v, d) { return isNaN(v) ? '—' : v.toFixed(d); }
 
 function enCalc() {
-  var b    = parseFloat(document.getElementById('en-b').value)||0;
-  var d    = parseFloat(document.getElementById('en-d').value)||0;
+  var b_inp = parseFloat(document.getElementById('en-b').value)||0;
+  var d_inp = parseFloat(document.getElementById('en-d').value)||0;
+  // Wind direction: θ=90° swaps the roles of b and d
+  var b = enWindDir === 90 ? d_inp : b_inp;
+  var d = enWindDir === 90 ? b_inp : d_inp;
   var h    = parseFloat(document.getElementById('en-h').value)||0;
   var theta= parseFloat(document.getElementById('en-theta').value)||0;
   var roof = document.getElementById('en-roof').value;
@@ -2287,6 +2331,15 @@ function enCalc() {
   var mu   = parseFloat(document.getElementById('en-mu').value)||0.5;
 
   if (b<=0||d<=0||h<=0||vb0<=0) return;
+
+  // Update wind direction hint with live effective values
+  var wdHint = document.getElementById('en-wd-hint');
+  if (wdHint) {
+    var e_hint = Math.min(b, 2*h);
+    wdHint.textContent = enWindDir === 90
+      ? 'θ=90°: b↔d swapped — b_eff=' + enFmt(b,1) + 'm, d_eff=' + enFmt(d,1) + 'm, e=' + enFmt(e_hint,1) + 'm'
+      : 'b=' + enFmt(b,1) + 'm (crosswind) · d=' + enFmt(d,1) + 'm (along-wind) · e=min(b,2h)=' + enFmt(e_hint,1) + 'm';
+  }
 
   var terr = EN_TERRAIN[terrVal];
   var z0 = terr.z0, zmin = terr.zmin;
@@ -2534,6 +2587,7 @@ function enCalc() {
   // Wind arrow
   svg += '<line x1="5" y1="'+(oy+bH/2)+'" x2="'+(ox-ws-4)+'" y2="'+(oy+bH/2)+'" stroke="#1e3a8a" stroke-width="2" marker-end="url(#wmar)"/>';
   svg += '<text x="5" y="'+(oy+bH/2-9)+'" font-size="8" fill="#1e3a8a" font-weight="600">Wind</text>';
+  svg += '<text x="5" y="'+(oy+bH/2+14)+'" font-size="7" fill="#1e3a8a">'+(enWindDir===90?'θ=90°':'θ=0°')+'</text>';
 
   // ── Roof zone depth annotations (above wall strip) ─────────────────────
   var rdimY = oy-ws-6, rdimTY = rdimY-9;
