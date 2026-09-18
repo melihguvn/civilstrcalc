@@ -860,7 +860,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <tbody id="en-zone-body"></tbody>
       </table>
       <div style="padding:4px 2px 2px;font-size:.63rem;color:var(--text-dim);">
-        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · positive = outward pressure (basınç) · negative = suction/uplift (emme)
+        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · "—" = no net outward pressure (basınç) case; zone governed entirely by suction (emme)
       </div>
     </div>
   </div>
@@ -1162,7 +1162,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <tbody id="duo-zone-body"></tbody>
       </table>
       <div style="padding:4px 2px 2px;font-size:.63rem;color:var(--text-dim);">
-        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · positive = outward pressure (basınç) · negative = suction (emme)
+        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · "—" = no net outward pressure case; zone governed entirely by suction (emme)
       </div>
     </div>
   </div>
@@ -2610,13 +2610,15 @@ function enCalc() {
       if (monoSection === 1) ztH += '<tr class="zone-sep"><td colspan="5">── Wind from low eave (θ=0°) ──</td></tr>';
       if (monoSection === 2) ztH += '<tr class="zone-sep"><td colspan="5">── Wind from high eave (θ=180°) ──</td></tr>';
     }
-    var clsP = (z.wpos||0) >= 0 ? 'p-pos' : 'p-neg';
-    var clsN = (z.wneg||0) >= 0 ? 'p-pos' : 'p-neg';
+    var wp0 = z.wpos||0, wn0 = z.wneg||0;
+    var clsP = wp0 > 0 ? 'p-pos' : '';
+    var clsN = wn0 >= 0 ? 'p-pos' : 'p-neg';
+    var wpStr0 = wp0 > 0 ? enFmt(z.wpos,3) : '—';
     ztH += '<tr>'
       + '<td>'+z.z+'</td>'
       + '<td style="font-size:.71rem;">'+z.surf+'</td>'
       + '<td>'+z.cpeStr+'</td>'
-      + '<td class="'+clsP+'">'+enFmt(z.wpos,3)+'</td>'
+      + '<td class="'+clsP+'">'+wpStr0+'</td>'
       + '<td class="'+clsN+'">'+enFmt(z.wneg,3)+'</td>'
       + '</tr>';
   });
@@ -2967,9 +2969,11 @@ function duoCalc() {
   var zt='';
   zones.forEach(function(row) {
     var wp = wpos(row.cArr), wn = wneg(row.cArr);
-    var clsp = wp>0?'p-pos':'p-neg', clsn = wn>0?'p-pos':'p-neg';
+    var clsp = wp > 0 ? 'p-pos' : '';
+    var clsn = wn >= 0 ? 'p-pos' : 'p-neg';
+    var wpStr = wp > 0 ? enFmt(wp,3) : '—';
     zt += '<tr><td>'+row.z+'</td><td>'+row.surf+'</td><td>'+fmtCpe(row.cArr)+'</td>';
-    zt += '<td class="'+clsp+'">'+enFmt(wp,3)+'</td>';
+    zt += '<td class="'+clsp+'">'+wpStr+'</td>';
     zt += '<td class="'+clsn+'">'+enFmt(wn,3)+'</td></tr>';
   });
   document.getElementById('duo-zone-body').innerHTML=zt;
