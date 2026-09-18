@@ -999,7 +999,13 @@ function cbCalc() {
   // Shear stud capacity §I8.2a
   var Asa = Math.PI / 4 * ds * ds;
   var wr_hr_ratio = wr / hr;
-  var Rg  = 0.85;
+  // Max studs per rib determines Rg (§I8.2a): 1.0 for single stud/rib, 0.85 for two
+  var rib_allows2   = (wr_hr_ratio >= 1.5);
+  var bf_min_2studs = isUS ? (2 * 1.5 + 4 * ds) : (2 * 38 + 4 * ds);
+  var bf_allows2    = (bf >= bf_min_2studs);
+  var max_per_rib   = (rib_allows2 && bf_allows2) ? 2 : 1;
+  var double_row    = (max_per_rib === 2);
+  var Rg  = double_row ? 0.85 : 1.0;
   var Rp  = document.getElementById('cb-pos-fav').checked ? 0.75 : 0.625; // AISC §I8.2a Table C-I8.2a
   var Qn_basic = isUS
     ? 0.5 * Asa * Math.sqrt(fpc * Ec)
@@ -1012,11 +1018,6 @@ function cbCalc() {
 
   // Stud layout geometry
   var SQn_req  = eta_in * SQn_full;
-  var rib_allows2   = (wr_hr_ratio >= 1.5);
-  var bf_min_2studs = isUS ? (2 * 1.5 + 4 * ds) : (2 * 38 + 4 * ds);
-  var bf_allows2    = (bf >= bf_min_2studs);
-  var max_per_rib   = (rib_allows2 && bf_allows2) ? 2 : 1;
-  var double_row    = (max_per_rib === 2);
   var deck_pitch    = +document.getElementById('cb-sr').value || (isUS ? 12 : 305);
   var half_span     = isUS ? L * 12 / 2 : L * 1000 / 2;
   var N_ribs_half   = Math.floor(half_span / deck_pitch);
@@ -1073,8 +1074,9 @@ function cbCalc() {
   var h_tw     = (d - 2 * tf) / tw;
   var lim_htw  = 2.24 * Math.sqrt(Es / Fy);
   var Cv1      = h_tw <= lim_htw ? 1.0 : lim_htw / h_tw;
+  var phi_v    = h_tw <= lim_htw ? 1.0 : 0.90; // §G2.1: φv=1.0 compact web, 0.90 otherwise
   var Aw       = d * tw;
-  var phi_Vn   = isUS ? 0.6 * Fy * Aw * Cv1 : 0.6 * Fy * Aw * Cv1 / 1000;
+  var phi_Vn   = isUS ? phi_v * 0.6 * Fy * Aw * Cv1 : phi_v * 0.6 * Fy * Aw * Cv1 / 1000;
   var DCR_shear = Vu / phi_Vn;
   var shear_ok  = DCR_shear <= 1.0;
 
@@ -1092,13 +1094,17 @@ function cbCalc() {
   if (isUS) {
     var L_in = L * 12;
     dL_val  = 5 * (wL/12)       * Math.pow(L_in,4) / (384 * Es * Ieff);
-    dT_val  = 5 * (wD_total/12) * Math.pow(L_in,4) / (384 * Es * Is) + dL_val;
+    dT_val  = 5 * (sw/12)       * Math.pow(L_in,4) / (384 * Es * Is)   // pre-composite DL on steel
+            + 5 * (wD_cover/12) * Math.pow(L_in,4) / (384 * Es * Ieff) // SDL on composite
+            + dL_val;
     dL_lim  = L_in / 360;
     dT_lim  = L_in / 240;
   } else {
     var L_mm = L * 1000;
     dL_val  = 5 * wL       * Math.pow(L_mm,4) / (384 * Es * Ieff);
-    dT_val  = 5 * wD_total * Math.pow(L_mm,4) / (384 * Es * Is) + dL_val;
+    dT_val  = 5 * sw       * Math.pow(L_mm,4) / (384 * Es * Is)   // pre-composite DL on steel
+            + 5 * wD_cover * Math.pow(L_mm,4) / (384 * Es * Ieff) // SDL on composite
+            + dL_val;
     dL_lim  = L_mm / 360;
     dT_lim  = L_mm / 240;
   }
