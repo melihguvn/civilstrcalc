@@ -2648,10 +2648,10 @@ function enCalc() {
   document.getElementById('en-zone-body').innerHTML = ztH;
 
   // SVG zone plan diagram (EN 1991-1-4 §7.2/7.3) — wall zones A-E, roof zones F-I
-  var svgW = 440, svgH = 330;
+  var svgW = 500, svgH = 335;
   var ox = 50, oy = 58;
-  var bW = 278, bH = 178;
-  var ws = 16;
+  var bW = 310, bH = 200;
+  var ws = 18;
 
   var eV  = Math.min(b, 2*h);
   var scX = bW / Math.max(d, 0.001);
@@ -2668,7 +2668,7 @@ function enCalc() {
     return '<text x="'+x+'" y="'+y+'" text-anchor="middle" dominant-baseline="middle" font-size="'+(sz||10)+'" font-weight="700" fill="'+col+'">'+t+'</text>';
   }
 
-  var svg = '<svg width="100%" viewBox="0 0 '+svgW+' '+svgH+'" style="font-family:sans-serif;display:block;max-width:480px;margin:0 auto;">';
+  var svg = '<svg width="100%" viewBox="0 0 '+svgW+' '+svgH+'" style="font-family:sans-serif;display:block;">';
   svg += '<defs><marker id="wmar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,1 L5,3 L0,5 Z" fill="#1e3a8a"/></marker></defs>';
 
   // Roof zones painted inside building rectangle (back-to-front order)
@@ -2696,8 +2696,13 @@ function enCalc() {
   svg += '<rect x="'+(ox+bW)+'" y="'+(oy-ws)+'" width="'+ws+'" height="'+(bH+2*ws)+'" fill="#fecaca" stroke="#dc2626" stroke-width="0.7"/>';
 
   // Roof labels
-  if (rfw > 10) { svg += lblZ(ox+rgd/2, oy+rfw/2, 'F', '#7f1d1d', 9); }
-  if (rfw > 10) { svg += lblZ(ox+rgd/2, oy+bH-rfw/2, 'F', '#7f1d1d', 9); }
+  if (rfw > 10) {
+    // When e/4 rotated text is shown (rfw>20) it occupies zone center — offset F to near-edge
+    var fyT = rfw > 20 ? oy + Math.min(rfw*0.14, 9) : oy+rfw/2;
+    var fyB = rfw > 20 ? oy+bH - Math.min(rfw*0.14, 9) : oy+bH-rfw/2;
+    svg += lblZ(ox+rgd/2, fyT, 'F', '#7f1d1d', rfw > 20 ? 7 : 9);
+    svg += lblZ(ox+rgd/2, fyB, 'F', '#7f1d1d', rfw > 20 ? 7 : 9);
+  }
   if (bH-2*rfw > 12) { svg += lblZ(ox+rgd/2, oy+bH/2, 'G', '#92400e', 9); }
   svg += lblZ(ox+rgd+(bW-rgd-rid)/2, oy+bH/2, 'H', '#0c4a6e', 13);
   svg += lblZ(ox+bW-rid/2, oy+bH/2, 'I', '#14532d', 9);
@@ -3185,8 +3190,8 @@ function monoCalc() {
   // Zone diagram
   (function(){
     var eV=Math.min(b,2*h);
-    var svgW=480, svgH=248;
-    var plox=50, ploy=50, plW=185, plH=126;
+    var svgW=500, svgH=268;
+    var plox=50, ploy=50, plW=220, plH=148;
     var e10px=Math.min(eV/10,d*0.4)*(plW/Math.max(d,0.001));
     var e4px =Math.min(eV/4, b*0.45)*(plH/Math.max(b,0.001));
     var i10px=e10px;
