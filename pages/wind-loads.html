@@ -1732,6 +1732,7 @@ var isUS = true;
 var activeLC = 1;
 var currentProc = 'ch28';
 var _rptData = null;
+var _enRptData = null;
 var Kd = 0.85;
 var windDir27 = 0;   // 0 = wind ⊥ L-face (default), 90 = wind ⊥ B-face
 var enWindDir = 0;   // 0 = wind ⊥ b (default), 90 = wind ⊥ d (b↔d swap)
@@ -2404,8 +2405,15 @@ function calcCh30(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var minP=isUS?16:0.766;
   var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', Au=isUS?'ft²':'m²';
 
+  var anchCh30=[{A:10,label:'10'},{A:Aeff_ft2,label:f(Aeff_raw,1)},{A:500,label:'500'}];
+  var ch30Rows=anchCh30.map(function(anch,i){
+    var gcp=ccGCp(d,anch.A);
+    var pP=Math.max(qh*(gcp.pos+GCpi),minP), pN=Math.min(qh*(gcp.neg-GCpi),-minP);
+    return {A:anch.label,gcpPos:gcp.pos,gcpNeg:gcp.neg,pPos:pP,pNeg:pN,sel:i===1};
+  });
   _rptData={proc:'ch30',qh:qh,Kh:Kh,a:a,GCpi:GCpi,Aeff_raw:Aeff_raw,surface:surface,
-    h_raw:h_raw,B_raw:B_raw,L_raw:L_raw,V_raw:V_raw,theta:theta,expo:expo,Kzt:Kzt,Ke:Ke};
+    h_raw:h_raw,B_raw:B_raw,L_raw:L_raw,V_raw:V_raw,theta:theta,expo:expo,Kzt:Kzt,Ke:Ke,
+    ch30Rows:ch30Rows,surfLabel:d?d.label:surface,minP:minP};
 
   document.getElementById('c30-qh').textContent=f(qh,2);
   document.getElementById('c30-qh-u').textContent=u;
@@ -2463,8 +2471,11 @@ function calcPrpt(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V
   var loc=document.getElementById('inp-prpt-loc').value;
   var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', Fu=isUS?'plf':'kN/m';
 
+  var prptRows=[];
+  if(loc==='both'||loc==='ww'){var pw=qp*1.5; prptRows.push({name:'Windward parapet',GCpn:1.5,p:pw,FL:isUS?pw*hp_ft:pw*hp_raw});}
+  if(loc==='both'||loc==='lw'){var pl=-qp; prptRows.push({name:'Leeward parapet',GCpn:-1.0,p:pl,FL:isUS?pl*hp_ft:pl*hp_raw});}
   _rptData={proc:'prpt',qp:qp,Kp:Kp,htot:htot,hp_raw:hp_raw,hp_ft:hp_ft,
-    h_raw:h_raw,V_raw:V_raw,expo:expo,Kzt:Kzt,Ke:Ke};
+    h_raw:h_raw,V_raw:V_raw,expo:expo,Kzt:Kzt,Ke:Ke,prptRows:prptRows};
 
   document.getElementById('prpt-qp').textContent=f(qp,2);
   document.getElementById('prpt-qp-u').textContent=u;
@@ -2807,48 +2818,191 @@ function drawCh27Building(profile, qh, G, Cp_lw, Cp_roof_ww, theta) {
 // PRINT / PDF
 // ═══════════════════════════════════════════════════════════
 function printReport() {
-  if (!_rptData) calc();
-  var p=_rptData; if (!p) return;
-  var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', vu=isUS?'mph':'m/s', Au=isUS?'ft²':'m²';
-  var d=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-  document.getElementById('rpt-date').textContent=d;
+  var isEN = document.getElementById('wpane-en').classList.contains('active');
+  var dt=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  document.getElementById('rpt-date').textContent=dt;
   document.getElementById('rpt-ft-left').textContent='civilstrcalc.com — Wind Load Report';
+  var h='';
   function kv(l,v){return '<div class="rpt-kv"><div class="rpt-kv-l">'+l+'</div><div class="rpt-kv-v">'+v+'</div></div>';}
-  function r4(a,b,c,d){return '<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+d+'</td></tr>';}
-  var h='<div class="rpt-sh">Inputs</div><div class="rpt-g4">';
-  h+=kv('V ('+vu+')',f(p.V_raw,1)); h+=kv('L ('+hu+')',f(p.L_raw,1)); h+=kv('B ('+hu+')',f(p.B_raw,1)); h+=kv('h ('+hu+')',f(p.h_raw,1));
-  h+=kv('Exposure',p.expo); h+=kv('Kzt',f(p.Kzt,3)); h+=kv('Ke',f(p.Ke,3)); h+=kv('Kd','0.85');
-  h+='</div>';
-  if (p.proc==='ch28') {
-    document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 28 Envelope';
-    document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — Low-rise Building';
-    h+='<div class="rpt-sh">Factors</div><div class="rpt-g4">';
-    h+=kv('Kh',f(p.Kh,3)); h+=kv('qh ('+u+')',f(p.qh,2)); h+=kv('GCpi','±'+f(p.GCpi,2)); h+=kv('a ('+hu+')',f(p.a,2));
-    h+='</div>';
-    function zTbl(zones,labels,title) {
-      var t='<div class="rpt-sh">'+title+'</div><table class="rpt-t"><thead><tr><th>Zone</th><th>GCpf</th><th>p+ ('+u+')</th><th>p- ('+u+')</th></tr></thead><tbody>';
-      ['1','1E','2','2E','3','3E','4','4E','5','5E'].forEach(function(z){var d=zones[z]; t+=r4(labels[z]||z,fSign(d.gcpf,2),fSign(d.pPos,1),fSign(d.pNeg,1));});
+  function sh(t){return '<div class="rpt-sh">'+t+'</div>';}
+  function pc(v){return v>=0?'color:#1d4ed8;font-weight:600':'color:#b91c1c;font-weight:600';}
+  function ef(v,dp){return (v==null||isNaN(v))?'—':(+v).toFixed(dp);}
+  function sg(v,dp){return (typeof v==='number'&&isFinite(v))?((v>=0?'+':'')+v.toFixed(dp)):'—';}
+
+  if (isEN) {
+    var activePaneEl=document.querySelector('.en-inner-pane.active');
+    var enProcId=activePaneEl?activePaneEl.id.replace('en-pane-',''):'building';
+    if(enProcId==='wall') wallCalc();
+    else if(enProcId==='mono') monoCalc();
+    else if(enProcId==='duo') duoCalc();
+    else if(enProcId==='rect') rectCalc();
+    else enCalc();
+    if(!_enRptData) return;
+    var p=_enRptData;
+
+    function enZTbl(zones, roofType) {
+      var t='<table class="rpt-t"><thead><tr><th>Zone</th><th>Surface</th><th>c<sub>pe</sub></th><th>w⁺ (kN/m²)</th><th>w⁻ (kN/m²)</th></tr></thead><tbody>';
+      var isW=true, monoSec=0;
+      zones.forEach(function(z){
+        var isRoof=['F','G','H','I','J'].indexOf(z.z)>=0;
+        if(isRoof&&isW){t+='<tr><td colspan="5" style="font-size:5pt;background:#f0f4f8;color:#64748b;">── Roof ──</td></tr>';isW=false;}
+        if(roofType==='mono'&&z.sep&&!isW){monoSec++;t+='<tr><td colspan="5" style="font-size:5pt;background:#f0f4f8;color:#64748b;">── '+(monoSec===1?'θ=0° Wind from low eave':'θ=180° Wind from high eave')+' ──</td></tr>';}
+        var wp=z.wpos||0,wn=z.wneg||0;
+        t+='<tr><td>'+z.z+'</td><td style="font-size:5.5pt;">'+z.surf+'</td><td>'+z.cpeStr+'</td>';
+        t+='<td style="'+(wp>0?pc(wp):'')+'">'+( wp>0?ef(wp,3):'—')+'</td>';
+        t+='<td style="'+pc(wn)+'">'+ef(wn,3)+'</td></tr>';
+      });
       return t+'</tbody></table>';
     }
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4pt;">';
-    h+='<div>'+zTbl(p.lc1,ZL1,'LC1 — Wind ⊥ Ridge')+'</div>';
-    h+='<div>'+zTbl(p.lc2,ZL2,'LC2 — Wind ∥ Ridge')+'</div></div>';
-  } else if (p.proc==='ch27') {
-    document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 27 Directional';
-    document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — All Heights';
-    h+='<div class="rpt-sh">Height Profile — Windward Wall</div><table class="rpt-t"><thead><tr><th>z ('+hu+')</th><th>Kz</th><th>qz ('+u+')</th><th>p_ww+ ('+u+')</th></tr></thead><tbody>';
-    (p.profile||[]).forEach(function(row){h+=r4(f(row.z,1),f(row.Kz,3),f(row.qz,2),f(row.pww,1));});
-    h+='</tbody></table>';
-  } else if (p.proc==='ch30') {
-    document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 30 C&C';
-    document.getElementById('rpt-subtitle').textContent='Components & Cladding Design Pressures';
-    h+=kv('Aeff ('+Au+')',f(p.Aeff_raw,1)); h+=kv('qh ('+u+')',f(p.qh,2));
+
+    if(p.proc==='en-building'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — EN 1991-1-4 Building';
+      document.getElementById('rpt-subtitle').textContent='Peak Velocity Pressure · Zone Pressures';
+      h+=sh('Inputs')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b,0</sub> (m/s)',ef(p.vb0,1))+kv('Terrain','Cat. '+p.terrVal)+kv('b (m)',ef(p.b,1))+kv('d (m)',ef(p.d,1));
+      h+=kv('h (m)',ef(p.h,1))+kv('Roof',p.roof)+kv('c<sub>dir</sub>×c<sub>sea</sub>',ef(p.cdir,2)+'×'+ef(p.cseason,2))+kv('Enclosure',p.enc);
+      h+='</div>'+sh('Key Values')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b</sub> (m/s)',ef(p.vb,2))+kv('z<sub>eff</sub> (m)',ef(p.zeff,1))+kv('I<sub>v</sub>',ef(p.Iv,3))+kv('q<sub>p</sub>(h) (kN/m²)',ef(p.qp_kN,4));
+      h+=kv('c<sub>pi</sub>','+'+ef(p.cpi_pos,2)+'/'+ef(p.cpi_neg,2))+kv('c<sub>r</sub>',ef(p.cr,3))+kv('v<sub>m</sub> (m/s)',ef(p.vm,2))+kv('F<sub>w</sub> (kN)',ef(p.Fw_kN,1));
+      h+='</div>'+sh('Zone Pressures')+enZTbl(p.zones, p.roof);
+
+    } else if(p.proc==='en-wall'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — EN 1991-1-4 Free-Standing Wall';
+      document.getElementById('rpt-subtitle').textContent='§7.4 Net Pressure Coefficients · Table 7.9';
+      h+=sh('Inputs')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b,0</sub> (m/s)',ef(p.vb0,1))+kv('Terrain','Cat. '+p.terrV)+kv('h (m)',ef(p.h,1))+kv('l (m)',ef(p.l,1));
+      h+=kv('φ (solidity)',ef(p.phi,2))+kv('l/h',ef(p.lh,2))+kv('q<sub>p</sub>(h) (kN/m²)',ef(p.qp_kN,4))+kv('F<sub>w,tot</sub> (kN)',ef(p.Ftot,1));
+      h+='</div>'+sh('Zone Loads');
+      h+='<table class="rpt-t"><thead><tr><th>Zone</th><th>c<sub>p,net</sub></th><th>Width (m)</th><th>Load (kN/m)</th></tr></thead><tbody>';
+      p.wallZones.forEach(function(z){h+='<tr><td>'+z.z+'</td><td style="'+pc(-1)+'">'+ef(z.cp,2)+'</td><td>'+ef(z.w,2)+'</td><td style="'+pc(-1)+'">'+ef(z.F,3)+'</td></tr>';});
+      h+='<tr style="font-weight:700;"><td colspan="3">Total F<sub>w</sub> (×h = '+ef(p.h,1)+' m)</td><td style="'+pc(-1)+'">'+ef(p.Ftot,1)+' kN</td></tr>';
+      h+='</tbody></table>';
+
+    } else if(p.proc==='en-duo'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — EN 1991-1-4 Duopitch Roof';
+      document.getElementById('rpt-subtitle').textContent='§7.4a Zone Pressures · Wind Direction θ=0°';
+      h+=sh('Inputs')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b,0</sub> (m/s)',ef(p.vb0,1))+kv('Terrain','Cat. '+p.terrV)+kv('b (m)',ef(p.b,1))+kv('d (m)',ef(p.d,1));
+      h+=kv('h (m)',ef(p.h,1))+kv('α (°)',ef(p.alpha,0))+kv('q<sub>p</sub>(h) (kN/m²)',ef(p.qp_kN,4))+kv('c<sub>pi</sub>','+'+ef(p.cpi_pos,2)+'/'+ef(p.cpi_neg,2));
+      h+='</div>'+sh('Zone Pressures')+enZTbl(p.zones,'duo');
+
+    } else if(p.proc==='en-mono'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — EN 1991-1-4 Monopitch Roof';
+      document.getElementById('rpt-subtitle').textContent='§7.3 Zone Pressures · θ=0° & 180°';
+      h+=sh('Inputs')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b,0</sub> (m/s)',ef(p.vb0,1))+kv('Terrain','Cat. '+p.terrV)+kv('b (m)',ef(p.b,1))+kv('d (m)',ef(p.d,1));
+      h+=kv('h (m)',ef(p.h,1))+kv('α (°)',ef(p.alpha,0))+kv('q<sub>p</sub>(h) (kN/m²)',ef(p.qp_kN,4))+kv('c<sub>pi</sub>','+'+ef(p.cpi_pos,2)+'/'+ef(p.cpi_neg,2));
+      h+='</div>';
+      function monoT(zones){
+        var t='<table class="rpt-t"><thead><tr><th>Zone</th><th>c<sub>pe</sub></th><th>w⁺ (kN/m²)</th><th>w⁻ (kN/m²)</th></tr></thead><tbody>';
+        zones.forEach(function(z){
+          var wp=z.wpos||0,wn=z.wneg||0;
+          t+='<tr><td>'+z.z+'</td><td>'+z.cpeStr+'</td>';
+          t+='<td style="'+(wp>0?pc(wp):'')+'">'+( wp>0?ef(wp,3):'—')+'</td>';
+          t+='<td style="'+pc(wn)+'">'+ef(wn,3)+'</td></tr>';
+        });
+        return t+'</tbody></table>';
+      }
+      h+=sh('θ=0° — Wind from Low Eave')+monoT(p.zones0);
+      h+=sh('θ=180° — Wind from High Eave')+monoT(p.zones180);
+
+    } else if(p.proc==='en-rect'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — EN 1991-1-4 Rectangular Element';
+      document.getElementById('rpt-subtitle').textContent='§7.6 Force Coefficient · Total Wind Force';
+      h+=sh('Inputs')+'<div class="rpt-g4">';
+      h+=kv('v<sub>b,0</sub> (m/s)',ef(p.vb0,1))+kv('Terrain','Cat. '+p.terrV)+kv('d (m)',ef(p.d,1))+kv('b (m)',ef(p.b,1));
+      h+=kv('l (m)',ef(p.l_el,1))+kv('r (m)',ef(p.r,1))+kv('c<sub>s</sub>c<sub>d</sub>',ef(p.cscd,2))+kv('q<sub>p</sub> (kN/m²)',ef(p.qp_kN,4));
+      h+='</div>'+sh('Force Calculation')+'<div class="rpt-g4">';
+      h+=kv('d/b',ef(p.d/p.b,3))+kv('c<sub>f,0</sub>',ef(p.cf0,3))+kv('ψ<sub>r</sub>',ef(p.psi_r,3))+kv('ψ<sub>λ</sub>',ef(p.psi_lam,2));
+      h+=kv('c<sub>f</sub>',ef(p.cf,3))+kv('A<sub>ref</sub> (m²)',ef(p.Aref,3))+kv('F<sub>w</sub> (kN)','<b style="font-size:9pt;">'+ef(p.Fw,2)+'</b>');
+      h+='</div>';
+    }
+
   } else {
-    document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Parapets §27.3.5';
-    document.getElementById('rpt-subtitle').textContent='Parapet MWFRS Design Pressures';
-    h+=kv('hp ('+hu+')',f(p.hp_raw,2)); h+=kv('h+hp ('+hu+')',f(p.htot,2)); h+=kv('Kp',f(p.Kp,3)); h+=kv('qp ('+u+')',f(p.qp,2));
+    if(!_rptData) calc();
+    if(!_rptData) return;
+    var p=_rptData;
+    var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', vu=isUS?'mph':'m/s', Au=isUS?'ft²':'m²', Fu=isUS?'plf':'kN/m';
+    h+=sh('Inputs')+'<div class="rpt-g4">';
+    h+=kv('V ('+vu+')',f(p.V_raw,1))+kv('L ('+hu+')',f(p.L_raw,1))+kv('B ('+hu+')',f(p.B_raw,1))+kv('h ('+hu+')',f(p.h_raw,1));
+    h+=kv('Exposure',p.expo)+kv('K<sub>zt</sub>',f(p.Kzt,3))+kv('K<sub>e</sub>',f(p.Ke,3))+kv('K<sub>d</sub>','0.85');
+    h+='</div>';
+
+    if(p.proc==='ch28'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 28 Envelope';
+      document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — Low-rise Building';
+      h+=sh('Factors')+'<div class="rpt-g4">';
+      h+=kv('K<sub>h</sub>',f(p.Kh,3))+kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('a ('+hu+')',f(p.a,2));
+      h+='</div>';
+      function zTbl28(zones,labels,title){
+        var t=sh(title)+'<table class="rpt-t"><thead><tr><th>Zone</th><th>GCpf</th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
+        ['1','1E','2','2E','3','3E','4','4E','5','5E'].forEach(function(z){
+          var dd=zones[z]; if(!dd) return;
+          t+='<tr><td style="font-size:5.5pt;">'+(labels[z]||z)+'</td><td>'+sg(dd.gcpf,2)+'</td>';
+          t+='<td style="'+pc(dd.pPos)+'">'+sg(dd.pPos,1)+'</td>';
+          t+='<td style="'+pc(dd.pNeg)+'">'+sg(dd.pNeg,1)+'</td></tr>';
+        });
+        return t+'</tbody></table>';
+      }
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4pt;">';
+      h+='<div>'+zTbl28(p.lc1,ZL1,'LC1 — Wind ⊥ Ridge')+'</div>';
+      h+='<div>'+zTbl28(p.lc2,ZL2,'LC2 — Wind ∥ Ridge')+'</div></div>';
+
+    } else if(p.proc==='ch27'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 27 Directional';
+      document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — All Heights';
+      h+=sh('Key Factors')+'<div class="rpt-g4">';
+      h+=kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('G',f(p.G,3))+kv('C<sub>p,ww</sub>','+0.80')+kv('C<sub>p,lw</sub>',fSign(p.Cp_lw,2));
+      h+=kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('θ (°)',f(p.theta,0))+kv('L/B',f(p.LB,2))+kv('Exposure',p.expo);
+      h+='</div>'+sh('Surface Design Pressures');
+      h+='<table class="rpt-t"><thead><tr><th>Surface</th><th>C<sub>p</sub></th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
+      (p.surfs||[]).forEach(function(s){
+        if(s.skip||s.Cp==null) return;
+        var pP=Math.max(p.qh*p.G*s.Cp+p.qh*p.GCpi, isUS?(s.isRoof?8:16):(s.isRoof?0.383:0.766));
+        var pN=Math.min(p.qh*p.G*s.Cp-p.qh*p.GCpi, isUS?(s.isRoof?-8:-16):(s.isRoof?-0.383:-0.766));
+        h+='<tr><td style="font-size:5.5pt;">'+s.name+'</td><td>'+fSign(s.Cp,2)+'</td>';
+        h+='<td style="'+pc(pP)+'">'+sg(pP,1)+'</td>';
+        h+='<td style="'+pc(pN)+'">'+sg(pN,1)+'</td></tr>';
+      });
+      h+='</tbody></table>'+sh('Windward Wall — Height Profile');
+      h+='<table class="rpt-t"><thead><tr><th>z ('+hu+')</th><th>K<sub>z</sub></th><th>q<sub>z</sub> ('+u+')</th><th>p<sub>ww</sub>⁺ ('+u+')</th></tr></thead><tbody>';
+      (p.profile||[]).forEach(function(row){h+='<tr><td>'+f(row.z,1)+'</td><td>'+f(row.Kz,3)+'</td><td>'+f(row.qz,2)+'</td><td style="color:#1d4ed8;font-weight:600;">'+f(row.pww,1)+'</td></tr>';});
+      h+='</tbody></table>';
+
+    } else if(p.proc==='ch30'){
+      document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 30 C&C';
+      document.getElementById('rpt-subtitle').textContent='Components & Cladding Design Pressures';
+      h+=sh('Factors')+'<div class="rpt-g4">';
+      h+=kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('A<sub>eff</sub> ('+Au+')',f(p.Aeff_raw,1))+kv('a ('+hu+')',f(p.a,2));
+      h+='</div>'+sh('Zone Pressures — '+(p.surfLabel||p.surface));
+      h+='<table class="rpt-t"><thead><tr><th>A<sub>eff</sub> ('+Au+')</th><th>GC<sub>p</sub>⁺</th><th>GC<sub>p</sub>⁻</th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
+      (p.ch30Rows||[]).forEach(function(row){
+        var bld=row.sel?'font-weight:700;':'';
+        h+='<tr style="'+bld+'"><td>'+row.A+'</td><td>'+sg(row.gcpPos,2)+'</td><td>'+sg(row.gcpNeg,2)+'</td>';
+        h+='<td style="'+bld+'color:#1d4ed8;">'+sg(row.pPos,1)+'</td>';
+        h+='<td style="'+bld+'color:#b91c1c;">'+sg(row.pNeg,1)+'</td></tr>';
+      });
+      h+='</tbody></table>';
+      h+='<div style="font-size:5pt;color:#9ca3af;margin-top:2pt;">Minimum ±'+f(p.minP,0)+' '+u+' applied. Bold row = selected A<sub>eff</sub>.</div>';
+
+    } else {
+      document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Parapets §27.3.5';
+      document.getElementById('rpt-subtitle').textContent='Parapet MWFRS Design Pressures';
+      h+=sh('Parapet Parameters')+'<div class="rpt-g4">';
+      h+=kv('h<sub>p</sub> ('+hu+')',f(p.hp_raw,2))+kv('h+h<sub>p</sub> ('+hu+')',f(p.htot,2))+kv('K<sub>p</sub>',f(p.Kp,3))+kv('q<sub>p</sub> ('+u+')',f(p.qp,2));
+      h+='</div>'+sh('Parapet Design Pressures');
+      h+='<table class="rpt-t"><thead><tr><th>Location</th><th>GC<sub>pn</sub></th><th>p ('+u+')</th><th>F/L ('+Fu+')</th></tr></thead><tbody>';
+      (p.prptRows||[]).forEach(function(row){
+        h+='<tr><td>'+row.name+'</td>';
+        h+='<td style="'+pc(row.GCpn)+'">'+sg(row.GCpn,2)+'</td>';
+        h+='<td style="'+pc(row.p)+'">'+sg(row.p,1)+'</td>';
+        h+='<td style="'+pc(row.FL)+'">'+sg(row.FL,isUS?0:2)+'</td></tr>';
+      });
+      h+='</tbody></table>';
+    }
   }
-  h+='<div style="font-size:5.5pt;color:#9ca3af;margin-top:4pt;">Preliminary design only. Verify against ASCE 7-22. Engineer of record responsible for final design.</div>';
+
+  h+='<div style="font-size:5.5pt;color:#9ca3af;margin-top:4pt;">Preliminary design only. Verify against '+(isEN?'EN 1991-1-4':'ASCE 7-22')+'. Engineer of record responsible for final design.</div>';
   document.getElementById('rpt-body').innerHTML=h;
   window.print();
 }
@@ -3282,6 +3436,9 @@ function enCalc() {
   fH += enStep('w<sub>e,E</sub>', 'q<sub>p</sub>×(c<sub>pe,E</sub>−c<sub>pi,max</sub>) = '+enFmt(qp_kN,4)+'×('+enFmt(cpe_E,2)+'−'+enFmt(cpi_pos,2)+')', enFmt(qp_kN*(cpe_E-cpi_pos),3), 'kN/m²');
   fH += enStep('F<sub>w</sub>', 'c<sub>s</sub>c<sub>d</sub>×(w<sub>D</sub>+|w<sub>E</sub>|)×h×b = '+enFmt(cscd,2)+'×('+enFmt(weD,3)+'+'+enFmt(weE_abs,3)+')×'+enFmt(h,1)+'×'+enFmt(b,1), '<b class="vok vbig">'+enFmt(Fw_kN,1)+'</b>', 'kN');
   document.getElementById('en-forces').innerHTML = fH;
+  _enRptData={proc:'en-building',vb0:vb0,cdir:cdir,cseason:cseason,terrVal:terrVal,b:b,d:d,h:h,roof:roof,enc:enc,
+    vb:vb,qp_kN:qp_kN,Iv:Iv,cr:cr,vm:vm,ze:ze,zeff:zeff,cpi_pos:cpi_pos,cpi_neg:cpi_neg,Fw_kN:Fw_kN,
+    zones:zones.map(function(z){return {z:z.z,surf:z.surf,cpeStr:z.cpeStr,wpos:z.wpos||0,wneg:z.wneg||0,sep:z.sep||false};})};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3391,6 +3548,10 @@ function wallCalc() {
   if(hasCandD&&zD>0) wRow('D',cpD,zD,qp_kN*cpD*zD);
   zt += '<tr style="font-weight:700;"><td colspan="3">Total F<sub>w</sub> (×height '+enFmt(h,1)+' m)</td><td class="p-neg">'+enFmt(Ftot,1)+' kN</td></tr>';
   document.getElementById('wall-zone-body').innerHTML = zt;
+  var wz=[{z:'A (end)',cp:cpA,w:zA,F:qp_kN*cpA*zA},{z:'B',cp:cpB,w:zB,F:qp_kN*cpB*zB}];
+  if(hasCandD&&zC>0) wz.push({z:'C',cp:cpC,w:zC,F:qp_kN*cpC*zC});
+  if(hasCandD&&zD>0) wz.push({z:'D',cp:cpD,w:zD,F:qp_kN*cpD*zD});
+  _enRptData={proc:'en-wall',vb0:vb0,terrV:terrV,h:h,l:l,phi:phi,lh:lh,qp_kN:qp_kN,wallZones:wz,Ftot:Ftot};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3616,6 +3777,13 @@ function duoCalc() {
     s+='</svg>';
     document.getElementById('duo-diagram').innerHTML=s;
   })();
+  var duoZ=[{z:'F',surf:'Windward — F',cpeStr:fmtCpe(dc.F),wpos:wpos(dc.F),wneg:wneg(dc.F)},
+    {z:'G',surf:'Windward — G',cpeStr:fmtCpe(dc.G),wpos:wpos(dc.G),wneg:wneg(dc.G)},
+    {z:'H',surf:'Windward — H',cpeStr:fmtCpe(dc.H),wpos:wpos(dc.H),wneg:wneg(dc.H)},
+    {z:'I',surf:'Leeward — I',cpeStr:fmtCpe(dc.I),wpos:wpos(dc.I),wneg:wneg(dc.I)},
+    {z:'J',surf:'Leeward — J',cpeStr:fmtCpe(dc.J),wpos:wpos(dc.J),wneg:wneg(dc.J)}];
+  _enRptData={proc:'en-duo',vb0:vb0,terrV:terrV,b:b,d:d,h:h,alpha:alpha,enc:enc,
+    qp_kN:qp_kN,cpi_pos:cpi_pos,cpi_neg:cpi_neg,zones:duoZ};
 }
 
 function monoCalc() {
@@ -3769,6 +3937,10 @@ function monoCalc() {
     s+='</svg>';
     document.getElementById('mono-diagram').innerHTML=s;
   })();
+  var mz0=['F','G','H','I'].map(function(z){var cv=cpe.deg0[z];return {z:z,cpeStr:fmtCpe(cv),wpos:wpos_m(cv),wneg:wneg_m(cv)};});
+  var mz180=['F','G','H','I'].map(function(z){var cv=cpe.deg180[z];return {z:z,cpeStr:fmtCpe(cv),wpos:wpos_m(cv),wneg:wneg_m(cv)};});
+  _enRptData={proc:'en-mono',vb0:vb0,terrV:terrV,b:b,d:d,h:h,alpha:alpha,enc:enc,
+    qp_kN:qp_kN,cpi_pos:cpi_pos,cpi_neg:cpi_neg,zones0:mz0,zones180:mz180};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3843,6 +4015,8 @@ function rectCalc() {
   sH += enStep('A<sub>ref</sub>','b×l = '+enFmt(b,3)+'×'+enFmt(l_el,1),enFmt(Aref,3),'m²');
   sH += enStep('F<sub>w</sub>','c<sub>s</sub>c<sub>d</sub>×c<sub>f</sub>×q<sub>p</sub>×A<sub>ref</sub> = '+enFmt(cscd,2)+'×'+enFmt(cf,3)+'×'+enFmt(qp_kN,4)+'×'+enFmt(Aref,3),'<b class="vok vbig">'+enFmt(Fw,2)+'</b>','kN');
   document.getElementById('rect-steps').innerHTML=sH;
+  _enRptData={proc:'en-rect',vb0:vb0,terrV:terrV,d:d,b:b,l_el:l_el,r:r,cscd:cscd,
+    qp_kN:qp_kN,cf0:cf0,psi_r:psi_r,psi_lam:psi_lam,cf:cf,Aref:Aref,Fw:Fw};
 }
 
 function switchWind(std, btn) {
