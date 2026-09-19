@@ -1293,6 +1293,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="bg-hdr"><h3>&#128218; Wind Load Design — Theory &amp; Code Background (ASCE 7-22)</h3></div>
   <nav class="bg-toc">
     <a href="#asce-bg-overview">Overview</a>
+    <a href="#asce-bg-wind">Wind Speed &amp; Return Period</a>
     <a href="#asce-bg-qz">Velocity Pressure</a>
     <a href="#asce-bg-ch27">Ch.27 — Directional</a>
     <a href="#asce-bg-ch28">Ch.28 — Envelope</a>
@@ -1323,6 +1324,56 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <tr><td>Ch. 30</td><td>Components &amp; Cladding</td><td>h ≤ 60 ft; individual cladding, windows, roof panels, fasteners</td></tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section id="asce-bg-wind">
+      <div class="bg-panel-hdr"><span>Wind Speed &amp; Return Period</span><a class="bg-top-btn" href="#asce-bg-overview">&#8593; Top</a></div>
+      <div class="tb" style="padding:18px 22px;">
+        <h4>3-Second Gust Speed — The ASCE Standard</h4>
+        <p>ASCE 7-22 defines the basic wind speed <strong>V</strong> as the <strong>3-second gust speed</strong> at 33 ft (10 m) above ground in open terrain (Exposure C). A 3-second averaging period was adopted in ASCE 7-98 (replacing the older fastest-mile convention) because it closely matches the duration over which a gust simultaneously loads most building surfaces.</p>
+        <p>Physical reasoning: at 90 mph ≈ 132 ft/s, a 3-second gust spans roughly 400 ft of wind travel — similar to the dimension of typical buildings. Shorter averaging periods (1 s, 0.5 s) capture point gusts that don't load an entire facade; longer periods (10 min, 1 h) average out the gusts entirely.</p>
+        <h4>Historical Averaging Periods</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Standard / Era</th><th>Averaging Period</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>ASCE 7-95 and earlier</td><td>Fastest-mile</td><td>Time for exactly 1 mile (1609 m) of air to pass the anemometer; ≈ 40–60 s at hurricane speeds. Equivalent to roughly a 1-minute mean.</td></tr>
+            <tr><td>ASCE 7-98 → ASCE 7-22</td><td>3-second gust</td><td>Peak 3-s rolling average. Higher numerical values than fastest-mile; Cp tables were revised accordingly.</td></tr>
+            <tr><td>EN 1991-1-4 (Eurocode)</td><td>10-minute mean</td><td>WMO meteorological standard. Significantly lower numerically than 3-s gust. Gusts added back via turbulence intensity I<sub>v</sub>.</td></tr>
+            <tr><td>ISO 4354 / most of world</td><td>10-minute mean</td><td>Also used in Australian/NZ AS/NZS 1170.2 as a 3-s gust, but with separate conversion tables.</td></tr>
+          </tbody>
+        </table>
+        <h4>Speed Conversion Between Averaging Periods</h4>
+        <p>At a given site in open terrain, approximate conversion ratios from a 10-minute mean speed v<sub>10min</sub>:</p>
+        <table class="lim-tbl">
+          <thead><tr><th>Averaging period</th><th>Ratio to 10-min mean</th><th>Example (v<sub>10min</sub> = 26 m/s)</th></tr></thead>
+          <tbody>
+            <tr><td>1 hour</td><td>≈ 0.94</td><td>≈ 24.4 m/s</td></tr>
+            <tr><td>10 minutes</td><td>1.00 (base)</td><td>26 m/s</td></tr>
+            <tr><td>1 minute</td><td>≈ 1.19</td><td>≈ 30.9 m/s</td></tr>
+            <tr><td>3 seconds</td><td>≈ 1.40–1.55 (terrain-dependent)</td><td>≈ 36–40 m/s</td></tr>
+            <tr><td>1 second</td><td>≈ 1.60–1.75</td><td>≈ 42–46 m/s</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.76rem;color:var(--text-dim);">Ratios from Durst (1960) and Wieringa (1992); vary ±10% with turbulence intensity and terrain roughness. Never directly compare ASCE V (3-s gust) with EN v<sub>b</sub> (10-min mean) without converting.</p>
+        <h4>Return Period (Mean Recurrence Interval — MRI)</h4>
+        <p>The MRI is the average number of years between events equalling or exceeding a given speed. ASCE 7-22 uses <strong>strength-level</strong> (ultimate) wind speeds — not service-level — so the MRI values are high:</p>
+        <table class="lim-tbl">
+          <thead><tr><th>Risk Category</th><th>Occupancy type</th><th>MRI (years)</th><th>Annual exceedance probability</th></tr></thead>
+          <tbody>
+            <tr><td>I</td><td>Low hazard (storage, agricultural)</td><td>300</td><td>1/300 ≈ 0.33%/yr</td></tr>
+            <tr><td>II</td><td>Normal occupancy (most buildings)</td><td>700</td><td>1/700 ≈ 0.14%/yr</td></tr>
+            <tr><td>III</td><td>Substantial hazard (schools, assembly)</td><td>1,700</td><td>1/1700 ≈ 0.06%/yr</td></tr>
+            <tr><td>IV</td><td>Essential facilities (hospitals, EOC)</td><td>3,000</td><td>1/3000 ≈ 0.03%/yr</td></tr>
+          </tbody>
+        </table>
+        <p>Before ASCE 7-10, a single 50-year MRI map was used with a load factor of 1.6W for strength design. The multi-MRI approach adopted in ASCE 7-10/16/22 directly embeds the risk category into the wind speed map, giving more uniform structural reliability across building types.</p>
+        <h4>Probability of Exceedance During Design Life</h4>
+        <p>For a design life of <em>n</em> years and annual exceedance probability <em>p<sub>a</sub></em> = 1/MRI, the probability that the design wind event is exceeded at least once during service life is:</p>
+        <div class="fml-blk">
+          P<sub>E</sub> = 1 − (1 − 1/MRI)<sup>n</sup>
+        </div>
+        <p>Example: Risk Cat. II (MRI = 700 yr), n = 50 yr → P<sub>E</sub> = 1 − (699/700)<sup>50</sup> ≈ 7%. This ~7% lifetime exceedance probability is considered the acceptable target for normal occupancy buildings in the US.</p>
       </div>
     </section>
 
@@ -1483,6 +1534,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <div class="bg-hdr"><h3>&#128218; Wind Action Design — Theory &amp; Code Background (EN 1991-1-4)</h3></div>
   <nav class="bg-toc">
     <a href="#en-bg-overview">Overview</a>
+    <a href="#en-bg-wind">Wind Speed &amp; Return Period</a>
     <a href="#en-bg-qp">Peak Velocity Pressure</a>
     <a href="#en-bg-cpe">Pressure Coefficients</a>
     <a href="#en-bg-roofs">Roof Zones</a>
@@ -1505,6 +1557,56 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           w<sub>net</sub> = w<sub>e</sub> − w<sub>i</sub> &nbsp; (net pressure, + = inward)
         </div>
         <p>The structural factor c<sub>s</sub>c<sub>d</sub> accounts for non-simultaneous gust loading and dynamic amplification. For most normal buildings (height &lt; 15 m or slenderness &lt; 4), c<sub>s</sub>c<sub>d</sub> = 1.0.</p>
+      </div>
+    </section>
+
+    <section id="en-bg-wind">
+      <div class="bg-panel-hdr"><span>Wind Speed &amp; Return Period</span><a class="bg-top-btn" href="#en-bg-overview">&#8593; Top</a></div>
+      <div class="tb" style="padding:18px 22px;">
+        <h4>10-Minute Mean Speed — The EN Standard</h4>
+        <p>EN 1991-1-4 defines the fundamental basic wind velocity <strong>v<sub>b,0</sub></strong> as the <strong>10-minute mean wind speed</strong> at 10 m height above flat open terrain (terrain category II), with an annual exceedance probability of 0.02 (50-year return period). The 10-minute averaging period is the World Meteorological Organisation (WMO) standard for synoptic weather observations.</p>
+        <p>Unlike ASCE 7 which embeds gust speed directly into V, EN 1991-1-4 uses only the mean speed as input and then reconstructs the gust through turbulence intensity I<sub>v</sub>(z) in the peak velocity pressure formula. This separates the mean wind climate from the local turbulence structure, making the method more physically transparent.</p>
+        <h4>Why 10 Minutes — Not 3 Seconds?</h4>
+        <p>The 10-minute mean eliminates most of the gusty fluctuations, leaving only the synoptic wind speed that is well-represented by standard meteorological records. The gust component is then added back analytically:</p>
+        <div class="fml-blk">
+          q<sub>p</sub>(z) = [1 + 7 · I<sub>v</sub>(z)] · ½ρv<sub>m</sub>²(z)
+        </div>
+        <p>The factor 7 · I<sub>v</sub> is the gust peak factor times the turbulence intensity — it represents how much the 3–5 second peak gust exceeds the mean at a given height and terrain. In open terrain (cat. II) at 10 m height, I<sub>v</sub> ≈ 0.19, giving a peak factor of [1 + 7×0.19] = 2.33 above the dynamic pressure based on mean speed alone.</p>
+        <h4>Comparison: ASCE 3-s Gust vs EN 10-min Mean</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Feature</th><th>ASCE 7-22</th><th>EN 1991-1-4</th></tr></thead>
+          <tbody>
+            <tr><td>Wind speed definition</td><td>3-second gust at 33 ft, Exposure C</td><td>10-minute mean at 10 m, terrain cat. II</td></tr>
+            <tr><td>Gust effect handling</td><td>Absorbed into V; separate gust factor G = 0.85</td><td>Absorbed into q<sub>p</sub> via turbulence intensity I<sub>v</sub>(z)</td></tr>
+            <tr><td>Typical map speed (coastal)</td><td>130–160 mph (58–71 m/s)</td><td>26–32 m/s (typical European)</td></tr>
+            <tr><td>Numerical speed ratio</td><td colspan="2">V<sub>ASCE 3s</sub> ≈ 1.4–1.55 × v<sub>b,EN 10min</sub> (open terrain)</td></tr>
+            <tr><td>Return period</td><td>300 / 700 / 1700 / 3000 yr (Cat. I–IV)</td><td>50 yr standard; NA may adjust</td></tr>
+            <tr><td>Load level</td><td>Strength (ultimate) level directly</td><td>Characteristic (serviceability-compatible); amplified by γ<sub>Q</sub> in load combinations</td></tr>
+          </tbody>
+        </table>
+        <h4>Return Period — EN 1991-1-4 (§4.2)</h4>
+        <p>The standard reference period is <strong>T = 50 years</strong> with an annual exceedance probability p = 1/50 = 0.02 (2%/yr). This is the <em>characteristic wind action</em> for use in EN 1990 load combinations with γ<sub>Q</sub> = 1.5 (persistent design situation).</p>
+        <p>For other return periods, EN 1991-1-4 Annex C provides a conversion formula based on extreme-value statistics:</p>
+        <div class="fml-blk">
+          v<sub>b,T</sub> = v<sub>b,50</sub> · [1 − K · ln(−ln(1 − p<sub>T</sub>))] / [1 − K · ln(−ln(0.98))]
+        </div>
+        <p>Where K is a shape parameter (≈ 0.2 for most of Europe, Gumbel distribution). For a 500-year return period (p<sub>T</sub> = 0.002), v<sub>b,500</sub> ≈ 1.20 × v<sub>b,50</sub>.</p>
+        <h4>Lifetime Exceedance Probability</h4>
+        <p>For a 50-year service life (typical EN 1990 reference), the probability that the 50-year wind is exceeded at least once:</p>
+        <div class="fml-blk">
+          P<sub>E</sub> = 1 − (1 − 1/50)<sup>50</sup> = 1 − (0.98)<sup>50</sup> ≈ <strong>64%</strong>
+        </div>
+        <p>This seemingly high probability is intentional — the 50-year wind is a <em>characteristic</em> action, not a "maximum ever" value. Safety is ensured by the partial factors in the EN 1990 load combination (γ<sub>Q</sub> = 1.5 for variable actions). The effective return period at the design strength level is approximately 50 × 1.5² ≈ 3750 years for a linear pressure-to-speed relationship.</p>
+        <h4>Comparison With ASCE Risk Categories</h4>
+        <table class="lim-tbl">
+          <thead><tr><th>Standard</th><th>Map/Input MRI</th><th>Effective structural MRI</th><th>Annual P<sub>E</sub></th></tr></thead>
+          <tbody>
+            <tr><td>EN (Cat. II building)</td><td>50 yr (map)</td><td>≈ 3,750 yr (after γ<sub>Q</sub> = 1.5 on pressure)</td><td>0.027%</td></tr>
+            <tr><td>ASCE Risk Cat. II</td><td>700 yr (map, strength level)</td><td>700 yr (already at strength level, φ applied to resistance)</td><td>0.14%</td></tr>
+            <tr><td>ASCE Risk Cat. IV</td><td>3,000 yr</td><td>3,000 yr</td><td>0.033%</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.76rem;color:var(--text-dim);">The two frameworks target similar structural reliability levels through different means: ASCE uses high-MRI maps + resistance factors; EN uses low-MRI maps + load partial factors. Final designs should be similar for comparable site and occupancy conditions.</p>
       </div>
     </section>
 
