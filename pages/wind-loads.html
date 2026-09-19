@@ -2599,141 +2599,207 @@ function drawCh27Building(profile, qh, G, Cp_lw, Cp_roof_ww, theta) {
   var canvas = document.getElementById('c27-canvas'); if (!canvas) return;
   var isDark = document.documentElement.getAttribute('data-theme')==='dark'||
     (!document.documentElement.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme:dark)').matches);
-  /* Force reflow so offsetWidth reflects the actual container width after hidden→visible */
   canvas.style.width = '100%';
   var cW = canvas.offsetWidth;
   if (!cW || cW < 150) cW = 560;
-  var cH = Math.max(200, Math.round(cW * 0.38));
-  canvas.width = cW * (window.devicePixelRatio||1);
+  var cH = Math.max(260, Math.round(cW * 0.48));
+  canvas.width  = cW * (window.devicePixelRatio||1);
   canvas.height = cH * (window.devicePixelRatio||1);
   canvas.style.width = cW + 'px'; canvas.style.height = cH + 'px';
   var ctx = canvas.getContext('2d');
   ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
 
   var bg    = isDark ? '#0f172a' : '#f8fafc';
-  var lineC = isDark ? '#475569' : '#64748b';
-  var lblC  = isDark ? '#94a3b8' : '#475569';
+  var lineC = isDark ? '#94a3b8' : '#475569';
   var dimC  = isDark ? '#64748b' : '#94a3b8';
+  var lblC  = isDark ? '#cbd5e1' : '#1e293b';
   ctx.fillStyle = bg; ctx.fillRect(0, 0, cW, cH);
 
-  /* layout */
-  var ml = 44, mr = 44, mt = 30, mb = 28;
-  var bW = Math.round(cW * 0.28);
-  var bH = cH - mt - mb;
-  var bX = ml + Math.round(cW * 0.14);
-  var bY = mt;
-  var n  = profile.length;
+  // ── layout ──
+  var ml = 52, mr = 10, mt = 62, mb = 30;
+  var bW  = Math.round(cW * 0.30);
+  var bH  = cH - mt - mb;
+  var bX  = ml + Math.round(cW * 0.16);  // left wall x
+  var bY  = mt;                            // top of wall
+  var gY  = bY + bH;                       // ground y
+  var n   = profile.length;
+
+  // ── pressure scale ──
   var maxPww = 0;
   profile.forEach(function(r){ if (r.pww > maxPww) maxPww = r.pww; });
-  var pMaxW = bX - ml - 8;   // max width of pressure polygon
+  if (!maxPww) maxPww = 1;
+  var pMaxW = bX - ml - 8;  // px budget for windward polygon
+  var pu = isUS ? ' psf' : ' kPa';
+  var hu = isUS ? ' ft' : ' m';
 
-  /* helper: z → canvas y */
   function zy(z){ return bY + bH * (1 - z / profile[n-1].z); }
-  /* helper: pressure → x offset */
   function pw(p){ return Math.round(p / maxPww * pMaxW); }
 
-  /* ── windward pressure polygon ── */
+  // ── ROOF pressure block (above building, drawn first so gable overlaps) ──
+  var roofP  = Math.abs(qh * G * Math.abs(Cp_roof_ww));
+  var roofSuction = Cp_roof_ww < 0;
+  var roofH  = Math.max(30, mt - 18);
+  var roofY  = bY - roofH;
+  var roofFill = roofSuction
+    ? (isDark ? 'rgba(239,68,68,0.13)' : 'rgba(239,68,68,0.09)')
+    : (isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.10)');
+  var roofStroke = roofSuction ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#60a5fa' : '#2563eb');
+  ctx.fillStyle = roofFill;
+  ctx.fillRect(bX, roofY, bW, roofH);
+  ctx.strokeStyle = roofStroke; ctx.lineWidth = 1.2;
+  ctx.setLineDash([4,3]); ctx.strokeRect(bX, roofY, bW, roofH); ctx.setLineDash([]);
+
+  // roof arrows (3 vertical arrows indicating direction)
+  var aStep = bW / 4;
+  ctx.strokeStyle = roofStroke; ctx.lineWidth = 1.1;
+  for (var ai = 1; ai <= 3; ai++) {
+    var ax = bX + aStep * ai;
+    var ay1, ay2;
+    if (roofSuction) {
+      ay1 = bY - 4; ay2 = roofY + 6;  // pointing upward (away from surface)
+    } else {
+      ay1 = roofY + roofH - 6; ay2 = bY - 4;  // pointing downward (toward surface)
+    }
+    ctx.beginPath(); ctx.moveTo(ax, ay1); ctx.lineTo(ax, ay2); ctx.stroke();
+    ctx.beginPath();
+    if (roofSuction) {
+      ctx.moveTo(ax, ay2); ctx.lineTo(ax - 4, ay2 + 7); ctx.lineTo(ax + 4, ay2 + 7);
+    } else {
+      ctx.moveTo(ax, ay2); ctx.lineTo(ax - 4, ay2 - 7); ctx.lineTo(ax + 4, ay2 - 7);
+    }
+    ctx.closePath();
+    ctx.fillStyle = roofStroke; ctx.fill();
+  }
+
+  // roof pressure value label (above the block)
+  var roofSign = roofSuction ? '−' : '+';
+  ctx.font = 'bold 9.5px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = roofStroke;
+  ctx.fillText('Roof: ' + roofSign + f(roofP,1) + pu, bX + bW/2, roofY - 4);
+
+  // ── WINDWARD pressure polygon ──
   ctx.beginPath();
-  ctx.moveTo(bX, bY + bH);
+  ctx.moveTo(bX, gY);
   for (var i = 0; i < n; i++) ctx.lineTo(bX - pw(profile[i].pww), zy(profile[i].z));
   ctx.lineTo(bX, bY);
   ctx.closePath();
-  ctx.fillStyle = isDark ? 'rgba(100,116,139,0.30)' : 'rgba(100,116,139,0.18)';
+  ctx.fillStyle = isDark ? 'rgba(59,130,246,0.18)' : 'rgba(59,130,246,0.11)';
   ctx.fill();
-  ctx.strokeStyle = isDark ? '#64748b' : '#94a3b8';
-  ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.strokeStyle = isDark ? '#60a5fa' : '#2563eb'; ctx.lineWidth = 1.4; ctx.stroke();
 
-  /* pressure ticks */
-  for (var i = 0; i < n; i++) {
-    var ty = zy(profile[i].z), tx = bX - pw(profile[i].pww);
-    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bX - 2, ty);
-    ctx.strokeStyle = dimC; ctx.lineWidth = 0.7; ctx.stroke();
+  // windward horizontal tick arrows
+  var tStep = Math.max(1, Math.ceil(n / 6));
+  for (var i = 0; i < n; i += tStep) {
+    var ty = zy(profile[i].z);
+    var tx = bX - pw(profile[i].pww);
+    ctx.beginPath(); ctx.moveTo(tx + 1, ty); ctx.lineTo(bX - 2, ty);
+    ctx.strokeStyle = isDark ? '#93c5fd' : '#3b82f6'; ctx.lineWidth = 0.8; ctx.stroke();
+    // arrowhead toward building
+    ctx.beginPath();
+    ctx.moveTo(bX - 2, ty);
+    ctx.lineTo(bX - 8, ty - 3); ctx.lineTo(bX - 8, ty + 3);
+    ctx.closePath();
+    ctx.fillStyle = isDark ? '#93c5fd' : '#3b82f6'; ctx.fill();
   }
 
-  /* ── leeward pressure block — clamped to fit within canvas ── */
-  var lwP  = Math.abs(qh * G * Cp_lw);
-  var lwWmax = Math.max(4, cW - mr - (bX + bW) - 4);
-  var lwW  = Math.min(Math.round(lwP / maxPww * pMaxW * 0.65), lwWmax);
-  ctx.fillStyle = isDark ? 'rgba(148,163,184,0.22)' : 'rgba(148,163,184,0.28)';
+  // windward top label
+  var topR  = profile[n-1];
+  var topLx = bX - pw(topR.pww) / 2;
+  ctx.font = 'bold 9.5px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = isDark ? '#93c5fd' : '#1d4ed8';
+  ctx.fillText('+' + f(topR.pww,1) + pu, topLx, bY - 6);
+
+  // ── LEEWARD pressure block ──
+  var lwP    = Math.abs(qh * G * Cp_lw);
+  var availR = cW - mr - (bX + bW) - 2;
+  var lwW    = Math.min(Math.round(lwP / maxPww * pMaxW * 0.72), Math.max(20, availR - 8));
+  ctx.fillStyle = isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.09)';
   ctx.fillRect(bX + bW, bY, lwW, bH);
-  ctx.strokeStyle = dimC; ctx.lineWidth = 1; ctx.strokeRect(bX + bW, bY, lwW, bH);
+  ctx.strokeStyle = isDark ? '#f87171' : '#dc2626'; ctx.lineWidth = 1.2;
+  ctx.strokeRect(bX + bW, bY, lwW, bH);
 
-  /* ── roof pressure block ── */
-  var roofH = Math.round(bH * 0.12);
-  ctx.fillStyle = isDark ? 'rgba(148,163,184,0.18)' : 'rgba(148,163,184,0.22)';
-  ctx.fillRect(bX, bY - roofH, bW, roofH);
-  ctx.strokeStyle = dimC; ctx.lineWidth = 0.8;
-  ctx.setLineDash([3,3]); ctx.strokeRect(bX, bY - roofH, bW, roofH); ctx.setLineDash([]);
+  // leeward horizontal arrows pointing away from building (suction)
+  var lwMid = bY + bH / 2;
+  for (var li = -1; li <= 1; li++) {
+    var ly = lwMid + li * bH * 0.22;
+    ctx.beginPath(); ctx.moveTo(bX + bW + 2, ly); ctx.lineTo(bX + bW + Math.max(6, lwW - 4), ly);
+    ctx.strokeStyle = isDark ? '#fca5a5' : '#ef4444'; ctx.lineWidth = 0.9; ctx.stroke();
+    var atip = bX + bW + Math.max(6, lwW - 4);
+    ctx.beginPath();
+    ctx.moveTo(atip, ly); ctx.lineTo(atip - 6, ly - 3); ctx.lineTo(atip - 6, ly + 3);
+    ctx.closePath(); ctx.fillStyle = isDark ? '#fca5a5' : '#ef4444'; ctx.fill();
+  }
 
-  /* ── building outline ── */
-  ctx.strokeStyle = lineC; ctx.lineWidth = 1.8;
+  // leeward label — right of block, clamped to canvas
+  var lwLblX = bX + bW + lwW + 4;
+  var lwLblAnchor = 'left';
+  if (lwLblX + 50 > cW - mr) { lwLblX = bX + bW + lwW / 2; lwLblAnchor = 'center'; }
+  ctx.font = 'bold 9.5px system-ui,sans-serif'; ctx.textAlign = lwLblAnchor;
+  ctx.fillStyle = isDark ? '#fca5a5' : '#b91c1c';
+  ctx.fillText('−' + f(lwP,1) + pu, lwLblX, bY + bH/2 + 4);
+
+  // ── building outline ──
+  ctx.strokeStyle = lineC; ctx.lineWidth = 2;
   ctx.strokeRect(bX, bY, bW, bH);
 
-  /* ── roof gable ── */
+  // ── gable roof (drawn over roof block) ──
+  var ridgeH = Math.max(18, Math.round(bH * 0.18));
   ctx.beginPath(); ctx.moveTo(bX, bY);
-  ctx.lineTo(bX + bW/2, bY - roofH - 4); ctx.lineTo(bX + bW, bY);
-  ctx.strokeStyle = lineC; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.lineTo(bX + bW/2, bY - ridgeH);
+  ctx.lineTo(bX + bW, bY);
+  ctx.strokeStyle = lineC; ctx.lineWidth = 1.8; ctx.stroke();
 
-  /* ── ground line + hatch ── */
-  var gY = bY + bH;
+  // ── ground line + hatch ──
   ctx.strokeStyle = lineC; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(ml - 10, gY); ctx.lineTo(cW - 6, gY); ctx.stroke();
-  ctx.strokeStyle = dimC; ctx.lineWidth = 1;
-  for (var gi = 0; gi < 12; gi++) {
-    var gx = ml - 4 + gi * Math.round((cW - ml) / 12);
-    ctx.beginPath(); ctx.moveTo(gx, gY); ctx.lineTo(gx - 7, gY + 8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ml - 8, gY); ctx.lineTo(cW - 4, gY); ctx.stroke();
+  ctx.strokeStyle = dimC; ctx.lineWidth = 0.9;
+  for (var gi = 0; gi < 14; gi++) {
+    var gx = ml + gi * Math.round((cW - ml - 4) / 14);
+    ctx.beginPath(); ctx.moveTo(gx, gY); ctx.lineTo(gx - 6, gY + 7); ctx.stroke();
   }
 
-  /* ── height dimension line ── */
-  ctx.strokeStyle = dimC; ctx.lineWidth = 0.9;
-  ctx.beginPath(); ctx.moveTo(ml - 14, bY); ctx.lineTo(ml - 14, gY); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(ml - 18, bY); ctx.lineTo(ml - 10, bY); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(ml - 18, gY); ctx.lineTo(ml - 10, gY); ctx.stroke();
-  ctx.save(); ctx.translate(ml - 26, (bY + gY) / 2); ctx.rotate(-Math.PI / 2);
-  ctx.fillStyle = lblC; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'center';
+  // ── height dimension ──
+  var dimX = ml - 14;
+  ctx.strokeStyle = dimC; ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(dimX, bY); ctx.lineTo(dimX, gY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(dimX - 4, bY); ctx.lineTo(dimX + 4, bY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(dimX - 4, gY); ctx.lineTo(dimX + 4, gY); ctx.stroke();
+  ctx.save(); ctx.translate(dimX - 10, (bY + gY) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = dimC; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('h', 0, 3); ctx.restore();
 
-  /* ── height labels ── */
-  var u = isUS ? 'ft' : 'm';
-  var step = Math.max(1, Math.ceil(n / 5));
-  ctx.font = '8.5px system-ui,sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = dimC;
-  for (var j = 0; j < n; j += step) {
+  // ── height labels on windward side ──
+  var hStep = Math.max(1, Math.ceil(n / 5));
+  ctx.font = '8px system-ui,sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = dimC;
+  for (var j = 0; j < n; j += hStep) {
     var yt = zy(profile[j].z);
-    ctx.fillText(Math.round(profile[j].z) + ' ' + u, bX - pMaxW - 4, yt + 3);
+    ctx.fillText(Math.round(profile[j].z) + hu, bX - pMaxW - 4, yt + 3);
     ctx.beginPath(); ctx.moveTo(bX - 2, yt); ctx.lineTo(bX + 2, yt);
-    ctx.strokeStyle = dimC; ctx.lineWidth = 0.7; ctx.stroke();
+    ctx.strokeStyle = dimC; ctx.lineWidth = 0.6; ctx.stroke();
   }
 
-  /* ── top pressure label ── */
-  var topR = profile[n-1];
-  ctx.font = 'bold 9px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lblC;
-  ctx.fillText(f(topR.pww, 1) + (isUS ? ' psf' : ' kPa'), bX - pw(topR.pww) / 2, bY - 4);
-
-  /* ── leeward pressure label (inside block) ── */
-  ctx.font = '9px system-ui,sans-serif'; ctx.fillStyle = lblC;
-  ctx.fillText('−' + f(lwP, 1), bX + bW + lwW / 2, bY + bH / 2 + 4);
-
-  /* ── wind arrow ── */
-  var arrowY = bY + bH * 0.55;
-  var arrowTip = bX - pMaxW - 5;
-  var arrowStart = Math.max(6, arrowTip - 38);
-  ctx.strokeStyle = isDark ? '#94a3b8' : '#475569'; ctx.lineWidth = 1.8;
-  ctx.beginPath(); ctx.moveTo(arrowStart, arrowY); ctx.lineTo(arrowTip, arrowY); ctx.stroke();
-  ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+  // ── wind arrow ──
+  var arrowY   = bY + bH * 0.55;
+  var arrowTip = bX - pMaxW - 4;
+  var arrowStart = Math.max(8, arrowTip - 34);
+  ctx.strokeStyle = isDark ? '#94a3b8' : '#64748b'; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(arrowStart, arrowY); ctx.lineTo(arrowTip - 1, arrowY); ctx.stroke();
+  ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
   ctx.beginPath(); ctx.moveTo(arrowTip, arrowY);
   ctx.lineTo(arrowTip - 8, arrowY - 4); ctx.lineTo(arrowTip - 8, arrowY + 4);
   ctx.closePath(); ctx.fill();
-  ctx.font = 'bold 10px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-  ctx.fillText('V', arrowStart + (arrowTip - arrowStart) / 2, arrowY - 6);
+  ctx.font = 'bold 10px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+  ctx.fillText('V', (arrowStart + arrowTip) / 2, arrowY - 6);
 
-  /* ── Windward / Leeward floor labels (clamped) ── */
-  ctx.font = '8.5px system-ui,sans-serif'; ctx.fillStyle = lblC; ctx.textAlign = 'center';
-  ctx.fillText('Windward', bX - pMaxW / 2, bY + bH + 14);
-  var lwLabelX = Math.min(bX + bW + lwW / 2, cW - mr);
-  ctx.fillText('Leeward', lwLabelX, bY + bH + 14);
+  // ── zone floor labels ──
+  ctx.font = '8.5px system-ui,sans-serif'; ctx.fillStyle = dimC; ctx.textAlign = 'center';
+  ctx.fillText('Windward', bX - pMaxW / 2, gY + 14);
+  ctx.fillText('Roof (suction)', bX + bW / 2, gY + 14);
+  var lwFloorX = Math.min(bX + bW + lwW / 2, cW - mr - 20);
+  ctx.fillText('Leeward', lwFloorX, gY + 14);
 
-  /* ── caption ── */
-  ctx.fillStyle = dimC; ctx.font = '8px system-ui,sans-serif'; ctx.textAlign = 'center';
+  // ── caption ──
+  ctx.fillStyle = dimC; ctx.font = '7.5px system-ui,sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('Pressure profile · Ch.27 Directional · ASCE 7-22', cW / 2, cH - 5);
 }
 
