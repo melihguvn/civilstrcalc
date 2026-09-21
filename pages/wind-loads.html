@@ -138,6 +138,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rpt-t td:not(:first-child){text-align:center;font-weight:500;}
 .rpt-ft{display:flex;justify-content:space-between;align-items:center;border-top:1pt solid #0d1f3c;padding-top:3pt;margin-top:5pt;font-size:4.5pt;color:#9ca3af;}
 .rpt-ft-disc{color:#b45309;font-style:italic;}
+.rpt-pt2{display:grid;grid-template-columns:1fr 1fr;gap:5pt;margin-bottom:4pt;}
+.rpt-pt{width:100%;border-collapse:collapse;font-size:6pt;}
+.rpt-pt td{padding:2pt 4pt;border-bottom:.5pt solid #e5ecf5;}
+.rpt-pt tr:first-child td{border-top:.5pt solid #dde6f0;}
+.rpt-pt td:first-child{color:#64748b;font-size:5.5pt;width:58%;}
+.rpt-pt td:last-child{font-weight:700;color:#0d1f3c;text-align:right;}
+.rpt-fml{background:#f8fafc;border-left:3pt solid #4fb896;padding:4pt 7pt;font-size:6pt;font-family:monospace;color:#0d1f3c;margin:3pt 0 4pt;line-height:1.85;}
+.rpt-fml-hd{font-family:'Helvetica Neue',Arial,sans-serif;font-size:5pt;font-weight:700;color:#1a5c8e;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:2pt;}
+.rpt-res{display:flex;gap:5pt;margin:4pt 0 5pt;}
+.rpt-res-box{flex:1;padding:5pt 6pt;border-radius:2pt;text-align:center;}
+.rpt-res-pos{background:#dbeafe;border:1pt solid #93c5fd;}
+.rpt-res-neg{background:#fee2e2;border:1pt solid #fca5a5;}
+.rpt-res-lbl{font-size:5pt;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b;display:block;margin-bottom:2pt;}
+.rpt-res-val{font-size:12pt;font-weight:800;color:#0d1f3c;}
+.rpt-res-unit{font-size:5pt;color:#9ca3af;display:block;margin-top:1pt;}
 @media print{html,body{display:block!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;background:#fff!important;}body>*{display:none!important;}#pdf-report{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}#pdf-report .rpt{width:100%!important;box-sizing:border-box!important;}@page{margin:10mm 12mm;size:A4;}}
 
 /* ── EN secondary tabs ── */
@@ -2834,23 +2849,39 @@ function getSvgDiagram(proc) {
   var arB='<defs><marker id="arB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="#1d4ed8"/></marker></defs>';
   var arL='<defs><marker id="arL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto"><path d="M6,0 L6,6 L0,3z" fill="#374151"/></marker></defs>';
 
-  if(proc==='ch28') return W+ar+
-    '<rect x="30" y="10" width="460" height="90" fill="#f8fafb" stroke="#1a2332" stroke-width="1.5"/>'+
-    '<rect x="30" y="10" width="70" height="90" fill="#e0f2fe" stroke="#64748b" stroke-width="0.7" stroke-dasharray="3,2"/>'+
-    '<rect x="420" y="10" width="70" height="90" fill="#e0f2fe" stroke="#64748b" stroke-width="0.7" stroke-dasharray="3,2"/>'+
-    '<line x1="30" y1="55" x2="490" y2="55" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="4,3"/>'+
-    '<text x="65" y="38" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">1E/2E</text>'+
-    '<text x="65" y="80" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">4E/5E</text>'+
-    '<text x="260" y="38" text-anchor="middle" font-size="10" fill="#374151">Roof Zones 1 / 2 / 3</text>'+
-    '<text x="260" y="80" text-anchor="middle" font-size="10" fill="#374151">Wall Zones 4 / 5</text>'+
-    '<text x="455" y="38" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">1E/2E</text>'+
-    '<text x="455" y="80" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">4E/5E</text>'+
-    '<line x1="3" y1="55" x2="26" y2="55" stroke="#374151" stroke-width="2" marker-end="url(#ar)"/>'+
-    '<text x="2" y="47" font-size="9" fill="#374151" font-weight="bold">V</text>'+
-    '<line x1="30" y1="5" x2="100" y2="5" stroke="#94a3b8" stroke-width="0.7"/><line x1="30" y1="3" x2="30" y2="7" stroke="#94a3b8" stroke-width="0.7"/><line x1="100" y1="3" x2="100" y2="7" stroke="#94a3b8" stroke-width="0.7"/>'+
-    '<text x="65" y="4" text-anchor="middle" font-size="8" fill="#6b7280">a</text>'+
-    '<text x="260" y="107" text-anchor="middle" font-size="8" fill="#9ca3af">Building Plan — End zone E width a = 10% least plan dim. (LC1 shown)</text>'+
-    '</svg>';
+  if(proc==='ch28'){
+    var d8=_rptData||{}, lc1=d8.lc1||{};
+    var u8=isUS?'psf':'kPa';
+    var z4=(lc1['4']||{}), z4E=(lc1['4E']||{}), z5=(lc1['5']||{});
+    var wallPos=z4.pPos!=null?'+'+f(z4.pPos,1)+' '+u8:'';
+    var wallNeg=z5.pNeg!=null?f(z5.pNeg,1)+' '+u8:'';
+    var endPos=z4E.pPos!=null?'+'+f(z4E.pPos,1)+' '+u8:'';
+    return W+arB+
+      '<line x1="0" y1="114" x2="520" y2="114" stroke="#94a3b8" stroke-width="1"/>'+
+      '<rect x="52" y="8" width="416" height="28" fill="#fee2e2" stroke="#1a2332" stroke-width="1.5"/>'+
+      '<rect x="52" y="8" width="66" height="28" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
+      '<rect x="402" y="8" width="66" height="28" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
+      '<rect x="52" y="36" width="416" height="78" fill="#dbeafe" stroke="#1a2332" stroke-width="1.5"/>'+
+      '<rect x="52" y="36" width="66" height="78" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
+      '<rect x="402" y="36" width="66" height="78" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
+      '<text x="85" y="26" text-anchor="middle" font-size="8" font-weight="bold" fill="#92400e">1E / 2E / 3E</text>'+
+      '<text x="260" y="26" text-anchor="middle" font-size="9" fill="#b91c1c">Roof Zones 1 / 2 / 3</text>'+
+      '<text x="435" y="26" text-anchor="middle" font-size="8" font-weight="bold" fill="#92400e">1E / 2E / 3E</text>'+
+      '<text x="85" y="70" text-anchor="middle" font-size="8" font-weight="bold" fill="#92400e">4E / 5E</text>'+
+      '<text x="260" y="67" text-anchor="middle" font-size="9" fill="#1e40af">Wall Zones 4 / 5</text>'+
+      '<text x="435" y="70" text-anchor="middle" font-size="8" font-weight="bold" fill="#92400e">4E / 5E</text>'+
+      (wallPos?'<text x="210" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">'+wallPos+'</text>':'')+
+      (wallNeg?'<text x="320" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#b91c1c">'+wallNeg+'</text>':'')+
+      (endPos?'<text x="85" y="92" text-anchor="middle" font-size="8" font-weight="bold" fill="#1d4ed8">'+endPos+'</text>':'')+
+      '<line x1="5" y1="75" x2="47" y2="75" stroke="#1d4ed8" stroke-width="2" marker-end="url(#arB)"/>'+
+      '<text x="7" y="66" font-size="10" fill="#1d4ed8" font-weight="bold">V</text>'+
+      '<line x1="52" y1="4" x2="118" y2="4" stroke="#94a3b8" stroke-width="0.7"/>'+
+      '<line x1="52" y1="2" x2="52" y2="6" stroke="#94a3b8" stroke-width="0.7"/>'+
+      '<line x1="118" y1="2" x2="118" y2="6" stroke="#94a3b8" stroke-width="0.7"/>'+
+      '<text x="85" y="3.5" text-anchor="middle" font-size="8" fill="#6b7280">a</text>'+
+      '<text x="260" y="109" text-anchor="middle" font-size="8" fill="#9ca3af">Building Elevation (LC1: Wind ⊥ Ridge) — ASCE 7-22 Ch.28 MWFRS Low-rise</text>'+
+      '</svg>';
+  }
 
   if(proc==='ch27') return W+arB+
     '<line x1="0" y1="104" x2="520" y2="104" stroke="#94a3b8" stroke-width="1"/>'+
@@ -3037,6 +3068,8 @@ function printReport() {
   function pc(v){return v>=0?'color:#1d4ed8;font-weight:600':'color:#b91c1c;font-weight:600';}
   function ef(v,dp){return (v==null||isNaN(v))?'—':(+v).toFixed(dp);}
   function sg(v,dp){return (typeof v==='number'&&isFinite(v))?((v>=0?'+':'')+v.toFixed(dp)):'—';}
+  function ptr(l,v){return '<tr><td>'+l+'</td><td>'+v+'</td></tr>';}
+  function ptbl(rows){return '<table class="rpt-pt">'+rows+'</table>';}
 
   if (isEN) {
     var activePaneEl=document.querySelector('.en-inner-pane.active');
@@ -3132,19 +3165,49 @@ function printReport() {
     if(!_rptData) return;
     var p=_rptData;
     var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', vu=isUS?'mph':'m/s', Au=isUS?'ft²':'m²', Fu=isUS?'plf':'kN/m';
-    h+=sh('Inputs')+'<div class="rpt-g4">';
-    h+=kv('V ('+vu+')',f(p.V_raw,1))+kv('L ('+hu+')',f(p.L_raw,1))+kv('B ('+hu+')',f(p.B_raw,1))+kv('h ('+hu+')',f(p.h_raw,1));
-    h+=kv('Exposure',p.expo)+kv('K<sub>zt</sub>',f(p.Kzt,3))+kv('K<sub>e</sub>',f(p.Ke,3))+kv('K<sub>d</sub>','0.85');
-    h+='</div>';
+    // Shared velocity pressure formula block (all ASCE procedures share q_h)
+    var qhCoef=isUS?'0.00256':'0.613';
+    var qhFml='<div class="rpt-fml"><span class="rpt-fml-hd">Velocity Pressure — ASCE 7-22 Eq. 26.10-1</span>'+
+      'q_h = '+qhCoef+' · K_h · K_zt · K_e · K_d · V²<br>'+
+      '    = '+qhCoef+' · '+f(p.Kh,3)+' · '+f(p.Kzt,3)+' · '+f(p.Ke,3)+' · 0.85 · '+f(p.V_raw,0)+'²<br>'+
+      '    = <b style="font-family:inherit;">'+f(p.qh,2)+' '+u+'</b></div>';
+    // Shared inputs half-table (left col of 2-col layout)
+    var inLeft=ptbl(
+      ptr('Wind Speed V ('+vu+')',f(p.V_raw,1))+
+      ptr('Building Length L ('+hu+')',f(p.L_raw,1))+
+      ptr('Building Width B ('+hu+')',f(p.B_raw,1))+
+      ptr('Mean Roof Height h ('+hu+')',f(p.h_raw,1))+
+      ptr('Exposure Category',p.expo)
+    );
+    // Shared factors half-table (right col)
+    var inRight=ptbl(
+      ptr('K<sub>zt</sub> — Topographic Factor',f(p.Kzt,3))+
+      ptr('K<sub>e</sub> — Ground Elevation',f(p.Ke,3))+
+      ptr('K<sub>d</sub> — Wind Directionality','0.85')+
+      ptr('K<sub>h</sub> — Vel. Pressure Coeff.',f(p.Kh,3))+
+      ptr('q<sub>h</sub> — Velocity Pressure ('+u+')',f(p.qh,2))
+    );
 
     if(p.proc==='ch28'){
       document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 28 Envelope';
       document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — Low-rise Building';
-      h+=sh('Factors')+'<div class="rpt-g4">';
-      h+=kv('K<sub>h</sub>',f(p.Kh,3))+kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('a ('+hu+')',f(p.a,2));
+      h+=sh('Design Parameters')+'<div class="rpt-pt2">'+inLeft+inRight+'</div>'+qhFml;
+      // Max pressure summary box
+      var mxPos=-999, mxNeg=999;
+      ['lc1','lc2'].forEach(function(lc){
+        var zz=p[lc]||{};
+        Object.keys(zz).forEach(function(z){var d=zz[z];if(d.pPos!=null&&d.pPos>mxPos)mxPos=d.pPos;if(d.pNeg!=null&&d.pNeg<mxNeg)mxNeg=d.pNeg;});
+      });
+      h+='<div class="rpt-res">';
+      h+='<div class="rpt-res-box rpt-res-pos"><span class="rpt-res-lbl">Max Design Pressure (+)</span><span class="rpt-res-val">+'+(mxPos>-999?f(mxPos,1):'—')+'</span><span class="rpt-res-unit">'+u+' · Governs inward (all zones)</span></div>';
+      h+='<div class="rpt-res-box rpt-res-neg"><span class="rpt-res-lbl">Max Design Pressure (−)</span><span class="rpt-res-val">'+(mxNeg<999?f(mxNeg,1):'—')+'</span><span class="rpt-res-unit">'+u+' · Governs outward / suction</span></div>';
       h+='</div>';
+      h+=sh('Envelope Parameters')+'<div class="rpt-pt2">'+
+        ptbl(ptr('Internal Pressure Coeff. GC<sub>pi</sub>','±'+f(p.GCpi,2))+ptr('End Zone Width a ('+hu+')',f(p.a,2)))+
+        ptbl(ptr('Load Case 1 — Wind ⊥ Ridge','LC1')+ptr('Load Case 2 — Wind ∥ Ridge','LC2'))+
+      '</div>';
       function zTbl28(zones,labels,title){
-        var t=sh(title)+'<table class="rpt-t"><thead><tr><th>Zone</th><th>GCpf</th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
+        var t=sh(title)+'<table class="rpt-t"><thead><tr><th>Zone</th><th>GC<sub>pf</sub></th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
         ['1','1E','2','2E','3','3E','4','4E','5','5E'].forEach(function(z){
           var dd=zones[z]; if(!dd) return;
           t+='<tr><td style="font-size:5.5pt;">'+(labels[z]||z)+'</td><td>'+sg(dd.gcpf,2)+'</td>';
@@ -3161,10 +3224,31 @@ function printReport() {
     } else if(p.proc==='ch27'){
       document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 27 Directional';
       document.getElementById('rpt-subtitle').textContent='MWFRS Design Wind Pressures — All Heights';
-      h+=sh('Key Factors')+'<div class="rpt-g4">';
-      h+=kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('G',f(p.G,3))+kv('C<sub>p,ww</sub>','+0.80')+kv('C<sub>p,lw</sub>',fSign(p.Cp_lw,2));
-      h+=kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('θ (°)',f(p.theta,0))+kv('L/B',f(p.LB,2))+kv('Exposure',p.expo);
-      h+='</div>'+getSvgDiagram('ch27')+sh('Surface Design Pressures');
+      var inRight27=ptbl(
+        ptr('K<sub>zt</sub> — Topographic Factor',f(p.Kzt,3))+
+        ptr('K<sub>e</sub> — Ground Elevation',f(p.Ke,3))+
+        ptr('K<sub>d</sub> — Wind Directionality','0.85')+
+        ptr('Gust Factor G',f(p.G,3))+
+        ptr('GC<sub>pi</sub> (Internal Pressure)','±'+f(p.GCpi,2))
+      );
+      var inLeft27=ptbl(
+        ptr('Wind Speed V ('+vu+')',f(p.V_raw,1))+
+        ptr('Building Height h ('+hu+')',f(p.h_raw,1))+
+        ptr('Exposure Category',p.expo)+
+        ptr('Roof Pitch θ (°)',f(p.theta,0))+
+        ptr('L/B Ratio',f(p.LB,2))
+      );
+      h+=sh('Design Parameters')+'<div class="rpt-pt2">'+inLeft27+inRight27+'</div>'+qhFml;
+      // Max pressure summary
+      var mxWW=-999, mnLW=999;
+      var topRow=p.profile&&p.profile.length?p.profile[p.profile.length-1]:null;
+      if(topRow) mxWW=topRow.pww;
+      (p.surfs||[]).forEach(function(s){if(s.skip||s.Cp==null)return;var pN=p.qh*p.G*s.Cp-p.qh*p.GCpi;if(pN<mnLW)mnLW=pN;});
+      h+='<div class="rpt-res">';
+      h+='<div class="rpt-res-box rpt-res-pos"><span class="rpt-res-lbl">Windward Wall @ h</span><span class="rpt-res-val">+'+(mxWW>-999?f(mxWW,1):'—')+'</span><span class="rpt-res-unit">'+u+' · Maximum positive pressure</span></div>';
+      h+='<div class="rpt-res-box rpt-res-neg"><span class="rpt-res-lbl">Max Suction (Roof/Leeward)</span><span class="rpt-res-val">'+(mnLW<999?f(mnLW,1):'—')+'</span><span class="rpt-res-unit">'+u+' · Worst case suction</span></div>';
+      h+='</div>';
+      h+=getSvgDiagram('ch27')+sh('Surface Design Pressures');
       h+='<table class="rpt-t"><thead><tr><th>Surface</th><th>C<sub>p</sub></th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
       (p.surfs||[]).forEach(function(s){
         if(s.skip||s.Cp==null) return;
@@ -3182,9 +3266,23 @@ function printReport() {
     } else if(p.proc==='ch30'){
       document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Ch. 30 C&C';
       document.getElementById('rpt-subtitle').textContent='Components & Cladding Design Pressures';
-      h+=sh('Factors')+'<div class="rpt-g4">';
-      h+=kv('q<sub>h</sub> ('+u+')',f(p.qh,2))+kv('GC<sub>pi</sub>','±'+f(p.GCpi,2))+kv('A<sub>eff</sub> ('+Au+')',f(p.Aeff_raw,1))+kv('a ('+hu+')',f(p.a,2));
-      h+='</div>'+getSvgDiagram('ch30')+sh('Zone Pressures — '+(p.surfLabel||p.surface));
+      var selRow=(p.ch30Rows||[]).find(function(r){return r.sel;});
+      h+=sh('Design Parameters')+'<div class="rpt-pt2">'+inLeft+
+        ptbl(
+          ptr('K<sub>zt</sub> — Topographic Factor',f(p.Kzt,3))+
+          ptr('K<sub>e</sub> — Ground Elevation',f(p.Ke,3))+
+          ptr('K<sub>d</sub> — Directionality','0.85')+
+          ptr('A<sub>eff</sub> — Tributary Area ('+Au+')',f(p.Aeff_raw,1))+
+          ptr('End Zone Width a ('+hu+')',f(p.a,2))
+        )+
+      '</div>'+qhFml;
+      if(selRow){
+        h+='<div class="rpt-res">';
+        h+='<div class="rpt-res-box rpt-res-pos"><span class="rpt-res-lbl">Design Pressure (+)</span><span class="rpt-res-val">+'+f(selRow.pPos,1)+'</span><span class="rpt-res-unit">'+u+' · A<sub>eff</sub>='+selRow.A+' '+Au+' · GC<sub>p</sub>=+'+f(selRow.gcpPos,2)+'</span></div>';
+        h+='<div class="rpt-res-box rpt-res-neg"><span class="rpt-res-lbl">Design Pressure (−)</span><span class="rpt-res-val">'+f(selRow.pNeg,1)+'</span><span class="rpt-res-unit">'+u+' · GC<sub>pi</sub>=±'+f(p.GCpi,2)+' · Surface: '+(p.surfLabel||p.surface)+'</span></div>';
+        h+='</div>';
+      }
+      h+=getSvgDiagram('ch30')+sh('Zone Pressures — '+(p.surfLabel||p.surface));
       h+='<table class="rpt-t"><thead><tr><th>A<sub>eff</sub> ('+Au+')</th><th>GC<sub>p</sub>⁺</th><th>GC<sub>p</sub>⁻</th><th>p⁺ ('+u+')</th><th>p⁻ ('+u+')</th></tr></thead><tbody>';
       (p.ch30Rows||[]).forEach(function(row){
         var bld=row.sel?'font-weight:700;':'';
@@ -3193,14 +3291,25 @@ function printReport() {
         h+='<td style="'+bld+'color:#b91c1c;">'+sg(row.pNeg,1)+'</td></tr>';
       });
       h+='</tbody></table>';
-      h+='<div style="font-size:5pt;color:#9ca3af;margin-top:2pt;">Minimum ±'+f(p.minP,0)+' '+u+' applied. Bold row = selected A<sub>eff</sub>.</div>';
+      h+='<div style="font-size:5pt;color:#9ca3af;margin-top:2pt;">Min. ±'+f(p.minP,0)+' '+u+' per ASCE 7-22 §30.4.5. Bold row = selected A<sub>eff</sub>.</div>';
 
     } else {
       document.getElementById('rpt-title').textContent='Wind Load Report — ASCE 7-22 Parapets §27.3.5';
       document.getElementById('rpt-subtitle').textContent='Parapet MWFRS Design Pressures';
-      h+=sh('Parapet Parameters')+'<div class="rpt-g4">';
-      h+=kv('h<sub>p</sub> ('+hu+')',f(p.hp_raw,2))+kv('h+h<sub>p</sub> ('+hu+')',f(p.htot,2))+kv('K<sub>p</sub>',f(p.Kp,3))+kv('q<sub>p</sub> ('+u+')',f(p.qp,2));
-      h+='</div>'+getSvgDiagram('prpt')+sh('Parapet Design Pressures');
+      h+=sh('Design Parameters')+'<div class="rpt-pt2">'+inLeft+
+        ptbl(
+          ptr('Parapet Height h<sub>p</sub> ('+hu+')',f(p.hp_raw,2))+
+          ptr('h + h<sub>p</sub> ('+hu+')',f(p.htot,2))+
+          ptr('K<sub>p</sub> (Vel. Pressure Coeff.)',f(p.Kp,3))+
+          ptr('q<sub>p</sub> — Parapet Vel. Pressure ('+u+')',f(p.qp,2))+
+          ptr('K<sub>d</sub> / K<sub>zt</sub> / K<sub>e</sub>','0.85 / '+f(p.Kzt,3)+' / '+f(p.Ke,3))
+        )+
+      '</div>';
+      h+='<div class="rpt-fml"><span class="rpt-fml-hd">Parapet Velocity Pressure — ASCE 7-22 Eq. 27.3-1</span>'+
+        'q_p = '+qhCoef+' · K_p · K_zt · K_e · K_d · V²<br>'+
+        '    = '+qhCoef+' · '+f(p.Kp,3)+' · '+f(p.Kzt,3)+' · '+f(p.Ke,3)+' · 0.85 · '+f(p.V_raw,0)+'²<br>'+
+        '    = <b style="font-family:inherit;">'+f(p.qp,2)+' '+u+'</b></div>';
+      h+=getSvgDiagram('prpt')+sh('Parapet Design Pressures');
       h+='<table class="rpt-t"><thead><tr><th>Location</th><th>GC<sub>pn</sub></th><th>p ('+u+')</th><th>F/L ('+Fu+')</th></tr></thead><tbody>';
       (p.prptRows||[]).forEach(function(row){
         h+='<tr><td>'+row.name+'</td>';
