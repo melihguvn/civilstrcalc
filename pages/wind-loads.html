@@ -159,7 +159,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .rp-pt td:first-child{color:#5a5a7a;font-size:7pt;width:60%;}
 .rp-pt td:last-child{font-weight:700;color:#1a1a1a;text-align:right;}
 /* Formula derivation block */
-.rp-fml{background:#f8f6ff;border-left:3pt solid #4B2E83;padding:5pt 8pt;font-family:'Courier New',monospace;font-size:7pt;color:#2c1a5e;margin:4pt 0 5pt;line-height:1.9;}
+.rp-fml{background:#f8f6ff;border-left:3pt solid #4B2E83;padding:5pt 8pt;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:7pt;color:#2c1a5e;margin:4pt 0 5pt;line-height:1.9;}
+.rp-unit{text-transform:none;}
 .rp-fml-hd{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:6pt;font-weight:700;color:#4B2E83;letter-spacing:.09em;text-transform:uppercase;display:block;margin-bottom:3pt;}
 /* Result summary boxes */
 .rp-res{display:flex;gap:6pt;margin:5pt 0 6pt;}
@@ -3180,7 +3181,7 @@ function printReport() {
     h='';
 
     function enZTbl(zones, roofType) {
-      var t='<table class="rp-t"><thead><tr><th>Zone</th><th>Surface</th><th>c<sub>pe</sub></th><th>w⁺ (kN/m²)</th><th>w⁻ (kN/m²)</th></tr></thead><tbody>';
+      var t='<table class="rp-t"><thead><tr><th>Zone</th><th>Surface</th><th>c<sub>pe</sub></th><th>w⁺ <span class="rp-unit">(kN/m²)</span></th><th>w⁻ <span class="rp-unit">(kN/m²)</span></th></tr></thead><tbody>';
       var isW=true, monoSec=0;
       zones.forEach(function(z){
         var isRoof=['F','G','H','I','J'].indexOf(z.z)>=0;
@@ -3202,14 +3203,16 @@ function printReport() {
         ptbl(ptr('Roof Type',p.roof)+ptr('c<sub>dir</sub> × c<sub>season</sub>',ef(p.cdir,2)+' × '+ef(p.cseason,2))+ptr('c<sub>pi</sub> (Internal Pressure)','+'+ef(p.cpi_pos,2)+' / −'+ef(p.cpi_neg,2))+ptr('Enclosure Type',p.enc))+
       '</div>';
       h+='<div class="rp-fml"><span class="rp-fml-hd">Peak Velocity Pressure — EN §4.5</span>'+
-        'v_b = c_dir · c_season · v_b,0 = '+ef(p.cdir,2)+' · '+ef(p.cseason,2)+' · '+ef(p.vb0,1)+' = '+ef(p.vb,2)+' m/s<br>'+
-        'q_p(h) = [1 + 7·I_v(z)] · ½·ρ·v_m² = '+ef(p.qp_kN,4)+' kN/m²</div>';
-      h+=resPair('Peak Vel. Pressure q<sub>p</sub>(h)',ef(p.qp_kN,4),'Total Wind Force F<sub>w</sub>',ef(p.Fw_kN,1),'kN/m²  /  kN');
+        'v<sub>b</sub> = c<sub>dir</sub> · c<sub>season</sub> · v<sub>b,0</sub> = '+ef(p.cdir,2)+' · '+ef(p.cseason,2)+' · '+ef(p.vb0,1)+' = '+ef(p.vb,2)+' m/s<br>'+
+        'q<sub>p</sub>(h) = [1 + 7·I<sub>v</sub>(z)] · ½·ρ·v<sub>m</sub>² = '+ef(p.qp_kN,4)+' kN/m²</div>';
+      var _maxWp=0,_minWn=0;
+      p.zones.forEach(function(z){if((z.wpos||0)>_maxWp)_maxWp=z.wpos;if((z.wneg||0)<_minWn)_minWn=z.wneg;});
+      h+=resPair('Max. Pressure w<sup>+</sup>',ef(_maxWp,3),'Max. Suction w<sup>−</sup>',ef(_minWn,3),'kN/m²');
       h+=sh('Key Computed Values')+'<div class="rp-pt2">'+
         ptbl(ptr('v<sub>b</sub> — Design Wind Speed (m/s)',ef(p.vb,2))+ptr('z<sub>eff</sub> — Reference Height (m)',ef(p.zeff,1))+ptr('I<sub>v</sub> — Turbulence Intensity',ef(p.Iv,3)))+
         ptbl(ptr('c<sub>r</sub> — Roughness Factor',ef(p.cr,3))+ptr('v<sub>m</sub> — Mean Wind Speed (m/s)',ef(p.vm,2))+ptr('q<sub>p</sub>(h) — Peak Vel. Pressure (kN/m²)',ef(p.qp_kN,4)))+
       '</div>';
-      h+=getSvgDiagram('en-building')+sh('Zone Pressures')+enZTbl(p.zones, p.roof);
+      h+=getSvgDiagram('en-building')+'<div style="page-break-inside:avoid;break-inside:avoid;">'+sh('Zone Pressures')+enZTbl(p.zones, p.roof)+'</div>';
 
     } else if(p.proc==='en-wall'){
       document.getElementById('rp-title').textContent='Wind Load Design Report — EN 1991-1-4 Free-Standing Wall';
