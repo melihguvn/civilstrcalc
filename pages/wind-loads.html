@@ -2863,7 +2863,39 @@ function drawCh27Building(profile, qh, G, Cp_lw, Cp_roof_ww, theta) {
 // ZONE DIAGRAMS (SVG, inline — canvas doesn't print)
 // ═══════════════════════════════════════════════════════════
 function getSvgDiagram(proc) {
-  var W='<svg viewBox="0 0 520 110" style="width:100%;display:block;margin:3pt 0 5pt;border:.5pt solid #dde1e7;border-radius:2pt;background:#fff;">';
+  // Clone a DOM SVG into the PDF report with renamed IDs to avoid conflicts
+  function cloneSvgForPdf(el, pfx) {
+    if (!el) return '';
+    var svgEl = (el.tagName && el.tagName.toLowerCase()==='svg') ? el : el.querySelector('svg');
+    if (!svgEl) return '';
+    var html = svgEl.outerHTML;
+    // Collect all id values used in this SVG
+    var ids = [];
+    html.replace(/\bid="([^"]+)"/g, function(m, id) { ids.push(id); return m; });
+    // Rename each id and its url(#) / href="#" references
+    ids.forEach(function(id) {
+      var safe = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      html = html.replace(new RegExp('\\bid="' + safe + '"', 'g'), 'id="' + pfx + id + '"');
+      html = html.replace(new RegExp('url\\(#' + safe + '\\)', 'g'), 'url(#' + pfx + id + ')');
+      html = html.replace(new RegExp('href="#' + safe + '"', 'g'), 'href="#' + pfx + id + '"');
+    });
+    // Strip any existing style/width/height on <svg> tag and apply PDF style
+    html = html.replace(/^<svg\b[^>]*/i, function(tag) {
+      tag = tag.replace(/\s+style="[^"]*"/, '').replace(/\s+width="[^"]*"/, '').replace(/\s+height="[^"]*"/, '');
+      return tag + ' style="width:100%;display:block;margin:3pt 0 5pt;border:.5pt solid #dde1e7;border-radius:2pt;background:#fff;"';
+    });
+    return html;
+  }
+
+  // Use actual DOM SVGs for these (much richer than hand-coded schematics)
+  if (proc === 'ch30')       return cloneSvgForPdf(document.querySelector('[aria-label="C&C zone diagram"]'), 'pdf30_');
+  if (proc === 'prpt')       return cloneSvgForPdf(document.querySelector('[aria-label="Parapet pressure diagram"]'), 'pdfPp_');
+  if (proc === 'en-building') return cloneSvgForPdf(document.getElementById('en-diagram'), 'pdfEnB_');
+  if (proc === 'en-duo')     return cloneSvgForPdf(document.getElementById('duo-diagram'), 'pdfEnD_');
+  if (proc === 'en-mono')    return cloneSvgForPdf(document.getElementById('mono-diagram'), 'pdfEnM_');
+
+  // Generated schematics for cases without a rich DOM SVG
+  var W='<svg viewBox="0 0 520 120" style="width:100%;display:block;margin:3pt 0 5pt;border:.5pt solid #dde1e7;border-radius:2pt;background:#fff;">';
   var ar='<defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="#374151"/></marker></defs>';
   var arB='<defs><marker id="arB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="#1d4ed8"/></marker></defs>';
   var arL='<defs><marker id="arL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto"><path d="M6,0 L6,6 L0,3z" fill="#374151"/></marker></defs>';
@@ -2876,7 +2908,7 @@ function getSvgDiagram(proc) {
     var wallNeg=z5.pNeg!=null?f(z5.pNeg,1)+' '+u8:'';
     var endPos=z4E.pPos!=null?'+'+f(z4E.pPos,1)+' '+u8:'';
     return W+arB+
-      '<line x1="0" y1="114" x2="520" y2="114" stroke="#94a3b8" stroke-width="1"/>'+
+      '<line x1="0" y1="116" x2="520" y2="116" stroke="#94a3b8" stroke-width="1"/>'+
       '<rect x="52" y="8" width="416" height="28" fill="#fee2e2" stroke="#1a2332" stroke-width="1.5"/>'+
       '<rect x="52" y="8" width="66" height="28" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
       '<rect x="402" y="8" width="66" height="28" fill="#fde68a" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>'+
@@ -2898,7 +2930,7 @@ function getSvgDiagram(proc) {
       '<line x1="52" y1="2" x2="52" y2="6" stroke="#94a3b8" stroke-width="0.7"/>'+
       '<line x1="118" y1="2" x2="118" y2="6" stroke="#94a3b8" stroke-width="0.7"/>'+
       '<text x="85" y="3.5" text-anchor="middle" font-size="8" fill="#6b7280">a</text>'+
-      '<text x="260" y="109" text-anchor="middle" font-size="8" fill="#9ca3af">Building Elevation (LC1: Wind ⊥ Ridge) — ASCE 7-22 Ch.28 MWFRS Low-rise</text>'+
+      '<text x="260" y="112" text-anchor="middle" font-size="8" fill="#9ca3af">Building Elevation (LC1: Wind ⊥ Ridge) — ASCE 7-22 Ch.28 MWFRS Low-rise</text>'+
       '</svg>';
   }
 
