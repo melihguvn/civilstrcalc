@@ -353,11 +353,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="be-tbdy-fck" value="25" min="16" oninput="calcBe('tbdy')"><span class="us">MPa</span></div></div>
             <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="be-tbdy-fyk" value="420" min="220" oninput="calcBe('tbdy')"><span class="us">MPa</span></div></div>
           </div>
-          <div class="form-div"><div class="form-div-lbl">Design Loads</div></div>
-          <div class="form-row-2">
-            <div class="form-group"><label>N<sub>d</sub> (kN)</label><div class="iw"><input type="number" id="be-tbdy-nd" value="2000" min="0" oninput="calcBe('tbdy')"><span class="us">kN</span></div></div>
-            <div class="form-group"><label>M<sub>d</sub> (kN·m)</label><div class="iw"><input type="number" id="be-tbdy-md" value="8000" min="0" oninput="calcBe('tbdy')"><span class="us">kN·m</span></div></div>
-          </div>
           <div class="form-div"><div class="form-div-lbl">Seismic Hazard Level</div></div>
           <div style="display:flex;gap:6px;margin-bottom:14px;">
             <button class="unit-btn active" id="be-tbdy-dts12" onclick="setTbdyDts('12',this)">DTS 1 &amp; 2</button>
@@ -1610,80 +1605,75 @@ function calcBe(std){
   }
 
   if(std==='tbdy'){
-    if(_beTbdyCrit==='out'){
-      res.innerHTML=banner('ok','No Confined End Regions Required Above Critical Zone','TBDY 2018 §7.6.3.1 — confined end regions are required only within the critical wall height h_cr = max(l_w, H_w/6) from the base');
-      return;
-    }
     var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000,hw=v(m+'-hw')*1000;
     var fck=v(m+'-fck'),fyk=v(m+'-fyk');
-    var Nd_N=v(m+'-nd')*1000,Md_Nmm=v(m+'-md')*1e6;
     var cc=v(m+'-cc');
     if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'tbdy',res))return;
-    var Ac=lw*bw,Ig=bw*Math.pow(lw,3)/12;
-    var sig_max=Nd_N/Ac+Md_Nmm*(lw/2)/Ig;
-    var sig_lim=_tbdyDts==='12'?0.35*fck:0.40*fck;
-    var need=sig_max>sig_lim;
-    var lbe=Math.max(bw,lw/5,hw/10);
+    var inCrit=_beTbdyCrit==='in';
+    var lbe=inCrit?Math.max(bw,lw/5,hw/10):Math.max(bw,lw/10);
+    var smax_tb=inCrit?Math.min(bw/3,100):200; smax_tb=Math.max(smax_tb,20);
     var html='<div class="result-box">';
-    html+=ri('σ_max',fmt(sig_max),'MPa',need?'err':'ok');
-    html+=ri(_tbdyDts==='12'?'0.35f_ck':'0.40f_ck',fmt(sig_lim),'MPa','');
-    html+=ri('l_be',need?fmt(lbe,0):'—','mm',need?'ok':'');
+    html+=ri('Location',inCrit?'Within critical zone':'Above critical zone','',inCrit?'warn':'ok');
+    html+=ri('l_be',fmt(lbe,0),'mm','ok');
+    html+=ri('s_max',fmt(smax_tb,0),'mm','');
     html+='</div>';
-    html+=banner(need?'warn':'ok',need?'Confined End Regions REQUIRED':'Confined End Regions NOT Required',
-      'σmax='+fmt(sig_max)+'MPa'+(need?' > ':' ≤ ')+fmt(sig_lim)+'MPa');
-    if(need){
-      html+='<div class="report-card"><div class="report-body">';
-      html+='<div class="rpt-sec-title">Confined Zone Length (TBDY §7.6.6.1)</div>';
-      html+='<table class="steps-tbl"><tbody>';
+    html+=banner('warn','Confined End Regions REQUIRED','TBDY 2018 §7.6.6 — required at all wall ends'+(inCrit?' within critical zone':' above critical zone'));
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">Confined Zone Length (TBDY §7.6.6.1)</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    if(inCrit){
       html+=srow(1,'b_w',fmt(bw,0)+' mm','');
       html+=srow(2,'l_w/5',fmt(lw/5,0)+' mm','');
       html+=srow(3,'h_w/10',fmt(hw/10,0)+' mm','');
       html+=srow(4,'l_be = max(b_w, l_w/5, h_w/10)','<strong>'+fmt(lbe,0)+' mm</strong>','','chk-ok');
-      html+='</tbody></table></div></div>';
-      /* confinement check */
-      var fcd_tb=fck/1.5;
-      var s_tb=v(m+'-s')||50;
-      var dtie_tb=v(m+'-dtie')||10;
-      var nl_tb=Math.max(Math.round(v(m+'-nl')||2),1);
-      var nb_tb=Math.max(Math.round(v(m+'-nb')||2),1);
-      var Atie_tb=Math.PI*dtie_tb*dtie_tb/4;
-      var Ach_tb=Math.max((lbe-2*cc)*(bw-2*cc),100);
-      var Ac_be_tb=lbe*bw;
-      var bc_bw_tb=Math.max(bw-2*cc,20);
-      var bc_lbe_tb=Math.max(lbe-2*cc,20);
-      var rhos_req=Math.max(0.30*fcd_tb/fyk*(Ac_be_tb/Ach_tb-1),0.075*fcd_tb/fyk);
-      var Ash_req_bw_tb=rhos_req*bc_lbe_tb*s_tb;
-      var Ash_req_lbe_tb=rhos_req*bc_bw_tb*s_tb;
-      var Ash_prov_bw_tb=nl_tb*Atie_tb;
-      var Ash_prov_lbe_tb=nb_tb*Atie_tb;
-      var smax_tb=Math.min(bw/3,100); smax_tb=Math.max(smax_tb,20);
-      var ok_s_tb=s_tb<=smax_tb+0.01;
-      var ok_bw_tb=Ash_prov_bw_tb>=Ash_req_bw_tb-0.01;
-      var ok_lbe_tb=Ash_prov_lbe_tb>=Ash_req_lbe_tb-0.01;
-      html+='<div class="report-card"><div class="report-body">';
-      html+='<div class="rpt-sec-title">Confinement Steel Check (TBDY §7.6.3.3)</div>';
-      html+='<table class="steps-tbl"><tbody>';
-      html+=srow(1,'f_cd = f_ck/1.5',fmt(fcd_tb,2)+' MPa','');
-      html+=srow(2,'A_tie = π·d_tie²/4',fmt(Atie_tb,0)+' mm²','');
-      html+=srow(3,'A_ch = (l_be−2c_c)·(b_w−2c_c)',fmt(Ach_tb,0)+' mm²','');
-      html+=srow(4,'A_c,be = l_be·b_w',fmt(Ac_be_tb,0)+' mm²','');
-      html+=srow(5,'ρ_s,req = max(0.30f_cd/f_yk·(Ac/Ach−1), 0.075f_cd/f_yk)',fmt(rhos_req,4),'');
-      html+=srow(6,'s_max = min(b_w/3, 100 mm) — critical zone',fmt(smax_tb,0)+' mm','');
-      html+=srow(7,'Provided s',fmt(s_tb,0)+' mm ≤ s_max?',ok_s_tb?'✓':'✗',ok_s_tb?'chk-ok':'chk-err');
-      html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ l<sub>be</sub> — n<sub>l</sub> = '+nl_tb+' legs (confine b<sub>w</sub> core, b<sub>c</sub> = '+fmt(bc_bw_tb,0)+' mm)</td></tr>';
-      html+=srow(8,'A_sh,req = ρ_s·b_c,lbe·s',fmt(Ash_req_bw_tb,0)+' mm²','');
-      html+=srow(9,'A_sh,prov = n_l·A_tie',fmt(Ash_prov_bw_tb,0)+' mm²',ok_bw_tb?'✓':'✗',ok_bw_tb?'chk-ok':'chk-err');
-      html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ b<sub>w</sub> — n<sub>b</sub> = '+nb_tb+' legs (confine l<sub>be</sub> core, b<sub>c</sub> = '+fmt(bc_lbe_tb,0)+' mm)</td></tr>';
-      html+=srow(10,'A_sh,req = ρ_s·b_c,bw·s',fmt(Ash_req_lbe_tb,0)+' mm²','');
-      html+=srow(11,'A_sh,prov = n_b·A_tie',fmt(Ash_prov_lbe_tb,0)+' mm²',ok_lbe_tb?'✓':'✗',ok_lbe_tb?'chk-ok':'chk-err');
-      html+='</tbody></table>';
-      var allok_tb=ok_s_tb&&ok_bw_tb&&ok_lbe_tb;
-      html+=banner(allok_tb?'ok':'err',allok_tb?'Confinement ADEQUATE':'Confinement INADEQUATE',
-        [ok_s_tb?null:'s exceeds s_max',ok_bw_tb?null:'A_sh ∥ l_be insufficient',ok_lbe_tb?null:'A_sh ∥ b_w insufficient'].filter(Boolean).join(' | ')||'All checks pass');
-      html+='</div></div>';
-      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe,'be-tbdy')+'</div></div>';
+    } else {
+      html+=srow(1,'b_w',fmt(bw,0)+' mm','');
+      html+=srow(2,'l_w/10',fmt(lw/10,0)+' mm','');
+      html+=srow(3,'l_be = max(b_w, l_w/10)','<strong>'+fmt(lbe,0)+' mm</strong>','','chk-ok');
     }
+    html+='</tbody></table></div></div>';
+    /* confinement check */
+    var fcd_tb=fck/1.5;
+    var s_tb=v(m+'-s')||50;
+    var dtie_tb=v(m+'-dtie')||10;
+    var nl_tb=Math.max(Math.round(v(m+'-nl')||2),1);
+    var nb_tb=Math.max(Math.round(v(m+'-nb')||2),1);
+    var Atie_tb=Math.PI*dtie_tb*dtie_tb/4;
+    var Ach_tb=Math.max((lbe-2*cc)*(bw-2*cc),100);
+    var Ac_be_tb=lbe*bw;
+    var bc_bw_tb=Math.max(bw-2*cc,20);
+    var bc_lbe_tb=Math.max(lbe-2*cc,20);
+    var rhos_req=Math.max(0.30*fcd_tb/fyk*(Ac_be_tb/Ach_tb-1),0.075*fcd_tb/fyk);
+    var Ash_req_bw_tb=rhos_req*bc_lbe_tb*s_tb;
+    var Ash_req_lbe_tb=rhos_req*bc_bw_tb*s_tb;
+    var Ash_prov_bw_tb=nl_tb*Atie_tb;
+    var Ash_prov_lbe_tb=nb_tb*Atie_tb;
+    var ok_s_tb=s_tb<=smax_tb+0.01;
+    var ok_bw_tb=Ash_prov_bw_tb>=Ash_req_bw_tb-0.01;
+    var ok_lbe_tb=Ash_prov_lbe_tb>=Ash_req_lbe_tb-0.01;
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">Confinement Steel Check (TBDY §7.6.3.3)</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'f_cd = f_ck/1.5',fmt(fcd_tb,2)+' MPa','');
+    html+=srow(2,'A_tie = π·d_tie²/4',fmt(Atie_tb,0)+' mm²','');
+    html+=srow(3,'A_ch = (l_be−2c_c)·(b_w−2c_c)',fmt(Ach_tb,0)+' mm²','');
+    html+=srow(4,'A_c,be = l_be·b_w',fmt(Ac_be_tb,0)+' mm²','');
+    html+=srow(5,'ρ_s,req = max(0.30f_cd/f_yk·(Ac/Ach−1), 0.075f_cd/f_yk)',fmt(rhos_req,4),'');
+    html+=srow(6,'s_max = '+(inCrit?'min(b_w/3, 100 mm)':'200 mm'),fmt(smax_tb,0)+' mm','');
+    html+=srow(7,'Provided s',fmt(s_tb,0)+' mm ≤ s_max?',ok_s_tb?'✓':'✗',ok_s_tb?'chk-ok':'chk-err');
+    html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ l<sub>be</sub> — n<sub>l</sub> = '+nl_tb+' legs (confine b<sub>w</sub> core, b<sub>c</sub> = '+fmt(bc_bw_tb,0)+' mm)</td></tr>';
+    html+=srow(8,'A_sh,req = ρ_s·b_c,lbe·s',fmt(Ash_req_bw_tb,0)+' mm²','');
+    html+=srow(9,'A_sh,prov = n_l·A_tie',fmt(Ash_prov_bw_tb,0)+' mm²',ok_bw_tb?'✓':'✗',ok_bw_tb?'chk-ok':'chk-err');
+    html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ b<sub>w</sub> — n<sub>b</sub> = '+nb_tb+' legs (confine l<sub>be</sub> core, b<sub>c</sub> = '+fmt(bc_lbe_tb,0)+' mm)</td></tr>';
+    html+=srow(10,'A_sh,req = ρ_s·b_c,bw·s',fmt(Ash_req_lbe_tb,0)+' mm²','');
+    html+=srow(11,'A_sh,prov = n_b·A_tie',fmt(Ash_prov_lbe_tb,0)+' mm²',ok_lbe_tb?'✓':'✗',ok_lbe_tb?'chk-ok':'chk-err');
+    html+='</tbody></table>';
+    var allok_tb=ok_s_tb&&ok_bw_tb&&ok_lbe_tb;
+    html+=banner(allok_tb?'ok':'err',allok_tb?'Confinement ADEQUATE':'Confinement INADEQUATE',
+      [ok_s_tb?null:'s exceeds s_max',ok_bw_tb?null:'A_sh ∥ l_be insufficient',ok_lbe_tb?null:'A_sh ∥ b_w insufficient'].filter(Boolean).join(' | ')||'All checks pass');
+    html+='</div></div>';
+    html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe,'be-tbdy')+'</div></div>';
     res.innerHTML=html;
   }
 }
