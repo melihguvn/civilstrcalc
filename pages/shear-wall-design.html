@@ -1,0 +1,1795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shear Wall Design</title>
+<link rel="canonical" href="https://civilstrcalc.com/pages/shear-wall-design">
+<meta name="robots" content="index, follow">
+<meta name="description" content="RC shear wall design — boundary element check, shear design, PMM interaction, shear friction per ACI 318-25, EN 1992+EN 1998, IS 456+IS 13920, TBDY 2018.">
+<link rel="stylesheet" href="../css/style.css">
+<script src="../shell.js" defer></script>
+<style>
+.fml-eq{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border-left:3px solid var(--accent);padding:5px 10px;margin:5px 0;border-radius:0 4px 4px 0;line-height:1.7;display:block;}
+.wall-svg-wrap{display:flex;justify-content:center;padding:8px 0 4px;}
+.pmm-canvas-outer{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
+.pmm-canvas-outer h4{font-family:var(--cond);font-size:.77rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;color:var(--text);}
+.pmm-canvas-outer canvas{display:block;margin:0 auto;max-width:100%;}
+.steps-tbl{width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:10px;}
+.steps-tbl td{padding:4px 7px;vertical-align:middle;border-bottom:1px solid var(--border);}
+.snum span{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.6rem;font-weight:700;}
+.sdesc{color:var(--text-dim);font-size:.71rem;min-width:100px;}
+.sval{font-family:var(--mono);font-size:.72rem;}
+.schk{font-family:var(--mono);font-size:.72rem;font-weight:700;text-align:right;}
+.chk-ok{color:var(--green);}
+.chk-warn{color:var(--orange);}
+.chk-err{color:var(--red);}
+</style>
+</head>
+<body style="display:block;background:var(--bg);">
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Shear Wall Design</h1>
+  <p>Boundary element check · shear design · P–M interaction · shear friction &emsp; ACI 318-25 · EN 1992+1998 · IS 456+13920 · TBDY 2018</p>
+</div>
+
+<div class="mod-tabs no-print">
+  <button class="mod-tab active" onclick="swMod(this,'mod-be')">Boundary Element</button>
+  <button class="mod-tab" onclick="swMod(this,'mod-sh')">Shear Design</button>
+  <button class="mod-tab" onclick="swMod(this,'mod-pm')">PMM Design</button>
+  <button class="mod-tab" onclick="swMod(this,'mod-sf')">Shear Friction</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MODULE 1 — BOUNDARY ELEMENT CHECK
+     ═══════════════════════════════════════════════════ -->
+<div class="mod-pane active" id="mod-be">
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="swStd('be','aci',this)">ACI 318-25</button>
+    <button class="sub-tab" onclick="swStd('be','en',this)">EN 1992+1998</button>
+    <button class="sub-tab" onclick="swStd('be','is',this)">IS 456+13920</button>
+    <button class="sub-tab" onclick="swStd('be','tbdy',this)">TBDY 2018</button>
+  </div>
+
+  <!-- ── BE · ACI ── -->
+  <div class="sub-pane active" id="be-aci">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="be-aci-utag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" id="be-aci-si-btn" onclick="setSwUnit('be-aci','si',this)">SI &nbsp;mm · kN · MPa</button>
+              <button class="unit-btn" id="be-aci-us-btn" onclick="setSwUnit('be-aci','us',this)">US &nbsp;in · kip · psi</button>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> wall length (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-lw" value="5000" min="200" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> thickness (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-bw" value="250" min="100" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+          </div>
+          <div class="form-group"><label>h<sub>w</sub> clear height (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-hw" value="3000" min="200" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f'<sub>c</sub> (<span class="u-str" data-m="be-aci">MPa</span>)</label><div class="iw"><input type="number" id="be-aci-fc" value="28" min="17" oninput="calcBe('aci')"><span class="us u-str" data-m="be-aci">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (<span class="u-str" data-m="be-aci">MPa</span>)</label><div class="iw"><input type="number" id="be-aci-fy" value="420" min="280" oninput="calcBe('aci')"><span class="us u-str" data-m="be-aci">MPa</span></div></div>
+          </div>
+          <div class="form-group"><label>f<sub>yt</sub> tie yield (<span class="u-str" data-m="be-aci">MPa</span>)</label><div class="iw"><input type="number" id="be-aci-fyt" value="420" min="280" oninput="calcBe('aci')"><span class="us u-str" data-m="be-aci">MPa</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>P<sub>u</sub> (<span class="u-frc" data-m="be-aci">kN</span>)</label><div class="iw"><input type="number" id="be-aci-pu" value="2000" min="0" oninput="calcBe('aci')"><span class="us u-frc" data-m="be-aci">kN</span></div></div>
+            <div class="form-group"><label>M<sub>u</sub> (<span class="u-mom" data-m="be-aci">kN·m</span>)</label><div class="iw"><input type="number" id="be-aci-mu" value="8000" min="0" oninput="calcBe('aci')"><span class="us u-mom" data-m="be-aci">kN·m</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement &amp; Detailing</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v</sub> vert. web ratio</label><div class="iw"><input type="number" id="be-aci-rhov" value="0.0025" step="0.0001" min="0.0025" oninput="calcBe('aci')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> long. bar (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-db" value="20" min="10" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>c<sub>c</sub> clear cover (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-cc" value="40" min="20" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+            <div class="form-group"><label>h<sub>x</sub> max hoop leg (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-hx" value="200" min="50" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Seismic Design Category</div></div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;">
+            <button class="unit-btn active" id="be-aci-sdc-hi" onclick="setSdcAci('hi',this)">SDC D / E / F</button>
+            <button class="unit-btn" id="be-aci-sdc-lo" onclick="setSdcAci('lo',this)">SDC A / B / C</button>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="be-aci-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-be-aci">
+      <div class="bg-hdr" onclick="toggleBg('bgs-be-aci')"><span>Design Background — ACI 318-25 §18.10.6</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-tabs">
+          <button class="bg-tab active" onclick="swBgTab('bgs-be-aci',0,this)">Stress Trigger</button>
+          <button class="bg-tab" onclick="swBgTab('bgs-be-aci',1,this)">Neutral Axis</button>
+          <button class="bg-tab" onclick="swBgTab('bgs-be-aci',2,this)">Confinement</button>
+        </div>
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>ACI 318-25 §18.10.6.2</strong> — Special boundary elements required when extreme fiber compressive stress exceeds 0.2f'<sub>c</sub>:</p><span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f'<sub>c</sub></span><p>A<sub>g</sub> = l<sub>w</sub>·b<sub>w</sub> &emsp; I<sub>g</sub> = b<sub>w</sub>·l<sub>w</sub>³/12 &emsp; (gross section, uncracked)</p></div>
+        </div>
+        <div class="bg-pane">
+          <div class="fml-blk"><p><strong>Neutral axis depth</strong> (equilibrium with uniform web reinforcement):</p><span class="fml-eq">β<sub>1</sub> = max(0.85 − 0.05(f'<sub>c</sub>−28)/7, 0.65)</span><span class="fml-eq">c = (P<sub>u</sub> + ρ<sub>v</sub>·b<sub>w</sub>·l<sub>w</sub>·f<sub>y</sub>) / [b<sub>w</sub>·(0.85f'<sub>c</sub>·β<sub>1</sub> + 2ρ<sub>v</sub>·f<sub>y</sub>)]</span><p>Required boundary element length (§18.10.6.4):</p><span class="fml-eq">l<sub>be</sub> = max(c − 0.1l<sub>w</sub>, c/2) ≥ b<sub>w</sub> (SDC D/E/F)</span></div>
+        </div>
+        <div class="bg-pane">
+          <div class="fml-blk"><p><strong>Confinement — ACI §18.7.5.4</strong> (applied via §18.10.6.4):</p><span class="fml-eq">A<sub>sh</sub>/(s·b<sub>c</sub>) ≥ max[ 0.3(A<sub>g,be</sub>/A<sub>ch</sub>−1)·f'<sub>c</sub>/f<sub>yt</sub> , 0.09·f'<sub>c</sub>/f<sub>yt</sub> ]</span><p>A<sub>g,be</sub>=l<sub>be</sub>·b<sub>w</sub> &emsp; A<sub>ch</sub>=(l<sub>be</sub>−2c<sub>c</sub>)(b<sub>w</sub>−2c<sub>c</sub>) &emsp; b<sub>c</sub>=b<sub>w</sub>−2c<sub>c</sub></p><span class="fml-eq">s<sub>max</sub> = min(6d<sub>b</sub>, 150 mm, 350−h<sub>x</sub>/3 mm)</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /be-aci -->
+
+  <!-- ── BE · EN ── -->
+  <div class="sub-pane" id="be-en">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="be-en-lw" value="5000" min="200" oninput="calcBe('en')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="be-en-bw" value="250" min="100" oninput="calcBe('en')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="be-en-fck" value="25" min="12" oninput="calcBe('en')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>yk</sub> (MPa)</label><div class="iw"><input type="number" id="be-en-fyk" value="500" min="400" oninput="calcBe('en')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>γ<sub>c</sub></label><div class="iw"><input type="number" id="be-en-gc" value="1.5" step="0.05" min="1" oninput="calcBe('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="be-en-gs" value="1.15" step="0.05" min="1" oninput="calcBe('en')"><span class="us">—</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Loads</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>N<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="be-en-ned" value="2000" min="0" oninput="calcBe('en')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>Ed</sub> (kN·m)</label><div class="iw"><input type="number" id="be-en-med" value="8000" min="0" oninput="calcBe('en')"><span class="us">kN·m</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Ductility Class &amp; Seismicity</div></div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <button class="unit-btn active" id="be-en-dch" onclick="setEnDc('dch',this)">DCH</button>
+            <button class="unit-btn" id="be-en-dcm" onclick="setEnDc('dcm',this)">DCM</button>
+            <button class="unit-btn" id="be-en-dcl" onclick="setEnDc('dcl',this)">DCL</button>
+          </div>
+          <div class="form-group"><label>μ<sub>φ</sub> curvature ductility factor</label><div class="iw"><input type="number" id="be-en-muphi" value="5.0" step="0.5" min="1" oninput="calcBe('en')"><span class="us">—</span></div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v</sub> vert. web ratio</label><div class="iw"><input type="number" id="be-en-rhov" value="0.003" step="0.0001" min="0.002" oninput="calcBe('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="be-en-cc" value="35" min="20" oninput="calcBe('en')"><span class="us">mm</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="be-en-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-be-en">
+      <div class="bg-hdr" onclick="toggleBg('bgs-be-en')"><span>Design Background — EN 1998-1 §5.4.3.4 / §5.5.3.4</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-tabs">
+          <button class="bg-tab active" onclick="swBgTab('bgs-be-en',0,this)">Trigger &amp; Length</button>
+          <button class="bg-tab" onclick="swBgTab('bgs-be-en',1,this)">Confinement</button>
+        </div>
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>EN 1998-1 §5.4.3.4 / §5.5.3.4</strong> — Boundary elements required when axial ratio exceeds the limit:</p><span class="fml-eq">ν<sub>d</sub> = N<sub>Ed</sub>/(l<sub>w</sub>·b<sub>w</sub>·f<sub>cd</sub>) &gt; 0.15 (DCH) or 0.20 (DCM)</span><p>Length of critical end region:</p><span class="fml-eq">l<sub>c</sub> = max(0.15l<sub>w</sub>, 1.5b<sub>w</sub>) [DCH]</span><span class="fml-eq">l<sub>c</sub> = max(0.10l<sub>w</sub>, 1.5b<sub>w</sub>) [DCM]</span></div>
+        </div>
+        <div class="bg-pane">
+          <div class="fml-blk"><p><strong>Mechanical volumetric ratio</strong> (EN 1998-1 §5.5.3.4(4)):</p><span class="fml-eq">ω<sub>wd</sub> ≥ max(30·μ<sub>φ</sub>·ν<sub>d</sub>·ε<sub>sy,d</sub>·b<sub>c</sub>/b<sub>o</sub> − 0.035, 0.12)</span><p>ε<sub>sy,d</sub> = f<sub>yk</sub>/(γ<sub>s</sub>·E<sub>s</sub>) &emsp; Required confinement steel:</p><span class="fml-eq">A<sub>sh</sub>/s = ω<sub>wd</sub>·A<sub>ch</sub>·f<sub>cd</sub> / (b<sub>c</sub>·f<sub>yd</sub>)</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /be-en -->
+
+  <!-- ── BE · IS ── -->
+  <div class="sub-pane" id="be-is">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="be-is-lw" value="5000" min="200" oninput="calcBe('is')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>t<sub>w</sub> thickness (mm)</label><div class="iw"><input type="number" id="be-is-bw" value="250" min="100" oninput="calcBe('is')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="be-is-fck" value="25" min="15" oninput="calcBe('is')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (MPa)</label><div class="iw"><input type="number" id="be-is-fy" value="415" min="250" oninput="calcBe('is')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Factored Loads</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>P<sub>u</sub> (kN)</label><div class="iw"><input type="number" id="be-is-pu" value="2000" min="0" oninput="calcBe('is')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>u</sub> (kN·m)</label><div class="iw"><input type="number" id="be-is-mu" value="8000" min="0" oninput="calcBe('is')"><span class="us">kN·m</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v</sub> vert. ratio</label><div class="iw"><input type="number" id="be-is-rhov" value="0.003" step="0.0001" min="0.0025" oninput="calcBe('is')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="be-is-cc" value="40" min="20" oninput="calcBe('is')"><span class="us">mm</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="be-is-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-be-is">
+      <div class="bg-hdr" onclick="toggleBg('bgs-be-is')"><span>Design Background — IS 13920:2016 §9.4</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>IS 13920:2016 §9.4.1</strong> — Boundary elements required when:</p><span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f<sub>ck</sub></span><p>Minimum length: l<sub>be</sub> ≥ max(t<sub>w</sub>, l<sub>w</sub>/10)</p><p><strong>Confinement steel (§9.4.4):</strong></p><span class="fml-eq">A<sub>sh</sub> ≥ 0.18·s·h<sub>core</sub>·(f<sub>ck</sub>/f<sub>y</sub>)·(A<sub>g,be</sub>/A<sub>ch</sub>−1)</span><span class="fml-eq">s<sub>max</sub> = min(t<sub>w</sub>/4, 75 mm, 6d<sub>b</sub>)</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /be-is -->
+
+  <!-- ── BE · TBDY ── -->
+  <div class="sub-pane" id="be-tbdy">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="be-tbdy-lw" value="5000" min="200" oninput="calcBe('tbdy')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="be-tbdy-bw" value="250" min="100" oninput="calcBe('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-group"><label>h<sub>w</sub> clear height (mm)</label><div class="iw"><input type="number" id="be-tbdy-hw" value="3000" min="200" oninput="calcBe('tbdy')"><span class="us">mm</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="be-tbdy-fck" value="25" min="16" oninput="calcBe('tbdy')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="be-tbdy-fyk" value="420" min="220" oninput="calcBe('tbdy')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Loads</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>N<sub>d</sub> (kN)</label><div class="iw"><input type="number" id="be-tbdy-nd" value="2000" min="0" oninput="calcBe('tbdy')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>d</sub> (kN·m)</label><div class="iw"><input type="number" id="be-tbdy-md" value="8000" min="0" oninput="calcBe('tbdy')"><span class="us">kN·m</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Seismic Hazard Level</div></div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;">
+            <button class="unit-btn active" id="be-tbdy-dts12" onclick="setTbdyDts('12',this)">DTS 1 &amp; 2</button>
+            <button class="unit-btn" id="be-tbdy-dts34" onclick="setTbdyDts('34',this)">DTS 3 &amp; 4</button>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v</sub> vert. ratio</label><div class="iw"><input type="number" id="be-tbdy-rhov" value="0.003" step="0.0001" min="0.0025" oninput="calcBe('tbdy')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="be-tbdy-cc" value="40" min="20" oninput="calcBe('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="be-tbdy-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-be-tbdy">
+      <div class="bg-hdr" onclick="toggleBg('bgs-be-tbdy')"><span>Design Background — TBDY 2018 §7.6.6</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>TBDY 2018 §7.6.6.1</strong> — Confined end regions required when extreme fiber stress exceeds the limit:</p><span class="fml-eq">σ<sub>max</sub> = N<sub>d</sub>/A<sub>c</sub> + M<sub>d</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.35f<sub>ck</sub> (DTS 1,2) or 0.40f<sub>ck</sub> (DTS 3,4)</span><p>Required confined zone length:</p><span class="fml-eq">l<sub>be</sub> = max(b<sub>w</sub>, l<sub>w</sub>/5, h<sub>w</sub>/10)</span><p>Confinement reinforcement follows TBDY 2018 Table 7.4 — same provisions as column critical zones.</p></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /be-tbdy -->
+</div><!-- /mod-be -->
+
+<!-- ═══════════════════════════════════════════════════
+     MODULE 2 — SHEAR DESIGN
+     ═══════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-sh">
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="swStd('sh','aci',this)">ACI 318-25</button>
+    <button class="sub-tab" onclick="swStd('sh','en',this)">EN 1992+1998</button>
+    <button class="sub-tab" onclick="swStd('sh','is',this)">IS 456+13920</button>
+    <button class="sub-tab" onclick="swStd('sh','tbdy',this)">TBDY 2018</button>
+  </div>
+
+  <!-- ── SH · ACI ── -->
+  <div class="sub-pane active" id="sh-aci">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="sh-aci-utag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" id="sh-aci-si-btn" onclick="setSwUnit('sh-aci','si',this)">SI &nbsp;mm · kN · MPa</button>
+              <button class="unit-btn" id="sh-aci-us-btn" onclick="setSwUnit('sh-aci','us',this)">US &nbsp;in · kip · psi</button>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (<span class="u-len" data-m="sh-aci">mm</span>)</label><div class="iw"><input type="number" id="sh-aci-lw" value="5000" min="200" oninput="calcSh('aci')"><span class="us u-len" data-m="sh-aci">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (<span class="u-len" data-m="sh-aci">mm</span>)</label><div class="iw"><input type="number" id="sh-aci-bw" value="250" min="100" oninput="calcSh('aci')"><span class="us u-len" data-m="sh-aci">mm</span></div></div>
+          </div>
+          <div class="form-group"><label>h<sub>w</sub> clear height (<span class="u-len" data-m="sh-aci">mm</span>)</label><div class="iw"><input type="number" id="sh-aci-hw" value="3000" min="200" oninput="calcSh('aci')"><span class="us u-len" data-m="sh-aci">mm</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f'<sub>c</sub> (<span class="u-str" data-m="sh-aci">MPa</span>)</label><div class="iw"><input type="number" id="sh-aci-fc" value="28" min="17" oninput="calcSh('aci')"><span class="us u-str" data-m="sh-aci">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (<span class="u-str" data-m="sh-aci">MPa</span>)</label><div class="iw"><input type="number" id="sh-aci-fy" value="420" min="280" oninput="calcSh('aci')"><span class="us u-str" data-m="sh-aci">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Shear (factored)</div></div>
+          <div class="form-group"><label>V<sub>u</sub> (<span class="u-frc" data-m="sh-aci">kN</span>)</label><div class="iw"><input type="number" id="sh-aci-vu" value="1500" min="0" oninput="calcSh('aci')"><span class="us u-frc" data-m="sh-aci">kN</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Horizontal Web Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>t</sub> horiz. ratio</label><div class="iw"><input type="number" id="sh-aci-rhot" value="0.0025" step="0.0001" min="0.0025" oninput="calcSh('aci')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>Number of curtains</label><div class="iw"><input type="number" id="sh-aci-curt" value="2" min="1" max="4" oninput="calcSh('aci')"><span class="us">—</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="sh-aci-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sh-aci">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sh-aci')"><span>Design Background — ACI 318-25 §18.10.4</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>ACI 318-25 §18.10.4</strong> — Shear strength of structural walls:</p><span class="fml-eq">V<sub>n</sub> = (α<sub>c</sub>·√f'<sub>c</sub> + ρ<sub>t</sub>·f<sub>y</sub>)·A<sub>cv</sub></span><p>α<sub>c</sub> = 0.25 when h<sub>w</sub>/l<sub>w</sub> ≤ 1.5; α<sub>c</sub> = 0.17 when h<sub>w</sub>/l<sub>w</sub> ≥ 2.0 (interpolate between)</p><span class="fml-eq">V<sub>n,max</sub> = 0.66·√f'<sub>c</sub>·A<sub>cv</sub> &emsp; φ = 0.75</span><p>A<sub>cv</sub> = l<sub>w</sub>·b<sub>w</sub> (net concrete area). All in MPa, mm units.</p></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sh-aci -->
+
+  <!-- ── SH · EN ── -->
+  <div class="sub-pane" id="sh-en">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-en-lw" value="5000" min="200" oninput="calcSh('en')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-en-bw" value="250" min="100" oninput="calcSh('en')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sh-en-fck" value="25" min="12" oninput="calcSh('en')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>yk</sub> (MPa)</label><div class="iw"><input type="number" id="sh-en-fyk" value="500" min="400" oninput="calcSh('en')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>γ<sub>c</sub></label><div class="iw"><input type="number" id="sh-en-gc" value="1.5" step="0.05" oninput="calcSh('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="sh-en-gs" value="1.15" step="0.05" oninput="calcSh('en')"><span class="us">—</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sh-en-ved" value="1500" min="0" oninput="calcSh('en')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>N<sub>Ed</sub> (kN, + comp)</label><div class="iw"><input type="number" id="sh-en-ned" value="2000" oninput="calcSh('en')"><span class="us">kN</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Longitudinal &amp; Horizontal Steel</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>l</sub> longit. ratio</label><div class="iw"><input type="number" id="sh-en-rhol" value="0.005" step="0.0001" oninput="calcSh('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>ρ<sub>h</sub> horiz. ratio</label><div class="iw"><input type="number" id="sh-en-rhoh" value="0.003" step="0.0001" oninput="calcSh('en')"><span class="us">—</span></div></div>
+          </div>
+          <div class="form-group"><label>d effective depth (mm)</label><div class="iw"><input type="number" id="sh-en-d" value="4750" min="100" oninput="calcSh('en')"><span class="us">mm</span></div></div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;">
+            <button class="unit-btn active" id="sh-en-dch" onclick="setShEnDc('dch',this)">DCH (×1.5)</button>
+            <button class="unit-btn" id="sh-en-dcm" onclick="setShEnDc('dcm',this)">DCM (×1.5)</button>
+            <button class="unit-btn" id="sh-en-dcl" onclick="setShEnDc('dcl',this)">DCL (×1.0)</button>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="sh-en-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sh-en">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sh-en')"><span>Design Background — EN 1992-1-1 §6.2 + EN 1998-1 §5.5.2.4</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>EN 1992-1-1 §6.2.2</strong> — Members without shear reinforcement (concrete contribution):</p><span class="fml-eq">V<sub>Rd,c</sub> = [C<sub>Rd,c</sub>·k·(100ρ<sub>l</sub>·f<sub>ck</sub>)<sup>1/3</sup> + k<sub>1</sub>·σ<sub>cp</sub>]·b<sub>w</sub>·d ≥ (v<sub>min</sub>+k<sub>1</sub>σ<sub>cp</sub>)·b<sub>w</sub>·d</span><p>C<sub>Rd,c</sub>=0.18/γ<sub>c</sub>, k=1+(200/d)<sup>0.5</sup>≤2, k<sub>1</sub>=0.15, v<sub>min</sub>=0.035k<sup>1.5</sup>√f<sub>ck</sub></p><p><strong>Shear reinforcement (§6.2.3):</strong></p><span class="fml-eq">V<sub>Rd,max</sub> = α<sub>cw</sub>·b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/(cot θ + tan θ)</span><span class="fml-eq">A<sub>sw</sub>/s = V<sub>Ed</sub>/(z·f<sub>yd</sub>·cot θ) &emsp; z≈0.9d, θ=45°</span><p><strong>EN 1998-1 §5.5.2.4</strong> — In DCH/DCM walls design shear is amplified by 1.5.</p></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sh-en -->
+
+  <!-- ── SH · IS ── -->
+  <div class="sub-pane" id="sh-is">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-is-lw" value="5000" min="200" oninput="calcSh('is')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>t<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-is-bw" value="250" min="100" oninput="calcSh('is')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-group"><label>d effective depth (mm)</label><div class="iw"><input type="number" id="sh-is-d" value="4750" min="100" oninput="calcSh('is')"><span class="us">mm</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sh-is-fck" value="25" min="15" oninput="calcSh('is')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (MPa)</label><div class="iw"><input type="number" id="sh-is-fy" value="415" min="250" oninput="calcSh('is')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>u</sub> (kN)</label><div class="iw"><input type="number" id="sh-is-vu" value="1500" min="0" oninput="calcSh('is')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>ρ<sub>h</sub> horiz. ratio</label><div class="iw"><input type="number" id="sh-is-rhoh" value="0.003" step="0.0001" oninput="calcSh('is')"><span class="us">—</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="sh-is-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sh-is">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sh-is')"><span>Design Background — IS 456:2000 §32.4 + IS 13920 §9.3</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>IS 456:2000 §32.4.3</strong> — Permissible shear stress in wall panel:</p><span class="fml-eq">τ<sub>v</sub> = V<sub>u</sub>/(t<sub>w</sub>·d) &emsp; τ<sub>c</sub> = 0.17√f<sub>ck</sub> (no axial load)</span><p>Nominal shear reinforcement if τ<sub>v</sub> > τ<sub>c</sub>. IS 13920:2016 §9.3 sets minimum ρ<sub>h</sub> = 0.0025 and ρ<sub>v</sub> = 0.0025 for seismic zones.</p><span class="fml-eq">A<sub>sv</sub>/s<sub>v</sub> = (V<sub>u</sub> − τ<sub>c</sub>·b<sub>w</sub>·d) / (0.87f<sub>y</sub>·d)</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sh-is -->
+
+  <!-- ── SH · TBDY ── -->
+  <div class="sub-pane" id="sh-tbdy">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-tbdy-lw" value="5000" min="200" oninput="calcSh('tbdy')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="sh-tbdy-bw" value="250" min="100" oninput="calcSh('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-group"><label>h<sub>w</sub> clear height (mm)</label><div class="iw"><input type="number" id="sh-tbdy-hw" value="3000" min="200" oninput="calcSh('tbdy')"><span class="us">mm</span></div></div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sh-tbdy-fck" value="25" min="16" oninput="calcSh('tbdy')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="sh-tbdy-fyk" value="420" min="220" oninput="calcSh('tbdy')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>e</sub> (kN)</label><div class="iw"><input type="number" id="sh-tbdy-ve" value="1500" min="0" oninput="calcSh('tbdy')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>N<sub>d</sub> (kN, + comp)</label><div class="iw"><input type="number" id="sh-tbdy-nd" value="2000" oninput="calcSh('tbdy')"><span class="us">kN</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>sh</sub> horiz. ratio</label><div class="iw"><input type="number" id="sh-tbdy-rhoh" value="0.003" step="0.0001" oninput="calcSh('tbdy')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>Number of curtains</label><div class="iw"><input type="number" id="sh-tbdy-curt" value="2" min="1" max="4" oninput="calcSh('tbdy')"><span class="us">—</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="sh-tbdy-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sh-tbdy">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sh-tbdy')"><span>Design Background — TBDY 2018 §7.6.5</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>TBDY 2018 §7.6.5.3</strong> — Shear strength:</p><span class="fml-eq">V<sub>r</sub> = (0.65·√f<sub>ck</sub> + ρ<sub>sh</sub>·f<sub>ywk</sub>)·A<sub>w</sub> &emsp; γ<sub>RE</sub>=0.75</span><p>A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub>. Minimum ρ<sub>sh</sub> = 0.0025 (both directions). Maximum shear capacity:</p><span class="fml-eq">V<sub>r,max</sub> = 0.85·√f<sub>ck</sub>·A<sub>w</sub></span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sh-tbdy -->
+</div><!-- /mod-sh -->
+
+<!-- ═══════════════════════════════════════════════════
+     MODULE 3 — PMM DESIGN
+     ═══════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-pm">
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="swStd('pm','aci',this)">ACI 318-25</button>
+    <button class="sub-tab" onclick="swStd('pm','en',this)">EN 1992+1998</button>
+    <button class="sub-tab" onclick="swStd('pm','is',this)">IS 456+13920</button>
+    <button class="sub-tab" onclick="swStd('pm','tbdy',this)">TBDY 2018</button>
+  </div>
+
+  <!-- ── PM · ACI ── -->
+  <div class="sub-pane active" id="pm-aci">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="pm-aci-utag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" id="pm-aci-si-btn" onclick="setSwUnit('pm-aci','si',this)">SI &nbsp;mm · kN · MPa</button>
+              <button class="unit-btn" id="pm-aci-us-btn" onclick="setSwUnit('pm-aci','us',this)">US &nbsp;in · kip · psi</button>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-lw" value="5000" min="200" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-bw" value="250" min="100" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f'<sub>c</sub> (<span class="u-str" data-m="pm-aci">MPa</span>)</label><div class="iw"><input type="number" id="pm-aci-fc" value="28" min="17" oninput="calcPm('aci')"><span class="us u-str" data-m="pm-aci">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (<span class="u-str" data-m="pm-aci">MPa</span>)</label><div class="iw"><input type="number" id="pm-aci-fy" value="420" min="280" oninput="calcPm('aci')"><span class="us u-str" data-m="pm-aci">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v,web</sub> web vert. ratio</label><div class="iw"><input type="number" id="pm-aci-rhov" value="0.005" step="0.0001" min="0.0025" oninput="calcPm('aci')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-cc" value="40" min="20" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="unit-btn active" id="pm-aci-nobe" onclick="setPmBe('aci','no',this)">No boundary element</button>
+            <button class="unit-btn" id="pm-aci-habe" onclick="setPmBe('aci','yes',this)">With boundary element</button>
+          </div>
+          <div id="pm-aci-be-inputs" style="display:none;margin-top:6px;">
+            <div class="form-row-2">
+              <div class="form-group"><label>l<sub>be</sub> BE length (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-lbe" value="500" min="100" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+              <div class="form-group"><label>ρ<sub>v,be</sub> BE vert. ratio</label><div class="iw"><input type="number" id="pm-aci-rhobe" value="0.03" step="0.001" min="0.01" oninput="calcPm('aci')"><span class="us">—</span></div></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>P<sub>u</sub> (<span class="u-frc" data-m="pm-aci">kN</span>)</label><div class="iw"><input type="number" id="pm-aci-pu" value="2000" oninput="calcPm('aci')"><span class="us u-frc" data-m="pm-aci">kN</span></div></div>
+            <div class="form-group"><label>M<sub>u</sub> (<span class="u-mom" data-m="pm-aci">kN·m</span>)</label><div class="iw"><input type="number" id="pm-aci-mu" value="8000" min="0" oninput="calcPm('aci')"><span class="us u-mom" data-m="pm-aci">kN·m</span></div></div>
+          </div>
+          <button class="btn-calc" onclick="calcPm('aci')">▶ Generate P-M Diagram</button>
+        </div>
+      </div>
+      <div class="results-col" id="pm-aci-res">
+        <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
+        <div id="pm-aci-canvas-wrap" style="display:none;">
+          <div class="pmm-canvas-outer">
+            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">ACI 318-25 · φ-reduced envelope shown</span></h4>
+            <canvas id="pm-aci-canvas" width="480" height="380" role="img" aria-label="ACI 318-25 P-M interaction diagram"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-pm-aci">
+      <div class="bg-hdr" onclick="toggleBg('bgs-pm-aci')"><span>Design Background — ACI 318-25 PMM Fiber Model</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p>The P-M interaction diagram is generated by sweeping the neutral axis depth c from 2l<sub>w</sub> (pure compression) to near zero (pure tension). At each c, equilibrium of the rectangular stress block with all fiber strips gives (P<sub>n</sub>, M<sub>n</sub>):</p><span class="fml-eq">P<sub>n</sub> = 0.85f'<sub>c</sub>·a·b<sub>w</sub> + ΣA<sub>s,i</sub>·f<sub>s,i</sub> − ΣA<sub>s,i</sub>·0.85f'<sub>c</sub> (in comp. block)</span><span class="fml-eq">φ = 0.65 to 0.90 based on net tensile strain ε<sub>t</sub></span><p>β<sub>1</sub>·c = a; ε<sub>s,i</sub> = (c−x<sub>i</sub>)/c·0.003; f<sub>s,i</sub> = min(ε<sub>s,i</sub>·E<sub>s</sub>, f<sub>y</sub>).</p></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /pm-aci -->
+
+  <!-- ── PM · EN ── -->
+  <div class="sub-pane" id="pm-en">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-en-lw" value="5000" min="200" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-en-bw" value="250" min="100" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="pm-en-fck" value="25" min="12" oninput="calcPm('en')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>yk</sub> (MPa)</label><div class="iw"><input type="number" id="pm-en-fyk" value="500" min="400" oninput="calcPm('en')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>γ<sub>c</sub></label><div class="iw"><input type="number" id="pm-en-gc" value="1.5" step="0.05" oninput="calcPm('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="pm-en-gs" value="1.15" step="0.05" oninput="calcPm('en')"><span class="us">—</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-en-rhov" value="0.005" step="0.0001" oninput="calcPm('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-en-cc" value="35" min="20" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="unit-btn active" id="pm-en-nobe" onclick="setPmBe('en','no',this)">No boundary element</button>
+            <button class="unit-btn" id="pm-en-habe" onclick="setPmBe('en','yes',this)">With boundary element</button>
+          </div>
+          <div id="pm-en-be-inputs" style="display:none;margin-top:6px;">
+            <div class="form-row-2">
+              <div class="form-group"><label>l<sub>be</sub> (mm)</label><div class="iw"><input type="number" id="pm-en-lbe" value="500" min="100" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-en-rhobe" value="0.03" step="0.001" oninput="calcPm('en')"><span class="us">—</span></div></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>N<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="pm-en-ned" value="2000" oninput="calcPm('en')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>Ed</sub> (kN·m)</label><div class="iw"><input type="number" id="pm-en-med" value="8000" min="0" oninput="calcPm('en')"><span class="us">kN·m</span></div></div>
+          </div>
+          <button class="btn-calc" onclick="calcPm('en')">▶ Generate P-M Diagram</button>
+        </div>
+      </div>
+      <div class="results-col" id="pm-en-res">
+        <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
+        <div id="pm-en-canvas-wrap" style="display:none;">
+          <div class="pmm-canvas-outer">
+            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">EN 1992-1-1 · design values</span></h4>
+            <canvas id="pm-en-canvas" width="480" height="380" role="img" aria-label="EN 1992 P-M interaction diagram"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-pm-en">
+      <div class="bg-hdr" onclick="toggleBg('bgs-pm-en')"><span>Design Background — EN 1992-1-1 §6.1 Fiber Model</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active"><div class="fml-blk"><p>Fiber strip model sweeps neutral axis depth x. Parabola-rectangle stress block: f<sub>cd</sub>=α<sub>cc</sub>·f<sub>ck</sub>/γ<sub>c</sub> (α<sub>cc</sub>=1.0 per EN NA). Steel: f<sub>sd</sub>=f<sub>yk</sub>/γ<sub>s</sub>, elastic-perfectly-plastic. Equilibrium gives N<sub>Rd</sub> and M<sub>Rd</sub> at each x.</p><span class="fml-eq">ε<sub>cu3</sub>=0.0035 &emsp; λ=0.80 (f<sub>ck</sub>≤50MPa) &emsp; η=1.0</span></div></div>
+      </div>
+    </div>
+  </div><!-- /pm-en -->
+
+  <!-- ── PM · IS ── -->
+  <div class="sub-pane" id="pm-is">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-is-lw" value="5000" min="200" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>t<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-is-bw" value="250" min="100" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="pm-is-fck" value="25" min="15" oninput="calcPm('is')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (MPa)</label><div class="iw"><input type="number" id="pm-is-fy" value="415" min="250" oninput="calcPm('is')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-is-rhov" value="0.005" step="0.0001" oninput="calcPm('is')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-is-cc" value="40" min="20" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="unit-btn active" id="pm-is-nobe" onclick="setPmBe('is','no',this)">No boundary element</button>
+            <button class="unit-btn" id="pm-is-habe" onclick="setPmBe('is','yes',this)">With boundary element</button>
+          </div>
+          <div id="pm-is-be-inputs" style="display:none;margin-top:6px;">
+            <div class="form-row-2">
+              <div class="form-group"><label>l<sub>be</sub> (mm)</label><div class="iw"><input type="number" id="pm-is-lbe" value="500" min="100" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-is-rhobe" value="0.03" step="0.001" oninput="calcPm('is')"><span class="us">—</span></div></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>P<sub>u</sub> (kN)</label><div class="iw"><input type="number" id="pm-is-pu" value="2000" oninput="calcPm('is')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>u</sub> (kN·m)</label><div class="iw"><input type="number" id="pm-is-mu" value="8000" min="0" oninput="calcPm('is')"><span class="us">kN·m</span></div></div>
+          </div>
+          <button class="btn-calc" onclick="calcPm('is')">▶ Generate P-M Diagram</button>
+        </div>
+      </div>
+      <div class="results-col" id="pm-is-res">
+        <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
+        <div id="pm-is-canvas-wrap" style="display:none;">
+          <div class="pmm-canvas-outer">
+            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">IS 456:2000 · design values</span></h4>
+            <canvas id="pm-is-canvas" width="480" height="380" role="img" aria-label="IS 456 P-M interaction diagram"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-pm-is">
+      <div class="bg-hdr" onclick="toggleBg('bgs-pm-is')"><span>Design Background — IS 456:2000 Annex B Fiber Model</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active"><div class="fml-blk"><p>IS 456:2000 uses a parabolic-rectangular stress block: peak f<sub>cc</sub>=0.67f<sub>cu</sub>/γ<sub>m</sub> = 0.447f<sub>ck</sub> where γ<sub>m</sub>=1.5. Steel: f<sub>sd</sub>=0.87f<sub>y</sub>. Neutral axis swept from 2l<sub>w</sub> to ~0. The diagram boundary is the nominal envelope divided by 1.0 (no explicit φ in IS 456; partial factors are embedded in material values).</p><span class="fml-eq">ε<sub>cu</sub>=0.0035 &emsp; Parabolic-rect. block depth = 0.42x (c = xu)</span></div></div>
+      </div>
+    </div>
+  </div><!-- /pm-is -->
+
+  <!-- ── PM · TBDY ── -->
+  <div class="sub-pane" id="pm-tbdy">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Wall Geometry</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>l<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-tbdy-lw" value="5000" min="200" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>b<sub>w</sub> (mm)</label><div class="iw"><input type="number" id="pm-tbdy-bw" value="250" min="100" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="pm-tbdy-fck" value="25" min="16" oninput="calcPm('tbdy')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="pm-tbdy-fyk" value="420" min="220" oninput="calcPm('tbdy')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-tbdy-rhov" value="0.005" step="0.0001" oninput="calcPm('tbdy')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-tbdy-cc" value="40" min="20" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="unit-btn active" id="pm-tbdy-nobe" onclick="setPmBe('tbdy','no',this)">No boundary element</button>
+            <button class="unit-btn" id="pm-tbdy-habe" onclick="setPmBe('tbdy','yes',this)">With boundary element</button>
+          </div>
+          <div id="pm-tbdy-be-inputs" style="display:none;margin-top:6px;">
+            <div class="form-row-2">
+              <div class="form-group"><label>l<sub>be</sub> (mm)</label><div class="iw"><input type="number" id="pm-tbdy-lbe" value="500" min="100" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-tbdy-rhobe" value="0.03" step="0.001" oninput="calcPm('tbdy')"><span class="us">—</span></div></div>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>N<sub>d</sub> (kN)</label><div class="iw"><input type="number" id="pm-tbdy-nd" value="2000" oninput="calcPm('tbdy')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>M<sub>d</sub> (kN·m)</label><div class="iw"><input type="number" id="pm-tbdy-md" value="8000" min="0" oninput="calcPm('tbdy')"><span class="us">kN·m</span></div></div>
+          </div>
+          <button class="btn-calc" onclick="calcPm('tbdy')">▶ Generate P-M Diagram</button>
+        </div>
+      </div>
+      <div class="results-col" id="pm-tbdy-res">
+        <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
+        <div id="pm-tbdy-canvas-wrap" style="display:none;">
+          <div class="pmm-canvas-outer">
+            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">TBDY 2018 · design values</span></h4>
+            <canvas id="pm-tbdy-canvas" width="480" height="380" role="img" aria-label="TBDY 2018 P-M interaction diagram"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-pm-tbdy">
+      <div class="bg-hdr" onclick="toggleBg('bgs-pm-tbdy')"><span>Design Background — TBDY 2018 §7.3 Fiber Model</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active"><div class="fml-blk"><p>TBDY 2018 follows TS EN 1992-1-1 material models. f<sub>cd</sub>=f<sub>ck</sub>/1.5, f<sub>yd</sub>=f<sub>ywk</sub>/1.15. The parabola-rectangle block (ε<sub>cu3</sub>=0.0035, λ=0.80) is swept identically to the Eurocode fiber model. γ<sub>RE</sub>=0.75 for shear (not applied in PMM).</p></div></div>
+      </div>
+    </div>
+  </div><!-- /pm-tbdy -->
+</div><!-- /mod-pm -->
+
+<!-- ═══════════════════════════════════════════════════
+     MODULE 4 — SHEAR FRICTION
+     ═══════════════════════════════════════════════════ -->
+<div class="mod-pane" id="mod-sf">
+  <div class="sub-tabs no-print">
+    <button class="sub-tab active" onclick="swStd('sf','aci',this)">ACI 318-25</button>
+    <button class="sub-tab" onclick="swStd('sf','en',this)">EN 1992</button>
+    <button class="sub-tab" onclick="swStd('sf','is',this)">IS 456</button>
+    <button class="sub-tab" onclick="swStd('sf','tbdy',this)">TBDY 2018</button>
+  </div>
+
+  <!-- ── SF · ACI ── -->
+  <div class="sub-pane active" id="sf-aci">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag" id="sf-aci-utag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="unit-switcher">
+            <label>Units:</label>
+            <div class="unit-btns">
+              <button class="unit-btn active" id="sf-aci-si-btn" onclick="setSwUnit('sf-aci','si',this)">SI &nbsp;mm · kN · MPa</button>
+              <button class="unit-btn" id="sf-aci-us-btn" onclick="setSwUnit('sf-aci','us',this)">US &nbsp;in · kip · psi</button>
+            </div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Interface</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>A<sub>c</sub> interface area (<span class="u-area" data-m="sf-aci">mm²</span>)</label><div class="iw"><input type="number" id="sf-aci-ac" value="1250000" min="1000" oninput="calcSf('aci')"><span class="us u-area" data-m="sf-aci">mm²</span></div></div>
+            <div class="form-group"><label>A<sub>vf</sub> crossing steel (<span class="u-area" data-m="sf-aci">mm²</span>)</label><div class="iw"><input type="number" id="sf-aci-avf" value="2000" min="0" oninput="calcSf('aci')"><span class="us u-area" data-m="sf-aci">mm²</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f'<sub>c</sub> (<span class="u-str" data-m="sf-aci">MPa</span>)</label><div class="iw"><input type="number" id="sf-aci-fc" value="28" min="17" oninput="calcSf('aci')"><span class="us u-str" data-m="sf-aci">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (<span class="u-str" data-m="sf-aci">MPa</span>)</label><div class="iw"><input type="number" id="sf-aci-fy" value="420" min="280" oninput="calcSf('aci')"><span class="us u-str" data-m="sf-aci">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>u</sub> (<span class="u-frc" data-m="sf-aci">kN</span>)</label><div class="iw"><input type="number" id="sf-aci-vu" value="1000" min="0" oninput="calcSf('aci')"><span class="us u-frc" data-m="sf-aci">kN</span></div></div>
+            <div class="form-group"><label>N<sub>u</sub> compressive (<span class="u-frc" data-m="sf-aci">kN</span>)</label><div class="iw"><input type="number" id="sf-aci-nu" value="0" oninput="calcSf('aci')"><span class="us u-frc" data-m="sf-aci">kN</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Interface Condition (ACI §22.9.4.2)</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="sf-aci-mu-btns">
+            <button class="unit-btn active" onclick="setSfMu('aci','mono',this)">Monolithic (μ=1.4λ)</button>
+            <button class="unit-btn" onclick="setSfMu('aci','rough',this)">Intentionally roughened (μ=1.0λ)</button>
+            <button class="unit-btn" onclick="setSfMu('aci','smooth',this)">Not roughened (μ=0.6λ)</button>
+            <button class="unit-btn" onclick="setSfMu('aci','hard',this)">Concrete to steel (μ=0.7λ)</button>
+          </div>
+          <div class="form-group"><label>λ (lightweight factor)</label><div class="iw"><input type="number" id="sf-aci-lam" value="1.0" step="0.05" min="0.75" max="1.0" oninput="calcSf('aci')"><span class="us">—</span></div></div>
+        </div>
+      </div>
+      <div class="results-col" id="sf-aci-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sf-aci">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sf-aci')"><span>Design Background — ACI 318-25 §22.9</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>ACI 318-25 §22.9.4.2</strong> — Nominal shear-friction strength:</p><span class="fml-eq">V<sub>n</sub> = μ·(A<sub>vf</sub>·f<sub>y</sub> + N<sub>u,comp</sub>) &emsp; φ=0.75</span><p>μ: monolithic=1.4λ, intentionally roughened=1.0λ, not roughened=0.6λ, concrete-to-steel=0.7λ</p><p><strong>Upper limits (§22.9.4.4):</strong></p><span class="fml-eq">V<sub>n,max</sub> = min(0.2f'<sub>c</sub>·A<sub>c</sub>, 5.5A<sub>c</sub> [N], (3.3+0.08f'<sub>c</sub>)·A<sub>c</sub> [N])</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sf-aci -->
+
+  <!-- ── SF · EN ── -->
+  <div class="sub-pane" id="sf-en">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Interface</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>A<sub>i</sub> interface area (mm²)</label><div class="iw"><input type="number" id="sf-en-ai" value="1250000" min="1000" oninput="calcSf('en')"><span class="us">mm²</span></div></div>
+            <div class="form-group"><label>A<sub>s</sub> crossing steel (mm²)</label><div class="iw"><input type="number" id="sf-en-as" value="2000" min="0" oninput="calcSf('en')"><span class="us">mm²</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sf-en-fck" value="25" min="12" oninput="calcSf('en')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>yk</sub> (MPa)</label><div class="iw"><input type="number" id="sf-en-fyk" value="500" min="400" oninput="calcSf('en')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>γ<sub>c</sub></label><div class="iw"><input type="number" id="sf-en-gc" value="1.5" step="0.05" oninput="calcSf('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="sf-en-gs" value="1.15" step="0.05" oninput="calcSf('en')"><span class="us">—</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sf-en-ved" value="1000" min="0" oninput="calcSf('en')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>σ<sub>n</sub> normal stress (MPa)</label><div class="iw"><input type="number" id="sf-en-sn" value="0" step="0.1" oninput="calcSf('en')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Interface Surface Type</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            <button class="unit-btn active" onclick="setSfEnSurf('mono',this)">Monolithic (c=0.50, μ=0.9)</button>
+            <button class="unit-btn" onclick="setSfEnSurf('rough',this)">Rough (c=0.45, μ=0.7)</button>
+            <button class="unit-btn" onclick="setSfEnSurf('smooth',this)">Smooth (c=0.20, μ=0.6)</button>
+          </div>
+          <div class="form-group"><label>ρ = A<sub>s</sub>/A<sub>i</sub></label><div class="iw" style="background:var(--bg2);"><input type="number" id="sf-en-rho" value="0.0016" step="0.0001" oninput="calcSf('en')" readonly style="background:transparent;"><span class="us">—</span></div></div>
+        </div>
+      </div>
+      <div class="results-col" id="sf-en-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sf-en">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sf-en')"><span>Design Background — EN 1992-1-1 §6.2.5</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active">
+          <div class="fml-blk"><p><strong>EN 1992-1-1 §6.2.5</strong> — Design shear resistance at the interface:</p><span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>·(μ·sin α + cos α))·A<sub>i</sub></span><p>c and μ depend on surface roughness (Table 6.2). α = 90° for perpendicular reinforcement → sinα=1, cosα=0.</p><span class="fml-eq">V<sub>Rdi,max</sub> = 0.5·ν·f<sub>cd</sub>·A<sub>i</sub> &emsp; ν=0.6(1−f<sub>ck</sub>/250)</span></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sf-en -->
+
+  <!-- ── SF · IS ── -->
+  <div class="sub-pane" id="sf-is">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Interface</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>A<sub>c</sub> area (mm²)</label><div class="iw"><input type="number" id="sf-is-ac" value="1250000" min="1000" oninput="calcSf('is')"><span class="us">mm²</span></div></div>
+            <div class="form-group"><label>A<sub>vf</sub> crossing (mm²)</label><div class="iw"><input type="number" id="sf-is-avf" value="2000" min="0" oninput="calcSf('is')"><span class="us">mm²</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sf-is-fck" value="25" min="15" oninput="calcSf('is')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>y</sub> (MPa)</label><div class="iw"><input type="number" id="sf-is-fy" value="415" min="250" oninput="calcSf('is')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-group"><label>V<sub>u</sub> (kN)</label><div class="iw"><input type="number" id="sf-is-vu" value="1000" min="0" oninput="calcSf('is')"><span class="us">kN</span></div></div>
+        </div>
+      </div>
+      <div class="results-col" id="sf-is-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sf-is">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sf-is')"><span>Design Background — IS 456:2000 §17.6 Shear Friction</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active"><div class="fml-blk"><p><strong>IS 456:2000 §17.6</strong> — Shear transfer at construction joints. Design shear friction analogous to ACI approach:</p><span class="fml-eq">V<sub>n</sub> = μ·0.87·f<sub>y</sub>·A<sub>vf</sub> &emsp; τ<sub>max</sub> = 0.2f<sub>ck</sub> ≤ 3.5 MPa</span><p>μ = 0.7 for roughened surface; 0.5 for smooth. The capacity may also be checked as V<sub>n,max</sub> = τ<sub>max</sub>·A<sub>c</sub>.</p></div></div>
+      </div>
+    </div>
+  </div><!-- /sf-is -->
+
+  <!-- ── SF · TBDY ── -->
+  <div class="sub-pane" id="sf-tbdy">
+    <div class="col-layout">
+      <div class="card no-print">
+        <div class="card-hdr"><h3>Input Parameters</h3><span class="ctag">SI · mm kN MPa</span></div>
+        <div class="card-body">
+          <div class="form-div"><div class="form-div-lbl">Interface</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>A<sub>i</sub> interface area (mm²)</label><div class="iw"><input type="number" id="sf-tbdy-ai" value="1250000" min="1000" oninput="calcSf('tbdy')"><span class="us">mm²</span></div></div>
+            <div class="form-group"><label>A<sub>s</sub> crossing steel (mm²)</label><div class="iw"><input type="number" id="sf-tbdy-as" value="2000" min="0" oninput="calcSf('tbdy')"><span class="us">mm²</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Materials</div></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sf-tbdy-fck" value="25" min="16" oninput="calcSf('tbdy')"><span class="us">MPa</span></div></div>
+            <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="sf-tbdy-fyk" value="420" min="220" oninput="calcSf('tbdy')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sf-tbdy-ved" value="1000" min="0" oninput="calcSf('tbdy')"><span class="us">kN</span></div></div>
+            <div class="form-group"><label>σ<sub>n</sub> normal (MPa)</label><div class="iw"><input type="number" id="sf-tbdy-sn" value="0" step="0.1" oninput="calcSf('tbdy')"><span class="us">MPa</span></div></div>
+          </div>
+          <div class="form-div"><div class="form-div-lbl">Interface Surface</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            <button class="unit-btn active" onclick="setSfTbdySurf('mono',this)">Monolithic</button>
+            <button class="unit-btn" onclick="setSfTbdySurf('rough',this)">Rough</button>
+            <button class="unit-btn" onclick="setSfTbdySurf('smooth',this)">Smooth</button>
+          </div>
+        </div>
+      </div>
+      <div class="results-col" id="sf-tbdy-res">
+        <div class="res-empty"><div class="ri">📐</div>Enter parameters — results appear here.</div>
+      </div>
+    </div>
+    <div class="bg-section" id="bgs-sf-tbdy">
+      <div class="bg-hdr" onclick="toggleBg('bgs-sf-tbdy')"><span>Design Background — TBDY 2018 → TS EN 1992-1-1 §6.2.5</span><span class="bg-arr">▾</span></div>
+      <div class="bg-body" style="display:none;padding:14px 18px;">
+        <div class="bg-pane active"><div class="fml-blk"><p>TBDY 2018 adopts TS EN 1992-1-1 for shear friction (interface shear). Same formula as EN 1992-1-1 §6.2.5 with Turkish National Annex: γ<sub>c</sub>=1.5, γ<sub>s</sub>=1.15.</p><span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>)·A<sub>i</sub> ≤ 0.5νf<sub>cd</sub>·A<sub>i</sub></span></div></div>
+      </div>
+    </div>
+  </div><!-- /sf-tbdy -->
+</div><!-- /mod-sf -->
+
+</main>
+<script>
+/* ─── STATE ─── */
+var _unit={};           // 'si' or 'us' per module key
+var _sdcHi=true;        // ACI BE: SDC D/E/F
+var _enDc='dch';        // EN BE ductility class
+var _tbdyDts='12';      // TBDY DTS
+var _shEnDc='dch';      // EN Shear ductility class
+var _sfMuAci='mono';    // ACI shear-friction surface
+var _sfEnSurf='mono';   // EN shear-friction surface
+var _sfTbdySurf='mono'; // TBDY shear-friction surface
+var _pmBe={aci:'no',en:'no',is:'no',tbdy:'no'};
+
+/* ─── HELPERS ─── */
+function v(id){var e=document.getElementById(id);return e?parseFloat(e.value)||0:0;}
+function fmt(x,d){if(d===undefined)d=2;return isNaN(x)||!isFinite(x)?'—':x.toFixed(d);}
+function ri(lbl,val,unit,cls){return '<div class="result-item'+(cls?' '+cls:'')+'"><div class="ri-label">'+lbl+'</div><div class="ri-value">'+val+'</div><div class="ri-unit">'+unit+'</div></div>';}
+function banner(state,strong,sub){return '<div class="dcr-banner '+state+'"><div class="dcr-icon">'+(state==='ok'?'✅':state==='warn'?'⚠️':'❌')+'</div><div class="dcr-text"><strong>'+strong+'</strong><span>'+sub+'</span></div></div>';}
+function srow(n,desc,val,chk,cls){return '<tr><td class="snum"><span>'+n+'</span></td><td class="sdesc">'+desc+'</td><td class="sval">'+val+'</td><td class="schk'+(cls?' '+cls:'')+'">'+chk+'</td></tr>';}
+function ul(id){return (_unit[id]||'si')==='us';}
+function toSI_len(x,mod){return ul(mod)?x*25.4:x;}
+function toSI_str(x,mod){return ul(mod)?x*0.006895:x;}
+function toSI_frc(x,mod){return ul(mod)?x*4.44822:x;}
+function toSI_mom(x,mod){return ul(mod)?x*1.35582:x;}
+function toSI_area(x,mod){return ul(mod)?x*645.16:x;}
+function frSI_len(x,mod){return ul(mod)?x/25.4:x;}
+function frSI_str(x,mod){return ul(mod)?x/0.006895:x;}
+function frSI_frc(x,mod){return ul(mod)?x/4.44822:x;}
+function frSI_mom(x,mod){return ul(mod)?x/1.35582:x;}
+function frSI_area(x,mod){return ul(mod)?x/645.16:x;}
+function uLen(mod){return ul(mod)?'in':'mm';}
+function uStr(mod){return ul(mod)?'psi':'MPa';}
+function uFrc(mod){return ul(mod)?'kip':'kN';}
+function uMom(mod){return ul(mod)?'kip·ft':'kN·m';}
+function uArea(mod){return ul(mod)?'in²':'mm²';}
+
+function wallSvg(lw,bw,lbe,mod){
+  /* plan view SVG, lw = wall length, bw = thickness, lbe = BE length */
+  var W=280,H=90,pad=20;
+  var scx=W/(lw+2*pad),scy=H/(bw+2*pad);
+  var sc=Math.min(scx,scy);
+  var ox=(W-lw*sc)/2,oy=(H-bw*sc)/2;
+  var lw_px=lw*sc,bw_px=bw*sc,lbe_px=lbe*sc;
+  var s='<svg width="'+W+'" height="'+H+'" style="font-size:9px;font-family:var(--mono);">';
+  /* wall body */
+  s+='<rect x="'+ox+'" y="'+oy+'" width="'+lw_px+'" height="'+bw_px+'" fill="#e8f0fb" stroke="#4a7ecb" stroke-width="1.2"/>';
+  if(lbe>0){
+    /* left BE */
+    s+='<rect x="'+ox+'" y="'+oy+'" width="'+lbe_px+'" height="'+bw_px+'" fill="#b8d0eb" stroke="#4a7ecb" stroke-width="0.8"/>';
+    /* right BE */
+    s+='<rect x="'+(ox+lw_px-lbe_px)+'" y="'+oy+'" width="'+lbe_px+'" height="'+bw_px+'" fill="#b8d0eb" stroke="#4a7ecb" stroke-width="0.8"/>';
+  }
+  /* dim line */
+  var dy=oy+bw_px+10;
+  s+='<line x1="'+ox+'" y1="'+dy+'" x2="'+(ox+lw_px)+'" y2="'+dy+'" stroke="#888" stroke-width="0.8"/>';
+  s+='<text x="'+(ox+lw_px/2)+'" y="'+(dy+8)+'" text-anchor="middle" fill="#666">l_w = '+fmt(frSI_len(lw,mod),lbe?0:0)+' '+uLen(mod)+'</text>';
+  if(lbe>0){
+    s+='<text x="'+(ox+lbe_px/2)+'" y="'+(oy+bw_px/2+3)+'" text-anchor="middle" fill="#2563a8" font-size="8">BE</text>';
+    s+='<text x="'+(ox+lw_px-lbe_px/2)+'" y="'+(oy+bw_px/2+3)+'" text-anchor="middle" fill="#2563a8" font-size="8">BE</text>';
+    s+='<text x="'+ox+'" y="'+(oy-4)+'" text-anchor="middle" fill="#2563a8" font-size="8">'+fmt(frSI_len(lbe,mod),0)+' '+uLen(mod)+'</text>';
+  }
+  s+='</svg>';
+  return '<div class="wall-svg-wrap">'+s+'</div>';
+}
+
+function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
+  var cnv=document.getElementById(canvasId);if(!cnv)return;
+  var ctx=cnv.getContext('2d');
+  var W=cnv.width,H=cnv.height,pad=46;
+  ctx.clearRect(0,0,W,H);
+  if(!pts||pts.length<3)return;
+  /* find range */
+  var maxP=0,minP=0,maxM=0;
+  pts.forEach(function(p){maxP=Math.max(maxP,p.Pn);minP=Math.min(minP,p.Pn);maxM=Math.max(maxM,p.Mn);});
+  maxP*=1.1;minP=Math.min(minP*1.1,-100);maxM*=1.15;if(maxM<100)maxM=100;
+  function cx(m){return pad+(m/maxM)*(W-2*pad);}
+  function cy(p){return pad+(1-(p-minP)/(maxP-minP))*(H-2*pad);}
+  /* grid */
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=0.8;
+  for(var i=0;i<=4;i++){var xx=pad+i*(W-2*pad)/4;ctx.beginPath();ctx.moveTo(xx,pad);ctx.lineTo(xx,H-pad);ctx.stroke();}
+  for(var j=0;j<=4;j++){var yy=pad+j*(H-2*pad)/4;ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-pad,yy);ctx.stroke();}
+  /* axes */
+  ctx.strokeStyle='#9ca3af';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad,cy(0));ctx.lineTo(W-pad,cy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx(0),pad);ctx.lineTo(cx(0),H-pad);ctx.stroke();
+  /* P-M nominal curve */
+  ctx.strokeStyle='#94a3c8';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.Mn),cy(p.Pn));else ctx.lineTo(cx(p.Mn),cy(p.Pn));});
+  ctx.stroke();ctx.setLineDash([]);
+  /* φP-M design curve */
+  ctx.strokeStyle='#3b6fd4';ctx.lineWidth=2;
+  ctx.beginPath();
+  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn||p.Mn),cy(p.phiPn||p.Pn));else ctx.lineTo(cx(p.phiMn||p.Mn),cy(p.phiPn||p.Pn));});
+  ctx.stroke();
+  /* design point */
+  var dpx=cx(Mu_kNm),dpy=cy(Pu_kN);
+  ctx.fillStyle='#ef4444';ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(dpx,dpy,6,0,Math.PI*2);ctx.fill();ctx.stroke();
+  /* axis labels */
+  ctx.fillStyle='#6b7280';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText(mLabel||'Mn (kN·m)',W/2,H-4);
+  ctx.save();ctx.translate(11,H/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(pLabel||'Pn (kN)',0,0);ctx.restore();
+  /* tick labels */
+  ctx.font='9px sans-serif';ctx.fillStyle='#9ca3af';
+  ctx.textAlign='center';
+  ctx.fillText(fmt(maxM,0),cx(maxM),pad-4);
+  ctx.textAlign='right';
+  ctx.fillText(fmt(maxP,0),pad-3,cy(maxP)+3);
+  ctx.fillText('0',pad-3,cy(0)+3);
+  if(minP<0)ctx.fillText(fmt(minP,0),pad-3,cy(minP)+3);
+  /* legend */
+  ctx.strokeStyle='#3b6fd4';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(W-pad-90,pad-2);ctx.lineTo(W-pad-70,pad-2);ctx.stroke();
+  ctx.fillStyle='#374151';ctx.font='9px sans-serif';ctx.textAlign='left';
+  ctx.fillText('φPn−φMn',W-pad-68,pad+1);
+  ctx.strokeStyle='#94a3c8';ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(W-pad-90,pad+10);ctx.lineTo(W-pad-70,pad+10);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillText('Pn−Mn',W-pad-68,pad+14);
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(W-pad-80,pad+22,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#374151';ctx.fillText('(Mu,Pu)',W-pad-68,pad+26);
+}
+
+/* ─── TAB SWITCHERS ─── */
+function swMod(btn,id){
+  document.querySelectorAll('.mod-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.mod-pane').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function swStd(pre,std,btn){
+  var par=document.getElementById('mod-'+pre);
+  par.querySelectorAll('.sub-tab').forEach(function(b){b.classList.remove('active');});
+  par.querySelectorAll('.sub-pane').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById(pre+'-'+std).classList.add('active');
+}
+function toggleBg(id){
+  var sec=document.getElementById(id);
+  var body=sec.querySelector('.bg-body');
+  var arr=sec.querySelector('.bg-arr');
+  var open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(arr)arr.textContent=open?'▾':'▴';
+}
+function swBgTab(secId,idx,btn){
+  var sec=document.getElementById(secId);
+  sec.querySelectorAll('.bg-tab').forEach(function(b){b.classList.remove('active');});
+  sec.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  sec.querySelectorAll('.bg-pane')[idx].classList.add('active');
+}
+
+/* ─── UNIT TOGGLE ─── */
+var _uDefs={
+  len:{si:'mm',us:'in',si2si:1,us2si:25.4},
+  str:{si:'MPa',us:'psi',si2si:1,us2si:0.006895},
+  frc:{si:'kN',us:'kip',si2si:1,us2si:4.44822},
+  mom:{si:'kN·m',us:'kip·ft',si2si:1,us2si:1.35582},
+  area:{si:'mm²',us:'in²',si2si:1,us2si:645.16}
+};
+function setSwUnit(mod,newUnit,btn){
+  var oldUnit=_unit[mod]||'si';
+  if(oldUnit===newUnit)return;
+  _unit[mod]=newUnit;
+  /* toggle button state */
+  [mod+'-si-btn',mod+'-us-btn'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.classList.remove('active');
+  });
+  btn.classList.add('active');
+  /* update labels */
+  document.querySelectorAll('.u-len[data-m="'+mod+'"]').forEach(function(el){el.textContent=newUnit==='us'?'in':'mm';});
+  document.querySelectorAll('.u-str[data-m="'+mod+'"]').forEach(function(el){el.textContent=newUnit==='us'?'psi':'MPa';});
+  document.querySelectorAll('.u-frc[data-m="'+mod+'"]').forEach(function(el){el.textContent=newUnit==='us'?'kip':'kN';});
+  document.querySelectorAll('.u-mom[data-m="'+mod+'"]').forEach(function(el){el.textContent=newUnit==='us'?'kip·ft':'kN·m';});
+  document.querySelectorAll('.u-area[data-m="'+mod+'"]').forEach(function(el){el.textContent=newUnit==='us'?'in²':'mm²';});
+  /* convert input values */
+  var inputs=document.querySelectorAll('#'+mod.replace('-','-')+' input[type=number]');
+  /* We identify each input's unit type by its suffix label */
+  /* simpler: just convert all known inputs by field convention */
+  _convertInputs(mod, oldUnit, newUnit);
+  /* update ctag */
+  var tag=document.getElementById(mod+'-utag');
+  if(tag)tag.textContent=newUnit==='us'?'US · in kip psi':'SI · mm kN MPa';
+  /* recalculate */
+  var modPre=mod.split('-')[0];
+  var std=mod.split('-')[1];
+  if(modPre==='be')calcBe(std);
+  else if(modPre==='sh')calcSh(std);
+  else if(modPre==='pm')calcPm(std);
+  else if(modPre==='sf')calcSf(std);
+}
+var _lenIds={
+  'be-aci':['lw','bw','hw','db','cc','hx'],
+  'sh-aci':['lw','bw','hw'],
+  'pm-aci':['lw','bw','cc','lbe'],
+  'sf-aci':[]
+};
+var _strIds={
+  'be-aci':['fc','fy','fyt'],
+  'sh-aci':['fc','fy'],
+  'pm-aci':['fc','fy'],
+  'sf-aci':['fc','fy']
+};
+var _frcIds={
+  'be-aci':['pu'],
+  'sh-aci':['vu'],
+  'pm-aci':['pu'],
+  'sf-aci':['vu','nu']
+};
+var _momIds={
+  'be-aci':['mu'],
+  'sh-aci':[],
+  'pm-aci':['mu'],
+  'sf-aci':[]
+};
+var _areaIds={
+  'be-aci':[],
+  'sh-aci':[],
+  'pm-aci':[],
+  'sf-aci':['ac','avf']
+};
+function _convertInputs(mod,oldUnit,newUnit){
+  var toNew = newUnit==='us' ? 1 : -1; /* +1 → to US, -1 → to SI */
+  function conv(ids,factor){
+    ids.forEach(function(fld){
+      var el=document.getElementById(mod+'-'+fld);
+      if(!el)return;
+      var val=parseFloat(el.value)||0;
+      el.value = toNew===1 ? fmt(val/factor,3) : fmt(val*factor,3);
+    });
+  }
+  var f=toNew===1?1:-1; /* direction */
+  var lf=toNew===1?(1/25.4):25.4;
+  var sf=toNew===1?(1/0.006895):0.006895;
+  var ff=toNew===1?(1/4.44822):4.44822;
+  var mf=toNew===1?(1/1.35582):1.35582;
+  var af=toNew===1?(1/645.16):645.16;
+  (_lenIds[mod]||[]).forEach(function(fld){var el=document.getElementById(mod+'-'+fld);if(!el)return;el.value=fmt((parseFloat(el.value)||0)*lf,2);});
+  (_strIds[mod]||[]).forEach(function(fld){var el=document.getElementById(mod+'-'+fld);if(!el)return;el.value=fmt((parseFloat(el.value)||0)*sf,1);});
+  (_frcIds[mod]||[]).forEach(function(fld){var el=document.getElementById(mod+'-'+fld);if(!el)return;el.value=fmt((parseFloat(el.value)||0)*ff,2);});
+  (_momIds[mod]||[]).forEach(function(fld){var el=document.getElementById(mod+'-'+fld);if(!el)return;el.value=fmt((parseFloat(el.value)||0)*mf,2);});
+  (_areaIds[mod]||[]).forEach(function(fld){var el=document.getElementById(mod+'-'+fld);if(!el)return;el.value=fmt((parseFloat(el.value)||0)*af,1);});
+}
+
+/* ─── STATE SETTERS ─── */
+function setSdcAci(lvl,btn){
+  _sdcHi=lvl==='hi';
+  ['be-aci-sdc-hi','be-aci-sdc-lo'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
+  btn.classList.add('active');
+  calcBe('aci');
+}
+function setEnDc(dc,btn){
+  _enDc=dc;
+  ['be-en-dch','be-en-dcm','be-en-dcl'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
+  btn.classList.add('active');
+  calcBe('en');
+}
+function setTbdyDts(dts,btn){
+  _tbdyDts=dts;
+  ['be-tbdy-dts12','be-tbdy-dts34'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
+  btn.classList.add('active');
+  calcBe('tbdy');
+}
+function setShEnDc(dc,btn){
+  _shEnDc=dc;
+  ['sh-en-dch','sh-en-dcm','sh-en-dcl'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
+  btn.classList.add('active');
+  calcSh('en');
+}
+function setSfMu(std,surface,btn){
+  _sfMuAci=surface;
+  document.querySelectorAll('#sf-aci-mu-btns .unit-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  calcSf('aci');
+}
+function setSfEnSurf(surf,btn){
+  _sfEnSurf=surf;
+  document.querySelectorAll('#sf-en .sub-pane .unit-btn, #sf-en .unit-btn').forEach(function(b){if(b.onclick&&b.onclick.toString().indexOf('setSfEnSurf')>-1)b.classList.remove('active');});
+  btn.classList.add('active');
+  calcSf('en');
+}
+function setSfTbdySurf(surf,btn){
+  _sfTbdySurf=surf;
+  btn.closest('div').querySelectorAll('.unit-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  calcSf('tbdy');
+}
+function setPmBe(std,state,btn){
+  _pmBe[std]=state;
+  var ids=['pm-'+std+'-nobe','pm-'+std+'-habe'];
+  ids.forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
+  btn.classList.add('active');
+  var wrap=document.getElementById('pm-'+std+'-be-inputs');
+  if(wrap)wrap.style.display=state==='yes'?'block':'none';
+  calcPm(std);
+}
+
+/* ═══ BOUNDARY ELEMENT ═══ */
+function calcBe(std){
+  var m='be-'+std;
+  var res=document.getElementById(m+'-res');
+  if(!res)return;
+
+  if(std==='aci'){
+    var lw=toSI_len(v(m+'-lw'),m);
+    var bw=toSI_len(v(m+'-bw'),m);
+    var hw=toSI_len(v(m+'-hw'),m);
+    var fc=toSI_str(v(m+'-fc'),m);
+    var fy=toSI_str(v(m+'-fy'),m);
+    var fyt=toSI_str(v(m+'-fyt'),m);
+    var Pu_N=toSI_frc(v(m+'-pu'),m)*1000;
+    var Mu_Nmm=toSI_mom(v(m+'-mu'),m)*1e6;
+    var rhov=v(m+'-rhov');
+    var db=toSI_len(v(m+'-db'),m);
+    var cc=toSI_len(v(m+'-cc'),m);
+    var hx=toSI_len(v(m+'-hx'),m);
+    if(lw<200||bw<100||fc<1||fy<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Ag=lw*bw; var Ig=bw*Math.pow(lw,3)/12;
+    var sig_max=Pu_N/Ag+Mu_Nmm*(lw/2)/Ig;
+    var sig_lim=0.2*fc;
+    var need=sig_max>sig_lim;
+    var beta1=Math.max(0.65,0.85-0.05*(fc-28)/7);
+    var c=(Pu_N+rhov*bw*lw*fy)/(bw*(0.85*fc*beta1+2*rhov*fy));
+    var lbe_calc=Math.max(c-0.1*lw,c/2);
+    var lbe=Math.max(lbe_calc,_sdcHi?bw:lbe_calc);
+    lbe=Math.max(lbe,200);
+    var bc_s=Math.max(bw-2*cc,50);
+    var Ach=Math.max((lbe-2*cc)*(bw-2*cc),100);
+    var Ag_be=lbe*bw;
+    var ratio=Math.max(0.3*(Ag_be/Ach-1)*fc/fyt,0.09*fc/fyt);
+    var smax=Math.min(6*db,150,350-hx/3); smax=Math.max(smax,40);
+    var Ash_req=ratio*bc_s*smax;
+    /* display */
+    var lU=uLen(m),sU=uStr(m),fU=uFrc(m),aU=uArea(m);
+    var html='<div class="result-box">';
+    html+=ri('σ_max',fmt(frSI_str(sig_max,m)),sU,need?'err':'ok');
+    html+=ri('0.2f\'c limit',fmt(frSI_str(sig_lim,m)),sU,'');
+    html+=ri('Neutral axis c',fmt(frSI_len(c,m),0),lU,'');
+    if(need)html+=ri('l_be req.',fmt(frSI_len(lbe,m),0),lU,'ok');
+    html+='</div>';
+    html+=banner(need?'warn':'ok',need?'Boundary Elements REQUIRED':'Boundary Elements NOT Required',
+      'σmax='+fmt(frSI_str(sig_max,m))+sU+(need?' > ':' ≤ ')+fmt(frSI_str(sig_lim,m))+sU+' (0.2f\'c)');
+    if(need){
+      html+='<div class="report-card"><div class="report-body">';
+      html+='<div class="rpt-sec-title">Neutral Axis Depth &amp; Boundary Element Length</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(1,'Stress block factor','β₁ = '+fmt(beta1,3),'');
+      html+=srow(2,'Neutral axis depth','c = '+fmt(frSI_len(c,m),1)+' '+lU,'');
+      html+=srow(3,'c − 0.1l_w','= '+fmt(frSI_len(c-0.1*lw,m),1)+' '+lU,'');
+      html+=srow(4,'c / 2','= '+fmt(frSI_len(c/2,m),1)+' '+lU,'');
+      html+=srow(5,'l_be = max(rows 3,4) ≥ b_w','l_be = <strong>'+fmt(frSI_len(lbe,m),0)+' '+lU+'</strong>','','chk-ok');
+      html+='</tbody></table>';
+      html+='<div class="rpt-sec-title">Confinement Steel (ACI §18.7.5.4)</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(6,'A_g,be = l_be × b_w','= '+fmt(frSI_area(Ag_be,m),0)+' '+aU,'');
+      html+=srow(7,'A_ch core area','= '+fmt(frSI_area(Ach,m),0)+' '+aU,'');
+      html+=srow(8,'A_sh/(s·b_c) ratio','= max(0.3(Ag/Ach−1)f\'c/fyt, 0.09f\'c/fyt) = '+fmt(ratio,4),'');
+      html+=srow(9,'s_max = min(6d_b, 150, 350−h_x/3)','s_max = '+fmt(frSI_len(smax,m),1)+' '+lU,'');
+      html+=srow(10,'A_sh,req at s_max','<strong>A_sh = '+fmt(frSI_area(Ash_req,m),0)+' '+aU+'</strong>','','chk-ok');
+      html+='</tbody></table></div></div>';
+      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe,m)+'</div></div>';
+    }
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='en'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw');
+    var fck=v(m+'-fck'),fyk=v(m+'-fyk');
+    var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
+    var Ned_N=v(m+'-ned')*1000,Med_Nmm=v(m+'-med')*1e6;
+    var rhov=v(m+'-rhov'),cc=v(m+'-cc');
+    var muphi=v(m+'-muphi')||5;
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var fcd=fck/gc,fyd=fyk/gs;
+    var Ac=lw*bw;
+    var nud=Ned_N/(Ac*fcd);
+    var lim=_enDc==='dcl'?99:_enDc==='dch'?0.15:0.20;
+    var need=nud>lim&&_enDc!=='dcl';
+    var lc=_enDc==='dch'?Math.max(0.15*lw,1.5*bw):Math.max(0.10*lw,1.5*bw);
+    /* confinement */
+    var bc=bw-2*cc,bo=bc;
+    var esd=fyk/(gs*200000);
+    var owd=Math.max(30*muphi*nud*esd*(bc/bo)-0.035,0.12);
+    var Ach=(lc-2*cc)*(bw-2*cc);
+    var Ash_per_s=owd*Ach*fcd/(bc*fyd);
+    var html='<div class="result-box">';
+    html+=ri('ν_d = N_Ed/(Ac·f_cd)',fmt(nud,3),'—',need?'err':'ok');
+    html+=ri(_enDc==='dch'?'Limit (DCH) 0.15':_enDc==='dcm'?'Limit (DCM) 0.20':'N/A (DCL)',_enDc==='dcl'?'N/A':fmt(lim,2),'—','');
+    html+=ri('l_c required',need?fmt(lc,0):'—','mm',need?'ok':'');
+    html+=ri('ω_wd min.',fmt(owd,3),'—','');
+    html+='</div>';
+    html+=banner(need?'warn':(_enDc==='dcl'?'ok':'ok'),
+      need?'Boundary Elements REQUIRED':'Boundary Elements NOT Required',
+      'ν_d = '+fmt(nud,3)+(need?' > ':' ≤ ')+(lim>90?'N/A':fmt(lim,2))+(need?'':' — No boundary elements required'));
+    if(need){
+      html+='<div class="report-card"><div class="report-body">';
+      html+='<div class="rpt-sec-title">Critical Zone Length</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(1,'0.15·l_w',fmt(0.15*lw,0)+' mm','');
+      html+=srow(2,'1.5·b_w',fmt(1.5*bw,0)+' mm','');
+      html+=srow(3,'l_c = max','<strong>'+fmt(lc,0)+' mm</strong>','','chk-ok');
+      html+='</tbody></table>';
+      html+='<div class="rpt-sec-title">Confinement Steel</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(4,'ε_sy,d = f_yk/(γ_s·E_s)',fmt(esd,5),'');
+      html+=srow(5,'ω_wd = max(30μφ·ν_d·ε_sy,d·bc/bo−0.035, 0.12)','ω_wd = '+fmt(owd,3),'');
+      html+=srow(6,'A_sh/s = ω_wd·A_ch·f_cd/(b_c·f_yd)','A_sh/s = <strong>'+fmt(Ash_per_s,2)+' mm²/mm</strong>','','chk-ok');
+      html+='</tbody></table></div></div>';
+      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lc,'be-en')+'</div></div>';
+    }
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='is'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw');
+    var fck=v(m+'-fck'),fy=v(m+'-fy');
+    var Pu_N=v(m+'-pu')*1000,Mu_Nmm=v(m+'-mu')*1e6;
+    var rhov=v(m+'-rhov'),cc=v(m+'-cc');
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Ag=lw*bw,Ig=bw*Math.pow(lw,3)/12;
+    var sig_max=Pu_N/Ag+Mu_Nmm*(lw/2)/Ig;
+    var sig_lim=0.2*fck;
+    var need=sig_max>sig_lim;
+    var lbe=Math.max(bw,lw/10);
+    var Ach=(lbe-2*cc)*(bw-2*cc),Ag_be=lbe*bw;
+    var hcore=bw-2*cc;
+    var db_est=20;
+    var smax=Math.min(bw/4,75,6*db_est);smax=Math.max(smax,40);
+    var Ash_req=0.18*smax*hcore*(fck/fy)*(Ag_be/Ach-1);
+    var html='<div class="result-box">';
+    html+=ri('σ_max',fmt(sig_max),sU||'MPa',need?'err':'ok');
+    html+=ri('0.2f_ck',fmt(sig_lim),'MPa','');
+    html+=ri('l_be req.',need?fmt(lbe,0):'—','mm',need?'ok':'');
+    html+=ri('A_sh req.',need?fmt(Ash_req,0):'—','mm²',need?'ok':'');
+    html+='</div>';
+    html+=banner(need?'warn':'ok',need?'Boundary Elements REQUIRED':'Boundary Elements NOT Required',
+      'σmax='+fmt(sig_max)+'MPa'+(need?' > ':' ≤ ')+fmt(sig_lim)+'MPa (0.2f_ck)');
+    if(need){
+      html+='<div class="report-card"><div class="report-body">';
+      html+='<div class="rpt-sec-title">Boundary Element Length (IS 13920 §9.4.2)</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(1,'t_w',fmt(bw,0)+' mm','');
+      html+=srow(2,'l_w/10',fmt(lw/10,0)+' mm','');
+      html+=srow(3,'l_be = max','<strong>'+fmt(lbe,0)+' mm</strong>','','chk-ok');
+      html+='</tbody></table>';
+      html+='<div class="rpt-sec-title">Confinement Steel (IS 13920 §9.4.4)</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(4,'s_max = min(t_w/4, 75, 6d_b)',fmt(smax,0)+' mm','');
+      html+=srow(5,'A_sh ≥ 0.18·s·h·(fck/fy)·(Ag/Ach−1)','<strong>'+fmt(Ash_req,0)+' mm²</strong>','','chk-ok');
+      html+='</tbody></table></div></div>';
+      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe,'be-is')+'</div></div>';
+    }
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='tbdy'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw'),hw=v(m+'-hw');
+    var fck=v(m+'-fck'),fyk=v(m+'-fyk');
+    var Nd_N=v(m+'-nd')*1000,Md_Nmm=v(m+'-md')*1e6;
+    var rhov=v(m+'-rhov'),cc=v(m+'-cc');
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Ac=lw*bw,Ig=bw*Math.pow(lw,3)/12;
+    var sig_max=Nd_N/Ac+Md_Nmm*(lw/2)/Ig;
+    var sig_lim=_tbdyDts==='12'?0.35*fck:0.40*fck;
+    var need=sig_max>sig_lim;
+    var lbe=Math.max(bw,lw/5,hw/10);
+    var html='<div class="result-box">';
+    html+=ri('σ_max',fmt(sig_max),'MPa',need?'err':'ok');
+    html+=ri(_tbdyDts==='12'?'0.35f_ck':'0.40f_ck',fmt(sig_lim),'MPa','');
+    html+=ri('l_be',need?fmt(lbe,0):'—','mm',need?'ok':'');
+    html+='</div>';
+    html+=banner(need?'warn':'ok',need?'Confined End Regions REQUIRED':'Confined End Regions NOT Required',
+      'σmax='+fmt(sig_max)+'MPa'+(need?' > ':' ≤ ')+fmt(sig_lim)+'MPa');
+    if(need){
+      html+='<div class="report-card"><div class="report-body">';
+      html+='<div class="rpt-sec-title">Confined Zone Length (TBDY §7.6.6.1)</div>';
+      html+='<table class="steps-tbl"><tbody>';
+      html+=srow(1,'b_w',fmt(bw,0)+' mm','');
+      html+=srow(2,'l_w/5',fmt(lw/5,0)+' mm','');
+      html+=srow(3,'h_w/10',fmt(hw/10,0)+' mm','');
+      html+=srow(4,'l_be = max(b_w, l_w/5, h_w/10)','<strong>'+fmt(lbe,0)+' mm</strong>','','chk-ok');
+      html+='</tbody></table></div></div>';
+      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe,'be-tbdy')+'</div></div>';
+    }
+    res.innerHTML=html;
+  }
+}
+
+/* ═══ SHEAR DESIGN ═══ */
+function calcSh(std){
+  var m='sh-'+std;
+  var res=document.getElementById(m+'-res');
+  if(!res)return;
+
+  if(std==='aci'){
+    var lw=toSI_len(v(m+'-lw'),m),bw=toSI_len(v(m+'-bw'),m),hw=toSI_len(v(m+'-hw'),m);
+    var fc=toSI_str(v(m+'-fc'),m),fy=toSI_str(v(m+'-fy'),m);
+    var Vu_N=toSI_frc(v(m+'-vu'),m)*1000;
+    var rhot=v(m+'-rhot');
+    if(lw<200||bw<100||fc<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Acv=lw*bw;
+    var hw_lw=hw/lw;
+    var ac=hw_lw<=1.5?0.25:hw_lw>=2.0?0.17:0.25+(0.17-0.25)*(hw_lw-1.5)/(2.0-1.5);
+    var Vn=(ac*Math.sqrt(fc)+rhot*fy)*Acv;
+    var Vn_max=0.66*Math.sqrt(fc)*Acv;
+    var Vn_used=Math.min(Vn,Vn_max);
+    var phi=0.75;
+    var phiVn=phi*Vn_used/1000;
+    var Vu_kN=Vu_N/1000;
+    var dcr=Vu_kN/phiVn;
+    var ok=dcr<=1.0;
+    var lU=uLen(m),sU=uStr(m),fU=uFrc(m);
+    var html='<div class="result-box">';
+    html+=ri('φV_n',fmt(frSI_frc(phiVn*1000,m)/1000,1),fU,ok?'ok':'err');
+    html+=ri('V_u',fmt(frSI_frc(Vu_N,m)/1000,1),fU,'');
+    html+=ri('D/C ratio',fmt(dcr,3),'—',ok?'ok':'err');
+    html+=ri('h_w/l_w',fmt(hw_lw,2),'—','');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Shear Capacity OK':'Shear Capacity INSUFFICIENT',
+      'V_u='+fmt(frSI_frc(Vu_N,m)/1000,1)+fU+' ≤ φV_n='+fmt(frSI_frc(phiVn*1000,m)/1000,1)+fU);
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">ACI 318-25 §18.10.4 Shear Design</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'h_w/l_w',fmt(hw_lw,2),'');
+    html+=srow(2,'α_c',fmt(ac,3),'');
+    html+=srow(3,'A_cv = l_w × b_w',fmt(Acv/1e6,4)+' m²','');
+    html+=srow(4,'V_n = (α_c√f\'c + ρ_t·f_y)·A_cv',fmt(frSI_frc(Vn,m)/1000,1)+' '+fU,'');
+    html+=srow(5,'V_n,max = 0.66√f\'c·A_cv',fmt(frSI_frc(Vn_max,m)/1000,1)+' '+fU,'');
+    html+=srow(6,'V_n used = min(V_n, V_n,max)',fmt(frSI_frc(Vn_used,m)/1000,1)+' '+fU,'');
+    html+=srow(7,'φV_n (φ=0.75)','<strong>'+fmt(frSI_frc(phiVn*1000,m)/1000,1)+' '+fU+'</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='en'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw');
+    var fck=v(m+'-fck'),fyk=v(m+'-fyk');
+    var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
+    var Ved_N=v(m+'-ved')*1000,Ned_N=v(m+'-ned')*1000;
+    var rhol=v(m+'-rhol'),rhoh=v(m+'-rhoh');
+    var d=v(m+'-d');
+    var amp=_shEnDc==='dcl'?1.0:1.5;
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var fcd=fck/gc,fyd=fyk/gs;
+    var fctd=0.21*Math.pow(fck,2/3)/gc;
+    var CRdc=0.18/gc;
+    var k=Math.min(1+Math.sqrt(200/d),2.0);
+    var rhol_chk=Math.min(rhol,0.02);
+    var sig_cp=Ned_N/(lw*bw); sig_cp=Math.min(sig_cp,0.2*fcd);
+    var vmin=0.035*Math.pow(k,1.5)*Math.sqrt(fck);
+    var VRdc_N=Math.max(CRdc*k*Math.pow(100*rhol_chk*fck,1/3)+0.15*sig_cp, vmin+0.15*sig_cp)*bw*d;
+    var nu=0.6*(1-fck/250);
+    var z=0.9*d;
+    var VRdmax_N=1.0*bw*z*nu*fcd/(1+1); /* cotθ=1, tanθ=1 for θ=45° */
+    var Asw_per_s_mm=amp*Ved_N/(z*fyd*1.0); /* per mm height */
+    var phiVRdc=VRdc_N/1000,phiVRdmax=VRdmax_N/1000;
+    var ok_conc=amp*v(m+'-ved')<=phiVRdmax;
+    var html='<div class="result-box">';
+    html+=ri('V_Rd,c',fmt(phiVRdc,1),'kN','');
+    html+=ri('V_Rd,max',fmt(phiVRdmax,1),'kN','');
+    html+=ri('A_sw/s req.',fmt(Asw_per_s_mm,2),'mm²/mm','ok');
+    html+=ri('Amplification',fmt(amp,1),'×','');
+    html+='</div>';
+    html+=banner(ok_conc?'ok':'err',ok_conc?'Shear OK':'Strut Capacity EXCEEDED',
+      'V_Ed,design='+fmt(amp*v(m+'-ved'),1)+'kN'+'; V_Rd,max='+fmt(phiVRdmax,1)+'kN');
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">EN 1992-1-1 §6.2 Shear Design</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'V_Ed,design (×'+amp+')',fmt(amp*v(m+'-ved'),1)+' kN','');
+    html+=srow(2,'k = 1+(200/d)^0.5',fmt(k,3),'');
+    html+=srow(3,'V_Rd,c (concrete contribution)',fmt(phiVRdc,1)+' kN','');
+    html+=srow(4,'V_Rd,max (strut)',fmt(phiVRdmax,1)+' kN',ok_conc?'✔':'✘',ok_conc?'chk-ok':'chk-err');
+    html+=srow(5,'A_sw/s = V_Ed,d/(z·f_yd)',fmt(Asw_per_s_mm,3)+' mm²/mm (horiz.)','');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='is'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw'),d=v(m+'-d');
+    var fck=v(m+'-fck'),fy=v(m+'-fy');
+    var Vu_N=v(m+'-vu')*1000,rhoh=v(m+'-rhoh');
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var tv=Vu_N/(bw*d);
+    var tc=0.17*Math.sqrt(fck);
+    var need_steel=tv>tc;
+    var Asv_per_s=need_steel?(Vu_N-tc*bw*d)/(0.87*fy*d):0;
+    var tau_max=Math.min(0.2*fck,3.5);
+    var ok_max=tv<=tau_max;
+    var html='<div class="result-box">';
+    html+=ri('τ_v',fmt(tv,3),'MPa',tv>tau_max?'err':tv>tc?'warn':'ok');
+    html+=ri('τ_c',fmt(tc,3),'MPa','');
+    html+=ri('τ_max',fmt(tau_max,2),'MPa','');
+    html+=ri('A_sv/s',fmt(Asv_per_s,3),'mm²/mm',need_steel?'warn':'ok');
+    html+='</div>';
+    html+=banner(!ok_max?'err':need_steel?'warn':'ok',
+      !ok_max?'Section Too Small':need_steel?'Shear Steel Required':'No Shear Reinf. Needed',
+      'τ_v='+fmt(tv,3)+' MPa vs τ_c='+fmt(tc,3)+' MPa');
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='tbdy'){
+    var lw=v(m+'-lw'),bw=v(m+'-bw'),hw=v(m+'-hw');
+    var fck=v(m+'-fck'),fyk=v(m+'-fyk');
+    var Ve_N=v(m+'-ve')*1000;
+    var rhoh=v(m+'-rhoh');
+    if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Aw=lw*bw,gRE=0.75;
+    var Vr_N=(0.65*Math.sqrt(fck)+rhoh*fyk)*Aw;
+    var Vr_max_N=0.85*Math.sqrt(fck)*Aw;
+    var phiVr=gRE*Math.min(Vr_N,Vr_max_N)/1000;
+    var Ve_kN=Ve_N/1000;
+    var dcr=Ve_kN/phiVr;
+    var ok=dcr<=1.0;
+    var html='<div class="result-box">';
+    html+=ri('γ_RE·V_r',fmt(phiVr,1),'kN',ok?'ok':'err');
+    html+=ri('V_e',fmt(Ve_kN,1),'kN','');
+    html+=ri('D/C',fmt(dcr,3),'—',ok?'ok':'err');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Shear Capacity OK':'Shear Capacity INSUFFICIENT',
+      'V_e='+fmt(Ve_kN,1)+'kN vs γ_RE·V_r='+fmt(phiVr,1)+'kN');
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">TBDY 2018 §7.6.5.3</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'A_w = l_w × b_w',fmt(Aw/1e6,4)+' m²','');
+    html+=srow(2,'V_r = (0.65√f_ck + ρ_sh·f_ywk)·A_w',fmt(Vr_N/1000,1)+' kN','');
+    html+=srow(3,'V_r,max = 0.85√f_ck·A_w',fmt(Vr_max_N/1000,1)+' kN','');
+    html+=srow(4,'γ_RE·V_r (γ_RE=0.75)','<strong>'+fmt(phiVr,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+  }
+}
+
+/* ═══ PMM DESIGN ═══ */
+function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
+  /* Returns array of {Pn,Mn,phiPn,phiMn} in N, N·mm */
+  var Es=200000,pts=[],N=100;
+  var beta1=codeType==='aci'?Math.max(0.65,0.85-0.05*(fc-28)/7):0.80;
+  var eps_cu=codeType==='is'?0.0035:0.003;
+  if(codeType==='en'||codeType==='tbdy'||codeType==='is')eps_cu=0.0035;
+  var fcd,fyd;
+  if(codeType==='aci'){fcd=0.85*fc;fyd=fy;}
+  else if(codeType==='en'){fcd=fc/1.5;fyd=fy/1.15;}
+  else if(codeType==='is'){fcd=0.447*fc;fyd=0.87*fy;}
+  else{fcd=fc/1.5;fyd=fy/1.15;} /* tbdy */
+
+  /* Pure compression cap */
+  var Ast_web=rhov_web*lw*bw;
+  var Ast_be=lbe>0?2*rhov_be*lbe*bw:0;
+  var Pn0=(fcd*lw*bw+fyd*(Ast_web+Ast_be));
+  var Pn_max=codeType==='aci'?0.80*Pn0:Pn0;
+  pts.push({Pn:Pn_max,Mn:0,phiPn:codeType==='aci'?0.65*Pn_max:Pn_max,phiMn:0});
+
+  for(var i=1;i<=N;i++){
+    var c=lw*(2.0-i*2.5/N);if(c<1)c=1;
+    var a=Math.min(beta1*c,lw);
+    var Pn=0,Mn=0;
+    var centroid=lw/2;
+    /* concrete compression block */
+    var Cc=fcd*a*bw;
+    Pn+=Cc; Mn+=Cc*(centroid-a/2);
+    /* web steel strips */
+    var nS=80,dS=lw/nS;
+    for(var j=0;j<nS;j++){
+      var xi=(j+0.5)*dS;
+      var eps_si=(c-xi)/c*eps_cu;
+      var fs=Math.max(-fyd,Math.min(fyd,Es*eps_si));
+      var As_s=rhov_web*bw*dS;
+      var cc_disp=(xi<a)?fcd*bw*dS:0;
+      var F=As_s*fs-cc_disp;
+      Pn+=F; Mn+=F*(centroid-xi);
+    }
+    /* boundary elements */
+    if(lbe>0){
+      var xbe_L=lbe/2,xbe_R=lw-lbe/2;
+      [xbe_L,xbe_R].forEach(function(xbe){
+        var eps_be=(c-xbe)/c*eps_cu;
+        var fs_be=Math.max(-fyd,Math.min(fyd,Es*eps_be));
+        var Abe=rhov_be*bw*lbe;
+        var cc_be=(xbe<a)?fcd*bw*lbe:0;
+        var F_be=Abe*fs_be-cc_be;
+        Pn+=F_be; Mn+=F_be*(centroid-xbe);
+      });
+    }
+    /* phi */
+    var eps_t=(lw-c)/c*eps_cu;
+    var phi=1.0;
+    if(codeType==='aci'){
+      var eps_y=fy/Es;
+      phi=eps_t>=0.005?0.90:eps_t<=eps_y?0.65:0.65+(0.90-0.65)*(eps_t-eps_y)/(0.005-eps_y);
+    }
+    pts.push({Pn:Pn,Mn:Math.abs(Mn),phiPn:phi*Pn,phiMn:phi*Math.abs(Mn)});
+  }
+  /* pure tension */
+  var Ast_tot=Ast_web+Ast_be;
+  var Tn=fyd*Ast_tot;
+  pts.push({Pn:-Tn,Mn:0,phiPn:(codeType==='aci'?0.90:1.0)*(-Tn),phiMn:0});
+  return pts;
+}
+
+function calcPm(std){
+  var m='pm-'+std;
+  var res=document.getElementById(m+'-res');
+  var wrap=document.getElementById(m+'-canvas-wrap');
+  if(!res)return;
+
+  var lw=toSI_len(v(m+'-lw'),m);
+  var bw=toSI_len(v(m+'-bw'),m);
+  var fc_raw=v(m+'-fc'),fc_str=m.indexOf('aci')>-1||m.indexOf('sh')>-1?v(m+'-fc'):v(m+'-fck');
+  /* choose right field */
+  var fc_fld=document.getElementById(m+'-fc')?'fc':document.getElementById(m+'-fck')?'fck':null;
+  var fc=toSI_str(v(m+'-'+(fc_fld||'fc')),m);
+  var fy_fld=document.getElementById(m+'-fy')?'fy':document.getElementById(m+'-fyk')?'fyk':'fywk';
+  var fy=toSI_str(v(m+'-'+fy_fld),m)||420;
+  var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
+  if(std==='en'||std==='tbdy'){fc=v(m+'-fck');fy=v(m+'-fyk')||v(m+'-fywk');}
+  if(std==='is'){fc=v(m+'-fck');fy=v(m+'-fy');}
+  var rhov=v(m+'-rhov');
+  var cc=toSI_len(v(m+'-cc'),m);
+  var hasBe=_pmBe[std]==='yes';
+  var lbe=hasBe?toSI_len(v(m+'-lbe'),m):0;
+  var rhobe=hasBe?v(m+'-rhobe'):0;
+  var Pu_fld=document.getElementById(m+'-pu')?'pu':document.getElementById(m+'-ned')?'ned':'nd';
+  var Mu_fld=document.getElementById(m+'-mu')?'mu':document.getElementById(m+'-med')?'med':'md';
+  var Pu_kN=toSI_frc(v(m+'-'+Pu_fld),m);
+  var Mu_kNm=toSI_mom(v(m+'-'+Mu_fld),m);
+  if(std==='en'){Pu_kN=v(m+'-ned');Mu_kNm=v(m+'-med');}
+  if(std==='is'){Pu_kN=v(m+'-pu');Mu_kNm=v(m+'-mu');}
+  if(std==='tbdy'){Pu_kN=v(m+'-nd');Mu_kNm=v(m+'-md');}
+
+  if(lw<200||bw<100||fc<1||fy<1){
+    res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';
+    if(wrap)wrap.style.display='none';
+    return;
+  }
+
+  var pts=fiberPM(lw,bw,fc,fy,rhov,rhobe,lbe,cc,std);
+  /* convert to kN, kN·m */
+  var ptsPlot=pts.map(function(p){return{Pn:p.Pn/1000,Mn:p.Mn/1e6,phiPn:p.phiPn/1000,phiMn:p.phiMn/1e6};});
+
+  /* DCR: check (Pu,Mu) inside φ curve */
+  /* find max phiMn at given phiPn = Pu_kN */
+  var phiMn_at_Pu=0;
+  for(var i=0;i<ptsPlot.length-1;i++){
+    var p1=ptsPlot[i],p2=ptsPlot[i+1];
+    if((p1.phiPn>=Pu_kN&&p2.phiPn<=Pu_kN)||(p1.phiPn<=Pu_kN&&p2.phiPn>=Pu_kN)){
+      var t=(Pu_kN-p1.phiPn)/(p2.phiPn-p1.phiPn);
+      phiMn_at_Pu=p1.phiMn+t*(p2.phiMn-p1.phiMn);
+      break;
+    }
+  }
+  var dcr=phiMn_at_Pu>0?Mu_kNm/phiMn_at_Pu:999;
+  var inside=dcr<=1.0;
+  var fU=uFrc(m),mU=uMom(m);
+  var html='<div class="result-box">';
+  html+=ri('φM_n at P_u',fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
+  html+=ri('M_u demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
+  html+=ri('D/C ratio',fmt(dcr,3),'—',inside?'ok':'err');
+  html+='</div>';
+  html+=banner(inside?'ok':'err',inside?'Design Point Inside Envelope':'Design Point OUTSIDE Envelope',
+    'M_u='+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+mU+' vs φM_n='+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+mU+' at P_u='+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+fU);
+  res.innerHTML=html;
+  if(wrap)wrap.style.display='block';
+  drawPmCanvas(m+'-canvas',ptsPlot,Pu_kN,Mu_kNm,'','P_n (kN)','M_n (kN·m)');
+}
+
+/* ═══ SHEAR FRICTION ═══ */
+function calcSf(std){
+  var m='sf-'+std;
+  var res=document.getElementById(m+'-res');
+  if(!res)return;
+
+  if(std==='aci'){
+    var Ac=toSI_area(v(m+'-ac'),m);
+    var Avf=toSI_area(v(m+'-avf'),m);
+    var fc=toSI_str(v(m+'-fc'),m);
+    var fy=toSI_str(v(m+'-fy'),m);
+    var Vu_N=toSI_frc(v(m+'-vu'),m)*1000;
+    var Nu_N=toSI_frc(v(m+'-nu'),m)*1000;
+    var lam=v(m+'-lam')||1.0;
+    var mu_map={mono:1.4,rough:1.0,smooth:0.6,hard:0.7};
+    var mu=(mu_map[_sfMuAci]||1.4)*lam;
+    if(Ac<100||fc<1||fy<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var Vn=mu*(Avf*fy+Nu_N);
+    var Vn_max1=0.2*fc*Ac;
+    var Vn_max2=5.5*Ac; /* psi × in² = lbf → if MPa use 5.5/1000 per N → use N directly */
+    var Vn_max3=(3.3+0.08*fc)*Ac; /* N, with fc in MPa: 3.3 is N/mm² coeff */
+    var Vn_max=Math.min(Vn_max1,Vn_max3); /* §22.9.4.4, simplified to most common */
+    var Vn_used=Math.min(Vn,Vn_max);
+    var phi=0.75,phiVn=phi*Vn_used/1000;
+    var Vu_kN=Vu_N/1000,ok=Vu_kN<=phiVn;
+    var fU=uFrc(m),aU=uArea(m);
+    var html='<div class="result-box">';
+    html+=ri('φV_n',fmt(frSI_frc(phiVn*1000,m)/1000,1),fU,ok?'ok':'err');
+    html+=ri('V_u',fmt(frSI_frc(Vu_N,m)/1000,1),fU,'');
+    html+=ri('μ',fmt(mu,2),'—','');
+    html+=ri('D/C',fmt(Vu_kN/phiVn,3),'—',ok?'ok':'err');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Shear-Friction OK':'Shear-Friction INSUFFICIENT',
+      'V_u='+fmt(frSI_frc(Vu_N,m)/1000,1)+fU+' vs φV_n='+fmt(frSI_frc(phiVn*1000,m)/1000,1)+fU);
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">ACI 318-25 §22.9</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'μ = '+(_sfMuAci==='mono'?'1.4λ':_sfMuAci==='rough'?'1.0λ':_sfMuAci==='smooth'?'0.6λ':'0.7λ'),fmt(mu,2),'');
+    html+=srow(2,'V_n = μ(A_vf·f_y + N_u)',fmt(Vn/1000,1)+' kN','');
+    html+=srow(3,'V_n,max = min(0.2f\'c·Ac, (3.3+0.08f\'c)·Ac)',fmt(Vn_max/1000,1)+' kN','');
+    html+=srow(4,'V_n used = min(V_n, V_n,max)',fmt(Vn_used/1000,1)+' kN','');
+    html+=srow(5,'φV_n (φ=0.75)','<strong>'+fmt(phiVn,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='en'||std==='tbdy'){
+    var Ai=std==='en'?v(m+'-ai'):v(m+'-ai');
+    var As=std==='en'?v(m+'-as'):v(m+'-as');
+    var fck=v(m+'-fck'),fyk=v(m+'-fyk');
+    var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
+    var Ved_N=v(m+'-ved')*1000;
+    var sn=std==='en'?v(m+'-sn'):v(m+'-sn');
+    var surf=std==='en'?_sfEnSurf:_sfTbdySurf;
+    var cmap={mono:{c:0.50,mu:0.9},rough:{c:0.45,mu:0.7},smooth:{c:0.20,mu:0.6}};
+    var sp=cmap[surf]||cmap.mono;
+    if(Ai<100||fck<1||fyk<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var fcd=fck/gc,fyd=fyk/gs;
+    var fctd=0.21*Math.pow(fck,2/3)/gc;
+    var rho=As/Ai;
+    var nu=0.6*(1-fck/250);
+    var VRdi_N=(sp.c*fctd+sp.mu*sn+rho*fyd)*Ai;
+    var VRdi_max=0.5*nu*fcd*Ai;
+    var VRdi_used=Math.min(VRdi_N,VRdi_max);
+    var phiVRdi=VRdi_used/1000;
+    var ok=v(m+'-ved')<=phiVRdi;
+    var html='<div class="result-box">';
+    html+=ri('V_Rdi',fmt(phiVRdi,1),'kN',ok?'ok':'err');
+    html+=ri('V_Ed',fmt(v(m+'-ved'),1),'kN','');
+    html+=ri('D/C',fmt(v(m+'-ved')/phiVRdi,3),'—',ok?'ok':'err');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Interface Shear OK':'Interface Shear INSUFFICIENT',
+      'V_Ed='+fmt(v(m+'-ved'),1)+'kN vs V_Rdi='+fmt(phiVRdi,1)+'kN');
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">EN 1992-1-1 §6.2.5</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'Surface: '+surf+' — c='+sp.c+', μ='+sp.mu,'','');
+    html+=srow(2,'f_ctd',fmt(fctd,3)+' MPa','');
+    html+=srow(3,'ρ = A_s/A_i',fmt(rho,5),'');
+    html+=srow(4,'V_Rdi = (c·f_ctd + μ·σ_n + ρ·f_yd)·A_i',fmt(VRdi_N/1000,1)+' kN','');
+    html+=srow(5,'V_Rdi,max = 0.5ν·f_cd·A_i',fmt(VRdi_max/1000,1)+' kN','');
+    html+=srow(6,'V_Rdi used','<strong>'+fmt(phiVRdi,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='is'){
+    var Ac=v(m+'-ac'),Avf=v(m+'-avf');
+    var fck=v(m+'-fck'),fy=v(m+'-fy');
+    var Vu_N=v(m+'-vu')*1000;
+    if(Ac<100||fck<1||fy<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var mu=0.7; /* roughened, IS 456 §17.6 */
+    var Vn=mu*0.87*fy*Avf;
+    var tau_max=Math.min(0.2*fck,3.5);
+    var Vn_max=tau_max*Ac;
+    var Vn_used=Math.min(Vn,Vn_max);
+    var ok=Vu_N<=Vn_used;
+    var html='<div class="result-box">';
+    html+=ri('V_n',fmt(Vn_used/1000,1),'kN',ok?'ok':'err');
+    html+=ri('V_u',fmt(Vu_N/1000,1),'kN','');
+    html+=ri('τ_max',fmt(tau_max,2),'MPa','');
+    html+=ri('D/C',fmt(Vu_N/Vn_used,3),'—',ok?'ok':'err');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Shear Transfer OK':'Shear Transfer INSUFFICIENT',
+      'V_u='+fmt(Vu_N/1000,1)+'kN vs V_n='+fmt(Vn_used/1000,1)+'kN');
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">IS 456:2000 §17.6</div>';
+    html+='<table class="steps-tbl"><tbody>';
+    html+=srow(1,'μ (roughened)',fmt(mu,1),'');
+    html+=srow(2,'V_n = μ·0.87·f_y·A_vf',fmt(Vn/1000,1)+' kN','');
+    html+=srow(3,'τ_max = min(0.2f_ck, 3.5)',fmt(tau_max,2)+' MPa','');
+    html+=srow(4,'V_n,max = τ_max·A_c',fmt(Vn_max/1000,1)+' kN','');
+    html+=srow(5,'V_n used = min','<strong>'+fmt(Vn_used/1000,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+  }
+}
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@
     if (/\/beam(\.html)?$/.test(P))                    return 'beam';
     if (/\/slab(\.html)?$/.test(P))                    return 'slab';
     if (/\/column(\.html)?$/.test(P))                  return 'column';
+    if (/\/shear-wall-design(\.html)?$/.test(P))       return 'shear-wall';
     if (/\/development-length(\.html)?$/.test(P))      return 'devlen';
     if (/\/crack-width(\.html)?$/.test(P))             return 'crackwidth';
     if (/\/foundation(\.html)?$/.test(P))              return 'foundation';
