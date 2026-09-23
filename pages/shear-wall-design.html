@@ -172,10 +172,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>P<sub>u</sub> (<span class="u-frc" data-m="be-aci">kN</span>)</label><div class="iw"><input type="number" id="be-aci-pu" value="2000" min="0" oninput="calcBe('aci')"><span class="us u-frc" data-m="be-aci">kN</span></div></div>
             <div class="form-group"><label>M<sub>u</sub> (<span class="u-mom" data-m="be-aci">kN·m</span>)</label><div class="iw"><input type="number" id="be-aci-mu" value="8000" min="0" oninput="calcBe('aci')"><span class="us u-mom" data-m="be-aci">kN·m</span></div></div>
           </div>
-          <div class="form-div"><div class="form-div-lbl">Longitudinal Reinforcement</div></div>
+          <div class="form-div"><div class="form-div-lbl">Wall Vertical Reinforcement</div></div>
           <div class="form-row-2">
-            <div class="form-group"><label>n<sub>long</sub> bars in wall</label><div class="iw"><input type="number" id="be-aci-nlong" value="12" min="4" oninput="calcBe('aci')"><span class="us">—</span></div></div>
-            <div class="form-group"><label>d<sub>b</sub> bar dia. (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-db" value="20" min="10" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> bar dia. (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-db" value="16" min="10" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
+            <div class="form-group"><label>s<sub>v</sub> spacing (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-sv" value="200" step="25" min="50" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
           </div>
           <div class="form-row-2">
             <div class="form-group"><label>c<sub>c</sub> clear cover (<span class="u-len" data-m="be-aci">mm</span>)</label><div class="iw"><input type="number" id="be-aci-cc" value="40" min="20" oninput="calcBe('aci')"><span class="us u-len" data-m="be-aci">mm</span></div></div>
@@ -1248,7 +1248,7 @@ var _lenBigIds={
   'sf-aci':[]
 };
 var _lenSmIds={
-  'be-aci':['db','cc','hx','s','dtie','lbe'],
+  'be-aci':['db','sv','cc','hx','s','dtie','lbe'],
   'sh-aci':[],
   'pm-aci':['cc'],
   'sf-aci':[]
@@ -1382,14 +1382,14 @@ function calcBe(std){
     var fyt=toSI_str(v(m+'-fyt'),m);
     var Pu_N=toSI_frc(v(m+'-pu'),m)*1000;
     var Mu_Nmm=toSI_mom(v(m+'-mu'),m)*1e6;
-    var nlong=Math.max(Math.round(v(m+'-nlong')||12),4);
-    var db=toSI_len(v(m+'-db'),m);
+    var db=toSI_len(v(m+'-db'),m)||16;
+    var sv=toSI_len(v(m+'-sv'),m)||200;
     var cc=toSI_len(v(m+'-cc'),m);
     var hx=toSI_len(v(m+'-hx'),m);
     var lbe_prov=toSI_len(v(m+'-lbe'),m)||600;
     if(lw<200||bw<100||fc<1||fy<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'aci',res))return;
-    var rhov=nlong*Math.PI*db*db/4/(bw*lw);
+    var rhov=2*Math.PI*db*db/4/(bw*sv);
     var Ag=lw*bw; var Ig=bw*Math.pow(lw,3)/12;
     var sig_max=Pu_N/Ag+Mu_Nmm*(lw/2)/Ig;
     var sig_lim=0.2*fc;
@@ -1413,7 +1413,7 @@ function calcBe(std){
       html+='<div class="report-card"><div class="report-body">';
       html+='<div class="rpt-sec-title">Required Boundary Element Length</div>';
       html+='<table class="steps-tbl"><tbody>';
-      html+=srow(1,'ρ_v = n·A_b / (b_w·l_w)','= '+fmt(rhov,5),'');
+      html+=srow(1,'ρ_v = 2·A_b / (b_w·s_v)','= '+fmt(rhov,5),'');
       html+=srow(2,'Stress block factor','β₁ = '+fmt(beta1,3),'');
       html+=srow(3,'Neutral axis depth','c = '+fmt(frSI_len(c,m),1)+' '+lU,'');
       html+=srow(4,'c − 0.1l_w','= '+fmt(frSI_len(c-0.1*lw,m),1)+' '+lU,'');
