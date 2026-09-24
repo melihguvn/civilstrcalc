@@ -1162,6 +1162,15 @@ function uStr(mod){return ul(mod)?'psi':'MPa';}
 function uFrc(mod){return ul(mod)?'kip':'kN';}
 function uMom(mod){return ul(mod)?'kip·ft':'kN·m';}
 function uArea(mod){return ul(mod)?'in²':'mm²';}
+function rptHdr(std,m){
+  var codes={aci:'ACI 318-25',en:'EN 1992+1998',is:'IS 456+13920',tbdy:'TBDY 2018'};
+  var lbl=codes[std]||std.toUpperCase();
+  var units=ul(m)?'in &middot; kip &middot; psi':'mm &middot; kN &middot; MPa';
+  return '<div class="report-card"><div class="report-hdr"><h4>Calculation Report</h4>'
+        +'<span class="rh-code">'+lbl+' &middot; '+units+'</span>'
+        +'<button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>'
+        +'</div></div>';
+}
 
 function wallSvg(lw,bw,lbe,mod){
   /* plan view SVG, lw = wall length, bw = thickness, lbe = BE length */
@@ -1502,7 +1511,7 @@ function calcBe(std){
     lbe_req=Math.max(lbe_req,200);
     var ok_lbe_prov=lbe_prov>=lbe_req-0.01;
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m),aU=uArea(m);
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('σ<sub>max</sub>',fmt(frSI_str(sig_max,m)),sU,need?'err':'ok');
     html+=ri('0.2f\'<sub>c</sub>',fmt(frSI_str(sig_lim,m)),sU,'');
     html+=ri('Neutral axis c',fmt(frSI_len(c,m),0),lU,'');
@@ -1597,7 +1606,7 @@ function calcBe(std){
     var esd=fyk/(gs*200000);
     var owd=Math.max(30*muphi*nud*esd*(bc_en/bo_en)-0.035,0.12);
     var Ach_en=Math.max((lbe_prov_en-2*cc)*(bw-2*cc),100);
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('ν_d = N_Ed/(Ac·f_cd)',fmt(nud,3),'—',need?'err':'ok');
     html+=ri(_enDc==='dch'?'Limit (DCH) 0.15':_enDc==='dcm'?'Limit (DCM) 0.20':'N/A (DCL)',_enDc==='dcl'?'N/A':fmt(lim,2),'—','');
     if(need){html+=ri('l_c req.',fmt(lc_req,0),'mm','');html+=ri('l_c prov.',fmt(lbe_prov_en,0),'mm',ok_lbe_en?'ok':'err');}
@@ -1669,7 +1678,7 @@ function calcBe(std){
     var need=sig_max>sig_lim;
     var lbe_req_is=Math.max(bw,lw/10);
     var ok_lbe_is_len=lbe_prov_is>=lbe_req_is-0.01;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('σ_max',fmt(sig_max),'MPa',need?'err':'ok');
     html+=ri('0.2f_ck',fmt(sig_lim),'MPa','');
     if(need){html+=ri('l_be req.',fmt(lbe_req_is,0),'mm','');html+=ri('l_be prov.',fmt(lbe_prov_is,0),'mm',ok_lbe_is_len?'ok':'err');}
@@ -1738,7 +1747,7 @@ function calcBe(std){
     var lbe_req_tb=inCrit?Math.max(2*bw,lw/5,hw/10):Math.max(bw,lw/10);
     var ok_lbe_tb_len=lbe_prov_tb>=lbe_req_tb-0.01;
     var smax_tb=inCrit?Math.min(bw/3,100):200; smax_tb=Math.max(smax_tb,20);
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('Location',inCrit?'Within critical zone':'Above critical zone','',inCrit?'warn':'ok');
     html+=ri('l_be req.',fmt(lbe_req_tb,0),'mm','');
     html+=ri('l_be prov.',fmt(lbe_prov_tb,0),'mm',ok_lbe_tb_len?'ok':'err');
@@ -1829,7 +1838,7 @@ function calcSh(std){
     var dcr=Vu_kN/phiVn;
     var ok=dcr<=1.0;
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m);
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('φV_n',fmt(frSI_frc(phiVn*1000,m)/1000,1),fU,ok?'ok':'err');
     html+=ri('V_u',fmt(frSI_frc(Vu_N,m)/1000,1),fU,'');
     html+=ri('D/C ratio',fmt(dcr,3),'—',ok?'ok':'err');
@@ -1876,7 +1885,7 @@ function calcSh(std){
     var Asw_per_s_mm=amp*Ved_N/(z*fyd*1.0); /* per mm height */
     var phiVRdc=VRdc_N/1000,phiVRdmax=VRdmax_N/1000;
     var ok_conc=amp*v(m+'-ved')<=phiVRdmax;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('V_Rd,c',fmt(phiVRdc,1),'kN','');
     html+=ri('V_Rd,max',fmt(phiVRdmax,1),'kN','');
     html+=ri('A_sw/s req.',fmt(Asw_per_s_mm,2),'mm²/mm','ok');
@@ -1909,7 +1918,7 @@ function calcSh(std){
     var Asv_per_s=need_steel?(Vu_N-tc*bw*d)/(0.87*fy*d):0;
     var tau_max=Math.min(0.2*fck,3.5);
     var ok_max=tv<=tau_max;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('τ_v',fmt(tv,3),'MPa',tv>tau_max?'err':tv>tc?'warn':'ok');
     html+=ri('τ_c',fmt(tc,3),'MPa','');
     html+=ri('τ_max',fmt(tau_max,2),'MPa','');
@@ -1936,7 +1945,7 @@ function calcSh(std){
     var Ve_kN=Ve_N/1000;
     var dcr=Ve_kN/phiVr;
     var ok=dcr<=1.0;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('γ_RE·V_r',fmt(phiVr,1),'kN',ok?'ok':'err');
     html+=ri('V_e',fmt(Ve_kN,1),'kN','');
     html+=ri('D/C',fmt(dcr,3),'—',ok?'ok':'err');
@@ -2077,7 +2086,7 @@ function calcPm(std){
   var dcr=phiMn_at_Pu>0?Mu_kNm/phiMn_at_Pu:999;
   var inside=dcr<=1.0;
   var fU=uFrc(m),mU=uMom(m);
-  var html='<div class="result-box">';
+  var html=rptHdr(std,m)+'<div class="result-box">';
   html+=ri('φM_n at P_u',fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
   html+=ri('M_u demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
   html+=ri('D/C ratio',fmt(dcr,3),'—',inside?'ok':'err');
@@ -2115,7 +2124,7 @@ function calcSf(std){
     var phi=0.75,phiVn=phi*Vn_used/1000;
     var Vu_kN=Vu_N/1000,ok=Vu_kN<=phiVn;
     var fU=uFrc(m),aU=uArea(m);
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('φV_n',fmt(frSI_frc(phiVn*1000,m)/1000,1),fU,ok?'ok':'err');
     html+=ri('V_u',fmt(frSI_frc(Vu_N,m)/1000,1),fU,'');
     html+=ri('μ',fmt(mu,2),'—','');
@@ -2156,7 +2165,7 @@ function calcSf(std){
     var VRdi_used=Math.min(VRdi_N,VRdi_max);
     var phiVRdi=VRdi_used/1000;
     var ok=v(m+'-ved')<=phiVRdi;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('V_Rdi',fmt(phiVRdi,1),'kN',ok?'ok':'err');
     html+=ri('V_Ed',fmt(v(m+'-ved'),1),'kN','');
     html+=ri('D/C',fmt(v(m+'-ved')/phiVRdi,3),'—',ok?'ok':'err');
@@ -2188,7 +2197,7 @@ function calcSf(std){
     var Vn_max=tau_max*Ac;
     var Vn_used=Math.min(Vn,Vn_max);
     var ok=Vu_N<=Vn_used;
-    var html='<div class="result-box">';
+    var html=rptHdr(std,m)+'<div class="result-box">';
     html+=ri('V_n',fmt(Vn_used/1000,1),'kN',ok?'ok':'err');
     html+=ri('V_u',fmt(Vu_N/1000,1),'kN','');
     html+=ri('τ_max',fmt(tau_max,2),'MPa','');
