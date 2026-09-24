@@ -76,6 +76,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 /* Misc */
 .fml-eq{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border-left:3px solid var(--accent);padding:5px 10px;margin:5px 0;border-radius:0 4px 4px 0;line-height:1.7;display:block;}
 
+/* Comparison result card */
+.result-cmp .ri-cmp-row{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:3px;}
+.result-cmp .ri-cmp-side{text-align:center;min-width:52px;}
+.ri-cmp-op{font-family:var(--mono);font-size:1rem;font-weight:700;color:#64748b;padding-bottom:4px;flex-shrink:0;}
+.ri-cmp-ref{color:var(--text-dim)!important;font-size:1rem!important;font-weight:500!important;}
+
 @media print{
   @page{margin:6mm 8mm;size:A4;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
@@ -1138,6 +1144,13 @@ function v(id){var e=document.getElementById(id);return e?parseFloat(e.value)||0
 function fmt(x,d){if(d===undefined)d=2;return isNaN(x)||!isFinite(x)?'—':x.toFixed(d);}
 function ri(lbl,val,unit,cls){return '<div class="result-item'+(cls?' '+cls:'')+'"><div class="ri-label">'+lbl+'</div><div class="ri-value">'+val+'</div><div class="ri-unit">'+unit+'</div></div>';}
 function banner(state,strong,sub){return '<div class="dcr-banner '+state+'"><div class="dcr-icon">'+(state==='ok'?'✅':state==='warn'?'⚠️':'❌')+'</div><div class="dcr-text"><strong>'+strong+'</strong><span>'+sub+'</span></div></div>';}
+function riCmp(lbl1,val1,op,lbl2,val2,unit,cls){
+  return '<div class="result-item result-cmp'+(cls?' '+cls:'')+'"><div class="ri-cmp-row">'
+    +'<div class="ri-cmp-side"><div class="ri-label">'+lbl1+'</div><div class="ri-value">'+val1+'</div></div>'
+    +'<div class="ri-cmp-op">'+op+'</div>'
+    +'<div class="ri-cmp-side"><div class="ri-label">'+lbl2+'</div><div class="ri-value ri-cmp-ref">'+val2+'</div></div>'
+    +'</div><div class="ri-unit">'+unit+'</div></div>';
+}
 function srow(n,desc,val,chk,cls){
   var vCls=cls?cls.replace('chk-',''):'';
   var chkHtml=chk?'<span class="step-check'+(cls?' '+cls:'')+'">'+chk+'</span>':'';
@@ -1512,12 +1525,10 @@ function calcBe(std){
     var ok_lbe_prov=lbe_prov>=lbe_req-0.01;
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m),aU=uArea(m);
     var html=rptHdr(std,m)+'<div class="result-box">';
-    html+=ri('σ<sub>max</sub>',fmt(frSI_str(sig_max,m)),sU,need?'err':'ok');
-    html+=ri('0.2f\'<sub>c</sub>',fmt(frSI_str(sig_lim,m)),sU,'');
+    html+=riCmp('σ<sub>max</sub>',fmt(frSI_str(sig_max,m)),need?'&gt;':'&le;','0.2f\'<sub>c</sub>',fmt(frSI_str(sig_lim,m)),sU,need?'err':'ok');
     html+=ri('Neutral axis c',fmt(frSI_len(c,m),0),lU,'');
     if(need){
-      html+=ri('l<sub>be,req</sub>',fmt(frSI_len(lbe_req,m),0),lU,'');
-      html+=ri('l<sub>be,prov</sub>',fmt(frSI_len(lbe_prov,m),0),lU,ok_lbe_prov?'ok':'err');
+      html+=riCmp('l<sub>be,prov</sub>',fmt(frSI_len(lbe_prov,m),0),ok_lbe_prov?'&ge;':'&lt;','l<sub>be,req</sub>',fmt(frSI_len(lbe_req,m),0),lU,ok_lbe_prov?'ok':'err');
     }
     html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_prov?'warn':'err'):'ok');
     html+='</div>';
