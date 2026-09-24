@@ -1540,12 +1540,13 @@ function calcBe(std){
       var nl_a=Math.max(Math.round(v(m+'-nl')||2),1);
       var nb_a=Math.max(Math.round(v(m+'-nb')||5),1);
       var Atie_a=Math.PI*dtie_a*dtie_a/4;
-      var Ash_req=ratio*bc_min*s_a;
+      var Ash_req_bw=ratio*bc_bw*s_a;
+      var Ash_req_lbe=ratio*bc_lbe*s_a;
       var Ash_prov_bw=nl_a*Atie_a;
       var Ash_prov_lbe=nb_a*Atie_a;
       var ok_s_a=s_a<=smax_a+0.01;
-      var ok_bw_a=Ash_prov_bw>=Ash_req-0.01;
-      var ok_lbe_a=Ash_prov_lbe>=Ash_req-0.01;
+      var ok_bw_a=Ash_prov_bw>=Ash_req_bw-0.01;
+      var ok_lbe_a=Ash_prov_lbe>=Ash_req_lbe-0.01;
       html+='<div class="report-card"><div class="report-body">';
       html+='<div class="rpt-sec-title">Confinement Steel — ACI 318-25 §18.7.5</div>';
       html+='<table class="steps-table"><tbody>';
@@ -1555,18 +1556,17 @@ function calcBe(std){
       html+=srow(4,'s<sub>o</sub> = min(100+(350−h<sub>x</sub>)/3, 150)','= '+fmt(frSI_len(so_a,m),0)+' '+lU,'');
       html+=srow(5,'s<sub>max</sub> = min(6d<sub>b</sub>, s<sub>o</sub>)','= '+fmt(frSI_len(smax_a,m),0)+' '+lU,'');
       html+=srow(6,'Spacing s',fmt(frSI_len(s_a,m),0)+' '+lU+' ≤ s<sub>max</sub>?',ok_s_a?'✓':'✗',ok_s_a?'chk-ok':'chk-err');
-      html+=srow(7,'b<sub>c</sub> = min(b<sub>c,bw</sub>, b<sub>c,lbe</sub>) — §18.10.6.4(b)','= '+fmt(frSI_len(bc_min,m),0)+' '+lU,'');
-      html+=srow(8,'A<sub>sh,req</sub> = ρ<sub>ratio</sub>·b<sub>c</sub>·s','= '+fmt(frSI_area(Ash_req,m),0)+' '+aU,'');
       html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ l<sub>be</sub> — n<sub>l</sub> = '+nl_a+' legs (confine b<sub>w</sub> core, b<sub>c,bw</sub> = '+fmt(frSI_len(bc_bw,m),0)+' '+lU+')</td></tr>';
-      html+=srow(9,'A<sub>sh,prov</sub> = n<sub>l</sub>·A<sub>tie</sub>','= '+fmt(frSI_area(Ash_prov_bw,m),0)+' '+aU,ok_bw_a?'✓':'✗',ok_bw_a?'chk-ok':'chk-err');
+      html+=srow(7,'A<sub>sh,req</sub> = ρ<sub>ratio</sub>·b<sub>c,bw</sub>·s','= '+fmt(frSI_area(Ash_req_bw,m),0)+' '+aU,'');
+      html+=srow(8,'A<sub>sh,prov</sub> = n<sub>l</sub>·A<sub>tie</sub>','= '+fmt(frSI_area(Ash_prov_bw,m),0)+' '+aU,ok_bw_a?'✓':'✗',ok_bw_a?'chk-ok':'chk-err');
       html+='<tr><td colspan="4" style="padding:6px 8px 2px;font-size:.78rem;color:var(--text-dim);font-weight:600;border-top:1px solid var(--border);">Dir. ∥ b<sub>w</sub> — n<sub>b</sub> = '+nb_a+' legs (confine l<sub>be</sub> core, b<sub>c,lbe</sub> = '+fmt(frSI_len(bc_lbe,m),0)+' '+lU+')</td></tr>';
+      html+=srow(9,'A<sub>sh,req</sub> = ρ<sub>ratio</sub>·b<sub>c,lbe</sub>·s','= '+fmt(frSI_area(Ash_req_lbe,m),0)+' '+aU,'');
       html+=srow(10,'A<sub>sh,prov</sub> = n<sub>b</sub>·A<sub>tie</sub>','= '+fmt(frSI_area(Ash_prov_lbe,m),0)+' '+aU,ok_lbe_a?'✓':'✗',ok_lbe_a?'chk-ok':'chk-err');
       html+='</tbody></table>';
       var allok_a=ok_s_a&&ok_bw_a&&ok_lbe_a&&ok_lbe_prov;
       html+=banner(allok_a?'ok':'err',allok_a?'Confinement ADEQUATE':'Confinement INADEQUATE',
         [ok_lbe_prov?null:'l<sub>be,prov</sub> &lt; l<sub>be,req</sub>',ok_s_a?null:'s exceeds s<sub>max</sub>',ok_bw_a?null:'A<sub>sh</sub> ∥ l<sub>be</sub> insufficient',ok_lbe_a?null:'A<sub>sh</sub> ∥ b<sub>w</sub> insufficient'].filter(Boolean).join(' | ')||'All checks pass');
       html+='</div></div>';
-      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe_prov,m)+'</div></div>';
     }
     res.innerHTML=html;
     return;
@@ -1650,7 +1650,6 @@ function calcBe(std){
       html+=banner(allok_en?'ok':'err',allok_en?'Confinement ADEQUATE':'Confinement INADEQUATE',
         [ok_lbe_en?null:'l_c prov. < l_c req.',ok_bw_en?null:'A_sh ∥ l_c insufficient',ok_lc_en?null:'A_sh ∥ b_w insufficient'].filter(Boolean).join(' | ')||'All checks pass');
       html+='</div></div>';
-      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe_prov_en,'be-en')+'</div></div>';
     }
     res.innerHTML=html;
     return;
@@ -1723,7 +1722,6 @@ function calcBe(std){
       html+=banner(allok_is?'ok':'err',allok_is?'Confinement ADEQUATE':'Confinement INADEQUATE',
         [ok_lbe_is_len?null:'l_be prov. < l_be req.',ok_s_is?null:'s exceeds s_max',ok_bw_is?null:'A_sh ∥ l_be insufficient',ok_lbe_is?null:'A_sh ∥ b_w insufficient'].filter(Boolean).join(' | ')||'All checks pass');
       html+='</div></div>';
-      html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe_prov_is,'be-is')+'</div></div>';
     }
     res.innerHTML=html;
     return;
@@ -1802,7 +1800,6 @@ function calcBe(std){
     html+=banner(allok_tb?'ok':'err',allok_tb?'Confinement ADEQUATE':'Confinement INADEQUATE',
       [ok_lbe_tb_len?null:'l_be prov. < l_be req.',ok_s_tb?null:'s exceeds s_max',ok_bw_tb?null:'A_sh ∥ l_be insufficient',ok_lbe_tb?null:'A_sh ∥ b_w insufficient'].filter(Boolean).join(' | ')||'All checks pass');
     html+='</div></div>';
-    html+='<div class="report-card"><div class="report-body">'+wallSvg(lw,bw,lbe_prov_tb,'be-tbdy')+'</div></div>';
     res.innerHTML=html;
   }
 }
