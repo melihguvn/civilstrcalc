@@ -1527,11 +1527,28 @@ function calcBe(std){
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m),aU=uArea(m);
     var html=rptHdr(std,m)+'<div class="result-box">';
     html+=riCmp('σ<sub>max</sub>',fmt(frSI_str(sig_max,m)),need?'&gt;':'&le;','0.2f\'<sub>c</sub>',fmt(frSI_str(sig_lim,m)),sU,need?'err':'ok');
-    html+=ri('Neutral axis c',fmt(frSI_len(c,m),0),lU,'');
+    html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_prov?'warn':'err'):'ok');
     if(need){
       html+=riCmp('l<sub>be,prov</sub>',fmt(frSI_len(lbe_prov,m),0),ok_lbe_prov?'&ge;':'&lt;','l<sub>be,req</sub>',fmt(frSI_len(lbe_req,m),0),lU,ok_lbe_prov?'ok':'err');
+      var s_s=toSI_len(v(m+'-s'),m)||80;
+      var dtie_s=toSI_len(v(m+'-dtie'),m)||10;
+      var nl_s=Math.max(Math.round(v(m+'-nl')||2),1);
+      var nb_s=Math.max(Math.round(v(m+'-nb')||5),1);
+      var Ach_s=Math.max((lbe_prov-2*cc)*(bw-2*cc),100);
+      var Ag_be_s=lbe_prov*bw;
+      var bc_bw_s=Math.max(bw-2*cc,20);
+      var bc_lbe_s=Math.max(lbe_prov-2*cc,20);
+      var ratio_s=Math.max(0.3*(Ag_be_s/Ach_s-1)*fc/fyt,0.09*fc/fyt);
+      var Atie_s=Math.PI*dtie_s*dtie_s/4;
+      var Ash_req_bw_s=ratio_s*bc_bw_s*s_s;
+      var Ash_req_lbe_s=ratio_s*bc_lbe_s*s_s;
+      var Ash_prov_bw_s=nl_s*Atie_s;
+      var Ash_prov_lbe_s=nb_s*Atie_s;
+      var ok_bw_s=Ash_prov_bw_s>=Ash_req_bw_s-0.01;
+      var ok_lbe_s=Ash_prov_lbe_s>=Ash_req_lbe_s-0.01;
+      html+=riCmp('A<sub>sh</sub>(∥ l<sub>be</sub>)',fmt(frSI_area(Ash_prov_bw_s,m),0),ok_bw_s?'&ge;':'&lt;','A<sub>sh,req</sub>',fmt(frSI_area(Ash_req_bw_s,m),0),aU,ok_bw_s?'ok':'err');
+      html+=riCmp('A<sub>sh</sub>(∥ b<sub>w</sub>)',fmt(frSI_area(Ash_prov_lbe_s,m),0),ok_lbe_s?'&ge;':'&lt;','A<sub>sh,req</sub>',fmt(frSI_area(Ash_req_lbe_s,m),0),aU,ok_lbe_s?'ok':'err');
     }
-    html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_prov?'warn':'err'):'ok');
     html+='</div>';
     html+=banner(need?'warn':'ok',need?'Boundary Elements REQUIRED':'Boundary Elements NOT Required',
       'σ<sub>max</sub> = '+fmt(frSI_str(sig_max,m))+' '+sU+(need?' > ':' ≤ ')+fmt(frSI_str(sig_lim,m))+' '+sU+' (0.2f\'<sub>c</sub>)');
