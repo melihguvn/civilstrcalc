@@ -1802,10 +1802,10 @@ const ROUTES = {
   'column/pmm':       { page:'pages/column.html', tab:'pmm',         nav:'sub-col-pmm',          group:'grp-column', title:'Column PMM Design',             desc:'RC column P-M-M interaction diagram and design. ACI 318-25, Eurocode 2, IS 456:2000.' },
   'column/shear':     { page:'pages/column.html', tab:'colshear',    nav:'sub-col-shear',        group:'grp-column', title:'Column Shear Design',           desc:'RC column shear design calculator. ACI 318-25, Eurocode 2, IS 456:2000.' },
   // Shear Wall
-  'shear-wall/boundary':       { page:'pages/shear-wall-design.html', tab:'mod-be', nav:'sub-sw-be', group:'grp-shear-wall', title:'Shear Wall Boundary Element',  desc:'RC shear wall boundary element check. ACI 318-25, EN 1992+1998, IS 456+13920, TBDY 2018.' },
-  'shear-wall/shear':          { page:'pages/shear-wall-design.html', tab:'mod-sh', nav:'sub-sw-sh', group:'grp-shear-wall', title:'Shear Wall Shear Design',       desc:'RC shear wall in-plane shear design. ACI 318-25, EN 1992+1998, IS 456, TBDY 2018.' },
-  'shear-wall/pmm':            { page:'pages/shear-wall-design.html', tab:'mod-pm', nav:'sub-sw-pm', group:'grp-shear-wall', title:'Shear Wall PMM Design',         desc:'RC shear wall P-M interaction diagram with fiber model. ACI 318-25, EN 1992, IS 456, TBDY 2018.' },
-  'shear-wall/shear-friction': { page:'pages/shear-wall-design.html', tab:'mod-sf', nav:'sub-sw-sf', group:'grp-shear-wall', title:'Shear Wall Shear Friction',     desc:'RC shear-friction / interface shear design. ACI 318-25, EN 1992, IS 456, TBDY 2018.' },
+  'shear-wall/boundary':       { page:'pages/shear-wall-design.html', tab:'mod-be', noHashSrc:true, nav:'sub-sw-be', group:'grp-shear-wall', title:'Shear Wall Boundary Element',  desc:'RC shear wall boundary element check. ACI 318-25, EN 1992+1998, IS 456+13920, TBDY 2018.' },
+  'shear-wall/shear':          { page:'pages/shear-wall-design.html', tab:'mod-sh', noHashSrc:true, nav:'sub-sw-sh', group:'grp-shear-wall', title:'Shear Wall Shear Design',       desc:'RC shear wall in-plane shear design. ACI 318-25, EN 1992+1998, IS 456, TBDY 2018.' },
+  'shear-wall/pmm':            { page:'pages/shear-wall-design.html', tab:'mod-pm', noHashSrc:true, nav:'sub-sw-pm', group:'grp-shear-wall', title:'Shear Wall PMM Design',         desc:'RC shear wall P-M interaction diagram with fiber model. ACI 318-25, EN 1992, IS 456, TBDY 2018.' },
+  'shear-wall/shear-friction': { page:'pages/shear-wall-design.html', tab:'mod-sf', noHashSrc:true, nav:'sub-sw-sf', group:'grp-shear-wall', title:'Shear Wall Shear Friction',     desc:'RC shear-friction / interface shear design. ACI 318-25, EN 1992, IS 456, TBDY 2018.' },
   // Standalone
   'dev-length':       { page:'pages/development-length.html',        nav:'nav-devlen',           title:'Development & Splice Length',   desc:'Rebar development and splice length calculator. ACI 318-25, Eurocode 2, IS 456:2000.' },
   'crack-width':      { page:'pages/crack-width.html',               nav:'nav-crackwidth',       title:'Crack Width Control',           desc:'Characteristic crack width calculator per EC2 §7.3.4, IS 456:2000 Annex F, ACI 224R, and TS 500:2000. Beams, slabs, walls, foundations.' },
@@ -1944,6 +1944,11 @@ function _applyTab(iw, r) {
       const btn = iw.document.querySelector(`.std-btn[onclick*="'${t}'"]`);
       if (btn) { iw.setStd(t, btn); return true; }
     }
+    // swMod — shear-wall-design.html
+    if (iw.swMod) {
+      const btn = iw.document.querySelector(`.mod-tab[onclick*="'${t}'"]`);
+      if (btn) { iw.swMod(btn, t); return true; }
+    }
     // modTab — slab-style
     const mBtn = iw.document.getElementById('mtab-' + t);
     if (mBtn && iw.modTab) { iw.modTab(mBtn, 'mod-' + t); return true; }
@@ -1978,7 +1983,7 @@ function _loadPage(route) {
   }
 
   // Load the page (with tab hash so it can auto-activate on load if supported)
-  const src = targetPage + (r.tab ? '#' + r.tab : '');
+  const src = targetPage + (r.tab && !r.noHashSrc ? '#' + r.tab : '');
   frame.src = src;
   _currentPage = targetPage;
 
