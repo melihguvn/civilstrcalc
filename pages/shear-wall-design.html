@@ -760,12 +760,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="sh-en-gs" value="1.15" step="0.05" oninput="calcSh('en')"><span class="us">—</span></div></div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
-          <div class="form-row-2">
-            <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sh-en-ved" value="1500" min="0" oninput="calcSh('en')"><span class="us">kN</span></div></div>
-            <div class="form-group"><label>N<sub>Ed</sub> (kN, + comp)</label><div class="iw"><input type="number" id="sh-en-ned" value="2000" oninput="calcSh('en')"><span class="us">kN</span></div></div>
-          </div>
-          <div class="form-div"><div class="form-div-lbl">Longitudinal Steel</div></div>
-          <div class="form-group"><label>ρ<sub>l</sub> longit. ratio</label><div class="iw"><input type="number" id="sh-en-rhol" value="0.005" step="0.0001" oninput="calcSh('en')"><span class="us">—</span></div></div>
+          <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sh-en-ved" value="1500" min="0" oninput="calcSh('en')"><span class="us">kN</span></div></div>
           <div class="form-div"><div class="form-div-lbl">Horizontal Web Reinforcement</div></div>
           <div class="form-row-2">
             <div class="form-group"><label>d<sub>h</sub> (mm)</label><div class="iw"><input type="number" id="sh-en-dh" value="12" min="8" oninput="calcSh('en')"><span class="us">mm</span></div></div>
@@ -2125,8 +2120,7 @@ function calcSh(std){
     var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000;
     var fck=v(m+'-fck'),fyk=v(m+'-fyk');
     var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
-    var Ved_N=v(m+'-ved')*1000,Ned_N=v(m+'-ned')*1000;
-    var rhol=v(m+'-rhol');
+    var Ved_N=v(m+'-ved')*1000;
     var dh=v(m+'-dh')||12;
     var sh_sp=v(m+'-sh')||200;
     var nc=Math.max(Math.round(v(m+'-nc')||2),1);
@@ -2141,17 +2135,10 @@ function calcSh(std){
     var rho_min=_shEnDc==='dcl'?0.001:0.002;
     var ok_rho=rhoh>=rho_min-1e-6;
     var Asw_prov=Ah/sh_sp;
-    var CRdc=0.18/gc;
-    var k=Math.min(1+Math.sqrt(200/d),2.0);
-    var rhol_chk=Math.min(rhol,0.02);
-    var sig_cp=Ned_N/(lw*bw); sig_cp=Math.min(sig_cp,0.2*fcd);
-    var vmin=0.035*Math.pow(k,1.5)*Math.sqrt(fck);
-    var VRdc_N=Math.max(CRdc*k*Math.pow(100*rhol_chk*fck,1/3)+0.15*sig_cp, vmin+0.15*sig_cp)*bw*d;
     var nu=0.6*(1-fck/250);
     var z=0.9*d;
     var VRdmax_N=bw*z*nu*fcd/2; /* θ=45° */
     var Ved_design=amp*Ved_N;
-    var Asw_req=Ved_design/(z*fyd);
     var VRds_N=Asw_prov*z*fyd;
     var ok_strut=Ved_design<=VRdmax_N;
     var ok_prov=VRds_N>=Ved_design-1;
@@ -2162,7 +2149,7 @@ function calcSh(std){
     html+='</div>';
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>Rd,s</sub>',fmt(VRds_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_prov?'ok':'err');
-    html+=ri('V<sub>Rd,c</sub>',fmt(VRdc_N/1000,1),'kN','');
+    html+=ri('z = 0.9·d',fmt(z,0),'mm','');
     html+='</div>';
     html+='</div>';
     var allok=ok_strut&&ok_rho&&ok_prov;
@@ -2176,12 +2163,11 @@ function calcSh(std){
     html+=srow(1,'V<sub>Ed,design</sub> = '+amp+'·V<sub>Ed</sub>',fmt(Ved_design/1000,1)+' kN','');
     html+=srow(2,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
     html+=srow(3,'ρ<sub>h</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; '+fmt(rho_min,4)+' ✓':' &lt; '+fmt(rho_min,4)+' ✗'),'',ok_rho?'chk-ok':'chk-err');
-    html+=srow(4,'k = 1+(200/d)<sup>0.5</sup>',fmt(k,3),'');
-    html+=srow(5,'V<sub>Rd,c</sub> (concrete)',fmt(VRdc_N/1000,1)+' kN','');
-    html+=srow(6,'ν<sub>1</sub> = 0.6(1−f<sub>ck</sub>/250)',fmt(nu,3),'');
-    html+=srow(7,'V<sub>Rd,max</sub> = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/2',fmt(VRdmax_N/1000,1)+' kN',ok_strut?'✔':'✘',ok_strut?'chk-ok':'chk-err');
-    html+=srow(8,'A<sub>sw,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asw_prov,3)+' mm²/mm','');
-    html+=srow(9,'V<sub>Rd,s</sub> = (A<sub>sw,prov</sub>/s)·z·f<sub>yd</sub>',fmt(VRds_N/1000,1)+' kN',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
+    html+=srow(4,'ν<sub>1</sub> = 0.6(1−f<sub>ck</sub>/250)',fmt(nu,3),'');
+    html+=srow(5,'z = 0.9·(l<sub>w</sub>−c<sub>c</sub>)',fmt(z,0)+' mm','');
+    html+=srow(6,'V<sub>Rd,max</sub> = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/2',fmt(VRdmax_N/1000,1)+' kN',ok_strut?'✔':'✘',ok_strut?'chk-ok':'chk-err');
+    html+=srow(7,'A<sub>sw,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asw_prov,3)+' mm²/mm','');
+    html+=srow(8,'V<sub>Rd,s</sub> = (A<sub>sw,prov</sub>/s)·z·f<sub>yd</sub>',fmt(VRds_N/1000,1)+' kN',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     var smax_sh=Math.min(3*bw,400);
     if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3b<sub>w</sub>, 400) = '+fmt(smax_sh,0)+' mm (EN 1992-1-1 §9.6.3)');
