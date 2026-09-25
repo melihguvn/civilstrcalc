@@ -1730,6 +1730,13 @@ function srow(n,desc,val,chk,cls){
   var chkHtml=chk?'<span class="step-check'+(cls?' '+cls:'')+'">'+chk+'</span>':'';
   return '<tr><td style="width:32px;padding-right:8px"><div class="step-num">'+n+'</div></td><td><div class="step-desc">'+desc+'</div></td><td style="text-align:right"><span class="step-val'+(vCls?' '+vCls:'')+'">'+val+'</span>'+chkHtml+'</td></tr>';
 }
+function inpSum(rows){
+  return '<div class="report-card"><div class="report-body">'
+        +'<div class="rpt-sec-title">Input Summary</div>'
+        +'<table class="inp-tbl">'
+        +rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';}).join('')
+        +'</table></div></div>';
+}
 function ul(id){return (_unit[id]||'si')==='us';}
 function toSI_len(x,mod){return ul(mod)?x*25.4:x;}      /* small dims: mm (SI) ↔ in (US) */
 function toSI_m(x,mod){return ul(mod)?x*25.4:x*1000;}   /* big dims:   m  (SI) ↔ in (US) → mm */
@@ -2082,7 +2089,17 @@ function calcBe(std){
     lbe_req=Math.max(lbe_req,200);
     var ok_lbe_prov=lbe_prov>=lbe_req-0.01;
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m),aU=uArea(m);
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(frSI_len(lw,m),0)+' '+lU],
+      ['Wall thickness b<sub>w</sub>', fmt(frSI_len(bw,m),0)+' '+lU],
+      ["Concrete f'<sub>c</sub>", fmt(frSI_str(fc,m),0)+' '+sU],
+      ['Steel f<sub>y</sub>', fmt(frSI_str(fy,m),0)+' '+sU],
+      ['Steel f<sub>yt</sub>', fmt(frSI_str(fyt,m),0)+' '+sU],
+      ['Axial force P<sub>u</sub>', fmt(frSI_frc(Pu_N,m)/1000,1)+' '+fU],
+      ['Moment M<sub>u</sub>', fmt(frSI_mom(Mu_Nmm,m)/1e6,1)+' '+uMom(m)],
+      ['Long. bar d<sub>b</sub>', fmt(frSI_len(db,m),1)+' '+lU],
+      ['Tie spacing s<sub>v</sub>', fmt(frSI_len(sv,m),0)+' '+lU],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('σ<sub>max</sub>',fmt(frSI_str(sig_max,m)),need?'&gt;':'&le;','0.2f\'<sub>c</sub>',fmt(frSI_str(sig_lim,m)),sU,need?'err':'ok');
     html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_prov?'warn':'err'):'ok');
@@ -2218,7 +2235,17 @@ function calcBe(std){
       ok_bw_en=Ash_prov_bw_en>=Ash_req_bw_en-0.01;
       ok_lc_en=Ash_prov_lc_en>=Ash_req_lc_en-0.01;
     }
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub>', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>yk</sub>', fmt(fyk,0)+' MPa'],
+      ['γ<sub>c</sub> / γ<sub>s</sub>', fmt(gc,2)+' / '+fmt(gs,2)],
+      ['Axial force N<sub>Ed</sub>', fmt(Ned_N/1000,1)+' kN'],
+      ['Cover c<sub>c</sub>', fmt(cc,0)+' mm'],
+      ['Ductility class', _enDc.toUpperCase()],
+      ['Curvature ductility μ<sub>φ</sub>', fmt(muphi,0)],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('ν<sub>d</sub>',fmt(nud,3),need?'&gt;':'&le;',_enDc==='dch'?'Limit (DCH)':'Limit (DCM)',_enDc==='dcl'?'N/A':fmt(lim,2),'',need?'err':'ok');
     html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_en?'warn':'err'):'ok');
@@ -2305,7 +2332,15 @@ function calcBe(std){
     }
     var beSch_is=document.getElementById('be-is-schematic');
     if(beSch_is) beSch_is.style.display=need?'':'none';
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub>', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>y</sub>', fmt(fy,0)+' MPa'],
+      ['Axial force P<sub>u</sub>', fmt(Pu_N/1000,1)+' kN'],
+      ['Moment M<sub>u</sub>', fmt(Mu_Nmm/1e6,1)+' kN·m'],
+      ['Cover c<sub>c</sub>', fmt(cc,0)+' mm'],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('σ<sub>max</sub>',fmt(sig_max,2),need?'&gt;':'&le;','0.2f<sub>ck</sub>',fmt(sig_lim,2),'MPa',need?'err':'ok');
     html+=ri('Boundary element',need?'Required':'Not required','',need?(ok_lbe_is_len?'warn':'err'):'ok');
@@ -2377,7 +2412,17 @@ function calcBe(std){
     var ok_s_tb=s_tb<=smax_tb+0.01;
     var ok_bw_tb=Ash_prov_bw_tb>=Ash_req_bw_tb-0.01;
     var ok_lbe_tb=Ash_prov_lbe_tb>=Ash_req_lbe_tb-0.01;
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub>', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>ywk</sub>', fmt(fyk,0)+' MPa'],
+      ['Cover c<sub>c</sub>', fmt(cc,0)+' mm'],
+      ['Zone location', inCrit?'Within critical zone':'Above critical zone'],
+      ['Zone length l<sub>be,prov</sub>', fmt(lbe_prov_tb,0)+' mm'],
+      ['Tie spacing s', fmt(s_tb,0)+' mm'],
+      ['Tie diameter d<sub>tie</sub>', fmt(dtie_tb,0)+' mm'],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('l<sub>be,prov</sub>',fmt(lbe_prov_tb,0),ok_lbe_tb_len?'&ge;':'&lt;','l<sub>be,req</sub>',fmt(lbe_req_tb,0),'mm',ok_lbe_tb_len?'ok':'err');
     html+=riCmp('A<sub>sh</sub> (b<sub>w</sub> core)',fmt(Ash_prov_bw_tb,0),ok_bw_tb?'&ge;':'&lt;','A<sub>sh,req</sub>',fmt(Ash_req_bw_tb,0),'mm²',ok_bw_tb?'ok':'err');
@@ -2450,7 +2495,17 @@ function calcSh(std){
     var ok=Vu_kN<=phiVn;
     var ok_max=Vu_kN<=phiVn_max;
     var lU=uLen(m),sU=uStr(m),fU=uFrc(m);
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(frSI_len(lw,m),0)+' '+lU],
+      ['Wall thickness b<sub>w</sub>', fmt(frSI_len(bw,m),0)+' '+lU],
+      ['Wall height h<sub>w</sub>', fmt(frSI_len(hw,m),0)+' '+lU],
+      ["Concrete f'<sub>c</sub>", fmt(frSI_str(fc,m),0)+' '+sU],
+      ['Steel f<sub>y</sub>', fmt(frSI_str(fy,m),0)+' '+sU],
+      ['Shear force V<sub>u</sub>', fmt(frSI_frc(Vu_N,m)/1000,1)+' '+fU],
+      ['Horiz. bar d<sub>h</sub>', fmt(frSI_len(dh,m),1)+' '+lU],
+      ['Horiz. spacing s<sub>h</sub>', fmt(frSI_len(sh_sp,m),0)+' '+lU],
+      ['Bars per layer n<sub>h</sub>', nc],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('φV<sub>n</sub>',fmt(frSI_frc(phiVn*1000,m)/1000,1),ok?'&ge;':'&lt;','V<sub>u</sub>',fmt(frSI_frc(Vu_N,m)/1000,1),fU,ok?'ok':'err');
     html+=riCmp('φV<sub>n,max</sub>',fmt(frSI_frc(phiVn_max*1000,m)/1000,1),ok_max?'&ge;':'&lt;','V<sub>u</sub>',fmt(frSI_frc(Vu_N,m)/1000,1),fU,ok_max?'ok':'err');
@@ -2506,7 +2561,17 @@ function calcSh(std){
     var VRds_N=Asw_prov*z*fyd;
     var ok_strut=Ved_design<=VRdmax_N;
     var ok_prov=VRds_N>=Ved_design-1;
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub>', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>yk</sub>', fmt(fyk,0)+' MPa'],
+      ['γ<sub>c</sub> / γ<sub>s</sub>', gc+' / '+gs],
+      ['Design shear V<sub>Ed,d</sub>', fmt(Ved_N/1000,1)+' kN'],
+      ['Horiz. bar d<sub>h</sub>', fmt(dh,0)+' mm'],
+      ['Horiz. spacing s<sub>h</sub>', fmt(sh_sp,0)+' mm'],
+      ['Bars per layer n<sub>h</sub>', nc],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>Rd,s</sub>',fmt(VRds_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_prov?'ok':'err');
     html+=riCmp('V<sub>Rd,max</sub>',fmt(VRdmax_N/1000,1),ok_strut?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_strut?'ok':'err');
@@ -2562,7 +2627,16 @@ function calcSh(std){
     var Vu_kN=Vu_N/1000;
     var ok_prov=Vn_prov_N>=Vu_N-1;
     var ok_max=Vmax_N>=Vu_N-1;
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub> (t<sub>w</sub>)', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>y</sub>', fmt(fy,0)+' MPa'],
+      ['Shear force V<sub>u</sub>', fmt(Vu_kN,1)+' kN'],
+      ['Horiz. bar d<sub>h</sub>', fmt(dh,0)+' mm'],
+      ['Horiz. spacing s<sub>h</sub>', fmt(sh_sp,0)+' mm'],
+      ['Bars per layer n<sub>h</sub>', nc],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>n</sub>',fmt(Vn_prov_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_prov?'ok':'err');
     html+=riCmp('V<sub>max</sub>',fmt(Vmax_N/1000,1),ok_max?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_max?'ok':'err');
@@ -2617,7 +2691,16 @@ function calcSh(std){
     var Ve_kN=Ve_N/1000;
     var ok=Ve_kN<=Vr_kN;
     var ok_max=Ve_kN<=Vr_max_kN;
-    var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
+    var html=rptHdr(std,m)+inpSum([
+      ['Wall length l<sub>w</sub>', fmt(lw,0)+' mm'],
+      ['Wall thickness b<sub>w</sub>', fmt(bw,0)+' mm'],
+      ['Concrete f<sub>ck</sub>', fmt(fck,0)+' MPa'],
+      ['Steel f<sub>ywk</sub>', fmt(fyk,0)+' MPa'],
+      ['Seismic shear V<sub>e</sub>', fmt(Ve_kN,1)+' kN'],
+      ['Horiz. bar d<sub>h</sub>', fmt(dh,0)+' mm'],
+      ['Horiz. spacing s<sub>h</sub>', fmt(sh_sp,0)+' mm'],
+      ['Bars per layer n<sub>h</sub>', nc],
+    ])+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>r</sub>',fmt(Vr_kN,1),ok?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok?'ok':'err');
     html+=riCmp('V<sub>r,max</sub>',fmt(Vr_max_kN,1),ok_max?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok_max?'ok':'err');
