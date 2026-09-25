@@ -2168,40 +2168,37 @@ function calcSh(std){
     var rhoh=Ah/(bw*sh_sp);
     var rho_min=0.0025;
     var ok_rho=rhoh>=rho_min-1e-6;
-    var Asv_prov=Ah/sh_sp;
-    var tv=Vu_N/(bw*d);
     var tc=0.17*Math.sqrt(fck);
-    var need_steel=tv>tc;
-    var Asv_req=need_steel?Math.max(0,(Vu_N-tc*bw*d)/(0.87*fy*d)):0;
     var tau_max=Math.min(0.2*fck,3.5);
-    var ok_max=tv<=tau_max;
-    var ok_prov=!need_steel||Asv_prov>=Asv_req-0.001;
+    var Vc_N=tc*bw*d;
+    var Vs_prov_N=(Ah/sh_sp)*0.87*fy*d;
+    var Vn_prov_N=Vc_N+Vs_prov_N;
+    var Vmax_N=tau_max*bw*d;
+    var Vu_kN=Vu_N/1000;
+    var ok_prov=Vn_prov_N>=Vu_N-1;
+    var ok_max=Vmax_N>=Vu_N-1;
     var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
-    if(need_steel) html+=riCmp('A<sub>sv,prov</sub>/s',fmt(Asv_prov,3),ok_prov?'&ge;':'&lt;','A<sub>sv,req</sub>/s',fmt(Asv_req,3),'mm²/mm',ok_prov?'ok':'err');
-    else html+=riCmp('τ<sub>v</sub>',fmt(tv,3),'&le;','τ<sub>c</sub>',fmt(tc,3),'MPa','ok');
-    html+=riCmp('τ<sub>v</sub>',fmt(tv,3),ok_max?'&le;':'&gt;','τ<sub>max</sub>',fmt(tau_max,2),'MPa',ok_max?'ok':'err');
+    html+=riCmp('V<sub>n</sub>',fmt(Vn_prov_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_prov?'ok':'err');
+    html+=riCmp('V<sub>max</sub>',fmt(Vmax_N/1000,1),ok_max?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_max?'ok':'err');
     html+=riCmp('ρ<sub>h</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>h,min</sub>','0.0025','',ok_rho?'ok':'err');
     html+='</div>';
     html+='</div>';
     var allok=ok_max&&ok_rho&&ok_prov;
-    html+=banner(!ok_max?'err':(!ok_prov||!ok_rho)?'err':!need_steel?'ok':'warn',
-      !ok_max?'Section Too Small':'Shear Design '+(allok?'OK':'INCOMPLETE'),
-      'τ<sub>v</sub>='+fmt(tv,3)+' MPa vs τ<sub>c</sub>='+fmt(tc,3)+' MPa');
+    html+=banner(allok?'ok':'err',
+      allok?'Shear OK':(!ok_max?'Section Too Small — Crushing Limit Exceeded':'Shear Capacity INSUFFICIENT'),
+      'V<sub>u</sub>='+fmt(Vu_kN,1)+' kN'+(ok_prov?' &le; ':' &gt; ')+'V<sub>n</sub>='+fmt(Vn_prov_N/1000,1)+' kN');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">IS 456:2000 §32.4 / IS 13920 §9.3 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
-    html+=srow(1,'τ<sub>v</sub> = V<sub>u</sub>/(b<sub>w</sub>·d)',fmt(tv,3)+' MPa','');
-    html+=srow(2,'τ<sub>c</sub> = 0.17√f<sub>ck</sub>',fmt(tc,3)+' MPa','');
-    html+=srow(3,'τ<sub>max</sub> = min(0.2f<sub>ck</sub>, 3.5 MPa)',fmt(tau_max,2)+' MPa',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
-    html+=srow(4,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
-    html+=srow(5,'ρ<sub>h</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; 0.0025 ✓':' &lt; 0.0025 ✗'),'',ok_rho?'chk-ok':'chk-err');
-    if(need_steel){
-      html+=srow(6,'A<sub>sv,req</sub>/s = (V<sub>u</sub>−τ<sub>c</sub>·b<sub>w</sub>·d)/(0.87·f<sub>y</sub>·d)',fmt(Asv_req,3)+' mm²/mm','');
-      html+=srow(7,'A<sub>sv,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asv_prov,3)+' mm²/mm',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
-    } else {
-      html+=srow(6,'A<sub>sv</sub>/s','Not required','✔','chk-ok');
-    }
+    html+=srow(1,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
+    html+=srow(2,'ρ<sub>h</sub> = A<sub>h</sub>/(t<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; 0.0025 ✓':' &lt; 0.0025 ✗'),'',ok_rho?'chk-ok':'chk-err');
+    html+=srow(3,'d = l<sub>w</sub> − c<sub>c</sub>',fmt(d,0)+' mm','');
+    html+=srow(4,'τ<sub>c</sub> = 0.17√f<sub>ck</sub>',fmt(tc,3)+' MPa','');
+    html+=srow(5,'V<sub>c</sub> = τ<sub>c</sub>·t<sub>w</sub>·d',fmt(Vc_N/1000,1)+' kN','');
+    html+=srow(6,'V<sub>s,prov</sub> = (A<sub>h</sub>/s<sub>h</sub>)·0.87·f<sub>y</sub>·d',fmt(Vs_prov_N/1000,1)+' kN','');
+    html+=srow(7,'V<sub>n</sub> = V<sub>c</sub> + V<sub>s,prov</sub>','<strong>'+fmt(Vn_prov_N/1000,1)+' kN</strong>',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
+    html+=srow(8,'V<sub>max</sub> = τ<sub>max</sub>·t<sub>w</sub>·d  (τ<sub>max</sub>='+fmt(tau_max,2)+' MPa)',fmt(Vmax_N/1000,1)+' kN',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     var smax_sh=Math.min(3*bw,450);
     if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3t<sub>w</sub>, 450) = '+fmt(smax_sh,0)+' mm (IS 456 §32.5)');
