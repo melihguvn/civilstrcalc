@@ -2509,7 +2509,6 @@ function calcSh(std){
     html+='<div class="rb-row">';
     html+=riCmp('φV<sub>n</sub>',fmt(frSI_frc(phiVn*1000,m)/1000,1),ok?'&ge;':'&lt;','V<sub>u</sub>',fmt(frSI_frc(Vu_N,m)/1000,1),fU,ok?'ok':'err');
     html+=riCmp('φV<sub>n,max</sub>',fmt(frSI_frc(phiVn_max*1000,m)/1000,1),ok_max?'&ge;':'&lt;','V<sub>u</sub>',fmt(frSI_frc(Vu_N,m)/1000,1),fU,ok_max?'ok':'err');
-    html+=riCmp('ρ<sub>t</sub>',fmt(rhot,5),ok_rho?'&ge;':'&lt;','ρ<sub>t,min</sub>','0.0025','',ok_rho?'ok':'err');
     html+=ri('D/C',fmt(Vu_kN/phiVn,3),'V<sub>u</sub>/φV<sub>n</sub>',ok?'ok':'err');
     html+='</div>';
     html+='</div>';
@@ -2517,6 +2516,7 @@ function calcSh(std){
     html+=banner(allok?'ok':'err',
       allok?'Shear OK':(!ok_max?'Section Too Small — Crushing Limit Exceeded':'Shear Capacity INSUFFICIENT'),
       'V<sub>u</sub>='+fmt(frSI_frc(Vu_N,m)/1000,1)+' '+fU+(ok?' &le; ':' &gt; ')+'φV<sub>n</sub>='+fmt(frSI_frc(phiVn*1000,m)/1000,1)+' '+fU);
+    if(!ok_rho) html+=banner('warn','Min. Horizontal Reinforcement Not Satisfied','ρ<sub>t</sub> = '+fmt(rhot,5)+' &lt; ρ<sub>t,min</sub> = 0.0025 (ACI 318-25 §18.10.2.1)');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">ACI 318-25 §18.10.4 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
@@ -2575,7 +2575,6 @@ function calcSh(std){
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>Rd,s</sub>',fmt(VRds_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_prov?'ok':'err');
     html+=riCmp('V<sub>Rd,max</sub>',fmt(VRdmax_N/1000,1),ok_strut?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_strut?'ok':'err');
-    html+=riCmp('ρ<sub>h</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>h,min</sub>',fmt(rho_min,4),'',ok_rho?'ok':'err');
     html+=ri('D/C',fmt(Ved_design/VRds_N,3),'V<sub>Ed,d</sub>/V<sub>Rd,s</sub>',ok_prov?'ok':'err');
     html+='</div>';
     html+='</div>';
@@ -2584,6 +2583,7 @@ function calcSh(std){
       allok?'Shear OK':(!ok_strut?'Strut Capacity EXCEEDED':'Shear Reinf. INSUFFICIENT'),
       !ok_strut?'V<sub>Ed,d</sub>='+fmt(Ved_design/1000,1)+' kN &gt; V<sub>Rd,max</sub>='+fmt(VRdmax_N/1000,1)+' kN':
         'V<sub>Rd,s</sub>='+fmt(VRds_N/1000,1)+(ok_prov?' &ge; ':' &lt; ')+'V<sub>Ed,d</sub>='+fmt(Ved_design/1000,1)+' kN');
+    if(!ok_rho) html+=banner('warn','Min. Horizontal Reinforcement Not Satisfied','ρ<sub>h</sub> = '+fmt(rhoh,5)+' &lt; ρ<sub>h,min</sub> = '+fmt(rho_min,4)+' (EN 1992-1-1 §9.6.2)');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">EN 1992-1-1 §6.2 / EN 1998-1 §5.5.2.4 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
@@ -2640,7 +2640,6 @@ function calcSh(std){
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>n</sub>',fmt(Vn_prov_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_prov?'ok':'err');
     html+=riCmp('V<sub>max</sub>',fmt(Vmax_N/1000,1),ok_max?'&ge;':'&lt;','V<sub>u</sub>',fmt(Vu_kN,1),'kN',ok_max?'ok':'err');
-    html+=riCmp('ρ<sub>h</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>h,min</sub>','0.0025','',ok_rho?'ok':'err');
     html+=ri('D/C',fmt(Vu_N/Vn_prov_N,3),'V<sub>u</sub>/V<sub>n</sub>',ok_prov?'ok':'err');
     html+='</div>';
     html+='</div>';
@@ -2648,6 +2647,7 @@ function calcSh(std){
     html+=banner(allok?'ok':'err',
       allok?'Shear OK':(!ok_max?'Section Too Small — Crushing Limit Exceeded':'Shear Capacity INSUFFICIENT'),
       'V<sub>u</sub>='+fmt(Vu_kN,1)+' kN'+(ok_prov?' &le; ':' &gt; ')+'V<sub>n</sub>='+fmt(Vn_prov_N/1000,1)+' kN');
+    if(!ok_rho) html+=banner('warn','Min. Horizontal Reinforcement Not Satisfied','ρ<sub>h</sub> = '+fmt(rhoh,5)+' &lt; ρ<sub>h,min</sub> = 0.0025 (IS 13920 §9.1.5)');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">IS 456:2000 §32.4 / IS 13920 §9.3 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
@@ -2704,7 +2704,6 @@ function calcSh(std){
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>r</sub>',fmt(Vr_kN,1),ok?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok?'ok':'err');
     html+=riCmp('V<sub>r,max</sub>',fmt(Vr_max_kN,1),ok_max?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok_max?'ok':'err');
-    html+=riCmp('ρ<sub>sh</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>sh,min</sub>','0.0025','',ok_rho?'ok':'err');
     html+=ri('D/C',fmt(Ve_kN/Vr_kN,3),'V<sub>e</sub>/V<sub>r</sub>',ok?'ok':'err');
     html+='</div>';
     html+='</div>';
@@ -2712,6 +2711,7 @@ function calcSh(std){
     html+=banner(allok?'ok':'err',
       allok?'Shear OK':(!ok_max?'Section Too Small — Crushing Limit Exceeded':'Shear Capacity INSUFFICIENT'),
       'V<sub>e</sub>='+fmt(Ve_kN,1)+' kN vs V<sub>r</sub>='+fmt(Vr_kN,1)+' kN');
+    if(!ok_rho) html+=banner('warn','Min. Horizontal Reinforcement Not Satisfied','ρ<sub>sh</sub> = '+fmt(rhoh,5)+' &lt; ρ<sub>sh,min</sub> = 0.0025 (TSC 2018 §7.6.3.2)');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">TSC 2018 §7.6.5.3 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
