@@ -578,7 +578,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>l<sub>w</sub> (m)</label><div class="iw"><input type="number" id="be-tbdy-lw" value="3" step="0.1" min="0.2" oninput="calcBe('tbdy')"><span class="us">m</span></div></div>
             <div class="form-group"><label>b<sub>w</sub> (m)</label><div class="iw"><input type="number" id="be-tbdy-bw" value="0.30" step="0.05" min="0.1" oninput="calcBe('tbdy')"><span class="us">m</span></div></div>
           </div>
-          <div class="form-group"><label>h<sub>w</sub> clear height (m)</label><div class="iw"><input type="number" id="be-tbdy-hw" value="15" step="0.1" min="0.2" oninput="calcBe('tbdy')"><span class="us">m</span></div></div>
           <div class="form-div"><div class="form-div-lbl">Materials</div></div>
           <div class="form-row-2">
             <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="be-tbdy-fck" value="30" min="16" oninput="calcBe('tbdy')"><span class="us">MPa</span></div></div>
@@ -671,7 +670,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <button class="bg-tab" onclick="swBgTab('bgs-be-tbdy',1,this)">Confinement</button>
         </div>
         <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>TSC 2018 §7.6.6.1</strong> — Confined end regions are unconditionally required at all wall ends. Length depends on zone location relative to critical zone height h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6):</p><span class="fml-eq">Within critical zone: l<sub>be</sub> = max(2b<sub>w</sub>, l<sub>w</sub>/5, h<sub>w</sub>/10)</span><span class="fml-eq">Above critical zone: l<sub>be</sub> = max(b<sub>w</sub>, l<sub>w</sub>/10)</span><p>h<sub>w</sub> is the clear storey height; l<sub>w</sub> and b<sub>w</sub> are wall length and thickness.</p></div>
+          <div class="fml-blk"><p><strong>TSC 2018 §7.6.6.1</strong> — Confined end regions are unconditionally required at all wall ends. Length depends on zone location relative to critical zone height h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6):</p><span class="fml-eq">Within critical zone: l<sub>be</sub> = max(2b<sub>w</sub>, l<sub>w</sub>/5)</span><span class="fml-eq">Above critical zone: l<sub>be</sub> = max(b<sub>w</sub>, l<sub>w</sub>/10)</span></div>
         </div>
         <div class="bg-pane">
           <div class="fml-blk"><p><strong>TSC 2018 §7.6.3.3 / Table 7.4</strong> — Required volumetric ratio of transverse reinforcement:</p><span class="fml-eq">ρ<sub>s,req</sub> = max(0.30·f<sub>cd</sub>/f<sub>yk</sub>·(A<sub>c,be</sub>/A<sub>ch</sub>−1), 0.075·f<sub>cd</sub>/f<sub>yk</sub>)</span><p>f<sub>cd</sub> = f<sub>ck</sub>/1.5 &emsp; A<sub>c,be</sub> = l<sub>be</sub>·b<sub>w</sub> &emsp; A<sub>ch</sub> = (l<sub>be</sub>−2c<sub>c</sub>)·(b<sub>w</sub>−2c<sub>c</sub>)</p><p>Required area per direction (b<sub>c</sub> = confined core width in that direction):</p><span class="fml-eq">A<sub>sh,req</sub> = ρ<sub>s,req</sub>·b<sub>c</sub>·s</span><span class="fml-eq">s<sub>max</sub> = min(b<sub>w</sub>/3, 100 mm) [critical zone] &emsp; or &emsp; 200 mm [above]</span></div>
@@ -1980,14 +1979,14 @@ function calcBe(std){
   }
 
   if(std==='tbdy'){
-    var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000,hw=v(m+'-hw')*1000;
+    var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000;
     var fck=v(m+'-fck'),fyk=v(m+'-fyk');
     var cc=v(m+'-cc');
     var lbe_prov_tb=v(m+'-lbe')||600;
     if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'tbdy',res))return;
     var inCrit=_beTbdyCrit==='in';
-    var lbe_req_tb=inCrit?Math.max(2*bw,lw/5,hw/10):Math.max(bw,lw/10);
+    var lbe_req_tb=inCrit?Math.max(2*bw,lw/5):Math.max(bw,lw/10);
     var ok_lbe_tb_len=lbe_prov_tb>=lbe_req_tb-0.01;
     var smax_tb=inCrit?Math.min(bw/3,100):200; smax_tb=Math.max(smax_tb,20);
     var fcd_tb=fck/1.5;
@@ -2010,29 +2009,24 @@ function calcBe(std){
     var ok_lbe_tb=Ash_prov_lbe_tb>=Ash_req_lbe_tb-0.01;
     var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
-    html+=ri('Location',inCrit?'Within critical zone':'Above critical zone','',inCrit?'warn':'ok');
-    html+=ri('Confined end region','Required','','warn');
-    html+='</div>';
-    html+='<div class="rb-row">';
     html+=riCmp('l<sub>be,prov</sub>',fmt(lbe_prov_tb,0),ok_lbe_tb_len?'&ge;':'&lt;','l<sub>be,req</sub>',fmt(lbe_req_tb,0),'mm',ok_lbe_tb_len?'ok':'err');
     html+=riCmp('A<sub>sh</sub> (b<sub>w</sub> core)',fmt(Ash_prov_bw_tb,0),ok_bw_tb?'&ge;':'&lt;','A<sub>sh,req</sub>',fmt(Ash_req_bw_tb,0),'mm²',ok_bw_tb?'ok':'err');
     html+=riCmp('A<sub>sh</sub> (l<sub>be</sub> core)',fmt(Ash_prov_lbe_tb,0),ok_lbe_tb?'&ge;':'&lt;','A<sub>sh,req</sub>',fmt(Ash_req_lbe_tb,0),'mm²',ok_lbe_tb?'ok':'err');
     html+='</div>';
     html+='</div>';
     html+='<div class="report-card"><div class="report-body">';
-    html+='<div class="rpt-sec-title">Required Confined Zone Length (TSC 2018 §7.6.6.1)</div>';
+    html+='<div class="rpt-sec-title">Required Confined Zone Length — '+(inCrit?'Within':'Above')+' Critical Zone (TSC 2018 §7.6.6.1)</div>';
     html+='<table class="steps-table"><tbody>';
     if(inCrit){
       html+=srow(1,'2·b<sub>w</sub>',fmt(2*bw,0)+' mm','');
       html+=srow(2,'l<sub>w</sub>/5',fmt(lw/5,0)+' mm','');
-      html+=srow(3,'h<sub>w</sub>/10',fmt(hw/10,0)+' mm','');
-      html+=srow(4,'l<sub>be,req</sub> = max(2·b<sub>w</sub>, l<sub>w</sub>/5, h<sub>w</sub>/10)','<strong>'+fmt(lbe_req_tb,0)+' mm</strong>','','chk-ok');
+      html+=srow(3,'l<sub>be,req</sub> = max(2·b<sub>w</sub>, l<sub>w</sub>/5)','<strong>'+fmt(lbe_req_tb,0)+' mm</strong>','','chk-ok');
     } else {
       html+=srow(1,'b<sub>w</sub>',fmt(bw,0)+' mm','');
       html+=srow(2,'l<sub>w</sub>/10',fmt(lw/10,0)+' mm','');
       html+=srow(3,'l<sub>be,req</sub> = max(b<sub>w</sub>, l<sub>w</sub>/10)','<strong>'+fmt(lbe_req_tb,0)+' mm</strong>','','chk-ok');
     }
-    html+=srow(inCrit?5:4,'l<sub>be,prov</sub>',fmt(lbe_prov_tb,0)+' mm ≥ l<sub>be,req</sub>?',ok_lbe_tb_len?'✓':'✗',ok_lbe_tb_len?'chk-ok':'chk-err');
+    html+=srow(4,'l<sub>be,prov</sub>',fmt(lbe_prov_tb,0)+' mm ≥ l<sub>be,req</sub>?',ok_lbe_tb_len?'✓':'✗',ok_lbe_tb_len?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">Confinement Steel — TSC 2018 §7.6.3.3</div>';
