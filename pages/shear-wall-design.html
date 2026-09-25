@@ -63,6 +63,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .pmm-canvas-outer{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
 .pmm-canvas-outer h4{font-family:var(--cond);font-size:.77rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;color:var(--text);}
 .pmm-canvas-outer canvas{display:block;margin:0 auto;max-width:100%;}
+/* Boundary zone checkbox */
+.chk-label{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text);cursor:pointer;margin-bottom:6px;padding:5px 0;user-select:none;}
+.chk-label input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
 
 /* Misc */
 .fml-eq{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border-left:3px solid var(--accent);padding:5px 10px;margin:5px 0;border-radius:0 4px 4px 0;line-height:1.7;display:block;}
@@ -1193,17 +1196,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
           <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
           <div class="form-row-2">
-            <div class="form-group"><label>ρ<sub>v,web</sub> web vert. ratio</label><div class="iw"><input type="number" id="pm-aci-rhov" value="0.005" step="0.0001" min="0.0025" oninput="calcPm('aci')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> web bar (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-db-web" value="12" step="1" min="6" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+            <div class="form-group"><label>s<sub>v</sub> spacing (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-sv-web" value="200" step="10" min="50" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+          </div>
+          <div class="form-row-2">
             <div class="form-group"><label>c<sub>c</sub> cover (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-cc" value="40" min="20" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <button class="unit-btn active" id="pm-aci-nobe" onclick="setPmBe('aci','no',this)">No boundary zone</button>
-            <button class="unit-btn" id="pm-aci-habe" onclick="setPmBe('aci','yes',this)">With boundary zone</button>
-          </div>
-          <div id="pm-aci-be-inputs" style="display:none;margin-top:6px;">
+          <label class="chk-label"><input type="checkbox" id="pm-aci-be-chk" onchange="togglePmBe('aci')"> Boundary zone present</label>
+          <div id="pm-aci-be-inputs" style="display:none;margin-top:4px;">
+            <div class="form-div" style="margin-top:0;"><div class="form-div-lbl">Boundary Zone</div></div>
             <div class="form-row-2">
-              <div class="form-group"><label>l<sub>be</sub> BE length (<span class="u-len-m" data-m="pm-aci">m</span>)</label><div class="iw"><input type="number" id="pm-aci-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('aci')"><span class="us u-len-m" data-m="pm-aci">m</span></div></div>
-              <div class="form-group"><label>ρ<sub>v,be</sub> BE vert. ratio</label><div class="iw"><input type="number" id="pm-aci-rhobe" value="0.03" step="0.001" min="0.01" oninput="calcPm('aci')"><span class="us">—</span></div></div>
+              <div class="form-group"><label>l<sub>be</sub> length (<span class="u-len-m" data-m="pm-aci">m</span>)</label><div class="iw"><input type="number" id="pm-aci-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('aci')"><span class="us u-len-m" data-m="pm-aci">m</span></div></div>
+              <div class="form-group"><label>d<sub>b,be</sub> bar (<span class="u-len" data-m="pm-aci">mm</span>)</label><div class="iw"><input type="number" id="pm-aci-db-be" value="20" step="2" min="8" oninput="calcPm('aci')"><span class="us u-len" data-m="pm-aci">mm</span></div></div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group"><label>n<sub>be</sub> bars per element</label><div class="iw"><input type="number" id="pm-aci-n-be" value="8" step="1" min="2" oninput="calcPm('aci')"><span class="us">—</span></div></div>
             </div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
@@ -1216,12 +1223,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="results-col" id="pm-aci-res">
         <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
-        <div id="pm-aci-canvas-wrap" style="display:none;">
-          <div class="pmm-canvas-outer">
-            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">ACI 318-25 · φ-reduced envelope shown</span></h4>
-            <canvas id="pm-aci-canvas" width="480" height="380" role="img" aria-label="ACI 318-25 P-M interaction diagram"></canvas>
-          </div>
-        </div>
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-aci">
@@ -1266,19 +1267,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>γ<sub>c</sub></label><div class="iw"><input type="number" id="pm-en-gc" value="1.5" step="0.05" oninput="calcPm('en')"><span class="us">—</span></div></div>
             <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="pm-en-gs" value="1.15" step="0.05" oninput="calcPm('en')"><span class="us">—</span></div></div>
           </div>
-          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
           <div class="form-row-2">
-            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-en-rhov" value="0.005" step="0.0001" oninput="calcPm('en')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> web bar (mm)</label><div class="iw"><input type="number" id="pm-en-db-web" value="12" step="1" min="6" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>s<sub>v</sub> spacing (mm)</label><div class="iw"><input type="number" id="pm-en-sv-web" value="200" step="10" min="50" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-row-2">
             <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-en-cc" value="35" min="20" oninput="calcPm('en')"><span class="us">mm</span></div></div>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <button class="unit-btn active" id="pm-en-nobe" onclick="setPmBe('en','no',this)">No boundary zone</button>
-            <button class="unit-btn" id="pm-en-habe" onclick="setPmBe('en','yes',this)">With boundary zone</button>
-          </div>
-          <div id="pm-en-be-inputs" style="display:none;margin-top:6px;">
+          <label class="chk-label"><input type="checkbox" id="pm-en-be-chk" onchange="togglePmBe('en')"> Boundary zone present</label>
+          <div id="pm-en-be-inputs" style="display:none;margin-top:4px;">
+            <div class="form-div" style="margin-top:0;"><div class="form-div-lbl">Boundary Zone</div></div>
             <div class="form-row-2">
-              <div class="form-group"><label>l<sub>be</sub> (m)</label><div class="iw"><input type="number" id="pm-en-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('en')"><span class="us">m</span></div></div>
-              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-en-rhobe" value="0.03" step="0.001" oninput="calcPm('en')"><span class="us">—</span></div></div>
+              <div class="form-group"><label>l<sub>be</sub> length (m)</label><div class="iw"><input type="number" id="pm-en-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('en')"><span class="us">m</span></div></div>
+              <div class="form-group"><label>d<sub>b,be</sub> bar (mm)</label><div class="iw"><input type="number" id="pm-en-db-be" value="20" step="2" min="8" oninput="calcPm('en')"><span class="us">mm</span></div></div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group"><label>n<sub>be</sub> bars per element</label><div class="iw"><input type="number" id="pm-en-n-be" value="8" step="1" min="2" oninput="calcPm('en')"><span class="us">—</span></div></div>
             </div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
@@ -1291,12 +1296,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="results-col" id="pm-en-res">
         <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
-        <div id="pm-en-canvas-wrap" style="display:none;">
-          <div class="pmm-canvas-outer">
-            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">EN 1992-1-1 · design values</span></h4>
-            <canvas id="pm-en-canvas" width="480" height="380" role="img" aria-label="EN 1992 P-M interaction diagram"></canvas>
-          </div>
-        </div>
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-en">
@@ -1336,19 +1335,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="pm-is-fck" value="25" min="15" oninput="calcPm('is')"><span class="us">MPa</span></div></div>
             <div class="form-group"><label>f<sub>y</sub> (MPa)</label><div class="iw"><input type="number" id="pm-is-fy" value="415" min="250" oninput="calcPm('is')"><span class="us">MPa</span></div></div>
           </div>
-          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
           <div class="form-row-2">
-            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-is-rhov" value="0.005" step="0.0001" oninput="calcPm('is')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> web bar (mm)</label><div class="iw"><input type="number" id="pm-is-db-web" value="12" step="1" min="6" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>s<sub>v</sub> spacing (mm)</label><div class="iw"><input type="number" id="pm-is-sv-web" value="200" step="10" min="50" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-row-2">
             <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-is-cc" value="40" min="20" oninput="calcPm('is')"><span class="us">mm</span></div></div>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <button class="unit-btn active" id="pm-is-nobe" onclick="setPmBe('is','no',this)">No boundary zone</button>
-            <button class="unit-btn" id="pm-is-habe" onclick="setPmBe('is','yes',this)">With boundary zone</button>
-          </div>
-          <div id="pm-is-be-inputs" style="display:none;margin-top:6px;">
+          <label class="chk-label"><input type="checkbox" id="pm-is-be-chk" onchange="togglePmBe('is')"> Boundary zone present</label>
+          <div id="pm-is-be-inputs" style="display:none;margin-top:4px;">
+            <div class="form-div" style="margin-top:0;"><div class="form-div-lbl">Boundary Zone</div></div>
             <div class="form-row-2">
-              <div class="form-group"><label>l<sub>be</sub> (m)</label><div class="iw"><input type="number" id="pm-is-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('is')"><span class="us">m</span></div></div>
-              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-is-rhobe" value="0.03" step="0.001" oninput="calcPm('is')"><span class="us">—</span></div></div>
+              <div class="form-group"><label>l<sub>be</sub> length (m)</label><div class="iw"><input type="number" id="pm-is-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('is')"><span class="us">m</span></div></div>
+              <div class="form-group"><label>d<sub>b,be</sub> bar (mm)</label><div class="iw"><input type="number" id="pm-is-db-be" value="20" step="2" min="8" oninput="calcPm('is')"><span class="us">mm</span></div></div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group"><label>n<sub>be</sub> bars per element</label><div class="iw"><input type="number" id="pm-is-n-be" value="8" step="1" min="2" oninput="calcPm('is')"><span class="us">—</span></div></div>
             </div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
@@ -1361,12 +1364,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="results-col" id="pm-is-res">
         <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
-        <div id="pm-is-canvas-wrap" style="display:none;">
-          <div class="pmm-canvas-outer">
-            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">IS 456:2000 · design values</span></h4>
-            <canvas id="pm-is-canvas" width="480" height="380" role="img" aria-label="IS 456 P-M interaction diagram"></canvas>
-          </div>
-        </div>
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-is">
@@ -1406,19 +1403,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="pm-tbdy-fck" value="25" min="16" oninput="calcPm('tbdy')"><span class="us">MPa</span></div></div>
             <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="pm-tbdy-fyk" value="420" min="220" oninput="calcPm('tbdy')"><span class="us">MPa</span></div></div>
           </div>
-          <div class="form-div"><div class="form-div-lbl">Reinforcement</div></div>
+          <div class="form-div"><div class="form-div-lbl">Reinforcement Layout</div></div>
           <div class="form-row-2">
-            <div class="form-group"><label>ρ<sub>v,web</sub></label><div class="iw"><input type="number" id="pm-tbdy-rhov" value="0.005" step="0.0001" oninput="calcPm('tbdy')"><span class="us">—</span></div></div>
+            <div class="form-group"><label>d<sub>b</sub> web bar (mm)</label><div class="iw"><input type="number" id="pm-tbdy-db-web" value="12" step="1" min="6" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+            <div class="form-group"><label>s<sub>v</sub> spacing (mm)</label><div class="iw"><input type="number" id="pm-tbdy-sv-web" value="200" step="10" min="50" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+          </div>
+          <div class="form-row-2">
             <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="pm-tbdy-cc" value="40" min="20" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <button class="unit-btn active" id="pm-tbdy-nobe" onclick="setPmBe('tbdy','no',this)">No boundary zone</button>
-            <button class="unit-btn" id="pm-tbdy-habe" onclick="setPmBe('tbdy','yes',this)">With boundary zone</button>
-          </div>
-          <div id="pm-tbdy-be-inputs" style="display:none;margin-top:6px;">
+          <label class="chk-label"><input type="checkbox" id="pm-tbdy-be-chk" onchange="togglePmBe('tbdy')"> Boundary zone present</label>
+          <div id="pm-tbdy-be-inputs" style="display:none;margin-top:4px;">
+            <div class="form-div" style="margin-top:0;"><div class="form-div-lbl">Boundary Zone</div></div>
             <div class="form-row-2">
-              <div class="form-group"><label>l<sub>be</sub> (m)</label><div class="iw"><input type="number" id="pm-tbdy-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('tbdy')"><span class="us">m</span></div></div>
-              <div class="form-group"><label>ρ<sub>v,be</sub></label><div class="iw"><input type="number" id="pm-tbdy-rhobe" value="0.03" step="0.001" oninput="calcPm('tbdy')"><span class="us">—</span></div></div>
+              <div class="form-group"><label>l<sub>be</sub> length (m)</label><div class="iw"><input type="number" id="pm-tbdy-lbe" value="0.5" step="0.05" min="0.1" oninput="calcPm('tbdy')"><span class="us">m</span></div></div>
+              <div class="form-group"><label>d<sub>b,be</sub> bar (mm)</label><div class="iw"><input type="number" id="pm-tbdy-db-be" value="20" step="2" min="8" oninput="calcPm('tbdy')"><span class="us">mm</span></div></div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group"><label>n<sub>be</sub> bars per element</label><div class="iw"><input type="number" id="pm-tbdy-n-be" value="8" step="1" min="2" oninput="calcPm('tbdy')"><span class="us">—</span></div></div>
             </div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Design Point</div></div>
@@ -1431,12 +1432,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
       <div class="results-col" id="pm-tbdy-res">
         <div class="res-empty"><div class="ri">📊</div>Enter parameters and click Generate P-M Diagram.</div>
-        <div id="pm-tbdy-canvas-wrap" style="display:none;">
-          <div class="pmm-canvas-outer">
-            <h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">TSC 2018 · design values</span></h4>
-            <canvas id="pm-tbdy-canvas" width="480" height="380" role="img" aria-label="TSC 2018 P-M interaction diagram"></canvas>
-          </div>
-        </div>
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-tbdy">
@@ -1712,7 +1707,7 @@ var _beTbdyCrit='in';   // TSC BE critical zone: 'in' | 'out'
 var _sfMuAci='mono';    // ACI shear-friction surface
 var _sfEnSurf='mono';   // EN shear-friction surface
 var _sfTbdySurf='mono'; // TSC shear-friction surface
-var _pmBe={aci:'no',en:'no',is:'no',tbdy:'no'};
+/* _pmBe removed — BE state now read from checkbox */
 
 /* ─── HELPERS ─── */
 function v(id){var e=document.getElementById(id);return e?parseFloat(e.value)||0:0;}
@@ -1815,60 +1810,87 @@ function wallCheck(lw_mm,bw_mm,std,resEl){
 function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
   var cnv=document.getElementById(canvasId);if(!cnv)return;
   var ctx=cnv.getContext('2d');
-  var W=cnv.width,H=cnv.height,pad=46;
+  var W=cnv.width,H=cnv.height,pad=52;
   ctx.clearRect(0,0,W,H);
   if(!pts||pts.length<3)return;
-  /* find range */
+  /* detect dark mode */
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark'||(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches&&document.documentElement.getAttribute('data-theme')!=='light');
+  var clrGrid=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+  var clrAxis=isDark?'rgba(255,255,255,0.18)':'rgba(0,0,0,0.14)';
+  var clrLabel=isDark?'#8898aa':'#6b7280';
+  var clrTick=isDark?'#6a7a8a':'#9ca3af';
+  var clrNominal=isDark?'rgba(148,163,200,0.55)':'rgba(148,163,200,0.85)';
+  var clrDesign='#3b6fd4';
+  var clrFill=isDark?'rgba(59,111,212,0.13)':'rgba(59,111,212,0.09)';
+  var clrDot='#ef4444';
+  var clrText=isDark?'#c5cfd8':'#374151';
+  /* find range from both curves */
   var maxP=0,minP=0,maxM=0;
-  pts.forEach(function(p){maxP=Math.max(maxP,p.Pn);minP=Math.min(minP,p.Pn);maxM=Math.max(maxM,p.Mn);});
-  maxP*=1.1;minP=Math.min(minP*1.1,-100);maxM*=1.15;if(maxM<100)maxM=100;
+  pts.forEach(function(p){
+    maxP=Math.max(maxP,p.Pn,p.phiPn);
+    minP=Math.min(minP,p.Pn,p.phiPn);
+    maxM=Math.max(maxM,p.Mn,p.phiMn);
+  });
+  maxP*=1.1;minP=Math.min(minP*1.1,-50);maxM*=1.15;if(maxM<50)maxM=50;
   function cx(m){return pad+(m/maxM)*(W-2*pad);}
   function cy(p){return pad+(1-(p-minP)/(maxP-minP))*(H-2*pad);}
   /* grid */
-  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=0.8;
-  for(var i=0;i<=4;i++){var xx=pad+i*(W-2*pad)/4;ctx.beginPath();ctx.moveTo(xx,pad);ctx.lineTo(xx,H-pad);ctx.stroke();}
-  for(var j=0;j<=4;j++){var yy=pad+j*(H-2*pad)/4;ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-pad,yy);ctx.stroke();}
+  ctx.strokeStyle=clrGrid;ctx.lineWidth=0.8;
+  for(var i=0;i<=5;i++){var xx=pad+i*(W-2*pad)/5;ctx.beginPath();ctx.moveTo(xx,pad);ctx.lineTo(xx,H-pad);ctx.stroke();}
+  for(var j=0;j<=5;j++){var yy=pad+j*(H-2*pad)/5;ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-pad,yy);ctx.stroke();}
+  /* filled φ-envelope */
+  ctx.fillStyle=clrFill;
+  ctx.beginPath();
+  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
+  ctx.closePath();ctx.fill();
   /* axes */
-  ctx.strokeStyle='#9ca3af';ctx.lineWidth=1;
+  ctx.strokeStyle=clrAxis;ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad,cy(0));ctx.lineTo(W-pad,cy(0));ctx.stroke();
   ctx.beginPath();ctx.moveTo(cx(0),pad);ctx.lineTo(cx(0),H-pad);ctx.stroke();
   /* P-M nominal curve */
-  ctx.strokeStyle='#94a3c8';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  ctx.strokeStyle=clrNominal;ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
   ctx.beginPath();
   pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.Mn),cy(p.Pn));else ctx.lineTo(cx(p.Mn),cy(p.Pn));});
   ctx.stroke();ctx.setLineDash([]);
   /* φP-M design curve */
-  ctx.strokeStyle='#3b6fd4';ctx.lineWidth=2;
+  ctx.strokeStyle=clrDesign;ctx.lineWidth=2;
   ctx.beginPath();
-  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn||p.Mn),cy(p.phiPn||p.Pn));else ctx.lineTo(cx(p.phiMn||p.Mn),cy(p.phiPn||p.Pn));});
+  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
   ctx.stroke();
   /* design point */
   var dpx=cx(Mu_kNm),dpy=cy(Pu_kN);
-  ctx.fillStyle='#ef4444';ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+  ctx.fillStyle=clrDot;ctx.strokeStyle='#fff';ctx.lineWidth=2;
   ctx.beginPath();ctx.arc(dpx,dpy,6,0,Math.PI*2);ctx.fill();ctx.stroke();
   /* axis labels */
-  ctx.fillStyle='#6b7280';ctx.font='10px sans-serif';ctx.textAlign='center';
-  ctx.fillText(mLabel||'Mn (kN·m)',W/2,H-4);
-  ctx.save();ctx.translate(11,H/2);ctx.rotate(-Math.PI/2);
+  ctx.fillStyle=clrLabel;ctx.font='11px "IBM Plex Sans",sans-serif';ctx.textAlign='center';
+  ctx.fillText(mLabel||'Mn (kN·m)',W/2,H-5);
+  ctx.save();ctx.translate(13,H/2);ctx.rotate(-Math.PI/2);
   ctx.fillText(pLabel||'Pn (kN)',0,0);ctx.restore();
   /* tick labels */
-  ctx.font='9px sans-serif';ctx.fillStyle='#9ca3af';
+  ctx.font='9px "IBM Plex Sans",sans-serif';ctx.fillStyle=clrTick;
   ctx.textAlign='center';
-  ctx.fillText(fmt(maxM,0),cx(maxM),pad-4);
+  for(var ti=0;ti<=4;ti++){
+    var mv=maxM*ti/4;
+    ctx.fillText(fmt(mv,0),cx(mv),H-pad+13);
+  }
   ctx.textAlign='right';
-  ctx.fillText(fmt(maxP,0),pad-3,cy(maxP)+3);
-  ctx.fillText('0',pad-3,cy(0)+3);
-  if(minP<0)ctx.fillText(fmt(minP,0),pad-3,cy(minP)+3);
+  for(var ti2=0;ti2<=4;ti2++){
+    var pv=minP+(maxP-minP)*ti2/4;
+    ctx.fillText(fmt(pv,0),pad-4,cy(pv)+3);
+  }
   /* legend */
-  ctx.strokeStyle='#3b6fd4';ctx.lineWidth=2;ctx.setLineDash([]);
-  ctx.beginPath();ctx.moveTo(W-pad-90,pad-2);ctx.lineTo(W-pad-70,pad-2);ctx.stroke();
-  ctx.fillStyle='#374151';ctx.font='9px sans-serif';ctx.textAlign='left';
-  ctx.fillText('φPn−φMn',W-pad-68,pad+1);
-  ctx.strokeStyle='#94a3c8';ctx.setLineDash([4,3]);
-  ctx.beginPath();ctx.moveTo(W-pad-90,pad+10);ctx.lineTo(W-pad-70,pad+10);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillText('Pn−Mn',W-pad-68,pad+14);
-  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(W-pad-80,pad+22,4,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#374151';ctx.fillText('(Mu,Pu)',W-pad-68,pad+26);
+  var lx=W-pad-2,ly=pad+2;
+  ctx.font='9px "IBM Plex Sans",sans-serif';
+  ctx.strokeStyle=clrDesign;ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(lx-74,ly+1);ctx.lineTo(lx-57,ly+1);ctx.stroke();
+  ctx.fillStyle=clrText;ctx.textAlign='left';
+  ctx.fillText('φPn–φMn',lx-55,ly+4);
+  ctx.strokeStyle=clrNominal;ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(lx-74,ly+14);ctx.lineTo(lx-57,ly+14);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=clrText;
+  ctx.fillText('Pn–Mn',lx-55,ly+17);
+  ctx.fillStyle=clrDot;ctx.beginPath();ctx.arc(lx-65,ly+26,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=clrText;ctx.fillText('(Mu, Pu)',lx-55,ly+30);
 }
 
 /* ─── TAB SWITCHERS ─── */
@@ -1942,7 +1964,7 @@ var _lenBigIds={
 var _lenSmIds={
   'be-aci':['db','sv','cc','hx','s','dtie','lbe'],
   'sh-aci':[],
-  'pm-aci':['cc'],
+  'pm-aci':['cc','db-web','sv-web','db-be'],
   'sf-aci':[]
 };
 var _strIds={
@@ -2043,13 +2065,10 @@ function setSfTbdySurf(surf,btn){
   btn.classList.add('active');
   calcSf('tbdy');
 }
-function setPmBe(std,state,btn){
-  _pmBe[std]=state;
-  var ids=['pm-'+std+'-nobe','pm-'+std+'-habe'];
-  ids.forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
-  btn.classList.add('active');
+function togglePmBe(std){
+  var chk=document.getElementById('pm-'+std+'-be-chk');
   var wrap=document.getElementById('pm-'+std+'-be-inputs');
-  if(wrap)wrap.style.display=state==='yes'?'block':'none';
+  if(wrap)wrap.style.display=chk&&chk.checked?'block':'none';
   calcPm(std);
 }
 
@@ -2801,7 +2820,6 @@ function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
 function calcPm(std){
   var m='pm-'+std;
   var res=document.getElementById(m+'-res');
-  var wrap=document.getElementById(m+'-canvas-wrap');
   if(!res)return;
 
   var lw=toSI_m(v(m+'-lw'),m);
@@ -2822,18 +2840,25 @@ function calcPm(std){
     gc=v(m+'-gc')||1.5; gs=v(m+'-gs')||1.15;
     Pu_kN=v(m+'-nd'); Mu_kNm=v(m+'-md');
   }
-  var rhov=v(m+'-rhov');
+  var db_web=toSI_len(v(m+'-db-web'),m)||12;
+  var sv_web=toSI_len(v(m+'-sv-web'),m)||200;
+  var rhov=sv_web>0?2*(Math.PI*db_web*db_web/4)/(bw*sv_web):0.005;
   var cc=toSI_len(v(m+'-cc'),m);
-  var hasBe=_pmBe[std]==='yes';
+  var beChk=document.getElementById(m+'-be-chk');
+  var hasBe=beChk&&beChk.checked;
   var lbe=hasBe?toSI_m(v(m+'-lbe'),m):0;
-  var rhobe=hasBe?v(m+'-rhobe'):0;
+  var rhobe=0;
+  if(hasBe&&lbe>0){
+    var db_be=toSI_len(v(m+'-db-be'),m)||20;
+    var n_be=Math.max(Math.round(v(m+'-n-be')||1),1);
+    rhobe=n_be*(Math.PI*db_be*db_be/4)/(lbe*bw);
+  }
 
   if(lw<200||bw<100||fc<1||fy<1){
     res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';
-    if(wrap)wrap.style.display='none';
     return;
   }
-  if(wallCheck(lw,bw,std,res)){if(wrap)wrap.style.display='none';return;}
+  if(wallCheck(lw,bw,std,res))return;
 
   var pts=fiberPM(lw,bw,fc,fy,rhov,rhobe,lbe,cc,std);
   /* convert to kN, kN·m */
@@ -2853,16 +2878,21 @@ function calcPm(std){
   var dcr=phiMn_at_Pu>0?Mu_kNm/phiMn_at_Pu:999;
   var inside=dcr<=1.0;
   var fU=uFrc(m),mU=uMom(m);
-  var html=rptHdr(std,m)+'<div class="result-box">';
-  html+=ri('φM_n at P_u',fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
-  html+=ri('M_u demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
-  html+=ri('D/C ratio',fmt(dcr,3),'—',inside?'ok':'err');
+  var cnvSub={aci:'ACI 318-25 · φ-reduced envelope',en:'EN 1992-1-1 · design values',is:'IS 456:2000 · design values',tbdy:'TSC 2018 · design values'};
+  var html=rptHdr(std,m);
+  html+='<div class="pmm-canvas-outer">';
+  html+='<h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">'+(cnvSub[std]||'')+'</span></h4>';
+  html+='<canvas id="'+m+'-canvas" width="480" height="380" role="img" aria-label="P-M interaction diagram"></canvas>';
+  html+='</div>';
+  html+='<div class="result-box">';
+  html+=ri('φM<sub>n</sub> at P<sub>u</sub>',fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
+  html+=ri('M<sub>u</sub> demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
+  html+=ri('D/C',fmt(dcr,3),'—',inside?'ok':'err');
   html+='</div>';
   html+=banner(inside?'ok':'err',inside?'Design Point Inside Envelope':'Design Point OUTSIDE Envelope',
-    'M_u='+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+mU+' vs φM_n='+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+mU+' at P_u='+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+fU);
+    'M<sub>u</sub> = '+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+' '+mU+' &nbsp;vs&nbsp; φM<sub>n</sub> = '+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+' '+mU+' &nbsp;at&nbsp; P<sub>u</sub> = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU);
   res.innerHTML=html;
-  if(wrap)wrap.style.display='block';
-  drawPmCanvas(m+'-canvas',ptsPlot,Pu_kN,Mu_kNm,'','P_n (kN)','M_n (kN·m)');
+  drawPmCanvas(m+'-canvas',ptsPlot,Pu_kN,Mu_kNm,'','Pn (kN)','Mn (kN·m)');
 }
 
 /* ═══ SHEAR FRICTION ═══ */
