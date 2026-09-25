@@ -722,7 +722,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>d<sub>h</sub> (<span class="u-len" data-m="sh-aci">mm</span>)</label><div class="iw"><input type="number" id="sh-aci-dh" value="12" min="8" oninput="calcSh('aci')"><span class="us u-len" data-m="sh-aci">mm</span></div></div>
             <div class="form-group"><label>s<sub>h</sub> spacing (<span class="u-len" data-m="sh-aci">mm</span>)</label><div class="iw"><input type="number" id="sh-aci-sh" value="200" step="25" min="50" oninput="calcSh('aci')"><span class="us u-len" data-m="sh-aci">mm</span></div></div>
           </div>
-          <div class="form-group"><label>n<sub>h</sub> curtains</label><div class="iw"><input type="number" id="sh-aci-nc" value="2" min="1" max="4" oninput="calcSh('aci')"><span class="us">—</span></div></div>
+          <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-aci-nc" value="2" min="1" max="4" oninput="calcSh('aci')"><span class="us">—</span></div></div>
         </div>
       </div>
       <div class="results-col" id="sh-aci-res">
@@ -771,7 +771,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>d<sub>h</sub> (mm)</label><div class="iw"><input type="number" id="sh-en-dh" value="12" min="8" oninput="calcSh('en')"><span class="us">mm</span></div></div>
             <div class="form-group"><label>s<sub>h</sub> spacing (mm)</label><div class="iw"><input type="number" id="sh-en-sh" value="200" step="25" min="50" oninput="calcSh('en')"><span class="us">mm</span></div></div>
           </div>
-          <div class="form-group"><label>n<sub>h</sub> curtains</label><div class="iw"><input type="number" id="sh-en-nc" value="2" min="1" max="4" oninput="calcSh('en')"><span class="us">—</span></div></div>
+          <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-en-nc" value="2" min="1" max="4" oninput="calcSh('en')"><span class="us">—</span></div></div>
           <div class="form-group"><label>d effective depth (mm)</label><div class="iw"><input type="number" id="sh-en-d" value="4750" min="100" oninput="calcSh('en')"><span class="us">mm</span></div></div>
           <div style="display:flex;gap:6px;margin-bottom:14px;">
             <button class="unit-btn active" id="sh-en-dch" onclick="setShEnDc('dch',this)">DCH (×1.5)</button>
@@ -818,7 +818,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>d<sub>h</sub> (mm)</label><div class="iw"><input type="number" id="sh-is-dh" value="12" min="8" oninput="calcSh('is')"><span class="us">mm</span></div></div>
             <div class="form-group"><label>s<sub>h</sub> spacing (mm)</label><div class="iw"><input type="number" id="sh-is-sh" value="200" step="25" min="50" oninput="calcSh('is')"><span class="us">mm</span></div></div>
           </div>
-          <div class="form-group"><label>n<sub>h</sub> curtains</label><div class="iw"><input type="number" id="sh-is-nc" value="2" min="1" max="4" oninput="calcSh('is')"><span class="us">—</span></div></div>
+          <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-is-nc" value="2" min="1" max="4" oninput="calcSh('is')"><span class="us">—</span></div></div>
         </div>
       </div>
       <div class="results-col" id="sh-is-res">
@@ -862,7 +862,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>d<sub>h</sub> (mm)</label><div class="iw"><input type="number" id="sh-tbdy-dh" value="12" min="8" oninput="calcSh('tbdy')"><span class="us">mm</span></div></div>
             <div class="form-group"><label>s<sub>h</sub> spacing (mm)</label><div class="iw"><input type="number" id="sh-tbdy-sh" value="200" step="25" min="50" oninput="calcSh('tbdy')"><span class="us">mm</span></div></div>
           </div>
-          <div class="form-group"><label>n<sub>h</sub> curtains</label><div class="iw"><input type="number" id="sh-tbdy-nc" value="2" min="1" max="4" oninput="calcSh('tbdy')"><span class="us">—</span></div></div>
+          <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-tbdy-nc" value="2" min="1" max="4" oninput="calcSh('tbdy')"><span class="us">—</span></div></div>
         </div>
       </div>
       <div class="results-col" id="sh-tbdy-res">
@@ -2115,6 +2115,8 @@ function calcSh(std){
     html+=srow(7,'V<sub>n,max</sub> = 0.66√f\'<sub>c</sub>·A<sub>cv</sub>',fmt(frSI_frc(Vn_max,m)/1000,1)+' '+fU,ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
     html+=srow(8,'φV<sub>n</sub> = 0.75·min(V<sub>n</sub>, V<sub>n,max</sub>)','<strong>'+fmt(frSI_frc(phiVn*1000,m)/1000,1)+' '+fU+'</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
+    var smax_sh=Math.min(3*bw,450);
+    if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3b<sub>w</sub>, 450) = '+fmt(smax_sh,0)+' mm (ACI §11.7.3.1)');
     res.innerHTML=html;
     return;
   }
@@ -2179,6 +2181,8 @@ function calcSh(std){
     html+=srow(8,'A<sub>sw,req</sub>/s = V<sub>Ed,d</sub>/(z·f<sub>yd</sub>)',fmt(Asw_req,3)+' mm²/mm','');
     html+=srow(9,'A<sub>sw,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asw_prov,3)+' mm²/mm',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
+    var smax_sh=Math.min(3*bw,400);
+    if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3b<sub>w</sub>, 400) = '+fmt(smax_sh,0)+' mm (EN 1992-1-1 §9.6.3)');
     res.innerHTML=html;
     return;
   }
@@ -2234,6 +2238,8 @@ function calcSh(std){
       html+=srow(6,'A<sub>sv</sub>/s','Not required','✔','chk-ok');
     }
     html+='</tbody></table></div></div>';
+    var smax_sh=Math.min(3*bw,450);
+    if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3t<sub>w</sub>, 450) = '+fmt(smax_sh,0)+' mm (IS 456 §32.5)');
     res.innerHTML=html;
     return;
   }
@@ -2283,6 +2289,8 @@ function calcSh(std){
     html+=srow(5,'V<sub>r,max</sub> = 0.85√f<sub>ck</sub>·A<sub>w</sub>',fmt(Vr_max_N/1000,1)+' kN',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
     html+=srow(6,'γ<sub>RE</sub>·V<sub>r</sub> (γ<sub>RE</sub>=0.75)','<strong>'+fmt(phiVr,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
+    var smax_sh=Math.min(bw,300);
+    if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(b<sub>w</sub>, 300) = '+fmt(smax_sh,0)+' mm (TSC §7.6.3.3)');
     res.innerHTML=html;
   }
 }
