@@ -1473,11 +1473,15 @@ function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
 }
 
 /* ─── TAB SWITCHERS ─── */
+var _calcFns={be:function(s){calcBe(s);},sh:function(s){calcSh(s);},pm:function(s){if(typeof calcPm==='function')calcPm(s);},sf:function(s){if(typeof calcSf==='function')calcSf(s);}};
+var _activeStd={be:'aci',sh:'aci',pm:'aci',sf:'aci'};
 function swMod(btn,id){
   document.querySelectorAll('.mod-tab').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.mod-pane').forEach(function(p){p.classList.remove('active');});
   btn.classList.add('active');
   document.getElementById(id).classList.add('active');
+  var pre=id.replace('mod-','');
+  if(_calcFns[pre]) _calcFns[pre](_activeStd[pre]||'aci');
 }
 function swStd(pre,std,btn){
   var par=document.getElementById('mod-'+pre);
@@ -1485,6 +1489,8 @@ function swStd(pre,std,btn){
   par.querySelectorAll('.sub-pane').forEach(function(p){p.classList.remove('active');});
   btn.classList.add('active');
   document.getElementById(pre+'-'+std).classList.add('active');
+  _activeStd[pre]=std;
+  if(_calcFns[pre]) _calcFns[pre](std);
 }
 function toggleBg(id){
   var sec=document.getElementById(id);
@@ -2450,11 +2456,19 @@ function calcSf(std){
   }
 }
 
+/* ─── DEBOUNCE ─── */
+var _dbt={};
+function _dbc(k,f){clearTimeout(_dbt[k]);_dbt[k]=setTimeout(f,160);}
+(function(){
+  var _beR=calcBe,_shR=calcSh,_pmR=typeof calcPm==='function'?calcPm:null,_sfR=typeof calcSf==='function'?calcSf:null;
+  calcBe=function(s){_dbc('be'+s,function(){_beR(s);});};
+  calcSh=function(s){_dbc('sh'+s,function(){_shR(s);});};
+  if(_pmR){calcPm=function(s){_dbc('pm'+s,function(){_pmR(s);});};}
+  if(_sfR){calcSf=function(s){_dbc('sf'+s,function(){_sfR(s);});};}
+})();
+
 document.addEventListener('DOMContentLoaded',function(){
-  ['aci','en','is','tbdy'].forEach(function(s){calcBe(s);});
-  ['aci','en','is','tbdy'].forEach(function(s){calcSh(s);});
-  ['aci','en','is','tbdy'].forEach(function(s){if(typeof calcPm==='function')calcPm(s);});
-  ['aci','en','is','tbdy'].forEach(function(s){if(typeof calcSf==='function')calcSf(s);});
+  calcBe('aci');
 });
 </script>
 </body>
