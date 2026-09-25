@@ -772,7 +772,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>s<sub>h</sub> spacing (mm)</label><div class="iw"><input type="number" id="sh-en-sh" value="200" step="25" min="50" oninput="calcSh('en')"><span class="us">mm</span></div></div>
           </div>
           <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-en-nc" value="2" min="1" max="4" oninput="calcSh('en')"><span class="us">—</span></div></div>
-          <div class="form-group"><label>d effective depth (mm)</label><div class="iw"><input type="number" id="sh-en-d" value="4750" min="100" oninput="calcSh('en')"><span class="us">mm</span></div></div>
+          <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="sh-en-cc" value="40" min="10" oninput="calcSh('en')"><span class="us">mm</span></div></div>
           <div style="display:flex;gap:6px;margin-bottom:14px;">
             <button class="unit-btn active" id="sh-en-dch" onclick="setShEnDc('dch',this)">DCH (×1.5)</button>
             <button class="unit-btn" id="sh-en-dcm" onclick="setShEnDc('dcm',this)">DCM (×1.5)</button>
@@ -805,7 +805,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>l<sub>w</sub> (m)</label><div class="iw"><input type="number" id="sh-is-lw" value="5" step="0.1" min="0.2" oninput="calcSh('is')"><span class="us">m</span></div></div>
             <div class="form-group"><label>t<sub>w</sub> (m)</label><div class="iw"><input type="number" id="sh-is-bw" value="0.25" step="0.05" min="0.1" oninput="calcSh('is')"><span class="us">m</span></div></div>
           </div>
-          <div class="form-group"><label>d effective depth (mm)</label><div class="iw"><input type="number" id="sh-is-d" value="4750" min="100" oninput="calcSh('is')"><span class="us">mm</span></div></div>
+          <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="sh-is-cc" value="40" min="10" oninput="calcSh('is')"><span class="us">mm</span></div></div>
           <div class="form-div"><div class="form-div-lbl">Materials</div></div>
           <div class="form-row-2">
             <div class="form-group"><label>f<sub>ck</sub> (MPa)</label><div class="iw"><input type="number" id="sh-is-fck" value="25" min="15" oninput="calcSh('is')"><span class="us">MPa</span></div></div>
@@ -2130,7 +2130,8 @@ function calcSh(std){
     var dh=v(m+'-dh')||12;
     var sh_sp=v(m+'-sh')||200;
     var nc=Math.max(Math.round(v(m+'-nc')||2),1);
-    var d=v(m+'-d');
+    var cc=v(m+'-cc')||40;
+    var d=lw-cc;
     var amp=_shEnDc==='dcl'?1.0:1.5;
     if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'en',res))return;
@@ -2189,12 +2190,14 @@ function calcSh(std){
   }
 
   if(std==='is'){
-    var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000,d=v(m+'-d');
+    var lw=v(m+'-lw')*1000,bw=v(m+'-bw')*1000;
     var fck=v(m+'-fck'),fy=v(m+'-fy');
     var Vu_N=v(m+'-vu')*1000;
     var dh=v(m+'-dh')||12;
     var sh_sp=v(m+'-sh')||200;
     var nc=Math.max(Math.round(v(m+'-nc')||2),1);
+    var cc=v(m+'-cc')||40;
+    var d=lw-cc;
     if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'is',res))return;
     var Ah=nc*Math.PI*dh*dh/4;
