@@ -2511,7 +2511,7 @@ function calcSf(std){
 /* ─── DEBOUNCE ─── */
 var _dbt={};
 function _dbc(k,f){clearTimeout(_dbt[k]);_dbt[k]=setTimeout(f,160);}
-var _beInit=calcBe; /* save original before debounce wrapper — for instant first render */
+var _beInit=calcBe,_shInit=calcSh; /* save originals before debounce wrapper */
 (function(){
   var _beR=calcBe,_shR=calcSh,_pmR=typeof calcPm==='function'?calcPm:null,_sfR=typeof calcSf==='function'?calcSf:null;
   calcBe=function(s){_dbc('be'+s,function(){_beR(s);});};
@@ -2519,9 +2519,12 @@ var _beInit=calcBe; /* save original before debounce wrapper — for instant fir
   if(_pmR){calcPm=function(s){_dbc('pm'+s,function(){_pmR(s);});};}
   if(_sfR){calcSf=function(s){_dbc('sf'+s,function(){_sfR(s);});};}
 })();
+/* swMod / swStd use direct (no-debounce) calcs — no empty-state flash on tab switch */
+_calcFns.be=function(s){_beInit(s);};
+_calcFns.sh=function(s){_shInit(s);};
 
 document.addEventListener('DOMContentLoaded',function(){
-  _beInit('aci'); /* no debounce — results appear on first paint, no empty-state flash */
+  _beInit('aci');
 });
 </script>
 </body>
