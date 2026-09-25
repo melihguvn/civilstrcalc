@@ -56,16 +56,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 .results-col{display:flex;flex-direction:column;gap:14px;}
 
-/* bg-section: override style.css which hides bg-tabs and shows all bg-pane */
-.bg-hdr{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;}
-.bg-hdr:hover{background:var(--bg);}
-.bg-arr{font-size:.75rem;color:var(--text-dim);margin-left:8px;}
-.bg-section .bg-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--white);flex-wrap:wrap;}
-.bg-section .bg-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 13px;font-family:var(--sans);font-size:.75rem;font-weight:500;color:var(--text-dim);cursor:pointer;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s;}
-.bg-section .bg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.bg-section .bg-pane{display:none;padding:0;}
-.bg-section .bg-pane.active{display:block;padding:16px 20px;}
-.bg-body{display:none;}
 
 
 /* Wall SVG + PMM canvas */
@@ -309,23 +299,54 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-be-aci">
-      <div class="bg-hdr" onclick="toggleBg('bgs-be-aci')"><span>Design Background — ACI 318-25 §18.10.6</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-be-aci',0,this)">Stress Trigger</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-aci',1,this)">Zone Length</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-aci',2,this)">Confinement</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>ACI 318-25 §18.10.6.2</strong> — Special boundary zones are required at the ends of special structural walls when the extreme fiber compressive stress under factored axial and flexural demands exceeds:</p><span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f'<sub>c</sub></span><p>A<sub>g</sub> = l<sub>w</sub>·b<sub>w</sub>, I<sub>g</sub> = b<sub>w</sub>·l<sub>w</sub>³/12 (gross uncracked section). This elastic stress check is intentionally conservative — it triggers confinement when extreme-fiber crushing is plausible under the maximum credible demand, not when it is certain. The 0.2f'<sub>c</sub> threshold corresponds roughly to the onset of significant nonlinear compressive strain in the concrete.</p><p>When σ<sub>max</sub> ≤ 0.2f'<sub>c</sub>, no special boundary zones are required; however, minimum longitudinal and transverse reinforcement per §18.10.6.5 still applies across the full wall length, and the wall end must still satisfy §18.10.6.3 prescriptive requirements. Both P<sub>u</sub> and M<sub>u</sub> correspond to the governing seismic load combination (LRFD E-combination with 1.0E) — not gravity alone.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>Neutral axis depth c</strong> — the depth of the compression zone at the base cross-section determines how much of the wall end must be confined (ACI 318-25 §18.10.6.4 displacement-based approach):</p><span class="fml-eq">β<sub>1</sub> = max(0.85 − 0.05(f'<sub>c</sub>−28)/7, 0.65)</span><span class="fml-eq">c = (P<sub>u</sub> + ρ<sub>v</sub>·b<sub>w</sub>·l<sub>w</sub>·f<sub>y</sub>) / [b<sub>w</sub>·(0.85f'<sub>c</sub>·β<sub>1</sub> + 2ρ<sub>v</sub>·f<sub>y</sub>)]</span><p>ρ<sub>v</sub> is the uniformly distributed vertical web reinforcement ratio; the formula approximates a uniform steel layout. For walls with concentrated boundary longitudinal bars the calculation requires numerical integration of the stress block.</p><p><strong>Required boundary zone length</strong> (§18.10.6.4) — the zone must encompass the portion of the compression block beyond the code-permitted extreme strain limit, with a minimum equal to the wall thickness:</p><span class="fml-eq">l<sub>be</sub> = max(c − 0.1l<sub>w</sub>, c/2) ≥ b<sub>w</sub> &emsp; (SDC D/E/F)</span><p>For SDC A/B/C: l<sub>be</sub> ≥ 200 mm. The boundary zone must extend vertically over the critical height h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6) from the base and must be fully developed over the entire plastic hinge length to allow redistribution as the wall rocks about its base.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>Confinement hoop reinforcement</strong> (ACI 318-25 §18.7.5.4 via §18.10.6.4) — two conditions govern; the larger A<sub>sh</sub> requirement controls in each direction:</p><span class="fml-eq">A<sub>sh</sub>/(s·b<sub>c</sub>) ≥ max[ 0.3·(A<sub>g,be</sub>/A<sub>ch</sub>−1)·f'<sub>c</sub>/f<sub>yt</sub> , 0.09·f'<sub>c</sub>/f<sub>yt</sub> ]</span><p>A<sub>g,be</sub> = l<sub>be</sub>·b<sub>w</sub> (gross zone area); A<sub>ch</sub> = (l<sub>be</sub>−2c<sub>c</sub>)·(b<sub>w</sub>−2c<sub>c</sub>) (confined core area); b<sub>c</sub> = b<sub>w</sub>−2c<sub>c</sub> (core width in the direction being checked). The (A<sub>g</sub>/A<sub>ch</sub>−1) term rewards smaller cover and more efficient cross-section utilization — thicker cover or larger zones demand more confinement steel. Apply each direction check independently.</p><p><strong>Maximum hoop spacing</strong> — s<sub>o</sub> depends on the lateral support spacing h<sub>x</sub> of longitudinal bars, rewarding closely spaced cross-ties:</p><span class="fml-eq">s<sub>o</sub> = min(100+(350−h<sub>x</sub>)/3, 150 mm) &emsp; s<sub>max</sub> = min(6d<sub>b,long</sub>, s<sub>o</sub>)</span><p>h<sub>x</sub> is the maximum centre-to-centre spacing of laterally restrained longitudinal bars around the perimeter of the confined zone. Adding intermediate cross-ties reduces h<sub>x</sub>, which increases s<sub>o</sub> and allows wider hoop spacing — a useful lever for congested boundary zones in thin walls.</p></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — ACI 318-25 §18.10.6</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-be-aci-trigger">Stress Trigger</a>
+          <a href="#bgs-be-aci-length">Zone Length</a>
+          <a href="#bgs-be-aci-conf">Confinement</a>
+        </nav>
+        <section id="bgs-be-aci-trigger">
+          <div class="bg-panel-hdr"><span>Stress Trigger</span><a class="bg-top-btn" href="#bgs-be-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">ACI 318-25 §18.10.6.2 — Boundary Zone Trigger</div>
+              <p>Special boundary zones are required at the ends of special structural walls when the extreme fiber compressive stress under factored axial and flexural demands exceeds:</p>
+              <span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f'<sub>c</sub></span>
+              <p>A<sub>g</sub> = l<sub>w</sub>·b<sub>w</sub>, I<sub>g</sub> = b<sub>w</sub>·l<sub>w</sub>³/12 (gross uncracked section). This elastic stress check is intentionally conservative — it triggers confinement when extreme-fiber crushing is plausible under the maximum credible demand, not when it is certain. The 0.2f'<sub>c</sub> threshold corresponds roughly to the onset of significant nonlinear compressive strain in the concrete.</p>
+              <p>When σ<sub>max</sub> ≤ 0.2f'<sub>c</sub>, no special boundary zones are required; however, minimum longitudinal and transverse reinforcement per §18.10.6.5 still applies across the full wall length. Both P<sub>u</sub> and M<sub>u</sub> correspond to the governing seismic load combination (LRFD E-combination with 1.0E) — not gravity alone.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-aci-length">
+          <div class="bg-panel-hdr"><span>Zone Length</span><a class="bg-top-btn" href="#bgs-be-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Neutral Axis Depth &amp; Required Zone Length — §18.10.6.4</div>
+              <p>The depth of the compression zone at the base cross-section determines how much of the wall end must be confined (displacement-based approach):</p>
+              <span class="fml-eq">β<sub>1</sub> = max(0.85 − 0.05(f'<sub>c</sub>−28)/7, 0.65)</span>
+              <span class="fml-eq">c = (P<sub>u</sub> + ρ<sub>v</sub>·b<sub>w</sub>·l<sub>w</sub>·f<sub>y</sub>) / [b<sub>w</sub>·(0.85f'<sub>c</sub>·β<sub>1</sub> + 2ρ<sub>v</sub>·f<sub>y</sub>)]</span>
+              <p>ρ<sub>v</sub> is the uniformly distributed vertical web reinforcement ratio. The zone must encompass the portion of the compression block beyond the code-permitted extreme strain limit, with a minimum equal to the wall thickness:</p>
+              <span class="fml-eq">l<sub>be</sub> = max(c − 0.1l<sub>w</sub>, c/2) ≥ b<sub>w</sub> &emsp; (SDC D/E/F)</span>
+              <p>For SDC A/B/C: l<sub>be</sub> ≥ 200 mm. The boundary zone must extend vertically over the critical height h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6) from the base and must be fully developed over the entire plastic hinge length.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-aci-conf">
+          <div class="bg-panel-hdr"><span>Confinement</span><a class="bg-top-btn" href="#bgs-be-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Confinement Hoop Reinforcement — §18.7.5.4 via §18.10.6.4</div>
+              <p>Two conditions govern; the larger A<sub>sh</sub> requirement controls in each direction:</p>
+              <span class="fml-eq">A<sub>sh</sub>/(s·b<sub>c</sub>) ≥ max[ 0.3·(A<sub>g,be</sub>/A<sub>ch</sub>−1)·f'<sub>c</sub>/f<sub>yt</sub> , 0.09·f'<sub>c</sub>/f<sub>yt</sub> ]</span>
+              <p>A<sub>g,be</sub> = l<sub>be</sub>·b<sub>w</sub> (gross zone area); A<sub>ch</sub> = (l<sub>be</sub>−2c<sub>c</sub>)·(b<sub>w</sub>−2c<sub>c</sub>) (confined core area); b<sub>c</sub> = b<sub>w</sub>−2c<sub>c</sub> (core width in the direction checked). The (A<sub>g</sub>/A<sub>ch</sub>−1) term rewards smaller cover — thicker cover demands more confinement steel.</p>
+              <p><strong>Maximum hoop spacing</strong> — s<sub>o</sub> depends on the lateral support spacing h<sub>x</sub> of longitudinal bars:</p>
+              <span class="fml-eq">s<sub>o</sub> = min(100+(350−h<sub>x</sub>)/3, 150 mm) &emsp; s<sub>max</sub> = min(6d<sub>b,long</sub>, s<sub>o</sub>)</span>
+              <p>h<sub>x</sub> is the maximum centre-to-centre spacing of laterally restrained longitudinal bars around the perimeter of the confined zone. Adding intermediate cross-ties reduces h<sub>x</sub> and allows wider hoop spacing.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /be-aci -->
 
@@ -439,23 +460,55 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-be-en">
-      <div class="bg-hdr" onclick="toggleBg('bgs-be-en')"><span>Design Background — EN 1998-1 §5.4.3.4 / §5.5.3.4</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-be-en',0,this)">Trigger &amp; Length</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-en',1,this)">Critical Zone</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-en',2,this)">Confinement</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>EN 1998-1 §5.4.3.4 / §5.5.3.4</strong> — Confined boundary zones (critical edge regions) are required at wall ends when the normalised axial force exceeds the ductility-class-dependent threshold:</p><span class="fml-eq">ν<sub>d</sub> = N<sub>Ed</sub>/(l<sub>w</sub>·b<sub>w</sub>·f<sub>cd</sub>) &gt; 0.15 (DCH) or 0.20 (DCM)</span><p>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub> = f<sub>ck</sub>/1.5. A high axial ratio compresses the plastic hinge region at the wall base, reducing the maximum achievable curvature before concrete crushing — confinement extends the usable compressive strain and maintains the target curvature ductility factor μ<sub>φ</sub>.</p><p><strong>Length of confined end region</strong> (§5.5.3.4(3)):</p><span class="fml-eq">l<sub>c</sub> = max(0.15l<sub>w</sub>, 1.5b<sub>w</sub>) [DCH]</span><span class="fml-eq">l<sub>c</sub> = max(0.10l<sub>w</sub>, 1.5b<sub>w</sub>) [DCM]</span><p>The 1.5b<sub>w</sub> floor prevents overly narrow zones in thick walls where the boundary zone could otherwise be so thin it provides no meaningful confinement. For DCL (low ductility), only nominal detailing applies — no boundary zone calculation is required, regardless of ν<sub>d</sub>.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>Critical zone height h<sub>cr</sub></strong> (EN 1998-1 §5.4.3.4(2)) — confined boundary zones are required only within this height from the wall base, where inelastic deformations are expected to concentrate:</p><span class="fml-eq">h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6) ≤ 2l<sub>w</sub> (multi-storey) or H<sub>w</sub>/2 (one storey)</span><p>The floor of max(l<sub>w</sub>, H<sub>w</sub>/6) ensures that even short walls with large l<sub>w</sub> are confined over at least one wall length — the extent of the anticipated plastic hinge. The 2l<sub>w</sub> ceiling prevents unreasonably tall critical zones in very slender, lightly axially loaded walls.</p><p>Above h<sub>cr</sub>, the wall is expected to remain in the elastic range under the design ground motion. Sections above h<sub>cr</sub> must still satisfy minimum web reinforcement (§5.4.3.2.2) and minimum boundary reinforcement per §5.4.3.2.2(3), but the confinement hoop calculation no longer governs.</p><p>Where wall thickness, reinforcement layout, or axial load changes significantly with height, the designer must evaluate whether a new plastic hinge location could form above h<sub>cr</sub>, particularly in setback buildings or walls with large openings near mid-height.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>Mechanical volumetric ratio ω<sub>wd</sub></strong> (EN 1998-1 §5.5.3.4(4)) — required confinement intensity derived from the target curvature ductility and the axial demand. Two bounds apply; the larger governs:</p><span class="fml-eq">ω<sub>wd</sub> ≥ max(30·μ<sub>φ</sub>·ν<sub>d</sub>·ε<sub>sy,d</sub>·b<sub>c</sub>/b<sub>o</sub> − 0.035, 0.12)</span><p>μ<sub>φ</sub> = curvature ductility factor (related to the behaviour factor q per §5.2.3.4). ε<sub>sy,d</sub> = f<sub>yk</sub>/(γ<sub>s</sub>·E<sub>s</sub>) ≈ 0.00217 for f<sub>yk</sub>=500 MPa. b<sub>c</sub>/b<sub>o</sub> is the ratio of gross to confined boundary width — larger cover or more widely spaced hoops increase this ratio and demand higher ω<sub>wd</sub>. The 0.12 floor ensures a minimum confinement intensity regardless of axial level.</p><p><strong>Required hoop area per unit height</strong> (one orthogonal direction at a time):</p><span class="fml-eq">A<sub>sh</sub>/s = ω<sub>wd</sub>·A<sub>ch</sub>·f<sub>cd</sub> / (b<sub>c</sub>·f<sub>yd</sub>)</span><p>A<sub>ch</sub> = l<sub>c</sub>·b<sub>w</sub> is the gross confined zone area; b<sub>c</sub> = b<sub>w</sub>−2c<sub>c</sub> is the confined core width. Maximum hoop spacing s ≤ min(b<sub>o</sub>/3, 125 mm, 6d<sub>b,long</sub>) per §5.4.3.2.2(8) — the b<sub>o</sub>/3 limit often governs in thin walls.</p></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — EN 1998-1 §5.4.3.4 / §5.5.3.4</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-be-en-trigger">Trigger &amp; Length</a>
+          <a href="#bgs-be-en-critical">Critical Zone</a>
+          <a href="#bgs-be-en-conf">Confinement</a>
+        </nav>
+        <section id="bgs-be-en-trigger">
+          <div class="bg-panel-hdr"><span>Trigger &amp; Length</span><a class="bg-top-btn" href="#bgs-be-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">EN 1998-1 §5.4.3.4 / §5.5.3.4 — Boundary Zone Trigger</div>
+              <p>Confined boundary zones are required at wall ends when the normalised axial force exceeds the ductility-class-dependent threshold:</p>
+              <span class="fml-eq">ν<sub>d</sub> = N<sub>Ed</sub>/(l<sub>w</sub>·b<sub>w</sub>·f<sub>cd</sub>) &gt; 0.15 (DCH) or 0.20 (DCM)</span>
+              <p>f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub> = f<sub>ck</sub>/1.5. A high axial ratio compresses the plastic hinge region, reducing maximum achievable curvature — confinement extends the usable compressive strain to maintain target curvature ductility factor μ<sub>φ</sub>.</p>
+              <p><strong>Length of confined end region</strong> (§5.5.3.4(3)):</p>
+              <span class="fml-eq">l<sub>c</sub> = max(0.15l<sub>w</sub>, 1.5b<sub>w</sub>) [DCH]</span>
+              <span class="fml-eq">l<sub>c</sub> = max(0.10l<sub>w</sub>, 1.5b<sub>w</sub>) [DCM]</span>
+              <p>The 1.5b<sub>w</sub> floor prevents overly narrow zones in thick walls. For DCL, only nominal detailing applies — no boundary zone calculation is required regardless of ν<sub>d</sub>.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-en-critical">
+          <div class="bg-panel-hdr"><span>Critical Zone</span><a class="bg-top-btn" href="#bgs-be-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Critical Zone Height — EN 1998-1 §5.4.3.4(2)</div>
+              <p>Confined boundary zones are required only within this height from the wall base, where inelastic deformations concentrate:</p>
+              <span class="fml-eq">h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6) ≤ 2l<sub>w</sub> (multi-storey) or H<sub>w</sub>/2 (one storey)</span>
+              <p>The max(l<sub>w</sub>, H<sub>w</sub>/6) floor ensures even short walls are confined over at least one wall length — the extent of the anticipated plastic hinge. The 2l<sub>w</sub> ceiling prevents unreasonably tall critical zones in very slender walls.</p>
+              <p>Above h<sub>cr</sub>, minimum web reinforcement (§5.4.3.2.2) and minimum boundary reinforcement per §5.4.3.2.2(3) still apply, but the confinement hoop calculation no longer governs.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-en-conf">
+          <div class="bg-panel-hdr"><span>Confinement</span><a class="bg-top-btn" href="#bgs-be-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Mechanical Volumetric Ratio — EN 1998-1 §5.5.3.4(4)</div>
+              <p>Required confinement intensity derived from the target curvature ductility and the axial demand. Two bounds apply; the larger governs:</p>
+              <span class="fml-eq">ω<sub>wd</sub> ≥ max(30·μ<sub>φ</sub>·ν<sub>d</sub>·ε<sub>sy,d</sub>·b<sub>c</sub>/b<sub>o</sub> − 0.035, 0.12)</span>
+              <p>ε<sub>sy,d</sub> = f<sub>yk</sub>/(γ<sub>s</sub>·E<sub>s</sub>) ≈ 0.00217 for f<sub>yk</sub>=500 MPa. b<sub>c</sub>/b<sub>o</sub> is the ratio of gross to confined boundary width — larger cover demands higher ω<sub>wd</sub>. The 0.12 floor ensures minimum confinement regardless of axial level.</p>
+              <p><strong>Required hoop area per unit height</strong> (one direction at a time):</p>
+              <span class="fml-eq">A<sub>sh</sub>/s = ω<sub>wd</sub>·A<sub>ch</sub>·f<sub>cd</sub> / (b<sub>c</sub>·f<sub>yd</sub>)</span>
+              <p>A<sub>ch</sub> = l<sub>c</sub>·b<sub>w</sub>; b<sub>c</sub> = b<sub>w</sub>−2c<sub>c</sub>. Max hoop spacing s ≤ min(b<sub>o</sub>/3, 125 mm, 6d<sub>b,long</sub>) per §5.4.3.2.2(8).</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /be-en -->
 
@@ -556,19 +609,41 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-be-is">
-      <div class="bg-hdr" onclick="toggleBg('bgs-be-is')"><span>Design Background — IS 13920:2016 §9.4</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-be-is',0,this)">Trigger &amp; Length</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-is',1,this)">Confinement</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>IS 13920:2016 §9.4.1</strong> — Boundary zones are required at wall ends when the extreme fiber compressive stress under factored combined axial and flexural load exceeds the threshold (trigger identical to ACI 318):</p><span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f<sub>ck</sub></span><p>A<sub>g</sub> = l<sub>w</sub>·b<sub>w</sub>, I<sub>g</sub> = b<sub>w</sub>·l<sub>w</sub>³/12 (gross uncracked section). f<sub>ck</sub> is the characteristic cylinder compressive strength — IS 456 internally uses cube strength, but IS 13920 references the cylinder value for consistency with seismic design provisions. The elastic stress check is conservative: it triggers confinement when compressive fiber crushing becomes plausible under maximum demand, ensuring ductile response before limit state is reached.</p><p><strong>Minimum boundary zone length</strong> (§9.4.2) — provides a practical lower bound when the compression block depth is small:</p><span class="fml-eq">l<sub>be,req</sub> = max(t<sub>w</sub>, l<sub>w</sub>/10)</span><p>t<sub>w</sub> = b<sub>w</sub> is the wall thickness. When the stress trigger is exceeded, the zone must encompass the compression block depth or this minimum, whichever is greater. Even when the trigger is not met, minimum reinforcement at wall ends per IS 13920 §9.3.1 still applies.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>IS 13920:2016 §9.4.4</strong> — Confinement reinforcement; applied independently in each orthogonal direction. The (A<sub>g</sub>/A<sub>ch</sub>−1) term accounts for the passive confining pressure needed to offset the stiffness drop when the cover spalls:</p><span class="fml-eq">A<sub>sh</sub> ≥ 0.18·s·b<sub>c</sub>·(f<sub>ck</sub>/f<sub>y</sub>)·(A<sub>g,be</sub>/A<sub>ch</sub>−1)</span><p>A<sub>g,be</sub> = l<sub>be</sub>·b<sub>w</sub> (gross zone area); A<sub>ch</sub> = (l<sub>be</sub>−2c<sub>c</sub>)·(b<sub>w</sub>−2c<sub>c</sub>) (confined core area); b<sub>c</sub> is the core dimension in the direction checked. Smaller cover and more closely spaced cross-ties increase A<sub>ch</sub> and reduce the (A<sub>g</sub>/A<sub>ch</sub>−1) demand — a useful design lever in congested boundary zones.</p><p><strong>Maximum hoop spacing</strong> (§9.4.4):</p><span class="fml-eq">s<sub>max</sub> = min(b<sub>w</sub>/4, 75 mm)</span><p>The 75 mm limit is stricter than ACI because IS 13920 boundary zones are typically narrower (l<sub>be</sub> = max(t<sub>w</sub>, l<sub>w</sub>/10)). Hoops must be closed with 135° seismic hooks and properly anchored — where the wall is too narrow for a closed hoop (b<sub>w</sub> ≤ 200 mm), U-bars with cross-ties are acceptable per §9.4.5. The boundary zone must extend vertically over the full critical height from the base per IS 13920 §9.4.3.</p></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — IS 13920:2016 §9.4</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-be-is-trigger">Trigger &amp; Length</a>
+          <a href="#bgs-be-is-conf">Confinement</a>
+        </nav>
+        <section id="bgs-be-is-trigger">
+          <div class="bg-panel-hdr"><span>Trigger &amp; Length</span><a class="bg-top-btn" href="#bgs-be-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">IS 13920:2016 §9.4.1 — Boundary Zone Trigger</div>
+              <p>Boundary zones are required at wall ends when the extreme fiber compressive stress under factored combined axial and flexural load exceeds the threshold (identical to ACI 318):</p>
+              <span class="fml-eq">σ<sub>max</sub> = P<sub>u</sub>/A<sub>g</sub> + M<sub>u</sub>·(l<sub>w</sub>/2)/I<sub>g</sub> &gt; 0.2f<sub>ck</sub></span>
+              <p>A<sub>g</sub> = l<sub>w</sub>·b<sub>w</sub>, I<sub>g</sub> = b<sub>w</sub>·l<sub>w</sub>³/12 (gross uncracked section). f<sub>ck</sub> is the characteristic cylinder compressive strength. The elastic stress check is conservative — it triggers confinement when compressive fiber crushing becomes plausible under maximum demand.</p>
+              <p><strong>Minimum boundary zone length</strong> (§9.4.2):</p>
+              <span class="fml-eq">l<sub>be,req</sub> = max(t<sub>w</sub>, l<sub>w</sub>/10)</span>
+              <p>t<sub>w</sub> = b<sub>w</sub> is the wall thickness. Even when the trigger is not met, minimum reinforcement at wall ends per IS 13920 §9.3.1 still applies.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-is-conf">
+          <div class="bg-panel-hdr"><span>Confinement</span><a class="bg-top-btn" href="#bgs-be-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Confinement Reinforcement — IS 13920:2016 §9.4.4</div>
+              <p>Applied independently in each orthogonal direction. The (A<sub>g</sub>/A<sub>ch</sub>−1) term accounts for the passive confining pressure needed when the cover spalls:</p>
+              <span class="fml-eq">A<sub>sh</sub> ≥ 0.18·s·b<sub>c</sub>·(f<sub>ck</sub>/f<sub>y</sub>)·(A<sub>g,be</sub>/A<sub>ch</sub>−1)</span>
+              <p>A<sub>g,be</sub> = l<sub>be</sub>·b<sub>w</sub>; A<sub>ch</sub> = (l<sub>be</sub>−2c<sub>c</sub>)·(b<sub>w</sub>−2c<sub>c</sub>); b<sub>c</sub> = core dimension checked. Smaller cover and more closely spaced cross-ties reduce the (A<sub>g</sub>/A<sub>ch</sub>−1) demand.</p>
+              <p><strong>Maximum hoop spacing</strong> (§9.4.4):</p>
+              <span class="fml-eq">s<sub>max</sub> = min(b<sub>w</sub>/4, 75 mm)</span>
+              <p>Hoops must be closed with 135° seismic hooks. Where b<sub>w</sub> ≤ 200 mm, U-bars with cross-ties are acceptable per §9.4.5. The boundary zone must extend vertically over the full critical height per IS 13920 §9.4.3.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /be-is -->
 
@@ -668,19 +743,43 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-be-tbdy">
-      <div class="bg-hdr" onclick="toggleBg('bgs-be-tbdy')"><span>Design Background — TSC 2018 §7.6.6</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-be-tbdy',0,this)">Length</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-be-tbdy',1,this)">Confinement</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>TSC 2018 §7.6.6.1</strong> — Confined end zones are <em>unconditionally required</em> at both ends of every structural wall, regardless of axial load level. No stress or axial ratio trigger applies — this is a fundamental difference from ACI (stress-triggered) and IS (stress-triggered), and a key reason why TSC-designed walls consistently achieve higher ductility in post-earthquake surveys.</p><p>Required length depends on position relative to the critical zone height h<sub>cr</sub>:</p><span class="fml-eq">h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6)</span><span class="fml-eq">Within critical zone: l<sub>be</sub> = max(2b<sub>w</sub>, l<sub>w</sub>/5)</span><span class="fml-eq">Above critical zone: l<sub>be</sub> = max(b<sub>w</sub>, l<sub>w</sub>/10)</span><p>The significantly larger l<sub>be</sub> within h<sub>cr</sub> (up to l<sub>w</sub>/5) reflects the high inelastic demand in the anticipated plastic hinge region, where concrete strains can reach several times the crushing limit during large ground motions. Above h<sub>cr</sub>, the wall is expected to remain essentially elastic under the design seismic event — a reduced zone length provides adequate confinement without excessive material cost. The boundary zone must be detailed consistently from foundation to h<sub>cr</sub> without interruption at floor levels.</p></div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk"><p><strong>TSC 2018 §7.6.5.2(b)</strong> — Wall boundary zone confinement is governed by a single minimum volumetric ratio. Unlike columns, the (A<sub>g</sub>/A<sub>ch</sub>−1) gross-to-core area term is <em>explicitly excluded</em> for walls — the geometry of a wall boundary zone differs fundamentally from a rectangular column core, making the column formula inapplicable:</p><span class="fml-eq">ρ<sub>s,req</sub> = 0.050·f<sub>ck</sub>/f<sub>ywk</sub></span><p>Required hoop area in each orthogonal direction (b<sub>c</sub> = confined core width in the direction checked):</p><span class="fml-eq">A<sub>sh,req</sub> = ρ<sub>s,req</sub>·b<sub>c</sub>·s</span><p><strong>Hoop spacing limits</strong> (§7.6.5.2) — stricter spacing within the critical zone where inelastic deformation demands are highest:</p><span class="fml-eq">Within critical zone: s ≤ min(b<sub>w</sub>/3, 100 mm)</span><span class="fml-eq">Above critical zone: s ≤ min(b<sub>w</sub>, 200 mm)</span><p>TSC requires at least one intermediate cross-tie when b<sub>w</sub> &gt; 300 mm — without it, the unsupported hoop leg becomes too long and loses its confining efficiency. Every longitudinal bar in the boundary zone must be restrained at a corner of a hoop or the bend of a cross-tie hook; intermediate bars with no lateral restraint do not count toward the confinement area.</p></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — TSC 2018 §7.6.6</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-be-tbdy-length">Zone Length</a>
+          <a href="#bgs-be-tbdy-conf">Confinement</a>
+        </nav>
+        <section id="bgs-be-tbdy-length">
+          <div class="bg-panel-hdr"><span>Zone Length</span><a class="bg-top-btn" href="#bgs-be-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 §7.6.6.1 — Unconditional Boundary Zone Requirement</div>
+              <p>Confined end zones are <em>unconditionally required</em> at both ends of every structural wall, regardless of axial load level. No stress or axial ratio trigger applies — a fundamental difference from ACI and IS, and a key reason why TSC-designed walls consistently achieve higher ductility.</p>
+              <p>Required length depends on position relative to the critical zone height h<sub>cr</sub>:</p>
+              <span class="fml-eq">h<sub>cr</sub> = max(l<sub>w</sub>, H<sub>w</sub>/6)</span>
+              <span class="fml-eq">Within critical zone: l<sub>be</sub> = max(2b<sub>w</sub>, l<sub>w</sub>/5)</span>
+              <span class="fml-eq">Above critical zone: l<sub>be</sub> = max(b<sub>w</sub>, l<sub>w</sub>/10)</span>
+              <p>The significantly larger l<sub>be</sub> within h<sub>cr</sub> (up to l<sub>w</sub>/5) reflects the high inelastic demand in the anticipated plastic hinge region. The boundary zone must be detailed consistently from foundation to h<sub>cr</sub> without interruption at floor levels.</p>
+            </div>
+          </div>
+        </section>
+        <section id="bgs-be-tbdy-conf">
+          <div class="bg-panel-hdr"><span>Confinement</span><a class="bg-top-btn" href="#bgs-be-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 §7.6.5.2(b) — Confinement Volumetric Ratio</div>
+              <p>Wall boundary zone confinement is governed by a single minimum volumetric ratio. Unlike columns, the (A<sub>g</sub>/A<sub>ch</sub>−1) term is <em>explicitly excluded</em> for walls:</p>
+              <span class="fml-eq">ρ<sub>s,req</sub> = 0.050·f<sub>ck</sub>/f<sub>ywk</sub></span>
+              <p>Required hoop area in each orthogonal direction (b<sub>c</sub> = confined core width in direction checked):</p>
+              <span class="fml-eq">A<sub>sh,req</sub> = ρ<sub>s,req</sub>·b<sub>c</sub>·s</span>
+              <p><strong>Hoop spacing limits</strong> (§7.6.5.2):</p>
+              <span class="fml-eq">Within critical zone: s ≤ min(b<sub>w</sub>/3, 100 mm)</span>
+              <span class="fml-eq">Above critical zone: s ≤ min(b<sub>w</sub>, 200 mm)</span>
+              <p>TSC requires at least one intermediate cross-tie when b<sub>w</sub> &gt; 300 mm. Every longitudinal bar must be restrained at a corner of a hoop or cross-tie bend.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /be-tbdy -->
 </div><!-- /mod-be -->
@@ -735,49 +834,57 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sh-aci">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sh-aci')"><span>Design Background — ACI 318-25 §18.10.4</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-sh-aci',0,this)">Strength Model</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-aci',1,this)">Capacity Limits</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-aci',2,this)">Reinforcement</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk">
-            <p><strong>ACI 318-25 §18.10.4.1</strong> — Nominal shear strength of special structural walls, combining a concrete diagonal tension term with a horizontal steel contribution:</p>
-            <span class="fml-eq">V<sub>n</sub> = (α<sub>c</sub>·√f'<sub>c</sub> + ρ<sub>t</sub>·f<sub>y</sub>)·A<sub>cv</sub> &emsp; φ = 0.75</span>
-            <p>A<sub>cv</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross cross-sectional area of the wall web. ρ<sub>t</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. The concrete term α<sub>c</sub>·√f'<sub>c</sub> represents aggregate interlock and dowel action across diagonal tension cracks; the steel term ρ<sub>t</sub>·f<sub>y</sub> is the contribution of horizontal bars crossing those cracks.</p>
-            <p><strong>Aspect-ratio coefficient α<sub>c</sub></strong> — squat walls develop diagonal compression struts that carry shear directly to supports (arch action), suppressing diagonal cracking and boosting the concrete contribution. Slender walls rely primarily on the truss mechanism and receive less benefit:</p>
-            <span class="fml-eq">h<sub>w</sub>/l<sub>w</sub> ≤ 1.5 → α<sub>c</sub> = 0.25 (squat wall, dominant arch contribution)</span>
-            <span class="fml-eq">h<sub>w</sub>/l<sub>w</sub> ≥ 2.0 → α<sub>c</sub> = 0.17 (slender wall, truss-governed)</span>
-            <p>α<sub>c</sub> is linearly interpolated for 1.5 &lt; h<sub>w</sub>/l<sub>w</sub> &lt; 2.0. h<sub>w</sub> is the clear height of the wall segment — for multi-story walls use the story height, not the total wall height, unless the wall is designed as a single cantilevered element.</p>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — ACI 318-25 §18.10.4</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sh-aci-model">Strength Model</a>
+          <a href="#bgs-sh-aci-limits">Capacity Limits</a>
+          <a href="#bgs-sh-aci-reinf">Reinforcement</a>
+        </nav>
+        <section id="bgs-sh-aci-model">
+          <div class="bg-panel-hdr"><span>Strength Model</span><a class="bg-top-btn" href="#bgs-sh-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">ACI 318-25 §18.10.4.1 — Nominal Shear Strength</div>
+              <p>Nominal shear strength of special structural walls, combining a concrete diagonal tension term with a horizontal steel contribution:</p>
+              <span class="fml-eq">V<sub>n</sub> = (α<sub>c</sub>·√f'<sub>c</sub> + ρ<sub>t</sub>·f<sub>y</sub>)·A<sub>cv</sub> &emsp; φ = 0.75</span>
+              <p>A<sub>cv</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross wall web area. ρ<sub>t</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. The concrete term α<sub>c</sub>·√f'<sub>c</sub> represents aggregate interlock and dowel action; the steel term ρ<sub>t</sub>·f<sub>y</sub> is the contribution of horizontal bars.</p>
+              <p><strong>Aspect-ratio coefficient α<sub>c</sub></strong> — squat walls develop arch action, boosting concrete contribution; slender walls rely on the truss mechanism:</p>
+              <span class="fml-eq">h<sub>w</sub>/l<sub>w</sub> ≤ 1.5 → α<sub>c</sub> = 0.25 (squat wall)</span>
+              <span class="fml-eq">h<sub>w</sub>/l<sub>w</sub> ≥ 2.0 → α<sub>c</sub> = 0.17 (slender wall)</span>
+              <p>α<sub>c</sub> is linearly interpolated for 1.5 &lt; h<sub>w</sub>/l<sub>w</sub> &lt; 2.0. Use the story height for multi-story walls unless designed as a single cantilevered element.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>Maximum nominal shear capacity</strong> (ACI 318-25 §18.10.4.4) — the diagonal compression strut can crush regardless of how much horizontal steel is present:</p>
-            <span class="fml-eq">V<sub>n,max</sub> = 0.66·√f'<sub>c</sub>·A<sub>cv</sub></span>
-            <p>If φ·V<sub>n,max</sub> &lt; V<sub>u</sub>, the wall cross-section must be enlarged — increasing horizontal reinforcement cannot prevent strut crushing. The 0.66 factor corresponds to roughly 4×(0.17√f'c), calibrated from test data on walls with various reinforcement ratios and aspect ratios.</p>
-            <p>For a <strong>system of walls</strong> sharing a common lateral load (§18.10.4.3), the maximum applies collectively:</p>
-            <span class="fml-eq">ΣV<sub>n</sub> ≤ 0.66·√f'<sub>c</sub>·ΣA<sub>cv</sub></span>
-            <p>Each individual wall's V<sub>n</sub> may exceed its own per-wall strut limit as long as the system total is within bounds — this allows unequal shear distribution to be accommodated in coupled or pierced wall systems.</p>
-            <p><strong>Capacity-design shear</strong> (§18.10.3) — for special structural walls in SDC D, E, or F, V<sub>u</sub> must be the larger of: (a) amplified elastic shear or (b) shear from probable flexural overstrength M<sub>pr</sub>. Using the elastic analysis shear directly is non-conservative because flexural overstrength at the base can drive shear demands far above the factored design moment.</p>
+        </section>
+        <section id="bgs-sh-aci-limits">
+          <div class="bg-panel-hdr"><span>Capacity Limits</span><a class="bg-top-btn" href="#bgs-sh-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Maximum Nominal Shear — ACI 318-25 §18.10.4.4</div>
+              <p>The diagonal compression strut can crush regardless of horizontal steel present:</p>
+              <span class="fml-eq">V<sub>n,max</sub> = 0.66·√f'<sub>c</sub>·A<sub>cv</sub></span>
+              <p>If φ·V<sub>n,max</sub> &lt; V<sub>u</sub>, the wall cross-section must be enlarged — no amount of reinforcement can prevent strut crushing. For a <strong>system of walls</strong> sharing lateral load (§18.10.4.3), the maximum applies collectively:</p>
+              <span class="fml-eq">ΣV<sub>n</sub> ≤ 0.66·√f'<sub>c</sub>·ΣA<sub>cv</sub></span>
+              <p><strong>Capacity-design shear</strong> (§18.10.3) — for SDC D/E/F walls, V<sub>u</sub> must be the larger of: (a) amplified elastic shear or (b) shear from probable flexural overstrength M<sub>pr</sub>. Using elastic analysis shear directly is non-conservative.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>Minimum horizontal (transverse) web reinforcement</strong> (ACI 318-25 §18.10.2.1) — ensures distributed diagonal cracking and prevents brittle shear failure after inclined crack formation:</p>
-            <span class="fml-eq">ρ<sub>t</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025</span>
-            <p>Walls with ρ<sub>t</sub> &lt; 0.0025 exhibit brittle, sudden failure once diagonal cracking initiates — the minimum is required even when V<sub>u</sub> &lt; φV<sub>c</sub>. The provision ensures adequate post-cracking ductility and energy dissipation under seismic cycling.</p>
-            <p><strong>Maximum horizontal spacing</strong> (§18.10.2.1) — limits diagonal crack width and ensures shear redistribution across the web height:</p>
-            <span class="fml-eq">s<sub>h</sub> ≤ min(l<sub>w</sub>/5, 3b<sub>w</sub>, 450 mm)</span>
-            <p><strong>Two curtains of reinforcement</strong> (§18.10.2.2) required when:</p>
-            <span class="fml-eq">V<sub>u</sub> &gt; A<sub>cv</sub>·0.17·√f'<sub>c</sub></span>
-            <p>Two curtains reduce out-of-plane buckling of the web and distribute shear more uniformly through the wall thickness — essential when in-plane and out-of-plane demands interact under multi-directional seismic loading.</p>
-            <p><strong>Vertical web reinforcement</strong> (§18.10.2.2): ρ<sub>l</sub> ≥ 0.0025. For slender walls (h<sub>w</sub>/l<sub>w</sub> ≥ 2.0), ρ<sub>l</sub> need not exceed ρ<sub>t</sub> since vertical bars contribute negligibly to shear in slender walls; in squat walls, vertical steel can provide up to 50% of total shear resistance.</p>
+        </section>
+        <section id="bgs-sh-aci-reinf">
+          <div class="bg-panel-hdr"><span>Reinforcement</span><a class="bg-top-btn" href="#bgs-sh-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Minimum Horizontal Reinforcement — ACI 318-25 §18.10.2.1</div>
+              <p>Ensures distributed diagonal cracking and prevents brittle shear failure after inclined crack formation:</p>
+              <span class="fml-eq">ρ<sub>t</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025</span>
+              <p>Required even when V<sub>u</sub> &lt; φV<sub>c</sub>. Maximum horizontal spacing:</p>
+              <span class="fml-eq">s<sub>h</sub> ≤ min(l<sub>w</sub>/5, 3b<sub>w</sub>, 450 mm)</span>
+              <p><strong>Two curtains required</strong> (§18.10.2.2) when:</p>
+              <span class="fml-eq">V<sub>u</sub> &gt; A<sub>cv</sub>·0.17·√f'<sub>c</sub></span>
+              <p><strong>Vertical web reinforcement</strong> (§18.10.2.2): ρ<sub>l</sub> ≥ 0.0025. For slender walls (h<sub>w</sub>/l<sub>w</sub> ≥ 2.0), ρ<sub>l</sub> need not exceed ρ<sub>t</sub> since vertical bars contribute negligibly to shear.</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sh-aci -->
 
@@ -812,43 +919,54 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sh-en">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sh-en')"><span>Design Background — EN 1992-1-1 §6.2 / EN 1998-1 §5.5.2.4</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-sh-en',0,this)">Truss Model</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-en',1,this)">Strut Limit</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-en',2,this)">Seismic (EN 1998-1)</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk">
-            <p><strong>EN 1992-1-1 §6.2.3</strong> — Structural walls with shear reinforcement use the variable-angle compression field (truss) model. The inclined cracks are idealised as struts; horizontal bars are the tension ties. For the practical default θ = 45°:</p>
-            <span class="fml-eq">V<sub>Rd,s</sub> = (A<sub>sw,prov</sub>/s)·z·f<sub>yd</sub></span>
-            <p>A<sub>sw,prov</sub>/s = n<sub>h</sub>·π·d<sub>h</sub>²/(4·s<sub>h</sub>) is the horizontal steel area per unit wall height. f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub> = f<sub>yk</sub>/1.15. This is a <em>steel-only</em> capacity — unlike beams, EC2 for walls with shear reinforcement neglects the concrete tensile contribution; the diagonal crack is assumed to run fully across the section.</p>
-            <p>Inner lever arm z ≈ 0.9·d, where d = l<sub>w</sub> − c<sub>c</sub> is the effective depth (c<sub>c</sub> = 40 mm fixed). The 0.9 factor approximates the distance between the centroids of the tension chord (horizontal bars) and the compression chord (boundary zone concrete). The design check is V<sub>Rd,s</sub> ≥ V<sub>Ed,d</sub>.</p>
-            <p><strong>Minimum horizontal reinforcement</strong> (EN 1992-1-1 §9.6.3): ρ<sub>h</sub> ≥ 0.002 in each face; maximum spacing s<sub>h</sub> ≤ min(3b<sub>w</sub>, 400 mm). Bars must be anchored with hooks around the vertical boundary zone bars at wall ends to develop the full tensile force in the horizontal tie.</p>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — EN 1992-1-1 §6.2 / EN 1998-1 §5.5.2.4</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sh-en-truss">Truss Model</a>
+          <a href="#bgs-sh-en-strut">Strut Limit</a>
+          <a href="#bgs-sh-en-seismic">Seismic (EN 1998-1)</a>
+        </nav>
+        <section id="bgs-sh-en-truss">
+          <div class="bg-panel-hdr"><span>Truss Model</span><a class="bg-top-btn" href="#bgs-sh-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">EN 1992-1-1 §6.2.3 — Variable-Angle Compression Field</div>
+              <p>Structural walls with shear reinforcement use the variable-angle compression field (truss) model. Inclined cracks are idealised as struts; horizontal bars are the tension ties. For the default θ = 45°:</p>
+              <span class="fml-eq">V<sub>Rd,s</sub> = (A<sub>sw,prov</sub>/s)·z·f<sub>yd</sub></span>
+              <p>A<sub>sw,prov</sub>/s = n<sub>h</sub>·π·d<sub>h</sub>²/(4·s<sub>h</sub>) is the horizontal steel area per unit wall height. f<sub>yd</sub> = f<sub>yk</sub>/1.15. EC2 for walls neglects the concrete tensile contribution — the diagonal crack is assumed to run fully across the section.</p>
+              <p>Inner lever arm z ≈ 0.9·d, where d = l<sub>w</sub> − c<sub>c</sub> (c<sub>c</sub> = 40 mm fixed). Design check: V<sub>Rd,s</sub> ≥ V<sub>Ed,d</sub>.</p>
+              <p><strong>Minimum horizontal reinforcement</strong> (§9.6.3): ρ<sub>h</sub> ≥ 0.002 in each face; s<sub>h</sub> ≤ min(3b<sub>w</sub>, 400 mm). Bars must be hooked around the boundary zone vertical bars.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>Strut crushing limit</strong> (EN 1992-1-1 §6.2.3) — the diagonal compression strut between inclined cracks must not crush before horizontal reinforcement yields:</p>
-            <span class="fml-eq">V<sub>Rd,max</sub> = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/2 &emsp; (θ = 45°)</span>
-            <p>ν<sub>1</sub> = 0.6·(1 − f<sub>ck</sub>/250) is the strength reduction factor for cracked concrete in shear. Higher-strength concrete is more brittle, so ν<sub>1</sub> decreases as f<sub>ck</sub> increases — e.g. C25: ν<sub>1</sub> = 0.54; C40: ν<sub>1</sub> = 0.50. f<sub>cd</sub> = f<sub>ck</sub>/1.5.</p>
-            <p>If V<sub>Ed,d</sub> &gt; V<sub>Rd,max</sub>, the wall cross-section must be enlarged, or a <strong>shallower truss angle</strong> may be used. EC2 permits 21.8° ≤ θ ≤ 45°. At θ = 21.8° (cot θ = 2.5), V<sub>Rd,max</sub> increases by approximately 2.5× compared with θ = 45°, through the relation:</p>
-            <span class="fml-eq">V<sub>Rd,max</sub>(θ) = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>·cot θ/(1 + cot²θ)</span>
-            <p>However, a shallower angle also increases the required A<sub>sw</sub>/s proportionally (by cot θ). For seismic walls, using θ &lt; 45° is discouraged because shear reversals under cyclic loading degrade the concrete contribution assumed by the shallower angle truss model.</p>
+        </section>
+        <section id="bgs-sh-en-strut">
+          <div class="bg-panel-hdr"><span>Strut Limit</span><a class="bg-top-btn" href="#bgs-sh-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Strut Crushing Limit — EN 1992-1-1 §6.2.3</div>
+              <p>The diagonal compression strut must not crush before horizontal reinforcement yields:</p>
+              <span class="fml-eq">V<sub>Rd,max</sub> = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/2 &emsp; (θ = 45°)</span>
+              <p>ν<sub>1</sub> = 0.6·(1 − f<sub>ck</sub>/250) is the strength reduction factor for cracked concrete in shear (e.g. C25: ν<sub>1</sub> = 0.54; C40: ν<sub>1</sub> = 0.50). f<sub>cd</sub> = f<sub>ck</sub>/1.5.</p>
+              <p>If V<sub>Ed,d</sub> &gt; V<sub>Rd,max</sub>, a shallower truss angle (21.8° ≤ θ ≤ 45°) may be used:</p>
+              <span class="fml-eq">V<sub>Rd,max</sub>(θ) = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>·cot θ/(1 + cot²θ)</span>
+              <p>For seismic walls, θ &lt; 45° is discouraged because shear reversals under cyclic loading degrade the concrete contribution assumed by the shallower angle model.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>EN 1998-1 §5.5.2.4</strong> — Ductile walls must be designed for a shear force greater than the one from linear seismic analysis. Modal response spectrum analysis underestimates the actual shear because it cannot capture (i) flexural overstrength at the plastic hinge (M<sub>Rd</sub> &gt; M<sub>Ed</sub>) and (ii) dynamic shear magnification from higher-mode vibrations above the plastic hinge level.</p>
-            <p>For <strong>DCH walls</strong> (§5.5.2.4.1) — amplified design shear:</p>
-            <span class="fml-eq">V<sub>Ed,d</sub> = ε·V<sub>Ed,analysis</sub> &emsp; ε ≥ 1.0</span>
-            <p>ε depends on the ratio M<sub>Rd,base</sub>/M<sub>Ed,base</sub> and the fundamental period T<sub>1</sub>. For most practical DCH walls, ε ranges from about 1.2 to 2.0. EN 1998-1 Annex A provides the full formula. The amplified V<sub>Ed,d</sub> shall be not less than the elastic analysis shear.</p>
-            <p>For <strong>DCM walls</strong>: no amplification is required — the elastic analysis shear is used directly with standard ductility detailing.</p>
-            <p>The calculator uses the <strong>user-entered V<sub>Ed,d</sub></strong> as the final design shear. Apply the ε factor externally before entering the value; the amplification requires moment capacity and period data outside the scope of this single-section shear check.</p>
+        </section>
+        <section id="bgs-sh-en-seismic">
+          <div class="bg-panel-hdr"><span>Seismic (EN 1998-1)</span><a class="bg-top-btn" href="#bgs-sh-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">EN 1998-1 §5.5.2.4 — Capacity-Design Shear</div>
+              <p>Ductile walls must be designed for a shear force greater than from linear analysis. Modal analysis underestimates actual shear due to: (i) flexural overstrength at the plastic hinge (M<sub>Rd</sub> &gt; M<sub>Ed</sub>) and (ii) dynamic shear magnification from higher-mode vibrations.</p>
+              <p>For <strong>DCH walls</strong> (§5.5.2.4.1) — amplified design shear:</p>
+              <span class="fml-eq">V<sub>Ed,d</sub> = ε·V<sub>Ed,analysis</sub> &emsp; ε ≥ 1.0</span>
+              <p>ε depends on M<sub>Rd,base</sub>/M<sub>Ed,base</sub> and fundamental period T<sub>1</sub>. For most DCH walls, ε ≈ 1.2 to 2.0 (EN 1998-1 Annex A provides the full formula).</p>
+              <p>For <strong>DCM walls</strong>: no amplification is required. The calculator uses the user-entered V<sub>Ed,d</sub> as the final design shear — apply the ε factor externally before entering the value.</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sh-en -->
 
@@ -884,47 +1002,57 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sh-is">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sh-is')"><span>Design Background — IS 456:2000 §32.4 / IS 13920 §9.3</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-sh-is',0,this)">Shear Strength</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-is',1,this)">Limits &amp; Seismic</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-is',2,this)">Capacity Design</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk">
-            <p><strong>IS 456:2000 §32.4</strong> — Shear resistance of reinforced concrete walls is computed in force terms on the effective cross-section b<sub>w</sub>×d. The model superimposes separate concrete and horizontal steel contributions:</p>
-            <p><strong>Concrete shear resistance:</strong></p>
-            <span class="fml-eq">V<sub>c</sub> = τ<sub>c</sub>·b<sub>w</sub>·d &emsp; τ<sub>c</sub> = 0.17√f<sub>ck</sub> (MPa, no axial load)</span>
-            <p>τ<sub>c</sub> = 0.17√f<sub>ck</sub> is a simplified flat-rate concrete shear stress for walls (IS 456 §32.4.1). It is intentionally lower than the beam value because walls are typically more slender and subjected to reversed shear cycles under seismic loading. The effective depth d = l<sub>w</sub> − c<sub>c</sub> is measured from the compression face to the tension reinforcement centroid.</p>
-            <p><strong>Horizontal web steel contribution:</strong></p>
-            <span class="fml-eq">V<sub>s,prov</sub> = (A<sub>h</sub>/s<sub>h</sub>)·0.87·f<sub>y</sub>·d</span>
-            <p><strong>Provided nominal shear capacity:</strong></p>
-            <span class="fml-eq">V<sub>n</sub> = V<sub>c</sub> + V<sub>s,prov</sub> ≥ V<sub>u</sub></span>
-            <p>A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4 is the total horizontal bar area per spacing s<sub>h</sub>. The factor 0.87 = 1/γ<sub>m</sub> is the IS 456 partial safety factor for steel (γ<sub>m</sub> = 1.15). Note that the effective depth d in both terms must be measured consistently from the same compression face.</p>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — IS 456:2000 §32.4 / IS 13920 §9.3</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sh-is-strength">Shear Strength</a>
+          <a href="#bgs-sh-is-limits">Limits &amp; Seismic</a>
+          <a href="#bgs-sh-is-capacity">Capacity Design</a>
+        </nav>
+        <section id="bgs-sh-is-strength">
+          <div class="bg-panel-hdr"><span>Shear Strength</span><a class="bg-top-btn" href="#bgs-sh-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">IS 456:2000 §32.4 — Concrete + Steel Shear Model</div>
+              <p>Shear resistance computed on the effective cross-section b<sub>w</sub>×d. The model superimposes concrete and horizontal steel contributions.</p>
+              <p><strong>Concrete shear resistance:</strong></p>
+              <span class="fml-eq">V<sub>c</sub> = τ<sub>c</sub>·b<sub>w</sub>·d &emsp; τ<sub>c</sub> = 0.17√f<sub>ck</sub> (MPa)</span>
+              <p>τ<sub>c</sub> is intentionally lower than the beam value because walls are subjected to reversed shear cycles under seismic loading. Effective depth d = l<sub>w</sub> − c<sub>c</sub>.</p>
+              <p><strong>Horizontal web steel contribution:</strong></p>
+              <span class="fml-eq">V<sub>s,prov</sub> = (A<sub>h</sub>/s<sub>h</sub>)·0.87·f<sub>y</sub>·d</span>
+              <p><strong>Total nominal shear capacity:</strong></p>
+              <span class="fml-eq">V<sub>n</sub> = V<sub>c</sub> + V<sub>s,prov</sub> ≥ V<sub>u</sub></span>
+              <p>0.87 = 1/γ<sub>m</sub> is the IS 456 partial safety factor for steel.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>Maximum allowable shear</strong> (IS 456:2000 §32.4.2.1) — diagonal concrete crushing governs regardless of horizontal steel provided:</p>
-            <span class="fml-eq">V<sub>max</sub> = τ<sub>max</sub>·b<sub>w</sub>·d &emsp; τ<sub>max</sub> = min(0.2f<sub>ck</sub>, 3.5 MPa)</span>
-            <p>The 3.5 MPa ceiling prevents over-reliance on high-strength concrete where brittleness is a concern. If V<sub>u</sub> &gt; V<sub>max</sub>, the wall must be deepened or thickened — no amount of shear reinforcement can prevent premature strut crushing at these stress levels.</p>
-            <p><strong>IS 13920:2016 §9.3 — seismic ductility requirements:</strong></p>
-            <span class="fml-eq">ρ<sub>h</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025 &emsp; (horizontal and vertical)</span>
-            <p>Minimum ρ = 0.0025 in both directions ensures distributed diagonal cracking and prevents brittle failure after the first diagonal crack. Two curtains of reinforcement are required when h<sub>w</sub>/t<sub>w</sub> ≥ 16 or l<sub>w</sub> ≥ 600 mm (§9.3.2) — the second curtain reduces out-of-plane instability under biaxial seismic demands.</p>
-            <p><strong>Maximum horizontal spacing</strong> (IS 13920 §9.3.3): s<sub>h</sub> ≤ min(l<sub>w</sub>/5, 3t<sub>w</sub>, 450 mm). Horizontal bars must be anchored at wall ends with 90° standard hooks per IS 456 §26.2 to develop the full tie force.</p>
+        </section>
+        <section id="bgs-sh-is-limits">
+          <div class="bg-panel-hdr"><span>Limits &amp; Seismic</span><a class="bg-top-btn" href="#bgs-sh-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Maximum Shear &amp; Seismic Ductility — IS 456:2000 §32.4.2.1, IS 13920 §9.3</div>
+              <p>Diagonal concrete crushing upper bound regardless of horizontal steel:</p>
+              <span class="fml-eq">V<sub>max</sub> = τ<sub>max</sub>·b<sub>w</sub>·d &emsp; τ<sub>max</sub> = min(0.2f<sub>ck</sub>, 3.5 MPa)</span>
+              <p>If V<sub>u</sub> &gt; V<sub>max</sub>, the wall must be deepened or thickened.</p>
+              <p><strong>IS 13920:2016 §9.3 — seismic minimum:</strong></p>
+              <span class="fml-eq">ρ<sub>h</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025 &emsp; (horizontal and vertical)</span>
+              <p>Two curtains required when h<sub>w</sub>/t<sub>w</sub> ≥ 16 or l<sub>w</sub> ≥ 600 mm (§9.3.2). Max horizontal spacing: s<sub>h</sub> ≤ min(l<sub>w</sub>/5, 3t<sub>w</sub>, 450 mm).</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>IS 13920:2016 §9.3.4 — Capacity-design shear</strong> — for seismic walls the design shear V<sub>u</sub> shall not be less than the shear corresponding to the full plastic moment capacity at the wall base:</p>
-            <span class="fml-eq">V<sub>u</sub> ≥ M<sub>cap</sub>/H<sub>w</sub></span>
-            <p>M<sub>cap</sub> is the probable (overstrength) moment capacity of the wall cross-section at the base, computed using actual mean material strengths — not the factored moment M<sub>u</sub> from elastic analysis. H<sub>w</sub> is the total wall height. This capacity-design requirement prevents a brittle shear failure from occurring before the intended flexural plastic hinge can form at the wall base, which is the assumed energy-dissipating mechanism.</p>
-            <p>When the capacity-design shear substantially exceeds the elastic analysis shear (often by 50–100% in high-seismicity zones), horizontal web reinforcement must be sized for the larger value. Ignoring this step is one of the most common design errors in seismic RC wall systems.</p>
-            <p><strong>Squat vs. slender walls</strong> (IS 13920 §2): slender walls have H<sub>w</sub>/l<sub>w</sub> ≥ 2.0 and are governed by diagonal tension. Squat walls (H<sub>w</sub>/l<sub>w</sub> &lt; 2.0) behave as deep beams per IS 456 §29 and are additionally susceptible to horizontal sliding shear at construction joints — IS 13920 §9.5 provides separate sliding shear checks for these cases.</p>
+        </section>
+        <section id="bgs-sh-is-capacity">
+          <div class="bg-panel-hdr"><span>Capacity Design</span><a class="bg-top-btn" href="#bgs-sh-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">IS 13920:2016 §9.3.4 — Capacity-Design Shear</div>
+              <p>The design shear V<sub>u</sub> shall not be less than the shear corresponding to the full plastic moment capacity at the wall base:</p>
+              <span class="fml-eq">V<sub>u</sub> ≥ M<sub>cap</sub>/H<sub>w</sub></span>
+              <p>M<sub>cap</sub> is the probable (overstrength) moment capacity computed using actual mean material strengths — not M<sub>u</sub> from elastic analysis. This prevents brittle shear failure before the intended flexural plastic hinge forms.</p>
+              <p><strong>Squat vs. slender walls</strong> (IS 13920 §2): slender walls (H<sub>w</sub>/l<sub>w</sub> ≥ 2.0) are governed by diagonal tension. Squat walls (H<sub>w</sub>/l<sub>w</sub> &lt; 2.0) behave as deep beams and are additionally susceptible to horizontal sliding shear at construction joints — IS 13920 §9.5 provides separate sliding shear checks.</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sh-is -->
 
@@ -959,49 +1087,58 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sh-tbdy">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sh-tbdy')"><span>Design Background — TSC 2018 §7.6.5</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-tabs">
-          <button class="bg-tab active" onclick="swBgTab('bgs-sh-tbdy',0,this)">Shear Capacity</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-tbdy',1,this)">Reinforcement &amp; Limits</button>
-          <button class="bg-tab" onclick="swBgTab('bgs-sh-tbdy',2,this)">Capacity Design</button>
-        </div>
-        <div class="bg-pane active">
-          <div class="fml-blk">
-            <p><strong>TSC 2018 §7.6.5.3</strong> — Design shear strength of reinforced concrete structural walls (TBDY 2018 Denklem 7.17). The formula combines a concrete diagonal cracking term with horizontal steel contribution, both expressed using design strengths:</p>
-            <span class="fml-eq">V<sub>r</sub> = (0.65·f<sub>ctd</sub> + ρ<sub>sh</sub>·f<sub>ywd</sub>)·A<sub>w</sub></span>
-            <p>A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross wall web area. ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. The 0.65·f<sub>ctd</sub> coefficient is derived from the TS 500 §8.1 cracking shear model. f<sub>ywd</sub> = f<sub>ywk</sub>/γ<sub>s</sub> is the design yield strength of the horizontal web bars.</p>
-            <p>Design material strengths (TS 500 §2.1, γ<sub>c</sub> = 1.5, γ<sub>s</sub> = 1.15):</p>
-            <span class="fml-eq">f<sub>ctd</sub> = 0.35·√f<sub>ck</sub>/γ<sub>c</sub> &emsp; f<sub>ywd</sub> = f<sub>ywk</sub>/γ<sub>s</sub></span>
-            <p>The design check is direct — no additional φ reduction factor applies:</p>
-            <span class="fml-eq">V<sub>e</sub> ≤ V<sub>r</sub></span>
-            <p>Unlike ACI (φ = 0.75), TSC incorporates safety through material partial factors γ<sub>c</sub> and γ<sub>s</sub> embedded in f<sub>ctd</sub> and f<sub>ywd</sub> — applying a further reduction would result in double-counting the safety margin. V<sub>e</sub> is the capacity-design shear from §4.3.4, which is typically larger than the elastic analysis shear.</p>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — TSC 2018 §7.6.5</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sh-tbdy-vr">Shear Capacity</a>
+          <a href="#bgs-sh-tbdy-reinf">Reinforcement &amp; Limits</a>
+          <a href="#bgs-sh-tbdy-cap">Capacity Design</a>
+        </nav>
+        <section id="bgs-sh-tbdy-vr">
+          <div class="bg-panel-hdr"><span>Shear Capacity</span><a class="bg-top-btn" href="#bgs-sh-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 §7.6.5.3 — Design Shear Strength (TBDY Denklem 7.17)</div>
+              <p>The formula combines a concrete diagonal cracking term with horizontal steel contribution, both expressed using design strengths:</p>
+              <span class="fml-eq">V<sub>r</sub> = (0.65·f<sub>ctd</sub> + ρ<sub>sh</sub>·f<sub>ywd</sub>)·A<sub>w</sub></span>
+              <p>A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross wall web area. ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. The 0.65·f<sub>ctd</sub> coefficient is derived from the TS 500 §8.1 cracking shear model.</p>
+              <p>Design material strengths per TS 500 §2.1 (γ<sub>c</sub> = 1.5, γ<sub>s</sub> = 1.15):</p>
+              <span class="fml-eq">f<sub>ctd</sub> = 0.35·√f<sub>ck</sub> / γ<sub>c</sub> &emsp; f<sub>ywd</sub> = f<sub>ywk</sub> / γ<sub>s</sub></span>
+              <p>Design check (no additional φ factor — safety is already embedded in the material partial factors):</p>
+              <span class="fml-eq">V<sub>e</sub> ≤ V<sub>r</sub></span>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>Maximum shear capacity</strong> (TBDY 2018 §7.6.5.3, Denklem 7.18) — diagonal strut crushing upper bound. Note that √f<sub>ck</sub> (characteristic) rather than √f<sub>cd</sub> is used here, giving a higher cap consistent with the semi-empirical calibration of this crushing limit in TS 500:</p>
-            <span class="fml-eq">V<sub>r,max</sub> = 0.85·√f<sub>ck</sub>·A<sub>w</sub> &emsp; (solid wall)</span>
-            <p>If V<sub>e</sub> &gt; V<sub>r,max</sub>, no amount of horizontal reinforcement can prevent premature strut crushing — the wall cross-section must be enlarged by increasing l<sub>w</sub> or b<sub>w</sub>.</p>
-            <p><strong>Minimum horizontal web reinforcement</strong> (§7.6.3.3):</p>
-            <span class="fml-eq">ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025</span>
-            <p>The same minimum ρ<sub>sv</sub> ≥ 0.0025 applies to vertical web reinforcement. Both must be provided in two curtains for seismic design zones (DTS 1–4) to ensure web stability and distributed cracking under reversed seismic loading.</p>
-            <p><strong>Maximum horizontal spacing</strong> (§7.6.3.3):</p>
-            <span class="fml-eq">s<sub>h</sub> ≤ min(b<sub>w</sub>, 300 mm)</span>
-            <p>Horizontal bars must be hooked around the outermost vertical bars of the boundary zone per §7.3.5 anchorage requirements — the hook develops the full tensile force at the design shear level and prevents premature bar pull-out at wall ends.</p>
+        </section>
+        <section id="bgs-sh-tbdy-reinf">
+          <div class="bg-panel-hdr"><span>Reinforcement &amp; Limits</span><a class="bg-top-btn" href="#bgs-sh-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">Maximum Shear &amp; Minimum Reinforcement — TBDY 2018 §7.6.5.3, §7.6.3.3</div>
+              <p>Diagonal strut crushing upper bound (√f<sub>ck</sub> characteristic, not √f<sub>cd</sub>, consistent with TS 500 semi-empirical calibration):</p>
+              <span class="fml-eq">V<sub>r,max</sub> = 0.85·√f<sub>ck</sub>·A<sub>w</sub> &emsp; (solid wall)</span>
+              <p>If V<sub>e</sub> &gt; V<sub>r,max</sub>, the wall cross-section must be enlarged — no amount of horizontal reinforcement can prevent strut crushing.</p>
+              <p><strong>Minimum web reinforcement</strong> (§7.6.3.3):</p>
+              <span class="fml-eq">ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025 &emsp; (horizontal &amp; vertical)</span>
+              <p>Both directions must be provided in two curtains for DTS 1–4 seismic zones. Maximum horizontal spacing:</p>
+              <span class="fml-eq">s<sub>h</sub> ≤ min(b<sub>w</sub>, 300 mm)</span>
+              <p>Horizontal bars must be hooked around the outermost vertical bars of the boundary zone per §7.3.5 to develop the full tensile force.</p>
+            </div>
           </div>
-        </div>
-        <div class="bg-pane">
-          <div class="fml-blk">
-            <p><strong>TSC 2018 §4.3.4 — Capacity-design shear V<sub>e</sub></strong> — for ductile structural walls the design shear must reflect the probable plastic mechanism at the wall base, amplified for higher-mode shear effects above the hinge:</p>
-            <span class="fml-eq">V<sub>e</sub> = D<sub>v</sub>·(M<sub>p,base</sub>/H<sub>w</sub>)</span>
-            <p>M<sub>p,base</sub> is the probable flexural capacity of the wall base cross-section, computed with mean material strengths including steel strain hardening. H<sub>w</sub> is the effective wall height. D<sub>v</sub> ≥ 1.0 is the dynamic shear magnification factor — it accounts for higher-mode contributions that increase shear demand above the first plastic hinge without proportionally increasing the base moment. TBDY 2018 §4.3.4.5 defines D<sub>v</sub> as a function of the number of storeys above the plastic hinge level.</p>
-            <p>V<sub>e</sub> shall be taken as the greater of the capacity-design value and the elastic analysis shear:</p>
-            <span class="fml-eq">V<sub>e</sub> = max(D<sub>v</sub>·M<sub>p,base</sub>/H<sub>w</sub>, V<sub>analysis</sub>)</span>
-            <p>In high-seismicity zones (DTS 1–2), using V<sub>analysis</sub> directly typically underestimates V<sub>e</sub> by 30–100%. The calculator uses the user-entered V<sub>e</sub> — the capacity-design computation must be completed by the designer before entering the value, as it requires wall moment capacity and building geometry data outside the scope of this shear check.</p>
+        </section>
+        <section id="bgs-sh-tbdy-cap">
+          <div class="bg-panel-hdr"><span>Capacity Design</span><a class="bg-top-btn" href="#bgs-sh-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 §4.3.4 — Capacity-Design Shear V<sub>e</sub></div>
+              <p>For ductile structural walls the design shear must reflect the probable plastic mechanism at the wall base, amplified for higher-mode shear effects:</p>
+              <span class="fml-eq">V<sub>e</sub> = D<sub>v</sub>·(M<sub>p,base</sub>/H<sub>w</sub>)</span>
+              <p>M<sub>p,base</sub> is the probable flexural capacity computed with mean material strengths including strain hardening. D<sub>v</sub> ≥ 1.0 is the dynamic shear magnification factor for higher-mode contributions (TBDY 2018 §4.3.4.5 defines D<sub>v</sub> as a function of the number of storeys).</p>
+              <span class="fml-eq">V<sub>e</sub> = max(D<sub>v</sub>·M<sub>p,base</sub>/H<sub>w</sub>, V<sub>analysis</sub>)</span>
+              <p>In DTS 1–2 zones, using V<sub>analysis</sub> directly typically underestimates V<sub>e</sub> by 30–100%. Enter the completed capacity-design shear directly into the calculator.</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sh-tbdy -->
 </div><!-- /mod-sh -->
@@ -1074,12 +1211,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-aci">
-      <div class="bg-hdr" onclick="toggleBg('bgs-pm-aci')"><span>Design Background — ACI 318-25 PMM Fiber Model</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active">
-          <div class="fml-blk"><p>The P-M interaction diagram is generated by sweeping the neutral axis depth c from 2l<sub>w</sub> (pure compression) to near zero (pure tension). At each c, equilibrium of the rectangular stress block with all fiber strips gives (P<sub>n</sub>, M<sub>n</sub>):</p><span class="fml-eq">P<sub>n</sub> = 0.85f'<sub>c</sub>·a·b<sub>w</sub> + ΣA<sub>s,i</sub>·f<sub>s,i</sub> − ΣA<sub>s,i</sub>·0.85f'<sub>c</sub> (in comp. block)</span><span class="fml-eq">φ = 0.65 to 0.90 based on net tensile strain ε<sub>t</sub></span><p>β<sub>1</sub>·c = a; ε<sub>s,i</sub> = (c−x<sub>i</sub>)/c·0.003; f<sub>s,i</sub> = min(ε<sub>s,i</sub>·E<sub>s</sub>, f<sub>y</sub>).</p></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — ACI 318-25 PMM Fiber Model</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-pm-aci-fiber">Fiber Method</a>
+        </nav>
+        <section id="bgs-pm-aci-fiber">
+          <div class="bg-panel-hdr"><span>Fiber Method</span><a class="bg-top-btn" href="#bgs-pm-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">ACI 318-25 — P-M Interaction via Neutral Axis Sweep</div>
+              <p>The P-M interaction diagram is generated by sweeping the neutral axis depth c from 2l<sub>w</sub> (pure compression) to near zero (pure tension). At each c, equilibrium of the rectangular stress block with all fiber strips gives (P<sub>n</sub>, M<sub>n</sub>):</p>
+              <span class="fml-eq">P<sub>n</sub> = 0.85f'<sub>c</sub>·a·b<sub>w</sub> + ΣA<sub>s,i</sub>·f<sub>s,i</sub> − ΣA<sub>s,i</sub>·0.85f'<sub>c</sub> (in comp. block)</span>
+              <span class="fml-eq">φ = 0.65 to 0.90 based on net tensile strain ε<sub>t</sub></span>
+              <p>β<sub>1</sub>·c = a; ε<sub>s,i</sub> = (c−x<sub>i</sub>)/c·0.003; f<sub>s,i</sub> = min(ε<sub>s,i</sub>·E<sub>s</sub>, f<sub>y</sub>). The φ-reduced envelope is plotted; the design point (P<sub>u</sub>, M<sub>u</sub>) must fall inside it.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /pm-aci -->
 
@@ -1137,10 +1286,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-en">
-      <div class="bg-hdr" onclick="toggleBg('bgs-pm-en')"><span>Design Background — EN 1992-1-1 §6.1 Fiber Model</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p>Fiber strip model sweeps neutral axis depth x. Parabola-rectangle stress block: f<sub>cd</sub>=α<sub>cc</sub>·f<sub>ck</sub>/γ<sub>c</sub> (α<sub>cc</sub>=1.0 per EN NA). Steel: f<sub>sd</sub>=f<sub>yk</sub>/γ<sub>s</sub>, elastic-perfectly-plastic. Equilibrium gives N<sub>Rd</sub> and M<sub>Rd</sub> at each x.</p><span class="fml-eq">ε<sub>cu3</sub>=0.0035 &emsp; λ=0.80 (f<sub>ck</sub>≤50MPa) &emsp; η=1.0</span></div></div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — EN 1992-1-1 §6.1 Fiber Model</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-pm-en-fiber">Fiber Method</a>
+        </nav>
+        <section id="bgs-pm-en-fiber">
+          <div class="bg-panel-hdr"><span>Fiber Method</span><a class="bg-top-btn" href="#bgs-pm-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">EN 1992-1-1 §6.1 — Parabola-Rectangle Stress Block</div>
+              <p>Fiber strip model sweeps neutral axis depth x. Parabola-rectangle stress block: f<sub>cd</sub> = α<sub>cc</sub>·f<sub>ck</sub>/γ<sub>c</sub> (α<sub>cc</sub> = 1.0 per EN NA). Steel: f<sub>sd</sub> = f<sub>yk</sub>/γ<sub>s</sub>, elastic-perfectly-plastic. Equilibrium gives N<sub>Rd</sub> and M<sub>Rd</sub> at each x.</p>
+              <span class="fml-eq">ε<sub>cu3</sub> = 0.0035 &emsp; λ = 0.80 (f<sub>ck</sub> ≤ 50 MPa) &emsp; η = 1.0</span>
+              <p>The design point (N<sub>Ed</sub>, M<sub>Ed</sub>) must fall within the interaction diagram boundary for section adequacy.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /pm-en -->
 
@@ -1194,10 +1356,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-is">
-      <div class="bg-hdr" onclick="toggleBg('bgs-pm-is')"><span>Design Background — IS 456:2000 Annex B Fiber Model</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p>IS 456:2000 uses a parabolic-rectangular stress block: peak f<sub>cc</sub>=0.67f<sub>cu</sub>/γ<sub>m</sub> = 0.447f<sub>ck</sub> where γ<sub>m</sub>=1.5. Steel: f<sub>sd</sub>=0.87f<sub>y</sub>. Neutral axis swept from 2l<sub>w</sub> to ~0. The diagram boundary is the nominal envelope divided by 1.0 (no explicit φ in IS 456; partial factors are embedded in material values).</p><span class="fml-eq">ε<sub>cu</sub>=0.0035 &emsp; Parabolic-rect. block depth = 0.42x (c = xu)</span></div></div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — IS 456:2000 Annex B Fiber Model</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-pm-is-fiber">Fiber Method</a>
+        </nav>
+        <section id="bgs-pm-is-fiber">
+          <div class="bg-panel-hdr"><span>Fiber Method</span><a class="bg-top-btn" href="#bgs-pm-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">IS 456:2000 Annex B — Parabolic-Rectangular Stress Block</div>
+              <p>IS 456:2000 uses a parabolic-rectangular stress block: peak f<sub>cc</sub> = 0.67f<sub>cu</sub>/γ<sub>m</sub> = 0.447f<sub>ck</sub> where γ<sub>m</sub> = 1.5. Steel: f<sub>sd</sub> = 0.87f<sub>y</sub>. Neutral axis swept from 2l<sub>w</sub> to near zero.</p>
+              <span class="fml-eq">ε<sub>cu</sub> = 0.0035 &emsp; Parabolic-rect. block depth = 0.42x (c = x<sub>u</sub>)</span>
+              <p>No explicit φ in IS 456 — partial safety factors are embedded in the material values (0.447f<sub>ck</sub> and 0.87f<sub>y</sub>). The diagram boundary is the nominal envelope.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /pm-is -->
 
@@ -1251,10 +1426,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-pm-tbdy">
-      <div class="bg-hdr" onclick="toggleBg('bgs-pm-tbdy')"><span>Design Background — TSC 2018 §7.3 Fiber Model</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p>TSC 2018 follows TS EN 1992-1-1 material models. f<sub>cd</sub>=f<sub>ck</sub>/1.5, f<sub>yd</sub>=f<sub>ywk</sub>/1.15. The parabola-rectangle block (ε<sub>cu3</sub>=0.0035, λ=0.80) is swept identically to the Eurocode fiber model.</p></div></div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — TSC 2018 §7.3 Fiber Model</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-pm-tbdy-fiber">Fiber Method</a>
+        </nav>
+        <section id="bgs-pm-tbdy-fiber">
+          <div class="bg-panel-hdr"><span>Fiber Method</span><a class="bg-top-btn" href="#bgs-pm-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 §7.3 — TS EN 1992-1-1 Material Models</div>
+              <p>TSC 2018 follows TS EN 1992-1-1 material models. f<sub>cd</sub> = f<sub>ck</sub>/1.5, f<sub>yd</sub> = f<sub>ywk</sub>/1.15. The parabola-rectangle block (ε<sub>cu3</sub> = 0.0035, λ = 0.80) is swept identically to the Eurocode fiber model.</p>
+              <span class="fml-eq">f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub> = f<sub>ck</sub>/1.5 &emsp; f<sub>yd</sub> = f<sub>ywk</sub>/γ<sub>s</sub> = f<sub>ywk</sub>/1.15</span>
+              <p>The design point (N<sub>d</sub>, M<sub>d</sub>) must fall within the interaction diagram boundary.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /pm-tbdy -->
 </div><!-- /mod-pm -->
@@ -1313,12 +1501,27 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sf-aci">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sf-aci')"><span>Design Background — ACI 318-25 §22.9</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>ACI 318-25 §22.9.4.2</strong> — Nominal shear-friction strength:</p><span class="fml-eq">V<sub>n</sub> = μ·(A<sub>vf</sub>·f<sub>y</sub> + N<sub>u,comp</sub>) &emsp; φ=0.75</span><p>μ: monolithic=1.4λ, intentionally roughened=1.0λ, not roughened=0.6λ, concrete-to-steel=0.7λ</p><p><strong>Upper limits (§22.9.4.4):</strong></p><span class="fml-eq">V<sub>n,max</sub> = min(0.2f'<sub>c</sub>·A<sub>c</sub>, 5.5A<sub>c</sub> [N], (3.3+0.08f'<sub>c</sub>)·A<sub>c</sub> [N])</span></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — ACI 318-25 §22.9</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sf-aci-model">Shear-Friction Model</a>
+        </nav>
+        <section id="bgs-sf-aci-model">
+          <div class="bg-panel-hdr"><span>Shear-Friction Model</span><a class="bg-top-btn" href="#bgs-sf-aci">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">ACI 318-25 §22.9.4.2 — Nominal Shear-Friction Strength</div>
+              <p>The shear-friction model assumes sliding along a crack plane. Nominal shear-friction strength:</p>
+              <span class="fml-eq">V<sub>n</sub> = μ·(A<sub>vf</sub>·f<sub>y</sub> + N<sub>u,comp</sub>) &emsp; φ = 0.75</span>
+              <p>Friction coefficient μ by interface condition (λ = lightweight factor):</p>
+              <span class="fml-eq">Monolithic = 1.4λ &emsp; Intentionally roughened = 1.0λ</span>
+              <span class="fml-eq">Not roughened = 0.6λ &emsp; Concrete-to-steel = 0.7λ</span>
+              <p><strong>Upper limits</strong> (§22.9.4.4) — prevent excessive reliance on interface roughness:</p>
+              <span class="fml-eq">V<sub>n,max</sub> = min(0.2f'<sub>c</sub>·A<sub>c</sub>, 5.5A<sub>c</sub> [N], (3.3+0.08f'<sub>c</sub>)·A<sub>c</sub> [N])</span>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sf-aci -->
 
@@ -1361,12 +1564,25 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sf-en">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sf-en')"><span>Design Background — EN 1992-1-1 §6.2.5</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active">
-          <div class="fml-blk"><p><strong>EN 1992-1-1 §6.2.5</strong> — Design shear resistance at the interface:</p><span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>·(μ·sin α + cos α))·A<sub>i</sub></span><p>c and μ depend on surface roughness (Table 6.2). α = 90° for perpendicular reinforcement → sinα=1, cosα=0.</p><span class="fml-eq">V<sub>Rdi,max</sub> = 0.5·ν·f<sub>cd</sub>·A<sub>i</sub> &emsp; ν=0.6(1−f<sub>ck</sub>/250)</span></div>
-        </div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — EN 1992-1-1 §6.2.5</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sf-en-model">Interface Shear Model</a>
+        </nav>
+        <section id="bgs-sf-en-model">
+          <div class="bg-panel-hdr"><span>Interface Shear Model</span><a class="bg-top-btn" href="#bgs-sf-en">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">EN 1992-1-1 §6.2.5 — Design Shear Resistance at Interface</div>
+              <p>The interface shear model combines cohesion, friction on normal stress, and the steel clamping contribution:</p>
+              <span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>·(μ·sin α + cos α))·A<sub>i</sub></span>
+              <p>c and μ depend on surface roughness (Table 6.2). For perpendicular reinforcement (α = 90°): sin α = 1, cos α = 0. f<sub>ctd</sub> = 0.35·√f<sub>ck</sub>/γ<sub>c</sub> (TS 500 §2.1), f<sub>yd</sub> = f<sub>yk</sub>/γ<sub>s</sub>.</p>
+              <p>Upper limit against strut crushing:</p>
+              <span class="fml-eq">V<sub>Rdi,max</sub> = 0.5·ν·f<sub>cd</sub>·A<sub>i</sub> &emsp; ν = 0.6(1 − f<sub>ck</sub>/250)</span>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sf-en -->
 
@@ -1394,10 +1610,25 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sf-is">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sf-is')"><span>Design Background — IS 456:2000 §17.6 Shear Friction</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p><strong>IS 456:2000 §17.6</strong> — Shear transfer at construction joints. Design shear friction analogous to ACI approach:</p><span class="fml-eq">V<sub>n</sub> = μ·0.87·f<sub>y</sub>·A<sub>vf</sub> &emsp; τ<sub>max</sub> = 0.2f<sub>ck</sub> ≤ 3.5 MPa</span><p>μ = 0.7 for roughened surface; 0.5 for smooth. The capacity may also be checked as V<sub>n,max</sub> = τ<sub>max</sub>·A<sub>c</sub>.</p></div></div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — IS 456:2000 §17.6 Shear Friction</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sf-is-model">Shear-Friction Model</a>
+        </nav>
+        <section id="bgs-sf-is-model">
+          <div class="bg-panel-hdr"><span>Shear-Friction Model</span><a class="bg-top-btn" href="#bgs-sf-is">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">IS 456:2000 §17.6 — Shear Transfer at Construction Joints</div>
+              <p>Design shear friction analogous to ACI approach. Nominal shear capacity at interface:</p>
+              <span class="fml-eq">V<sub>n</sub> = μ·0.87·f<sub>y</sub>·A<sub>vf</sub> &emsp; τ<sub>max</sub> = 0.2f<sub>ck</sub> ≤ 3.5 MPa</span>
+              <p>μ = 0.7 for a roughened surface; 0.5 for a smooth surface. The capacity is also bounded by:</p>
+              <span class="fml-eq">V<sub>n,max</sub> = τ<sub>max</sub>·A<sub>c</sub></span>
+              <p>Both limits must be satisfied; the governing (lower) value controls the design.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sf-is -->
 
@@ -1434,10 +1665,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       </div>
     </div>
     <div class="bg-section" id="bgs-sf-tbdy">
-      <div class="bg-hdr" onclick="toggleBg('bgs-sf-tbdy')"><span>Design Background — TSC 2018 → TS EN 1992-1-1 §6.2.5</span><span class="bg-arr">▾</span></div>
-      <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p>TSC 2018 adopts TS EN 1992-1-1 for shear friction (interface shear). Same formula as EN 1992-1-1 §6.2.5 with Turkish National Annex: γ<sub>c</sub>=1.5, γ<sub>s</sub>=1.15.</p><span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>)·A<sub>i</sub> ≤ 0.5νf<sub>cd</sub>·A<sub>i</sub></span></div></div>
-      </div>
+      <section class="design-background">
+        <div class="bg-hdr"><h3>📚 Design Background — TSC 2018 / TS EN 1992-1-1 §6.2.5</h3></div>
+        <nav class="bg-toc">
+          <a href="#bgs-sf-tbdy-model">Interface Shear Model</a>
+        </nav>
+        <section id="bgs-sf-tbdy-model">
+          <div class="bg-panel-hdr"><span>Interface Shear Model</span><a class="bg-top-btn" href="#bgs-sf-tbdy">&#8593; Top</a></div>
+          <div class="tb">
+            <div class="fml-blk">
+              <div class="ft">TSC 2018 — TS EN 1992-1-1 §6.2.5 with Turkish National Annex</div>
+              <p>TSC 2018 adopts TS EN 1992-1-1 for shear friction (interface shear). Same formula as EN 1992-1-1 §6.2.5 with Turkish National Annex: γ<sub>c</sub> = 1.5, γ<sub>s</sub> = 1.15.</p>
+              <span class="fml-eq">V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>)·A<sub>i</sub> ≤ 0.5ν·f<sub>cd</sub>·A<sub>i</sub></span>
+              <p>f<sub>ctd</sub> = 0.35·√f<sub>ck</sub>/γ<sub>c</sub> (TS 500 §2.1); f<sub>cd</sub> = f<sub>ck</sub>/γ<sub>c</sub>; ν = 0.6(1 − f<sub>ck</sub>/250). c and μ per EN 1992-1-1 Table 6.2 for the applicable surface roughness class.</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
   </div><!-- /sf-tbdy -->
 </div><!-- /mod-sf -->
@@ -1625,21 +1869,6 @@ function swStd(pre,std,btn){
   document.getElementById(pre+'-'+std).classList.add('active');
   _activeStd[pre]=std;
   if(_calcFns[pre]) _calcFns[pre](std);
-}
-function toggleBg(id){
-  var sec=document.getElementById(id);
-  var body=sec.querySelector('.bg-body');
-  var arr=sec.querySelector('.bg-arr');
-  var open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  if(arr)arr.textContent=open?'▾':'▴';
-}
-function swBgTab(secId,idx,btn){
-  var sec=document.getElementById(secId);
-  sec.querySelectorAll('.bg-tab').forEach(function(b){b.classList.remove('active');});
-  sec.querySelectorAll('.bg-pane').forEach(function(p){p.classList.remove('active');});
-  btn.classList.add('active');
-  sec.querySelectorAll('.bg-pane')[idx].classList.add('active');
 }
 
 /* ─── UNIT TOGGLE ─── */
