@@ -953,7 +953,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <span class="fml-eq">V<sub>r</sub> = (0.65·f<sub>ctd</sub> + ρ<sub>sh</sub>·f<sub>ywd</sub>)·A<sub>w</sub></span>
             <p>A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross wall web area. ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. f<sub>ctd</sub> is the design concrete tensile strength; f<sub>ywd</sub> = f<sub>ywk</sub>/γ<sub>s</sub> is the design yield strength of horizontal reinforcement.</p>
             <p>Design material strengths (γ<sub>c</sub> = 1.5, γ<sub>s</sub> = 1.15):</p>
-            <span class="fml-eq">f<sub>ctd</sub> = 0.7·f<sub>ctm</sub>/γ<sub>c</sub> = 0.7·(0.30·f<sub>ck</sub><sup>2/3</sup>)/1.5</span>
+            <span class="fml-eq">f<sub>ctd</sub> = f<sub>ctk</sub>/γ<sub>c</sub> = 0.35·√f<sub>ck</sub>/1.5 &nbsp;(TS 500 §2.1)</span>
             <span class="fml-eq">f<sub>ywd</sub> = f<sub>ywk</sub>/γ<sub>s</sub> = f<sub>ywk</sub>/1.15</span>
             <p>The design check is direct — no separate capacity reduction factor applies:</p>
             <span class="fml-eq">V<sub>e</sub> ≤ V<sub>r</sub></span>
@@ -2329,8 +2329,8 @@ function calcSh(std){
     var rho_min=0.0025;
     var ok_rho=rhoh>=rho_min-1e-6;
     var Aw=lw*bw;
-    var fctm=0.30*Math.pow(fck,2/3);
-    var fctd=0.7*fctm/1.5;
+    var fctk=0.35*Math.sqrt(fck);
+    var fctd=fctk/1.5;
     var fywd=fyk/1.15;
     var Vr_N=(0.65*fctd+rhoh*fywd)*Aw;
     var Vr_max_N=0.85*Math.sqrt(fck)*Aw;
@@ -2356,7 +2356,7 @@ function calcSh(std){
     html+=srow(1,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
     html+=srow(2,'ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; 0.0025 ✓':' &lt; 0.0025 ✗'),'',ok_rho?'chk-ok':'chk-err');
     html+=srow(3,'A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub>',fmt(Aw/1e6,4)+' m²','');
-    html+=srow(4,'f<sub>ctd</sub> = 0.7·0.30·f<sub>ck</sub><sup>2/3</sup>/γ<sub>c</sub>',fmt(fctd,3)+' MPa','');
+    html+=srow(4,'f<sub>ctd</sub> = 0.35·√f<sub>ck</sub>/γ<sub>c</sub>',fmt(fctd,3)+' MPa','');
     html+=srow(5,'f<sub>ywd</sub> = f<sub>ywk</sub>/γ<sub>s</sub>',fmt(fywd,1)+' MPa','');
     html+=srow(6,'V<sub>r</sub> = (0.65·f<sub>ctd</sub> + ρ<sub>sh</sub>·f<sub>ywd</sub>)·A<sub>w</sub>','<strong>'+fmt(Vr_kN,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
     html+=srow(7,'V<sub>r,max</sub> = 0.85√f<sub>ck</sub>·A<sub>w</sub>',fmt(Vr_max_kN,1)+' kN',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
