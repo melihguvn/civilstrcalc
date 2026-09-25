@@ -2151,15 +2151,16 @@ function calcSh(std){
     var VRdmax_N=bw*z*nu*fcd/2; /* θ=45° */
     var Ved_design=amp*Ved_N;
     var Asw_req=Ved_design/(z*fyd);
+    var VRds_N=Asw_prov*z*fyd;
     var ok_strut=Ved_design<=VRdmax_N;
-    var ok_prov=Asw_prov>=Asw_req-0.001;
+    var ok_prov=VRds_N>=Ved_design-1;
     var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
     html+=riCmp('V<sub>Rd,max</sub>',fmt(VRdmax_N/1000,1),ok_strut?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_strut?'ok':'err');
     html+=riCmp('ρ<sub>h</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>h,min</sub>',fmt(rho_min,4),'',ok_rho?'ok':'err');
     html+='</div>';
     html+='<div class="rb-row">';
-    html+=riCmp('A<sub>sw,prov</sub>/s',fmt(Asw_prov,3),ok_prov?'&ge;':'&lt;','A<sub>sw,req</sub>/s',fmt(Asw_req,3),'mm²/mm',ok_prov?'ok':'err');
+    html+=riCmp('V<sub>Rd,s</sub>',fmt(VRds_N/1000,1),ok_prov?'&ge;':'&lt;','V<sub>Ed,d</sub>',fmt(Ved_design/1000,1),'kN',ok_prov?'ok':'err');
     html+=ri('V<sub>Rd,c</sub>',fmt(VRdc_N/1000,1),'kN','');
     html+='</div>';
     html+='</div>';
@@ -2167,7 +2168,7 @@ function calcSh(std){
     html+=banner(allok?'ok':'err',
       allok?'Shear OK':(!ok_strut?'Strut Capacity EXCEEDED':'Shear Reinf. INSUFFICIENT'),
       !ok_strut?'V<sub>Ed,d</sub>='+fmt(Ved_design/1000,1)+' kN &gt; V<sub>Rd,max</sub>='+fmt(VRdmax_N/1000,1)+' kN':
-        'A<sub>sw,prov</sub>/s='+fmt(Asw_prov,3)+(ok_prov?' &ge; ':' &lt; ')+fmt(Asw_req,3)+' mm²/mm');
+        'V<sub>Rd,s</sub>='+fmt(VRds_N/1000,1)+(ok_prov?' &ge; ':' &lt; ')+'V<sub>Ed,d</sub>='+fmt(Ved_design/1000,1)+' kN');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">EN 1992-1-1 §6.2 / EN 1998-1 §5.5.2.4 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
@@ -2178,8 +2179,8 @@ function calcSh(std){
     html+=srow(5,'V<sub>Rd,c</sub> (concrete)',fmt(VRdc_N/1000,1)+' kN','');
     html+=srow(6,'ν<sub>1</sub> = 0.6(1−f<sub>ck</sub>/250)',fmt(nu,3),'');
     html+=srow(7,'V<sub>Rd,max</sub> = b<sub>w</sub>·z·ν<sub>1</sub>·f<sub>cd</sub>/2',fmt(VRdmax_N/1000,1)+' kN',ok_strut?'✔':'✘',ok_strut?'chk-ok':'chk-err');
-    html+=srow(8,'A<sub>sw,req</sub>/s = V<sub>Ed,d</sub>/(z·f<sub>yd</sub>)',fmt(Asw_req,3)+' mm²/mm','');
-    html+=srow(9,'A<sub>sw,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asw_prov,3)+' mm²/mm',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
+    html+=srow(8,'A<sub>sw,prov</sub>/s = A<sub>h</sub>/s<sub>h</sub>',fmt(Asw_prov,3)+' mm²/mm','');
+    html+=srow(9,'V<sub>Rd,s</sub> = (A<sub>sw,prov</sub>/s)·z·f<sub>yd</sub>',fmt(VRds_N/1000,1)+' kN',ok_prov?'✔ OK':'✘ NG',ok_prov?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     var smax_sh=Math.min(3*bw,400);
     if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(3b<sub>w</sub>, 400) = '+fmt(smax_sh,0)+' mm (EN 1992-1-1 §9.6.3)');
