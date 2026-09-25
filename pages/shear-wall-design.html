@@ -760,7 +760,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>γ<sub>s</sub></label><div class="iw"><input type="number" id="sh-en-gs" value="1.15" step="0.05" oninput="calcSh('en')"><span class="us">—</span></div></div>
           </div>
           <div class="form-div"><div class="form-div-lbl">Applied Forces</div></div>
-          <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sh-en-ved" value="1500" min="0" oninput="calcSh('en')"><span class="us">kN</span></div></div>
+          <div class="form-group"><label>V<sub>Ed,d</sub> design shear (kN)</label><div class="iw"><input type="number" id="sh-en-ved" value="1500" min="0" oninput="calcSh('en')"><span class="us">kN</span></div></div>
           <div class="form-div"><div class="form-div-lbl">Horizontal Web Reinforcement</div></div>
           <div class="form-row-2">
             <div class="form-group"><label>d<sub>h</sub> (mm)</label><div class="iw"><input type="number" id="sh-en-dh" value="12" min="8" oninput="calcSh('en')"><span class="us">mm</span></div></div>
@@ -768,11 +768,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           </div>
           <div class="form-group"><label>n<sub>h</sub> legs</label><div class="iw"><input type="number" id="sh-en-nc" value="2" min="1" max="4" oninput="calcSh('en')"><span class="us">—</span></div></div>
           <div class="form-group"><label>c<sub>c</sub> cover (mm)</label><div class="iw"><input type="number" id="sh-en-cc" value="40" min="10" oninput="calcSh('en')"><span class="us">mm</span></div></div>
-          <div style="display:flex;gap:6px;margin-bottom:14px;">
-            <button class="unit-btn active" id="sh-en-dch" onclick="setShEnDc('dch',this)">DCH (×1.5)</button>
-            <button class="unit-btn" id="sh-en-dcm" onclick="setShEnDc('dcm',this)">DCM (×1.5)</button>
-            <button class="unit-btn" id="sh-en-dcl" onclick="setShEnDc('dcl',this)">DCL (×1.0)</button>
-          </div>
         </div>
       </div>
       <div class="results-col" id="sh-en-res">
@@ -1320,7 +1315,6 @@ var _enDc='dch';        // EN BE ductility class
 var _tbdyDts='12';      // TSC DTS
 var _beEnCrit='in';     // EN BE critical zone: 'in' | 'out'
 var _beTbdyCrit='in';   // TSC BE critical zone: 'in' | 'out'
-var _shEnDc='dch';      // EN Shear ductility class
 var _sfMuAci='mono';    // ACI shear-friction surface
 var _sfEnSurf='mono';   // EN shear-friction surface
 var _sfTbdySurf='mono'; // TSC shear-friction surface
@@ -1644,12 +1638,6 @@ function setBeTbdyCrit(v,btn){
   ['be-tbdy-crit-in','be-tbdy-crit-out'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
   btn.classList.add('active');
   calcBe('tbdy');
-}
-function setShEnDc(dc,btn){
-  _shEnDc=dc;
-  ['sh-en-dch','sh-en-dcm','sh-en-dcl'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});
-  btn.classList.add('active');
-  calcSh('en');
 }
 function setSfMu(std,surface,btn){
   _sfMuAci=surface;
@@ -2126,19 +2114,18 @@ function calcSh(std){
     var nc=Math.max(Math.round(v(m+'-nc')||2),1);
     var cc=v(m+'-cc')||40;
     var d=lw-cc;
-    var amp=_shEnDc==='dcl'?1.0:1.5;
     if(lw<200||bw<100||fck<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
     if(wallCheck(lw,bw,'en',res))return;
     var fcd=fck/gc,fyd=fyk/gs;
     var Ah=nc*Math.PI*dh*dh/4;
     var rhoh=Ah/(bw*sh_sp);
-    var rho_min=_shEnDc==='dcl'?0.001:0.002;
+    var rho_min=0.002;
     var ok_rho=rhoh>=rho_min-1e-6;
     var Asw_prov=Ah/sh_sp;
     var nu=0.6*(1-fck/250);
     var z=0.9*d;
     var VRdmax_N=bw*z*nu*fcd/2; /* θ=45° */
-    var Ved_design=amp*Ved_N;
+    var Ved_design=Ved_N;
     var VRds_N=Asw_prov*z*fyd;
     var ok_strut=Ved_design<=VRdmax_N;
     var ok_prov=VRds_N>=Ved_design-1;
@@ -2160,7 +2147,7 @@ function calcSh(std){
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">EN 1992-1-1 §6.2 / EN 1998-1 §5.5.2.4 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
-    html+=srow(1,'V<sub>Ed,design</sub> = '+amp+'·V<sub>Ed</sub>',fmt(Ved_design/1000,1)+' kN','');
+    html+=srow(1,'V<sub>Ed,d</sub>',fmt(Ved_design/1000,1)+' kN','');
     html+=srow(2,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
     html+=srow(3,'ρ<sub>h</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; '+fmt(rho_min,4)+' ✓':' &lt; '+fmt(rho_min,4)+' ✗'),'',ok_rho?'chk-ok':'chk-err');
     html+=srow(4,'ν<sub>1</sub> = 0.6(1−f<sub>ck</sub>/250)',fmt(nu,3),'');
