@@ -952,16 +952,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <p><strong>TSC 2018 §7.6.5.3</strong> — Nominal shear strength of reinforced concrete structural walls:</p>
             <span class="fml-eq">V<sub>r</sub> = (0.65·√f<sub>ck</sub> + ρ<sub>sh</sub>·f<sub>ywk</sub>)·A<sub>w</sub></span>
             <p>A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub> is the gross wall web area. ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) is the horizontal reinforcement ratio. The 0.65√f<sub>ck</sub> term represents the concrete shear contribution; ρ<sub>sh</sub>·f<sub>ywk</sub> is the horizontal steel contribution.</p>
-            <p><strong>Capacity reduction factor γ<sub>RE</sub> = 0.75</strong> is applied for earthquake combinations. The design check is:</p>
-            <span class="fml-eq">V<sub>e</sub> ≤ γ<sub>RE</sub>·min(V<sub>r</sub>, V<sub>r,max</sub>)</span>
-            <p>V<sub>e</sub> is the earthquake-induced design shear force from capacity design (TSC 2018 §4.3.4). γ<sub>RE</sub> plays the same role as φ in ACI — a strength reduction to account for uncertainty.</p>
+            <p>The design check is direct — no separate capacity reduction factor applies:</p>
+            <span class="fml-eq">V<sub>e</sub> ≤ V<sub>r</sub></span>
+            <p>V<sub>e</sub> is the earthquake-induced design shear from capacity design (TSC 2018 §4.3.4). Unlike ACI (φ = 0.75), TSC does not apply an additional reduction — the formula coefficients (0.65 for concrete, f<sub>ywk</sub> for steel without γ<sub>s</sub> division) already incorporate the material safety factors.</p>
           </div>
         </div>
         <div class="bg-pane">
           <div class="fml-blk">
             <p><strong>Maximum shear capacity</strong> (§7.6.5.3) — diagonal strut crushing limit:</p>
             <span class="fml-eq">V<sub>r,max</sub> = 0.85·√f<sub>ck</sub>·A<sub>w</sub></span>
-            <p>If V<sub>e</sub> &gt; γ<sub>RE</sub>·V<sub>r,max</sub>, increasing horizontal reinforcement will not help — the wall cross-section must be enlarged.</p>
+            <p>If V<sub>e</sub> &gt; V<sub>r,max</sub>, increasing horizontal reinforcement will not help — the wall cross-section must be enlarged.</p>
             <p><strong>Minimum horizontal web reinforcement</strong> (§7.6.3.3):</p>
             <span class="fml-eq">ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>) ≥ 0.0025</span>
             <p>The same minimum ρ<sub>sv</sub> ≥ 0.0025 applies to vertical web reinforcement. Both directions must be provided in two curtains for seismic walls.</p>
@@ -1220,7 +1220,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div class="bg-section" id="bgs-pm-tbdy">
       <div class="bg-hdr" onclick="toggleBg('bgs-pm-tbdy')"><span>Design Background — TSC 2018 §7.3 Fiber Model</span><span class="bg-arr">▾</span></div>
       <div class="bg-body" style="display:none;padding:14px 18px;">
-        <div class="bg-pane active"><div class="fml-blk"><p>TSC 2018 follows TS EN 1992-1-1 material models. f<sub>cd</sub>=f<sub>ck</sub>/1.5, f<sub>yd</sub>=f<sub>ywk</sub>/1.15. The parabola-rectangle block (ε<sub>cu3</sub>=0.0035, λ=0.80) is swept identically to the Eurocode fiber model. γ<sub>RE</sub>=0.75 for shear (not applied in PMM).</p></div></div>
+        <div class="bg-pane active"><div class="fml-blk"><p>TSC 2018 follows TS EN 1992-1-1 material models. f<sub>cd</sub>=f<sub>ck</sub>/1.5, f<sub>yd</sub>=f<sub>ywk</sub>/1.15. The parabola-rectangle block (ε<sub>cu3</sub>=0.0035, λ=0.80) is swept identically to the Eurocode fiber model.</p></div></div>
       </div>
     </div>
   </div><!-- /pm-tbdy -->
@@ -2325,34 +2325,33 @@ function calcSh(std){
     var rhoh=Ah/(bw*sh_sp);
     var rho_min=0.0025;
     var ok_rho=rhoh>=rho_min-1e-6;
-    var Aw=lw*bw,gRE=0.75;
+    var Aw=lw*bw;
     var Vr_N=(0.65*Math.sqrt(fck)+rhoh*fyk)*Aw;
     var Vr_max_N=0.85*Math.sqrt(fck)*Aw;
-    var phiVr=gRE*Math.min(Vr_N,Vr_max_N)/1000;
-    var phiVr_max=gRE*Vr_max_N/1000;
+    var Vr_kN=Vr_N/1000;
+    var Vr_max_kN=Vr_max_N/1000;
     var Ve_kN=Ve_N/1000;
-    var ok=Ve_kN<=phiVr;
-    var ok_max=Ve_kN<=phiVr_max;
+    var ok=Ve_kN<=Vr_kN;
+    var ok_max=Ve_kN<=Vr_max_kN;
     var html=rptHdr(std,m)+'<div class="result-box result-box-be">';
     html+='<div class="rb-row">';
-    html+=riCmp('γ<sub>RE</sub>·V<sub>r</sub>',fmt(phiVr,1),ok?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok?'ok':'err');
-    html+=riCmp('γ<sub>RE</sub>·V<sub>r,max</sub>',fmt(phiVr_max,1),ok_max?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok_max?'ok':'err');
+    html+=riCmp('V<sub>r</sub>',fmt(Vr_kN,1),ok?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok?'ok':'err');
+    html+=riCmp('V<sub>r,max</sub>',fmt(Vr_max_kN,1),ok_max?'&ge;':'&lt;','V<sub>e</sub>',fmt(Ve_kN,1),'kN',ok_max?'ok':'err');
     html+=riCmp('ρ<sub>sh</sub>',fmt(rhoh,5),ok_rho?'&ge;':'&lt;','ρ<sub>sh,min</sub>','0.0025','',ok_rho?'ok':'err');
     html+='</div>';
     html+='</div>';
     var allok=ok&&ok_rho&&ok_max;
     html+=banner(allok?'ok':'err',
       allok?'Shear OK':(!ok_max?'Section Too Small — Crushing Limit Exceeded':'Shear Capacity INSUFFICIENT'),
-      'V<sub>e</sub>='+fmt(Ve_kN,1)+' kN vs γ<sub>RE</sub>·V<sub>r</sub>='+fmt(phiVr,1)+' kN');
+      'V<sub>e</sub>='+fmt(Ve_kN,1)+' kN vs V<sub>r</sub>='+fmt(Vr_kN,1)+' kN');
     html+='<div class="report-card"><div class="report-body">';
     html+='<div class="rpt-sec-title">TSC 2018 §7.6.5.3 Shear Design</div>';
     html+='<table class="steps-table"><tbody>';
     html+=srow(1,'A<sub>h</sub> = n<sub>h</sub>·π·d<sub>h</sub>²/4',fmt(Ah,1)+' mm²','');
     html+=srow(2,'ρ<sub>sh</sub> = A<sub>h</sub>/(b<sub>w</sub>·s<sub>h</sub>)',fmt(rhoh,5)+(ok_rho?' &ge; 0.0025 ✓':' &lt; 0.0025 ✗'),'',ok_rho?'chk-ok':'chk-err');
     html+=srow(3,'A<sub>w</sub> = l<sub>w</sub>·b<sub>w</sub>',fmt(Aw/1e6,4)+' m²','');
-    html+=srow(4,'V<sub>r</sub> = (0.65√f<sub>ck</sub> + ρ<sub>sh</sub>·f<sub>ywk</sub>)·A<sub>w</sub>',fmt(Vr_N/1000,1)+' kN','');
-    html+=srow(5,'V<sub>r,max</sub> = 0.85√f<sub>ck</sub>·A<sub>w</sub>',fmt(Vr_max_N/1000,1)+' kN',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
-    html+=srow(6,'γ<sub>RE</sub>·V<sub>r</sub> (γ<sub>RE</sub>=0.75)','<strong>'+fmt(phiVr,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+=srow(4,'V<sub>r</sub> = (0.65√f<sub>ck</sub> + ρ<sub>sh</sub>·f<sub>ywk</sub>)·A<sub>w</sub>','<strong>'+fmt(Vr_kN,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+=srow(5,'V<sub>r,max</sub> = 0.85√f<sub>ck</sub>·A<sub>w</sub>',fmt(Vr_max_kN,1)+' kN',ok_max?'✔':'✘',ok_max?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     var smax_sh=Math.min(bw,300);
     if(sh_sp>smax_sh) html+=banner('warn','Max Spacing Exceeded','s<sub>h</sub>='+fmt(sh_sp,0)+' mm &gt; s<sub>max</sub> = min(b<sub>w</sub>, 300) = '+fmt(smax_sh,0)+' mm (TSC §7.6.3.3)');
