@@ -1831,30 +1831,35 @@ function wallCheck(lw_mm,bw_mm,std,resEl){
 function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
   var cnv=document.getElementById(canvasId);if(!cnv)return;
   var ctx=cnv.getContext('2d');
-  var W=cnv.width,H=cnv.height,pad=52;
+  /* HiDPI / retina sharpness */
+  var dpr=window.devicePixelRatio||1;
+  var W=cnv.width,H=cnv.height;
+  cnv.width=W*dpr;cnv.height=H*dpr;
+  cnv.style.width=W+'px';cnv.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  var pad=54;
   ctx.clearRect(0,0,W,H);
   if(!pts||pts.length<3)return;
-  /* detect dark mode */
+  /* dark mode */
   var isDark=document.documentElement.getAttribute('data-theme')==='dark'||(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches&&document.documentElement.getAttribute('data-theme')!=='light');
   var clrGrid=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
-  var clrAxis=isDark?'rgba(255,255,255,0.18)':'rgba(0,0,0,0.14)';
+  var clrAxis=isDark?'rgba(255,255,255,0.22)':'rgba(0,0,0,0.18)';
   var clrLabel=isDark?'#8898aa':'#6b7280';
-  var clrTick=isDark?'#6a7a8a':'#9ca3af';
-  var clrNominal=isDark?'rgba(148,163,200,0.55)':'rgba(148,163,200,0.85)';
+  var clrTick=isDark?'#6a7a8a':'#8a939f';
   var clrDesign='#3b6fd4';
   var clrFill=isDark?'rgba(59,111,212,0.13)':'rgba(59,111,212,0.09)';
   var clrDot='#ef4444';
   var clrText=isDark?'#c5cfd8':'#374151';
-  /* find range from both curves */
+  /* range */
   var maxP=0,minP=0,maxM=0;
   pts.forEach(function(p){
-    maxP=Math.max(maxP,p.Pn,p.phiPn);
-    minP=Math.min(minP,p.Pn,p.phiPn);
-    maxM=Math.max(maxM,p.Mn,p.phiMn);
+    maxP=Math.max(maxP,p.phiPn);
+    minP=Math.min(minP,p.phiPn);
+    maxM=Math.max(maxM,p.phiMn);
   });
   maxP*=1.1;minP=Math.min(minP*1.1,-50);maxM*=1.15;if(maxM<50)maxM=50;
-  function cx(m){return pad+(m/maxM)*(W-2*pad);}
-  function cy(p){return pad+(1-(p-minP)/(maxP-minP))*(H-2*pad);}
+  function cx(mv){return pad+(mv/maxM)*(W-2*pad);}
+  function cy(pv){return pad+(1-(pv-minP)/(maxP-minP))*(H-2*pad);}
   /* grid */
   ctx.strokeStyle=clrGrid;ctx.lineWidth=0.8;
   for(var i=0;i<=5;i++){var xx=pad+i*(W-2*pad)/5;ctx.beginPath();ctx.moveTo(xx,pad);ctx.lineTo(xx,H-pad);ctx.stroke();}
@@ -1862,21 +1867,16 @@ function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
   /* filled φ-envelope */
   ctx.fillStyle=clrFill;
   ctx.beginPath();
-  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
+  pts.forEach(function(p,k){if(k===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
   ctx.closePath();ctx.fill();
   /* axes */
   ctx.strokeStyle=clrAxis;ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad,cy(0));ctx.lineTo(W-pad,cy(0));ctx.stroke();
   ctx.beginPath();ctx.moveTo(cx(0),pad);ctx.lineTo(cx(0),H-pad);ctx.stroke();
-  /* P-M nominal curve */
-  ctx.strokeStyle=clrNominal;ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
-  ctx.beginPath();
-  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.Mn),cy(p.Pn));else ctx.lineTo(cx(p.Mn),cy(p.Pn));});
-  ctx.stroke();ctx.setLineDash([]);
   /* φP-M design curve */
   ctx.strokeStyle=clrDesign;ctx.lineWidth=2;
   ctx.beginPath();
-  pts.forEach(function(p,i){if(i===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
+  pts.forEach(function(p,k){if(k===0)ctx.moveTo(cx(p.phiMn),cy(p.phiPn));else ctx.lineTo(cx(p.phiMn),cy(p.phiPn));});
   ctx.stroke();
   /* design point */
   var dpx=cx(Mu_kNm),dpy=cy(Pu_kN);
@@ -1884,34 +1884,23 @@ function drawPmCanvas(canvasId,pts,Pu_kN,Mu_kNm,unit,pLabel,mLabel){
   ctx.beginPath();ctx.arc(dpx,dpy,6,0,Math.PI*2);ctx.fill();ctx.stroke();
   /* axis labels */
   ctx.fillStyle=clrLabel;ctx.font='11px "IBM Plex Sans",sans-serif';ctx.textAlign='center';
-  ctx.fillText(mLabel||'Mn (kN·m)',W/2,H-5);
+  ctx.fillText(mLabel||'Mn (kN·m)',W/2,H-6);
   ctx.save();ctx.translate(13,H/2);ctx.rotate(-Math.PI/2);
   ctx.fillText(pLabel||'Pn (kN)',0,0);ctx.restore();
   /* tick labels */
-  ctx.font='9px "IBM Plex Sans",sans-serif';ctx.fillStyle=clrTick;
+  ctx.font='9.5px "IBM Plex Sans",sans-serif';ctx.fillStyle=clrTick;
   ctx.textAlign='center';
-  for(var ti=0;ti<=4;ti++){
-    var mv=maxM*ti/4;
-    ctx.fillText(fmt(mv,0),cx(mv),H-pad+13);
-  }
+  for(var ti=0;ti<=4;ti++){var mv=maxM*ti/4;ctx.fillText(fmt(mv,0),cx(mv),H-pad+14);}
   ctx.textAlign='right';
-  for(var ti2=0;ti2<=4;ti2++){
-    var pv=minP+(maxP-minP)*ti2/4;
-    ctx.fillText(fmt(pv,0),pad-4,cy(pv)+3);
-  }
-  /* legend */
-  var lx=W-pad-2,ly=pad+2;
-  ctx.font='9px "IBM Plex Sans",sans-serif';
-  ctx.strokeStyle=clrDesign;ctx.lineWidth=2;ctx.setLineDash([]);
-  ctx.beginPath();ctx.moveTo(lx-74,ly+1);ctx.lineTo(lx-57,ly+1);ctx.stroke();
-  ctx.fillStyle=clrText;ctx.textAlign='left';
-  ctx.fillText('φPn–φMn',lx-55,ly+4);
-  ctx.strokeStyle=clrNominal;ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
-  ctx.beginPath();ctx.moveTo(lx-74,ly+14);ctx.lineTo(lx-57,ly+14);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle=clrText;
-  ctx.fillText('Pn–Mn',lx-55,ly+17);
-  ctx.fillStyle=clrDot;ctx.beginPath();ctx.arc(lx-65,ly+26,4,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=clrText;ctx.fillText('(Mu, Pu)',lx-55,ly+30);
+  for(var ti2=0;ti2<=4;ti2++){var pv=minP+(maxP-minP)*ti2/4;ctx.fillText(fmt(pv,0),pad-5,cy(pv)+3);}
+  /* legend — design curve + demand point only */
+  var lx=W-pad-4,ly=pad+4;
+  ctx.font='9.5px "IBM Plex Sans",sans-serif';
+  ctx.strokeStyle=clrDesign;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(lx-72,ly+2);ctx.lineTo(lx-56,ly+2);ctx.stroke();
+  ctx.fillStyle=clrText;ctx.textAlign='left';ctx.fillText('φPn–φMn envelope',lx-54,ly+5);
+  ctx.fillStyle=clrDot;ctx.beginPath();ctx.arc(lx-64,ly+18,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=clrText;ctx.fillText('Design point (Mu, Pu)',lx-54,ly+21);
 }
 
 /* ─── TAB SWITCHERS ─── */
