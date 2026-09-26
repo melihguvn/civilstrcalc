@@ -1736,14 +1736,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <div class="form-group"><label>f<sub>ywk</sub> (MPa)</label><div class="iw"><input type="number" id="sf-tbdy-fyk" value="420" min="220" oninput="calcSf('tbdy')"><span class="us">MPa</span></div></div>
           </div>
           <div class="form-row-2">
-            <div class="form-group"><label>V<sub>Ed</sub> (kN)</label><div class="iw"><input type="number" id="sf-tbdy-ved" value="1000" min="0" oninput="calcSf('tbdy')"><span class="us">kN</span></div></div>
-            <div class="form-group"><label>σ<sub>n</sub> normal (MPa)</label><div class="iw"><input type="number" id="sf-tbdy-sn" value="0" step="0.1" oninput="calcSf('tbdy')"><span class="us">MPa</span></div></div>
-          </div>
-          <div class="form-div"><div class="form-div-lbl">Interface Surface</div></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-            <button class="unit-btn active" onclick="setSfTbdySurf('mono',this)">Monolithic</button>
-            <button class="unit-btn" onclick="setSfTbdySurf('rough',this)">Rough</button>
-            <button class="unit-btn" onclick="setSfTbdySurf('smooth',this)">Smooth</button>
+            <div class="form-group"><label>V<sub>e</sub> (kN)</label><div class="iw"><input type="number" id="sf-tbdy-ved" value="1000" min="0" oninput="calcSf('tbdy')"><span class="us">kN</span></div></div>
           </div>
         </div>
       </div>
@@ -3176,13 +3169,13 @@ function calcSf(std){
     return;
   }
 
-  if(std==='en'||std==='tbdy'){
+  if(std==='en'){
     var bw=v(m+'-bw')*1000||250;
     var lw=v(m+'-lw')*1000||5000;
     var db=v(m+'-db')||12;
     var sv=v(m+'-sv')||200;
-    var beChk=std==='tbdy'?null:document.getElementById(m+'-be-chk');
-    var hasBe=std==='tbdy'||(beChk&&beChk.checked);
+    var beChk=document.getElementById(m+'-be-chk');
+    var hasBe=beChk&&beChk.checked;
     var lbe=hasBe?v(m+'-lbe')*1000||500:0;
     var db_be=hasBe?v(m+'-db-be')||20:0;
     var n_be=hasBe?v(m+'-n-be')||8:0;
@@ -3195,7 +3188,7 @@ function calcSf(std){
     var gc=v(m+'-gc')||1.5,gs=v(m+'-gs')||1.15;
     var Ved_N=v(m+'-ved')*1000;
     var sn=v(m+'-sn');
-    var surf=std==='en'?_sfEnSurf:_sfTbdySurf;
+    var surf=_sfEnSurf;
     var cmap={mono:{c:0.50,mu:0.9},rough:{c:0.45,mu:0.7},smooth:{c:0.20,mu:0.6}};
     var sp=cmap[surf]||cmap.mono;
     if(Ai<100||fck<1||fyk<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
@@ -3226,6 +3219,55 @@ function calcSf(std){
     html+=srow(6,'V<sub>Rdi</sub> = (c·f<sub>ctd</sub> + μ·σ<sub>n</sub> + ρ·f<sub>yd</sub>)·A<sub>i</sub>',fmt(VRdi_N/1000,1)+' kN','');
     html+=srow(7,'V<sub>Rdi,max</sub> = 0.5ν·f<sub>cd</sub>·A<sub>i</sub>',fmt(VRdi_max/1000,1)+' kN','');
     html+=srow(8,'V<sub>Rdi</sub> used','<strong>'+fmt(phiVRdi,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
+    html+='</tbody></table></div></div>';
+    res.innerHTML=html;
+    return;
+  }
+
+  if(std==='tbdy'){
+    var bw=v(m+'-bw')*1000||250;
+    var lw=v(m+'-lw')*1000||5000;
+    var db=v(m+'-db')||12;
+    var sv=v(m+'-sv')||200;
+    var lbe=v(m+'-lbe')*1000||500;
+    var db_be=v(m+'-db-be')||20;
+    var n_be=v(m+'-n-be')||8;
+    var Ac=bw*lw;
+    var lw_web=Math.max(0,lw-2*lbe);
+    var As_web=sv>0?2*(Math.PI*db*db/4)*(lw_web/sv):0;
+    var As_be=2*n_be*(Math.PI*db_be*db_be/4);
+    var As=As_web+As_be;
+    var fck=v(m+'-fck'),fywk=v(m+'-fyk');
+    if(Ac<100||fck<1||fywk<1){res.innerHTML='<div class="res-empty"><div class="ri">⚠️</div>Check inputs.</div>';return;}
+    var gc=1.5,gs=1.15;
+    var fctd=0.35*Math.sqrt(fck)/gc;   /* TS 500 §5.3 */
+    var fyd=fywk/gs;
+    var mu=0.8;                          /* roughened construction joint */
+    var Ve=v(m+'-ved');
+    var VRd1=(fctd*Ac+mu*As*fyd)/1000;
+    var VRd2=0.2*fck*Ac/1000;
+    var VRd3=(3.3+0.08*fck)*Ac/1000;
+    var VRd=Math.min(VRd1,VRd2,VRd3);
+    var ok=Ve<=VRd;
+    var html=rptHdr(std,m)+'<div class="result-box">';
+    html+=ri('V<sub>Rd</sub>',fmt(VRd,1),'kN',ok?'ok':'err');
+    html+=ri('V<sub>e</sub>',fmt(Ve,1),'kN','');
+    html+=ri('D/C',fmt(Ve/VRd,3),'—',ok?'ok':'err');
+    html+='</div>';
+    html+=banner(ok?'ok':'err',ok?'Sliding Shear OK':'Sliding Shear INSUFFICIENT',
+      'V<sub>e</sub>='+fmt(Ve,1)+'kN vs V<sub>Rd</sub>='+fmt(VRd,1)+'kN');
+    html+='<div class="report-card"><div class="report-body">';
+    html+='<div class="rpt-sec-title">TSC 2018 §7.6.7.2 — Denklem (7.19)</div>';
+    html+='<table class="steps-table"><tbody>';
+    html+=srow(1,'A<sub>c</sub> = b<sub>w</sub> × l<sub>w</sub>',fmt(Ac/1e6,4)+' m² ('+fmt(Ac,0)+' mm²)','');
+    html+=srow(2,'A<sub>s,web</sub> + 2·n<sub>be</sub>·(π·d<sub>b,be</sub>²/4)',fmt(As,0)+' mm²','');
+    html+=srow(3,'f<sub>ctd</sub> = 0.35·√f<sub>ck</sub> / γ<sub>c</sub>',fmt(fctd,3)+' MPa','');
+    html+=srow(4,'f<sub>yd</sub> = f<sub>ywk</sub> / γ<sub>s</sub>',fmt(fyd,1)+' MPa','');
+    html+=srow(5,'μ (roughened joint)',fmt(mu,1),'');
+    html+=srow(6,'V<sub>Rd,1</sub> = f<sub>ctd</sub>·A<sub>c</sub> + μ·A<sub>s</sub>·f<sub>yd</sub>',fmt(VRd1,1)+' kN','');
+    html+=srow(7,'V<sub>Rd,2</sub> = 0.2·f<sub>ck</sub>·A<sub>c</sub>',fmt(VRd2,1)+' kN','');
+    html+=srow(8,'V<sub>Rd,3</sub> = (3.3 + 0.08·f<sub>ck</sub>)·A<sub>c</sub>',fmt(VRd3,1)+' kN','');
+    html+=srow(9,'V<sub>Rd</sub> = min(V<sub>Rd,1</sub>, V<sub>Rd,2</sub>, V<sub>Rd,3</sub>)','<strong>'+fmt(VRd,1)+' kN</strong>',ok?'✔ OK':'✘ NG',ok?'chk-ok':'chk-err');
     html+='</tbody></table></div></div>';
     res.innerHTML=html;
     return;
