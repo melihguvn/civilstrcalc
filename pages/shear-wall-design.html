@@ -2770,8 +2770,9 @@ function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
   var Pn_max=codeType==='aci'?0.80*Pn0:Pn0;
   pts.push({Pn:Pn_max,Mn:0,phiPn:codeType==='aci'?0.65*Pn_max:Pn_max,phiMn:0});
 
+  var cMax=2*lw,cMin=Math.max(lw*0.005,1);
   for(var i=1;i<=N;i++){
-    var c=lw*(2.0-i*2.5/N);if(c<1)c=1;
+    var c=cMax+(cMin-cMax)*(i-1)/(N-1);
     var a=Math.min(beta1*c,lw);
     var Pn=0,Mn=0;
     var centroid=lw/2;
@@ -2785,7 +2786,7 @@ function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
       var eps_si=(c-xi)/c*eps_cu;
       var fs=Math.max(-fyd,Math.min(fyd,Es*eps_si));
       var As_s=rhov_web*bw*dS;
-      var cc_disp=(xi<a)?fcd*bw*dS:0;
+      var cc_disp=(xi<a)?fcd*As_s:0;
       var F=As_s*fs-cc_disp;
       Pn+=F; Mn+=F*(centroid-xi);
     }
@@ -2796,7 +2797,7 @@ function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
         var eps_be=(c-xbe)/c*eps_cu;
         var fs_be=Math.max(-fyd,Math.min(fyd,Es*eps_be));
         var Abe=rhov_be*bw*lbe;
-        var cc_be=(xbe<a)?fcd*bw*lbe:0;
+        var cc_be=(xbe<a)?fcd*Abe:0;
         var F_be=Abe*fs_be-cc_be;
         Pn+=F_be; Mn+=F_be*(centroid-xbe);
       });
