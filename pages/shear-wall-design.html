@@ -2823,6 +2823,11 @@ function fiberPM(lw,bw,fc,fy,rhov_web,rhov_be,lbe,cc,codeType){
   return pts;
 }
 
+/* ── Web Worker for fiber P-M (non-blocking) ── */
+var _pmWkr=(function(){try{return new Worker('../js/fiber-worker.js');}catch(e){return null;}}());
+var _pmTok=0,_pmCbs={};
+if(_pmWkr){_pmWkr.onmessage=function(e){var cb=_pmCbs[e.data.tok];if(cb){delete _pmCbs[e.data.tok];cb(e.data.pts);}};_pmWkr.onerror=function(){_pmWkr=null;};}
+
 function calcPm(std){
   var m='pm-'+std;
   var res=document.getElementById(m+'-res');
@@ -2854,10 +2859,11 @@ function calcPm(std){
   var hasBe=(std==='tbdy')||(beChk&&beChk.checked);
   var lbe=hasBe?toSI_m(v(m+'-lbe'),m):0;
   var rhobe=0;
+  var db_be_disp=0,n_be_disp=0;
   if(hasBe&&lbe>0){
-    var db_be=toSI_len(v(m+'-db-be'),m)||20;
-    var n_be=Math.max(Math.round(v(m+'-n-be')||1),1);
-    rhobe=n_be*(Math.PI*db_be*db_be/4)/(lbe*bw);
+    db_be_disp=toSI_len(v(m+'-db-be'),m)||20;
+    n_be_disp=Math.max(Math.round(v(m+'-n-be')||1),1);
+    rhobe=n_be_disp*(Math.PI*db_be_disp*db_be_disp/4)/(lbe*bw);
   }
 
   if(lw<200||bw<100||fc<1||fy<1){
@@ -2866,7 +2872,25 @@ function calcPm(std){
   }
   if(wallCheck(lw,bw,std,res))return;
 
-  var pts=fiberPM(lw,bw,fc,fy,rhov,rhobe,lbe,cc,std);
+  var ctx={std:std,m:m,res:res,lw:lw,bw:bw,fc:fc,fy:fy,gc:gc,gs:gs,
+           Pu_kN:Pu_kN,Mu_kNm:Mu_kNm,db_web:db_web,sv_web:sv_web,
+           rhov:rhov,cc:cc,hasBe:hasBe,lbe:lbe,rhobe:rhobe,
+           db_be_disp:db_be_disp,n_be_disp:n_be_disp};
+
+  if(_pmWkr){
+    var tok=++_pmTok;
+    _pmCbs[tok]=function(pts){_pmRender(ctx,pts);};
+    _pmWkr.postMessage({lw:lw,bw:bw,fc:fc,fy:fy,rhov:rhov,rhobe:rhobe,lbe:lbe,cc:cc,std:std,tok:tok});
+  } else { _pmRender(ctx,fiberPM(lw,bw,fc,fy,rhov,rhobe,lbe,cc,std)); }
+}
+
+function _pmRender(ctx,pts){
+  var std=ctx.std,m=ctx.m,res=ctx.res;
+  var lw=ctx.lw,bw=ctx.bw,fc=ctx.fc,fy=ctx.fy,gc=ctx.gc,gs=ctx.gs;
+  var Pu_kN=ctx.Pu_kN,Mu_kNm=ctx.Mu_kNm;
+  var db_web=ctx.db_web,sv_web=ctx.sv_web,rhov=ctx.rhov,cc=ctx.cc;
+  var hasBe=ctx.hasBe,lbe=ctx.lbe,rhobe=ctx.rhobe;
+  var db_be_disp=ctx.db_be_disp,n_be_disp=ctx.n_be_disp;
   /* convert to kN, kN·m */
   var ptsPlot=pts.map(function(p){return{Pn:p.Pn/1000,Mn:p.Mn/1e6,phiPn:p.phiPn/1000,phiMn:p.phiMn/1e6};});
 
@@ -2895,7 +2919,7 @@ function calcPm(std){
 
   /* steel areas */
   var Ast_web=rhov*lw*bw;
-  var Abe_per=hasBe&&lbe>0?(function(){var db_be=toSI_len(v(m+'-db-be'),m)||20;var n_be2=Math.max(Math.round(v(m+'-n-be')||1),1);return n_be2*(Math.PI*db_be*db_be/4);})():0;
+  var Abe_per=hasBe&&lbe>0?n_be_disp*(Math.PI*db_be_disp*db_be_disp/4):0;
 
   /* warnings */
   var warns=[];
@@ -2955,8 +2979,6 @@ function calcPm(std){
   html+='<tr><td>Web steel area A<sub>st,web</sub></td><td>'+fmt(Ast_web,0)+' mm²</td></tr>';
   html+='<tr><td>Cover c<sub>c</sub></td><td>'+fmt(frSI_len(cc,m),0)+' '+uLen(m)+'</td></tr>';
   if(hasBe&&lbe>0){
-    var db_be_disp=toSI_len(v(m+'-db-be'),m)||20;
-    var n_be_disp=Math.max(Math.round(v(m+'-n-be')||1),1);
     html+='<tr><td>Boundary zone length l<sub>be</sub></td><td>'+fmt(frSI_m(lbe,m),2)+' '+uLen_m(m)+'</td></tr>';
     html+='<tr><td>Boundary zone bars</td><td>'+n_be_disp+' &#215; &#216;'+fmt(frSI_len(db_be_disp,m),0)+' '+uLen(m)+'</td></tr>';
     html+='<tr><td>BE steel area A<sub>st,be</sub> (per zone)</td><td>'+fmt(Abe_per,0)+' mm²</td></tr>';
@@ -3162,7 +3184,11 @@ _calcFns.pm=function(s){if(_pmInit)_pmInit(s);};
 
 document.addEventListener('DOMContentLoaded',function(){
   _beInit('aci');
-  if(_pmInit){['aci','en','is','tbdy'].forEach(function(s){_pmInit(s);});}
+  if(_pmInit) _pmInit('aci');
+  var _idle=window.requestIdleCallback||function(fn){setTimeout(fn,300);};
+  _idle(function(){
+    if(_pmInit){['en','is','tbdy'].forEach(function(s){_pmInit(s);});}
+  });
 });
 </script>
 </body>
