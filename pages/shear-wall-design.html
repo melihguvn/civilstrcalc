@@ -3151,7 +3151,7 @@ function calcSf(std){
 /* ─── DEBOUNCE ─── */
 var _dbt={};
 function _dbc(k,f){clearTimeout(_dbt[k]);_dbt[k]=setTimeout(f,160);}
-var _beInit=calcBe,_shInit=calcSh; /* save originals before debounce wrapper */
+var _beInit=calcBe,_shInit=calcSh,_pmInit=typeof calcPm==='function'?calcPm:null; /* save originals before debounce wrapper */
 (function(){
   var _beR=calcBe,_shR=calcSh,_pmR=typeof calcPm==='function'?calcPm:null,_sfR=typeof calcSf==='function'?calcSf:null;
   calcBe=function(s){_dbc('be'+s,function(){_beR(s);});};
@@ -3162,10 +3162,10 @@ var _beInit=calcBe,_shInit=calcSh; /* save originals before debounce wrapper */
 /* swMod / swStd use direct (no-debounce) calcs — no empty-state flash on tab switch */
 _calcFns.be=function(s){_beInit(s);};
 _calcFns.sh=function(s){_shInit(s);};
+_calcFns.pm=function(s){if(_pmInit)_pmInit(s);};
 
 document.addEventListener('DOMContentLoaded',function(){
   _beInit('aci');
-  ['aci','en','is','tbdy'].forEach(function(s){if(typeof calcPm==='function')calcPm(s);});
 });
 </script>
 </body>
