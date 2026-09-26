@@ -63,6 +63,15 @@
     if (/\/articles\/eurocode\/7-steel-design-ec3(\.html)?$/.test(P))      return 'ec-steeldesign';
     if (/\/articles\/eurocode\/8-serviceability(\.html)?$/.test(P))        return 'ec-service';
     if (/\/articles\/eurocode\/9-retaining-wall-ec7(\.html)?$/.test(P))    return 'ec-retwall';
+    if (/\/articles\/is-standards\/1-introduction(\.html)?$/.test(P))       return 'is-intro';
+    if (/\/articles\/is-standards\/2-material-properties(\.html)?$/.test(P)) return 'is-materials';
+    if (/\/articles\/is-standards\/3-load-combinations(\.html)?$/.test(P))  return 'is-loadcomb';
+    if (/\/articles\/is-standards\/4-rc-design-is456(\.html)?$/.test(P))    return 'is-rcdesign';
+    if (/\/articles\/is-standards\/5-steel-design-is800(\.html)?$/.test(P)) return 'is-steeldesign';
+    if (/\/articles\/is-standards\/6-seismic-design-is1893(\.html)?$/.test(P)) return 'is-seismic';
+    if (/\/articles\/is-standards\/7-wind-loads-is875(\.html)?$/.test(P))   return 'is-wind';
+    if (/\/articles\/is-standards\/8-foundation-design(\.html)?$/.test(P))  return 'is-foundation';
+    if (/\/articles\/is-standards\/9-retaining-wall-is456(\.html)?$/.test(P)) return 'is-retwall';
     return '';
   }
   var ap = _ap();
@@ -279,6 +288,16 @@
       sub('/pages/articles/eurocode/7-steel-design-ec3',  '7. Steel Design (EC 3)',    'ec-steeldesign') +
       sub('/pages/articles/eurocode/8-serviceability',    '8. Serviceability Checks',  'ec-service') +
       sub('/pages/articles/eurocode/9-retaining-wall-ec7','9. Retaining Wall (EC 7)',  'ec-retwall')) +
+    grp(ic.guide, 'IS Standards Design Guide', ['is-intro','is-materials','is-loadcomb','is-rcdesign','is-steeldesign','is-seismic','is-wind','is-foundation','is-retwall'],
+      sub('/pages/articles/is-standards/1-introduction',       '1. Introduction',              'is-intro') +
+      sub('/pages/articles/is-standards/2-material-properties','2. Material Properties',       'is-materials') +
+      sub('/pages/articles/is-standards/3-load-combinations',  '3. Load Combinations',         'is-loadcomb') +
+      sub('/pages/articles/is-standards/4-rc-design-is456',    '4. RC Design (IS 456:2000)',    'is-rcdesign') +
+      sub('/pages/articles/is-standards/5-steel-design-is800', '5. Steel Design (IS 800:2007)', 'is-steeldesign') +
+      sub('/pages/articles/is-standards/6-seismic-design-is1893','6. Seismic Design (IS 1893)','is-seismic') +
+      sub('/pages/articles/is-standards/7-wind-loads-is875',   '7. Wind Loads (IS 875-3)',      'is-wind') +
+      sub('/pages/articles/is-standards/8-foundation-design',  '8. Foundation Design',          'is-foundation') +
+      sub('/pages/articles/is-standards/9-retaining-wall-is456','9. Retaining Wall (IS 456)',   'is-retwall')) +
     '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
