@@ -70,6 +70,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 /* Misc */
 .fml-eq{font-family:var(--mono);font-size:.78rem;background:var(--bg2);border-left:3px solid var(--accent);padding:5px 10px;margin:5px 0;border-radius:0 4px 4px 0;line-height:1.7;display:block;}
 
+/* Calculation report — shared with column.html pattern */
+.print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
+.print-pmm-wrap{display:none;}
+.rpt-sec-summary{display:none;}
+.rpt-sec-screen-only{display:block;}
+.print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
+.print-footer{display:none;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid #dde2e8;font-size:6.5pt;color:#9aabbb;}
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+
 /* Two-row result box */
 .result-box-be{display:flex;flex-direction:column;gap:8px;}
 .rb-row{display:flex;gap:10px;}
@@ -118,6 +128,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .rpt-sec-title{padding:1.5px 6px!important;font-size:.52rem!important;margin-bottom:3px!important;}
   .steps-table td{padding:2px 4px!important;}
   .step-val{font-size:.68rem!important;}
+  .pmm-canvas-outer{display:none!important;}
+  .print-only{display:flex!important;padding-bottom:4px!important;margin-bottom:4px!important;}
+  .print-pmm-wrap{display:block!important;margin-top:4px!important;}
+  .print-pmm-wrap canvas{display:block!important;width:100%!important;}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:4px!important;}
+  .rpt-sec-summary{display:block!important;margin:3px 0!important;}
+  .rpt-sec-screen-only{display:none!important;}
+  .print-disclaimer{display:block!important;margin-top:3px!important;padding:2px 6px!important;font-size:5pt!important;}
+  .print-footer{display:flex!important;margin-top:3px!important;padding-top:2px!important;font-size:5pt!important;}
+  .res-tbl{width:100%!important;}
+  .res-tbl td{padding:1.5px 4px!important;font-size:6pt!important;}
 }
 </style>
 </head>
@@ -2879,21 +2900,154 @@ function calcPm(std){
   var dcr=phiMn_at_Pu>0?Mu_kNm/phiMn_at_Pu:999;
   var inside=dcr<=1.0;
   var fU=uFrc(m),mU=uMom(m);
+  var phiPn_max=ptsPlot[0].phiPn;
+  var Pn_max=ptsPlot[0].Pn;
+
+  /* design strength values for display */
+  var fcd_disp,fyd_disp;
+  if(std==='aci'){fcd_disp=0.85*fc;fyd_disp=fy;}
+  else if(std==='en'||std==='tbdy'){fcd_disp=fc/gc;fyd_disp=fy/gs;}
+  else{fcd_disp=0.447*fc;fyd_disp=0.87*fy;}
+
+  /* steel areas */
+  var Ast_web=rhov*lw*bw;
+  var Abe_per=hasBe&&lbe>0?(function(){var db_be=toSI_len(v(m+'-db-be'),m)||20;var n_be2=Math.max(Math.round(v(m+'-n-be')||1),1);return n_be2*(Math.PI*db_be*db_be/4);})():0;
+
+  /* warnings */
+  var warns=[];
+  if(rhov<0.0025) warns.push('<b>Min reinforcement:</b> Web ρ<sub>v</sub> = '+(rhov*100).toFixed(3)+'% is below recommended minimum (0.25%).');
+  if(rhov>0.04)   warns.push('<b>Max reinforcement:</b> Web ρ<sub>v</sub> = '+(rhov*100).toFixed(3)+'% exceeds practical maximum (4%).');
+  if(Pu_kN>phiPn_max) warns.push('<b>Axial overload:</b> Demand P = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,0)+' '+fU+' exceeds max capacity φP<sub>n</sub> = '+fmt(frSI_frc(phiPn_max*1000,m)/1000,0)+' '+fU+'.');
+  if(std==='aci'&&fc&&(fc<17||fc>70)) warns.push('<b>Material limit:</b> f\'c = '+fmt(frSI_str(fc,m),0)+' '+uStr(m)+' outside ACI 318-25 range.');
+  if(std==='aci'&&fy&&(fy<280||fy>550)) warns.push('<b>Material limit:</b> f<sub>y</sub> = '+fmt(frSI_str(fy,m),0)+' '+uStr(m)+' outside ACI 318-25 range.');
+  if(std==='en'&&fc&&(fc<12||fc>90)) warns.push('<b>Material limit:</b> f<sub>ck</sub> = '+fmt(fc,0)+' MPa outside EN range.');
+  if(std==='is'&&fc&&(fc<15||fc>55)) warns.push('<b>Material limit:</b> f<sub>ck</sub> = '+fmt(fc,0)+' MPa outside IS 456 range (M15–M55).');
+  if(std==='tbdy'&&fc&&(fc<16||fc>50)) warns.push('<b>Material limit:</b> f<sub>ck</sub> = '+fmt(fc,0)+' MPa outside TSC 2018 range.');
+
+  var codeLbl={aci:'ACI 318-25',en:'EN 1992-1-1 (Eurocode 2)',is:'IS 456:2000',tbdy:'TSC 2018'}[std]||std.toUpperCase();
+  var unitsTag=ul(m)?'in · kip · psi':'mm · kN · MPa';
+  var demandLbl={aci:'P<sub>u</sub>',en:'N<sub>Ed</sub>',is:'P<sub>u</sub>',tbdy:'N<sub>d</sub>'}[std]||'P<sub>u</sub>';
+  var momLbl={aci:'M<sub>u</sub>',en:'M<sub>Ed</sub>',is:'M<sub>u</sub>',tbdy:'M<sub>d</sub>'}[std]||'M<sub>u</sub>';
   var cnvSub={aci:'ACI 318-25 · φ-reduced envelope',en:'EN 1992-1-1 · design values',is:'IS 456:2000 · design values',tbdy:'TSC 2018 · design values'};
-  var html=rptHdr(std,m);
+  var dateStr=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  var st=inside?'ok':'err';
+
+  var html='';
+  /* ── Screen canvas ── */
   html+='<div class="pmm-canvas-outer">';
   html+='<h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">'+(cnvSub[std]||'')+'</span></h4>';
   html+='<canvas id="'+m+'-canvas" width="480" height="380" role="img" aria-label="P-M interaction diagram"></canvas>';
   html+='</div>';
-  html+='<div class="result-box">';
-  html+=ri('φM<sub>n</sub> at P<sub>u</sub>',fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
-  html+=ri('M<sub>u</sub> demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
-  html+=ri('D/C',fmt(dcr,3),'—',inside?'ok':'err');
+
+  /* ── Report card ── */
+  html+='<div class="report-card">';
+  html+='<div class="report-hdr"><h4>Calculation Report</h4>';
+  html+='<span class="rh-code">'+codeLbl+' &middot; '+unitsTag+'</span>';
+  html+='<button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>';
   html+='</div>';
-  html+=banner(inside?'ok':'err',inside?'Design Point Inside Envelope':'Design Point OUTSIDE Envelope',
-    'M<sub>u</sub> = '+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+' '+mU+' &nbsp;vs&nbsp; φM<sub>n</sub> = '+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+' '+mU+' &nbsp;at&nbsp; P<sub>u</sub> = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU);
+  html+='<div class="report-body">';
+
+  /* print-only title header */
+  html+='<div class="print-only">';
+  html+='<div>';
+  html+='<div style="font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;">Shear Wall P-M Design Report</div>';
+  html+='<div style="font-size:.68rem;color:#666;margin-top:1px;">'+codeLbl+' &nbsp;&middot;&nbsp; '+unitsTag+'</div>';
+  html+='</div>';
+  html+='<div style="margin-left:auto;text-align:right;">';
+  html+='<div style="font-size:.68rem;color:#888;font-family:var(--mono);">'+dateStr+'</div>';
+  html+='<div style="font-size:.62rem;color:#aab;margin-top:1px;">CivilStrCalc.com</div>';
+  html+='</div>';
+  html+='</div>'; /* print-only */
+
+  /* warnings */
+  warns.forEach(function(w){html+='<div class="report-warn"><span>&#x26A0;&#xFE0F;</span><div>'+w+'</div></div>';});
+
+  /* section properties */
+  html+='<div class="rpt-sec">';
+  html+='<div class="rpt-sec-title">Section Properties</div>';
+  html+='<table class="res-tbl"><tbody>';
+  html+='<tr><td>Wall length l<sub>w</sub></td><td>'+fmt(frSI_m(lw,m),2)+' '+uLen_m(m)+'</td></tr>';
+  html+='<tr><td>Wall thickness b<sub>w</sub></td><td>'+fmt(frSI_m(bw,m),3)+' '+uLen_m(m)+'</td></tr>';
+  html+='<tr><td>'+(std==='aci'?"f'<sub>c</sub>":'f<sub>ck</sub>')+' (characteristic)</td><td>'+fmt(frSI_str(fc,m),0)+' '+uStr(m)+'</td></tr>';
+  html+='<tr><td>'+(std==='aci'?'f<sub>y</sub>':(std==='tbdy'?'f<sub>ywk</sub>':'f<sub>yk</sub>'))+' (yield strength)</td><td>'+fmt(frSI_str(fy,m),0)+' '+uStr(m)+'</td></tr>';
+  html+='<tr><td>f<sub>cd</sub> (design concrete)</td><td>'+fmt(fcd_disp,2)+' MPa</td></tr>';
+  html+='<tr><td>f<sub>yd</sub> (design steel)</td><td>'+fmt(fyd_disp,2)+' MPa</td></tr>';
+  html+='<tr><td>Web bars d<sub>b</sub> / s<sub>v</sub></td><td>&#216;'+fmt(frSI_len(db_web,m),0)+' @ '+fmt(frSI_len(sv_web,m),0)+' '+uLen(m)+'</td></tr>';
+  html+='<tr><td>Web steel ratio &#961;<sub>v</sub></td><td class="'+(rhov<0.0025?'vwarn':rhov>0.04?'verr':'vok')+'">'+(rhov*100).toFixed(3)+'%</td></tr>';
+  html+='<tr><td>Web steel area A<sub>st,web</sub></td><td>'+fmt(Ast_web,0)+' mm²</td></tr>';
+  html+='<tr><td>Cover c<sub>c</sub></td><td>'+fmt(frSI_len(cc,m),0)+' '+uLen(m)+'</td></tr>';
+  if(hasBe&&lbe>0){
+    var db_be_disp=toSI_len(v(m+'-db-be'),m)||20;
+    var n_be_disp=Math.max(Math.round(v(m+'-n-be')||1),1);
+    html+='<tr><td>Boundary zone length l<sub>be</sub></td><td>'+fmt(frSI_m(lbe,m),2)+' '+uLen_m(m)+'</td></tr>';
+    html+='<tr><td>Boundary zone bars</td><td>'+n_be_disp+' &#215; &#216;'+fmt(frSI_len(db_be_disp,m),0)+' '+uLen(m)+'</td></tr>';
+    html+='<tr><td>BE steel area A<sub>st,be</sub> (per zone)</td><td>'+fmt(Abe_per,0)+' mm²</td></tr>';
+  }
+  html+='</tbody></table>';
+  html+='</div>'; /* rpt-sec */
+
+  /* design results */
+  html+='<div class="rpt-sec">';
+  html+='<div class="rpt-sec-title">Design Results</div>';
+  /* screen-only: cards + banner */
+  html+='<div class="rpt-sec-screen-only">';
+  html+='<div class="result-box" style="margin-bottom:8px;">';
+  html+=ri('&#966;P<sub>n,max</sub>',fmt(frSI_frc(phiPn_max*1000,m)/1000,0),fU,'');
+  html+=ri('&#966;M<sub>n</sub> at '+demandLbl,fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
+  html+=ri(momLbl+' demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
+  html+=ri('D/C',fmt(dcr,3),'&#8212;',inside?'ok':'err');
+  html+='</div>';
+  html+=banner(st,inside?'Design Point Inside Envelope':'Design Point OUTSIDE Envelope',
+    momLbl+' = '+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+' '+mU+
+    ' &nbsp;vs&nbsp; &#966;M<sub>n</sub> = '+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+' '+mU+
+    ' &nbsp;at&nbsp; '+demandLbl+' = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU);
+  html+='</div>'; /* rpt-sec-screen-only */
+  /* print table */
+  html+='<table class="res-tbl"><tbody>';
+  html+='<tr><td>Applied axial '+demandLbl+'</td><td>'+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU+'</td></tr>';
+  html+='<tr><td>Applied moment '+momLbl+'</td><td>'+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+' '+mU+'</td></tr>';
+  html+='<tr><td>Max axial capacity &#966;P<sub>n</sub></td><td class="vok">'+fmt(frSI_frc(phiPn_max*1000,m)/1000,0)+' '+fU+'</td></tr>';
+  html+='<tr><td>Moment capacity &#966;M<sub>n</sub> at '+demandLbl+'</td><td class="'+(inside?'vok':'verr')+'">'+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+' '+mU+'</td></tr>';
+  html+='<tr><td>D/C ratio</td><td class="'+(inside?'vok vhl':'verr vhl')+'">'+fmt(dcr,3)+'</td></tr>';
+  html+='</tbody></table>';
+  html+='</div>'; /* rpt-sec */
+
+  /* print-only summary (cards + banner for print layout) */
+  html+='<div class="rpt-sec-summary">';
+  html+='<div class="result-box">';
+  html+=ri('&#966;P<sub>n,max</sub>',fmt(frSI_frc(phiPn_max*1000,m)/1000,0),fU,'');
+  html+=ri('&#966;M<sub>n</sub> at '+demandLbl,fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1),mU,inside?'ok':'err');
+  html+=ri(momLbl+' demand',fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1),mU,'');
+  html+=ri('D/C',fmt(dcr,3),'&#8212;',inside?'ok':'err');
+  html+='</div>';
+  html+=banner(st,inside?'Design Point Inside Envelope':'Design Point OUTSIDE Envelope',
+    momLbl+' = '+fmt(frSI_mom(Mu_kNm*1e6,m)/1e6,1)+' '+mU+
+    ' &nbsp;vs&nbsp; &#966;M<sub>n</sub> = '+fmt(frSI_mom(phiMn_at_Pu*1e6,m)/1e6,1)+' '+mU+
+    ' &nbsp;at&nbsp; '+demandLbl+' = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU);
+  html+='</div>'; /* rpt-sec-summary */
+
+  /* print PMM canvas */
+  html+='<div class="print-pmm-wrap">';
+  html+='<div style="font-family:var(--sans);font-size:8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin-bottom:5px;">P–M Interaction Diagram</div>';
+  html+='<canvas id="'+m+'-print-canvas" width="540" height="380" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>';
+  html+='</div>';
+
+  /* disclaimer + footer */
+  html+='<div class="print-disclaimer">&#x26A0; For educational and preliminary design purposes only. All results must be verified by a licensed structural engineer before use in any real project.</div>';
+  html+='<div class="print-footer">';
+  html+='<span>Generated by <strong>CivilStrCalc.com</strong> — Free Structural Engineering Tools</span>';
+  html+='<span>&copy; '+new Date().getFullYear()+' CivilStrCalc.com &nbsp;&middot;&nbsp; '+codeLbl+'</span>';
+  html+='</div>';
+
+  html+='</div>'; /* report-body */
+  html+='</div>'; /* report-card */
+
   res.innerHTML=html;
   drawPmCanvas(m+'-canvas',ptsPlot,Pu_kN,Mu_kNm,'','Pn (kN)','Mn (kN·m)');
+  setTimeout(function(){
+    var pc=document.getElementById(m+'-print-canvas');
+    if(pc) drawPmCanvas(m+'-print-canvas',ptsPlot,Pu_kN,Mu_kNm,'','Pn (kN)','Mn (kN·m)');
+  },50);
 }
 
 /* ═══ SHEAR FRICTION ═══ */
