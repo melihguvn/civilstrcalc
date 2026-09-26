@@ -72,7 +72,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 /* Calculation report — shared with column.html pattern */
 .print-only{display:none;align-items:center;gap:14px;padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid #1a2332;}
-.print-pmm-wrap{display:none;}
 .rpt-sec-summary{display:none;}
 .rpt-sec-screen-only{display:block;}
 .print-disclaimer{display:none;margin-top:10px;padding:6px 10px;border:1px solid #dde2e8;border-radius:4px;font-size:6.8pt;color:#7a8898;line-height:1.5;}
@@ -128,10 +127,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .rpt-sec-title{padding:1.5px 6px!important;font-size:.52rem!important;margin-bottom:3px!important;}
   .steps-table td{padding:2px 4px!important;}
   .step-val{font-size:.68rem!important;}
-  .pmm-canvas-outer{display:none!important;}
+  .pmm-canvas-outer{border:none!important;padding:2px 0!important;margin-bottom:3px!important;}
+  .pmm-canvas-outer h4{font-size:6.5pt!important;margin-bottom:3px!important;}
+  .pmm-canvas-outer canvas{display:block!important;width:100%!important;}
   .print-only{display:flex!important;padding-bottom:4px!important;margin-bottom:4px!important;}
-  .print-pmm-wrap{display:block!important;margin-top:4px!important;}
-  .print-pmm-wrap canvas{display:block!important;width:100%!important;}
   .rpt-sec{margin-bottom:4px!important;padding-bottom:4px!important;}
   .rpt-sec-summary{display:block!important;margin:3px 0!important;}
   .rpt-sec-screen-only{display:none!important;}
@@ -139,6 +138,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   .print-footer{display:flex!important;margin-top:3px!important;padding-top:2px!important;font-size:5pt!important;}
   .res-tbl{width:100%!important;}
   .res-tbl td{padding:1.5px 4px!important;font-size:6pt!important;}
+  .pmm-canvas-rpt{page-break-inside:avoid!important;}
 }
 </style>
 </head>
@@ -2933,12 +2933,6 @@ function calcPm(std){
   var st=inside?'ok':'err';
 
   var html='';
-  /* ── Screen canvas ── */
-  html+='<div class="pmm-canvas-outer">';
-  html+='<h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">'+(cnvSub[std]||'')+'</span></h4>';
-  html+='<canvas id="'+m+'-canvas" width="480" height="380" role="img" aria-label="P-M interaction diagram"></canvas>';
-  html+='</div>';
-
   /* ── Report card ── */
   html+='<div class="report-card">';
   html+='<div class="report-hdr"><h4>Calculation Report</h4>';
@@ -3026,10 +3020,10 @@ function calcPm(std){
     ' &nbsp;at&nbsp; '+demandLbl+' = '+fmt(frSI_frc(Pu_kN*1000,m)/1000,1)+' '+fU);
   html+='</div>'; /* rpt-sec-summary */
 
-  /* print PMM canvas */
-  html+='<div class="print-pmm-wrap">';
-  html+='<div style="font-family:var(--sans);font-size:8pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 8px;margin-bottom:5px;">P–M Interaction Diagram</div>';
-  html+='<canvas id="'+m+'-print-canvas" width="540" height="380" style="display:block;" role="img" aria-label="P-M interaction diagram for print"></canvas>';
+  /* P-M canvas — shown on screen and in print */
+  html+='<div class="pmm-canvas-outer pmm-canvas-rpt">';
+  html+='<h4>P – M Interaction Diagram &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem;color:var(--text-dim);">'+(cnvSub[std]||'')+'</span></h4>';
+  html+='<canvas id="'+m+'-canvas" width="540" height="400" role="img" aria-label="P-M interaction diagram"></canvas>';
   html+='</div>';
 
   /* disclaimer + footer */
@@ -3044,10 +3038,6 @@ function calcPm(std){
 
   res.innerHTML=html;
   drawPmCanvas(m+'-canvas',ptsPlot,Pu_kN,Mu_kNm,'','Pn (kN)','Mn (kN·m)');
-  setTimeout(function(){
-    var pc=document.getElementById(m+'-print-canvas');
-    if(pc) drawPmCanvas(m+'-print-canvas',ptsPlot,Pu_kN,Mu_kNm,'','Pn (kN)','Mn (kN·m)');
-  },50);
 }
 
 /* ═══ SHEAR FRICTION ═══ */
