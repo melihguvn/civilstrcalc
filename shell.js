@@ -72,6 +72,15 @@
     if (/\/articles\/is-standards\/7-wind-loads-is875(\.html)?$/.test(P))   return 'is-wind';
     if (/\/articles\/is-standards\/8-foundation-design(\.html)?$/.test(P))  return 'is-foundation';
     if (/\/articles\/is-standards\/9-retaining-wall-is456(\.html)?$/.test(P)) return 'is-retwall';
+    if (/\/articles\/tsc-standards\/1-introduction(\.html)?$/.test(P))          return 'tsc-intro';
+    if (/\/articles\/tsc-standards\/2-material-properties(\.html)?$/.test(P))   return 'tsc-materials';
+    if (/\/articles\/tsc-standards\/3-load-combinations(\.html)?$/.test(P))     return 'tsc-loadcomb';
+    if (/\/articles\/tsc-standards\/4-rc-design-ts500(\.html)?$/.test(P))       return 'tsc-rcdesign';
+    if (/\/articles\/tsc-standards\/5-steel-design-ts648(\.html)?$/.test(P))    return 'tsc-steeldesign';
+    if (/\/articles\/tsc-standards\/6-seismic-design-tbdy(\.html)?$/.test(P))   return 'tsc-seismic';
+    if (/\/articles\/tsc-standards\/7-wind-loads-ts498(\.html)?$/.test(P))      return 'tsc-wind';
+    if (/\/articles\/tsc-standards\/8-foundation-design(\.html)?$/.test(P))     return 'tsc-foundation';
+    if (/\/articles\/tsc-standards\/9-retaining-wall-ts500(\.html)?$/.test(P))  return 'tsc-retwall';
     return '';
   }
   var ap = _ap();
@@ -298,6 +307,16 @@
       sub('/pages/articles/is-standards/7-wind-loads-is875',   '7. Wind Loads (IS 875-3)',      'is-wind') +
       sub('/pages/articles/is-standards/8-foundation-design',  '8. Foundation Design',          'is-foundation') +
       sub('/pages/articles/is-standards/9-retaining-wall-is456','9. Retaining Wall (IS 456)',   'is-retwall')) +
+    grp(ic.guide, 'TSC Standards Design Guide', ['tsc-intro','tsc-materials','tsc-loadcomb','tsc-rcdesign','tsc-steeldesign','tsc-seismic','tsc-wind','tsc-foundation','tsc-retwall'],
+      sub('/pages/articles/tsc-standards/1-introduction',        '1. Introduction',              'tsc-intro') +
+      sub('/pages/articles/tsc-standards/2-material-properties', '2. Material Properties',       'tsc-materials') +
+      sub('/pages/articles/tsc-standards/3-load-combinations',   '3. Load Combinations',         'tsc-loadcomb') +
+      sub('/pages/articles/tsc-standards/4-rc-design-ts500',     '4. RC Design (TS 500)',         'tsc-rcdesign') +
+      sub('/pages/articles/tsc-standards/5-steel-design-ts648',  '5. Steel Design (TS EN 1993)', 'tsc-steeldesign') +
+      sub('/pages/articles/tsc-standards/6-seismic-design-tbdy', '6. Seismic Design (TBDY)',     'tsc-seismic') +
+      sub('/pages/articles/tsc-standards/7-wind-loads-ts498',    '7. Wind Loads (TS 498)',        'tsc-wind') +
+      sub('/pages/articles/tsc-standards/8-foundation-design',   '8. Foundation Design',          'tsc-foundation') +
+      sub('/pages/articles/tsc-standards/9-retaining-wall-ts500','9. Retaining Wall (TS 500)',   'tsc-retwall')) +
     '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TBDY 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
