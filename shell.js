@@ -44,6 +44,11 @@
     if (/\/how-to-size-a-steel-column(\.html)?$/.test(P))     return 'art-steelcol';
     if (/\/punching-shear-guide(\.html)?$/.test(P))           return 'art-punch';
     if (/\/concrete-cover-durability(\.html)?$/.test(P))      return 'art-cover';
+    if (/\/column-design-guide(\.html)?$/.test(P))            return 'art-col-guide';
+    if (/\/beam-design-guide(\.html)?$/.test(P))              return 'art-beam-guide';
+    if (/\/slab-design-guide(\.html)?$/.test(P))              return 'art-slab-guide';
+    if (/\/shear-wall-design-guide(\.html)?$/.test(P))        return 'art-sw-guide';
+    if (/\/foundation-design-guide(\.html)?$/.test(P))        return 'art-fnd-guide';
     if (/\/seismic-design-basics(\.html)?$/.test(P))          return 'art-seismic';
     if (/\/articles\/us-standards\/1-introduction(\.html)?$/.test(P))     return 'us-intro';
     if (/\/articles\/us-standards\/2-material-selection(\.html)?$/.test(P)) return 'us-materials';
@@ -265,14 +270,19 @@
     item('/pages/ts500-design-guide', ic.guide, 'TS 500 Guide',   'guide-ts500') +
     '<div class="sh-div"></div>' +
     '<div class="sh-sec">Articles</div>' +
-    grp(ic.guide, 'Concrete', ['art-aci-ec2','art-slabs','art-beam','art-devlen','art-loadcomb','art-punch','art-cover'],
+    grp(ic.guide, 'Concrete', ['art-aci-ec2','art-slabs','art-beam','art-devlen','art-loadcomb','art-punch','art-cover','art-col-guide','art-beam-guide','art-slab-guide','art-sw-guide','art-fnd-guide'],
       sub('/pages/aci-318-vs-eurocode-2',     'ACI 318 vs Eurocode 2',       'art-aci-ec2') +
       sub('/pages/one-way-vs-two-way-slabs',  'One-Way vs Two-Way Slabs',    'art-slabs') +
       sub('/pages/rc-beam-design-guide',      'RC Beam Design Guide',        'art-beam') +
       sub('/pages/punching-shear-guide',      'Punching Shear Guide',        'art-punch') +
       sub('/pages/development-length-guide',  'Development Length Guide',    'art-devlen') +
       sub('/pages/load-combinations-guide',   'Load Combinations Guide',     'art-loadcomb') +
-      sub('/pages/concrete-cover-durability', 'Concrete Cover & Durability', 'art-cover')) +
+      sub('/pages/concrete-cover-durability', 'Concrete Cover & Durability', 'art-cover') +
+      sub('/pages/column-design-guide',       'Column Design Guide',         'art-col-guide') +
+      sub('/pages/beam-design-guide',         'Beam Design Guide',           'art-beam-guide') +
+      sub('/pages/slab-design-guide',         'Slab Design Guide',           'art-slab-guide') +
+      sub('/pages/shear-wall-design-guide',   'Shear Wall Design Guide',     'art-sw-guide') +
+      sub('/pages/foundation-design-guide',   'Foundation Design Guide',     'art-fnd-guide')) +
     grp(ic.st, 'Steel', ['art-ltb','art-steelcol'],
       sub('/pages/lateral-torsional-buckling-guide', 'Lateral-Torsional Buckling', 'art-ltb') +
       sub('/pages/how-to-size-a-steel-column',       'How to Size a Steel Column', 'art-steelcol')) +
