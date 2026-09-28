@@ -28,6 +28,7 @@
     if (/\/cfst-column(\.html)?$/.test(P))               return 'cfstcol';
     if (/\/composite-column-src(\.html)?$/.test(P))      return 'srccol';
     if (/\/seismic-loads(\.html)?$/.test(P))             return 'seismicloads';
+    if (/\/wind-loads(\.html)?$/.test(P))               return 'windloads';
     if (/\/steel(\.html)?$/.test(P))                     return 'steel';
     if (/\/rebar(\.html)?$/.test(P))                   return 'rebar';
     if (/\/concrete(\.html)?$/.test(P))                return 'concrete';
@@ -193,7 +194,8 @@
     cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>',
     src:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5"/><line x1="8" y1="7" x2="16" y2="7" stroke-width="1.8"/><line x1="8" y1="17" x2="16" y2="17" stroke-width="1.8"/></svg>',
     /* Load Calculations */
-    seismic:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-7 4 14 3-10 2 3h5"/></svg>'
+    seismic:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-7 4 14 3-10 2 3h5"/></svg>',
+    wind:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h15a3 3 0 100-6 3 3 0 000 6"/><path d="M3 14h19"/><path d="M3 20h12a3 3 0 100-6"/></svg>'
   };
 
   function grp(icon, label, pages, subs) {
@@ -222,7 +224,7 @@
 
   // â”€â”€ Sidebar HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var sideHTML =
-    sect('Concrete Design', ['beam','slab','column','devlen','crackwidth','foundation','retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
+    sect('Concrete Design', ['beam','slab','column','shear-wall','devlen','crackwidth','foundation','retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
       grp(ic.beam, 'Beam Design', ['beam'],
         sub('/pages/beam#flexdesign', 'Flexural Design', 'beam') +
         sub('/pages/beam#flexcap',    'Flexural Capacity', '') +
@@ -238,11 +240,12 @@
       item('/pages/development-length', ic.devlen, 'Dev. & Splice Length', 'devlen') +
       item('/pages/crack-width',        ic.cw,     'Crack Width',          'crackwidth') +
       item('/pages/foundation',         ic.fnd,    'Foundation Design',    'foundation') +
+      item('/pages/shear-wall-design',  ic.col,    'Shear Wall Design',    'shear-wall') +
       grp(ic.rw, 'Retaining Wall', ['retwall-si','retwall-us','retwall-ec2','retwall-tsc'],
         sub('/pages/retaining-wall-aci-si', 'ACI 318 – SI units', 'retwall-si') +
         sub('/pages/retaining-wall-aci-us', 'ACI 318 – US units', 'retwall-us') +
         sub('/pages/retaining-wall-ec2',    'Eurocode 2',              'retwall-ec2') +
-        sub('/pages/retaining-wall-tsc',    'TS 500 / TBDY 2018',     'retwall-tsc'))) +
+        sub('/pages/retaining-wall-tsc',    'TSC 2018',               'retwall-tsc'))) +
     '<div class=”sh-div”></div>' +
     sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
       item('/pages/steel-flexural', ic.st_flx, 'Flexural Design',        'steelfd') +
@@ -256,8 +259,9 @@
       item('/pages/cfst-column',          ic.cfst, 'CFST Column Design',    'cfstcol') +
       item('/pages/composite-column-src', ic.src,  'SRC Column Design',     'srccol')) +
     '<div class=”sh-div”></div>' +
-    sect('Load Calculations', ['seismicloads'],
-      item('/pages/seismic-loads', ic.seismic, 'Seismic Base Shear', 'seismicloads')) +
+    sect('Load Calculations', ['seismicloads','windloads'],
+      item('/pages/seismic-loads', ic.seismic, 'Seismic Base Shear', 'seismicloads') +
+      item('/pages/wind-loads',    ic.wind,    'Wind Loads',          'windloads')) +
     '<div class=”sh-div”></div>' +
     '<div class=”sh-sec”>Reference Tables</div>' +
     item('/pages/steel',          ic.st,    'Steel Sections',    'steel') +
@@ -323,11 +327,11 @@
       sub('/pages/articles/tsc-standards/3-load-combinations',   '3. Load Combinations',         'tsc-loadcomb') +
       sub('/pages/articles/tsc-standards/4-rc-design-ts500',     '4. RC Design (TS 500)',         'tsc-rcdesign') +
       sub('/pages/articles/tsc-standards/5-steel-design-ts648',  '5. Steel Design (TS EN 1993)', 'tsc-steeldesign') +
-      sub('/pages/articles/tsc-standards/6-seismic-design-tbdy', '6. Seismic Design (TBDY)',     'tsc-seismic') +
+      sub('/pages/articles/tsc-standards/6-seismic-design-tbdy', '6. Seismic Design (TSC)',      'tsc-seismic') +
       sub('/pages/articles/tsc-standards/7-wind-loads-ts498',    '7. Wind Loads (TS 498)',        'tsc-wind') +
       sub('/pages/articles/tsc-standards/8-foundation-design',   '8. Foundation Design',          'tsc-foundation') +
       sub('/pages/articles/tsc-standards/9-retaining-wall-ts500','9. Retaining Wall (TS 500)',   'tsc-retwall')) +
-    '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TBDY 2018' +
+    '<div class="sh-foot">ACI 318-25 &middot; Eurocode 2 &middot; IS 456<br>AISC 360-22 &middot; TS 500 &middot; TSC 2018' +
       '<div style="margin-top:8px">' +
         '<a href="/about">About</a>' +
         '<a href="/contact">Contact</a>' +
@@ -374,9 +378,57 @@
 
   // â”€â”€ Inject into body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.body.prepend(ham, ov, hdr, side);
-  // Hide article-page standalone topbar â€” shell header replaces it
+  // Hide article-page standalone topbar -- shell header replaces it
   document.querySelectorAll('.sg-topbar,.art-topbar').forEach(function(el){ el.style.display='none'; });
   // Reveal body now that sidebar is injected (FOUC prevention)
   document.documentElement.classList.add('sh-ready');
+
+  // -- Cookie Consent Banner (GDPR / Google Consent Mode v2) --------------------
+  var CSC_KEY = 'csc_consent_v1';
+  var _stored = '';
+  try { _stored = localStorage.getItem(CSC_KEY) || ''; } catch(e) {}
+  if (_stored !== 'y' && _stored !== 'n') {
+    var _cs = document.createElement('style');
+    _cs.textContent =
+      '#csc-cb{position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#1a2332;' +
+        'border-top:2px solid #2a3a52;padding:13px 20px;display:flex;align-items:center;' +
+        'gap:14px;flex-wrap:wrap;font-family:”IBM Plex Sans Condensed”,sans-serif;' +
+        'box-shadow:0 -2px 12px rgba(0,0,0,.35)}' +
+      '#csc-cb p{margin:0;font-size:.79rem;color:rgba(255,255,255,.78);flex:1;min-width:220px;line-height:1.55}' +
+      '#csc-cb a{color:#3a8fd4;text-decoration:none}' +
+      '#csc-cb a:hover{text-decoration:underline}' +
+      '.csc-btn{padding:7px 18px;border-radius:4px;font-size:.76rem;font-weight:600;' +
+        'cursor:pointer;flex-shrink:0;font-family:inherit;transition:background .15s}' +
+      '.csc-acc{background:#3a8fd4;color:#fff;border:none}' +
+      '.csc-acc:hover{background:#2d7bb5}' +
+      '.csc-dcl{background:transparent;color:rgba(255,255,255,.5);' +
+        'border:1px solid rgba(255,255,255,.18)}' +
+      '.csc-dcl:hover{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.4)}';
+    document.head.appendChild(_cs);
+
+    var _cb = document.createElement('div');
+    _cb.id = 'csc-cb';
+    _cb.innerHTML =
+      '<p>We use cookies for analytics and advertising (Google Analytics &amp; AdSense). ' +
+        'By clicking <strong>Accept</strong> you consent to our use of cookies. ' +
+        '<a href=”/privacy”>Privacy Policy</a></p>' +
+      '<button class=”csc-btn csc-dcl” id=”csc-dcl-btn”>Decline</button>' +
+      '<button class=”csc-btn csc-acc” id=”csc-acc-btn”>Accept</button>';
+    document.body.appendChild(_cb);
+
+    function _setConsent(val) {
+      try { localStorage.setItem(CSC_KEY, val); } catch(e) {}
+      var g = val === 'y' ? 'granted' : 'denied';
+      if (typeof gtag === 'function') {
+        gtag('consent', 'update', {
+          ad_storage: g, analytics_storage: g,
+          ad_user_data: g, ad_personalization: g
+        });
+      }
+      _cb.remove();
+    }
+    document.getElementById('csc-acc-btn').addEventListener('click', function(){ _setConsent('y'); });
+    document.getElementById('csc-dcl-btn').addEventListener('click', function(){ _setConsent('n'); });
+  }
 })();
 
