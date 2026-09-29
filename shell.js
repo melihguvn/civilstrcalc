@@ -24,6 +24,7 @@
     if (/\/steel-combined(\.html)?$/.test(P))          return 'steelbc';
     if (/\/steel-ltb(\.html)?$/.test(P))               return 'steelltb';
     if (/\/truss-design(\.html)?$/.test(P))            return 'steeltruss';
+    if (/\/steel-base-plate(\.html)?$/.test(P))       return 'steelbp';
     if (/\/composite-beam(\.html)?$/.test(P))            return 'compbeam';
     if (/\/cfst-column(\.html)?$/.test(P))               return 'cfstcol';
     if (/\/composite-column-src(\.html)?$/.test(P))      return 'srccol';
@@ -189,6 +190,7 @@
     st_bc:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="19"/><line x1="3" y1="19" x2="21" y2="19"/><path d="M4 19l2-16" stroke-width="1" opacity=".35"/><line x1="3" y1="15" x2="9" y2="15" stroke-width="1.4" opacity=".6"/><line x1="9" y1="15" x2="9" y2="19" stroke-width="1.4" opacity=".6"/></svg>',
     st_ltb: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="12" x2="22" y2="12"/><path d="M2 12l5-4 5 8 5-8 5 4" stroke-width="1.6" opacity=".7"/></svg>',
     st_trs: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="20" x2="22" y2="20"/><path d="M2 20L12 5 22 20"/><line x1="7" y1="20" x2="12" y2="12.5"/><line x1="17" y1="20" x2="12" y2="12.5"/></svg>',
+    st_bp:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="16" width="18" height="5" rx="0.5"/><rect x="9" y="10" width="6" height="6" rx="0.5"/><line x1="9" y1="10" x2="6" y2="16"/><line x1="15" y1="10" x2="18" y2="16"/><line x1="12" y1="10" x2="12" y2="4"/><line x1="10" y1="4" x2="14" y2="4" stroke-width="1.5" opacity=".6"/></svg>',
     /* Composite Design module icons */
     comp:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="5" rx="0.5"/><line x1="8" y1="9" x2="8" y2="19"/><line x1="16" y1="9" x2="16" y2="19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="8" y1="9" x2="16" y2="9"/></svg>',
     cfst:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="0.5" fill="currentColor" opacity=".25" stroke-width="1.5"/></svg>',
@@ -247,12 +249,13 @@
         sub('/pages/retaining-wall-ec2',    'Eurocode 2',              'retwall-ec2') +
         sub('/pages/retaining-wall-tsc',    'TSC 2018',               'retwall-tsc'))) +
     '<div class=”sh-div”></div>' +
-    sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss'],
-      item('/pages/steel-flexural', ic.st_flx, 'Flexural Design',        'steelfd') +
-      item('/pages/steel-axial',    ic.st_axi, 'Axial (Column) Design',  'steelaxi') +
-      item('/pages/steel-combined', ic.st_bc,  'Combined (Beam-Column)', 'steelbc') +
-      item('/pages/steel-ltb',      ic.st_ltb, 'LTB Check',              'steelltb') +
-      item('/pages/truss-design',   ic.st_trs, 'Truss Design',           'steeltruss')) +
+    sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss','steelbp'],
+      item('/pages/steel-flexural',    ic.st_flx, 'Flexural Design',        'steelfd') +
+      item('/pages/steel-axial',       ic.st_axi, 'Axial (Column) Design',  'steelaxi') +
+      item('/pages/steel-combined',    ic.st_bc,  'Combined (Beam-Column)', 'steelbc') +
+      item('/pages/steel-ltb',         ic.st_ltb, 'LTB Check',              'steelltb') +
+      item('/pages/truss-design',      ic.st_trs, 'Truss Design',           'steeltruss') +
+      item('/pages/steel-base-plate',  ic.st_bp,  'Base Plate Design',      'steelbp')) +
     '<div class=”sh-div”></div>' +
     sect('Composite Design', ['compbeam','cfstcol','srccol'],
       item('/pages/composite-beam',       ic.comp, 'Composite Beam Design', 'compbeam') +
