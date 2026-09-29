@@ -376,6 +376,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="ri-value">—</div>
           <div class="ri-unit">V<sub>u</sub>/φV<sub>n</sub></div>
         </div>
+        <div class="result-item" id="ri-anch-t" style="display:none">
+          <div class="ri-label">Anchor T DCR</div>
+          <div class="ri-value">—</div>
+          <div class="ri-unit">T/φN<sub>t</sub></div>
+        </div>
       </div>
 
       <!-- DCR Banner -->
@@ -965,27 +970,32 @@ function calc(){
     T_anch = 0;
   } else {
     bearCase = 'partial';
-    // Solve for Y (bearing length) at full capacity with anchor tension
-    // From moment equilibrium about compression edge:
-    // q·Y²/6 + q·(N-f)·Y/2 - Pu_eff·(3N/2+e-f) = 0
-    // where q = phi_Fp·B, Pu_eff in same unit as force
-    var Pu_eff = (unit==='us') ? Pu : Pu; // kip or kN
-    var q = phi_Fp * B;                   // kip/in or kN/mm
-    // convert Pu to same unit as q·Y
-    var Pu_q = (unit==='us') ? Pu : Pu;   // kip or kN  (same as above, explicit)
+    // AISC DG1 §3.2 — moments about anchor rod (at f from tension edge):
+    //   C·(N-f-Y/3) = Pu·(e+f-N/2)  →  Y² - 3(N-f)·Y + 6·Pu·arm/q = 0
+    // SI unit consistency: q must be in kN/mm (not N/mm) to match Pu in kN
+    var q_fac  = (unit==='si') ? 1/1000 : 1; // phi_Fp·B: N/mm → kN/mm for SI
+    var q      = phi_Fp * B * q_fac;  // kip/in (US) or kN/mm (SI)
+    var Pu_q   = Pu;                  // kip (US) or kN (SI) — unchanged
     var f_anch = edgeDist;
-    var bb = 3*(N - f_anch);
-    var cc = -(6*Pu_q/q)*(1.5*N + e_ecc - f_anch);
-    var disc = bb*bb - 4*cc;
-    if(disc < 0){ Y_bear = 0; }
+    var arm_Pu = e_ecc + f_anch - N/2; // Pu moment arm about rod centroid
+    // quadratic: Y² + b·Y + c = 0
+    var bq = -3*(N - f_anch);
+    var cq =  6*Pu_q*arm_Pu/q;
+    var disc = bq*bq - 4*cq;
+    if(disc < 0){ Y_bear = 1; }
     else {
-      Y_bear = (-bb + Math.sqrt(disc))/2;
+      var Yr1 = (-bq - Math.sqrt(disc))/2; // smaller root
+      var Yr2 = (-bq + Math.sqrt(disc))/2; // larger root
+      // pick smallest positive root ≤ N
+      Y_bear = (Yr1 > 0 && Yr1 <= N) ? Yr1 : Yr2;
       Y_bear = Math.max(1, Math.min(Y_bear, N));
     }
-    T_anch = Math.max(0, phi_Fp*B*Y_bear/2 - Pu_q);
+    var C_bear = q * Y_bear / 2; // kip or kN — compression resultant
+    T_anch = Math.max(0, C_bear - Pu_q);
     if(T_anch <= 0){
-      // Plate big enough — no anchor tension needed
-      Y_bear = Math.max(1, 3*(N/2 - e_ecc));
+      // No anchor tension needed — recompute Y from simple no-T equilibrium
+      // ΣFy=0: C=Pu → Y = 2·Pu/(q), then fp_max from actual pressure
+      Y_bear = Math.max(1, Math.min(2*Pu_q/q, N));
       fp_max = (unit==='us') ? 2*Pu/(B*Y_bear) : 2*Pu*1000/(B*Y_bear);
       T_anch = 0;
     } else {
@@ -1063,6 +1073,15 @@ function calc(){
   riEl = el('ri-shear');
   riEl.querySelector('.ri-value').textContent = fmt(DCR_shear,3);
   riEl.className = 'result-item ' + shCls;
+
+  riEl = el('ri-anch-t');
+  if(T_anch > 0 && phi_Nt_min > 0){
+    riEl.style.display = '';
+    riEl.querySelector('.ri-value').textContent = fmt(DCR_anch_T,3);
+    riEl.className = 'result-item ' + dcrCls(DCR_anch_T);
+  } else {
+    riEl.style.display = 'none';
+  }
 
   // ── DCR Banner ──
   var worstDCR = Math.max(DCR_brg, DCR_shear, DCR_anch_T);
