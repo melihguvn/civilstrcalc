@@ -155,6 +155,30 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .suggest-btn{font-size:.72rem;padding:4px 10px;border-radius:4px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s}
 .suggest-btn:hover{background:var(--accent);color:white}
 
+/* Profile info read-only display */
+.prof-info{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 12px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.prof-info-item{text-align:center}
+.pi-lbl{font-size:.60rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--sans);margin-bottom:3px;white-space:nowrap}
+.pi-val{font-size:.85rem;font-weight:600;font-family:var(--mono);color:var(--accent)}
+
+/* Mobile responsive */
+@media(max-width:640px){
+  .form-row-2{grid-template-columns:1fr!important}
+  .result-box{grid-template-columns:repeat(2,1fr)!important}
+  .step-formula{display:none}
+  .step-val{font-size:.70rem;word-break:break-word;overflow-wrap:anywhere;max-width:160px}
+  .steps-table td{padding:5px 3px}
+  .steps-table{table-layout:fixed;width:100%}
+  .steps-table td:first-child{width:26px}
+  .steps-table td:nth-child(2){width:38%}
+  .steps-table td:last-child{width:36px}
+}
+@media(max-width:400px){
+  .ri-value{font-size:.90rem}
+  .ri-label{font-size:.60rem}
+  .prof-info{grid-template-columns:repeat(3,1fr)}
+}
+
 @media print {
   @page{margin:6mm 8mm;size:A4}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -227,19 +251,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <select id="colProfile" class="bp-sel" onchange="onProfileChange()"></select>
   </div>
 
-  <div class="form-row-2">
-    <div class="form-group">
-      <label>Depth d <span class="unit-lbl" id="lbl-d">[in]</span></label>
-      <div class="iw"><input type="number" id="inp-d" value="10" min="0" step="0.5" oninput="calc()"><span class="us" id="su-d">in</span></div>
+  <div class="prof-info" id="prof-info">
+    <div class="prof-info-item">
+      <div class="pi-lbl">d <span id="pi-lbl-d">[in]</span></div>
+      <div class="pi-val" id="pi-d">—</div>
     </div>
-    <div class="form-group">
-      <label>Flange Width b<sub>f</sub> <span class="unit-lbl" id="lbl-bf">[in]</span></label>
-      <div class="iw"><input type="number" id="inp-bf" value="10" min="0" step="0.5" oninput="calc()"><span class="us" id="su-bf">in</span></div>
+    <div class="prof-info-item">
+      <div class="pi-lbl">b<sub>f</sub></div>
+      <div class="pi-val" id="pi-bf">—</div>
     </div>
-  </div>
-  <div class="form-group">
-    <label>Section Area A <span class="unit-lbl" id="lbl-A">[in²]</span></label>
-    <div class="iw"><input type="number" id="inp-A" value="11.8" min="0" step="0.1" oninput="calc()"><span class="us" id="su-A">in²</span></div>
+    <div class="prof-info-item">
+      <div class="pi-lbl">A <span id="pi-lbl-A">[in²]</span></div>
+      <div class="pi-val" id="pi-A">—</div>
+    </div>
   </div>
 
   <!-- Loads -->
@@ -588,6 +612,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
    CONSTANTS & GLOBALS
    ═════════════════════════════════════════════════════════════════════ */
 var unit = 'us'; // 'us' or 'si'
+var colD = 0, colBf = 0, colA = 0; // filled by onProfileChange
 
 // Anchor rod diameter lookup: [label, d_in, Ase_in2]
 var ANCH_SIZES_US = [
@@ -665,13 +690,11 @@ function setUnit(u){
     var toSI = (u==='si');
     function cv(id, factor){ var e=el(id); if(e){e.value=(parseFloat(e.value)||0)*factor;} }
     if(toSI){
-      cv('inp-d',   IN_TO_MM);   cv('inp-bf',  IN_TO_MM);
       cv('inp-Pu',  KIP_TO_KN);  cv('inp-Vu',  KIP_TO_KN);
       cv('inp-B',   IN_TO_MM);   cv('inp-N',   IN_TO_MM);
       cv('inp-Fy',  KSI_TO_MPA); cv('inp-fc',  KSI_TO_MPA);
       cv('inp-hef', IN_TO_MM);   cv('inp-sa',  IN_TO_MM);
-      // Round to sensible precision
-      ['inp-d','inp-bf','inp-B','inp-N','inp-hef','inp-sa'].forEach(function(id){
+      ['inp-B','inp-N','inp-hef','inp-sa'].forEach(function(id){
         var e=el(id); if(e) e.value=Math.round(parseFloat(e.value)||0);
       });
       ['inp-Pu','inp-Vu'].forEach(function(id){
@@ -680,15 +703,12 @@ function setUnit(u){
       ['inp-Fy','inp-fc'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(0);
       });
-      // Default SI plate Fy = 250 MPa (roughly 36 ksi), fc=20.7 MPa
-      el('inp-A').value = ((parseFloat(el('inp-A').value)||0)*6.4516).toFixed(1);
     } else {
-      cv('inp-d',   1/IN_TO_MM); cv('inp-bf',  1/IN_TO_MM);
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vu',  1/KIP_TO_KN);
       cv('inp-B',   1/IN_TO_MM); cv('inp-N',   1/IN_TO_MM);
       cv('inp-Fy',  1/KSI_TO_MPA);cv('inp-fc', 1/KSI_TO_MPA);
       cv('inp-hef', 1/IN_TO_MM); cv('inp-sa',  1/IN_TO_MM);
-      ['inp-d','inp-bf','inp-B','inp-N'].forEach(function(id){
+      ['inp-B','inp-N'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(2);
       });
       ['inp-hef','inp-sa'].forEach(function(id){
@@ -700,7 +720,6 @@ function setUnit(u){
       ['inp-Fy','inp-fc'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
-      el('inp-A').value = ((parseFloat(el('inp-A').value)||0)/6.4516).toFixed(2);
     }
   }
 
@@ -711,19 +730,19 @@ function setUnit(u){
 
   // Update unit labels
   var labels = {
-    'lbl-d':lenU,'lbl-bf':lenU,'lbl-B':lenU,'lbl-N':lenU,
+    'lbl-B':lenU,'lbl-N':lenU,
     'lbl-Pu':forU,'lbl-Vu':forU,
     'lbl-Fy':strsU,'lbl-fc':strsU,
-    'lbl-hef':lenU,'lbl-sa':lenU,'lbl-da':lenU,'lbl-A':areaU
+    'lbl-hef':lenU,'lbl-sa':lenU,'lbl-da':lenU
   };
   Object.keys(labels).forEach(function(id){
     var e=el(id); if(e) e.textContent='['+labels[id]+']';
   });
   var spans = {
-    'su-d':lenU,'su-bf':lenU,'su-B':lenU,'su-N':lenU,
+    'su-B':lenU,'su-N':lenU,
     'su-Pu':forU,'su-Vu':forU,
     'su-Fy':strsU,'su-fc':strsU,
-    'su-hef':lenU,'su-sa':lenU,'su-A':areaU
+    'su-hef':lenU,'su-sa':lenU
   };
   Object.keys(spans).forEach(function(id){
     var e=el(id); if(e) e.textContent=spans[id];
@@ -792,9 +811,15 @@ function onProfileChange(){
     return;
   }
 
-  el('inp-d').value = d.toFixed(unit==='us'?2:0);
-  el('inp-bf').value = bf.toFixed(unit==='us'?2:0);
-  el('inp-A').value = A.toFixed(unit==='us'?2:1);
+  colD = d; colBf = bf; colA = A;
+  var lenU2  = unit==='us'?'in':'mm';
+  var areaU2 = unit==='us'?'in²':'cm²';
+  var e;
+  e = el('pi-d');  if(e) e.textContent = d.toFixed(unit==='us'?2:0) + ' ' + lenU2;
+  e = el('pi-bf'); if(e) e.textContent = bf.toFixed(unit==='us'?2:0) + ' ' + lenU2;
+  e = el('pi-A');  if(e) e.textContent = A.toFixed(unit==='us'?2:1) + ' ' + areaU2;
+  e = el('pi-lbl-d'); if(e) e.textContent = '[' + lenU2 + ']';
+  e = el('pi-lbl-A'); if(e) e.textContent = '[' + areaU2 + ']';
   calc();
 }
 
@@ -822,8 +847,8 @@ function buildAnchorDropdowns(){
 
 /* ═══ suggest plate dims ════════════════════════════════════════════════ */
 function suggestDims(){
-  var d  = v('inp-d');
-  var bf = v('inp-bf');
+  var d  = colD;
+  var bf = colBf;
   var Pu = v('inp-Pu');
   var fc = v('inp-fc');
   var a2a1 = Math.min(v('inp-a2a1')||1.0, 4.0);
@@ -863,8 +888,8 @@ function suggestDims(){
    ═════════════════════════════════════════════════════════════════════ */
 function calc(){
   var type = el('colType') ? el('colType').value : 'W';
-  var d    = v('inp-d');
-  var bf   = v('inp-bf');
+  var d    = colD;
+  var bf   = colBf;
   var Pu   = v('inp-Pu');
   var Vu   = v('inp-Vu');
   var B    = v('inp-B');
