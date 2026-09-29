@@ -848,13 +848,22 @@ function suggestDims(){
   var fc = v('inp-fc');
   var a2a1 = Math.min(Math.max(v('inp-a2a1')||1.0, 1.0), 4.0);
 
+  // Compute anchor edge distance for this rod selection
+  var daIdx_s = parseInt((el('inp-da')||{value:'4'}).value)||4;
+  var sizes_s = unit==='us' ? ANCH_SIZES_US : ANCH_SIZES_SI;
+  var da_s = sizes_s[Math.min(daIdx_s, sizes_s.length-1)][1];
+  var minEdge_s = unit==='us' ? 1.5 : 38;
+  var edgeDist_s = Math.max(4*da_s, minEdge_s);
+  var rod_gap = unit==='us' ? 0.75 : 20; // min clearance between rod and column face
+
   var phiPp_per_A1;
   if(unit==='us'){
     phiPp_per_A1 = Math.min(0.65*0.85*fc*Math.sqrt(a2a1), 0.65*1.7*fc); // ksi
     var over = 2.5; // in overhang each side
     var A1_req = Pu/phiPp_per_A1; // in²
     var side_from_bearing = Math.sqrt(A1_req);
-    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing);
+    var side_from_rods = Math.max(d, bf) + 2*(edgeDist_s + rod_gap);
+    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing, side_from_rods);
     // round up to nearest 0.5"
     el('inp-B').value = (Math.ceil(side_min*2)/2).toFixed(1);
   } else {
@@ -862,7 +871,8 @@ function suggestDims(){
     var over = 65; // mm overhang each side
     var A1_req = (Pu*1000)/phiPp_per_A1; // mm²
     var side_from_bearing = Math.sqrt(A1_req);
-    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing);
+    var side_from_rods = Math.max(d, bf) + 2*(edgeDist_s + rod_gap);
+    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing, side_from_rods);
     // round up to nearest 5mm
     el('inp-B').value = Math.ceil(side_min/5)*5;
   }
@@ -896,6 +906,8 @@ function calc(){
   var da0    = daRow0[1]; // in or mm
   var minEdge = unit==='us' ? 1.5 : 38; // ACI 318-25 Table 26.7.1 absolute min
   var edgeDist = Math.max(4*da0, minEdge); // 4·da for cast-in headed anchors
+  var rod_gap = unit==='us' ? 0.75 : 20;  // minimum clearance between rod CL and column face
+  var rodInsideCol = (B/2 - edgeDist) < (Math.max(d/2, bf/2) + rod_gap);
   var sa = Math.max(B - 2*edgeDist, edgeDist); // center-to-center between corner rods
 
   if(!d||!bf||!B||!N||!Fy||!fc) return;
@@ -1068,6 +1080,10 @@ function calc(){
   var govStr = DCR_brg>=DCR_shear && DCR_brg>=DCR_anch_T ? 'Bearing DCR = '+fmt(DCR_brg,3)
              : DCR_shear>=DCR_anch_T ? 'Shear DCR = '+fmt(DCR_shear,3)
              : 'Anchor tension DCR = '+fmt(DCR_anch_T,3);
+  if(rodInsideCol){
+    govStr += ' | ⚠ Rod clearance: use Suggest Size or increase B';
+    if(worstDCR<1.0) bnr.className = 'dcr-banner warn';
+  }
   if(ms) ms.textContent = 'Governing: ' + govStr;
 
   // ── Steps table ──
@@ -1194,9 +1210,18 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
   var cW = bf*scale, cH = d*scale;
   var cx0 = (W-cW)/2, cy0 = (H-cH)/2;
 
-  // Anchor positions — minimum edge distance from plate edges
-  var eS = edgeDist * scale; // edge dist in SVG units
-  eS = Math.min(eS, pW*0.3); // cap to 30% of plate for visual clarity
+  // Anchor positions — ensure rods appear outside the column footprint in SVG
+  // Physical overhang of plate beyond column in each direction
+  var overhangX = (B - bf) / 2;  // plate extends this far past column flange on each side
+  var overhangY = (N - d)  / 2;  // plate extends this far past column depth on each side
+  var minOverhang = Math.min(overhangX, overhangY);
+  // Place rod at 85% of the tighter overhang — always outside column, with visible gap
+  var edgeForSVG = (minOverhang > 0)
+    ? Math.min(edgeDist, minOverhang * 0.82)
+    : edgeDist;
+  var eS = edgeForSVG * scale;
+  eS = Math.max(eS, 3);          // at least 3 px visible from plate edge
+  eS = Math.min(eS, pW * 0.28);  // never more than 28% of plate width
   var anchPts = [];
   // Corner rods for both 4 and 8
   var x0a = px0 + eS, x1a = px0 + pW - eS;
