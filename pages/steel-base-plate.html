@@ -254,14 +254,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
   <!-- Loads -->
   <div class="form-div"><div class="form-div-lbl">Factored Loads (LRFD)</div></div>
+  <div class="form-group">
+    <label>Axial P<sub>u</sub> <span class="unit-lbl" id="lbl-Pu">[kip]</span></label>
+    <div class="iw"><input type="number" id="inp-Pu" value="200" min="0" step="10" oninput="calc()"><span class="us" id="su-Pu">kip</span></div>
+  </div>
   <div class="form-row-2">
-    <div class="form-group">
-      <label>Axial P<sub>u</sub> <span class="unit-lbl" id="lbl-Pu">[kip]</span></label>
-      <div class="iw"><input type="number" id="inp-Pu" value="200" min="0" step="10" oninput="calc()"><span class="us" id="su-Pu">kip</span></div>
-    </div>
     <div class="form-group">
       <label>Shear V<sub>u</sub> <span class="unit-lbl" id="lbl-Vu">[kip]</span></label>
       <div class="iw"><input type="number" id="inp-Vu" value="10" min="0" step="1" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
+    </div>
+    <div class="form-group">
+      <label>Moment M<sub>u</sub> <span class="unit-lbl" id="lbl-Mu">[kip·in]</span></label>
+      <div class="iw"><input type="number" id="inp-Mu" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mu">kip·in</span></div>
     </div>
   </div>
 
@@ -614,8 +618,9 @@ var ANCH_GRADES = [
   ['A307 Gr A',   36,  60,  248, 414],
   ['A193 B7',    105, 125,  724, 862],
   ['M4.6',        35,  58,  240, 400],
+  ['M5.6',        43,  72,  300, 500],
   ['M8.8',        92, 116,  640, 800],
-  ['M10.9',      130, 150,  900,1000]
+  ['M10.9',      130, 150,  900,1040]
 ];
 
 // Plate steel grades: [label, Fy_ksi, Fy_MPa]
@@ -674,28 +679,29 @@ function setUnit(u){
 
   // Convert current values
   var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482, KSI_TO_MPA = 6.8948;
+  var KIN_TO_KNM = KIP_TO_KN * IN_TO_MM / 1000; // kip·in → kN·m ≈ 0.1130
   if(oldUnit !== u){
     var toSI = (u==='si');
     function cv(id, factor){ var e=el(id); if(e){e.value=(parseFloat(e.value)||0)*factor;} }
     if(toSI){
-      cv('inp-Pu',  KIP_TO_KN);  cv('inp-Vu',  KIP_TO_KN);
+      // Use fixed SI defaults instead of converting
+      var ePu=el('inp-Pu'); if(ePu) ePu.value='100.0';
+      var eVu=el('inp-Vu'); if(eVu) eVu.value='50.0';
+      var eMu=el('inp-Mu'); if(eMu) eMu.value='0.0';
       cv('inp-B',   IN_TO_MM);
-      cv('inp-fc',  KSI_TO_MPA);
+      var efc=el('inp-fc'); if(efc) efc.value='30';
       cv('inp-hef', IN_TO_MM);
       var eB=el('inp-B'); if(eB) eB.value=Math.round(parseFloat(eB.value)||0);
       var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
-      ['inp-Pu','inp-Vu'].forEach(function(id){
-        var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
-      });
-      var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(0);
     } else {
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vu',  1/KIP_TO_KN);
+      cv('inp-Mu',  1/KIN_TO_KNM);
       cv('inp-B',   1/IN_TO_MM);
       cv('inp-fc',  1/KSI_TO_MPA);
       cv('inp-hef', 1/IN_TO_MM);
       var eB=el('inp-B'); if(eB) eB.value=(parseFloat(eB.value)||0).toFixed(2);
       var eH=el('inp-hef'); if(eH) eH.value=(parseFloat(eH.value)||0).toFixed(1);
-      ['inp-Pu','inp-Vu'].forEach(function(id){
+      ['inp-Pu','inp-Vu','inp-Mu'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
       var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(2);
@@ -707,10 +713,11 @@ function setUnit(u){
   var strsU = u==='us'?'ksi':'MPa';
   var areaU = u==='us'?'in²':'cm²';
 
+  var momU = u==='us'?'kip·in':'kN·m';
   // Update unit labels
   var labels = {
     'lbl-B':lenU,
-    'lbl-Pu':forU,'lbl-Vu':forU,
+    'lbl-Pu':forU,'lbl-Vu':forU,'lbl-Mu':momU,
     'lbl-fc':strsU,
     'lbl-hef':lenU,'lbl-da':lenU
   };
@@ -719,7 +726,7 @@ function setUnit(u){
   });
   var spans = {
     'su-B':lenU,
-    'su-Pu':forU,'su-Vu':forU,
+    'su-Pu':forU,'su-Vu':forU,'su-Mu':momU,
     'su-fc':strsU,
     'su-hef':lenU
   };
@@ -826,8 +833,8 @@ function buildAnchorDropdowns(){
   // grades
   var gSel = el('inp-grade');
   gSel.innerHTML='';
-  var startIdx = unit==='us'?0:4; // ISO grades for SI
-  var endIdx   = unit==='us'?3:6;
+  var startIdx = unit==='us'?0:4;
+  var endIdx   = unit==='us'?3:7;
   for(var i=startIdx;i<=endIdx;i++){
     var o=document.createElement('option'); o.value=i; o.textContent=ANCH_GRADES[i][0]; gSel.appendChild(o);
   }
@@ -883,111 +890,140 @@ function calc(){
   var daIdx  = parseInt((el('inp-da')||{value:'4'}).value)||4;
   var grIdx  = parseInt((el('inp-grade')||{value:'0'}).value)||0;
   var hef  = v('inp-hef');
-  // Auto edge distance: ACI 318-25 min = max(6*da, 2in / 50mm)
+  // Auto edge distance: ACI 318-25 cast-in min = max(4·da, 1.5in/38mm)
   var sizes  = unit==='us'?ANCH_SIZES_US:ANCH_SIZES_SI;
   var daRow0 = sizes[Math.min(daIdx, sizes.length-1)];
   var da0    = daRow0[1]; // in or mm
-  var minEdge = unit==='us' ? 2.0 : 50;
-  var edgeDist = Math.max(6*da0, minEdge);
+  var minEdge = unit==='us' ? 1.5 : 38; // ACI 318-25 Table 26.7.1 absolute min
+  var edgeDist = Math.max(4*da0, minEdge); // 4·da for cast-in headed anchors
   var sa = Math.max(B - 2*edgeDist, edgeDist); // center-to-center between corner rods
 
   if(!d||!bf||!B||!N||!Fy||!fc) return;
 
+  var Mu    = v('inp-Mu'); // kip·in (US) or kN·m (SI)
+
   // Anchor properties
-  var sizes  = unit==='us'?ANCH_SIZES_US:ANCH_SIZES_SI;
   var daRow  = sizes[Math.min(daIdx, sizes.length-1)];
   var grRow  = ANCH_GRADES[Math.min(grIdx, ANCH_GRADES.length-1)];
-  var da     = daRow[1]; // in or mm
-  var Ase    = daRow[2]; // in² or mm²
-  var futa   = unit==='us' ? grRow[2] : grRow[4]; // ksi or MPa
+  var da     = daRow[1];
+  var Ase    = daRow[2];
+  var futa   = unit==='us' ? grRow[2] : grRow[4];
   var fya    = unit==='us' ? grRow[1] : grRow[3];
 
-  // Is HSS/hollow section?
-  var isHSS = (type==='HSS_SQ_CHORD'||type==='SHS_CHORD'||type==='RHS_CHORD');
-  var mCoeff = 0.95; // for both W and HSS
+  var isHSS  = (type==='HSS_SQ_CHORD'||type==='SHS_CHORD'||type==='RHS_CHORD');
+  var mCoeff = 0.95;
   var nCoeff = isHSS ? 0.95 : 0.80;
 
-  var A1, fp, phi_c, phi_Fp, DCR_brg;
-  var m, n, nprime, X, lam, ell, tp, phi_Vn_fric, DCR_shear;
-  var phi_Nsa, phi_Nsa_grp, Nb, ANc, ANc0, phi_Ncbg, phi_Vsa, DCR_anch_V;
+  var phi_c  = 0.65;
+  var phi_pl = 0.90;
+
+  var A1, phi_Fp;
+  var Mu_int; // internal moment: kip·in or kN·mm
+  var e_ecc;  // eccentricity (in or mm)
+  var fp_max, T_anch = 0, Y_bear = N;
+  var bearCase; // 'centric' | 'full_comp' | 'partial'
+  var m, n, nprime, X, lam, ell, tp;
+  var phi_Vn_fric, DCR_shear, DCR_brg, DCR_anch_V, DCR_anch_T = 0;
+  var phi_Nsa, phi_Nsa_grp, Nb, ANc, ANc0, phi_Ncbg, phi_Vsa, phi_Nt_min;
+
+  /* ── unit-specific bearing setup ── */
+  A1 = B * N;
 
   if(unit==='us'){
-    // --- US: kip, in, ksi ---
-    A1 = B * N; // in²
-    fp = Pu / A1; // ksi
-    phi_c = 0.65;
-    phi_Fp = Math.min(phi_c * 0.85 * fc * Math.sqrt(a2a1), phi_c * 1.7 * fc); // ksi
-    DCR_brg = fp / phi_Fp;
-
-    m = (N - mCoeff*d) / 2;
-    n = (B - nCoeff*bf) / 2;
-    nprime = Math.sqrt(d * bf) / 4;
-    var phi_Pp0 = phi_c * 0.85 * fc * A1; // kip
-    X = (4*d*bf / Math.pow(d+bf,2)) * (Pu / phi_Pp0);
-    X = Math.min(Math.max(X, 0), 1.0);
-    lam = X>0 ? 2*Math.sqrt(X)/(1+Math.sqrt(1-X)) : 0;
-    lam = Math.min(1.0, lam);
-    ell = Math.max(m, n, lam*nprime);
-
-    var phi_pl = 0.90;
-    tp = ell * Math.sqrt(2*Pu / (phi_pl * Fy * A1));
-
-    phi_Vn_fric = phi_pl * 0.55 * Pu; // kip
-    DCR_shear = Vu / phi_Vn_fric;
-
-    // Anchors
-    phi_Nsa = 0.75 * Ase * futa; // kip per bolt
-    phi_Nsa_grp = nAnch * phi_Nsa;
-    var fc_psi = fc * 1000;
-    Nb = 24 * Math.sqrt(fc_psi) * Math.pow(hef, 1.5) / 1000; // kip
-    ANc0 = 9 * hef * hef; // in²
-    var n_side = Math.sqrt(nAnch); // for 4=2, for 8 approximate
-    ANc = Math.min(Math.pow(sa + 2*hef, 2), nAnch * ANc0); // simplified for 2×2 pattern
-    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
-    var psi_c = 1.25; var psi_ed = 1.0; var psi_cp = 1.0;
-    phi_Ncbg = 0.70 * (ANc/ANc0) * psi_ed * psi_c * psi_cp * Nb; // kip
-
-    phi_Vsa = 0.65 * 0.6 * Ase * futa; // kip per bolt
-    DCR_anch_V = Vu / (nAnch * phi_Vsa);
-
+    phi_Fp  = Math.min(phi_c*0.85*fc*Math.sqrt(a2a1), phi_c*1.7*fc); // ksi
+    Mu_int  = Mu;                            // kip·in
+    e_ecc   = (Pu > 0 && Mu_int > 0) ? Mu_int/Pu : 0; // in
   } else {
-    // --- SI: kN, mm, MPa ---
-    A1 = B * N; // mm²
-    fp = Pu * 1000 / A1; // MPa (N/mm²)
-    phi_c = 0.65;
-    phi_Fp = Math.min(phi_c * 0.85 * fc * Math.sqrt(a2a1), phi_c * 1.7 * fc); // MPa
-    DCR_brg = fp / phi_Fp;
-
-    m = (N - mCoeff*d) / 2;
-    n = (B - nCoeff*bf) / 2;
-    nprime = Math.sqrt(d * bf) / 4;
-    var phi_Pp0_kN = phi_c * 0.85 * fc * A1 / 1000; // kN
-    X = (4*d*bf / Math.pow(d+bf,2)) * (Pu / phi_Pp0_kN);
-    X = Math.min(Math.max(X, 0), 1.0);
-    lam = X>0 ? 2*Math.sqrt(X)/(1+Math.sqrt(1-X)) : 0;
-    lam = Math.min(1.0, lam);
-    ell = Math.max(m, n, lam*nprime);
-
-    var phi_pl = 0.90;
-    // tp: kN→N: ×1000; Fy in MPa=N/mm²; A1 in mm²
-    tp = ell * Math.sqrt(2*Pu*1000 / (phi_pl * Fy * A1));
-
-    phi_Vn_fric = phi_pl * 0.55 * Pu; // kN
-    DCR_shear = Vu / phi_Vn_fric;
-
-    // Anchors — SI: N_b = 10*sqrt(f'c_MPa)*hef^1.5 [N] with hef in mm
-    phi_Nsa = 0.75 * Ase * futa / 1000; // kN per bolt
-    phi_Nsa_grp = nAnch * phi_Nsa;
-    Nb = 10 * Math.sqrt(fc) * Math.pow(hef, 1.5) / 1000; // kN
-    ANc0 = 9 * hef * hef; // mm²
-    ANc = Math.min(Math.pow(sa + 2*hef, 2), nAnch * ANc0);
-    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
-    var psi_c = 1.25; var psi_ed = 1.0; var psi_cp = 1.0;
-    phi_Ncbg = 0.70 * (ANc/ANc0) * psi_ed * psi_c * psi_cp * Nb; // kN
-
-    phi_Vsa = 0.65 * 0.6 * Ase * futa / 1000; // kN per bolt
-    DCR_anch_V = Vu / (nAnch * phi_Vsa);
+    phi_Fp  = Math.min(phi_c*0.85*fc*Math.sqrt(a2a1), phi_c*1.7*fc); // MPa
+    Mu_int  = Mu * 1000;                     // kN·m → kN·mm
+    e_ecc   = (Pu > 0 && Mu_int > 0) ? Mu_int/Pu : 0; // mm
   }
+
+  /* ── Eccentric bearing (AISC DG1 §4.2) ── */
+  var fp_centric = unit==='us' ? Pu/A1 : Pu*1000/A1; // ksi or MPa
+
+  if(e_ecc <= 0){
+    bearCase = 'centric';
+    fp_max = fp_centric;
+    T_anch = 0;
+  } else if(e_ecc <= N/6){
+    bearCase = 'full_comp';
+    fp_max = fp_centric * (1 + 6*e_ecc/N);
+    T_anch = 0;
+  } else {
+    bearCase = 'partial';
+    // Solve for Y (bearing length) at full capacity with anchor tension
+    // From moment equilibrium about compression edge:
+    // q·Y²/6 + q·(N-f)·Y/2 - Pu_eff·(3N/2+e-f) = 0
+    // where q = phi_Fp·B, Pu_eff in same unit as force
+    var Pu_eff = (unit==='us') ? Pu : Pu; // kip or kN
+    var q = phi_Fp * B;                   // kip/in or kN/mm
+    // convert Pu to same unit as q·Y
+    var Pu_q = (unit==='us') ? Pu : Pu;   // kip or kN  (same as above, explicit)
+    var f_anch = edgeDist;
+    var bb = 3*(N - f_anch);
+    var cc = -(6*Pu_q/q)*(1.5*N + e_ecc - f_anch);
+    var disc = bb*bb - 4*cc;
+    if(disc < 0){ Y_bear = 0; }
+    else {
+      Y_bear = (-bb + Math.sqrt(disc))/2;
+      Y_bear = Math.max(1, Math.min(Y_bear, N));
+    }
+    T_anch = Math.max(0, phi_Fp*B*Y_bear/2 - Pu_q);
+    if(T_anch <= 0){
+      // Plate big enough — no anchor tension needed
+      Y_bear = Math.max(1, 3*(N/2 - e_ecc));
+      fp_max = (unit==='us') ? 2*Pu/(B*Y_bear) : 2*Pu*1000/(B*Y_bear);
+      T_anch = 0;
+    } else {
+      fp_max = phi_Fp; // bearing at full capacity
+    }
+  }
+  var DCR_brg_val = fp_max / phi_Fp;
+
+  /* ── Cantilever lengths & plate thickness ── */
+  m = (N - mCoeff*d)/2;
+  n = (B - nCoeff*bf)/2;
+  nprime = Math.sqrt(d*bf)/4;
+  var phi_Pp0 = phi_c*0.85*fc * (unit==='us' ? A1 : A1/1000); // kip or kN
+  X = (4*d*bf/Math.pow(d+bf,2)) * (Pu / Math.max(phi_Pp0, 0.001));
+  X = Math.min(Math.max(X,0),1.0);
+  lam = X>0 ? 2*Math.sqrt(X)/(1+Math.sqrt(1-X)) : 0;
+  lam = Math.min(1.0, lam);
+  ell = Math.max(m, n, lam*nprime);
+  // tp = ell·√(2·fp_max / (φ·Fy))   [dimensionally consistent in both unit systems]
+  tp  = ell * Math.sqrt(2*fp_max / (phi_pl*Fy));
+
+  /* ── Shear friction ── */
+  phi_Vn_fric = phi_pl*0.55*Pu;
+  DCR_shear   = Vu / Math.max(phi_Vn_fric, 1e-9);
+
+  /* ── Anchor rod capacities (ACI 318-25 §17) ── */
+  if(unit==='us'){
+    phi_Nsa = 0.75*Ase*futa; // kip/bolt
+    phi_Nsa_grp = nAnch*phi_Nsa;
+    Nb  = 24*Math.sqrt(fc*1000)*Math.pow(hef,1.5)/1000; // kip
+    ANc0 = 9*hef*hef;
+    ANc  = Math.min(Math.pow(sa+2*hef,2), nAnch*ANc0);
+    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
+    phi_Ncbg = 0.70*(ANc/ANc0)*1.0*1.25*1.0*Nb; // kip
+    phi_Vsa  = 0.65*0.6*Ase*futa; // kip/bolt
+  } else {
+    phi_Nsa = 0.75*Ase*futa/1000; // kN/bolt
+    phi_Nsa_grp = nAnch*phi_Nsa;
+    Nb  = 10*Math.sqrt(fc)*Math.pow(hef,1.5)/1000; // kN
+    ANc0 = 9*hef*hef;
+    ANc  = Math.min(Math.pow(sa+2*hef,2), nAnch*ANc0);
+    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
+    phi_Ncbg = 0.70*(ANc/ANc0)*1.0*1.25*1.0*Nb; // kN
+    phi_Vsa  = 0.65*0.6*Ase*futa/1000; // kN/bolt
+  }
+
+  DCR_anch_V = Vu / Math.max(nAnch*phi_Vsa, 1e-9);
+  phi_Nt_min = Math.min(phi_Nsa_grp, phi_Ncbg);
+  DCR_anch_T = (T_anch > 0 && phi_Nt_min > 0) ? T_anch/phi_Nt_min : 0;
+
+  var DCR_brg = DCR_brg_val;
 
   var lenU  = unit==='us'?'in':'mm';
   var forU  = unit==='us'?'kip':'kN';
@@ -1016,7 +1052,7 @@ function calc(){
   riEl.className = 'result-item ' + shCls;
 
   // ── DCR Banner ──
-  var worstDCR = Math.max(DCR_brg, DCR_shear);
+  var worstDCR = Math.max(DCR_brg, DCR_shear, DCR_anch_T);
   var bnr = el('dcr-banner');
   bnr.className = 'dcr-banner ' + dcrCls(worstDCR);
   var icon = el('dcr-icon')||bnr.querySelector('.dcr-icon');
@@ -1029,20 +1065,29 @@ function calc(){
   } else {
     if(mt) mt.textContent = 'Design NG — increase plate or modify inputs';
   }
-  var govStr = DCR_brg>=DCR_shear ? 'Bearing DCR = '+fmt(DCR_brg,3) : 'Shear DCR = '+fmt(DCR_shear,3);
+  var govStr = DCR_brg>=DCR_shear && DCR_brg>=DCR_anch_T ? 'Bearing DCR = '+fmt(DCR_brg,3)
+             : DCR_shear>=DCR_anch_T ? 'Shear DCR = '+fmt(DCR_shear,3)
+             : 'Anchor tension DCR = '+fmt(DCR_anch_T,3);
   if(ms) ms.textContent = 'Governing: ' + govStr;
 
   // ── Steps table ──
+  var momLabel = unit==='us'?'kip·in':'kN·m';
+  var bearDesc = bearCase==='centric' ? 'fp = Pu/A₁'
+               : bearCase==='full_comp' ? 'Full compression (e ≤ N/6): fp = (Pu/A₁)·(1+6e/N)'
+               : 'Partial bearing (e > N/6): fp = 2·Pu/(B·Y)';
+  var bearForm = bearCase==='centric' ? 'A₁ = B·N; fp = Pu/A₁'
+               : bearCase==='full_comp' ? 'e = Mu/Pu = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU+'; fp_max'
+               : 'e = '+fmt(e_ecc,unit==='us'?1:0)+' '+lenU+'; Y = '+fmt(Y_bear,unit==='us'?2:0)+' '+lenU;
   var rows = [
     {num:1,
-     desc:'Plate area & bearing pressure',
-     form:'A₁ = B × N; fp = Pu / A₁',
-     val: 'A₁ = '+fmt(A1,unit==='us'?1:0)+' '+areaU+' | fp = '+fmt(fp,unit==='us'?4:2)+' '+strsU,
+     desc:'Plate area & eccentricity',
+     form:'A₁ = B·N; e = Mu/Pu'+(Mu>0?' = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU:''),
+     val: 'A₁ = '+fmt(A1,unit==='us'?1:0)+' '+areaU+(Mu>0?' | e = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU+' ('+(bearCase==='full_comp'?'kern':'partial')+')':''),
      chk: ''},
     {num:2,
      desc:'Bearing capacity check',
-     form:'φcFp = min(φc·0.85·f\'c·√(A₂/A₁), φc·1.7·f\'c)',
-     val: 'φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
+     form:bearDesc,
+     val: 'fp_max = '+fmt(fp_max,unit==='us'?4:2)+' '+strsU+' | φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
      chk: DCR_brg},
     {num:3,
      desc:'Cantilever lengths m, n, n\'',
@@ -1056,13 +1101,13 @@ function calc(){
      chk: ''},
     {num:5,
      desc:'Required plate thickness',
-     form:'tp = ℓ·√(2Pu/(φ·Fy·B·N))',
+     form:'tp = ℓ·√(2·fp_max/(φ·Fy))',
      val: 'tp = '+fmt(tp,unit==='us'?3:1)+' '+lenU,
      chk: ''},
     {num:6,
      desc:'Shear friction',
      form:'φVn = φ·μ·Pu (μ=0.55, φ=0.90)',
-     val: 'φVn = '+fmt(phi_Vn_fric,1)+' '+forU+' | Vu = '+fmt(Vu,1)+' '+forU+' | DCR = '+fmt(DCR_shear,3),
+     val: 'φVn = '+fmt(phi_Vn_fric,1)+' '+forU+' | DCR = '+fmt(DCR_shear,3),
      chk: DCR_shear}
   ];
 
@@ -1088,14 +1133,18 @@ function calc(){
   var anchRows = [
     ['Grade',          grRow[0]],
     ['Diameter da',    daRow[0]],
+    ['Edge dist (auto)', fmt(edgeDist,unit==='us'?2:0)+' '+lenU+' = max(4·da, '+fmt(unit==='us'?1.5:38,0)+' '+lenU+')'],
     ['Stress area Ase', fmt(Ase, unit==='us'?3:0)+' '+(unit==='us'?'in²':'mm²')],
     ['φNsa per bolt',  fmt(phi_Nsa,unit==='us'?2:1)+' '+forU],
     ['φNsa group (n='+nAnch+')', fmt(phi_Nsa_grp,unit==='us'?1:0)+' '+forU],
-    ['Nb (single bar breakout)', fmt(Nb,unit==='us'?1:0)+' '+forU],
+    ['Nb (single breakout)', fmt(Nb,unit==='us'?1:0)+' '+forU],
     ['ANc / ANc0',    fmt(ANc/(ANc0||1),2)],
     ['φNcbg (group)',  fmt(phi_Ncbg,unit==='us'?1:0)+' '+forU+' <span style="font-size:.68rem;color:var(--text-dim)">(ψed=ψcp=1.0, ψc=1.25)</span>'],
     ['φVsa per bolt',  fmt(phi_Vsa,unit==='us'?2:1)+' '+forU],
-    ['φVsa group',     fmt(nAnch*phi_Vsa,unit==='us'?1:0)+' '+forU+' | Shear DCR = '+fmt(DCR_anch_V,3)]
+    ['Shear DCR',      fmt(DCR_anch_V,3)+' (Vu / φVsa·n)'],
+    T_anch > 0
+      ? ['Tension demand T',  fmt(T_anch,unit==='us'?2:1)+' '+forU+' | min(φNsa,φNcbg) = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR = '+fmt(DCR_anch_T,3)]
+      : ['Anchor tension',    'None — axial compression governs']
   ];
 
   var abody = el('anch-body');
@@ -1110,7 +1159,7 @@ function calc(){
   var inpRows = [
     ['Profile',         profName || 'Manual'],
     ['Plate B = N',     fmt(B,unit==='us'?1:0)+' '+lenU],
-    ['Pu / Vu',         fmt(Pu,1)+' / '+fmt(Vu,1)+' '+forU],
+    ['Pu / Vu / Mu',    fmt(Pu,1)+' '+forU+' / '+fmt(Vu,1)+' '+forU+(Mu>0?' / '+fmt(Mu,1)+' '+(unit==='us'?'kip·in':'kN·m'):'')],
     ['Steel grade',     pgRow[0]+' (Fy='+fmt(Fy,0)+' '+strsU+')'],
     ["f'c",             fmt(fc,unit==='us'?2:0)+' '+strsU],
     ['A2/A1',           fmt(a2a1,1)],
