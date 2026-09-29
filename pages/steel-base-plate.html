@@ -251,20 +251,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <select id="colProfile" class="bp-sel" onchange="onProfileChange()"></select>
   </div>
 
-  <div class="prof-info" id="prof-info">
-    <div class="prof-info-item">
-      <div class="pi-lbl">d <span id="pi-lbl-d">[in]</span></div>
-      <div class="pi-val" id="pi-d">—</div>
-    </div>
-    <div class="prof-info-item">
-      <div class="pi-lbl">b<sub>f</sub></div>
-      <div class="pi-val" id="pi-bf">—</div>
-    </div>
-    <div class="prof-info-item">
-      <div class="pi-lbl">A <span id="pi-lbl-A">[in²]</span></div>
-      <div class="pi-val" id="pi-A">—</div>
-    </div>
-  </div>
 
   <!-- Loads -->
   <div class="form-div"><div class="form-div-lbl">Factored Loads (LRFD)</div></div>
@@ -280,32 +266,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </div>
 
   <!-- Plate Dimensions -->
-  <div class="form-div"><div class="form-div-lbl">Base Plate Dimensions</div></div>
-  <div class="form-row-2" style="align-items:flex-end">
-    <div class="form-group">
-      <label>Width B <span class="unit-lbl" id="lbl-B">[in]</span> <span style="font-size:.68rem;color:var(--text-dim)">(&#x2225; b<sub>f</sub>)</span></label>
-      <div class="iw"><input type="number" id="inp-B" value="14" min="1" step="0.5" oninput="calc()"><span class="us" id="su-B">in</span></div>
-    </div>
-    <div class="form-group">
-      <label>Length N <span class="unit-lbl" id="lbl-N">[in]</span> <span style="font-size:.68rem;color:var(--text-dim)">(&#x2225; d)</span></label>
-      <div class="iw"><input type="number" id="inp-N" value="14" min="1" step="0.5" oninput="calc()"><span class="us" id="su-N">in</span></div>
-    </div>
+  <div class="form-div"><div class="form-div-lbl">Base Plate (Square, B = N)</div></div>
+  <div class="form-group">
+    <label>Plate Size B = N <span class="unit-lbl" id="lbl-B">[in]</span></label>
+    <div class="iw"><input type="number" id="inp-B" value="14" min="1" step="0.5" oninput="calc()"><span class="us" id="su-B">in</span></div>
   </div>
   <div style="margin:-6px 0 10px;text-align:right">
-    <button class="suggest-btn no-print" onclick="suggestDims()">Suggest B &amp; N</button>
+    <button class="suggest-btn no-print" onclick="suggestDims()">Suggest Size</button>
   </div>
 
   <!-- Materials -->
   <div class="form-div"><div class="form-div-lbl">Material Properties</div></div>
-  <div class="form-row-2">
-    <div class="form-group">
-      <label>Plate F<sub>y</sub> <span class="unit-lbl" id="lbl-Fy">[ksi]</span></label>
-      <div class="iw"><input type="number" id="inp-Fy" value="36" min="1" step="1" oninput="calc()"><span class="us" id="su-Fy">ksi</span></div>
-    </div>
-    <div class="form-group">
-      <label>Concrete f&prime;<sub>c</sub> <span class="unit-lbl" id="lbl-fc">[ksi]</span></label>
-      <div class="iw"><input type="number" id="inp-fc" value="3" min="0.5" step="0.5" oninput="calc()"><span class="us" id="su-fc">ksi</span></div>
-    </div>
+  <div class="form-group">
+    <label>Plate Steel Grade</label>
+    <select id="inp-plate-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
+  <div class="form-group">
+    <label>Concrete f&prime;<sub>c</sub> <span class="unit-lbl" id="lbl-fc">[ksi]</span></label>
+    <div class="iw"><input type="number" id="inp-fc" value="3" min="0.5" step="0.5" oninput="calc()"><span class="us" id="su-fc">ksi</span></div>
   </div>
   <div class="form-group">
     <label>A<sub>2</sub>/A<sub>1</sub> ratio <span style="font-size:.68rem;color:var(--text-dim)">(1.0&ndash;4.0; bearing area modifier)</span></label>
@@ -331,15 +309,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Rod grade</label>
     <select id="inp-grade" class="bp-sel" onchange="calc()"></select>
   </div>
-  <div class="form-row-2">
-    <div class="form-group">
-      <label>Embedment h<sub>ef</sub> <span class="unit-lbl" id="lbl-hef">[in]</span></label>
-      <div class="iw"><input type="number" id="inp-hef" value="12" min="1" step="1" oninput="calc()"><span class="us" id="su-hef">in</span></div>
-    </div>
-    <div class="form-group">
-      <label>Bolt spacing s<sub>a</sub> <span class="unit-lbl" id="lbl-sa">[in]</span></label>
-      <div class="iw"><input type="number" id="inp-sa" value="10" min="1" step="0.5" oninput="calc()"><span class="us" id="su-sa">in</span></div>
-    </div>
+  <div class="form-group">
+    <label>Embedment h<sub>ef</sub> <span class="unit-lbl" id="lbl-hef">[in]</span></label>
+    <div class="iw"><input type="number" id="inp-hef" value="12" min="1" step="1" oninput="calc()"><span class="us" id="su-hef">in</span></div>
   </div>
 
   <div style="margin-top:14px">
@@ -637,13 +609,28 @@ var ANCH_SIZES_SI = [
 
 // Anchor grades: [label, fya_ksi, futa_ksi, fya_MPa, futa_MPa]
 var ANCH_GRADES = [
-  ['F1554 Gr 36',  36,  58,  248, 400],
-  ['F1554 Gr 55',  55,  75,  379, 517],
-  ['A307 Gr A',    36,  60,  248, 414],
-  ['A193 B7',     105, 125,  724, 862],
-  ['ISO 4.6',      35,  58,  240, 400],
-  ['ISO 8.8',      92, 116,  640, 800],
-  ['ISO 10.9',    130, 150,  900,1000]
+  ['F1554 Gr36',  36,  58,  248, 400],
+  ['F1554 Gr55',  55,  75,  379, 517],
+  ['A307 Gr A',   36,  60,  248, 414],
+  ['A193 B7',    105, 125,  724, 862],
+  ['M4.6',        35,  58,  240, 400],
+  ['M8.8',        92, 116,  640, 800],
+  ['M10.9',      130, 150,  900,1000]
+];
+
+// Plate steel grades: [label, Fy_ksi, Fy_MPa]
+var PLATE_GRADES_US = [
+  ['A36',       36,  250],
+  ['A572 Gr50', 50,  345],
+  ['A572 Gr65', 65,  450],
+  ['A913 Gr65', 65,  450],
+  ['A913 Gr70', 70,  485]
+];
+var PLATE_GRADES_SI = [
+  ['S235', 34.1, 235],
+  ['S275', 39.9, 275],
+  ['S355', 51.5, 355],
+  ['S460', 66.7, 460]
 ];
 
 // Column type definitions: [key, label, isHSS, isSI]
@@ -671,6 +658,7 @@ function dcrCls(dcr){return dcr<=0.9?'ok':dcr<=1.0?'warn':'err';}
 /* ═══ init ═════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function(){
   buildTypeDropdown();
+  buildPlateGradeDropdown();
   buildAnchorDropdowns();
   onColTypeChange();
   el('ph-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
@@ -691,35 +679,26 @@ function setUnit(u){
     function cv(id, factor){ var e=el(id); if(e){e.value=(parseFloat(e.value)||0)*factor;} }
     if(toSI){
       cv('inp-Pu',  KIP_TO_KN);  cv('inp-Vu',  KIP_TO_KN);
-      cv('inp-B',   IN_TO_MM);   cv('inp-N',   IN_TO_MM);
-      cv('inp-Fy',  KSI_TO_MPA); cv('inp-fc',  KSI_TO_MPA);
-      cv('inp-hef', IN_TO_MM);   cv('inp-sa',  IN_TO_MM);
-      ['inp-B','inp-N','inp-hef','inp-sa'].forEach(function(id){
-        var e=el(id); if(e) e.value=Math.round(parseFloat(e.value)||0);
-      });
+      cv('inp-B',   IN_TO_MM);
+      cv('inp-fc',  KSI_TO_MPA);
+      cv('inp-hef', IN_TO_MM);
+      var eB=el('inp-B'); if(eB) eB.value=Math.round(parseFloat(eB.value)||0);
+      var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
       ['inp-Pu','inp-Vu'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
-      ['inp-Fy','inp-fc'].forEach(function(id){
-        var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(0);
-      });
+      var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(0);
     } else {
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vu',  1/KIP_TO_KN);
-      cv('inp-B',   1/IN_TO_MM); cv('inp-N',   1/IN_TO_MM);
-      cv('inp-Fy',  1/KSI_TO_MPA);cv('inp-fc', 1/KSI_TO_MPA);
-      cv('inp-hef', 1/IN_TO_MM); cv('inp-sa',  1/IN_TO_MM);
-      ['inp-B','inp-N'].forEach(function(id){
-        var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(2);
-      });
-      ['inp-hef','inp-sa'].forEach(function(id){
-        var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
-      });
+      cv('inp-B',   1/IN_TO_MM);
+      cv('inp-fc',  1/KSI_TO_MPA);
+      cv('inp-hef', 1/IN_TO_MM);
+      var eB=el('inp-B'); if(eB) eB.value=(parseFloat(eB.value)||0).toFixed(2);
+      var eH=el('inp-hef'); if(eH) eH.value=(parseFloat(eH.value)||0).toFixed(1);
       ['inp-Pu','inp-Vu'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
-      ['inp-Fy','inp-fc'].forEach(function(id){
-        var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
-      });
+      var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(2);
     }
   }
 
@@ -730,19 +709,19 @@ function setUnit(u){
 
   // Update unit labels
   var labels = {
-    'lbl-B':lenU,'lbl-N':lenU,
+    'lbl-B':lenU,
     'lbl-Pu':forU,'lbl-Vu':forU,
-    'lbl-Fy':strsU,'lbl-fc':strsU,
-    'lbl-hef':lenU,'lbl-sa':lenU,'lbl-da':lenU
+    'lbl-fc':strsU,
+    'lbl-hef':lenU,'lbl-da':lenU
   };
   Object.keys(labels).forEach(function(id){
     var e=el(id); if(e) e.textContent='['+labels[id]+']';
   });
   var spans = {
-    'su-B':lenU,'su-N':lenU,
+    'su-B':lenU,
     'su-Pu':forU,'su-Vu':forU,
-    'su-Fy':strsU,'su-fc':strsU,
-    'su-hef':lenU,'su-sa':lenU
+    'su-fc':strsU,
+    'su-hef':lenU
   };
   Object.keys(spans).forEach(function(id){
     var e=el(id); if(e) e.textContent=spans[id];
@@ -752,6 +731,7 @@ function setUnit(u){
   el('rh-unit-lbl').textContent = u==='us'?'US Customary':'SI Metric';
 
   buildTypeDropdown();
+  buildPlateGradeDropdown();
   buildAnchorDropdowns();
   onColTypeChange();
   calc();
@@ -812,15 +792,23 @@ function onProfileChange(){
   }
 
   colD = d; colBf = bf; colA = A;
-  var lenU2  = unit==='us'?'in':'mm';
-  var areaU2 = unit==='us'?'in²':'cm²';
-  var e;
-  e = el('pi-d');  if(e) e.textContent = d.toFixed(unit==='us'?2:0) + ' ' + lenU2;
-  e = el('pi-bf'); if(e) e.textContent = bf.toFixed(unit==='us'?2:0) + ' ' + lenU2;
-  e = el('pi-A');  if(e) e.textContent = A.toFixed(unit==='us'?2:1) + ' ' + areaU2;
-  e = el('pi-lbl-d'); if(e) e.textContent = '[' + lenU2 + ']';
-  e = el('pi-lbl-A'); if(e) e.textContent = '[' + areaU2 + ']';
   calc();
+}
+
+/* ═══ plate grade dropdown ══════════════════════════════════════════════ */
+function buildPlateGradeDropdown(){
+  var sel = el('inp-plate-grade');
+  if(!sel) return;
+  var grades = unit==='us' ? PLATE_GRADES_US : PLATE_GRADES_SI;
+  var prevLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  sel.innerHTML = '';
+  var matchIdx = 0;
+  grades.forEach(function(g, i){
+    var o = document.createElement('option');
+    o.value = i; o.textContent = g[0]; sel.appendChild(o);
+    if(g[0] === prevLabel) matchIdx = i;
+  });
+  sel.selectedIndex = matchIdx;
 }
 
 /* ═══ anchor dropdowns ═════════════════════════════════════════════════ */
@@ -851,34 +839,25 @@ function suggestDims(){
   var bf = colBf;
   var Pu = v('inp-Pu');
   var fc = v('inp-fc');
-  var a2a1 = Math.min(v('inp-a2a1')||1.0, 4.0);
-  a2a1 = Math.max(a2a1, 1.0);
+  var a2a1 = Math.min(Math.max(v('inp-a2a1')||1.0, 1.0), 4.0);
 
-  var phiPp_per_A1, over;
+  var phiPp_per_A1;
   if(unit==='us'){
     phiPp_per_A1 = Math.min(0.65*0.85*fc*Math.sqrt(a2a1), 0.65*1.7*fc); // ksi
-    over = 2.5; // in overhang each side
+    var over = 2.5; // in overhang each side
     var A1_req = Pu/phiPp_per_A1; // in²
-    var N_from_bearing = Math.sqrt(A1_req);
-    var N_min = Math.max(d + 2*over, N_from_bearing);
-    var B_min = Math.max(bf + 2*over, N_from_bearing);
-    // round to nearest 0.5"
-    var Nsugg = Math.ceil(N_min*2)/2;
-    var Bsugg = Math.ceil(B_min*2)/2;
-    el('inp-N').value = Nsugg.toFixed(1);
-    el('inp-B').value = Bsugg.toFixed(1);
+    var side_from_bearing = Math.sqrt(A1_req);
+    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing);
+    // round up to nearest 0.5"
+    el('inp-B').value = (Math.ceil(side_min*2)/2).toFixed(1);
   } else {
-    phiPp_per_A1 = Math.min(0.65*0.85*fc*Math.sqrt(a2a1), 0.65*1.7*fc); // MPa=N/mm²
-    over = 65; // mm overhang each side
+    phiPp_per_A1 = Math.min(0.65*0.85*fc*Math.sqrt(a2a1), 0.65*1.7*fc); // MPa
+    var over = 65; // mm overhang each side
     var A1_req = (Pu*1000)/phiPp_per_A1; // mm²
-    var N_from_bearing = Math.sqrt(A1_req);
-    var N_min = Math.max(d + 2*over, N_from_bearing);
-    var B_min = Math.max(bf + 2*over, N_from_bearing);
-    // round to nearest 5mm
-    var Nsugg = Math.ceil(N_min/5)*5;
-    var Bsugg = Math.ceil(B_min/5)*5;
-    el('inp-N').value = Nsugg;
-    el('inp-B').value = Bsugg;
+    var side_from_bearing = Math.sqrt(A1_req);
+    var side_min = Math.max(Math.max(d, bf) + 2*over, side_from_bearing);
+    // round up to nearest 5mm
+    el('inp-B').value = Math.ceil(side_min/5)*5;
   }
   calc();
 }
@@ -893,15 +872,24 @@ function calc(){
   var Pu   = v('inp-Pu');
   var Vu   = v('inp-Vu');
   var B    = v('inp-B');
-  var N    = v('inp-N');
-  var Fy   = v('inp-Fy');
+  var N    = B; // always square
+  var pgIdx = parseInt((el('inp-plate-grade')||{value:'0'}).value)||0;
+  var pgArr = unit==='us' ? PLATE_GRADES_US : PLATE_GRADES_SI;
+  var pgRow = pgArr[Math.min(pgIdx, pgArr.length-1)];
+  var Fy   = unit==='us' ? pgRow[1] : pgRow[2]; // ksi or MPa
   var fc   = v('inp-fc');
   var a2a1 = Math.min(Math.max(v('inp-a2a1')||1.0, 1.0), 4.0);
   var nAnch  = parseInt((el('inp-nAnch')||{value:'4'}).value)||4;
   var daIdx  = parseInt((el('inp-da')||{value:'4'}).value)||4;
   var grIdx  = parseInt((el('inp-grade')||{value:'0'}).value)||0;
   var hef  = v('inp-hef');
-  var sa   = v('inp-sa');
+  // Auto edge distance: ACI 318-25 min = max(6*da, 2in / 50mm)
+  var sizes  = unit==='us'?ANCH_SIZES_US:ANCH_SIZES_SI;
+  var daRow0 = sizes[Math.min(daIdx, sizes.length-1)];
+  var da0    = daRow0[1]; // in or mm
+  var minEdge = unit==='us' ? 2.0 : 50;
+  var edgeDist = Math.max(6*da0, minEdge);
+  var sa = Math.max(B - 2*edgeDist, edgeDist); // center-to-center between corner rods
 
   if(!d||!bf||!B||!N||!Fy||!fc) return;
 
@@ -1121,15 +1109,14 @@ function calc(){
   var profName = el('colProfile') ? el('colProfile').value : '';
   var inpRows = [
     ['Profile',         profName || 'Manual'],
-    ['d',               fmt(d,unit==='us'?2:0)+' '+lenU],
-    ['bf',              fmt(bf,unit==='us'?2:0)+' '+lenU],
-    ['Plate B × N',     fmt(B,unit==='us'?1:0)+' × '+fmt(N,unit==='us'?1:0)+' '+lenU],
+    ['Plate B = N',     fmt(B,unit==='us'?1:0)+' '+lenU],
     ['Pu / Vu',         fmt(Pu,1)+' / '+fmt(Vu,1)+' '+forU],
-    ['Fy',              fmt(Fy,unit==='us'?1:0)+' '+strsU],
+    ['Steel grade',     pgRow[0]+' (Fy='+fmt(Fy,0)+' '+strsU+')'],
     ["f'c",             fmt(fc,unit==='us'?2:0)+' '+strsU],
     ['A2/A1',           fmt(a2a1,1)],
     ['Anchors',         nAnch+'×'+daRow[0]+' '+grRow[0]],
-    ['hef / sa',        fmt(hef,1)+' / '+fmt(sa,1)+' '+lenU]
+    ['hef',             fmt(hef,unit==='us'?1:0)+' '+lenU],
+    ['Edge dist (auto)',fmt(edgeDist,unit==='us'?2:0)+' '+lenU]
   ];
   var ipBody = el('inp-body-print');
   if(ipBody){
@@ -1139,18 +1126,17 @@ function calc(){
   }
 
   // ── Draw SVG ──
-  drawSVG(d, bf, B, N, m, n, ell, nAnch, sa);
+  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    SVG PLAN DIAGRAM
    ═════════════════════════════════════════════════════════════════════ */
-function drawSVG(d, bf, B, N, m, n, ell, nAnch, sa){
+function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
   var svg = el('bp-svg');
   if(!svg) return;
 
   var W=300, H=240, pad=20;
-  var maxDim = Math.max(B, N) || 1;
   var scale = Math.min((W-2*pad)/B, (H-2*pad)/N);
 
   var pW = B*scale, pH = N*scale;
@@ -1159,25 +1145,26 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, sa){
   var cW = bf*scale, cH = d*scale;
   var cx0 = (W-cW)/2, cy0 = (H-cH)/2;
 
-  // Anchor positions
+  // Anchor positions — minimum edge distance from plate edges
+  var eS = edgeDist * scale; // edge dist in SVG units
+  eS = Math.min(eS, pW*0.3); // cap to 30% of plate for visual clarity
   var anchPts = [];
-  var aOff = Math.min(sa/2 * scale, pW*0.35);
-  var cx = W/2, cy = H/2;
+  // Corner rods for both 4 and 8
+  var x0a = px0 + eS, x1a = px0 + pW - eS;
+  var y0a = py0 + eS, y1a = py0 + pH - eS;
   if(nAnch===4){
     anchPts = [
-      [cx-aOff, cy-aOff], [cx+aOff, cy-aOff],
-      [cx-aOff, cy+aOff], [cx+aOff, cy+aOff]
+      [x0a, y0a], [x1a, y0a],
+      [x0a, y1a], [x1a, y1a]
     ];
   } else {
-    var aOff2 = Math.min(sa*scale, pW*0.3);
+    // 4 corners + 4 mid-side rods
+    var xm = (px0 + px0 + pW) / 2, ym = (py0 + py0 + pH) / 2;
     anchPts = [
-      [cx-aOff, cy-aOff2],[cx, cy-aOff2],[cx+aOff, cy-aOff2],[cx+aOff, cy-aOff2],
-      [cx-aOff, cy+aOff2],[cx, cy+aOff2],[cx+aOff, cy+aOff2],[cx+aOff, cy+aOff2]
-    ];
-    // 2×4 simplified layout
-    anchPts = [
-      [cx-aOff*1.5, cy-aOff],[cx-aOff*0.5, cy-aOff],[cx+aOff*0.5, cy-aOff],[cx+aOff*1.5, cy-aOff],
-      [cx-aOff*1.5, cy+aOff],[cx-aOff*0.5, cy+aOff],[cx+aOff*0.5, cy+aOff],[cx+aOff*1.5, cy+aOff]
+      [x0a, y0a], [x1a, y0a],
+      [x0a, y1a], [x1a, y1a],
+      [xm, y0a], [xm, y1a],
+      [x0a, ym], [x1a, ym]
     ];
   }
 
