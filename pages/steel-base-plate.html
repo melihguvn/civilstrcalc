@@ -1255,9 +1255,9 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
     html += '<rect x="'+cx0+'" y="'+cy0+'" width="'+cW+'" height="'+cH+'"'
           + ' fill="none" stroke="#1a2332" stroke-width="'+Math.max(tw_approx,1.5)+'" rx="0.5"/>';
   } else {
-    // W-shape simplified: flanges + web
-    var twScaled = Math.max(cW*0.12, 2);
-    var tfScaled = Math.max(cH*0.18, 2);
+    // W-shape plan: realistic proportions — tf ~8% of d, tw ~5% of bf
+    var twScaled = Math.max(cW*0.05, 1.5);
+    var tfScaled = Math.max(cH*0.08, 1.5);
     // Top flange
     html += '<rect x="'+cx0+'" y="'+cy0+'" width="'+cW+'" height="'+tfScaled+'" fill="#1a2332"/>';
     // Bottom flange
@@ -1267,15 +1267,20 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
     html += '<rect x="'+webX+'" y="'+cy0+'" width="'+twScaled+'" height="'+cH+'" fill="#1a2332"/>';
   }
 
-  // Anchor bolts
-  var anchR = Math.max(3, Math.min(6, pW*0.025));
+  // Anchor rods — standard structural symbol: outer circle + crosshair + center dot
+  var anchR = Math.max(5, Math.min(8, pW*0.035));
   anchPts.forEach(function(pt){
     var ax=pt[0], ay=pt[1];
-    // Clip to plate area with margin
     ax = Math.max(px0+anchR+2, Math.min(px0+pW-anchR-2, ax));
     ay = Math.max(py0+anchR+2, Math.min(py0+pH-anchR-2, ay));
-    html += '<circle cx="'+ax+'" cy="'+ay+'" r="'+anchR+'" fill="white" stroke="#cc4400" stroke-width="1.5"/>';
-    html += '<circle cx="'+ax+'" cy="'+ay+'" r="'+(anchR*0.35)+'" fill="#cc4400"/>';
+    // Outer ring
+    html += '<circle cx="'+ax+'" cy="'+ay+'" r="'+anchR+'" fill="white" stroke="#b03000" stroke-width="1.5"/>';
+    // Crosshair lines (horizontal + vertical through center)
+    var arm = anchR * 0.65;
+    html += '<line x1="'+(ax-arm)+'" y1="'+ay+'" x2="'+(ax+arm)+'" y2="'+ay+'" stroke="#b03000" stroke-width="0.9"/>';
+    html += '<line x1="'+ax+'" y1="'+(ay-arm)+'" x2="'+ax+'" y2="'+(ay+arm)+'" stroke="#b03000" stroke-width="0.9"/>';
+    // Center dot
+    html += '<circle cx="'+ax+'" cy="'+ay+'" r="'+(anchR*0.2)+'" fill="#b03000"/>';
   });
 
   // Dimension labels
@@ -1294,12 +1299,17 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
         + ' transform="rotate(90,'+(px0+pW+10)+','+(py0+pH/2)+')">'
         + 'N = '+fmt(N,unit==='us'?1:0)+' '+(unit==='us'?'in':'mm') + '</text>';
 
-  // m annotation
-  if(m>0){
-    var mScaled = m*scale;
-    var yCenter = H/2;
-    html += '<line x1="'+py0+'" y1="'+(H/2)+'" x2="'+(py0+mScaled)+'" y2="'+(H/2)+'" stroke="#2255aa" stroke-width="1" stroke-dasharray="3,2"/>';
-    html += '<text x="'+(px0+mScaled/2)+'" y="'+(H/2-3)+'" text-anchor="middle" font-size="8" fill="#2255aa">m</text>';
+  // m annotation — cantilever in N-direction: plate top edge → column flange top face
+  if(m > 0){
+    var xAnn = cx0 - 7;  // just left of the column
+    if(xAnn > px0 + 3){  // only draw if there is room
+      html += '<line x1="'+xAnn+'" y1="'+py0+'" x2="'+xAnn+'" y2="'+cy0+'"'
+            + ' stroke="#4477cc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+      html += '<line x1="'+(xAnn-3)+'" y1="'+py0+'" x2="'+(xAnn+3)+'" y2="'+py0+'" stroke="#4477cc" stroke-width="0.9"/>';
+      html += '<line x1="'+(xAnn-3)+'" y1="'+cy0+'" x2="'+(xAnn+3)+'" y2="'+cy0+'" stroke="#4477cc" stroke-width="0.9"/>';
+      var ymMid = (py0 + cy0) / 2;
+      html += '<text x="'+(xAnn-4)+'" y="'+(ymMid+3)+'" text-anchor="end" font-size="8" fill="#4477cc" font-style="italic">m</text>';
+    }
   }
 
   svg.innerHTML = html;
