@@ -1029,17 +1029,19 @@ function calc(){
     if(e <= 0) return {fp: fp_centric, T: 0, Y: pLen};
     if(e <= pLen/6) return {fp: fp_centric*(1+6*e/pLen), T: 0, Y: pLen};
     var q_fac = (unit==='si') ? 1/1000 : 1;
-    var q = phi_Fp * pWid * q_fac; // kip/in or kN/mm
-    // T=0 path: moment equilibrium directly gives Y (AISC DG1 §3.2, no anchor tension)
-    var Y_t0 = 3*(pLen/2 - e);
+    var q = phi_Fp * pWid * q_fac; // kip/in or kN/mm  (uniform bearing resultant per unit length)
+    // T=0 path: uniform (rectangular) bearing per AISC DG1 §3.2 / Drake & Elkin (1999)
+    // Moment equilibrium: Pu*(N/2−e) = C*(Y/2) with C=Pu → Y = N − 2e
+    var Y_t0 = pLen - 2*e;
     if(Y_t0 > 0){
-      var fp_t0 = (unit==='us') ? 2*Pu/(pWid*Y_t0) : 2*Pu*1000/(pWid*Y_t0);
+      var fp_t0 = (unit==='us') ? Pu/(pWid*Y_t0) : Pu*1000/(pWid*Y_t0);
       if(fp_t0 <= phi_Fp) return {fp: fp_t0, T: 0, Y: Y_t0};
     }
-    // T>0 path: fp = phi_Fp, quadratic for Y with anchor tension
-    var arm = e + pLen/2 - edgeDist; // moment arm of Pu about anchor bolt
-    var bq  = -3*(pLen - edgeDist);
-    var cq  = 6*Pu*arm/q;
+    // T>0 path: fp = phi_Fp uniform over Y, quadratic from moment about anchor
+    // Pu*arm = C*(N−f−Y/2) where C = phi_Fp*B*Y → Y² − 2(N−f)Y + 2Pu*arm/q = 0
+    var arm = e + pLen/2 - edgeDist;
+    var bq  = -2*(pLen - edgeDist);
+    var cq  = 2*Pu*arm/q;
     var disc = bq*bq - 4*cq;
     var Y;
     if(disc < 0){ Y = 1; }
@@ -1049,7 +1051,7 @@ function calc(){
       Y = (r1 > 0 && r1 <= pLen) ? r1 : r2;
       Y = Math.max(1, Math.min(Y, pLen));
     }
-    var C = q*Y/2;
+    var C = q*Y; // rectangular: C = phi_Fp*B*Y (not divided by 2)
     var T = Math.max(0, C - Pu);
     return {fp: phi_Fp, T: T, Y: Y};
   };
