@@ -1111,13 +1111,16 @@ function calc(){
   DCR_shear_y = Vy / Math.max(phi_Vn_fric, 1e-9);
 
   /* ── Anchor rod capacities (ACI 318-25 §17) ── */
+  // ANc cone projection: limited to ca_min when edge is close (ACI 318-25 §17.6.2.1)
+  var hef15 = 1.5*hef;
+  var hef_e = Math.min(hef15, ca_min); // effective projection toward edge
   if(unit==='us'){
     phi_Nsa = 0.75*Ase*futa; // kip/bolt
     phi_Nsa_grp = nAnch*phi_Nsa;
     Nb  = 24*Math.sqrt(fc*1000)*Math.pow(hef,1.5)/1000; // kip
     ANc0 = 9*hef*hef;
-    ANc  = Math.min(Math.pow(sa+2*hef,2), nAnch*ANc0);
-    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
+    ANc  = Math.min(Math.pow(sa+2*hef_e,2), nAnch*ANc0);
+    if(nAnch===8) ANc = Math.min((sa+2*hef_e)*(2*sa+2*hef_e), nAnch*ANc0);
     phi_Ncbg = 0.70*(ANc/ANc0)*1.0*psi_ed_N*1.25*1.0*Nb; // kip
     phi_Vsa  = 0.65*0.6*Ase*futa; // kip/bolt
   } else {
@@ -1125,8 +1128,8 @@ function calc(){
     phi_Nsa_grp = nAnch*phi_Nsa;
     Nb  = 10*Math.sqrt(fc)*Math.pow(hef,1.5)/1000; // kN
     ANc0 = 9*hef*hef;
-    ANc  = Math.min(Math.pow(sa+2*hef,2), nAnch*ANc0);
-    if(nAnch===8) ANc = Math.min((sa+2*hef)*(2*sa+2*hef), nAnch*ANc0);
+    ANc  = Math.min(Math.pow(sa+2*hef_e,2), nAnch*ANc0);
+    if(nAnch===8) ANc = Math.min((sa+2*hef_e)*(2*sa+2*hef_e), nAnch*ANc0);
     phi_Ncbg = 0.70*(ANc/ANc0)*1.0*psi_ed_N*1.25*1.0*Nb; // kN
     phi_Vsa  = 0.65*0.6*Ase*futa/1000; // kN/bolt
   }
