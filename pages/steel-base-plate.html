@@ -286,9 +286,16 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <div class="iw"><input type="number" id="inp-Vu" value="10" min="0" step="1" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
     </div>
     <div class="form-group">
-      <label>Moment M<sub>u</sub> <span class="unit-lbl" id="lbl-Mu">[kip·in]</span></label>
-      <div class="iw"><input type="number" id="inp-Mu" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mu">kip·in</span></div>
+      <label>M<sub>x</sub> strong-axis <span class="unit-lbl" id="lbl-Mx">[kip·in]</span></label>
+      <div class="iw"><input type="number" id="inp-Mx" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mx">kip·in</span></div>
     </div>
+  </div>
+  <div class="form-row-2">
+    <div class="form-group">
+      <label>M<sub>y</sub> weak-axis <span class="unit-lbl" id="lbl-My">[kip·in]</span></label>
+      <div class="iw"><input type="number" id="inp-My" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-My">kip·in</span></div>
+    </div>
+    <div class="form-group"></div>
   </div>
 
   <!-- Plate Dimensions -->
@@ -714,7 +721,8 @@ function setUnit(u){
       // Use fixed SI defaults instead of converting
       var ePu=el('inp-Pu'); if(ePu) ePu.value='100.0';
       var eVu=el('inp-Vu'); if(eVu) eVu.value='50.0';
-      var eMu=el('inp-Mu'); if(eMu) eMu.value='0.0';
+      var eMx=el('inp-Mx'); if(eMx) eMx.value='0.0';
+      var eMy=el('inp-My'); if(eMy) eMy.value='0.0';
       cv('inp-B',   IN_TO_MM);
       var efc=el('inp-fc'); if(efc) efc.value='30';
       cv('inp-hef', IN_TO_MM);
@@ -722,13 +730,14 @@ function setUnit(u){
       var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
     } else {
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vu',  1/KIP_TO_KN);
-      cv('inp-Mu',  1/KIN_TO_KNM);
+      cv('inp-Mx',  1/KIN_TO_KNM);
+      cv('inp-My',  1/KIN_TO_KNM);
       cv('inp-B',   1/IN_TO_MM);
       cv('inp-fc',  1/KSI_TO_MPA);
       cv('inp-hef', 1/IN_TO_MM);
       var eB=el('inp-B'); if(eB) eB.value=(parseFloat(eB.value)||0).toFixed(2);
       var eH=el('inp-hef'); if(eH) eH.value=(parseFloat(eH.value)||0).toFixed(1);
-      ['inp-Pu','inp-Vu','inp-Mu'].forEach(function(id){
+      ['inp-Pu','inp-Vu','inp-Mx','inp-My'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
       var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(2);
@@ -744,7 +753,7 @@ function setUnit(u){
   // Update unit labels
   var labels = {
     'lbl-B':lenU,
-    'lbl-Pu':forU,'lbl-Vu':forU,'lbl-Mu':momU,
+    'lbl-Pu':forU,'lbl-Vu':forU,'lbl-Mx':momU,'lbl-My':momU,
     'lbl-fc':strsU,
     'lbl-hef':lenU,'lbl-da':lenU
   };
@@ -753,7 +762,7 @@ function setUnit(u){
   });
   var spans = {
     'su-B':lenU,
-    'su-Pu':forU,'su-Vu':forU,'su-Mu':momU,
+    'su-Pu':forU,'su-Vu':forU,'su-Mx':momU,'su-My':momU,
     'su-fc':strsU,
     'su-hef':lenU
   };
@@ -940,7 +949,10 @@ function calc(){
 
   if(!d||!bf||!B||!N||!Fy||!fc) return;
 
-  var Mu    = v('inp-Mu'); // kip·in (US) or kN·m (SI)
+  var Mx = v('inp-Mx'); // kip·in (US) or kN·m (SI)
+  var My = v('inp-My');
+  var Mx_int = (unit==='us') ? Mx : Mx*1000; // → kip·in or kN·mm
+  var My_int = (unit==='us') ? My : My*1000;
 
   // Anchor properties
   var daRow  = sizes[Math.min(daIdx, sizes.length-1)];
@@ -958,8 +970,7 @@ function calc(){
   var phi_pl = 0.90;
 
   var A1, phi_Fp;
-  var Mu_int; // internal moment: kip·in or kN·mm
-  var e_ecc;  // eccentricity (in or mm)
+  var ex_ecc = 0, ey_ecc = 0; // eccentricities: N-dir (from Mx) and B-dir (from My)
   var fp_max, T_anch = 0, Y_bear = N;
   var bearCase; // 'centric' | 'full_comp' | 'partial'
   var m, n, nprime, X, lam, ell, tp;
@@ -968,61 +979,65 @@ function calc(){
 
   /* ── unit-specific bearing setup ── */
   A1 = B * N;
+  phi_Fp = Math.min(phi_c*0.85*fc*Math.sqrt(a2a1), phi_c*1.7*fc); // ksi or MPa
 
-  if(unit==='us'){
-    phi_Fp  = Math.min(phi_c*0.85*fc*Math.sqrt(a2a1), phi_c*1.7*fc); // ksi
-    Mu_int  = Mu;                            // kip·in
-    e_ecc   = (Pu > 0 && Mu_int > 0) ? Mu_int/Pu : 0; // in
-  } else {
-    phi_Fp  = Math.min(phi_c*0.85*fc*Math.sqrt(a2a1), phi_c*1.7*fc); // MPa
-    Mu_int  = Mu * 1000;                     // kN·m → kN·mm
-    e_ecc   = (Pu > 0 && Mu_int > 0) ? Mu_int/Pu : 0; // mm
+  if(Pu > 0){
+    ex_ecc = (Mx_int > 0) ? Mx_int/Pu : 0; // in or mm (N-direction)
+    ey_ecc = (My_int > 0) ? My_int/Pu : 0; // in or mm (B-direction)
   }
 
-  /* ── Eccentric bearing (AISC DG1 §4.2) ── */
+  /* ── Eccentric bearing (AISC DG1 §4.2 + biaxial extension) ── */
   var fp_centric = unit==='us' ? Pu/A1 : Pu*1000/A1; // ksi or MPa
 
-  if(e_ecc <= 0){
+  // Uniaxial partial-bearing helper (AISC DG1 §3.2)
+  // pLen = plate dim in direction of eccentricity; pWid = perpendicular dim
+  var uniCheck = function(e, pLen, pWid){
+    if(e <= 0) return {fp: fp_centric, T: 0, Y: pLen};
+    if(e <= pLen/6) return {fp: fp_centric*(1+6*e/pLen), T: 0, Y: pLen};
+    var q_fac = (unit==='si') ? 1/1000 : 1;
+    var q = phi_Fp * pWid * q_fac; // kip/in or kN/mm
+    var arm = e + edgeDist - pLen/2;
+    var bq  = -3*(pLen - edgeDist);
+    var cq  = 6*Pu*arm/q;
+    var disc = bq*bq - 4*cq;
+    var Y;
+    if(disc < 0){ Y = 1; }
+    else {
+      var r1 = (-bq - Math.sqrt(disc))/2;
+      var r2 = (-bq + Math.sqrt(disc))/2;
+      Y = (r1 > 0 && r1 <= pLen) ? r1 : r2;
+      Y = Math.max(1, Math.min(Y, pLen));
+    }
+    var C = q*Y/2;
+    var T = Math.max(0, C - Pu);
+    var fp;
+    if(T <= 0){
+      Y = Math.max(1, Math.min(2*Pu/q, pLen));
+      fp = (unit==='us') ? 2*Pu/(pWid*Y) : 2*Pu*1000/(pWid*Y);
+      T = 0;
+    } else {
+      fp = phi_Fp;
+    }
+    return {fp: fp, T: T, Y: Y};
+  };
+
+  if(ex_ecc <= 0 && ey_ecc <= 0){
     bearCase = 'centric';
     fp_max = fp_centric;
     T_anch = 0;
-  } else if(e_ecc <= N/6){
+  } else if(ex_ecc <= N/6 && ey_ecc <= B/6){
+    // Both within kern: biaxial elastic (full compression)
     bearCase = 'full_comp';
-    fp_max = fp_centric * (1 + 6*e_ecc/N);
+    fp_max = fp_centric * (1 + 6*ex_ecc/N + 6*ey_ecc/B);
     T_anch = 0;
   } else {
+    // Outside kern: independent uniaxial checks per AISC DG1 Commentary
     bearCase = 'partial';
-    // AISC DG1 §3.2 — moments about anchor rod (at f from tension edge):
-    //   C·(N-f-Y/3) = Pu·(e+f-N/2)  →  Y² - 3(N-f)·Y + 6·Pu·arm/q = 0
-    // SI unit consistency: q must be in kN/mm (not N/mm) to match Pu in kN
-    var q_fac  = (unit==='si') ? 1/1000 : 1; // phi_Fp·B: N/mm → kN/mm for SI
-    var q      = phi_Fp * B * q_fac;  // kip/in (US) or kN/mm (SI)
-    var Pu_q   = Pu;                  // kip (US) or kN (SI) — unchanged
-    var f_anch = edgeDist;
-    var arm_Pu = e_ecc + f_anch - N/2; // Pu moment arm about rod centroid
-    // quadratic: Y² + b·Y + c = 0
-    var bq = -3*(N - f_anch);
-    var cq =  6*Pu_q*arm_Pu/q;
-    var disc = bq*bq - 4*cq;
-    if(disc < 0){ Y_bear = 1; }
-    else {
-      var Yr1 = (-bq - Math.sqrt(disc))/2; // smaller root
-      var Yr2 = (-bq + Math.sqrt(disc))/2; // larger root
-      // pick smallest positive root ≤ N
-      Y_bear = (Yr1 > 0 && Yr1 <= N) ? Yr1 : Yr2;
-      Y_bear = Math.max(1, Math.min(Y_bear, N));
-    }
-    var C_bear = q * Y_bear / 2; // kip or kN — compression resultant
-    T_anch = Math.max(0, C_bear - Pu_q);
-    if(T_anch <= 0){
-      // No anchor tension needed — recompute Y from simple no-T equilibrium
-      // ΣFy=0: C=Pu → Y = 2·Pu/(q), then fp_max from actual pressure
-      Y_bear = Math.max(1, Math.min(2*Pu_q/q, N));
-      fp_max = (unit==='us') ? 2*Pu/(B*Y_bear) : 2*Pu*1000/(B*Y_bear);
-      T_anch = 0;
-    } else {
-      fp_max = phi_Fp; // bearing at full capacity
-    }
+    var resX = uniCheck(ex_ecc, N, B); // N-direction (strong axis)
+    var resY = uniCheck(ey_ecc, B, N); // B-direction (weak axis)
+    fp_max = Math.max(resX.fp, resY.fp);
+    T_anch = Math.max(resX.T, resY.T);
+    Y_bear = (resX.fp >= resY.fp) ? resX.Y : resY.Y;
   }
   var DCR_brg_val = fp_max / phi_Fp;
 
@@ -1130,17 +1145,24 @@ function calc(){
 
   // ── Steps table ──
   var momLabel = unit==='us'?'kip·in':'kN·m';
+  var dp = unit==='us'?2:0;
+  var hasMx = ex_ecc > 0, hasMy = ey_ecc > 0;
   var bearDesc = bearCase==='centric' ? 'fp = Pu/A₁'
-               : bearCase==='full_comp' ? 'Full compression (e ≤ N/6): fp = (Pu/A₁)·(1+6e/N)'
-               : 'Partial bearing (e > N/6): fp = 2·Pu/(B·Y)';
+               : bearCase==='full_comp' ? 'Biaxial kern (ex≤N/6, ey≤B/6): fp = (Pu/A₁)·(1+6ex/N+6ey/B)'
+               : 'Partial bearing (outside kern): independent uniaxial per axis';
   var bearForm = bearCase==='centric' ? 'A₁ = B·N; fp = Pu/A₁'
-               : bearCase==='full_comp' ? 'e = Mu/Pu = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU+'; fp_max'
-               : 'e = '+fmt(e_ecc,unit==='us'?1:0)+' '+lenU+'; Y = '+fmt(Y_bear,unit==='us'?2:0)+' '+lenU;
+               : bearCase==='full_comp' ? 'ex='+fmt(ex_ecc,dp)+' '+lenU+(hasMy?'; ey='+fmt(ey_ecc,dp)+' '+lenU:'')
+               : 'ex='+fmt(ex_ecc,dp)+(hasMy?'; ey='+fmt(ey_ecc,dp):'')+' '+lenU+'; Y='+fmt(Y_bear,dp)+' '+lenU;
+  var eccFormStr = 'A₁ = B·N'+(hasMx?'; ex=Mx/Pu='+fmt(ex_ecc,dp)+' '+lenU:'')+(hasMy?'; ey=My/Pu='+fmt(ey_ecc,dp)+' '+lenU:'');
+  var eccValStr  = 'A₁ = '+fmt(A1,unit==='us'?1:0)+' '+areaU
+                 +(hasMx?' | ex='+fmt(ex_ecc,dp)+' '+lenU:'')
+                 +(hasMy?' | ey='+fmt(ey_ecc,dp)+' '+lenU:'')
+                 +((hasMx||hasMy)?' ('+(bearCase==='full_comp'?'kern':'partial')+')':'');
   var rows = [
     {num:1,
-     desc:'Plate area & eccentricity',
-     form:'A₁ = B·N; e = Mu/Pu'+(Mu>0?' = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU:''),
-     val: 'A₁ = '+fmt(A1,unit==='us'?1:0)+' '+areaU+(Mu>0?' | e = '+fmt(e_ecc,unit==='us'?2:0)+' '+lenU+' ('+(bearCase==='full_comp'?'kern':'partial')+')':''),
+     desc:'Plate area & eccentricities',
+     form:eccFormStr,
+     val: eccValStr,
      chk: ''},
     {num:2,
      desc:'Bearing capacity check',
@@ -1217,7 +1239,8 @@ function calc(){
   var inpRows = [
     ['Profile',         profName || 'Manual'],
     ['Plate B = N',     fmt(B,unit==='us'?1:0)+' '+lenU],
-    ['Pu / Vu / Mu',    fmt(Pu,1)+' '+forU+' / '+fmt(Vu,1)+' '+forU+(Mu>0?' / '+fmt(Mu,1)+' '+(unit==='us'?'kip·in':'kN·m'):'')],
+    ['Pu / Vu',         fmt(Pu,1)+' '+forU+' / '+fmt(Vu,1)+' '+forU],
+    ['Mx / My',         fmt(Mx,1)+' / '+fmt(My,1)+' '+(unit==='us'?'kip·in':'kN·m')],
     ['Steel grade',     pgRow[0]+' (Fy='+fmt(Fy,0)+' '+strsU+')'],
     ["f'c",             fmt(fc,unit==='us'?2:0)+' '+strsU],
     ['A2/A1',           fmt(a2a1,1)],
@@ -1233,13 +1256,13 @@ function calc(){
   }
 
   // ── Draw SVG ──
-  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist);
+  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    SVG PLAN DIAGRAM
    ═════════════════════════════════════════════════════════════════════ */
-function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
+function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
   var svg = el('bp-svg');
   if(!svg) return;
 
@@ -1353,6 +1376,20 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist){
       html += '<text x="'+(xAnn-4)+'" y="'+(ymMid+3)+'" text-anchor="end" font-size="8" fill="#4477cc" font-style="italic">m</text>';
     }
   }
+
+  // Coordinate axis indicator — bottom-left corner of plate
+  // x → B/flange direction (horizontal), y → N/depth direction (vertical)
+  var axX = px0 + 9, axY = py0 + pH - 9, axLen = 20;
+  html += '<rect x="'+(axX-4)+'" y="'+(axY-axLen-10)+'" width="'+(axLen+16)+'" height="'+(axLen+14)+'"'
+        + ' fill="rgba(255,255,255,0.75)" rx="2"/>';
+  // X axis (rightward)
+  html += '<line x1="'+axX+'" y1="'+axY+'" x2="'+(axX+axLen)+'" y2="'+axY+'" stroke="#444" stroke-width="1.1"/>';
+  html += '<polygon points="'+(axX+axLen+4)+','+axY+' '+(axX+axLen)+','+(axY-2.5)+' '+(axX+axLen)+','+(axY+2.5)+'" fill="#444"/>';
+  html += '<text x="'+(axX+axLen+7)+'" y="'+(axY+3)+'" font-size="8" fill="#444" font-style="italic">x</text>';
+  // Y axis (upward)
+  html += '<line x1="'+axX+'" y1="'+axY+'" x2="'+axX+'" y2="'+(axY-axLen)+'" stroke="#444" stroke-width="1.1"/>';
+  html += '<polygon points="'+axX+','+(axY-axLen-4)+' '+(axX-2.5)+','+(axY-axLen)+' '+(axX+2.5)+','+(axY-axLen)+'" fill="#444"/>';
+  html += '<text x="'+(axX-3)+'" y="'+(axY-axLen-7)+'" text-anchor="middle" font-size="8" fill="#444" font-style="italic">y</text>';
 
   svg.innerHTML = html;
 }
