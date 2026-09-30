@@ -282,20 +282,23 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </div>
   <div class="form-row-2">
     <div class="form-group">
-      <label>Shear V<sub>u</sub> <span class="unit-lbl" id="lbl-Vu">[kip]</span></label>
-      <div class="iw"><input type="number" id="inp-Vu" value="10" min="0" step="1" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
+      <label>Shear V<sub>x</sub> <span class="unit-lbl" id="lbl-Vx">[kip]</span></label>
+      <div class="iw"><input type="number" id="inp-Vx" value="0" min="0" step="1" oninput="calc()"><span class="us" id="su-Vx">kip</span></div>
     </div>
     <div class="form-group">
-      <label>M<sub>x</sub> strong-axis <span class="unit-lbl" id="lbl-Mx">[kip·in]</span></label>
-      <div class="iw"><input type="number" id="inp-Mx" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mx">kip·in</span></div>
+      <label>Shear V<sub>y</sub> <span class="unit-lbl" id="lbl-Vy">[kip]</span></label>
+      <div class="iw"><input type="number" id="inp-Vy" value="0" min="0" step="1" oninput="calc()"><span class="us" id="su-Vy">kip</span></div>
     </div>
   </div>
   <div class="form-row-2">
     <div class="form-group">
+      <label>M<sub>x</sub> strong-axis <span class="unit-lbl" id="lbl-Mx">[kip·in]</span></label>
+      <div class="iw"><input type="number" id="inp-Mx" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mx">kip·in</span></div>
+    </div>
+    <div class="form-group">
       <label>M<sub>y</sub> weak-axis <span class="unit-lbl" id="lbl-My">[kip·in]</span></label>
       <div class="iw"><input type="number" id="inp-My" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-My">kip·in</span></div>
     </div>
-    <div class="form-group"></div>
   </div>
 
   <!-- Plate Dimensions -->
@@ -347,9 +350,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="iw"><input type="number" id="inp-hef" value="12" min="1" step="1" oninput="calc()"><span class="us" id="su-hef">in</span></div>
   </div>
 
-  <div style="margin-top:14px">
-    <button class="print-btn" onclick="window.print()">&#x1F5A8; Print / Save PDF</button>
-  </div>
 
 </div><!-- /left -->
 
@@ -370,7 +370,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="report-card" id="bp-card">
     <div class="report-hdr">
       <h4>Base Plate Design &mdash; AISC DG1 / ACI 318-25</h4>
-      <span class="rh-code" id="rh-unit-lbl">US Customary</span>
+      <span class="rh-code" id="rh-unit-lbl">kip &middot; in</span>
+      <button class="print-btn" onclick="window.print()" style="margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;padding:4px 12px;font-size:.72rem;cursor:pointer">&#128424; Print / PDF</button>
     </div>
     <div class="report-body">
 
@@ -383,32 +384,61 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         <div class="ph-date" id="ph-date"></div>
       </div>
 
-      <!-- Quick summary -->
-      <div class="result-box" id="summary-box">
-        <div class="result-item" id="ri-fp">
-          <div class="ri-label">Bearing DCR</div>
-          <div class="ri-value">—</div>
-          <div class="ri-unit">f<sub>p</sub>/φF<sub>p</sub></div>
+      <!-- Primary: Bearing DCR, tp, ℓ -->
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Bearing DCR</div>
+          <div class="fl-val" id="rv-brg">—</div>
+          <div class="fl-unit">f<sub>p</sub> / φF<sub>p</sub></div>
         </div>
-        <div class="result-item" id="ri-tp">
-          <div class="ri-label">Req. t<sub>p</sub></div>
-          <div class="ri-value">—</div>
-          <div class="ri-unit" id="tp-unit">in</div>
+        <div class="fl-col">
+          <div class="fl-lbl">Req. t<sub>p</sub></div>
+          <div class="fl-val" id="rv-tp">—</div>
+          <div class="fl-unit" id="rv-tp-u">in</div>
         </div>
-        <div class="result-item" id="ri-ell">
-          <div class="ri-label">Govern. ℓ</div>
-          <div class="ri-value">—</div>
-          <div class="ri-unit" id="ell-unit">in</div>
+        <div class="fl-col">
+          <div class="fl-lbl">Govern. ℓ</div>
+          <div class="fl-val" id="rv-ell">—</div>
+          <div class="fl-unit" id="rv-ell-u">in</div>
         </div>
-        <div class="result-item" id="ri-shear">
-          <div class="ri-label">Shear DCR</div>
-          <div class="ri-value">—</div>
-          <div class="ri-unit">V<sub>u</sub>/φV<sub>n</sub></div>
+      </div>
+      <!-- Bearing x/y detail (partial case only) -->
+      <div class="fl-rb" id="rb-brg-xy" style="display:none;grid-template-columns:1fr 1fr">
+        <div class="fl-col">
+          <div class="fl-lbl">Bearing x-dir (Mx)</div>
+          <div class="fl-val" id="rv-brg-x">—</div>
+          <div class="fl-unit">fp / φFp</div>
         </div>
-        <div class="result-item" id="ri-anch-t" style="display:none">
-          <div class="ri-label">Anchor T DCR</div>
-          <div class="ri-value">—</div>
-          <div class="ri-unit">T/φN<sub>t</sub></div>
+        <div class="fl-col">
+          <div class="fl-lbl">Bearing y-dir (My)</div>
+          <div class="fl-val" id="rv-brg-y">—</div>
+          <div class="fl-unit">fp / φFp</div>
+        </div>
+      </div>
+      <!-- Shear x/y (when Vx or Vy > 0) -->
+      <div class="fl-rb" id="rb-shear" style="display:none;grid-template-columns:1fr 1fr">
+        <div class="fl-col">
+          <div class="fl-lbl">Shear x DCR</div>
+          <div class="fl-val" id="rv-sh-x">—</div>
+          <div class="fl-unit">V<sub>x</sub> / φV<sub>n</sub></div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Shear y DCR</div>
+          <div class="fl-val" id="rv-sh-y">—</div>
+          <div class="fl-unit">V<sub>y</sub> / φV<sub>n</sub></div>
+        </div>
+      </div>
+      <!-- Anchor tension (when T > 0) -->
+      <div class="fl-rb" id="rb-anch-t" style="display:none;grid-template-columns:1fr 1fr">
+        <div class="fl-col">
+          <div class="fl-lbl">Anchor T(x) DCR</div>
+          <div class="fl-val" id="rv-anch-tx">—</div>
+          <div class="fl-unit">T<sub>x</sub> / φN<sub>t</sub></div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Anchor T(y) DCR</div>
+          <div class="fl-val" id="rv-anch-ty">—</div>
+          <div class="fl-unit">T<sub>y</sub> / φN<sub>t</sub></div>
         </div>
       </div>
 
@@ -720,7 +750,8 @@ function setUnit(u){
     if(toSI){
       // Use fixed SI defaults instead of converting
       var ePu=el('inp-Pu'); if(ePu) ePu.value='100.0';
-      var eVu=el('inp-Vu'); if(eVu) eVu.value='50.0';
+      var eVx=el('inp-Vx'); if(eVx) eVx.value='0.0';
+      var eVy=el('inp-Vy'); if(eVy) eVy.value='0.0';
       var eMx=el('inp-Mx'); if(eMx) eMx.value='0.0';
       var eMy=el('inp-My'); if(eMy) eMy.value='0.0';
       cv('inp-B',   IN_TO_MM);
@@ -729,7 +760,7 @@ function setUnit(u){
       var eB=el('inp-B'); if(eB) eB.value=Math.round(parseFloat(eB.value)||0);
       var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
     } else {
-      cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vu',  1/KIP_TO_KN);
+      cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vx',  1/KIP_TO_KN);cv('inp-Vy',  1/KIP_TO_KN);
       cv('inp-Mx',  1/KIN_TO_KNM);
       cv('inp-My',  1/KIN_TO_KNM);
       cv('inp-B',   1/IN_TO_MM);
@@ -737,7 +768,7 @@ function setUnit(u){
       cv('inp-hef', 1/IN_TO_MM);
       var eB=el('inp-B'); if(eB) eB.value=(parseFloat(eB.value)||0).toFixed(2);
       var eH=el('inp-hef'); if(eH) eH.value=(parseFloat(eH.value)||0).toFixed(1);
-      ['inp-Pu','inp-Vu','inp-Mx','inp-My'].forEach(function(id){
+      ['inp-Pu','inp-Vx','inp-Vy','inp-Mx','inp-My'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
       var efc=el('inp-fc'); if(efc) efc.value=(parseFloat(efc.value)||0).toFixed(2);
@@ -753,7 +784,7 @@ function setUnit(u){
   // Update unit labels
   var labels = {
     'lbl-B':lenU,
-    'lbl-Pu':forU,'lbl-Vu':forU,'lbl-Mx':momU,'lbl-My':momU,
+    'lbl-Pu':forU,'lbl-Vx':forU,'lbl-Vy':forU,'lbl-Mx':momU,'lbl-My':momU,
     'lbl-fc':strsU,
     'lbl-hef':lenU,'lbl-da':lenU
   };
@@ -762,16 +793,16 @@ function setUnit(u){
   });
   var spans = {
     'su-B':lenU,
-    'su-Pu':forU,'su-Vu':forU,'su-Mx':momU,'su-My':momU,
+    'su-Pu':forU,'su-Vx':forU,'su-Vy':forU,'su-Mx':momU,'su-My':momU,
     'su-fc':strsU,
     'su-hef':lenU
   };
   Object.keys(spans).forEach(function(id){
     var e=el(id); if(e) e.textContent=spans[id];
   });
-  el('tp-unit').textContent = lenU;
-  el('ell-unit').textContent = lenU;
-  el('rh-unit-lbl').textContent = u==='us'?'US Customary':'SI Metric';
+  var eTpu=el('rv-tp-u'); if(eTpu) eTpu.textContent=lenU;
+  var eEllu=el('rv-ell-u'); if(eEllu) eEllu.textContent=lenU;
+  el('rh-unit-lbl').textContent = u==='us'?'kip · in':'kN · mm';
 
   buildTypeDropdown();
   buildPlateGradeDropdown();
@@ -924,7 +955,8 @@ function calc(){
   var d    = colD;
   var bf   = colBf;
   var Pu   = v('inp-Pu');
-  var Vu   = v('inp-Vu');
+  var Vx   = v('inp-Vx')||0;
+  var Vy   = v('inp-Vy')||0;
   var B    = v('inp-B');
   var N    = B; // always square
   var pgIdx = parseInt((el('inp-plate-grade')||{value:'0'}).value)||0;
@@ -974,7 +1006,11 @@ function calc(){
   var fp_max, T_anch = 0, Y_bear = N;
   var bearCase; // 'centric' | 'full_comp' | 'partial'
   var m, n, nprime, X, lam, ell, tp;
-  var phi_Vn_fric, DCR_shear, DCR_brg, DCR_anch_V, DCR_anch_T = 0;
+  var phi_Vn_fric;
+  var DCR_shear_x = 0, DCR_shear_y = 0;
+  var DCR_anch_Vx = 0, DCR_anch_Vy = 0;
+  var DCR_anch_Tx = 0, DCR_anch_Ty = 0;
+  var fp_x, fp_y, T_anch_x = 0, T_anch_y = 0;
   var phi_Nsa, phi_Nsa_grp, Nb, ANc, ANc0, phi_Ncbg, phi_Vsa, phi_Nt_min;
 
   /* ── unit-specific bearing setup ── */
@@ -1021,24 +1057,28 @@ function calc(){
     return {fp: fp, T: T, Y: Y};
   };
 
+  fp_x = fp_y = fp_centric;
   if(ex_ecc <= 0 && ey_ecc <= 0){
     bearCase = 'centric';
     fp_max = fp_centric;
-    T_anch = 0;
   } else if(ex_ecc <= N/6 && ey_ecc <= B/6){
     // Both within kern: biaxial elastic (full compression)
     bearCase = 'full_comp';
-    fp_max = fp_centric * (1 + 6*ex_ecc/N + 6*ey_ecc/B);
-    T_anch = 0;
+    fp_x = fp_y = fp_centric * (1 + 6*ex_ecc/N + 6*ey_ecc/B);
+    fp_max = fp_x;
   } else {
     // Outside kern: independent uniaxial checks per AISC DG1 Commentary
     bearCase = 'partial';
     var resX = uniCheck(ex_ecc, N, B); // N-direction (strong axis)
     var resY = uniCheck(ey_ecc, B, N); // B-direction (weak axis)
-    fp_max = Math.max(resX.fp, resY.fp);
-    T_anch = Math.max(resX.T, resY.T);
+    fp_x = resX.fp; T_anch_x = resX.T;
+    fp_y = resY.fp; T_anch_y = resY.T;
+    fp_max = Math.max(fp_x, fp_y);
+    T_anch = Math.max(T_anch_x, T_anch_y);
     Y_bear = (resX.fp >= resY.fp) ? resX.Y : resY.Y;
   }
+  var DCR_brg_x = fp_x / phi_Fp;
+  var DCR_brg_y = fp_y / phi_Fp;
   var DCR_brg_val = fp_max / phi_Fp;
 
   /* ── Cantilever lengths & plate thickness ── */
@@ -1056,7 +1096,8 @@ function calc(){
 
   /* ── Shear friction ── */
   phi_Vn_fric = phi_pl*0.55*Pu;
-  DCR_shear   = Vu / Math.max(phi_Vn_fric, 1e-9);
+  DCR_shear_x = Vx / Math.max(phi_Vn_fric, 1e-9);
+  DCR_shear_y = Vy / Math.max(phi_Vn_fric, 1e-9);
 
   /* ── Anchor rod capacities (ACI 318-25 §17) ── */
   if(unit==='us'){
@@ -1079,9 +1120,11 @@ function calc(){
     phi_Vsa  = 0.65*0.6*Ase*futa/1000; // kN/bolt
   }
 
-  DCR_anch_V = Vu / Math.max(nAnch*phi_Vsa, 1e-9);
+  DCR_anch_Vx = Vx / Math.max(nAnch*phi_Vsa, 1e-9);
+  DCR_anch_Vy = Vy / Math.max(nAnch*phi_Vsa, 1e-9);
   phi_Nt_min = Math.min(phi_Nsa_grp, phi_Ncbg);
-  DCR_anch_T = (T_anch > 0 && phi_Nt_min > 0) ? T_anch/phi_Nt_min : 0;
+  DCR_anch_Tx = (T_anch_x > 0 && phi_Nt_min > 0) ? T_anch_x/phi_Nt_min : 0;
+  DCR_anch_Ty = (T_anch_y > 0 && phi_Nt_min > 0) ? T_anch_y/phi_Nt_min : 0;
 
   var DCR_brg = DCR_brg_val;
 
@@ -1090,38 +1133,50 @@ function calc(){
   var strsU = unit==='us'?'ksi':'MPa';
   var areaU = unit==='us'?'in²':'mm²';
 
-  // ── Update quick summary boxes ──
-  var brgCls = dcrCls(DCR_brg);
-  var shCls  = dcrCls(DCR_shear);
-  var riEl;
+  // ── Update result cards ──
+  function setFV(id, val, dcr){
+    var e=el(id); if(!e) return;
+    e.textContent=val;
+    e.className='fl-val'+(dcr!==undefined?' '+dcrCls(dcr):'');
+  }
+  setFV('rv-brg', fmt(DCR_brg_val,3), DCR_brg_val);
+  setFV('rv-tp',  isFinite(tp)?fmt(tp,unit==='us'?3:1):'—');
+  setFV('rv-ell', isFinite(ell)?fmt(ell,unit==='us'?3:1):'—');
 
-  riEl = el('ri-fp');
-  riEl.querySelector('.ri-value').textContent = fmt(DCR_brg,3);
-  riEl.className = 'result-item ' + brgCls;
+  // Bearing x/y detail (partial case only)
+  var rbBrgXY=el('rb-brg-xy');
+  if(rbBrgXY){
+    if(bearCase==='partial'&&(ex_ecc>0||ey_ecc>0)){
+      rbBrgXY.style.display='';
+      setFV('rv-brg-x',fmt(DCR_brg_x,3),DCR_brg_x);
+      setFV('rv-brg-y',fmt(DCR_brg_y,3),DCR_brg_y);
+    } else { rbBrgXY.style.display='none'; }
+  }
 
-  riEl = el('ri-tp');
-  riEl.querySelector('.ri-value').textContent = isFinite(tp)?fmt(tp,unit==='us'?3:1):'—';
-  riEl.className = 'result-item';
+  // Shear x/y
+  var rbSh=el('rb-shear');
+  if(rbSh){
+    if(Vx>0||Vy>0){
+      rbSh.style.display='';
+      setFV('rv-sh-x',Vx>0?fmt(DCR_shear_x,3):'—',Vx>0?DCR_shear_x:undefined);
+      setFV('rv-sh-y',Vy>0?fmt(DCR_shear_y,3):'—',Vy>0?DCR_shear_y:undefined);
+    } else { rbSh.style.display='none'; }
+  }
 
-  riEl = el('ri-ell');
-  riEl.querySelector('.ri-value').textContent = isFinite(ell)?fmt(ell,unit==='us'?3:1):'—';
-  riEl.className = 'result-item';
-
-  riEl = el('ri-shear');
-  riEl.querySelector('.ri-value').textContent = fmt(DCR_shear,3);
-  riEl.className = 'result-item ' + shCls;
-
-  riEl = el('ri-anch-t');
-  if(T_anch > 0 && phi_Nt_min > 0){
-    riEl.style.display = '';
-    riEl.querySelector('.ri-value').textContent = fmt(DCR_anch_T,3);
-    riEl.className = 'result-item ' + dcrCls(DCR_anch_T);
-  } else {
-    riEl.style.display = 'none';
+  // Anchor tension
+  var rbAnchT=el('rb-anch-t');
+  if(rbAnchT){
+    if((T_anch_x>0||T_anch_y>0)&&phi_Nt_min>0){
+      rbAnchT.style.display='';
+      setFV('rv-anch-tx',T_anch_x>0?fmt(DCR_anch_Tx,3):'—',T_anch_x>0?DCR_anch_Tx:undefined);
+      setFV('rv-anch-ty',T_anch_y>0?fmt(DCR_anch_Ty,3):'—',T_anch_y>0?DCR_anch_Ty:undefined);
+    } else { rbAnchT.style.display='none'; }
   }
 
   // ── DCR Banner ──
-  var worstDCR = Math.max(DCR_brg, DCR_shear, DCR_anch_T);
+  var maxSh = Math.max(DCR_shear_x, DCR_shear_y);
+  var maxAnchT = Math.max(DCR_anch_Tx, DCR_anch_Ty);
+  var worstDCR = Math.max(DCR_brg_val, maxSh, maxAnchT);
   var bnr = el('dcr-banner');
   bnr.className = 'dcr-banner ' + dcrCls(worstDCR);
   var icon = el('dcr-icon')||bnr.querySelector('.dcr-icon');
@@ -1134,9 +1189,9 @@ function calc(){
   } else {
     if(mt) mt.textContent = 'Design NG — increase plate or modify inputs';
   }
-  var govStr = DCR_brg>=DCR_shear && DCR_brg>=DCR_anch_T ? 'Bearing DCR = '+fmt(DCR_brg,3)
-             : DCR_shear>=DCR_anch_T ? 'Shear DCR = '+fmt(DCR_shear,3)
-             : 'Anchor tension DCR = '+fmt(DCR_anch_T,3);
+  var govStr = DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT ? 'Bearing DCR = '+fmt(DCR_brg_val,3)
+             : maxSh>=maxAnchT ? 'Shear DCR = '+fmt(maxSh,3)
+             : 'Anchor T DCR = '+fmt(maxAnchT,3);
   if(rodInsideCol){
     govStr += ' | ⚠ Rod clearance: use Suggest Size or increase B';
     if(worstDCR<1.0) bnr.className = 'dcr-banner warn';
@@ -1187,8 +1242,11 @@ function calc(){
     {num:6,
      desc:'Shear friction',
      form:'φVn = φ·μ·Pu (μ=0.55, φ=0.90)',
-     val: 'φVn = '+fmt(phi_Vn_fric,1)+' '+forU+' | DCR = '+fmt(DCR_shear,3),
-     chk: DCR_shear}
+     val: 'φVn = '+fmt(phi_Vn_fric,1)+' '+forU
+       +(Vx>0?' | DCR(x) = '+fmt(DCR_shear_x,3):'')
+       +(Vy>0?' | DCR(y) = '+fmt(DCR_shear_y,3):'')
+       +(Vx===0&&Vy===0?' | no shear applied':''),
+     chk: Math.max(DCR_shear_x, DCR_shear_y)}
   ];
 
   var tbody = el('steps-body');
@@ -1221,9 +1279,9 @@ function calc(){
     ['ANc / ANc0',    fmt(ANc/(ANc0||1),2)],
     ['φNcbg (group)',  fmt(phi_Ncbg,unit==='us'?1:0)+' '+forU+' <span style="font-size:.68rem;color:var(--text-dim)">(ψed=ψcp=1.0, ψc=1.25)</span>'],
     ['φVsa per bolt',  fmt(phi_Vsa,unit==='us'?2:1)+' '+forU],
-    ['Shear DCR',      fmt(DCR_anch_V,3)+' (Vu / φVsa·n)'],
-    T_anch > 0
-      ? ['Tension demand T',  fmt(T_anch,unit==='us'?2:1)+' '+forU+' | min(φNsa,φNcbg) = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR = '+fmt(DCR_anch_T,3)]
+    ['Shear DCR',      'x: '+fmt(DCR_anch_Vx,3)+' / y: '+fmt(DCR_anch_Vy,3)+' (V / φVsa·n)'],
+    (T_anch_x > 0 || T_anch_y > 0)
+      ? ['Tension demand T',  'x: '+fmt(T_anch_x,unit==='us'?2:1)+' / y: '+fmt(T_anch_y,unit==='us'?2:1)+' '+forU+' | φNt = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR x: '+fmt(DCR_anch_Tx,3)+' y: '+fmt(DCR_anch_Ty,3)]
       : ['Anchor tension',    'None — axial compression governs']
   ];
 
@@ -1239,7 +1297,8 @@ function calc(){
   var inpRows = [
     ['Profile',         profName || 'Manual'],
     ['Plate B = N',     fmt(B,unit==='us'?1:0)+' '+lenU],
-    ['Pu / Vu',         fmt(Pu,1)+' '+forU+' / '+fmt(Vu,1)+' '+forU],
+    ['Pu',              fmt(Pu,1)+' '+forU],
+    ['Vx / Vy',         fmt(Vx,1)+' / '+fmt(Vy,1)+' '+forU],
     ['Mx / My',         fmt(Mx,1)+' / '+fmt(My,1)+' '+(unit==='us'?'kip·in':'kN·m')],
     ['Steel grade',     pgRow[0]+' (Fy='+fmt(Fy,0)+' '+strsU+')'],
     ["f'c",             fmt(fc,unit==='us'?2:0)+' '+strsU],
