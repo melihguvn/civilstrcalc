@@ -357,6 +357,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Min. edge dist. c<sub>a,min</sub> <span class="unit-lbl" id="lbl-camin">[in]</span> <span style="font-size:.7rem;opacity:.65">(anchor CL → conc. face; blank = no edge effect)</span></label>
     <div class="iw"><input type="number" id="inp-ca-min" min="0" step="1" placeholder="—" oninput="calc()"><span class="us" id="su-camin">in</span></div>
   </div>
+  <div class="form-group">
+    <label>Pedestal thickness h<sub>a</sub> <span class="unit-lbl" id="lbl-ha">[in]</span> <span style="font-size:.7rem;opacity:.65">(for shear breakout ψ<sub>h,V</sub>; blank = unlimited)</span></label>
+    <div class="iw"><input type="number" id="inp-ha" min="0" step="1" placeholder="—" oninput="calc()"><span class="us" id="su-ha">in</span></div>
+  </div>
 
   <!-- SVG Plan Diagram -->
   <div class="card no-print" style="margin-top:12px">
@@ -447,6 +451,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         </div>
       </div>
 
+      <!-- Shear — pryout & breakout (when Vu > 0) -->
+      <div class="fl-rb" id="rb-shear-conc" style="display:none;grid-template-columns:1fr 1fr">
+        <div class="fl-col">
+          <div class="fl-lbl">Pryout DCR</div>
+          <div class="fl-val" id="rv-pryout">—</div>
+          <div class="fl-unit">V / φV<sub>cpg</sub></div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Shear Brk DCR</div>
+          <div class="fl-val" id="rv-vbrk">—</div>
+          <div class="fl-unit">V / φV<sub>cbg</sub></div>
+        </div>
+      </div>
+      <!-- T-V interaction (§17.8) -->
+      <div class="fl-rb" id="rb-tv-interact" style="display:none">
+        <div class="fl-col" style="width:100%;text-align:center">
+          <div class="fl-lbl">T-V Interaction (§17.8)</div>
+          <div class="fl-val" id="rv-interact">—</div>
+          <div class="fl-unit">(N<sub>ua</sub>/φN)<sup>5/3</sup> + (V<sub>ua</sub>/φV)<sup>5/3</sup> ≤ 1.0</div>
+        </div>
+      </div>
+
       <!-- DCR Banner -->
       <div class="dcr-banner ok" id="dcr-banner">
         <div class="dcr-icon">&#x2714;</div>
@@ -504,7 +530,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <a href="#bg-overview">Overview</a>
       <a href="#bg-bearing">Bearing</a>
       <a href="#bg-plate">Plate Thickness</a>
-      <a href="#bg-shear">Shear Friction</a>
+      <a href="#bg-shear">Shear Transfer</a>
       <a href="#bg-anchors">Anchor Rods</a>
       <a href="#bg-example">Example</a>
     </div>
@@ -655,14 +681,49 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     </div>
 
     <div id="bg-shear" class="bg-panel">
-      <div class="bg-panel-hdr">Shear Transfer — Friction</div>
+      <div class="bg-panel-hdr">Shear Transfer — Friction, Pryout &amp; Breakout</div>
       <div class="tb">
-        <p>Horizontal shear at the base is typically resisted by friction between the base plate and grout/concrete. Using ACI 318-25 §22.9 (shear friction):</p>
+        <h4>Shear Friction (ACI 318-25 §22.9)</h4>
+        <p>Horizontal shear at the base is first resisted by friction between the base plate and grout/concrete:</p>
         <div class="fml-blk">
           <span class="fml-eq">&phi;V<sub>n,fric</sub> = &phi; &times; &mu; &times; P<sub>u</sub></span>
           <span class="ft">&phi; = 0.90; &mu; = 0.55 (steel on grout, ACI Table R22.9.3.3)</span>
         </div>
-        <p>If V<sub>u</sub> &gt; &phi;V<sub>n,fric</sub>, the excess shear must be resisted by shear lugs or anchor rods acting in bearing against the concrete. This calculator highlights when friction is insufficient.</p>
+        <p>If V<sub>u</sub> &gt; &phi;V<sub>n,fric</sub>, the excess shear must be resisted by anchor rods acting in bearing. The calculator also checks ACI 318-25 §17.7 concrete failure modes when shear is applied.</p>
+
+        <h4>Pryout Failure — Anchor Group (ACI 318-25 §17.7.3)</h4>
+        <p>A shear load can "pry" the anchor out of the concrete in the direction opposite to the applied shear. The pryout capacity is proportional to the group's tensile breakout strength:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">&phi;V<sub>cpg</sub> = k<sub>cp</sub> &times; &phi;N<sub>cbg</sub></span>
+          <span class="ft">k<sub>cp</sub> = 1.0 if h<sub>ef</sub> &lt; 2.5 in (65 mm); k<sub>cp</sub> = 2.0 if h<sub>ef</sub> &ge; 2.5 in (65 mm)</span>
+        </div>
+        <p>Note: &phi; = 0.70 is already embedded in &phi;N<sub>cbg</sub>, so &phi;V<sub>cpg</sub> = k<sub>cp</sub> &times; &phi;N<sub>cbg</sub> directly (no additional &phi;).</p>
+
+        <h4>Concrete Breakout in Shear — Anchor Group (ACI 318-25 §17.7.2)</h4>
+        <p>When anchors are near a free concrete edge, shear can cause a concrete wedge to break out toward that edge. The basic single-anchor breakout strength in shear:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">V<sub>b</sub> = (&ell;<sub>e</sub>/d<sub>a</sub>)<sup>0.2</sup> &radic;d<sub>a</sub> &sdot; &lambda;&radic;f&prime;<sub>c</sub> &sdot; c<sub>a1</sub><sup>1.5</sup></span>
+          <span class="ft">US: result in kip (f&prime;<sub>c</sub> in psi, dims in in) &nbsp;&middot;&nbsp; SI: multiply by 0.66 (f&prime;<sub>c</sub> in MPa, dims in mm &rarr; kN) &nbsp;&middot;&nbsp; &ell;<sub>e</sub> = min(h<sub>ef</sub>, 8d<sub>a</sub>)</span>
+        </div>
+        <div class="fml-blk">
+          <span class="fml-eq">&phi;V<sub>cbg</sub> = 0.70 &times; (A<sub>Vc</sub>/A<sub>Vc0</sub>) &times; &psi;<sub>ec,V</sub> &times; &psi;<sub>ed,V</sub> &times; &psi;<sub>c,V</sub> &times; &psi;<sub>h,V</sub> &times; V<sub>b</sub></span>
+          <span class="ft">&psi;<sub>ec,V</sub> = 1.0 (no eccentricity) &nbsp;&middot;&nbsp; &psi;<sub>ed,V</sub> = 1.0 (no perpendicular free edge assumed) &nbsp;&middot;&nbsp; &psi;<sub>c,V</sub> = 1.4 (uncracked)</span>
+        </div>
+        <p>A<sub>Vc0</sub> = 4.5c<sub>a1</sub>&sup2; (projected area for single anchor). The group projected area A<sub>Vc</sub> adds the spacing between bolts parallel to the shear direction:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">A<sub>Vc</sub> = (s<sub>a</sub> + 3c<sub>a1</sub>) &times; min(1.5c<sub>a1</sub> + s<sub>a</sub>,&nbsp; h<sub>a</sub>) &nbsp;&nbsp; (4-bolt group)</span>
+          <span class="ft">c<sub>a1</sub> = edge distance in shear direction (taken conservatively as c<sub>a,min</sub>); h<sub>a</sub> = concrete member thickness</span>
+        </div>
+        <p>The thickness modifier &psi;<sub>h,V</sub> = max(1.0, &radic;(1.5c<sub>a1</sub>/h<sub>a</sub>)) amplifies capacity when h<sub>a</sub> &gt; 1.5c<sub>a1</sub> (thick member). When h<sub>a</sub> is not entered, h<sub>a</sub> = &infin; is assumed (&psi;<sub>h,V</sub> = 1.0).</p>
+
+        <h4>Tension-Shear Interaction (ACI 318-25 §17.8)</h4>
+        <p>When anchors carry simultaneous tension N<sub>ua</sub> and shear V<sub>ua</sub>, ACI 318-25 §17.8 requires an interaction check. Let n<sub>rat</sub> = N<sub>ua</sub>/&phi;N<sub>n</sub> and v<sub>rat</sub> = V<sub>ua</sub>/&phi;V<sub>n</sub>:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">n<sub>rat</sub> &le; 0.2: &nbsp; DCR = v<sub>rat</sub> &nbsp;&nbsp; (full shear capacity governs)</span>
+          <span class="fml-eq">v<sub>rat</sub> &le; 0.2: &nbsp; DCR = n<sub>rat</sub> &nbsp;&nbsp; (full tension capacity governs)</span>
+          <span class="fml-eq">otherwise: &nbsp; (N<sub>ua</sub>/&phi;N<sub>n</sub>)<sup>5/3</sup> + (V<sub>ua</sub>/&phi;V<sub>n</sub>)<sup>5/3</sup> &le; 1.0</span>
+          <span class="ft">&phi;N<sub>n</sub> = min governing anchor tension capacity; &phi;V<sub>n</sub> = min governing anchor shear capacity</span>
+        </div>
       </div>
     </div>
 
@@ -929,6 +990,8 @@ function setUnit(u){
       var eB=el('inp-B'); if(eB) eB.value=Math.round(parseFloat(eB.value)||0);
       var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
       var eCa=el('inp-ca-min'); if(eCa&&eCa.value) eCa.value=Math.round(parseFloat(eCa.value)||0);
+      cv('inp-ha', IN_TO_MM);
+      var eHa=el('inp-ha'); if(eHa&&eHa.value) eHa.value=Math.round(parseFloat(eHa.value)||0);
     } else {
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vx',  1/KIP_TO_KN);cv('inp-Vy',  1/KIP_TO_KN);
       cv('inp-Mx',  1/KIN_TO_KNM);
@@ -940,6 +1003,8 @@ function setUnit(u){
       var eB=el('inp-B'); if(eB) eB.value=(parseFloat(eB.value)||0).toFixed(2);
       var eH=el('inp-hef'); if(eH) eH.value=(parseFloat(eH.value)||0).toFixed(1);
       var eCa=el('inp-ca-min'); if(eCa&&eCa.value) eCa.value=(parseFloat(eCa.value)||0).toFixed(1);
+      cv('inp-ha', 1/IN_TO_MM);
+      var eHa2=el('inp-ha'); if(eHa2&&eHa2.value) eHa2.value=(parseFloat(eHa2.value)||0).toFixed(0);
       ['inp-Pu','inp-Vx','inp-Vy','inp-Mx','inp-My'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
@@ -958,7 +1023,7 @@ function setUnit(u){
     'lbl-B':lenU,
     'lbl-Pu':forU,'lbl-Vx':forU,'lbl-Vy':forU,'lbl-Mx':momU,'lbl-My':momU,
     'lbl-fc':strsU,
-    'lbl-hef':lenU,'lbl-da':lenU,'lbl-camin':lenU
+    'lbl-hef':lenU,'lbl-da':lenU,'lbl-camin':lenU,'lbl-ha':lenU
   };
   Object.keys(labels).forEach(function(id){
     var e=el(id); if(e) e.textContent='['+labels[id]+']';
@@ -967,7 +1032,7 @@ function setUnit(u){
     'su-B':lenU,
     'su-Pu':forU,'su-Vx':forU,'su-Vy':forU,'su-Mx':momU,'su-My':momU,
     'su-fc':strsU,
-    'su-hef':lenU,'su-camin':lenU
+    'su-hef':lenU,'su-camin':lenU,'su-ha':lenU
   };
   Object.keys(spans).forEach(function(id){
     var e=el(id); if(e) e.textContent=spans[id];
@@ -1306,6 +1371,59 @@ function calc(){
   DCR_anch_Tx = (T_anch_x > 0 && phi_Nt_min > 0) ? T_anch_x/phi_Nt_min : 0;
   DCR_anch_Ty = (T_anch_y > 0 && phi_Nt_min > 0) ? T_anch_y/phi_Nt_min : 0;
 
+  /* ── Pryout (ACI 318-25 §17.7.3) ── */
+  var kcp = (hef < (unit==='us' ? 2.5 : 65)) ? 1.0 : 2.0;
+  var phi_Vcpg = kcp * phi_Ncbg; // φ=0.70 in phi_Ncbg; φVcpg = kcp·φNcbg
+
+  /* ── Shear breakout (ACI 318-25 §17.7.2) ── */
+  var phi_Vcbg_sv = null, AVc_sv = 0, AVc0_sv = 0, Vb_sv = 0, psi_h_V = 1.0;
+  var ha_raw = parseFloat((el('inp-ha')||{}).value)||0;
+  var ha_v = ha_raw > 0 ? ha_raw : Infinity;
+  var Vua = Math.max(Vx, Vy);
+  if(ca_min < Infinity && Vua > 0){
+    var ca1_v = ca_min; // conservative: use min edge dist as shear-direction edge dist
+    var le_v = Math.min(hef, 8*da);
+    if(unit==='us'){
+      Vb_sv = Math.pow(le_v/da, 0.2) * Math.sqrt(da) * Math.sqrt(fc*1000) * Math.pow(ca1_v, 1.5) / 1000; // kip
+    } else {
+      Vb_sv = 0.66 * Math.pow(le_v/da, 0.2) * Math.sqrt(da) * Math.sqrt(fc) * Math.pow(ca1_v, 1.5) / 1000; // kN
+    }
+    AVc0_sv = 4.5 * ca1_v * ca1_v;
+    var ha_lim_v = Math.min(ha_v, 1.5*ca1_v + sa);
+    AVc_sv = (nAnch===8 ? (2*sa + 3*ca1_v) : (sa + 3*ca1_v)) * ha_lim_v;
+    AVc_sv = Math.min(AVc_sv, nAnch * AVc0_sv);
+    psi_h_V = ha_raw > 0 ? Math.max(1.0, Math.sqrt(1.5*ca1_v / ha_v)) : 1.0;
+    phi_Vcbg_sv = 0.70 * (AVc_sv / AVc0_sv) * 1.0 * 1.0 * 1.4 * psi_h_V * Vb_sv;
+  }
+
+  /* ── Governing anchor group shear capacity ── */
+  var phi_Vsa_grp = nAnch * phi_Vsa;
+  var phi_Vn_anch = phi_Vsa_grp;
+  var DCR_pryout = 0, DCR_vbrk = 0;
+  if(Vua > 0){
+    DCR_pryout = Vua / Math.max(phi_Vcpg, 1e-9);
+    phi_Vn_anch = Math.min(phi_Vn_anch, phi_Vcpg);
+    if(phi_Vcbg_sv !== null){
+      DCR_vbrk = Vua / Math.max(phi_Vcbg_sv, 1e-9);
+      phi_Vn_anch = Math.min(phi_Vn_anch, phi_Vcbg_sv);
+    }
+  }
+
+  /* ── T-V Interaction (ACI 318-25 §17.8) ── */
+  var DCR_interact = 0;
+  var Nua_tv = Math.max(T_anch_x, T_anch_y);
+  if(Nua_tv > 0 && Vua > 0 && phi_Nt_min > 0 && phi_Vn_anch > 0){
+    var n_rat = Nua_tv / phi_Nt_min;
+    var v_rat = Vua / phi_Vn_anch;
+    if(n_rat <= 0.2){
+      DCR_interact = v_rat;
+    } else if(v_rat <= 0.2){
+      DCR_interact = n_rat;
+    } else {
+      DCR_interact = Math.pow(n_rat, 5/3) + Math.pow(v_rat, 5/3);
+    }
+  }
+
   var DCR_brg = DCR_brg_val;
 
   var lenU  = unit==='us'?'in':'mm';
@@ -1353,10 +1471,37 @@ function calc(){
     } else { rbAnchT.style.display='none'; }
   }
 
+  // Pryout & shear breakout
+  var rbShConc=el('rb-shear-conc');
+  if(rbShConc){
+    if(Vua>0){
+      rbShConc.style.display='';
+      setFV('rv-pryout',fmt(DCR_pryout,3),DCR_pryout);
+      if(phi_Vcbg_sv!==null){
+        setFV('rv-vbrk',fmt(DCR_vbrk,3),DCR_vbrk);
+      } else {
+        var rvb=el('rv-vbrk'); if(rvb){rvb.textContent='n/a';rvb.className='fl-val';}
+      }
+    } else { rbShConc.style.display='none'; }
+  }
+
+  // T-V interaction
+  var rbTVI=el('rb-tv-interact');
+  if(rbTVI){
+    if(DCR_interact>0){
+      rbTVI.style.display='';
+      setFV('rv-interact',fmt(DCR_interact,3),DCR_interact);
+    } else { rbTVI.style.display='none'; }
+  }
+
   // ── DCR Banner ──
   var maxSh = Math.max(DCR_shear_x, DCR_shear_y);
+  var maxAnchV = Math.max(DCR_anch_Vx, DCR_anch_Vy);
   var maxAnchT = Math.max(DCR_anch_Tx, DCR_anch_Ty);
-  var worstDCR = hasT ? Math.max(maxSh, maxAnchT) : Math.max(DCR_brg_val, maxSh, maxAnchT);
+  var maxConcSh = Math.max(DCR_pryout, DCR_vbrk, DCR_interact);
+  var worstDCR = hasT
+    ? Math.max(maxSh, maxAnchV, maxAnchT, maxConcSh)
+    : Math.max(DCR_brg_val, maxSh, maxAnchV, maxAnchT, maxConcSh);
   var bnr = el('dcr-banner');
   bnr.className = 'dcr-banner ' + dcrCls(worstDCR);
   var icon = el('dcr-icon')||bnr.querySelector('.dcr-icon');
@@ -1369,9 +1514,21 @@ function calc(){
   } else {
     if(mt) mt.textContent = 'Design NG — increase plate or modify inputs';
   }
-  var govStr = (!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT) ? 'Bearing DCR = '+fmt(DCR_brg_val,3)
-             : maxSh>=maxAnchT ? 'Shear DCR = '+fmt(maxSh,3)
-             : 'Anchor T DCR = '+fmt(maxAnchT,3);
+  var govVal = worstDCR;
+  var govStr;
+  if(!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT && DCR_brg_val>=maxConcSh){
+    govStr = 'Bearing DCR = '+fmt(DCR_brg_val,3);
+  } else if(DCR_interact>=maxSh && DCR_interact>=maxAnchT && DCR_interact>=DCR_pryout && DCR_interact>=DCR_vbrk && DCR_interact>0){
+    govStr = 'T-V Interaction = '+fmt(DCR_interact,3);
+  } else if(DCR_pryout>=DCR_vbrk && DCR_pryout>=maxSh && DCR_pryout>=maxAnchT && DCR_pryout>0){
+    govStr = 'Pryout DCR = '+fmt(DCR_pryout,3);
+  } else if(DCR_vbrk>=maxSh && DCR_vbrk>=maxAnchT && DCR_vbrk>0){
+    govStr = 'Shear Brk DCR = '+fmt(DCR_vbrk,3);
+  } else if(maxAnchT>=maxSh){
+    govStr = 'Anchor T DCR = '+fmt(maxAnchT,3);
+  } else {
+    govStr = 'Shear (fric) DCR = '+fmt(maxSh,3);
+  }
   if(rodInsideCol){
     govStr += ' | ⚠ Rod clearance: use Suggest Size or increase B';
     if(worstDCR<1.0) bnr.className = 'dcr-banner warn';
@@ -1442,6 +1599,27 @@ function calc(){
        +(Vx===0&&Vy===0?' | no shear applied':''),
      chk: Math.max(DCR_shear_x, DCR_shear_y)}
   );
+  if(Vua > 0){
+    rows.push({num:0,
+     desc:'Anchor shear — pryout (§17.7.3)',
+     form:'φVcpg = kcp·φNcbg; kcp = '+(kcp===1?'1.0 (hef < '+(unit==='us'?'2.5 in':'65 mm')+')':(unit==='us'?'2.0 (hef ≥ 2.5 in)':'2.0 (hef ≥ 65 mm)')),
+     val: 'φVcpg = '+fmt(phi_Vcpg,unit==='us'?1:0)+' '+forU+' | Vu = '+fmt(Vua,1)+' '+forU+' | DCR = '+fmt(DCR_pryout,3),
+     chk: DCR_pryout});
+    if(phi_Vcbg_sv !== null){
+      rows.push({num:0,
+       desc:'Anchor shear — breakout (§17.7.2)',
+       form:'φVcbg = 0.70·(AVc/AVc0)·ψc,V·ψh,V·Vb; ψc,V=1.4; ca1=ca,min (conservative)',
+       val: 'Vb='+fmt(Vb_sv,unit==='us'?1:0)+' '+forU+' | AVc/AVc0='+fmt(AVc_sv/AVc0_sv,2)+(psi_h_V>1.0?' | ψh,V='+fmt(psi_h_V,2):'')+' | φVcbg='+fmt(phi_Vcbg_sv,unit==='us'?1:0)+' '+forU+' | DCR='+fmt(DCR_vbrk,3),
+       chk: DCR_vbrk});
+    }
+  }
+  if(DCR_interact > 0){
+    rows.push({num:0,
+     desc:'T-V Interaction (§17.8)',
+     form:'(Nua/φNn)^5/3 + (Vua/φVn)^5/3 ≤ 1.0',
+     val: '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')^5/3 + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')^5/3 = '+fmt(DCR_interact,3),
+     chk: DCR_interact});
+  }
   rows.forEach(function(r, i){ r.num = i+1; });
 
   var tbody = el('steps-body');
@@ -1475,7 +1653,15 @@ function calc(){
     ['ANc / ANc0',    fmt(ANc/(ANc0||1),2)],
     ['φNcbg (group)',  fmt(phi_Ncbg,unit==='us'?1:0)+' '+forU+' <span style="font-size:.68rem;color:var(--text-dim)">(ψed='+fmt(psi_ed_N,3)+(psi_ed_N<1.0?' ← edge governs':'')+'  ψc=1.25)</span>'],
     ['φVsa per bolt',  fmt(phi_Vsa,unit==='us'?2:1)+' '+forU],
-    ['Shear DCR',      'x: '+fmt(DCR_anch_Vx,3)+' / y: '+fmt(DCR_anch_Vy,3)+' (V / φVsa·n)'],
+    ['Shear — steel DCR', 'x: '+fmt(DCR_anch_Vx,3)+' / y: '+fmt(DCR_anch_Vy,3)+' (V / φVsa·n)'],
+    ['Pryout kcp',     kcp===1?'1.0 (hef < '+(unit==='us'?'2.5 in':'65 mm')+')':'2.0 (hef ≥ '+(unit==='us'?'2.5 in':'65 mm')+')'],
+    ['φVcpg (pryout)', fmt(phi_Vcpg,unit==='us'?1:0)+' '+forU+(Vua>0?' | DCR = '+fmt(DCR_pryout,3):'')],
+    phi_Vcbg_sv !== null
+      ? ['φVcbg (breakout)', 'Vb='+fmt(Vb_sv,unit==='us'?1:0)+' '+forU+' | AVc/AVc0='+fmt(AVc_sv/(AVc0_sv||1),2)+(psi_h_V>1.0?' | ψh,V='+fmt(psi_h_V,2):'')+' | φVcbg='+fmt(phi_Vcbg_sv,unit==='us'?1:0)+' '+forU+(Vua>0?' | DCR='+fmt(DCR_vbrk,3):'')]
+      : ['φVcbg (breakout)', 'n/a (ca,min not set or Vu = 0)'],
+    DCR_interact > 0
+      ? ['T-V Interaction §17.8', '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')^5/3 + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')^5/3 = '+fmt(DCR_interact,3)]
+      : ['T-V Interaction §17.8', 'n/a'],
     (T_anch_x > 0 || T_anch_y > 0)
       ? ['Tension demand T',  'x: '+fmt(T_anch_x,unit==='us'?2:1)+' / y: '+fmt(T_anch_y,unit==='us'?2:1)+' '+forU+' | φNt = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR x: '+fmt(DCR_anch_Tx,3)+' y: '+fmt(DCR_anch_Ty,3)]
       : ['Anchor tension',    'None — axial compression governs']
