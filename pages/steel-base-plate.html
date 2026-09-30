@@ -1421,16 +1421,15 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
         + 'N = '+fmt(N,unit==='us'?1:0)+' '+(unit==='us'?'in':'mm') + '</text>';
 
   // m annotation — cantilever in N-direction: plate top edge → column flange top face
-  if(m > 0){
-    var xAnn = cx0 - m*scale;  // m distance from column left face
-    if(xAnn > px0 + 3){  // only draw if there is room
-      html += '<line x1="'+xAnn+'" y1="'+py0+'" x2="'+xAnn+'" y2="'+cy0+'"'
-            + ' stroke="#4477cc" stroke-width="0.9" stroke-dasharray="3,2"/>';
-      html += '<line x1="'+(xAnn-3)+'" y1="'+py0+'" x2="'+(xAnn+3)+'" y2="'+py0+'" stroke="#4477cc" stroke-width="0.9"/>';
-      html += '<line x1="'+(xAnn-3)+'" y1="'+cy0+'" x2="'+(xAnn+3)+'" y2="'+cy0+'" stroke="#4477cc" stroke-width="0.9"/>';
-      var ymMid = (py0 + cy0) / 2;
-      html += '<text x="'+(xAnn-4)+'" y="'+(ymMid+3)+'" text-anchor="end" font-size="8" fill="#4477cc" font-style="italic">m</text>';
-    }
+  // xAnn: clamp to plate left area; if m > horizontal overhang, pin to px0+6
+  if(m > 0 && cy0 > py0 + 4){
+    var xAnn = Math.max(px0 + 6, cx0 - m*scale);
+    html += '<line x1="'+xAnn+'" y1="'+py0+'" x2="'+xAnn+'" y2="'+cy0+'"'
+          + ' stroke="#4477cc" stroke-width="0.9" stroke-dasharray="3,2"/>';
+    html += '<line x1="'+(xAnn-3)+'" y1="'+py0+'" x2="'+(xAnn+3)+'" y2="'+py0+'" stroke="#4477cc" stroke-width="0.9"/>';
+    html += '<line x1="'+(xAnn-3)+'" y1="'+cy0+'" x2="'+(xAnn+3)+'" y2="'+cy0+'" stroke="#4477cc" stroke-width="0.9"/>';
+    var ymMid = (py0 + cy0) / 2;
+    html += '<text x="'+(xAnn-4)+'" y="'+(ymMid+3)+'" text-anchor="end" font-size="8" fill="#4477cc" font-style="italic">m</text>';
   }
 
   // Coordinate axis indicator — bottom-left corner of plate
