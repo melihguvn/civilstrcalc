@@ -531,16 +531,97 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     </div>
 
     <div id="bg-bearing" class="bg-panel">
-      <div class="bg-panel-hdr">Bearing Pressure (ACI 318-25 §22.8)</div>
+      <div class="bg-panel-hdr">Bearing Pressure &amp; A<sub>2</sub>/A<sub>1</sub> Factor (ACI 318-25 §22.8)</div>
       <div class="tb">
-        <p>The plate area must satisfy the bearing strength of the supporting concrete:</p>
+        <p>The plate area must keep bearing stress within the design bearing capacity of the concrete (ACI 318-25 §22.8.3.2):</p>
         <div class="fml-blk">
-          <span class="ft">Design bearing strength</span>
-          <span class="fml-eq">&phi;<sub>c</sub>P<sub>p</sub> = &phi;<sub>c</sub> &times; 0.85 &times; f&prime;<sub>c</sub> &times; A<sub>1</sub> &times; &radic;(A<sub>2</sub>/A<sub>1</sub>) &le; &phi;<sub>c</sub> &times; 1.7 &times; f&prime;<sub>c</sub> &times; A<sub>1</sub></span>
-          <span class="ft">&phi;<sub>c</sub> = 0.65 (ACI bearing)</span>
+          <span class="fml-eq">&phi;F<sub>p</sub> = &phi;<sub>c</sub> &times; 0.85 f&prime;<sub>c</sub> &times; &radic;(A<sub>2</sub>/A<sub>1</sub>) &le; 1.7&phi;<sub>c</sub>f&prime;<sub>c</sub></span>
+          <span class="ft">&phi;<sub>c</sub> = 0.65 &nbsp;&middot;&nbsp; Enhancement cap: &radic;(A<sub>2</sub>/A<sub>1</sub>) &le; 2.0 &nbsp;&rarr;&nbsp; enter A<sub>2</sub>/A<sub>1</sub> &le; 4.0</span>
         </div>
-        <p>A<sub>1</sub> = B &times; N is the bearing area of the plate. A<sub>2</sub> is the maximum area of the supporting surface geometrically similar to and concentric with A<sub>1</sub> &mdash; typically the pedestal area. The A<sub>2</sub>/A<sub>1</sub> enhancement factor accounts for confinement; it is capped at &radic;4 = 2.0 (so A<sub>2</sub>/A<sub>1</sub> &le; 4.0).</p>
-        <p>The demand-to-capacity ratio: DCR = f<sub>p</sub> / (&phi;<sub>c</sub>P<sub>p</sub>/A<sub>1</sub>) &le; 1.0.</p>
+        <p>A<sub>1</sub> = B &times; N is the plate footprint. A<sub>2</sub> is the <em>largest area of the bearing surface</em> that is geometrically similar to A<sub>1</sub>, centered on A<sub>1</sub>, and bounded by the actual concrete cross-section. The &radic;(A<sub>2</sub>/A<sub>1</sub>) term reflects the confinement benefit of surrounding concrete mass pressing against the bearing zone.</p>
+
+        <h4>A<sub>2</sub>/A<sub>1</sub> by Column Location</h4>
+        <p>The ratio changes significantly with column position. A common design error is using A<sub>2</sub>/A<sub>1</sub>&nbsp;=&nbsp;4.0 for edge or corner columns when the geometry does not support it.</p>
+
+        <div style="margin:12px 0;background:#f8fafc;border:1px solid #d0dce8;border-radius:6px;padding:10px;text-align:center;overflow-x:auto">
+        <svg viewBox="0 0 570 215" width="100%" style="max-width:570px;display:block;margin:0 auto" aria-label="A2/A1 factor for interior, edge, and corner columns">
+          <defs>
+            <marker id="a2-arr" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L6,3.5 Z" fill="#448855"/>
+            </marker>
+          </defs>
+          <!-- ─── Panel 1: Interior ─── -->
+          <text x="87" y="14" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1a2332">Interior</text>
+          <rect x="4" y="20" width="166" height="146" rx="2" fill="#e8eef6" stroke="#8ba5c5" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="18" y="33" width="138" height="120" rx="1" fill="#b8d4f0" stroke="#3366aa" stroke-width="1.5"/>
+          <rect x="53" y="63" width="68" height="60" fill="#2a5aac" fill-opacity="0.87"/>
+          <line x1="52" y1="93" x2="18" y2="93" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <line x1="122" y1="93" x2="156" y2="93" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <line x1="87" y1="62" x2="87" y2="33" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <line x1="87" y1="124" x2="87" y2="153" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <text x="87" y="42" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#225599">A₂</text>
+          <text x="87" y="97" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="600">A₁ (plate)</text>
+          <text x="87" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#333">All 4 sides can expand</text>
+          <text x="87" y="197" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2255aa" font-weight="600">A₂/A₁ up to 4.0</text>
+          <text x="87" y="210" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">(pedestal size governs)</text>
+          <!-- ─── Panel 2: Edge ─── -->
+          <text x="277" y="14" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1a2332">Edge Column</text>
+          <line x1="192" y1="16" x2="192" y2="170" stroke="#cc2222" stroke-width="2.5"/>
+          <text x="188" y="14" text-anchor="end" font-family="sans-serif" font-size="7.5" fill="#cc2222">concrete</text>
+          <text x="188" y="23" text-anchor="end" font-family="sans-serif" font-size="7.5" fill="#cc2222">edge</text>
+          <rect x="192" y="20" width="168" height="146" rx="0" fill="#e8eef6" stroke="#8ba5c5" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="192" y="33" width="122" height="120" rx="1" fill="#b8d4f0" stroke="#3366aa" stroke-width="1.5"/>
+          <rect x="192" y="63" width="68" height="60" fill="#2a5aac" fill-opacity="0.87"/>
+          <line x1="261" y1="93" x2="314" y2="93" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <text x="196" y="96" font-family="sans-serif" font-size="14" fill="#cc2222">✕</text>
+          <text x="277" y="42" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#225599">A₂ (limited)</text>
+          <text x="226" y="97" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="600">A₁</text>
+          <text x="277" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#333">One side locked at free face</text>
+          <text x="277" y="197" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#aa3322" font-weight="600">A₂/A₁ typically 1.2 – 2.5</text>
+          <text x="277" y="210" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">(compute from actual geometry)</text>
+          <!-- ─── Panel 3: Corner ─── -->
+          <text x="469" y="14" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1a2332">Corner Column</text>
+          <line x1="384" y1="16" x2="384" y2="170" stroke="#cc2222" stroke-width="2.5"/>
+          <line x1="381" y1="166" x2="558" y2="166" stroke="#cc2222" stroke-width="2.5"/>
+          <text x="380" y="13" text-anchor="end" font-family="sans-serif" font-size="7.5" fill="#cc2222">edge</text>
+          <text x="394" y="178" font-family="sans-serif" font-size="7.5" fill="#cc2222">edge</text>
+          <rect x="384" y="20" width="168" height="146" rx="0" fill="#e8eef6" stroke="#8ba5c5" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="384" y="33" width="114" height="133" rx="1" fill="#b8d4f0" stroke="#3366aa" stroke-width="1.5"/>
+          <rect x="384" y="106" width="68" height="60" fill="#2a5aac" fill-opacity="0.87"/>
+          <line x1="453" y1="136" x2="498" y2="136" stroke="#448855" stroke-width="1.5" marker-end="url(#a2-arr)"/>
+          <text x="386" y="143" font-family="sans-serif" font-size="14" fill="#cc2222">✕</text>
+          <text x="420" y="163" font-family="sans-serif" font-size="14" fill="#cc2222">✕</text>
+          <text x="469" y="42" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#225599">A₂</text>
+          <text x="418" y="140" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="600">A₁</text>
+          <text x="469" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#333">Two sides locked at free faces</text>
+          <text x="469" y="197" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#aa3322" font-weight="600">A₂/A₁ → 1.0 in extreme cases</text>
+          <text x="469" y="210" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">(no confinement benefit)</text>
+        </svg>
+        <p style="margin:6px 0 0;font-size:.72rem;color:#666;font-family:sans-serif">Gray dashed = concrete pedestal &nbsp;|&nbsp; Light blue = available A₂ &nbsp;|&nbsp; Dark blue = A₁ plate &nbsp;|&nbsp; ✕ = locked by free face &nbsp;|&nbsp; Arrows = expansion directions</p>
+        </div>
+
+        <h4>How to Compute A<sub>2</sub> Geometrically</h4>
+        <p>Expand the plate outline (maintaining the B/N aspect ratio) symmetrically outward from each side until it hits the concrete boundary. For common cases:</p>
+        <div class="fml-blk">
+          <span class="ft">Interior — square plate (side L<sub>pl</sub>) on square pedestal (side L<sub>ped</sub>), centered:</span>
+          <span class="fml-eq">A<sub>2</sub>/A<sub>1</sub> = (L<sub>ped</sub> / L<sub>pl</sub>)&sup2; &le; 4.0</span>
+          <span class="ft">Edge column — plate flush with one concrete face; pedestal depth behind plate = d<sub>bk</sub>:</span>
+          <span class="fml-eq">A<sub>2</sub> = L<sub>pl</sub> &times; (L<sub>pl</sub> + 2d<sub>bk</sub>) &nbsp; &rarr;&nbsp; no expansion on flush side</span>
+          <span class="ft">Corner column — plate flush with two adjacent faces:</span>
+          <span class="fml-eq">A<sub>2</sub> &asymp; A<sub>1</sub> &nbsp;&rarr;&nbsp; enter A<sub>2</sub>/A<sub>1</sub> = 1.0 (no enhancement)</span>
+        </div>
+        <p>Enter the computed ratio in the inputs. Do not default to 4.0 for edge or corner columns &mdash; using the maximum where the geometry does not allow it is unconservative.</p>
+
+        <h4>Eccentric Loading — Rectangular Bearing Block (AISC DG1 §3.2)</h4>
+        <p>Under eccentric axial load (moment M = P<sub>u</sub>&times;e), part of the plate lifts off the concrete. AISC DG1 3rd Ed. (Drake &amp; Elkin 1999) replaces the triangular stress distribution with a <em>uniform (rectangular) block</em> of intensity equal to the design bearing capacity &phi;F<sub>p</sub>, acting over a contact length Y:</p>
+        <div class="fml-blk">
+          <span class="ft">No anchor tension — load within bearing zone (f<sub>p</sub> = P<sub>u</sub>/(B&times;Y) &le; &phi;F<sub>p</sub>):</span>
+          <span class="fml-eq">Y = N &minus; 2e &nbsp;&nbsp; f<sub>p</sub> = P<sub>u</sub> / (B &times; Y)</span>
+          <span class="ft">Anchor tension governs — bearing block at full capacity (f<sub>p</sub> = &phi;F<sub>p</sub>), solve quadratic for Y:</span>
+          <span class="fml-eq">Y&sup2; &minus; 2(N&minus;f)Y + 2P<sub>u</sub>A&prime;/q = 0 &nbsp;&nbsp; T = qY &minus; P<sub>u</sub></span>
+          <span class="ft">f = anchor CL to near edge of plate &nbsp;&middot;&nbsp; A&prime; = moment arm from P<sub>u</sub> to anchor &nbsp;&middot;&nbsp; q = &phi;F<sub>p</sub>&times;B (force/length)</span>
+        </div>
+        <p>When T &gt; 0 the bearing block is at its capacity limit and anchor tension is the binding design check. The bearing DCR shows "At cap." in the results — the anchor tension DCR is the number that governs.</p>
       </div>
     </div>
 
@@ -588,25 +669,108 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div id="bg-anchors" class="bg-panel">
       <div class="bg-panel-hdr">Anchor Rod Design — ACI 318-25 §17</div>
       <div class="tb">
-        <p>Cast-in headed anchor rods are designed per ACI 318-25 Chapter 17. For concentrically loaded columns, rods primarily carry shear (when friction is insufficient) and provide erection stability. Under seismic, wind, or eccentric loads, rods may also carry tension.</p>
-        <h4>Steel Failure — Tension (§17.6.1)</h4>
+        <p>Cast-in headed anchor rods are designed per ACI 318-25 Chapter 17. For typical base plates the critical tensile failure modes are steel fracture and concrete breakout. Near a free concrete face both capacities drop substantially — edge and corner columns require special attention.</p>
+
+        <h4>Steel Fracture — Tension (§17.6.1.2)</h4>
         <div class="fml-blk">
-          <span class="fml-eq">&phi;N<sub>sa</sub> = &phi; &times; A<sub>se,N</sub> &times; f<sub>uta</sub></span>
-          <span class="ft">&phi; = 0.75; A<sub>se,N</sub> = net tensile stress area (ASME B1.1); f<sub>uta</sub> = specified tensile strength</span>
+          <span class="fml-eq">&phi;N<sub>sa</sub> = 0.75 &times; A<sub>se,N</sub> &times; f<sub>uta</sub></span>
+          <span class="ft">A<sub>se,N</sub> = net tensile stress area per ASME B1.1; &phi; = 0.75 for ductile steel</span>
         </div>
-        <h4>Concrete Breakout — Tension (§17.6.2)</h4>
+
+        <h4>Concrete Breakout — Tension Group (§17.6.2)</h4>
+        <p>A breakout cone projects from the anchor head at ~35° to the surface. The plan area of the cone (A<sub>Nc</sub>) relative to a single-anchor reference area (A<sub>Nc0</sub> = 9h<sub>ef</sub>&sup2;) scales the group capacity. Basic single-anchor strength for cast-in anchors:</p>
         <div class="fml-blk">
-          <span class="fml-eq">N<sub>b</sub> = k<sub>c</sub> &lambda;<sub>a</sub> &radic;f&prime;<sub>c</sub> &times; h<sub>ef</sub><sup>1.5</sup></span>
-          <span class="ft">k<sub>c</sub> = 24 (cast-in, US); = 10 (SI, N &amp; mm); &lambda;<sub>a</sub> = 1.0 (normal-weight concrete)</span>
-          <span class="fml-eq">&phi;N<sub>cbg</sub> = &phi; &times; (A<sub>Nc</sub>/A<sub>Nc0</sub>) &times; &psi;<sub>ed,N</sub> &times; &psi;<sub>c,N</sub> &times; &psi;<sub>cp,N</sub> &times; N<sub>b</sub></span>
-          <span class="ft">&phi; = 0.70; A<sub>Nc0</sub> = 9h<sub>ef</sub>&sup2;; &psi;<sub>c,N</sub> = 1.25 (uncracked); &psi;<sub>ed</sub> = &psi;<sub>cp</sub> = 1.0 (assumed, no edge/splitting effects)</span>
+          <span class="fml-eq">N<sub>b</sub> = k<sub>c</sub>&lambda;<sub>a</sub>&radic;f&prime;<sub>c</sub> &times; h<sub>ef</sub><sup>1.5</sup></span>
+          <span class="ft">k<sub>c</sub> = 24 (US: f&prime;<sub>c</sub> in psi, h<sub>ef</sub> in in &rarr; N<sub>b</sub> in lb) &nbsp;&nbsp; = 10 (SI: MPa, mm &rarr; N) &nbsp;&nbsp; &lambda;<sub>a</sub> = 1.0 (n.w. concrete)</span>
         </div>
-        <h4>Steel Failure — Shear (§17.7.1)</h4>
         <div class="fml-blk">
-          <span class="fml-eq">&phi;V<sub>sa</sub> = &phi; &times; 0.6 &times; A<sub>se,V</sub> &times; f<sub>uta</sub></span>
-          <span class="ft">&phi; = 0.65</span>
+          <span class="fml-eq">&phi;N<sub>cbg</sub> = 0.70 &times; (A<sub>Nc</sub>/A<sub>Nc0</sub>) &times; &psi;<sub>ec,N</sub> &times; <strong>&psi;<sub>ed,N</sub></strong> &times; &psi;<sub>c,N</sub> &times; &psi;<sub>cp,N</sub> &times; N<sub>b</sub></span>
+          <span class="ft">&psi;<sub>ec,N</sub> = 1.0 (no load eccentricity) &nbsp;&middot;&nbsp; &psi;<sub>c,N</sub> = 1.25 (uncracked concrete assumed) &nbsp;&middot;&nbsp; &psi;<sub>cp,N</sub> = 1.0 (cast-in)</span>
         </div>
-        <p>The controlling anchor failure mode governs. Verify that the group breakout area A<sub>Nc</sub> does not intersect free edges or overlapping failure cones from adjacent anchors in the final design.</p>
+
+        <h4>Concrete Edge Distance — A<sub>Nc</sub> Truncation and &psi;<sub>ed,N</sub> (§17.6.2.1 &amp; §17.6.2.4)</h4>
+        <p>Two independent mechanisms reduce &phi;N<sub>cbg</sub> when anchors are placed close to a free concrete face. They act simultaneously and their effects compound — together they can cut &phi;N<sub>cbg</sub> by 50–70% compared to an interior group of the same size.</p>
+
+        <p><strong>Mechanism 1 — Breakout cone truncated at the edge (§17.6.2.1).</strong><br>
+        Without a nearby edge, each anchor's cone projects 1.5h<sub>ef</sub> outward on all sides. A free face physically cuts the cone, reducing the projected plan area A<sub>Nc</sub>. The effective projection toward the edge is limited by the available cover:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">h<sub>ef,e</sub> = min(1.5h<sub>ef</sub>,&nbsp; c<sub>a,min</sub>)</span>
+          <span class="fml-eq">A<sub>Nc</sub> = (s<sub>a</sub> + 2h<sub>ef,e</sub>)&sup2; &nbsp;&le;&nbsp; n &times; A<sub>Nc0</sub> &nbsp;&nbsp; (4-bolt square group)</span>
+          <span class="ft">s<sub>a</sub> = corner-to-corner anchor spacing; c<sub>a,min</sub> = anchor centerline to nearest free concrete face</span>
+        </div>
+
+        <p><strong>Mechanism 2 — Edge distance modification factor &psi;<sub>ed,N</sub> (§17.6.2.4).</strong><br>
+        Edge proximity reduces concrete confinement in the breakout zone. This is captured as a separate multiplier on top of the A<sub>Nc</sub> reduction:</p>
+        <div class="fml-blk">
+          <span class="fml-eq">c<sub>a,min</sub> &ge; 1.5h<sub>ef</sub>: &psi;<sub>ed,N</sub> = 1.0 &nbsp;&nbsp; (no reduction — edge too far to affect cone)</span>
+          <span class="fml-eq">c<sub>a,min</sub> &lt; 1.5h<sub>ef</sub>: &psi;<sub>ed,N</sub> = 0.7 + 0.3 (c<sub>a,min</sub> / 1.5h<sub>ef</sub>)</span>
+        </div>
+        <p>The critical distance is 1.5h<sub>ef</sub>. Closer than this, both A<sub>Nc</sub> and &psi;<sub>ed,N</sub> decrease together. At the extreme (c<sub>a,min</sub>&nbsp;&rarr;&nbsp;0): &psi;<sub>ed,N</sub>&nbsp;&rarr;&nbsp;0.70 and h<sub>ef,e</sub>&nbsp;&rarr;&nbsp;0 (A<sub>Nc</sub> collapses to nearly zero).</p>
+
+        <div style="margin:12px 0;background:#f8fafc;border:1px solid #d0dce8;border-radius:6px;padding:10px;text-align:center;overflow-x:auto">
+        <svg viewBox="0 0 490 195" width="100%" style="max-width:490px;display:block;margin:0 auto" aria-label="ANc breakout cone projection with and without edge truncation">
+          <defs>
+            <marker id="anc-garr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0.5 L0,5.5 L5.5,3 Z" fill="#339955"/>
+            </marker>
+          </defs>
+          <!-- ─── Left: No edge, full cone ─── -->
+          <text x="112" y="13" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a2332">No free edge — full projection</text>
+          <rect x="14" y="22" width="196" height="135" rx="2" fill="#d8f0e6" stroke="#339955" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="75" y="57" width="62" height="62" fill="none" stroke="#bbb" stroke-width="0.75" stroke-dasharray="2,2"/>
+          <circle cx="75" cy="57" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="137" cy="57" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="75" cy="119" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="137" cy="119" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <line x1="75" y1="50" x2="137" y2="50" stroke="#555" stroke-width="1"/>
+          <line x1="75" y1="47" x2="75" y2="53" stroke="#555" stroke-width="1"/>
+          <line x1="137" y1="47" x2="137" y2="53" stroke="#555" stroke-width="1"/>
+          <text x="106" y="47" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#444">sₐ</text>
+          <line x1="14" y1="88" x2="74" y2="88" stroke="#339955" stroke-width="1" stroke-dasharray="2,2"/>
+          <text x="44" y="85" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#226633">1.5h_ef</text>
+          <line x1="138" y1="88" x2="210" y2="88" stroke="#339955" stroke-width="1" stroke-dasharray="2,2"/>
+          <text x="174" y="85" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#226633">1.5h_ef</text>
+          <text x="112" y="170" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#226633" font-weight="600">A_Nc = (sₐ + 3h_ef)²</text>
+          <text x="112" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#444">ψ_ed,N = 1.0 &nbsp;|&nbsp; full capacity</text>
+          <!-- ─── Right: Near edge, truncated ─── -->
+          <text x="370" y="13" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a2332">Near free edge (c_a,min &lt; 1.5 h_ef)</text>
+          <line x1="258" y1="15" x2="258" y2="162" stroke="#cc2222" stroke-width="2.5"/>
+          <text x="255" y="13" text-anchor="end" font-family="sans-serif" font-size="7.5" fill="#cc2222">concrete</text>
+          <text x="255" y="22" text-anchor="end" font-family="sans-serif" font-size="7.5" fill="#cc2222">edge</text>
+          <rect x="233" y="22" width="196" height="135" rx="2" fill="none" stroke="#cc8888" stroke-width="1" stroke-dasharray="3,3"/>
+          <rect x="258" y="22" width="171" height="135" rx="0" fill="#d8f0e6" stroke="#339955" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="258" y="22" width="25" height="135" fill="#ffe0e0" stroke="none" fill-opacity="0.6"/>
+          <rect x="283" y="57" width="62" height="62" fill="none" stroke="#bbb" stroke-width="0.75" stroke-dasharray="2,2"/>
+          <circle cx="283" cy="57" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="345" cy="57" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="283" cy="119" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <circle cx="345" cy="119" r="5" fill="#1a2332" stroke="#f8fafc" stroke-width="1.5"/>
+          <line x1="258" y1="45" x2="283" y2="45" stroke="#cc2222" stroke-width="1.5"/>
+          <line x1="258" y1="42" x2="258" y2="48" stroke="#cc2222" stroke-width="1.5"/>
+          <line x1="283" y1="42" x2="283" y2="48" stroke="#cc2222" stroke-width="1.5"/>
+          <text x="270" y="40" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#cc2222">c_a,min</text>
+          <line x1="346" y1="88" x2="429" y2="88" stroke="#339955" stroke-width="1" stroke-dasharray="2,2"/>
+          <text x="387" y="85" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#226633">1.5h_ef</text>
+          <text x="248" y="93" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#cc4444" transform="rotate(-90,248,93)">cone cut</text>
+          <text x="370" y="170" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#aa3322" font-weight="600">A_Nc reduced + ψ_ed,N &lt; 1.0</text>
+          <text x="370" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#444">Both effects compound simultaneously</text>
+        </svg>
+        <p style="margin:6px 0 0;font-size:.72rem;color:#666;font-family:sans-serif">Green dashed = A<sub>Nc</sub> projected area &nbsp;|&nbsp; Pink fill = cone volume lost beyond edge &nbsp;|&nbsp; Red dashed = ghost outline without edge &nbsp;|&nbsp; Filled circles = anchor rods</p>
+        </div>
+
+        <h4>Typical Impact by Column Location</h4>
+        <table class="combo-ref-tbl" style="max-width:560px">
+          <tr><th>Column location</th><th>c<sub>a,min</sub> vs. 1.5h<sub>ef</sub></th><th>Typical &phi;N<sub>cbg</sub> reduction</th></tr>
+          <tr><td>Interior — anchors well away from any face</td><td>&ge; 1.5h<sub>ef</sub></td><td>None — baseline capacity</td></tr>
+          <tr><td>Edge column — one anchor line near a face</td><td>0.5 – 1.0 &times; 1.5h<sub>ef</sub></td><td>15 – 45%</td></tr>
+          <tr><td>Corner column — anchors near two adjacent faces</td><td>&lt; 0.5 &times; 1.5h<sub>ef</sub></td><td>50 – 75%+</td></tr>
+        </table>
+        <p style="font-size:.8rem;color:var(--text-mid);margin-top:6px"><em>Note:</em> This calculator applies c<sub>a,min</sub> to all sides of the bolt group (conservative). The physical truncation occurs on the near side only, but since a single c<sub>a,min</sub> is entered without specifying which face is exposed, the all-sides assumption is safe.</p>
+
+        <h4>Steel Failure — Shear (§17.7.1.2)</h4>
+        <div class="fml-blk">
+          <span class="fml-eq">&phi;V<sub>sa</sub> = 0.65 &times; 0.6 &times; A<sub>se,V</sub> &times; f<sub>uta</sub></span>
+        </div>
       </div>
     </div>
 
@@ -639,8 +803,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
         <h4>Step 6 — Concrete breakout (tension)</h4>
         <p>N<sub>b</sub> = 24&times;&radic;4000&times;15<sup>1.5</sup> = 24&times;63.2&times;58.1 = 88,180 lb = 88.2 kip.<br>
-        A<sub>Nc</sub> = (12+2&times;15)&sup2; = 42&sup2; = 1764 in&sup2;. A<sub>Nc0</sub> = 9&times;225 = 2025 in&sup2;.<br>
-        &phi;N<sub>cbg</sub> = 0.70&times;(1764/2025)&times;1.0&times;1.25&times;1.0&times;88.2 = <strong>84 kip</strong>.</p>
+        h<sub>ef,e</sub> = min(1.5&times;15, &infin;) = 22.5 in (no edge constraint). A<sub>Nc</sub> = (12+2&times;22.5)&sup2; = 57&sup2; = 3249 in&sup2; &rarr; capped at 4&times;2025 = 8100 in&sup2;, so A<sub>Nc</sub> = 3249 in&sup2;.<br>
+        A<sub>Nc0</sub> = 9&times;225 = 2025 in&sup2;. &psi;<sub>ed,N</sub> = 1.0 (no edge; c<sub>a,min</sub> &ge; 1.5h<sub>ef</sub>).<br>
+        &phi;N<sub>cbg</sub> = 0.70&times;(3249/2025)&times;1.0&times;1.0&times;1.25&times;1.0&times;88.2 = <strong>123 kip</strong>.<br>
+        Controls: &phi;N<sub>t,min</sub> = min(105.5, 123) = <strong>105.5 kip (steel governs)</strong>.</p>
       </div>
     </div>
 
