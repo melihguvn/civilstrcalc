@@ -1210,33 +1210,47 @@ function calc(){
                  +(hasMx?' | ex='+fmt(ex_ecc,dp)+' '+lenU:'')
                  +(hasMy?' | ey='+fmt(ey_ecc,dp)+' '+lenU:'')
                  +((hasMx||hasMy)?' ('+(bearCase==='full_comp'?'kern':'partial')+')':'');
+  var tAnchMax = Math.max(T_anch_x, T_anch_y);
+  var hasT = tAnchMax > 0;
+  var dcrAnchT = Math.max(DCR_anch_Tx, DCR_anch_Ty);
   var rows = [
-    {num:1,
+    {num:0,
      desc:'Plate area & eccentricities',
      form:eccFormStr,
      val: eccValStr,
      chk: ''},
-    {num:2,
+    {num:0,
      desc:'Bearing capacity check',
      form:bearDesc,
-     val: 'fp_max = '+fmt(fp_max,unit==='us'?4:2)+' '+strsU+' | φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
-     chk: DCR_brg},
-    {num:3,
+     val: hasT
+          ? 'fp = φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | Y = '+fmt(Y_bear,dp)+' '+lenU+' (at capacity — anchor tension governs)'
+          : 'fp_max = '+fmt(fp_max,unit==='us'?4:2)+' '+strsU+' | φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
+     chk: hasT ? '' : DCR_brg}
+  ];
+  if(hasT){
+    rows.push({num:0,
+     desc:'Anchor tension — moment demand',
+     form:'T = C − Pu; C = φFp·B·Y/2 | φNt = min(φNsa·n, φNcbg)',
+     val: 'T = '+fmt(tAnchMax,unit==='us'?2:1)+' '+forU+' | φNt = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR = '+fmt(dcrAnchT,3),
+     chk: dcrAnchT});
+  }
+  rows.push(
+    {num:0,
      desc:'Cantilever lengths m, n, n\'',
      form:'m=(N−0.95d)/2 | n=(B−'+nCoeff.toFixed(2)+'·bf)/2 | n\'=√(d·bf)/4',
      val: 'm='+fmt(m,unit==='us'?3:1)+' | n='+fmt(n,unit==='us'?3:1)+' | n\'='+fmt(nprime,unit==='us'?3:1)+' '+lenU,
      chk: ''},
-    {num:4,
+    {num:0,
      desc:'λ factor & governing ℓ',
      form:'X=4dbf/(d+bf)²·Pu/φPp₀ | λ=2√X/(1+√(1−X))',
      val: 'X='+fmt(X,3)+' | λ='+fmt(lam,3)+' | ℓ='+fmt(ell,unit==='us'?3:1)+' '+lenU,
      chk: ''},
-    {num:5,
+    {num:0,
      desc:'Required plate thickness',
      form:'tp = ℓ·√(2·fp_max/(φ·Fy))',
      val: 'tp = '+fmt(tp,unit==='us'?3:1)+' '+lenU,
      chk: ''},
-    {num:6,
+    {num:0,
      desc:'Shear friction',
      form:'φVn = φ·μ·Pu (μ=0.55, φ=0.90)',
      val: 'φVn = '+fmt(phi_Vn_fric,1)+' '+forU
@@ -1244,7 +1258,8 @@ function calc(){
        +(Vy>0?' | DCR(y) = '+fmt(DCR_shear_y,3):'')
        +(Vx===0&&Vy===0?' | no shear applied':''),
      chk: Math.max(DCR_shear_x, DCR_shear_y)}
-  ];
+  );
+  rows.forEach(function(r, i){ r.num = i+1; });
 
   var tbody = el('steps-body');
   if(tbody){
