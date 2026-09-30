@@ -1079,6 +1079,7 @@ function calc(){
   var DCR_brg_x = fp_x / phi_Fp;
   var DCR_brg_y = fp_y / phi_Fp;
   var DCR_brg_val = fp_max / phi_Fp;
+  var hasT = T_anch_x > 0 || T_anch_y > 0;
 
   /* ── Cantilever lengths & plate thickness ── */
   m = (N - mCoeff*d)/2;
@@ -1138,7 +1139,7 @@ function calc(){
     e.textContent=val;
     e.className='fl-val'+(dcr!==undefined?' '+dcrCls(dcr):'');
   }
-  setFV('rv-brg', fmt(DCR_brg_val,3), DCR_brg_val);
+  setFV('rv-brg', hasT ? 'At cap.' : fmt(DCR_brg_val,3), hasT ? undefined : DCR_brg_val);
   setFV('rv-tp',  isFinite(tp)?fmt(tp,unit==='us'?3:1):'—');
   setFV('rv-ell', isFinite(ell)?fmt(ell,unit==='us'?3:1):'—');
 
@@ -1147,8 +1148,8 @@ function calc(){
   if(rbBrgXY){
     if(bearCase==='partial'&&(ex_ecc>0||ey_ecc>0)){
       rbBrgXY.style.display='';
-      setFV('rv-brg-x',fmt(DCR_brg_x,3),DCR_brg_x);
-      setFV('rv-brg-y',fmt(DCR_brg_y,3),DCR_brg_y);
+      setFV('rv-brg-x', T_anch_x>0 ? 'At cap.' : fmt(DCR_brg_x,3), T_anch_x>0 ? undefined : DCR_brg_x);
+      setFV('rv-brg-y', T_anch_y>0 ? 'At cap.' : fmt(DCR_brg_y,3), T_anch_y>0 ? undefined : DCR_brg_y);
     } else { rbBrgXY.style.display='none'; }
   }
 
@@ -1175,7 +1176,7 @@ function calc(){
   // ── DCR Banner ──
   var maxSh = Math.max(DCR_shear_x, DCR_shear_y);
   var maxAnchT = Math.max(DCR_anch_Tx, DCR_anch_Ty);
-  var worstDCR = Math.max(DCR_brg_val, maxSh, maxAnchT);
+  var worstDCR = hasT ? Math.max(maxSh, maxAnchT) : Math.max(DCR_brg_val, maxSh, maxAnchT);
   var bnr = el('dcr-banner');
   bnr.className = 'dcr-banner ' + dcrCls(worstDCR);
   var icon = el('dcr-icon')||bnr.querySelector('.dcr-icon');
@@ -1188,7 +1189,7 @@ function calc(){
   } else {
     if(mt) mt.textContent = 'Design NG — increase plate or modify inputs';
   }
-  var govStr = DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT ? 'Bearing DCR = '+fmt(DCR_brg_val,3)
+  var govStr = (!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT) ? 'Bearing DCR = '+fmt(DCR_brg_val,3)
              : maxSh>=maxAnchT ? 'Shear DCR = '+fmt(maxSh,3)
              : 'Anchor T DCR = '+fmt(maxAnchT,3);
   if(rodInsideCol){
@@ -1350,19 +1351,19 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
   var cx0 = (W-cW)/2, cy0 = (H-cH)/2;
 
   // Anchor positions — ensure rods appear outside the column footprint in SVG
-  // Physical overhang of plate beyond column in each direction
+  var anchR = Math.max(5, Math.min(8, pW*0.035));  // compute early for clearance calc
   var overhangX = (B - bf) / 2;  // plate extends this far past column flange on each side
   var overhangY = (N - d)  / 2;  // plate extends this far past column depth on each side
   var minOverhang = Math.min(overhangX, overhangY);
-  // Place rod at 85% of the tighter overhang — always outside column, with visible gap
+  // Keep bolt circle fully outside column: center must be ≥ (anchR+4px) clear of column face
+  var clearPx = anchR + 4;
   var edgeForSVG = (minOverhang > 0)
-    ? Math.min(edgeDist, minOverhang * 0.82)
+    ? Math.min(edgeDist, Math.max(minOverhang - clearPx/scale, 3))
     : edgeDist;
   var eS = edgeForSVG * scale;
   eS = Math.max(eS, 3);          // at least 3 px visible from plate edge
   eS = Math.min(eS, pW * 0.28);  // never more than 28% of plate width
   var anchPts = [];
-  // Corner rods for both 4 and 8
   var x0a = px0 + eS, x1a = px0 + pW - eS;
   var y0a = py0 + eS, y1a = py0 + pH - eS;
   if(nAnch===4){
@@ -1371,13 +1372,15 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
       [x0a, y1a], [x1a, y1a]
     ];
   } else {
-    // 4 corners + 4 mid-side rods
-    var xm = (px0 + px0 + pW) / 2, ym = (py0 + py0 + pH) / 2;
+    // 8-bolt layout: 2 rods per overhang arm, outside column footprint
+    // Side-arm bolts (left/right) alongside column depth; top/bottom-arm bolts alongside column width
+    var x1c = cx0 + cW*0.25, x2c = cx0 + cW*0.75;  // 1/4 and 3/4 of column width
+    var y1c = cy0 + cH*0.25, y2c = cy0 + cH*0.75;  // 1/4 and 3/4 of column depth
     anchPts = [
-      [x0a, y0a], [x1a, y0a],
-      [x0a, y1a], [x1a, y1a],
-      [xm, y0a], [xm, y1a],
-      [x0a, ym], [x1a, ym]
+      [x0a, y1c], [x0a, y2c],   // left arm
+      [x1a, y1c], [x1a, y2c],   // right arm
+      [x1c, y0a], [x2c, y0a],   // top arm
+      [x1c, y1a], [x2c, y1a]    // bottom arm
     ];
   }
 
@@ -1407,7 +1410,6 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
   }
 
   // Anchor rods — standard structural symbol: outer circle + crosshair + center dot
-  var anchR = Math.max(5, Math.min(8, pW*0.035));
   anchPts.forEach(function(pt){
     var ax=pt[0], ay=pt[1];
     ax = Math.max(px0+anchR+2, Math.min(px0+pW-anchR-2, ax));
