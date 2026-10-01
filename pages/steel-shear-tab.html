@@ -331,16 +331,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
 
       <!-- Summary strip -->
-      <div class="fl-rb" style="grid-template-columns:repeat(2,1fr)">
+      <div class="fl-rb">
         <div class="fl-col">
-          <div class="fl-lbl">Worst DCR</div>
-          <div class="fl-val" id="rv-dcr">—</div>
-          <div class="fl-unit" id="rv-gov">—</div>
+          <div class="fl-lbl">Bolt</div>
+          <div class="fl-val" id="rv-bolt-dcr">—</div>
+          <div class="fl-unit" id="rv-bolt-gov">—</div>
         </div>
         <div class="fl-col">
-          <div class="fl-lbl">&phi;R<sub>n,min</sub></div>
-          <div class="fl-val" id="rv-phi-rn">—</div>
-          <div class="fl-unit" id="rv-phi-rn-u">kip</div>
+          <div class="fl-lbl">Shear Tab</div>
+          <div class="fl-val" id="rv-plate-dcr">—</div>
+          <div class="fl-unit" id="rv-plate-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Beam Web</div>
+          <div class="fl-val" id="rv-web-dcr">—</div>
+          <div class="fl-unit" id="rv-web-gov">—</div>
         </div>
       </div>
 
@@ -692,7 +697,7 @@ function setUnit(u){
   var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu,'su-a':lu};
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
-  el('rv-phi-rn-u').textContent=fu;
+  // rv-phi-rn-u removed (replaced by group DCR tiles)
   buildBeamTypeDropdown();
   buildBoltDropdowns();
   buildPlateGradeDropdown();
@@ -908,10 +913,26 @@ function calc(){
   var forU = unit==='us'?'kip':'kN';
   var lenU = unit==='us'?'in':'mm';
 
-  // Summary strip
-  set('rv-dcr',   fmt(DCR,3));
-  set('rv-gov',   checks[govIdx].name);
-  set('rv-phi-rn',fmt(phi_Rn_min,unit==='us'?1:0)+' '+forU);
+  // ── Group DCR tiles ──
+  var boltPhis  = [phi_Rnv, phi_Rnv_ecc].filter(isFinite);
+  var platePhis = [phi_Rbrg_pl, phi_Rsy, phi_Rsr, phi_Rbs, phi_Rn_bending].filter(isFinite);
+  var webPhis   = [phi_Rbrg_web, phi_Rwy, phi_Rwr].filter(isFinite);
+  function minPhi(arr){ return arr.length ? Math.min.apply(null,arr) : Infinity; }
+  function grpDCR(m){ return (Vu>0 && m>0 && isFinite(m)) ? Vu/m : 0; }
+  var gDCR_bolt  = grpDCR(minPhi(boltPhis));
+  var gDCR_plate = grpDCR(minPhi(platePhis));
+  var gDCR_web   = grpDCR(minPhi(webPhis));
+  var boltPairs  = [{p:phi_Rnv,n:'Bolt shear'},{p:phi_Rnv_ecc,n:'Eccentricity'}];
+  var platePairs = [{p:phi_Rbrg_pl,n:'Bearing'},{p:phi_Rsy,n:'Plate yield'},{p:phi_Rsr,n:'Plate rupture'},{p:phi_Rbs,n:'Block shear'},{p:phi_Rn_bending,n:'Plate bending'}];
+  var webPairs   = [{p:phi_Rbrg_web,n:'Bearing on web'},{p:phi_Rwy,n:'Web yield'},{p:phi_Rwr,n:'Web rupture'}];
+  function govLbl(pairs){ var b={p:Infinity,n:'—'}; pairs.forEach(function(x){if(isFinite(x.p)&&x.p<b.p)b=x;}); return b.n; }
+  function setGrp(vId,gId,dcr,pairs){
+    var ve=el(vId); if(ve){ve.textContent=dcr>0?fmt(dcr,3):'—';ve.className='fl-val'+(dcr>0?' '+dcrCls(dcr):'');}
+    var ge=el(gId);  if(ge) ge.textContent=dcr>0?govLbl(pairs):'—';
+  }
+  setGrp('rv-bolt-dcr',  'rv-bolt-gov',  gDCR_bolt,  boltPairs);
+  setGrp('rv-plate-dcr', 'rv-plate-gov', gDCR_plate, platePairs);
+  setGrp('rv-web-dcr',   'rv-web-gov',   gDCR_web,   webPairs);
 
   // DCR Banner
   var banner=el('dcr-banner');
