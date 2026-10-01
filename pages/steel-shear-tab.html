@@ -366,6 +366,20 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         </table>
       </div>
 
+      <!-- Geometry & Spacing Checks -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Geometry &amp; Spacing Checks (AISC 360-22)</div>
+        <table class="res-tbl">
+          <thead><tr>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Actual</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Limit</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Status</th>
+          </tr></thead>
+          <tbody id="geo-tbl-body"></tbody>
+        </table>
+      </div>
+
       <!-- Inputs -->
       <div class="rpt-sec">
         <div class="rpt-sec-title">Design Inputs</div>
@@ -545,6 +559,10 @@ var BOLT_GRADES_SI = [
   ['8.8',  330, 372],   // A325M
   ['10.9', 414, 469]    // A490M
 ];
+
+// Min edge distance per AISC 360-22 Table J3.4 / J3.4M (standard holes)
+var LE_MIN_US = {0.500:0.750, 0.625:0.875, 0.750:1.000, 0.875:1.125, 1.000:1.250, 1.125:1.500, 1.250:1.625};
+var LE_MIN_SI = {16:26, 20:32, 22:35, 24:38, 27:44, 30:49};
 
 // Bolt diameters US: [label, db_in]
 var BOLT_DIA_US = [
@@ -814,6 +832,32 @@ function calc(){
       +'<td style="text-align:right;font-family:var(--mono)"'+( isGov?' class="gov"':'')+'>'+fmt(c.phi_Rn,unit==='us'?1:0)+' '+forU+'</td>'
       +'<td class="'+cls2+'" style="text-align:right">'+fmt(dcr,3)+(isGov?' &#x25C4;':'')+'</td>';
     tbody.appendChild(tr);
+  });
+
+  // ── Geometry & Spacing Checks ──────────────────────────────────────
+  var d_web   = beamD - 2*beamTf;                            // clear web height
+  var Le_min  = unit==='us' ? (LE_MIN_US[db]||1.25*db) : (LE_MIN_SI[db]||1.6*db);
+  var t_thin  = Math.min(tp, tw);
+  var Le_max  = Math.min(12*t_thin, unit==='us'?6:150);     // §J3.5
+  var s_min   = 2.667*db;                                    // §J3.3
+  var s_max   = Math.min(24*t_thin, unit==='us'?12:300);    // §J3.5
+  var d2      = unit==='us'?2:1;                             // decimal places
+  var geoRows=[
+    {name:'Plate height hₚ ≤ clear web (d−2tᶠ)',   actual:hp,  limit:d_web,  hi:false},
+    {name:'Min. edge dist eᵥ ≥ Lₑ,min  (§J3.4)',   actual:ev,  limit:Le_min, hi:true },
+    {name:'Max. edge dist eᵥ ≤ Lₑ,max  (§J3.5)',   actual:ev,  limit:Le_max, hi:false},
+    {name:'Min. bolt spacing s ≥ 2.67dᵇ (§J3.3)',  actual:s,   limit:s_min,  hi:true },
+    {name:'Max. bolt spacing s ≤ sₘₐₓ   (§J3.5)',  actual:s,   limit:s_max,  hi:false}
+  ];
+  var gbody=el('geo-tbl-body'); gbody.innerHTML='';
+  geoRows.forEach(function(r){
+    var ok=r.hi ? r.actual>=r.limit : r.actual<=r.limit;
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-size:.78rem">'+r.name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)">'+fmt(r.actual,d2)+' '+lenU+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)">'+fmt(r.limit,d2)+' '+lenU+'</td>'
+      +'<td class="'+(ok?'ok':'err')+'" style="text-align:right">'+(ok?'&#x2714;':'&#x2716;')+'</td>';
+    gbody.appendChild(tr);
   });
 
   // Input summary
