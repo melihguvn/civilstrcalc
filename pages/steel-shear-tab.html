@@ -338,7 +338,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="fl-unit" id="rv-phi-rn-u">kip</div>
         </div>
         <div class="fl-col">
-          <div class="fl-lbl">Plate h<sub>p</sub></div>
+          <div class="fl-lbl">Conn. length h<sub>p</sub></div>
           <div class="fl-val" id="rv-hp">—</div>
           <div class="fl-unit" id="rv-hp-u">in</div>
         </div>
@@ -788,13 +788,20 @@ function calc(){
   var Rbs_b = 0.60*Fy_pl*Agv_bs + Ubs*Fu_pl*Ant_bs;
   var phi_Rbs = phi_bs * Math.min(Rbs_a, Rbs_b);
 
+  // SI: calculations yield N (MPa×mm²), convert to kN for display
+  if(unit==='si'){
+    var cf=1/1000;
+    phi_Rnv*=cf; phi_Rbrg_pl*=cf; phi_Rbrg_web*=cf;
+    phi_Rsy*=cf; phi_Rsr*=cf; phi_Rbs*=cf;
+  }
+
   var checks = [
-    {name:'Bolt shear §J3.6',          phi_Rn: phi_Rnv,      detail: fmt(phi_Rnv,unit==='us'?1:0)},
-    {name:'Bearing on plate §J3.10',   phi_Rn: phi_Rbrg_pl,  detail: fmt(phi_Rbrg_pl,unit==='us'?1:0)},
-    {name:'Bearing on web §J3.10',     phi_Rn: phi_Rbrg_web, detail: fmt(phi_Rbrg_web,unit==='us'?1:0)},
-    {name:'Plate shear yield §J4.2',   phi_Rn: phi_Rsy,      detail: fmt(phi_Rsy,unit==='us'?1:0)},
-    {name:'Plate shear rupture §J4.2', phi_Rn: phi_Rsr,      detail: fmt(phi_Rsr,unit==='us'?1:0)},
-    {name:'Block shear §J4.3',         phi_Rn: phi_Rbs,      detail: fmt(phi_Rbs,unit==='us'?1:0)}
+    {name:'Bolt shear §J3.6',          phi_Rn: phi_Rnv      },
+    {name:'Bearing on plate §J3.10',   phi_Rn: phi_Rbrg_pl  },
+    {name:'Bearing on web §J3.10',     phi_Rn: phi_Rbrg_web },
+    {name:'Plate shear yield §J4.2',   phi_Rn: phi_Rsy      },
+    {name:'Plate shear rupture §J4.2', phi_Rn: phi_Rsr      },
+    {name:'Block shear §J4.3',         phi_Rn: phi_Rbs      }
   ];
 
   var phi_Rn_min = Infinity, govIdx = 0;
