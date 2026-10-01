@@ -1760,25 +1760,18 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca
     var eClr='#cc7700', caClr2='#1a7a3a';
     var lenU2=unit==='us'?'in':'mm', dp2=unit==='us'?2:0;
 
-    // bolt setback "e": plate edge -> bolt (amber)
+    // Amber "e": plate left edge -> left bolt (horizontal, BELOW bolt)
     if(eS > 8){
-      var hY=hBoltY+anchR+4;
-      if(hY < py0+pH-10){
+      var hY=hBoltY+anchR+5;
+      if(hY < py0+pH-12){
         html += '<line x1="'+px0+'" y1="'+hY+'" x2="'+hBoltX+'" y2="'+hY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
         html += '<line x1="'+px0+'" y1="'+(hY-3)+'" x2="'+px0+'" y2="'+(hY+3)+'" stroke="'+eClr+'" stroke-width="0.8"/>';
         html += '<line x1="'+hBoltX+'" y1="'+(hY-3)+'" x2="'+hBoltX+'" y2="'+(hY+3)+'" stroke="'+eClr+'" stroke-width="0.8"/>';
-        html += '<text x="'+(px0+eS/2)+'" y="'+(hY+8)+'" text-anchor="middle" font-size="7" fill="'+eClr+'">e='+fmt(edgeDist,dp2)+' '+lenU2+'</text>';
-      }
-      var vX=vBoltX-anchR-4;
-      if(vX > px0+4){
-        html += '<line x1="'+vX+'" y1="'+py0+'" x2="'+vX+'" y2="'+vBoltY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
-        html += '<line x1="'+(vX-3)+'" y1="'+py0+'" x2="'+(vX+3)+'" y2="'+py0+'" stroke="'+eClr+'" stroke-width="0.8"/>';
-        html += '<line x1="'+(vX-3)+'" y1="'+vBoltY+'" x2="'+(vX+3)+'" y2="'+vBoltY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
-        html += '<text x="'+(vX-3)+'" y="'+(py0+eS/2+3)+'" text-anchor="end" font-size="7" fill="'+eClr+'">e='+fmt(edgeDist,dp2)+' '+lenU2+'</text>';
+        html += '<text x="'+(px0+eS/2)+'" y="'+(hY+9)+'" text-anchor="middle" font-size="7" fill="'+eClr+'">e='+fmt(edgeDist,dp2)+' '+lenU2+'</text>';
       }
     }
 
-    // ca,min: concrete pedestal face (green dashed rect + dim)
+    // Green "ca,min": concrete face -> bolt (horizontal, ABOVE bolt — outside plate boundary)
     if(ca_min_raw > 0){
       var caS=ca_min_raw*scale;
       var pedL=Math.max(2, hBoltX-caS);
@@ -1786,14 +1779,21 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca
       var pedT=Math.max(2, vBoltY-caS);
       var pedB=Math.min(H-2, py0+pH-eS+caS);
       if(pedR>pedL && pedB>pedT){
+        // Dashed concrete pedestal rectangle
         html += '<rect x="'+pedL+'" y="'+pedT+'" width="'+(pedR-pedL)+'" height="'+(pedB-pedT)+'"'
               + ' fill="none" stroke="'+caClr2+'" stroke-width="1" stroke-dasharray="4,3" rx="1"/>';
-        var caHY=hBoltY-anchR-5;
-        if(caHY > pedT+2 && caS > 6){
+        // ca dim line: left concrete face -> left bolt, placed ABOVE bolt (in the outer concrete space)
+        var caHY=hBoltY-anchR-8;
+        if(caHY > pedT+4 && caS > 8){
           html += '<line x1="'+pedL+'" y1="'+caHY+'" x2="'+hBoltX+'" y2="'+caHY+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
           html += '<line x1="'+pedL+'" y1="'+(caHY-3)+'" x2="'+pedL+'" y2="'+(caHY+3)+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
           html += '<line x1="'+hBoltX+'" y1="'+(caHY-3)+'" x2="'+hBoltX+'" y2="'+(caHY+3)+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
-          html += '<text x="'+(pedL+caS/2)+'" y="'+(caHY-3)+'" text-anchor="middle" font-size="7" fill="'+caClr2+'">ca='+fmt(ca_min_raw,dp2)+' '+lenU2+'</text>';
+          // Label in the OUTER space (left of plate), not above bolt where it crowds
+          var lblX = pedL + caS/2;
+          var lblY = caHY - 3;
+          // If label would overlap plate area, push it further left
+          if(lblX > px0-4) lblX = pedL + (px0-pedL)/2;
+          html += '<text x="'+lblX+'" y="'+lblY+'" text-anchor="middle" font-size="7" fill="'+caClr2+'">ca='+fmt(ca_min_raw,dp2)+' '+lenU2+'</text>';
         }
       }
     }
