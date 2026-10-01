@@ -191,6 +191,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 @media(max-width:640px){
   .form-row-2{grid-template-columns:1fr!important}
   .result-box{grid-template-columns:repeat(2,1fr)!important}
+  .fl-rb{grid-template-columns:repeat(2,1fr)!important}
+  .fl-col:nth-child(3),.fl-col:nth-child(4){border-top:1px solid #b8d0eb}
+  .fl-col:nth-child(3)::before{display:none}
   .step-formula{display:none}
   .step-val{font-size:.70rem;word-break:break-word;overflow-wrap:anywhere;max-width:160px}
   .steps-table td{padding:5px 3px}
@@ -403,11 +406,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
 
       <!-- Primary summary -->
-      <div class="fl-rb">
+      <div class="fl-rb" style="grid-template-columns:repeat(4,1fr)">
         <div class="fl-col">
-          <div class="fl-lbl">Worst DCR</div>
-          <div class="fl-val" id="rv-worst">—</div>
-          <div class="fl-unit" id="rv-worst-lbl">—</div>
+          <div class="fl-lbl">Bolt / Anchor</div>
+          <div class="fl-val" id="rv-bolt-dcr">—</div>
+          <div class="fl-unit" id="rv-bolt-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Base Plate</div>
+          <div class="fl-val" id="rv-plate-dcr">—</div>
+          <div class="fl-unit" id="rv-plate-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Concrete</div>
+          <div class="fl-val" id="rv-conc-dcr">—</div>
+          <div class="fl-unit" id="rv-conc-gov">—</div>
         </div>
         <div class="fl-col">
           <div class="fl-lbl">Req. t<sub>p</sub></div>
@@ -1484,10 +1497,34 @@ function calc(){
   }
   if(ms) ms.textContent = 'Governing: ' + govStr;
 
-  // ── Worst DCR card ──
-  var wrstLbl = govStr.replace(/\s*=\s*[\d.]+.*$/,'').trim(); // strip "= 0.xxx" suffix
-  setFV('rv-worst', fmt(worstDCR,3), worstDCR);
-  var wlEl=el('rv-worst-lbl'); if(wlEl) wlEl.textContent=wrstLbl;
+  // ── Group DCR tiles ──
+  var DCR_bolt = Math.max(DCR_anch_Vx, DCR_anch_Vy, DCR_anch_Tx, DCR_anch_Ty);
+  var boltGov;
+  if(DCR_bolt <= 0){ boltGov = '—'; }
+  else if(Math.max(DCR_anch_Tx,DCR_anch_Ty) >= Math.max(DCR_anch_Vx,DCR_anch_Vy)){ boltGov = 'Anchor tension'; }
+  else { boltGov = 'Anchor shear'; }
+
+  var DCR_plate = Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y);
+  var plateGov;
+  if(DCR_plate <= 0){ plateGov = '—'; }
+  else if(DCR_brg_val >= Math.max(DCR_shear_x, DCR_shear_y)){
+    plateGov = hasT ? 'Bearing at cap.' : 'Bearing pressure';
+  } else { plateGov = 'Shear friction'; }
+
+  var DCR_conc = Math.max(DCR_pullout, DCR_pryout, DCR_vbrk, DCR_interact);
+  var concGov;
+  if(DCR_conc <= 0){ concGov = '—'; }
+  else if(DCR_interact >= Math.max(DCR_pullout, DCR_pryout, DCR_vbrk)){ concGov = 'T-V interaction'; }
+  else if(DCR_pryout >= Math.max(DCR_pullout, DCR_vbrk)){ concGov = 'Pryout'; }
+  else if(DCR_vbrk >= DCR_pullout && DCR_vbrk > 0){ concGov = 'Shear breakout'; }
+  else { concGov = 'Pullout'; }
+
+  setFV('rv-bolt-dcr', DCR_bolt>0?fmt(DCR_bolt,3):'—', DCR_bolt>0?DCR_bolt:undefined);
+  var eg=el('rv-bolt-gov'); if(eg) eg.textContent=boltGov;
+  setFV('rv-plate-dcr', DCR_plate>0?fmt(DCR_plate,3):'—', DCR_plate>0?DCR_plate:undefined);
+  var epg=el('rv-plate-gov'); if(epg) epg.textContent=plateGov;
+  setFV('rv-conc-dcr', DCR_conc>0?fmt(DCR_conc,3):'—', DCR_conc>0?DCR_conc:undefined);
+  var ecg=el('rv-conc-gov'); if(ecg) ecg.textContent=concGov;
 
   // ── Steps table ──
   var momLabel = unit==='us'?'kip·in':'kN·m';
