@@ -326,7 +326,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
 
       <!-- Summary strip -->
-      <div class="fl-rb">
+      <div class="fl-rb" style="grid-template-columns:repeat(2,1fr)">
         <div class="fl-col">
           <div class="fl-lbl">Worst DCR</div>
           <div class="fl-val" id="rv-dcr">—</div>
@@ -336,11 +336,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="fl-lbl">&phi;R<sub>n,min</sub></div>
           <div class="fl-val" id="rv-phi-rn">—</div>
           <div class="fl-unit" id="rv-phi-rn-u">kip</div>
-        </div>
-        <div class="fl-col">
-          <div class="fl-lbl">Conn. length h<sub>p</sub></div>
-          <div class="fl-val" id="rv-hp">—</div>
-          <div class="fl-unit" id="rv-hp-u">in</div>
         </div>
       </div>
 
@@ -553,11 +548,18 @@ var BOLT_GRADES_US = [
   ['A325',  48,  54],   // Group A
   ['A490',  60,  68]    // Group B
 ];
+// SI: [label, Fnv_N_MPa, Fnv_X_MPa] — ISO 898-1 grades
+// 8.8 / 10.9: AISC 360-22 Table J3.2M (A325M / A490M)
+// Others: Fnv_N ≈ 0.413×fub, Fnv_X ≈ 0.467×fub (consistent with AISC ratios)
 var BOLT_GRADES_SI = [
-  ['4.6',  186, 186],   // equiv. A307 / F568M 4.6; no threads distinction
-  ['5.6',  200, 225],   // interpolated
-  ['8.8',  330, 372],   // A325M
-  ['10.9', 414, 469]    // A490M
+  ['4.6',   165, 187],   // fub = 400 MPa
+  ['4.8',   173, 196],   // fub = 420 MPa
+  ['5.6',   207, 234],   // fub = 500 MPa
+  ['5.8',   215, 243],   // fub = 520 MPa
+  ['6.8',   248, 280],   // fub = 600 MPa
+  ['8.8',   330, 372],   // fub = 800 MPa (AISC A325M)
+  ['10.9',  414, 469],   // fub = 1000 MPa (AISC A490M)
+  ['12.9',  504, 570]    // fub = 1220 MPa
 ];
 
 // Min edge distance per AISC 360-22 Table J3.4 / J3.4M (standard holes)
@@ -642,7 +644,6 @@ function setUnit(u){
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
   el('rv-phi-rn-u').textContent=fu;
-  el('rv-hp-u').textContent=lu;
   buildBeamTypeDropdown();
   buildBoltDropdowns();
   buildPlateGradeDropdown();
@@ -815,7 +816,6 @@ function calc(){
   set('rv-dcr',   fmt(DCR,3));
   set('rv-gov',   checks[govIdx].name);
   set('rv-phi-rn',fmt(phi_Rn_min,unit==='us'?1:0)+' '+forU);
-  set('rv-hp',    fmt(hp,unit==='us'?2:0));
 
   // DCR Banner
   var banner=el('dcr-banner');
