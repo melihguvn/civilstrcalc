@@ -347,7 +347,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
       <!-- DCR Banner -->
       <div class="dcr-banner ok" id="dcr-banner">
-        <div class="dcr-icon">&#x2714;</div>
+        <div class="dcr-icon" id="dcr-icon">&#x2714;</div>
         <div class="dcr-text">
           <strong id="dcr-text-main">—</strong>
           <span id="dcr-text-sub">—</span>
@@ -533,12 +533,18 @@ var beamTw = 0, beamFu = 0, beamD = 0, beamTf = 0;
 
 var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482;
 
-// Bolt grades: [label, Fnv_ksi, Fnv_MPa]
-var BOLT_GRADES = [
-  ['A325-N (Group A, threads incl.)', 48, 330],
-  ['A325-X (Group A, threads excl.)', 54, 372],
-  ['A490-N (Group B, threads incl.)', 60, 414],
-  ['A490-X (Group B, threads excl.)', 68, 469]
+// Bolt grades — US labels with Fnv ksi; SI labels with Fnv MPa (AISC 360-22 Table J3.2)
+var BOLT_GRADES_US = [
+  ['A325-N (Group A, threads incl.)', 48],
+  ['A325-X (Group A, threads excl.)', 54],
+  ['A490-N (Group B, threads incl.)', 60],
+  ['A490-X (Group B, threads excl.)', 68]
+];
+var BOLT_GRADES_SI = [
+  ['Group A – N (threads incl.)  330 MPa', 330],
+  ['Group A – X (threads excl.)  372 MPa', 372],
+  ['Group B – N (threads incl.)  414 MPa', 414],
+  ['Group B – X (threads excl.)  469 MPa', 469]
 ];
 
 // Bolt diameters US: [label, db_in]
@@ -678,7 +684,8 @@ function onBeamProfileChange(){
 function buildBoltDropdowns(){
   // Grade
   var gSel=el('inp-bolt-grade'); gSel.innerHTML='';
-  BOLT_GRADES.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
+  var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
   gSel.selectedIndex=0;
   // Diameter
   var dSel=el('inp-db'); dSel.innerHTML='';
@@ -714,7 +721,8 @@ function calc(){
   var Fy_pl = unit==='us' ? pg[1] : pg[3];
   var Fu_pl = unit==='us' ? pg[2] : pg[4];
 
-  var Fnv   = unit==='us' ? BOLT_GRADES[boltGi][1] : BOLT_GRADES[boltGi][2];
+  var grades= unit==='us' ? BOLT_GRADES_US : BOLT_GRADES_SI;
+  var Fnv   = grades[boltGi][1];
   var sizes = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
   var db    = sizes[dbIdx][1];
 
@@ -805,7 +813,7 @@ function calc(){
 
   // Input summary
   var ibody=el('inp-body'); ibody.innerHTML='';
-  var boltName=sizes[dbIdx][0], gradeName=BOLT_GRADES[boltGi][0].split(' ')[0];
+  var boltName=sizes[dbIdx][0], gradeName=grades[boltGi][0].split(' ')[0];
   var rows=[
     ['Beam',el('beamProfile').value],
     ['Vᵤ', fmt(Vu,unit==='us'?1:0)+' '+forU],
@@ -852,10 +860,11 @@ function drawSVG(n, s, ev, eh, tp, bp, hp, db, Vu, unit){
   var W=260, H=280;
   var margin=36, extraTop=30;
 
-  // Scale: fit hp into available height
+  // Scale: fit hp and bp into available drawing area
   var availH = H - 2*margin - extraTop - 20;
   var availW = W - 2*margin - 80;
-  var scale = Math.min(availH/Math.max(hp,1), availW/Math.max(bp+30,1), 2.5);
+  var scale = Math.min(availH/Math.max(hp,1), availW/Math.max(bp,1));
+  scale = Math.min(scale, unit==='us' ? 18 : 1.8);
 
   var px0 = margin + 60; // plate left x
   var py0 = margin + extraTop; // plate top y
