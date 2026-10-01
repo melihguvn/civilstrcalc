@@ -370,7 +370,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="iw"><input type="number" id="inp-ha" min="0" step="1" placeholder="—" oninput="calc()"><span class="us" id="su-ha">in</span></div>
   </div>
   <div class="form-group">
-    <label>Head bearing area A<sub>brg</sub> <span class="unit-lbl" id="lbl-abrg">[in²]</span> <span style="font-size:.7rem;opacity:.65">(anchor head net area; blank = heavy hex approx.)</span></label>
+    <label>Head bearing area A<sub>brg</sub> <span class="unit-lbl" id="lbl-abrg">[in²]</span> <span style="font-size:.7rem;opacity:.65">(anchor head net area; blank = 1.5·da² heavy hex nut approx.)</span></label>
     <div class="iw"><input type="number" id="inp-abrg" min="0" step="0.001" placeholder="auto" oninput="calc()"><span class="us" id="su-abrg">in²</span></div>
   </div>
 
@@ -793,7 +793,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <span class="fml-eq">&phi;N<sub>pn</sub> = &phi; &times; &psi;<sub>c,P</sub> &times; N<sub>p</sub> &nbsp;&nbsp; per anchor</span>
           <span class="ft">&phi; = 0.70 &nbsp;&middot;&nbsp; &psi;<sub>c,P</sub> = 1.4 (uncracked concrete; = 1.0 for cracked) &nbsp;&middot;&nbsp; Group capacity = n &times; &phi;N<sub>pn</sub></span>
         </div>
-        <p>When A<sub>brg</sub> is not entered, the calculator estimates it as 0.57d<sub>a</sub>&sup2; — a conservative approximation for ASTM F1554 Grade 36/55 heavy hex head bolts. For precision, obtain A<sub>brg</sub> from the bolt supplier's dimensional data or ASME B18.2.1 tables.</p>
+        <p>When A<sub>brg</sub> is not entered, the calculator estimates it as 1.5d<sub>a</sub>&sup2; — derived from a heavy hex nut head (across-flats &asymp; 1.6d<sub>a</sub>, giving A<sub>brg</sub> = A<sub>hex</sub> &minus; &pi;/4&sdot;d<sub>a</sub>&sup2; &asymp; 1.4&ndash;1.5d<sub>a</sub>&sup2;). For precision, obtain A<sub>brg</sub> from the bolt manufacturer's data or ASME B18.2.2 heavy hex nut tables.</p>
 
         <h4>Steel Failure — Shear (§17.7.1.2)</h4>
         <div class="fml-blk">
@@ -1338,7 +1338,7 @@ function calc(){
   DCR_anch_Vy = Vy / Math.max(nAnch*phi_Vsa, 1e-9);
   /* ── Pullout (ACI 318-25 §17.6.3) ── */
   var Abrg_usr = parseFloat((el('inp-abrg')||{}).value)||0;
-  var Abrg = Abrg_usr > 0 ? Abrg_usr : 0.57*da*da; // heavy hex head approx: ~0.57·da²
+  var Abrg = Abrg_usr > 0 ? Abrg_usr : 1.5*da*da; // heavy hex nut approx (across-flats ≈ 1.6·da → Abrg ≈ 1.4–1.5·da²)
   var Np_per = unit==='us' ? 8*Abrg*fc : 8*Abrg*fc/1000; // kip or kN per anchor (fc ksi/MPa, Abrg in²/mm²)
   var phi_Npn_per = 0.70 * 1.4 * Np_per; // φ=0.70, ψc,P=1.4 (uncracked concrete)
   var phi_Npn_grp = nAnch * phi_Npn_per; // pullout is per-anchor → group = n × per-anchor
@@ -1607,7 +1607,7 @@ function calc(){
     ['Nb (single breakout)', fmt(Nb,unit==='us'?1:0)+' '+forU],
     ['ANc / ANc0',    fmt(ANc/(ANc0||1),2)],
     ['φNcbg (group)',  fmt(phi_Ncbg,unit==='us'?1:0)+' '+forU+' <span style="font-size:.68rem;color:var(--text-dim)">(ψed='+fmt(psi_ed_N,3)+(psi_ed_N<1.0?' ← edge governs':'')+'  ψc=1.25)</span>'],
-    ['Abrg (§17.6.3)', (Abrg_usr>0?'user':('~heavy hex'))+': '+fmt(Abrg,unit==='us'?3:0)+' '+(unit==='us'?'in²':'mm²')],
+    ['Abrg (§17.6.3)', (Abrg_usr>0?'user-input':'~1.5·da²')+': '+fmt(Abrg,unit==='us'?3:0)+' '+(unit==='us'?'in²':'mm²')],
     ['φNpn per bolt',  fmt(phi_Npn_per,unit==='us'?2:1)+' '+forU+' (φ·ψc,P·8·Abrg·f\'c; ψc,P=1.4)'],
     ['φNpn group (n='+nAnch+')', fmt(phi_Npn_grp,unit==='us'?1:0)+' '+forU+(Nua_pull>0?' | DCR = '+fmt(DCR_pullout,3):'')],
     ['φVsa per bolt',  fmt(phi_Vsa,unit==='us'?2:1)+' '+forU],
