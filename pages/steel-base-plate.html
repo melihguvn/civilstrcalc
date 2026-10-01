@@ -135,6 +135,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .chk-warn{background:var(--orange-bg);color:var(--orange)}
 .chk-err{background:var(--red-bg);color:var(--red)}
 
+.res-tbl td.ok{color:var(--green);font-weight:600;font-variant-numeric:tabular-nums}
+.res-tbl td.warn{color:var(--orange);font-weight:600;font-variant-numeric:tabular-nums}
+.res-tbl td.err{color:var(--red);font-weight:600;font-variant-numeric:tabular-nums}
 .print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px}
 .ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans)}
 .ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
@@ -411,68 +414,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="fl-unit" id="rv-ell-u">in</div>
         </div>
       </div>
-      <!-- Bearing x/y detail (partial case only) -->
-      <div class="fl-rb" id="rb-brg-xy" style="display:none;grid-template-columns:1fr 1fr">
-        <div class="fl-col">
-          <div class="fl-lbl">Bearing x-dir (Mx)</div>
-          <div class="fl-val" id="rv-brg-x">—</div>
-          <div class="fl-unit">fp / φFp</div>
-        </div>
-        <div class="fl-col">
-          <div class="fl-lbl">Bearing y-dir (My)</div>
-          <div class="fl-val" id="rv-brg-y">—</div>
-          <div class="fl-unit">fp / φFp</div>
-        </div>
-      </div>
-      <!-- Shear x/y (when Vx or Vy > 0) -->
-      <div class="fl-rb" id="rb-shear" style="display:none;grid-template-columns:1fr 1fr">
-        <div class="fl-col">
-          <div class="fl-lbl">Shear x DCR</div>
-          <div class="fl-val" id="rv-sh-x">—</div>
-          <div class="fl-unit">V<sub>x</sub> / φV<sub>n</sub></div>
-        </div>
-        <div class="fl-col">
-          <div class="fl-lbl">Shear y DCR</div>
-          <div class="fl-val" id="rv-sh-y">—</div>
-          <div class="fl-unit">V<sub>y</sub> / φV<sub>n</sub></div>
-        </div>
-      </div>
-      <!-- Anchor tension (when T > 0) -->
-      <div class="fl-rb" id="rb-anch-t" style="display:none;grid-template-columns:1fr 1fr">
-        <div class="fl-col">
-          <div class="fl-lbl">Anchor T(x) DCR</div>
-          <div class="fl-val" id="rv-anch-tx">—</div>
-          <div class="fl-unit">T<sub>x</sub> / φN<sub>t</sub></div>
-        </div>
-        <div class="fl-col">
-          <div class="fl-lbl">Anchor T(y) DCR</div>
-          <div class="fl-val" id="rv-anch-ty">—</div>
-          <div class="fl-unit">T<sub>y</sub> / φN<sub>t</sub></div>
-        </div>
-      </div>
-
-      <!-- Shear — pryout & breakout (when Vu > 0) -->
-      <div class="fl-rb" id="rb-shear-conc" style="display:none;grid-template-columns:1fr 1fr">
-        <div class="fl-col">
-          <div class="fl-lbl">Pryout DCR</div>
-          <div class="fl-val" id="rv-pryout">—</div>
-          <div class="fl-unit">V / φV<sub>cpg</sub></div>
-        </div>
-        <div class="fl-col">
-          <div class="fl-lbl">Shear Brk DCR</div>
-          <div class="fl-val" id="rv-vbrk">—</div>
-          <div class="fl-unit">V / φV<sub>cbg</sub></div>
-        </div>
-      </div>
-      <!-- T-V interaction (§17.8) -->
-      <div class="fl-rb" id="rb-tv-interact" style="display:none">
-        <div class="fl-col" style="width:100%;text-align:center">
-          <div class="fl-lbl">T-V Interaction (§17.8)</div>
-          <div class="fl-val" id="rv-interact">—</div>
-          <div class="fl-unit">(N<sub>ua</sub>/φN)<sup>5/3</sup> + (V<sub>ua</sub>/φV)<sup>5/3</sup> ≤ 1.0</div>
-        </div>
-      </div>
-
       <!-- DCR Banner -->
       <div class="dcr-banner ok" id="dcr-banner">
         <div class="dcr-icon">&#x2714;</div>
@@ -480,6 +421,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <strong id="dcr-text-main">—</strong>
           <span id="dcr-text-sub">—</span>
         </div>
+      </div>
+
+      <!-- DCR Breakdown -->
+      <div class="rpt-sec" id="dcr-breakdown-sec" style="display:none">
+        <div class="rpt-sec-title">DCR Summary</div>
+        <table class="res-tbl">
+          <tbody id="dcr-tbl-body"></tbody>
+        </table>
       </div>
 
       <!-- Input summary -->
@@ -1441,57 +1390,30 @@ function calc(){
   setFV('rv-tp',  isFinite(tp)?fmt(tp,unit==='us'?3:1):'—');
   setFV('rv-ell', isFinite(ell)?fmt(ell,unit==='us'?3:1):'—');
 
-  // Bearing x/y detail (partial case only)
-  var rbBrgXY=el('rb-brg-xy');
-  if(rbBrgXY){
-    if(bearCase==='partial'&&(ex_ecc>0||ey_ecc>0)){
-      rbBrgXY.style.display='';
-      setFV('rv-brg-x', T_anch_x>0 ? 'At cap.' : fmt(DCR_brg_x,3), T_anch_x>0 ? undefined : DCR_brg_x);
-      setFV('rv-brg-y', T_anch_y>0 ? 'At cap.' : fmt(DCR_brg_y,3), T_anch_y>0 ? undefined : DCR_brg_y);
-    } else { rbBrgXY.style.display='none'; }
+  // ── DCR Breakdown table ──
+  var dcrRows2=[];
+  if(bearCase==='partial'&&(ex_ecc>0||ey_ecc>0)){
+    dcrRows2.push(['Bearing x-dir (Mx)',T_anch_x>0?'At cap.':fmt(DCR_brg_x,3),T_anch_x>0?null:DCR_brg_x,'fp / φFp']);
+    dcrRows2.push(['Bearing y-dir (My)',T_anch_y>0?'At cap.':fmt(DCR_brg_y,3),T_anch_y>0?null:DCR_brg_y,'fp / φFp']);
+  } else if(!hasT){
+    dcrRows2.push(['Bearing',fmt(DCR_brg_val,3),DCR_brg_val,'fp / φFp']);
   }
-
-  // Shear x/y
-  var rbSh=el('rb-shear');
-  if(rbSh){
-    if(Vx>0||Vy>0){
-      rbSh.style.display='';
-      setFV('rv-sh-x',Vx>0?fmt(DCR_shear_x,3):'—',Vx>0?DCR_shear_x:undefined);
-      setFV('rv-sh-y',Vy>0?fmt(DCR_shear_y,3):'—',Vy>0?DCR_shear_y:undefined);
-    } else { rbSh.style.display='none'; }
-  }
-
-  // Anchor tension
-  var rbAnchT=el('rb-anch-t');
-  if(rbAnchT){
-    if((T_anch_x>0||T_anch_y>0)&&phi_Nt_min>0){
-      rbAnchT.style.display='';
-      setFV('rv-anch-tx',T_anch_x>0?fmt(DCR_anch_Tx,3):'—',T_anch_x>0?DCR_anch_Tx:undefined);
-      setFV('rv-anch-ty',T_anch_y>0?fmt(DCR_anch_Ty,3):'—',T_anch_y>0?DCR_anch_Ty:undefined);
-    } else { rbAnchT.style.display='none'; }
-  }
-
-  // Pryout & shear breakout
-  var rbShConc=el('rb-shear-conc');
-  if(rbShConc){
-    if(Vua>0){
-      rbShConc.style.display='';
-      setFV('rv-pryout',fmt(DCR_pryout,3),DCR_pryout);
-      if(phi_Vcbg_sv!==null){
-        setFV('rv-vbrk',fmt(DCR_vbrk,3),DCR_vbrk);
-      } else {
-        var rvb=el('rv-vbrk'); if(rvb){rvb.textContent='n/a';rvb.className='fl-val';}
-      }
-    } else { rbShConc.style.display='none'; }
-  }
-
-  // T-V interaction
-  var rbTVI=el('rb-tv-interact');
-  if(rbTVI){
-    if(DCR_interact>0){
-      rbTVI.style.display='';
-      setFV('rv-interact',fmt(DCR_interact,3),DCR_interact);
-    } else { rbTVI.style.display='none'; }
+  if(Vx>0) dcrRows2.push(['Shear friction (x)',fmt(DCR_shear_x,3),DCR_shear_x,'Vx / φVn,fric = '+fmt(phi_Vn_fric,1)+' '+forU]);
+  if(Vy>0) dcrRows2.push(['Shear friction (y)',fmt(DCR_shear_y,3),DCR_shear_y,'Vy / φVn,fric = '+fmt(phi_Vn_fric,1)+' '+forU]);
+  if(Vx>0) dcrRows2.push(['Anchor shear steel (x)',fmt(DCR_anch_Vx,3),DCR_anch_Vx,'Vx / φVsa·n = '+fmt(nAnch*phi_Vsa,1)+' '+forU]);
+  if(Vy>0) dcrRows2.push(['Anchor shear steel (y)',fmt(DCR_anch_Vy,3),DCR_anch_Vy,'Vy / φVsa·n = '+fmt(nAnch*phi_Vsa,1)+' '+forU]);
+  if(T_anch_x>0&&phi_Nt_min>0) dcrRows2.push(['Anchor tension (x)',fmt(DCR_anch_Tx,3),DCR_anch_Tx,'Tx / φNt = '+fmt(phi_Nt_min,1)+' '+forU]);
+  if(T_anch_y>0&&phi_Nt_min>0) dcrRows2.push(['Anchor tension (y)',fmt(DCR_anch_Ty,3),DCR_anch_Ty,'Ty / φNt = '+fmt(phi_Nt_min,1)+' '+forU]);
+  if(Vua>0) dcrRows2.push(['Pryout §§17.7.3',fmt(DCR_pryout,3),DCR_pryout,'V / φVcpg = '+fmt(phi_Vcpg,1)+' '+forU]);
+  if(phi_Vcbg_sv!==null&&Vua>0) dcrRows2.push(['Shear breakout §17.7.2',fmt(DCR_vbrk,3),DCR_vbrk,'V / φVcbg = '+fmt(phi_Vcbg_sv,1)+' '+forU]);
+  if(DCR_interact>0) dcrRows2.push(['T-V interaction §17.8',fmt(DCR_interact,3),DCR_interact,'(N/φN)⁽\xB3⁄⁵ + (V/φV)⁽\xB3⁄⁵']);
+  var dtb=el('dcr-tbl-body'),dcrSec=el('dcr-breakdown-sec');
+  if(dtb&&dcrSec){
+    dcrSec.style.display=dcrRows2.length?'':'none';
+    dtb.innerHTML=dcrRows2.map(function(r){
+      var cls=r[2]!==null&&r[2]!==undefined?dcrCls(r[2]):'';
+      return '<tr><td>'+r[0]+'</td><td'+(cls?' class="'+cls+'"':'')+'>'+r[1]+'</td><td style="color:var(--text-dim);font-size:.78rem">'+r[3]+'</td></tr>';
+    }).join('');
   }
 
   // ── DCR Banner ──
