@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1624,13 +1624,13 @@ function calc(){
   }
 
   // ── Draw SVG ──
-  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa);
+  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    SVG PLAN DIAGRAM
    ═════════════════════════════════════════════════════════════════════ */
-function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa){
+function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw){
   var svg = el('bp-svg');
   if(!svg) return;
 
@@ -1748,35 +1748,56 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa){
 
   // ── Edge distance (ca) annotations ──
   if(eS > 5 && edgeDist > 0 && anchPts.length > 0){
-    var caStr = fmt(edgeDist, unit==='us'?2:0)+' '+(unit==='us'?'in':'mm');
-    var caClr = '#cc7700';
-    // Pick reference points: horizontal (left edge → left bolt) & vertical (top edge → top bolt)
+    // Reference bolts: leftmost and topmost
     var hBoltX, hBoltY, vBoltX, vBoltY;
     if(nAnch===4){
-      hBoltX = anchPts[0][0]; hBoltY = anchPts[0][1]; // top-left bolt for both
-      vBoltX = anchPts[0][0]; vBoltY = anchPts[0][1];
+      hBoltX=anchPts[0][0]; hBoltY=anchPts[0][1];
+      vBoltX=anchPts[0][0]; vBoltY=anchPts[0][1];
     } else {
-      hBoltX = anchPts[0][0]; hBoltY = anchPts[0][1]; // left-arm top bolt [x0a, cyMid-halfSa]
-      vBoltX = anchPts[4][0]; vBoltY = anchPts[4][1]; // top-arm left bolt [cxMid-halfSa, y0a]
+      hBoltX=anchPts[0][0]; hBoltY=anchPts[0][1];
+      vBoltX=anchPts[4][0]; vBoltY=anchPts[4][1];
     }
-    // Horizontal dim: plate left edge → left bolt centre (drawn just below bolt)
-    var hY = hBoltY + anchR + 4;
-    if(hY < py0+pH-10 && eS > 8){
-      html += '<line x1="'+px0+'" y1="'+hY+'" x2="'+hBoltX+'" y2="'+hY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<line x1="'+px0+'" y1="'+(hY-3)+'" x2="'+px0+'" y2="'+(hY+3)+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<line x1="'+hBoltX+'" y1="'+(hY-3)+'" x2="'+hBoltX+'" y2="'+(hY+3)+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<text x="'+(px0+eS/2)+'" y="'+(hY+8)+'" text-anchor="middle" font-size="7" fill="'+caClr+'">'+caStr+'</text>';
+    var eClr='#cc7700', caClr2='#1a7a3a';
+    var lenU2=unit==='us'?'in':'mm', dp2=unit==='us'?2:0;
+
+    // bolt setback "e": plate edge -> bolt (amber)
+    if(eS > 8){
+      var hY=hBoltY+anchR+4;
+      if(hY < py0+pH-10){
+        html += '<line x1="'+px0+'" y1="'+hY+'" x2="'+hBoltX+'" y2="'+hY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<line x1="'+px0+'" y1="'+(hY-3)+'" x2="'+px0+'" y2="'+(hY+3)+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<line x1="'+hBoltX+'" y1="'+(hY-3)+'" x2="'+hBoltX+'" y2="'+(hY+3)+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<text x="'+(px0+eS/2)+'" y="'+(hY+8)+'" text-anchor="middle" font-size="7" fill="'+eClr+'">e='+fmt(edgeDist,dp2)+' '+lenU2+'</text>';
+      }
+      var vX=vBoltX-anchR-4;
+      if(vX > px0+4){
+        html += '<line x1="'+vX+'" y1="'+py0+'" x2="'+vX+'" y2="'+vBoltY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<line x1="'+(vX-3)+'" y1="'+py0+'" x2="'+(vX+3)+'" y2="'+py0+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<line x1="'+(vX-3)+'" y1="'+vBoltY+'" x2="'+(vX+3)+'" y2="'+vBoltY+'" stroke="'+eClr+'" stroke-width="0.8"/>';
+        html += '<text x="'+(vX-3)+'" y="'+(py0+eS/2+3)+'" text-anchor="end" font-size="7" fill="'+eClr+'">e='+fmt(edgeDist,dp2)+' '+lenU2+'</text>';
+      }
     }
-    // Vertical dim: plate top edge → top bolt centre (drawn just left of bolt)
-    var vX = vBoltX - anchR - 4;
-    if(vX > px0+4 && eS > 8){
-      html += '<line x1="'+vX+'" y1="'+py0+'" x2="'+vX+'" y2="'+vBoltY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<line x1="'+(vX-3)+'" y1="'+py0+'" x2="'+(vX+3)+'" y2="'+py0+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<line x1="'+(vX-3)+'" y1="'+vBoltY+'" x2="'+(vX+3)+'" y2="'+vBoltY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
-      html += '<text x="'+(vX-3)+'" y="'+(py0+eS/2+3)+'" text-anchor="end" font-size="7" fill="'+caClr+'">'+caStr+'</text>';
+
+    // ca,min: concrete pedestal face (green dashed rect + dim)
+    if(ca_min_raw > 0){
+      var caS=ca_min_raw*scale;
+      var pedL=Math.max(2, hBoltX-caS);
+      var pedR=Math.min(W-2, px0+pW-eS+caS);
+      var pedT=Math.max(2, vBoltY-caS);
+      var pedB=Math.min(H-2, py0+pH-eS+caS);
+      if(pedR>pedL && pedB>pedT){
+        html += '<rect x="'+pedL+'" y="'+pedT+'" width="'+(pedR-pedL)+'" height="'+(pedB-pedT)+'"'
+              + ' fill="none" stroke="'+caClr2+'" stroke-width="1" stroke-dasharray="4,3" rx="1"/>';
+        var caHY=hBoltY-anchR-5;
+        if(caHY > pedT+2 && caS > 6){
+          html += '<line x1="'+pedL+'" y1="'+caHY+'" x2="'+hBoltX+'" y2="'+caHY+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
+          html += '<line x1="'+pedL+'" y1="'+(caHY-3)+'" x2="'+pedL+'" y2="'+(caHY+3)+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
+          html += '<line x1="'+hBoltX+'" y1="'+(caHY-3)+'" x2="'+hBoltX+'" y2="'+(caHY+3)+'" stroke="'+caClr2+'" stroke-width="0.8"/>';
+          html += '<text x="'+(pedL+caS/2)+'" y="'+(caHY-3)+'" text-anchor="middle" font-size="7" fill="'+caClr2+'">ca='+fmt(ca_min_raw,dp2)+' '+lenU2+'</text>';
+        }
+      }
     }
   }
-
   // Coordinate axis indicator — bottom-left corner of plate
   // x → B/flange direction (horizontal), y → N/depth direction (vertical)
   var axX = px0 + 9, axY = py0 + pH - 9, axLen = 20;
