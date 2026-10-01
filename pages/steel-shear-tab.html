@@ -428,17 +428,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <div class="bg-panel-hdr">Overview — Single-Plate Shear Tab</div>
       <div class="tb">
         <p>A shear tab (single-plate) connection transfers shear from a beam web to a support via a vertical row of bolts through a plate. This calculator checks all bolt and plate failure modes per <strong>AISC 360-22 Chapter J</strong>. The plate-to-support weld or the support itself are outside the scope of this check.</p>
-        <p>The eight limit states checked, in order of typical criticality:</p>
+        <p>The ten limit states checked, in order of typical criticality:</p>
         <table>
           <tr><th>#</th><th>Limit State</th><th>Section</th><th>&phi;</th></tr>
           <tr><td>1</td><td>Bolt shear rupture</td><td>§J3.6</td><td>0.75</td></tr>
           <tr><td>2</td><td>Bolt group eccentricity (elastic method)</td><td>§J3.6</td><td>0.75</td></tr>
           <tr><td>3</td><td>Bearing on plate</td><td>§J3.10</td><td>0.75</td></tr>
           <tr><td>4</td><td>Bearing on beam web</td><td>§J3.10</td><td>0.75</td></tr>
-          <tr><td>5</td><td>Plate gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
-          <tr><td>6</td><td>Plate net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
-          <tr><td>7</td><td>Block shear on plate</td><td>§J4.3</td><td>0.75</td></tr>
-          <tr><td>8</td><td>Plate bending at weld (cantilever)</td><td>§F11</td><td>0.90</td></tr>
+          <tr><td>5</td><td>Web gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
+          <tr><td>6</td><td>Web net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
+          <tr><td>7</td><td>Plate gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
+          <tr><td>8</td><td>Plate net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
+          <tr><td>9</td><td>Block shear on plate</td><td>§J4.3</td><td>0.75</td></tr>
+          <tr><td>10</td><td>Plate bending at weld (cantilever)</td><td>§F11</td><td>0.90</td></tr>
         </table>
       </div>
     </div>
@@ -639,15 +641,15 @@ var PLATE_GRADES = [
 // Beam types
 var BEAM_TYPES_US = [{k:'W',lb:'W Shapes'},{k:'HP',lb:'HP Shapes'}];
 var BEAM_TYPES_SI = [
-  {k:'IPE',lb:'IPE'},{k:'HEA',lb:'HEA'},{k:'HEB',lb:'HEB'},
-  {k:'UPN',lb:'UPN (Channel)'}
+  {k:'IPE',lb:'IPE'},{k:'HEA',lb:'HEA'},{k:'HEB',lb:'HEB'},{k:'HEM',lb:'HEM'},
+  {k:'UPN',lb:'UPN (Channel)'},{k:'UPE',lb:'UPE (Channel)'}
 ];
 
 // Default Fu by type (ksi / MPa)
 var TYPE_FU = {
   W:65, HP:65,
-  IPE:490, HEA:490, HEB:490,
-  UPN:430
+  IPE:490, HEA:490, HEB:490, HEM:490,
+  UPN:430, UPE:430
 };
 
 function el(id){return document.getElementById(id);}
@@ -796,6 +798,7 @@ function calc(){
   var Fu_pl = unit==='us' ? pg[2] : pg[4];
 
   var bm = PLATE_GRADES[bmIdx];
+  var Fy_web = unit==='us' ? bm[1] : bm[3];
   var Fu_web = unit==='us' ? bm[2] : bm[4];
 
   var grades    = unit==='us' ? BOLT_GRADES_US : BOLT_GRADES_SI;
@@ -803,7 +806,8 @@ function calc(){
   var Fnv       = threadsIn ? grades[boltGi][1] : grades[boltGi][2];
   var sizes     = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
   var db    = sizes[dbIdx][1];
-  var tw     = beamTw; // in or mm
+  var tw    = beamTw;
+  var d_web = beamD - 2*beamTf; // clear web height between flanges
 
   var phi_bolt  = 0.75;
   var phi_brg   = 0.75;
@@ -825,6 +829,13 @@ function calc(){
   // 3. Bearing on web
   var phi_Rbrg_web = brgCap(n, db, dh, s, ev, tw, Fu_web, phi_brg);
 
+  // 3a. Web shear yielding (gross section)
+  var phi_Rwy = phi_yield * 0.60 * Fy_web * d_web * tw;
+
+  // 3b. Web shear rupture (net section, deduct n bolt holes)
+  var Anv_web = Math.max(d_web - n*dh, 0) * tw;
+  var phi_Rwr = phi_rupt * 0.60 * Fu_web * Anv_web;
+
   // 4. Plate shear yielding
   var phi_Rsy = phi_yield * 0.60 * Fy_pl * hp * tp;
 
@@ -845,6 +856,7 @@ function calc(){
   if(unit==='si'){
     var cf=1/1000;
     phi_Rnv*=cf; phi_Rbrg_pl*=cf; phi_Rbrg_web*=cf;
+    phi_Rwy*=cf; phi_Rwr*=cf;
     phi_Rsy*=cf; phi_Rsr*=cf; phi_Rbs*=cf;
   }
 
@@ -885,6 +897,8 @@ function calc(){
     {name:'Bolt group eccentricity (elastic)',    phi_Rn: phi_Rnv_ecc      },
     {name:'Bearing on plate §J3.10',             phi_Rn: phi_Rbrg_pl      },
     {name:'Bearing on web §J3.10',               phi_Rn: phi_Rbrg_web     },
+    {name:'Web shear yield §J4.2',               phi_Rn: phi_Rwy          },
+    {name:'Web shear rupture §J4.2',             phi_Rn: phi_Rwr          },
     {name:'Plate shear yield §J4.2',             phi_Rn: phi_Rsy          },
     {name:'Plate shear rupture §J4.2',           phi_Rn: phi_Rsr          },
     {name:'Block shear §J4.3',                   phi_Rn: phi_Rbs          },
@@ -928,7 +942,7 @@ function calc(){
   });
 
   // ── Geometry & Spacing Checks ──────────────────────────────────────
-  var d_web   = beamD - 2*beamTf;                            // clear web height
+  // d_web already declared above (used in web shear checks)
   var Le_min  = unit==='us' ? (LE_MIN_US[db]||1.25*db) : (LE_MIN_SI[db]||1.6*db);
   var t_thin  = Math.min(tp, tw);
   var Le_max  = Math.min(12*t_thin, unit==='us'?6:150);     // §J3.5
@@ -978,7 +992,8 @@ function calc(){
     ['Fₙᵥ (bolt shear stress)', fmt(Fnv,0)+' '+(unit==='us'?'ksi':'MPa')],
     ['Fᵧ,ₚℓ / Fᵤ,ₚℓ (plate)', fmt(Fy_pl,0)+' / '+fmt(Fu_pl,0)+' '+(unit==='us'?'ksi':'MPa')],
     ['tᵂ (beam web)', fmt(tw,unit==='us'?3:1)+' '+lenU],
-    ['Fᵤ (beam)', fmt(Fu_web,0)+' '+(unit==='us'?'ksi':'MPa')]
+    ['d_web (clear web height)', fmt(d_web,unit==='us'?3:0)+' '+lenU],
+    ['Fᵧ / Fᵤ (beam web)', fmt(Fy_web,0)+' / '+fmt(Fu_web,0)+' '+(unit==='us'?'ksi':'MPa')]
   ];
   drows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';dbody.appendChild(tr);});
 
