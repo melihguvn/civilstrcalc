@@ -590,7 +590,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 <script>
 var unit = 'us';
-var beamTw = 0, beamFu = 0, beamD = 0, beamTf = 0;
+var beamTw = 0, beamD = 0, beamTf = 0;
 
 var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482;
 
@@ -645,12 +645,6 @@ var BEAM_TYPES_SI = [
   {k:'UPN',lb:'UPN (Channel)'},{k:'UPE',lb:'UPE (Channel)'}
 ];
 
-// Default Fu by type (ksi / MPa)
-var TYPE_FU = {
-  W:65, HP:65,
-  IPE:490, HEA:490, HEB:490, HEM:490,
-  UPN:430, UPE:430
-};
 
 function el(id){return document.getElementById(id);}
 function v(id){var e=el(id);return e?parseFloat(e.value)||0:0;}
@@ -729,17 +723,14 @@ function onBeamProfileChange(){
 
   var d,tw,tf;
   if(type==='W'||type==='HP'){
-    // W: [name,d_in,bf_in,tf_in,tw_in,...]
+    // W/HP: [name, d_in, bf_in, tf_in, tw_in, ...]
     d=row[1]; tf=row[3]; tw=row[4];
-    beamFu=TYPE_FU[type]; // ksi
   } else if(type==='IPE'||type==='HEA'||type==='HEB'||type==='HEM'||type==='HD'){
-    // EN open: [name,h,b,tw,tf,...]
+    // EN I-section: [name, h, b, tw, tf, ...]
     d=row[1]; tf=row[4]; tw=row[3];
-    beamFu=TYPE_FU[type]; // MPa
   } else if(type==='UPN'||type==='UPE'){
-    // EN channel: [name,h,b,tw,tf,...]
+    // EN channel: [name, h, b, tw, tf, ...]
     d=row[1]; tf=row[4]; tw=row[3];
-    beamFu=TYPE_FU['UPN'];
   } else { return; }
 
   beamD=d; beamTw=tw; beamTf=tf;
@@ -753,7 +744,7 @@ function buildBoltDropdowns(){
   var gSel=el('inp-bolt-grade'); gSel.innerHTML='';
   var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
   grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
-  gSel.selectedIndex=0;
+  gSel.selectedIndex=unit==='us'?1:5; // A325 for US, 8.8 for SI
   // Diameter
   var dSel=el('inp-db'); dSel.innerHTML='';
   var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
@@ -907,8 +898,11 @@ function calc(){
   ];
 
   var phi_Rn_min = Infinity, govIdx = 0;
-  checks.forEach(function(c,i){if(c.phi_Rn < phi_Rn_min){phi_Rn_min=c.phi_Rn; govIdx=i;}});
-  var DCR = Vu > 0 && phi_Rn_min > 0 ? Vu/phi_Rn_min : 0;
+  checks.forEach(function(c,i){
+    if(isFinite(c.phi_Rn) && c.phi_Rn < phi_Rn_min){phi_Rn_min=c.phi_Rn; govIdx=i;}
+  });
+  // If phi_Rn_min stayed Infinity (no finite checks), DCR=0; if 0, DCR=Infinity (FAIL)
+  var DCR = Vu > 0 ? (phi_Rn_min > 0 ? Vu/phi_Rn_min : (phi_Rn_min === 0 ? Infinity : 0)) : 0;
 
   var forU = unit==='us'?'kip':'kN';
   var lenU = unit==='us'?'in':'mm';
@@ -932,13 +926,20 @@ function calc(){
   // Capacity table
   var tbody=el('cap-tbl-body'); tbody.innerHTML='';
   checks.forEach(function(c,i){
-    var dcr = Vu>0&&c.phi_Rn>0 ? Vu/c.phi_Rn : 0;
-    var cls2 = dcrCls(dcr);
+    var isNA = !isFinite(c.phi_Rn);
+    var dcr  = isNA ? 0 : (Vu>0 ? (c.phi_Rn>0 ? Vu/c.phi_Rn : Infinity) : 0);
+    var cls2 = isNA ? '' : dcrCls(dcr);
     var tr=document.createElement('tr');
-    var isGov = i===govIdx && Vu>0;
+    var isGov = i===govIdx && Vu>0 && !isNA;
+    var capCell = isNA
+      ? '<span style="color:var(--text-dim);font-style:italic;font-size:.75rem">N/A (a=0)</span>'
+      : fmt(c.phi_Rn,unit==='us'?1:0)+' '+forU;
+    var dcrCell = isNA
+      ? '<span style="color:var(--text-dim)">—</span>'
+      : fmt(dcr,3)+(isGov?' &#x25C4;':'');
     tr.innerHTML='<td style="font-size:.78rem"'+(isGov?' class="gov"':'')+'>'+c.name+'</td>'
-      +'<td style="text-align:right;font-family:var(--mono)"'+( isGov?' class="gov"':'')+'>'+fmt(c.phi_Rn,unit==='us'?1:0)+' '+forU+'</td>'
-      +'<td class="'+cls2+'" style="text-align:right">'+fmt(dcr,3)+(isGov?' &#x25C4;':'')+'</td>';
+      +'<td style="text-align:right;font-family:var(--mono)"'+(isGov?' class="gov"':'')+'>'+capCell+'</td>'
+      +'<td class="'+cls2+'" style="text-align:right">'+dcrCell+'</td>';
     tbody.appendChild(tr);
   });
 
