@@ -241,6 +241,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Bolt grade</label>
     <select id="inp-bolt-grade" class="bp-sel" onchange="calc()"></select>
   </div>
+  <div class="form-group" style="padding:6px 0 2px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem">
+      <input type="checkbox" id="inp-threads" checked onchange="calc()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)">
+      Threads in shear plane (N condition)
+    </label>
+  </div>
   <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <div class="form-group">
       <label>Diameter d<sub>b</sub> <span class="unit-lbl" id="lbl-db">[in]</span></label>
@@ -527,20 +533,18 @@ var beamTw = 0, beamFu = 0, beamD = 0, beamTf = 0;
 
 var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482;
 
-// Bolt grades — US labels with Fnv ksi; SI labels with Fnv MPa (AISC 360-22 Table J3.2)
+// Bolt grades — [label, Fnv_N (threads incl.), Fnv_X (threads excl.)]
+// US: ksi per AISC 360-22 Table J3.2; SI: MPa (A325M→8.8, A490M→10.9)
 var BOLT_GRADES_US = [
-  ['A325-N (Group A, threads incl.)', 48],
-  ['A325-X (Group A, threads excl.)', 54],
-  ['A490-N (Group B, threads incl.)', 60],
-  ['A490-X (Group B, threads excl.)', 68]
+  ['A307',  27,  27],   // low-strength; threads distinction not applicable
+  ['A325',  48,  54],   // Group A
+  ['A490',  60,  68]    // Group B
 ];
 var BOLT_GRADES_SI = [
-  ['5.6 – N (threads incl.)',  210],
-  ['5.6 – X (threads excl.)',  250],
-  ['8.8 – N (threads incl.)',  330],
-  ['8.8 – X (threads excl.)',  372],
-  ['10.9 – N (threads incl.)', 414],
-  ['10.9 – X (threads excl.)', 469]
+  ['4.6',  186, 186],   // equiv. A307 / F568M 4.6; no threads distinction
+  ['5.6',  200, 225],   // interpolated
+  ['8.8',  330, 372],   // A325M
+  ['10.9', 414, 469]    // A490M
 ];
 
 // Bolt diameters US: [label, db_in]
@@ -712,9 +716,10 @@ function calc(){
   var Fy_pl = unit==='us' ? pg[1] : pg[3];
   var Fu_pl = unit==='us' ? pg[2] : pg[4];
 
-  var grades= unit==='us' ? BOLT_GRADES_US : BOLT_GRADES_SI;
-  var Fnv   = grades[boltGi][1];
-  var sizes = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
+  var grades    = unit==='us' ? BOLT_GRADES_US : BOLT_GRADES_SI;
+  var threadsIn = el('inp-threads') ? el('inp-threads').checked : true;
+  var Fnv       = threadsIn ? grades[boltGi][1] : grades[boltGi][2];
+  var sizes     = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
   var db    = sizes[dbIdx][1];
 
   var Fu_web = beamFu; // ksi or MPa
@@ -804,11 +809,11 @@ function calc(){
 
   // Input summary
   var ibody=el('inp-body'); ibody.innerHTML='';
-  var boltName=sizes[dbIdx][0], gradeName=grades[boltGi][0].split(' ')[0];
+  var boltName=sizes[dbIdx][0], gradeName=grades[boltGi][0];
   var rows=[
     ['Beam',el('beamProfile').value],
     ['Vᵤ', fmt(Vu,unit==='us'?1:0)+' '+forU],
-    ['Bolt grade', gradeName],
+    ['Bolt grade', gradeName+' ('+(threadsIn?'N':'X')+')'],
     ['Bolt dᵇ', boltName+' ('+fmt(db,unit==='us'?3:0)+' '+lenU+')'],
     ['n \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,unit==='us'?3:0)+' + 2\xD7'+fmt(ev,unit==='us'?3:0)+' = '+fmt(hp,unit==='us'?3:0)+' '+lenU],
     ['Plate tₚ \xD7 bₚ', fmt(tp,unit==='us'?3:0)+' \xD7 '+fmt(bp,unit==='us'?3:0)+' '+lenU],
