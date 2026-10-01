@@ -1746,6 +1746,37 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa){
     html += '<text x="'+(xAnn-4)+'" y="'+(ymMid+3)+'" text-anchor="end" font-size="8" fill="#4477cc" font-style="italic">m</text>';
   }
 
+  // ── Edge distance (ca) annotations ──
+  if(eS > 5 && edgeDist > 0 && anchPts.length > 0){
+    var caStr = fmt(edgeDist, unit==='us'?2:0)+' '+(unit==='us'?'in':'mm');
+    var caClr = '#cc7700';
+    // Pick reference points: horizontal (left edge → left bolt) & vertical (top edge → top bolt)
+    var hBoltX, hBoltY, vBoltX, vBoltY;
+    if(nAnch===4){
+      hBoltX = anchPts[0][0]; hBoltY = anchPts[0][1]; // top-left bolt for both
+      vBoltX = anchPts[0][0]; vBoltY = anchPts[0][1];
+    } else {
+      hBoltX = anchPts[0][0]; hBoltY = anchPts[0][1]; // left-arm top bolt [x0a, cyMid-halfSa]
+      vBoltX = anchPts[4][0]; vBoltY = anchPts[4][1]; // top-arm left bolt [cxMid-halfSa, y0a]
+    }
+    // Horizontal dim: plate left edge → left bolt centre (drawn just below bolt)
+    var hY = hBoltY + anchR + 4;
+    if(hY < py0+pH-10 && eS > 8){
+      html += '<line x1="'+px0+'" y1="'+hY+'" x2="'+hBoltX+'" y2="'+hY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<line x1="'+px0+'" y1="'+(hY-3)+'" x2="'+px0+'" y2="'+(hY+3)+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<line x1="'+hBoltX+'" y1="'+(hY-3)+'" x2="'+hBoltX+'" y2="'+(hY+3)+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<text x="'+(px0+eS/2)+'" y="'+(hY+8)+'" text-anchor="middle" font-size="7" fill="'+caClr+'">'+caStr+'</text>';
+    }
+    // Vertical dim: plate top edge → top bolt centre (drawn just left of bolt)
+    var vX = vBoltX - anchR - 4;
+    if(vX > px0+4 && eS > 8){
+      html += '<line x1="'+vX+'" y1="'+py0+'" x2="'+vX+'" y2="'+vBoltY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<line x1="'+(vX-3)+'" y1="'+py0+'" x2="'+(vX+3)+'" y2="'+py0+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<line x1="'+(vX-3)+'" y1="'+vBoltY+'" x2="'+(vX+3)+'" y2="'+vBoltY+'" stroke="'+caClr+'" stroke-width="0.8"/>';
+      html += '<text x="'+(vX-3)+'" y="'+(py0+eS/2+3)+'" text-anchor="end" font-size="7" fill="'+caClr+'">'+caStr+'</text>';
+    }
+  }
+
   // Coordinate axis indicator — bottom-left corner of plate
   // x → B/flange direction (horizontal), y → N/depth direction (vertical)
   var axX = px0 + 9, axY = py0 + pH - 9, axLen = 20;
