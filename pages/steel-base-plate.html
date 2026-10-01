@@ -1619,13 +1619,13 @@ function calc(){
   }
 
   // ── Draw SVG ──
-  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc);
+  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    SVG PLAN DIAGRAM
    ═════════════════════════════════════════════════════════════════════ */
-function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
+function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa){
   var svg = el('bp-svg');
   if(!svg) return;
 
@@ -1660,15 +1660,17 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc){
       [x0a, y1a], [x1a, y1a]
     ];
   } else {
-    // 8-bolt layout: 2 rods per overhang arm, outside column footprint
-    // Side-arm bolts (left/right) alongside column depth; top/bottom-arm bolts alongside column width
-    var x1c = cx0 + cW*0.25, x2c = cx0 + cW*0.75;  // 1/4 and 3/4 of column width
-    var y1c = cy0 + cH*0.25, y2c = cy0 + cH*0.75;  // 1/4 and 3/4 of column depth
+    // 8-bolt layout: equal spacing sa in both directions, centred on plate
+    var cxMid = W/2, cyMid = H/2;
+    var halfSa = (sa||0) * scale / 2;
+    // Clamp so bolts stay within the plate (with eS margin already set)
+    halfSa = Math.max(halfSa, eS * 0.4);
+    halfSa = Math.min(halfSa, (pH/2 - eS) * 0.95, (pW/2 - eS) * 0.95);
     anchPts = [
-      [x0a, y1c], [x0a, y2c],   // left arm
-      [x1a, y1c], [x1a, y2c],   // right arm
-      [x1c, y0a], [x2c, y0a],   // top arm
-      [x1c, y1a], [x2c, y1a]    // bottom arm
+      [x0a, cyMid - halfSa], [x0a, cyMid + halfSa],   // left arm
+      [x1a, cyMid - halfSa], [x1a, cyMid + halfSa],   // right arm
+      [cxMid - halfSa, y0a], [cxMid + halfSa, y0a],   // top arm
+      [cxMid - halfSa, y1a], [cxMid + halfSa, y1a]    // bottom arm
     ];
   }
 
