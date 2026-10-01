@@ -279,6 +279,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <div class="iw"><input type="number" id="inp-ev" value="1.25" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-ev">in</span></div>
     </div>
   </div>
+  <div class="form-group">
+    <label>Eccentricity a — support face to bolt CL <span class="unit-lbl" id="lbl-a">[in]</span></label>
+    <div class="iw"><input type="number" id="inp-a" value="3" min="0" step="0.25" oninput="calc()"><span class="us" id="su-a">in</span></div>
+  </div>
   <!-- Plate -->
   <div class="form-div"><div class="form-div-lbl">Shear Plate</div></div>
   <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -412,9 +416,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="bg-toc">
       <a href="#bg-overview">Overview</a>
       <a href="#bg-bolt-shear">Bolt Shear</a>
+      <a href="#bg-eccentricity">Eccentricity</a>
       <a href="#bg-bearing">Bearing</a>
       <a href="#bg-plate-shear">Plate Shear</a>
       <a href="#bg-block-shear">Block Shear</a>
+      <a href="#bg-plate-bending">Plate Bending</a>
       <a href="#bg-example">Example</a>
     </div>
 
@@ -422,15 +428,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <div class="bg-panel-hdr">Overview — Single-Plate Shear Tab</div>
       <div class="tb">
         <p>A shear tab (single-plate) connection transfers shear from a beam web to a support via a vertical row of bolts through a plate. This calculator checks all bolt and plate failure modes per <strong>AISC 360-22 Chapter J</strong>. The plate-to-support weld or the support itself are outside the scope of this check.</p>
-        <p>The six limit states checked, in order of typical criticality:</p>
+        <p>The eight limit states checked, in order of typical criticality:</p>
         <table>
           <tr><th>#</th><th>Limit State</th><th>Section</th><th>&phi;</th></tr>
           <tr><td>1</td><td>Bolt shear rupture</td><td>§J3.6</td><td>0.75</td></tr>
-          <tr><td>2</td><td>Bearing on plate</td><td>§J3.10</td><td>0.75</td></tr>
-          <tr><td>3</td><td>Bearing on beam web</td><td>§J3.10</td><td>0.75</td></tr>
-          <tr><td>4</td><td>Plate gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
-          <tr><td>5</td><td>Plate net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
-          <tr><td>6</td><td>Block shear on plate</td><td>§J4.3</td><td>0.75</td></tr>
+          <tr><td>2</td><td>Bolt group eccentricity (elastic method)</td><td>§J3.6</td><td>0.75</td></tr>
+          <tr><td>3</td><td>Bearing on plate</td><td>§J3.10</td><td>0.75</td></tr>
+          <tr><td>4</td><td>Bearing on beam web</td><td>§J3.10</td><td>0.75</td></tr>
+          <tr><td>5</td><td>Plate gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
+          <tr><td>6</td><td>Plate net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
+          <tr><td>7</td><td>Block shear on plate</td><td>§J4.3</td><td>0.75</td></tr>
+          <tr><td>8</td><td>Plate bending at weld (cantilever)</td><td>§F11</td><td>0.90</td></tr>
         </table>
       </div>
     </div>
@@ -448,6 +456,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <tr><td>Group B (A490, F2280)</td><td>-N</td><td>60</td><td>414</td></tr>
           <tr><td>Group B</td><td>-X</td><td>68</td><td>469</td></tr>
         </table>
+      </div>
+    </div>
+
+    <div id="bg-eccentricity" class="bg-panel">
+      <div class="bg-panel-hdr">Bolt Group Eccentricity — Elastic Vector Method</div>
+      <div class="tb">
+        <p>A shear tab bolt group is offset a horizontal distance <em>a</em> from the support face. This eccentricity creates an in-plane moment M = V<sub>u</sub> &times; a on the bolt group, so each bolt resists a combination of direct shear and torsional shear.</p>
+        <p>For a single vertical row of <em>n</em> bolts at spacing <em>s</em>, the polar moment of inertia of the bolt group (treating bolt areas as unit areas) is:</p>
+        <span class="fml-eq">I<sub>p</sub> = &Sigma;y<sub>i</sub>&sup2; = s&sup2; &times; n(n&sup2;&minus;1)/12</span>
+        <p>The critical (outermost) bolt at distance c<sub>max</sub> = (n&minus;1)s/2 from the centroid carries:</p>
+        <ul>
+          <li>Direct vertical shear: V' = V<sub>u</sub>/n</li>
+          <li>Eccentric horizontal shear: V&Prime; = (V<sub>u</sub>&times;a&times;c<sub>max</sub>) / I<sub>p</sub></li>
+        </ul>
+        <span class="fml-eq">r<sub>crit</sub> = &radic;(V'&sup2; + V&Prime;&sup2;)</span>
+        <p>The equivalent group capacity is the max V<sub>u</sub> such that r<sub>crit</sub> &le; &phi;R<sub>n,1bolt</sub>:</p>
+        <span class="fml-eq">&phi;R<sub>n,ecc</sub> = &phi;R<sub>n,1bolt</sub> &times; V<sub>u</sub> / r<sub>crit</sub></span>
+        <p>When a = 0 the result equals the direct bolt shear capacity (no penalty). Eccentricity can reduce group capacity by 20–50% for typical shear tab geometries.</p>
       </div>
     </div>
 
@@ -487,12 +513,26 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
     </div>
 
+    <div id="bg-plate-bending" class="bg-panel">
+      <div class="bg-panel-hdr">§F11 — Plate Bending at Weld Line</div>
+      <div class="tb">
+        <p>The shear tab plate acts as a short cantilever from the support weld to the bolt group. The applied shear V<sub>u</sub> at eccentricity <em>a</em> creates a moment at the weld line:</p>
+        <span class="fml-eq">M<sub>u</sub> = V<sub>u</sub> &times; a</span>
+        <p>The plate cross-section at the weld (h<sub>p</sub> &times; t<sub>p</sub>, no holes) is checked for flexural yielding per §F11. Using the plastic section modulus:</p>
+        <span class="fml-eq">Z<sub>x</sub> = t<sub>p</sub> &times; h<sub>p</sub>&sup2; / 4</span>
+        <span class="fml-eq">&phi;M<sub>n</sub> = 0.90 &times; F<sub>y</sub> &times; Z<sub>x</sub></span>
+        <p>The calculator converts this moment capacity to an equivalent shear capacity at distance <em>a</em> for direct comparison in the DCR table:</p>
+        <span class="fml-eq">&phi;R<sub>n,bending</sub> = &phi;M<sub>n</sub> / a</span>
+        <p>When a = 0 this check is not applicable (shown as &mdash;). Plate bending typically governs for long eccentricities combined with thin or short plates.</p>
+      </div>
+    </div>
+
     <div id="bg-example" class="bg-panel">
       <div class="bg-panel-hdr">Worked Example — US Units</div>
       <div class="tb">
         <p><strong>Given:</strong> W18&times;35 beam (t<sub>w</sub> = 0.300&Prime;, A992: F<sub>u</sub> = 65 ksi), V<sub>u</sub> = 40 kip.<br>
-        Bolts: 3/4&Prime; A325-N (n = 3, s = 3&Prime;, e<sub>v</sub> = 1.25&Prime;, e<sub>h</sub> = 1.5&Prime;).<br>
-        Plate: t<sub>p</sub> = 3/8&Prime;, A36 (F<sub>y</sub> = 36 ksi, F<sub>u</sub> = 58 ksi).</p>
+        Bolts: 3/4&Prime; A325-N (n = 3, s = 3&Prime;, e<sub>v</sub> = 1.25&Prime;, e<sub>h</sub> = 1.75&Prime;), eccentricity a = 3&Prime;.<br>
+        Plate: t<sub>p</sub> = 3/8&Prime;, b<sub>p</sub> = 3.5&Prime;, A36 (F<sub>y</sub> = 36 ksi, F<sub>u</sub> = 58 ksi).</p>
 
         <p><strong>Geometry:</strong> d<sub>h</sub> = 3/4 + 1/16 = 13/16&Prime; = 0.8125&Prime;. h<sub>p</sub> = 2&times;3 + 2&times;1.25 = 8.5&Prime;.<br>
         A<sub>b</sub> = &pi;(0.75)&sup2;/4 = 0.4418 in&sup2;.</p>
@@ -526,7 +566,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         R<sub>n</sub> = min(0.60&times;58&times;1.957 + 58&times;0.410, 0.60&times;36&times;2.719 + 58&times;0.410) = min(91.9, 82.6) = 82.6 kip.<br>
         &phi;R<sub>n</sub> = 0.75&times;82.6 = <strong>62.0 kip</strong> &#x2714;</p>
 
-        <p><strong>Governing: Bolt shear, &phi;R<sub>n,min</sub> = 47.7 kip. DCR = 40/47.7 = 0.84</strong> &#x2714;</p>
+        <h4>Step 7 — Bolt group eccentricity</h4>
+        <p>a = 3&Prime;. I<sub>p</sub> = 2&times;3&sup2; = 18 in&sup2;. c<sub>max</sub> = 3&Prime;.<br>
+        V' = 40/3 = 13.33 kip. V&Prime; = 40&times;3&times;3/18 = 20.0 kip.<br>
+        r<sub>crit</sub> = &radic;(13.33&sup2; + 20.0&sup2;) = 24.04 kip.<br>
+        &phi;R<sub>n,1bolt</sub> = 47.7/3 = 15.9 kip. &phi;R<sub>n,ecc</sub> = 15.9&times;40/24.04 = <strong>26.5 kip</strong> &lt; 40 kip &#x26A0;</p>
+
+        <h4>Step 8 — Plate bending</h4>
+        <p>Z<sub>x</sub> = 0.375&times;8.5&sup2;/4 = 6.76 in&sup3;.<br>
+        &phi;M<sub>n</sub> = 0.90&times;36&times;6.76 = 219 kip&middot;in.<br>
+        &phi;R<sub>n,bending</sub> = 219/3 = <strong>73.0 kip</strong> &#x2714;</p>
+
+        <p><strong>Governing: Bolt group eccentricity, &phi;R<sub>n,min</sub> = 26.5 kip. DCR = 40/26.5 = 1.51 — FAIL.</strong> Increase n or reduce a.</p>
       </div>
     </div>
 
@@ -628,18 +679,20 @@ function setUnit(u){
       el('inp-ev').value='32';
       el('inp-tp').value='10';
       el('inp-bp').value='90';
+      el('inp-a').value='75';
     } else {
       el('inp-Vu').value='30';
       el('inp-s').value='3';
       el('inp-ev').value='1.25';
       el('inp-tp').value='0.375';
       el('inp-bp').value='3.5';
+      el('inp-a').value='3';
     }
   }
   var lu=u==='us'?'in':'mm', fu=u==='us'?'kip':'kN';
-  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-tp':lu,'lbl-bp':lu};
+  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-tp':lu,'lbl-bp':lu,'lbl-a':lu};
   Object.keys(lblMap).forEach(function(id){var e=el(id);if(e)e.textContent='['+lblMap[id]+']';});
-  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu};
+  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu,'su-a':lu};
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
   el('rv-phi-rn-u').textContent=fu;
@@ -795,13 +848,47 @@ function calc(){
     phi_Rsy*=cf; phi_Rsr*=cf; phi_Rbs*=cf;
   }
 
+  // 7. Bolt group eccentricity — elastic vector method
+  // Single bolt capacity (phi_Rnv is already in kN or kip after SI conversion)
+  var phi_Rn_1bolt = phi_Rnv / n;
+  var a_ecc = v('inp-a');
+  // Polar moment of bolt group (single vertical row)
+  var Ip_bolts = 0;
+  for(var ii=0; ii<n; ii++){
+    var yi_i = -(n-1)/2*s + ii*s;
+    Ip_bolts += yi_i*yi_i;
+  }
+  // Eccentric horizontal force on critical bolt (outermost, farthest from centroid)
+  // M_ecc = Vu × a  [kN·mm or kip·in];  Vx = M·c_max/Ip  [kN or kip]
+  var c_max_bolt = (n > 1) ? (n-1)/2*s : 0;
+  var Vx_ecc = (Ip_bolts > 0 && a_ecc > 0) ? Vu * a_ecc * c_max_bolt / Ip_bolts : 0;
+  var Vy_dir = Vu / Math.max(n, 1);
+  var r_crit = Math.sqrt(Vy_dir*Vy_dir + Vx_ecc*Vx_ecc);
+  // Group capacity: max Vu such that r_crit ≤ phi_Rn_1bolt
+  var phi_Rnv_ecc = (r_crit > 0 && Vu > 0) ? phi_Rn_1bolt * Vu / r_crit : phi_Rnv;
+
+  // 8. Plate bending at weld line — cantilever: Mu = Vu × a
+  // Plastic section modulus Zx = tp × hp² / 4
+  var Zx_pl = tp * hp * hp / 4;
+  // phi_Mn_raw: N·mm (SI) or kip·in (US); φ = 0.90 per AISC 360-22 §F11
+  var phi_Mn_raw = 0.90 * Fy_pl * Zx_pl;
+  // Convert to equivalent shear capacity at distance a: phi_Rn_bending = phi_Mn / a
+  var phi_Rn_bending;
+  if(a_ecc > 0){
+    phi_Rn_bending = unit==='si' ? phi_Mn_raw/1000/a_ecc : phi_Mn_raw/a_ecc;
+  } else {
+    phi_Rn_bending = Infinity; // no moment, bending check N/A
+  }
+
   var checks = [
-    {name:'Bolt shear §J3.6',          phi_Rn: phi_Rnv      },
-    {name:'Bearing on plate §J3.10',   phi_Rn: phi_Rbrg_pl  },
-    {name:'Bearing on web §J3.10',     phi_Rn: phi_Rbrg_web },
-    {name:'Plate shear yield §J4.2',   phi_Rn: phi_Rsy      },
-    {name:'Plate shear rupture §J4.2', phi_Rn: phi_Rsr      },
-    {name:'Block shear §J4.3',         phi_Rn: phi_Rbs      }
+    {name:'Bolt shear §J3.6',                    phi_Rn: phi_Rnv          },
+    {name:'Bolt group eccentricity (elastic)',    phi_Rn: phi_Rnv_ecc      },
+    {name:'Bearing on plate §J3.10',             phi_Rn: phi_Rbrg_pl      },
+    {name:'Bearing on web §J3.10',               phi_Rn: phi_Rbrg_web     },
+    {name:'Plate shear yield §J4.2',             phi_Rn: phi_Rsy          },
+    {name:'Plate shear rupture §J4.2',           phi_Rn: phi_Rsr          },
+    {name:'Block shear §J4.3',                   phi_Rn: phi_Rbs          },
+    {name:'Plate bending §F11 (Mu = Vu\xB7a)',   phi_Rn: phi_Rn_bending   }
   ];
 
   var phi_Rn_min = Infinity, govIdx = 0;
@@ -872,6 +959,7 @@ function calc(){
   var rows=[
     ['Beam', el('beamProfile').value+' ('+bm[0]+')'],
     ['Vᵤ', fmt(Vu,unit==='us'?1:0)+' '+forU],
+    ['Eccentricity a', fmt(a_ecc,unit==='us'?3:0)+' '+lenU],
     ['Bolt grade', gradeName+' ('+(threadsIn?'N':'X')+')'],
     ['Bolt dᵇ', boltName+' ('+fmt(db,unit==='us'?3:0)+' '+lenU+')'],
     ['n \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,unit==='us'?3:0)+' + 2\xD7'+fmt(ev,unit==='us'?3:0)+' = '+fmt(hp,unit==='us'?3:0)+' '+lenU],
