@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index, follow">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+
+<title>Bolted Shear Tab Connection | AISC 360-22 Chapter J | CivilStrCalc</title>
+<meta name="description" content="Bolted shear tab (single plate) connection calculator per AISC 360-22 Chapter J. Checks bolt shear, bearing on plate and beam web, plate shear yielding/rupture, and block shear. US and SI units.">
+<meta name="keywords" content="shear tab connection, bolted shear connection, AISC 360 Chapter J, bolt shear check, bearing check, block shear, steel connection design">
+<link rel="canonical" href="https://civilstrcalc.com/pages/steel-shear-tab">
+
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://civilstrcalc.com/pages/steel-shear-tab">
+<meta property="og:title"       content="Bolted Shear Tab Connection | CivilStrCalc">
+<meta property="og:description" content="AISC 360-22 Ch. J bolt shear, bearing, and block shear checks for single-plate shear connections.">
+<meta property="og:image"       content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name"   content="CivilStrCalc">
+<meta property="og:locale"      content="en_US">
+
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:url"         content="https://civilstrcalc.com/pages/steel-shear-tab">
+<meta name="twitter:title"       content="Bolted Shear Tab Connection | CivilStrCalc">
+<meta name="twitter:description" content="AISC 360-22 Ch. J bolt shear, bearing, and block shear checks for single-plate shear connections.">
+<meta name="twitter:image"       content="https://civilstrcalc.com/images/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"Bolted Shear Tab Connection — CivilStrCalc",
+  "description":"Single-plate shear connection calculator per AISC 360-22 Chapter J.",
+  "applicationCategory":"UtilityApplication",
+  "operatingSystem":"Web Browser",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+  "featureList":"AISC 360-22 Chapter J, bolt shear, bearing, block shear, US and SI units"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {"@type":"ListItem","position":1,"name":"CivilStrCalc","item":"https://civilstrcalc.com"},
+    {"@type":"ListItem","position":2,"name":"Bolted Shear Tab Connection","item":"https://civilstrcalc.com/pages/steel-shear-tab"}
+  ]
+}
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2"  as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/svg+xml"           href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon"            href="../favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180"    href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+
+<script src="../shell.js" defer></script>
+<script src="../js/steel-profiles.js"></script>
+
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.calc-layout{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+@media(max-width:1000px){.calc-layout{grid-template-columns:1fr}}
+.results-col{display:flex;flex-direction:column;gap:14px}
+
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap}
+.unit-switcher label{font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--sans);font-size:.67rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent)}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600}
+
+.dcr-banner{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:7px;border:1.5px solid;margin-bottom:10px}
+.dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0}
+.dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a}
+.dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8}
+.dcr-icon{font-size:1.5rem}
+.dcr-text strong{font-size:.87rem;display:block;margin-bottom:2px}
+.dcr-text span{font-size:.73rem;color:var(--text-mid);font-family:var(--mono)}
+.dcr-banner.ok .dcr-text strong{color:var(--green)}
+.dcr-banner.warn .dcr-text strong{color:var(--orange)}
+.dcr-banner.err .dcr-text strong{color:var(--red)}
+
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.rpt-sec-title{font-family:var(--sans);font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 10px;margin-bottom:8px}
+
+.inp-tbl{width:100%;border-collapse:collapse}
+.inp-tbl tr{border-bottom:1px solid var(--border)}
+.inp-tbl tr:last-child{border-bottom:none}
+.inp-tbl td{padding:6px 8px;font-size:.80rem;font-family:var(--sans)}
+.inp-tbl td:first-child{color:var(--text-mid);width:55%}
+.inp-tbl td:last-child{font-weight:500;color:var(--text);text-align:right}
+
+.res-tbl{width:100%;border-collapse:collapse}
+.res-tbl tr{border-bottom:1px solid var(--border)}
+.res-tbl tr:last-child{border-bottom:none}
+.res-tbl td{padding:7px 8px;font-size:.79rem;font-family:var(--sans)}
+.res-tbl td:first-child{color:var(--text-mid);width:60%}
+.res-tbl td:last-child{font-weight:500;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.res-tbl td.ok{color:var(--green);font-weight:600}
+.res-tbl td.warn{color:var(--orange);font-weight:600}
+.res-tbl td.err{color:var(--red);font-weight:600}
+.res-tbl td.gov{background:rgba(26,109,181,.07);font-weight:700;color:var(--accent)}
+
+.fl-rb{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;margin-bottom:14px;overflow:hidden}
+.fl-col{padding:10px 14px;text-align:center;border-right:1px solid #b8d0eb}
+.fl-col:last-child{border-right:none}
+.fl-lbl{font-size:.63rem;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;font-family:var(--sans);font-weight:500}
+.fl-val{font-family:var(--mono);font-size:1.05rem;font-weight:600;color:var(--accent)}
+.fl-unit{font-size:.68rem;color:var(--text-dim);margin-top:2px;font-family:var(--sans)}
+
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans)}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
+.ph-date{font-size:.63rem;color:var(--text-dim);font-family:var(--mono)}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans)}
+
+.fml-eq{display:block;font-family:var(--mono);font-size:.79rem;color:var(--text);line-height:1.75;margin:5px 0}
+
+/* Design Background */
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden}
+.bg-hdr{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 20px;cursor:pointer;user-select:none;font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--text)}
+.bg-hdr:hover{background:var(--bg)}
+.bg-arr{font-size:.8rem;color:var(--text-dim);transition:transform .2s}
+.bg-section.open .bg-arr{transform:rotate(180deg)}
+.bg-body{display:none;padding:18px 20px}
+.bg-section.open .bg-body{display:block}
+.bg-toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.bg-toc a{font-size:.75rem;padding:4px 11px;border:1px solid var(--border);border-radius:20px;color:var(--accent);text-decoration:none;font-family:var(--sans);font-weight:500}
+.bg-toc a:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.bg-panel{margin-bottom:18px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.bg-panel:last-child{margin-bottom:0}
+.bg-panel-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 14px;font-family:var(--sans);font-size:.78rem;font-weight:700;color:var(--text)}
+.bg-panel .tb{padding:12px 14px;font-size:.82rem;color:var(--text);line-height:1.6}
+.bg-panel .tb p{margin:0 0 10px}
+.bg-panel .tb p:last-child{margin-bottom:0}
+
+.bp-sel{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer}
+.prof-info{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 12px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.prof-info-item{text-align:center}
+.pi-lbl{font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--sans);margin-bottom:3px;white-space:nowrap}
+.pi-val{font-size:.82rem;font-weight:600;font-family:var(--mono);color:var(--accent)}
+
+.bp-diagram-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+
+@media(max-width:640px){
+  .form-row-2{grid-template-columns:1fr!important}
+  .fl-rb{grid-template-columns:1fr 1fr!important}
+  .fl-col:nth-child(3){grid-column:1/-1;border-right:none;border-top:1px solid #b8d0eb}
+}
+@media print{
+  @page{margin:6mm 8mm;size:A4}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:white!important;font-size:7pt!important;padding:0!important}
+  .no-print,.bg-section,.sub-tabs,.mod-tabs,.page-title,.unit-switcher{display:none!important}
+  .print-only{display:flex!important}
+  .print-disclaimer{display:block!important;font-size:5pt!important}
+  .print-footer{display:flex!important}
+  .calc-layout{display:block!important}
+  .results-col{gap:2px!important}
+  .report-card{box-shadow:none!important;border:none!important}
+  .report-hdr{padding:3px 8px!important;background:#1a2332!important}
+  .report-hdr h4{font-size:6.5pt!important}
+  .rh-code{font-size:4.5pt!important}
+  .print-btn{display:none!important}
+  .report-body{padding:3px 8px!important}
+  .fl-rb{margin-bottom:3px!important;background:#f0f5fb!important}
+  .fl-col{padding:2px 5px!important}
+  .fl-lbl{font-size:4.5pt!important}
+  .fl-val{font-size:.75rem!important}
+  .fl-unit{font-size:4pt!important}
+  .dcr-banner{padding:3px 7px!important;margin-bottom:3px!important}
+  .dcr-icon{font-size:.9rem!important}
+  .dcr-text strong{font-size:6pt!important}
+  .rpt-sec{margin-bottom:3px!important;padding-bottom:3px!important}
+  .rpt-sec-title{font-size:.48rem!important;padding:1px 5px!important;margin-bottom:2px!important}
+  .inp-tbl td,.res-tbl td{padding:1px 4px!important;font-size:6pt!important}
+  #st-svg{display:none!important}
+}
+</style>
+<style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
+</head>
+
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Bolted Shear Tab Connection</h1>
+  <p>Single-plate shear connection &mdash; bolt shear, bearing, plate shear and block shear per <strong>AISC 360-22 Chapter J</strong></p>
+</div>
+
+<div class="unit-switcher no-print">
+  <label>Units:</label>
+  <div class="unit-btns">
+    <button class="unit-btn active" id="btn-us" onclick="setUnit('us')">US (kip &middot; in)</button>
+    <button class="unit-btn"        id="btn-si" onclick="setUnit('si')">SI (kN &middot; mm)</button>
+  </div>
+</div>
+
+<div class="calc-layout">
+
+<!-- ══ LEFT: INPUTS ══════════════════════════════════════════════════ -->
+<div class="no-print">
+
+  <!-- Beam Section -->
+  <div class="form-div"><div class="form-div-lbl">Beam Section</div></div>
+  <div class="form-group">
+    <label>Section Type</label>
+    <select id="beamType" class="bp-sel" onchange="onBeamTypeChange()"></select>
+  </div>
+  <div class="form-group">
+    <label>Profile</label>
+    <select id="beamProfile" class="bp-sel" onchange="onBeamProfileChange()"></select>
+  </div>
+  <div class="prof-info" id="prof-info-box">
+    <div class="prof-info-item"><div class="pi-lbl">d</div><div class="pi-val" id="pi-d">—</div></div>
+    <div class="prof-info-item"><div class="pi-lbl">t<sub>w</sub></div><div class="pi-val" id="pi-tw">—</div></div>
+    <div class="prof-info-item"><div class="pi-lbl">t<sub>f</sub></div><div class="pi-val" id="pi-tf">—</div></div>
+    <div class="prof-info-item"><div class="pi-lbl">F<sub>u,web</sub></div><div class="pi-val" id="pi-Fu">—</div></div>
+  </div>
+
+  <!-- Load -->
+  <div class="form-div"><div class="form-div-lbl">Applied Load (LRFD)</div></div>
+  <div class="form-group">
+    <label>Shear V<sub>u</sub> <span class="unit-lbl" id="lbl-Vu">[kip]</span></label>
+    <div class="iw"><input type="number" id="inp-Vu" value="30" min="0" step="1" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
+  </div>
+
+  <!-- Bolt Group -->
+  <div class="form-div"><div class="form-div-lbl">Bolt Group</div></div>
+  <div class="form-group">
+    <label>Bolt grade</label>
+    <select id="inp-bolt-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Diameter d<sub>b</sub> <span class="unit-lbl" id="lbl-db">[in]</span></label>
+      <select id="inp-db" class="bp-sel" onchange="calc()"></select>
+    </div>
+    <div class="form-group">
+      <label>Number of bolts n</label>
+      <select id="inp-n" class="bp-sel" onchange="calc()">
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Spacing s <span class="unit-lbl" id="lbl-s">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-s" value="3" min="1" step="0.25" oninput="calc()"><span class="us" id="su-s">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Vert. edge dist e<sub>v</sub> <span class="unit-lbl" id="lbl-ev">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-ev" value="1.25" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-ev">in</span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Horiz. edge dist e<sub>h</sub> <span class="unit-lbl" id="lbl-eh">[in]</span> <span style="font-size:.68rem;opacity:.65">(bolt CL to free plate edge)</span></label>
+    <div class="iw"><input type="number" id="inp-eh" value="1.5" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-eh">in</span></div>
+  </div>
+
+  <!-- Plate -->
+  <div class="form-div"><div class="form-div-lbl">Shear Plate</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Thickness t<sub>p</sub> <span class="unit-lbl" id="lbl-tp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-tp" value="0.375" min="0.125" step="0.0625" oninput="calc()"><span class="us" id="su-tp">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Width b<sub>p</sub> <span class="unit-lbl" id="lbl-bp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-bp" value="3.5" min="1" step="0.125" oninput="calc()"><span class="us" id="su-bp">in</span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Plate material</label>
+    <select id="inp-plate-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
+
+  <!-- SVG -->
+  <div class="card no-print" style="margin-top:12px">
+    <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Connection Elevation (not to scale)</div>
+    <div class="card-body" style="padding:8px;text-align:center">
+      <svg id="st-svg" viewBox="0 0 260 280" style="width:100%;max-width:280px"></svg>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ══ RIGHT: RESULTS ════════════════════════════════════════════════ -->
+<div class="results-col">
+
+  <div class="report-card" id="st-card">
+    <div class="report-hdr">
+      <h4>Shear Tab Connection &mdash; AISC 360-22 Ch. J</h4>
+      <span class="rh-code" id="rh-unit-lbl">kip &middot; in</span>
+      <button class="print-btn" onclick="window.print()" style="margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;padding:4px 12px;font-size:.72rem;cursor:pointer">&#128424; Print / PDF</button>
+    </div>
+    <div class="report-body">
+
+      <div class="print-only">
+        <div>
+          <div class="ph-title">Bolted Shear Tab Connection</div>
+          <div class="ph-sub">AISC 360-22 Chapter J &mdash; Bolt Shear &middot; Bearing &middot; Block Shear</div>
+        </div>
+        <div class="ph-date" id="ph-date"></div>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Worst DCR</div>
+          <div class="fl-val" id="rv-dcr">—</div>
+          <div class="fl-unit" id="rv-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">&phi;R<sub>n,min</sub></div>
+          <div class="fl-val" id="rv-phi-rn">—</div>
+          <div class="fl-unit" id="rv-phi-rn-u">kip</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Plate h<sub>p</sub></div>
+          <div class="fl-val" id="rv-hp">—</div>
+          <div class="fl-unit" id="rv-hp-u">in</div>
+        </div>
+      </div>
+
+      <!-- DCR Banner -->
+      <div class="dcr-banner ok" id="dcr-banner">
+        <div class="dcr-icon">&#x2714;</div>
+        <div class="dcr-text">
+          <strong id="dcr-text-main">—</strong>
+          <span id="dcr-text-sub">—</span>
+        </div>
+      </div>
+
+      <!-- DCR Breakdown -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Capacity Summary (AISC 360-22 Ch. J)</div>
+        <table class="res-tbl">
+          <thead><tr>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">&phi;R<sub>n</sub></th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">DCR</th>
+          </tr></thead>
+          <tbody id="cap-tbl-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Inputs -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Design Inputs</div>
+        <table class="inp-tbl"><tbody id="inp-body"></tbody></table>
+      </div>
+
+      <!-- Bolt & Plate Detail -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Geometry &amp; Material</div>
+        <table class="res-tbl"><tbody id="detail-body"></tbody></table>
+      </div>
+
+      <div class="print-disclaimer">
+        This output is for preliminary design only. Verify all results against current AISC 360-22 and project-specific requirements before use in construction documents.
+      </div>
+      <div class="print-footer">
+        <span>CivilStrCalc &mdash; civilstrcalc.com</span>
+        <span id="pf-date2"></span>
+      </div>
+
+    </div><!-- /report-body -->
+  </div><!-- /report-card -->
+
+</div><!-- /results-col -->
+</div><!-- /calc-layout -->
+
+<!-- ══ DESIGN BACKGROUND ═══════════════════════════════════════════════ -->
+<div class="bg-section open no-print">
+  <div class="bg-hdr" onclick="this.closest('.bg-section').classList.toggle('open')">
+    Design Background &mdash; AISC 360-22 Chapter J Shear Tab Connection
+    <span class="bg-arr">&#9662;</span>
+  </div>
+  <div class="bg-body">
+
+    <div class="bg-toc">
+      <a href="#bg-overview">Overview</a>
+      <a href="#bg-bolt-shear">Bolt Shear</a>
+      <a href="#bg-bearing">Bearing</a>
+      <a href="#bg-plate-shear">Plate Shear</a>
+      <a href="#bg-block-shear">Block Shear</a>
+      <a href="#bg-example">Example</a>
+    </div>
+
+    <div id="bg-overview" class="bg-panel">
+      <div class="bg-panel-hdr">Overview — Single-Plate Shear Tab</div>
+      <div class="tb">
+        <p>A shear tab (single-plate) connection transfers shear from a beam web to a support via a vertical row of bolts through a plate. This calculator checks all bolt and plate failure modes per <strong>AISC 360-22 Chapter J</strong>. The plate-to-support weld or the support itself are outside the scope of this check.</p>
+        <p>The six limit states checked, in order of typical criticality:</p>
+        <table>
+          <tr><th>#</th><th>Limit State</th><th>Section</th><th>&phi;</th></tr>
+          <tr><td>1</td><td>Bolt shear rupture</td><td>§J3.6</td><td>0.75</td></tr>
+          <tr><td>2</td><td>Bearing on plate</td><td>§J3.10</td><td>0.75</td></tr>
+          <tr><td>3</td><td>Bearing on beam web</td><td>§J3.10</td><td>0.75</td></tr>
+          <tr><td>4</td><td>Plate gross shear yielding</td><td>§J4.2</td><td>1.00</td></tr>
+          <tr><td>5</td><td>Plate net shear rupture</td><td>§J4.2</td><td>0.75</td></tr>
+          <tr><td>6</td><td>Block shear on plate</td><td>§J4.3</td><td>0.75</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="bg-bolt-shear" class="bg-panel">
+      <div class="bg-panel-hdr">§J3.6 — Bolt Shear Rupture</div>
+      <div class="tb">
+        <p>Each bolt resists a vertical shear of V<sub>u</sub>/n (assuming uniform distribution for a concentric connection).</p>
+        <span class="fml-eq">&phi;R<sub>n</sub> = n &times; &phi; &times; F<sub>nv</sub> &times; A<sub>b</sub></span>
+        <p>where &phi; = 0.75, A<sub>b</sub> = &pi;d<sub>b</sub>&sup2;/4, and F<sub>nv</sub> is from AISC Table J3.2:</p>
+        <table>
+          <tr><th>Grade</th><th>Condition</th><th>F<sub>nv</sub> (ksi)</th><th>F<sub>nv</sub> (MPa)</th></tr>
+          <tr><td>Group A (A325, F1852)</td><td>-N (threads in shear plane)</td><td>48</td><td>330</td></tr>
+          <tr><td>Group A</td><td>-X (threads excluded)</td><td>54</td><td>372</td></tr>
+          <tr><td>Group B (A490, F2280)</td><td>-N</td><td>60</td><td>414</td></tr>
+          <tr><td>Group B</td><td>-X</td><td>68</td><td>469</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="bg-bearing" class="bg-panel">
+      <div class="bg-panel-hdr">§J3.10 — Bearing and Tearout</div>
+      <div class="tb">
+        <p>Bolt bearing is checked on both the <strong>plate</strong> and the <strong>beam web</strong> independently. For standard holes when deformation is a design consideration (&phi; = 0.75):</p>
+        <span class="fml-eq">R<sub>n</sub> = 1.2 l<sub>c</sub> t F<sub>u</sub> &le; 2.4 d<sub>b</sub> t F<sub>u</sub></span>
+        <p>where l<sub>c</sub> is the clear distance from hole edge to next hole edge (interior bolts: l<sub>c</sub> = s &minus; d<sub>h</sub>) or to plate edge (end bolts: l<sub>c</sub> = e<sub>v</sub> &minus; d<sub>h</sub>/2). Standard hole diameter d<sub>h</sub> = d<sub>b</sub> + 1/16&Prime; (US) or d<sub>b</sub> + 2 mm (SI).</p>
+      </div>
+    </div>
+
+    <div id="bg-plate-shear" class="bg-panel">
+      <div class="bg-panel-hdr">§J4.2 — Plate Shear (Yielding and Rupture)</div>
+      <div class="tb">
+        <p>The plate height h<sub>p</sub> = (n&minus;1)&middot;s + 2&middot;e<sub>v</sub>.</p>
+        <p><strong>Gross shear yielding</strong> (&phi; = 1.00):</p>
+        <span class="fml-eq">&phi;R<sub>n</sub> = 1.00 &times; 0.60 F<sub>y</sub> &times; h<sub>p</sub> &times; t<sub>p</sub></span>
+        <p><strong>Net shear rupture</strong> (&phi; = 0.75, deduct n hole diameters):</p>
+        <span class="fml-eq">&phi;R<sub>n</sub> = 0.75 &times; 0.60 F<sub>u</sub> &times; (h<sub>p</sub> &minus; n&middot;d<sub>h</sub>) &times; t<sub>p</sub></span>
+      </div>
+    </div>
+
+    <div id="bg-block-shear" class="bg-panel">
+      <div class="bg-panel-hdr">§J4.3 — Block Shear on Plate</div>
+      <div class="tb">
+        <p>For a single vertical bolt row with uniform shear (U<sub>bs</sub> = 1.0), the block tears along the bolt line (shear) and across the top or bottom (tension).</p>
+        <span class="fml-eq">R<sub>n</sub> = 0.60 F<sub>u</sub> A<sub>nv</sub> + U<sub>bs</sub> F<sub>u</sub> A<sub>nt</sub> &le; 0.60 F<sub>y</sub> A<sub>gv</sub> + U<sub>bs</sub> F<sub>u</sub> A<sub>nt</sub></span>
+        <p>where &phi; = 0.75 and:</p>
+        <table>
+          <tr><th>Area</th><th>Expression</th><th>Description</th></tr>
+          <tr><td>A<sub>gv</sub></td><td>[(n&minus;1)s + e<sub>v</sub>] &times; t<sub>p</sub></td><td>Gross shear area (vertical path)</td></tr>
+          <tr><td>A<sub>nv</sub></td><td>A<sub>gv</sub> &minus; (n&minus;0.5)d<sub>h</sub>t<sub>p</sub></td><td>Net shear area</td></tr>
+          <tr><td>A<sub>nt</sub></td><td>(e<sub>h</sub> &minus; d<sub>h</sub>/2) &times; t<sub>p</sub></td><td>Net tension area (horizontal)</td></tr>
+        </table>
+        <p>e<sub>h</sub> is the horizontal edge distance from bolt centerline to the free (far) edge of the plate.</p>
+      </div>
+    </div>
+
+    <div id="bg-example" class="bg-panel">
+      <div class="bg-panel-hdr">Worked Example — US Units</div>
+      <div class="tb">
+        <p><strong>Given:</strong> W18&times;35 beam (t<sub>w</sub> = 0.300&Prime;, A992: F<sub>u</sub> = 65 ksi), V<sub>u</sub> = 40 kip.<br>
+        Bolts: 3/4&Prime; A325-N (n = 3, s = 3&Prime;, e<sub>v</sub> = 1.25&Prime;, e<sub>h</sub> = 1.5&Prime;).<br>
+        Plate: t<sub>p</sub> = 3/8&Prime;, A36 (F<sub>y</sub> = 36 ksi, F<sub>u</sub> = 58 ksi).</p>
+
+        <p><strong>Geometry:</strong> d<sub>h</sub> = 3/4 + 1/16 = 13/16&Prime; = 0.8125&Prime;. h<sub>p</sub> = 2&times;3 + 2&times;1.25 = 8.5&Prime;.<br>
+        A<sub>b</sub> = &pi;(0.75)&sup2;/4 = 0.4418 in&sup2;.</p>
+
+        <h4>Step 1 — Bolt shear</h4>
+        <p>F<sub>nv</sub> = 48 ksi. &phi;R<sub>n</sub> = 0.75&times;48&times;0.4418&times;3 = <strong>47.7 kip</strong> &gt; 40 kip &#x2714;</p>
+
+        <h4>Step 2 — Bearing on plate</h4>
+        <p>l<sub>c,end</sub> = 1.25 &minus; 0.8125/2 = 0.844&Prime;; l<sub>c,int</sub> = 3.0 &minus; 0.8125 = 2.188&Prime;.<br>
+        End bolt: R<sub>n</sub> = min(1.2&times;0.844&times;0.375&times;58, 2.4&times;0.75&times;0.375&times;58) = min(22.1, 39.2) = 22.1 kip.<br>
+        Interior bolt: R<sub>n</sub> = min(1.2&times;2.188&times;0.375&times;58, 39.2) = min(57.3, 39.2) = 39.2 kip.<br>
+        &phi;R<sub>n</sub> = 0.75&times;(2&times;22.1 + 1&times;39.2) = 0.75&times;83.4 = <strong>62.5 kip</strong> &#x2714;</p>
+
+        <h4>Step 3 — Bearing on web</h4>
+        <p>t<sub>w</sub> = 0.300&Prime;, F<sub>u,web</sub> = 65 ksi.<br>
+        End bolt: R<sub>n</sub> = min(1.2&times;0.844&times;0.300&times;65, 2.4&times;0.75&times;0.300&times;65) = min(19.7, 35.1) = 19.7 kip.<br>
+        Interior bolt: R<sub>n</sub> = min(1.2&times;2.188&times;0.300&times;65, 35.1) = min(51.2, 35.1) = 35.1 kip.<br>
+        &phi;R<sub>n</sub> = 0.75&times;(2&times;19.7 + 35.1) = 0.75&times;74.5 = <strong>55.9 kip</strong> &#x2714;</p>
+
+        <h4>Step 4 — Plate shear yielding</h4>
+        <p>&phi;R<sub>n</sub> = 1.00&times;0.60&times;36&times;8.5&times;0.375 = <strong>68.9 kip</strong> &#x2714;</p>
+
+        <h4>Step 5 — Plate shear rupture</h4>
+        <p>A<sub>nv</sub> = (8.5 &minus; 3&times;0.8125)&times;0.375 = 6.063&times;0.375 = 2.273 in&sup2;.<br>
+        &phi;R<sub>n</sub> = 0.75&times;0.60&times;58&times;2.273 = <strong>59.4 kip</strong> &#x2714;</p>
+
+        <h4>Step 6 — Block shear</h4>
+        <p>A<sub>gv</sub> = (2&times;3 + 1.25)&times;0.375 = 7.25&times;0.375 = 2.719 in&sup2;.<br>
+        A<sub>nv</sub> = (7.25 &minus; 2.5&times;0.8125)&times;0.375 = 5.219&times;0.375 = 1.957 in&sup2;.<br>
+        A<sub>nt</sub> = (1.5 &minus; 0.8125/2)&times;0.375 = 1.094&times;0.375 = 0.410 in&sup2;.<br>
+        R<sub>n</sub> = min(0.60&times;58&times;1.957 + 58&times;0.410, 0.60&times;36&times;2.719 + 58&times;0.410) = min(91.9, 82.6) = 82.6 kip.<br>
+        &phi;R<sub>n</sub> = 0.75&times;82.6 = <strong>62.0 kip</strong> &#x2714;</p>
+
+        <p><strong>Governing: Bolt shear, &phi;R<sub>n,min</sub> = 47.7 kip. DCR = 40/47.7 = 0.84</strong> &#x2714;</p>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /bg-section -->
+
+</main>
+
+<script>
+var unit = 'us';
+var beamTw = 0, beamFu = 0, beamD = 0, beamTf = 0;
+
+var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482;
+
+// Bolt grades: [label, Fnv_ksi, Fnv_MPa]
+var BOLT_GRADES = [
+  ['A325-N (Group A, threads incl.)', 48, 330],
+  ['A325-X (Group A, threads excl.)', 54, 372],
+  ['A490-N (Group B, threads incl.)', 60, 414],
+  ['A490-X (Group B, threads excl.)', 68, 469]
+];
+
+// Bolt diameters US: [label, db_in]
+var BOLT_DIA_US = [
+  ['1/2"', 0.500],['5/8"', 0.625],['3/4"', 0.750],['7/8"', 0.875],
+  ['1"', 1.000],['1-1/8"', 1.125],['1-1/4"', 1.250]
+];
+// Bolt diameters SI: [label, db_mm]
+var BOLT_DIA_SI = [
+  ['M16', 16],['M20', 20],['M22', 22],['M24', 24],['M27', 27],['M30', 30]
+];
+
+// Plate grades: [label, Fy_ksi, Fu_ksi, Fy_MPa, Fu_MPa]
+var PLATE_GRADES = [
+  ['A36',        36,  58,  250, 400],
+  ['A572 Gr50',  50,  65,  345, 450],
+  ['A572 Gr65',  65,  80,  450, 550],
+  ['S235',       34,  54,  235, 360],
+  ['S275',       40,  57,  275, 390],
+  ['S355',       51,  66,  355, 490]
+];
+
+// Beam types
+var BEAM_TYPES_US = [{k:'W',lb:'W Shapes'},{k:'HP',lb:'HP Shapes'}];
+var BEAM_TYPES_SI = [
+  {k:'IPE',lb:'IPE'},{k:'HEA',lb:'HEA'},{k:'HEB',lb:'HEB'},
+  {k:'UPN',lb:'UPN (Channel)'}
+];
+
+// Default Fu by type (ksi / MPa)
+var TYPE_FU = {
+  W:65, HP:65,
+  IPE:490, HEA:490, HEB:490,
+  UPN:430
+};
+
+function el(id){return document.getElementById(id);}
+function v(id){var e=el(id);return e?parseFloat(e.value)||0:0;}
+function set(id,val){var e=el(id);if(e)e.textContent=val;}
+function fmt(x,d){if(!isFinite(x)||isNaN(x))return'—';return x.toFixed(d===undefined?2:d);}
+function dcrCls(dcr){return dcr<=0.9?'ok':dcr<=1.0?'warn':'err';}
+function setClass(id,cls){var e=el(id);if(!e)return;e.className=e.className.replace(/\b(ok|warn|err)\b/g,'').trim();if(cls)e.classList.add(cls);}
+
+document.addEventListener('DOMContentLoaded',function(){
+  buildBeamTypeDropdown();
+  buildBoltDropdowns();
+  buildPlateGradeDropdown();
+  onBeamTypeChange();
+  el('ph-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  el('pf-date2').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+});
+
+/* ── Unit switching ── */
+function setUnit(u){
+  var old=unit; unit=u;
+  el('btn-us').classList.toggle('active',u==='us');
+  el('btn-si').classList.toggle('active',u==='si');
+  if(old!==u){
+    if(u==='si'){
+      el('inp-Vu').value='130';
+      el('inp-s').value='76';
+      el('inp-ev').value='32';
+      el('inp-eh').value='38';
+      el('inp-tp').value='10';
+      el('inp-bp').value='90';
+    } else {
+      el('inp-Vu').value='30';
+      el('inp-s').value='3';
+      el('inp-ev').value='1.25';
+      el('inp-eh').value='1.5';
+      el('inp-tp').value='0.375';
+      el('inp-bp').value='3.5';
+    }
+  }
+  var lu=u==='us'?'in':'mm', fu=u==='us'?'kip':'kN';
+  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-eh':lu,'lbl-tp':lu,'lbl-bp':lu};
+  Object.keys(lblMap).forEach(function(id){var e=el(id);if(e)e.textContent='['+lblMap[id]+']';});
+  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-eh':lu,'su-tp':lu,'su-bp':lu};
+  Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
+  el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
+  el('rv-phi-rn-u').textContent=fu;
+  el('rv-hp-u').textContent=lu;
+  buildBeamTypeDropdown();
+  buildBoltDropdowns();
+  buildPlateGradeDropdown();
+  onBeamTypeChange();
+}
+
+/* ── Profile dropdowns ── */
+function buildBeamTypeDropdown(){
+  var sel=el('beamType'); sel.innerHTML='';
+  var types=unit==='us'?BEAM_TYPES_US:BEAM_TYPES_SI;
+  types.forEach(function(t){var o=document.createElement('option');o.value=t.k;o.textContent=t.lb;sel.appendChild(o);});
+}
+
+function onBeamTypeChange(){
+  var type=el('beamType').value;
+  var SP=window.SteelProfiles; if(!SP) return;
+  var dd=SP.getProfileDropdown(type);
+  var sel=el('beamProfile'); sel.innerHTML='';
+  dd.names.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  if(dd.names.length>0) sel.selectedIndex=Math.min(Math.floor(dd.names.length*0.35),dd.names.length-1);
+  onBeamProfileChange();
+}
+
+function onBeamProfileChange(){
+  var type=el('beamType').value, name=el('beamProfile').value;
+  var SP=window.SteelProfiles; if(!SP) return;
+  var row=SP.getProfileProperties(type,name); if(!row) return;
+
+  var d,tw,tf;
+  if(type==='W'||type==='HP'){
+    // W: [name,d_in,bf_in,tf_in,tw_in,...]
+    d=row[1]; tf=row[3]; tw=row[4];
+    beamFu=TYPE_FU[type]; // ksi
+  } else if(type==='IPE'||type==='HEA'||type==='HEB'||type==='HEM'||type==='HD'){
+    // EN open: [name,h,b,tw,tf,...]
+    d=row[1]; tf=row[4]; tw=row[3];
+    beamFu=TYPE_FU[type]; // MPa
+  } else if(type==='UPN'||type==='UPE'){
+    // EN channel: [name,h,b,tw,tf,...]
+    d=row[1]; tf=row[4]; tw=row[3];
+    beamFu=TYPE_FU['UPN'];
+  } else { return; }
+
+  beamD=d; beamTw=tw; beamTf=tf;
+
+  var lu=unit==='us'?'in':'mm', su=unit==='us'?'ksi':'MPa';
+  set('pi-d', fmt(d,unit==='us'?2:0)+' '+lu);
+  set('pi-tw', fmt(tw,unit==='us'?3:1)+' '+lu);
+  set('pi-tf', fmt(tf,unit==='us'?3:1)+' '+lu);
+  set('pi-Fu', fmt(beamFu,0)+' '+su);
+  calc();
+}
+
+/* ── Bolt dropdowns ── */
+function buildBoltDropdowns(){
+  // Grade
+  var gSel=el('inp-bolt-grade'); gSel.innerHTML='';
+  BOLT_GRADES.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
+  gSel.selectedIndex=0;
+  // Diameter
+  var dSel=el('inp-db'); dSel.innerHTML='';
+  var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  sizes.forEach(function(s,i){var o=document.createElement('option');o.value=i;o.textContent=s[0];dSel.appendChild(o);});
+  dSel.selectedIndex=unit==='us'?2:1; // 3/4" or M20
+}
+
+/* ── Plate grade dropdown ── */
+function buildPlateGradeDropdown(){
+  var sel=el('inp-plate-grade'); sel.innerHTML='';
+  var idxs=unit==='us'?[0,1,2]:[3,4,5];
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=PLATE_GRADES[i][0];sel.appendChild(o);});
+  sel.selectedIndex=0;
+}
+
+/* ── Main calculation ── */
+function calc(){
+  if(!beamTw) return;
+
+  var Vu     = v('inp-Vu');
+  var n      = parseInt((el('inp-n')||{}).value)||3;
+  var boltGi = parseInt((el('inp-bolt-grade')||{}).value)||0;
+  var dbIdx  = parseInt((el('inp-db')||{}).value)||2;
+  var s      = v('inp-s');
+  var ev     = v('inp-ev');
+  var eh     = v('inp-eh');
+  var tp     = v('inp-tp');
+  var bp     = v('inp-bp');
+  var pgIdx  = parseInt((el('inp-plate-grade')||{}).value)||0;
+
+  var pg = PLATE_GRADES[pgIdx];
+  var Fy_pl = unit==='us' ? pg[1] : pg[3];
+  var Fu_pl = unit==='us' ? pg[2] : pg[4];
+
+  var Fnv   = unit==='us' ? BOLT_GRADES[boltGi][1] : BOLT_GRADES[boltGi][2];
+  var sizes = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
+  var db    = sizes[dbIdx][1];
+
+  var Fu_web = beamFu; // ksi or MPa
+  var tw     = beamTw; // in or mm
+
+  var phi_bolt  = 0.75;
+  var phi_brg   = 0.75;
+  var phi_yield = 1.00;
+  var phi_rupt  = 0.75;
+  var phi_bs    = 0.75;
+
+  // Standard hole diameter
+  var dh = unit==='us' ? db + 1/16 : db + 2;
+  var Ab = Math.PI/4 * db * db;
+  var hp = (n-1)*s + 2*ev;
+
+  // 1. Bolt shear
+  var phi_Rnv = phi_bolt * Fnv * Ab * n;
+
+  // 2. Bearing on plate
+  var phi_Rbrg_pl = brgCap(n, db, dh, s, ev, tp, Fu_pl, phi_brg);
+
+  // 3. Bearing on web
+  var phi_Rbrg_web = brgCap(n, db, dh, s, ev, tw, Fu_web, phi_brg);
+
+  // 4. Plate shear yielding
+  var phi_Rsy = phi_yield * 0.60 * Fy_pl * hp * tp;
+
+  // 5. Plate shear rupture
+  var Anv_rupt = (hp - n*dh) * tp;
+  var phi_Rsr  = phi_rupt * 0.60 * Fu_pl * Math.max(Anv_rupt, 0);
+
+  // 6. Block shear on plate
+  var Agv_bs = ((n-1)*s + ev) * tp;
+  var Anv_bs = Math.max(Agv_bs - (n-0.5)*dh*tp, 0);
+  var Ant_bs = Math.max((eh - dh/2) * tp, 0);
+  var Ubs = 1.0;
+  var Rbs_a = 0.60*Fu_pl*Anv_bs + Ubs*Fu_pl*Ant_bs;
+  var Rbs_b = 0.60*Fy_pl*Agv_bs + Ubs*Fu_pl*Ant_bs;
+  var phi_Rbs = phi_bs * Math.min(Rbs_a, Rbs_b);
+
+  var checks = [
+    {name:'Bolt shear §J3.6',          phi_Rn: phi_Rnv,      detail: fmt(phi_Rnv,unit==='us'?1:0)},
+    {name:'Bearing on plate §J3.10',   phi_Rn: phi_Rbrg_pl,  detail: fmt(phi_Rbrg_pl,unit==='us'?1:0)},
+    {name:'Bearing on web §J3.10',     phi_Rn: phi_Rbrg_web, detail: fmt(phi_Rbrg_web,unit==='us'?1:0)},
+    {name:'Plate shear yield §J4.2',   phi_Rn: phi_Rsy,      detail: fmt(phi_Rsy,unit==='us'?1:0)},
+    {name:'Plate shear rupture §J4.2', phi_Rn: phi_Rsr,      detail: fmt(phi_Rsr,unit==='us'?1:0)},
+    {name:'Block shear §J4.3',         phi_Rn: phi_Rbs,      detail: fmt(phi_Rbs,unit==='us'?1:0)}
+  ];
+
+  var phi_Rn_min = Infinity, govIdx = 0;
+  checks.forEach(function(c,i){if(c.phi_Rn < phi_Rn_min){phi_Rn_min=c.phi_Rn; govIdx=i;}});
+  var DCR = Vu > 0 && phi_Rn_min > 0 ? Vu/phi_Rn_min : 0;
+
+  var forU = unit==='us'?'kip':'kN';
+  var lenU = unit==='us'?'in':'mm';
+
+  // Summary strip
+  set('rv-dcr',   fmt(DCR,3));
+  set('rv-gov',   checks[govIdx].name);
+  set('rv-phi-rn',fmt(phi_Rn_min,unit==='us'?1:0)+' '+forU);
+  set('rv-hp',    fmt(hp,unit==='us'?2:0));
+
+  // DCR Banner
+  var banner=el('dcr-banner');
+  var cls=dcrCls(DCR);
+  banner.className='dcr-banner '+cls;
+  var icon=cls==='ok'?'&#x2714;':cls==='warn'?'&#x26A0;':'&#x2716;';
+  set('dcr-icon', '');
+  el('dcr-icon').innerHTML=icon;
+  var govStr=checks[govIdx].name+' governs';
+  set('dcr-text-main', cls==='ok'?'OK — Connection adequate':cls==='warn'?'Warning — Near capacity':'FAIL — Inadequate capacity');
+  set('dcr-text-sub',  govStr+' · DCR = '+fmt(DCR,3));
+
+  // Capacity table
+  var tbody=el('cap-tbl-body'); tbody.innerHTML='';
+  checks.forEach(function(c,i){
+    var dcr = Vu>0&&c.phi_Rn>0 ? Vu/c.phi_Rn : 0;
+    var cls2 = dcrCls(dcr);
+    var tr=document.createElement('tr');
+    var isGov = i===govIdx && Vu>0;
+    tr.innerHTML='<td style="font-size:.78rem"'+(isGov?' class="gov"':'')+'>'+c.name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)"'+( isGov?' class="gov"':'')+'>'+fmt(c.phi_Rn,unit==='us'?1:0)+' '+forU+'</td>'
+      +'<td class="'+cls2+'" style="text-align:right">'+fmt(dcr,3)+(isGov?' &#x25C4;':'')+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Input summary
+  var ibody=el('inp-body'); ibody.innerHTML='';
+  var boltName=sizes[dbIdx][0], gradeName=BOLT_GRADES[boltGi][0].split(' ')[0];
+  var rows=[
+    ['Beam',el('beamProfile').value],
+    ['Vᵤ', fmt(Vu,unit==='us'?1:0)+' '+forU],
+    ['Bolt grade', gradeName],
+    ['Bolt dᵇ', boltName+' ('+fmt(db,unit==='us'?3:0)+' '+lenU+')'],
+    ['n \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,unit==='us'?3:0)+' + 2\xD7'+fmt(ev,unit==='us'?3:0)+' = '+fmt(hp,unit==='us'?3:0)+' '+lenU],
+    ['Plate tₚ \xD7 bₚ', fmt(tp,unit==='us'?3:0)+' \xD7 '+fmt(bp,unit==='us'?3:0)+' '+lenU],
+    ['Plate grade', pg[0]]
+  ];
+  rows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';ibody.appendChild(tr);});
+
+  // Detail table
+  var dbody=el('detail-body'); dbody.innerHTML='';
+  var areaU=unit==='us'?'in\xB2':'mm\xB2';
+  var drows=[
+    ['Hole diam. dₕ', fmt(dh,unit==='us'?4:1)+' '+lenU],
+    ['Bolt area Aᵇ', fmt(Ab,unit==='us'?4:0)+' '+areaU],
+    ['Plate height hₚ (computed)', fmt(hp,unit==='us'?2:0)+' '+lenU],
+    ['Fₙᵥ (bolt shear stress)', fmt(Fnv,0)+' '+(unit==='us'?'ksi':'MPa')],
+    ['Fᵧ,ₚℓ / Fᵤ,ₚℓ (plate)', fmt(Fy_pl,0)+' / '+fmt(Fu_pl,0)+' '+(unit==='us'?'ksi':'MPa')],
+    ['tᵂ (beam web)', fmt(tw,unit==='us'?3:1)+' '+lenU],
+    ['Fᵤ (beam)', fmt(Fu_web,0)+' '+(unit==='us'?'ksi':'MPa')]
+  ];
+  drows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';dbody.appendChild(tr);});
+
+  drawSVG(n, s, ev, eh, tp, bp, hp, db, Vu, unit);
+}
+
+/* ── Bearing capacity helper ── */
+function brgCap(n, db, dh, s, ev, t, Fu, phi){
+  var lc_end = ev - dh/2;
+  var lc_int = s - dh;
+  var Rn_end = Math.min(1.2*Math.max(lc_end,0)*t*Fu, 2.4*db*t*Fu);
+  var Rn_int = Math.min(1.2*Math.max(lc_int,0)*t*Fu, 2.4*db*t*Fu);
+  var nEnd = Math.min(n, 2); // top + bottom edge bolts
+  var nInt = n - nEnd;
+  return phi * (nEnd * Rn_end + nInt * Rn_int);
+}
+
+/* ── SVG elevation diagram ── */
+function drawSVG(n, s, ev, eh, tp, bp, hp, db, Vu, unit){
+  var svg = el('st-svg'); if(!svg) return;
+
+  var W=260, H=280;
+  var margin=36, extraTop=30;
+
+  // Scale: fit hp into available height
+  var availH = H - 2*margin - extraTop - 20;
+  var availW = W - 2*margin - 80;
+  var scale = Math.min(availH/Math.max(hp,1), availW/Math.max(bp+30,1), 2.5);
+
+  var px0 = margin + 60; // plate left x
+  var py0 = margin + extraTop; // plate top y
+  var pW  = bp * scale;
+  var pH  = hp * scale;
+
+  // Colors
+  var col_plate='#4a7fb5', col_bolt='#1a2332', col_web='#888', col_dim='#555', col_arrow='#d04020';
+
+  var html='';
+
+  // Shear arrow (Vu)
+  var arrowX = px0 - 30;
+  var arrowMid = py0 + pH/2;
+  var arrowLen = Math.min(24, pH*0.35);
+  html += '<defs><marker id="ah" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">'
+        + '<polygon points="0 0,7 2.5,0 5" fill="'+col_arrow+'"/></marker>'
+        + '<marker id="dh" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">'
+        + '<line x1="0" y1="0" x2="6" y2="6" stroke="'+col_dim+'" stroke-width="0.8"/>'
+        + '<line x1="6" y1="0" x2="0" y2="6" stroke="'+col_dim+'" stroke-width="0.8"/></marker></defs>';
+
+  // Beam web (simplified — a thick line to the left of plate)
+  var webX = px0 - 2;
+  html += '<line x1="'+webX+'" y1="'+(py0-6)+'" x2="'+webX+'" y2="'+(py0+pH+6)+'" stroke="'+col_web+'" stroke-width="8" stroke-linecap="round"/>';
+
+  // Plate rectangle
+  html += '<rect x="'+px0+'" y="'+py0+'" width="'+pW+'" height="'+pH+'"'
+        + ' fill="rgba(74,127,181,0.18)" stroke="'+col_plate+'" stroke-width="1.8" rx="1"/>';
+
+  // Bolt holes
+  var boltX = px0 + pW/2; // centered in plate
+  for(var i=0;i<n;i++){
+    var by = py0 + ev*scale + i*s*scale;
+    var br = Math.max(2.5, db*scale*0.38);
+    html += '<circle cx="'+boltX+'" cy="'+by+'" r="'+br+'" fill="white" stroke="'+col_bolt+'" stroke-width="1.4"/>';
+    // crosshair
+    html += '<line x1="'+(boltX-br)+'" y1="'+by+'" x2="'+(boltX+br)+'" y2="'+by+'" stroke="'+col_bolt+'" stroke-width="0.6"/>';
+    html += '<line x1="'+boltX+'" y1="'+(by-br)+'" x2="'+boltX+'" y2="'+(by+br)+'" stroke="'+col_bolt+'" stroke-width="0.6"/>';
+  }
+
+  // Shear arrow
+  html += '<line x1="'+arrowX+'" y1="'+(arrowMid-arrowLen)+'" x2="'+arrowX+'" y2="'+(arrowMid+arrowLen)+'" stroke="'+col_arrow+'" stroke-width="1.5" marker-end="url(#ah)"/>';
+  html += '<text x="'+(arrowX-4)+'" y="'+(arrowMid-arrowLen-5)+'" text-anchor="middle" font-size="9" fill="'+col_arrow+'" font-family="monospace">Vu</text>';
+
+  var lu = unit==='us'?'in':'mm';
+  // Dimension: plate height hp (right side)
+  var dimX2 = px0 + pW + 22;
+  html += '<line x1="'+dimX2+'" y1="'+py0+'" x2="'+dimX2+'" y2="'+(py0+pH)+'" stroke="'+col_dim+'" stroke-width="1" marker-start="url(#dh)" marker-end="url(#dh)"/>';
+  var hpLabel = (unit==='us'?'hp='+hp.toFixed(2):' hp='+Math.round(hp))+lu;
+  html += '<text x="'+(dimX2+5)+'" y="'+(py0+pH/2)+'" font-size="8" fill="'+col_dim+'" font-family="sans-serif" dominant-baseline="middle">'+hpLabel+'</text>';
+
+  // Dimension: ev (top edge)
+  if(n>0){
+    var dimEv = px0 + pW + 22;
+    // ev label above first bolt
+    var firstBoltY = py0 + ev*scale;
+    html += '<text x="'+(px0-10)+'" y="'+(py0+ev*scale*0.5)+'" font-size="7.5" fill="'+col_dim+'" text-anchor="end" font-family="sans-serif" dominant-baseline="middle">ev</text>';
+    html += '<line x1="'+(px0-6)+'" y1="'+(py0+2)+'" x2="'+(px0-6)+'" y2="'+(firstBoltY-2)+'" stroke="'+col_dim+'" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  }
+
+  // Dimension: bolt spacing s (between first and second bolt if n>=2)
+  if(n>=2){
+    var b0y = py0 + ev*scale;
+    var b1y = py0 + ev*scale + s*scale;
+    html += '<text x="'+(px0-10)+'" y="'+(b0y+s*scale/2)+'" font-size="7.5" fill="'+col_dim+'" text-anchor="end" font-family="sans-serif" dominant-baseline="middle">s</text>';
+    html += '<line x1="'+(px0-6)+'" y1="'+(b0y+2)+'" x2="'+(px0-6)+'" y2="'+(b1y-2)+'" stroke="'+col_dim+'" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  }
+
+  // Plate width label
+  html += '<text x="'+(px0+pW/2)+'" y="'+(py0+pH+16)+'" text-anchor="middle" font-size="8" fill="'+col_dim+'" font-family="sans-serif">'
+        + 'bp='+(unit==='us'?bp.toFixed(3):Math.round(bp))+lu+'</text>';
+
+  // Title label
+  html += '<text x="'+(W/2)+'" y="16" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1a2332" font-family="sans-serif">Elevation — Single Bolt Row</text>';
+
+  svg.innerHTML = html;
+}
+</script>
+</body>
+</html>
