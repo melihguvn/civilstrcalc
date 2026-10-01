@@ -25,6 +25,7 @@
     if (/\/steel-ltb(\.html)?$/.test(P))               return 'steelltb';
     if (/\/truss-design(\.html)?$/.test(P))            return 'steeltruss';
     if (/\/steel-base-plate(\.html)?$/.test(P))       return 'steelbp';
+    if (/\/steel-shear-tab(\.html)?$/.test(P))        return 'steelsheartab';
     if (/\/composite-beam(\.html)?$/.test(P))            return 'compbeam';
     if (/\/cfst-column(\.html)?$/.test(P))               return 'cfstcol';
     if (/\/composite-column-src(\.html)?$/.test(P))      return 'srccol';
@@ -249,13 +250,14 @@
         sub('/pages/retaining-wall-ec2',    'Eurocode 2',              'retwall-ec2') +
         sub('/pages/retaining-wall-tsc',    'TSC 2018',               'retwall-tsc'))) +
     '<div class=”sh-div”></div>' +
-    sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss','steelbp'],
+    sect('Steel Design', ['steelfd','steelaxi','steelbc','steelltb','steeltruss','steelbp','steelsheartab'],
       item('/pages/steel-flexural',    ic.st_flx, 'Flexural Design',        'steelfd') +
       item('/pages/steel-axial',       ic.st_axi, 'Axial (Column) Design',  'steelaxi') +
       item('/pages/steel-combined',    ic.st_bc,  'Combined (Beam-Column)', 'steelbc') +
       item('/pages/steel-ltb',         ic.st_ltb, 'LTB Check',              'steelltb') +
       item('/pages/truss-design',      ic.st_trs, 'Truss Design',           'steeltruss') +
-      item('/pages/steel-base-plate',  ic.st_bp,  'Base Plate Design',      'steelbp')) +
+      item('/pages/steel-base-plate',  ic.st_bp,  'Base Plate Design',      'steelbp') +
+      item('/pages/steel-shear-tab',   ic.st_bp,  'Shear Tab Connection',   'steelsheartab')) +
     '<div class=”sh-div”></div>' +
     sect('Composite Design', ['compbeam','cfstcol','srccol'],
       item('/pages/composite-beam',       ic.comp, 'Composite Beam Design', 'compbeam') +
