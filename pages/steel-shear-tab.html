@@ -227,6 +227,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Profile</label>
     <select id="beamProfile" class="bp-sel" onchange="onBeamProfileChange()"></select>
   </div>
+  <div class="form-group">
+    <label>Beam material</label>
+    <select id="beamMaterial" class="bp-sel" onchange="calc()"></select>
+  </div>
 
   <!-- Load -->
   <div class="form-div"><div class="form-div-lbl">Applied Load (LRFD)</div></div>
@@ -275,11 +279,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <div class="iw"><input type="number" id="inp-ev" value="1.25" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-ev">in</span></div>
     </div>
   </div>
-  <div class="form-group">
-    <label>Horiz. edge dist e<sub>h</sub> <span class="unit-lbl" id="lbl-eh">[in]</span> <span style="font-size:.68rem;opacity:.65">(bolt CL to free plate edge)</span></label>
-    <div class="iw"><input type="number" id="inp-eh" value="1.5" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-eh">in</span></div>
-  </div>
-
   <!-- Plate -->
   <div class="form-div"><div class="form-div-lbl">Shear Plate</div></div>
   <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -592,6 +591,7 @@ document.addEventListener('DOMContentLoaded',function(){
   buildBeamTypeDropdown();
   buildBoltDropdowns();
   buildPlateGradeDropdown();
+  buildBeamMaterialDropdown();
   onBeamTypeChange();
   el('ph-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
   el('pf-date2').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
@@ -607,22 +607,20 @@ function setUnit(u){
       el('inp-Vu').value='130';
       el('inp-s').value='76';
       el('inp-ev').value='32';
-      el('inp-eh').value='38';
       el('inp-tp').value='10';
       el('inp-bp').value='90';
     } else {
       el('inp-Vu').value='30';
       el('inp-s').value='3';
       el('inp-ev').value='1.25';
-      el('inp-eh').value='1.5';
       el('inp-tp').value='0.375';
       el('inp-bp').value='3.5';
     }
   }
   var lu=u==='us'?'in':'mm', fu=u==='us'?'kip':'kN';
-  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-eh':lu,'lbl-tp':lu,'lbl-bp':lu};
+  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-tp':lu,'lbl-bp':lu};
   Object.keys(lblMap).forEach(function(id){var e=el(id);if(e)e.textContent='['+lblMap[id]+']';});
-  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-eh':lu,'su-tp':lu,'su-bp':lu};
+  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu};
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
   el('rv-phi-rn-u').textContent=fu;
@@ -630,6 +628,7 @@ function setUnit(u){
   buildBeamTypeDropdown();
   buildBoltDropdowns();
   buildPlateGradeDropdown();
+  buildBeamMaterialDropdown();
   onBeamTypeChange();
 }
 
@@ -697,6 +696,14 @@ function buildPlateGradeDropdown(){
   sel.selectedIndex=0;
 }
 
+/* ── Beam material dropdown ── */
+function buildBeamMaterialDropdown(){
+  var sel=el('beamMaterial'); sel.innerHTML='';
+  var idxs=unit==='us'?[0,1,2]:[3,4,5];
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=PLATE_GRADES[i][0];sel.appendChild(o);});
+  sel.selectedIndex=unit==='us'?1:2; // A572-50 for US, S355 for SI
+}
+
 /* ── Main calculation ── */
 function calc(){
   if(!beamTw) return;
@@ -707,22 +714,24 @@ function calc(){
   var dbIdx  = parseInt((el('inp-db')||{}).value)||2;
   var s      = v('inp-s');
   var ev     = v('inp-ev');
-  var eh     = v('inp-eh');
   var tp     = v('inp-tp');
   var bp     = v('inp-bp');
+  var eh     = bp / 2; // single bolt row — bolt centered on plate width
   var pgIdx  = parseInt((el('inp-plate-grade')||{}).value)||0;
+  var bmIdx  = parseInt((el('beamMaterial')||{}).value)||0;
 
   var pg = PLATE_GRADES[pgIdx];
   var Fy_pl = unit==='us' ? pg[1] : pg[3];
   var Fu_pl = unit==='us' ? pg[2] : pg[4];
+
+  var bm = PLATE_GRADES[bmIdx];
+  var Fu_web = unit==='us' ? bm[2] : bm[4];
 
   var grades    = unit==='us' ? BOLT_GRADES_US : BOLT_GRADES_SI;
   var threadsIn = el('inp-threads') ? el('inp-threads').checked : true;
   var Fnv       = threadsIn ? grades[boltGi][1] : grades[boltGi][2];
   var sizes     = unit==='us' ? BOLT_DIA_US : BOLT_DIA_SI;
   var db    = sizes[dbIdx][1];
-
-  var Fu_web = beamFu; // ksi or MPa
   var tw     = beamTw; // in or mm
 
   var phi_bolt  = 0.75;
@@ -811,7 +820,7 @@ function calc(){
   var ibody=el('inp-body'); ibody.innerHTML='';
   var boltName=sizes[dbIdx][0], gradeName=grades[boltGi][0];
   var rows=[
-    ['Beam',el('beamProfile').value],
+    ['Beam', el('beamProfile').value+' ('+bm[0]+')'],
     ['Vᵤ', fmt(Vu,unit==='us'?1:0)+' '+forU],
     ['Bolt grade', gradeName+' ('+(threadsIn?'N':'X')+')'],
     ['Bolt dᵇ', boltName+' ('+fmt(db,unit==='us'?3:0)+' '+lenU+')'],
