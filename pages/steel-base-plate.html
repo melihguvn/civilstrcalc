@@ -392,6 +392,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="report-hdr">
       <h4>Base Plate Design &mdash; AISC DG1 / ACI 318-25</h4>
       <span class="rh-code" id="rh-unit-lbl">kip &middot; in</span>
+      <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+      <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
       <button class="print-btn" onclick="window.print()" style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;padding:4px 12px;font-size:.72rem;cursor:pointer">&#128424; Print / PDF</button>
     </div>
     <div class="report-body">
@@ -686,7 +688,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         <div class="fml-blk">
           <span class="fml-eq">n<sub>rat</sub> &le; 0.2: &nbsp; DCR = v<sub>rat</sub> &nbsp;&nbsp; (full shear capacity governs)</span>
           <span class="fml-eq">v<sub>rat</sub> &le; 0.2: &nbsp; DCR = n<sub>rat</sub> &nbsp;&nbsp; (full tension capacity governs)</span>
-          <span class="fml-eq">otherwise: &nbsp; (N<sub>ua</sub>/&phi;N<sub>n</sub>)<sup>5/3</sup> + (V<sub>ua</sub>/&phi;V<sub>n</sub>)<sup>5/3</sup> &le; 1.0</span>
+          <span class="fml-eq">otherwise: &nbsp; (N<sub>ua</sub>/&phi;N<sub>n</sub>)<sup>5&#8260;3</sup> + (V<sub>ua</sub>/&phi;V<sub>n</sub>)<sup>5&#8260;3</sup> &le; 1.0</span>
           <span class="ft">&phi;N<sub>n</sub> = min governing anchor tension capacity; &phi;V<sub>n</sub> = min governing anchor shear capacity</span>
         </div>
       </div>
@@ -1136,7 +1138,7 @@ function suggestDims(){
   var a2a1 = Math.min(Math.max(v('inp-a2a1')||1.0, 1.0), 4.0);
 
   // Compute anchor edge distance for this rod selection
-  var daIdx_s = parseInt((el('inp-da')||{value:'4'}).value)||4;
+  var daIdx_s = el('inp-da') ? parseInt(el('inp-da').value) : 4;
   var sizes_s = unit==='us' ? ANCH_SIZES_US : ANCH_SIZES_SI;
   var da_s = sizes_s[Math.min(daIdx_s, sizes_s.length-1)][1];
   var minEdge_s = unit==='us' ? 1.5 : 38;
@@ -1185,7 +1187,7 @@ function calc(){
   var fc   = v('inp-fc');
   var a2a1 = Math.min(Math.max(v('inp-a2a1')||1.0, 1.0), 4.0);
   var nAnch  = parseInt((el('inp-nAnch')||{value:'4'}).value)||4;
-  var daIdx  = parseInt((el('inp-da')||{value:'4'}).value)||4;
+  var daIdx  = el('inp-da') ? parseInt(el('inp-da').value) : 4;
   var grIdx  = parseInt((el('inp-grade')||{value:'0'}).value)||0;
   var hef  = v('inp-hef');
   var ca_min_raw = parseFloat((el('inp-ca-min')||{}).value)||0; // 0 = not specified
@@ -1444,7 +1446,7 @@ function calc(){
   if(T_anch_y>0&&phi_Nt_min>0) dcrRows2.push(['Anchor tension (y)',fmt(DCR_anch_Ty,3),DCR_anch_Ty,'Ty / φNt = '+fmt(phi_Nt_min,1)+' '+forU]);
   if(Vua>0) dcrRows2.push(['Pryout §§17.7.3',fmt(DCR_pryout,3),DCR_pryout,'V / φVcpg = '+fmt(phi_Vcpg,1)+' '+forU]);
   if(phi_Vcbg_sv!==null&&Vua>0) dcrRows2.push(['Shear breakout §17.7.2',fmt(DCR_vbrk,3),DCR_vbrk,'V / φVcbg = '+fmt(phi_Vcbg_sv,1)+' '+forU]);
-  if(DCR_interact>0) dcrRows2.push(['T-V interaction §17.8',fmt(DCR_interact,3),DCR_interact,'(N/φN)⁽\xB3⁄⁵ + (V/φV)⁽\xB3⁄⁵']);
+  if(DCR_interact>0) dcrRows2.push(['T-V interaction §17.8',fmt(DCR_interact,3),DCR_interact,'(N/φN)<sup>5/3</sup> + (V/φV)<sup>5/3</sup>']);
   if(Nua_pull>0) dcrRows2.push(['Pullout §17.6.3',fmt(DCR_pullout,3),DCR_pullout,'T / φNpn·n = '+fmt(phi_Npn_grp,unit==='us'?1:0)+' '+forU]);
   var dtb=el('dcr-tbl-body'),dcrSec=el('dcr-breakdown-sec');
   if(dtb&&dcrSec){
@@ -1485,9 +1487,11 @@ function calc(){
     govStr = 'Pryout DCR = '+fmt(DCR_pryout,3);
   } else if(DCR_vbrk>=maxSh && DCR_vbrk>=maxAnchT && DCR_vbrk>0){
     govStr = 'Shear Brk DCR = '+fmt(DCR_vbrk,3);
-  } else if(maxAnchT>=maxSh){
+  } else if(maxAnchT>=maxSh && maxAnchT>=maxAnchV){
     var pullGov = phi_Npn_grp <= phi_Nsa_grp && phi_Npn_grp <= phi_Ncbg;
     govStr = (pullGov?'Pullout':'Anchor T')+' DCR = '+fmt(maxAnchT,3);
+  } else if(maxAnchV>maxSh){
+    govStr = 'Anchor shear DCR = '+fmt(maxAnchV,3);
   } else {
     govStr = 'Shear (fric) DCR = '+fmt(maxSh,3);
   }
@@ -1498,23 +1502,27 @@ function calc(){
   if(ms) ms.textContent = 'Governing: ' + govStr;
 
   // ── Group DCR tiles ──
-  var DCR_bolt = Math.max(DCR_anch_Vx, DCR_anch_Vy, DCR_anch_Tx, DCR_anch_Ty);
+  // T-V interaction is an anchor group check (§17.8); include in Bolt tile, not Concrete
+  var DCR_bolt = Math.max(DCR_anch_Vx, DCR_anch_Vy, DCR_anch_Tx, DCR_anch_Ty, DCR_interact);
   var boltGov;
   if(DCR_bolt <= 0){ boltGov = '—'; }
+  else if(DCR_interact >= Math.max(DCR_anch_Vx, DCR_anch_Vy, DCR_anch_Tx, DCR_anch_Ty)){ boltGov = 'T-V interaction'; }
   else if(Math.max(DCR_anch_Tx,DCR_anch_Ty) >= Math.max(DCR_anch_Vx,DCR_anch_Vy)){ boltGov = 'Anchor tension'; }
   else { boltGov = 'Anchor shear'; }
 
-  var DCR_plate = Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y);
+  // When hasT, bearing fills to capacity by design (fp=φFp); exclude it from DCR tile
+  var DCR_plate = hasT ? Math.max(DCR_shear_x, DCR_shear_y)
+                       : Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y);
   var plateGov;
   if(DCR_plate <= 0){ plateGov = '—'; }
-  else if(DCR_brg_val >= Math.max(DCR_shear_x, DCR_shear_y)){
-    plateGov = hasT ? 'Bearing at cap.' : 'Bearing pressure';
+  else if(!hasT && DCR_brg_val >= Math.max(DCR_shear_x, DCR_shear_y)){
+    plateGov = 'Bearing pressure';
   } else { plateGov = 'Shear friction'; }
 
-  var DCR_conc = Math.max(DCR_pullout, DCR_pryout, DCR_vbrk, DCR_interact);
+  // Concrete tile: only concrete failure modes (all fc-dependent)
+  var DCR_conc = Math.max(DCR_pullout, DCR_pryout, DCR_vbrk);
   var concGov;
   if(DCR_conc <= 0){ concGov = '—'; }
-  else if(DCR_interact >= Math.max(DCR_pullout, DCR_pryout, DCR_vbrk)){ concGov = 'T-V interaction'; }
   else if(DCR_pryout >= Math.max(DCR_pullout, DCR_vbrk)){ concGov = 'Pryout'; }
   else if(DCR_vbrk >= DCR_pullout && DCR_vbrk > 0){ concGov = 'Shear breakout'; }
   else { concGov = 'Pullout'; }
@@ -1607,8 +1615,8 @@ function calc(){
   if(DCR_interact > 0){
     rows.push({num:0,
      desc:'T-V Interaction (§17.8)',
-     form:'(Nua/φNn)^5/3 + (Vua/φVn)^5/3 ≤ 1.0',
-     val: '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')^5/3 + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')^5/3 = '+fmt(DCR_interact,3),
+     form:'(N<sub>ua</sub>/φN<sub>n</sub>)<sup>5/3</sup> + (V<sub>ua</sub>/φV<sub>n</sub>)<sup>5/3</sup> ≤ 1.0',
+     val: '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')<sup>5/3</sup> + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')<sup>5/3</sup> = '+fmt(DCR_interact,3),
      chk: DCR_interact});
   }
   rows.forEach(function(r, i){ r.num = i+1; });
@@ -1654,7 +1662,7 @@ function calc(){
       ? ['φVcbg (breakout)', 'Vb='+fmt(Vb_sv,unit==='us'?1:0)+' '+forU+' | AVc/AVc0='+fmt(AVc_sv/(AVc0_sv||1),2)+(psi_h_V>1.0?' | ψh,V='+fmt(psi_h_V,2):'')+' | φVcbg='+fmt(phi_Vcbg_sv,unit==='us'?1:0)+' '+forU+(Vua>0?' | DCR='+fmt(DCR_vbrk,3):'')]
       : ['φVcbg (breakout)', 'n/a (ca,min not set or Vu = 0)'],
     DCR_interact > 0
-      ? ['T-V Interaction §17.8', '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')^5/3 + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')^5/3 = '+fmt(DCR_interact,3)]
+      ? ['T-V Interaction §17.8', '('+fmt(Nua_tv,1)+'/'+fmt(phi_Nt_min,1)+')<sup>5/3</sup> + ('+fmt(Vua,1)+'/'+fmt(phi_Vn_anch,1)+')<sup>5/3</sup> = '+fmt(DCR_interact,3)]
       : ['T-V Interaction §17.8', 'n/a'],
     (T_anch_x > 0 || T_anch_y > 0)
       ? ['Tension demand T',  'x: '+fmt(T_anch_x,unit==='us'?2:1)+' / y: '+fmt(T_anch_y,unit==='us'?2:1)+' '+forU+' | φNt = '+fmt(phi_Nt_min,unit==='us'?1:0)+' '+forU+' | DCR x: '+fmt(DCR_anch_Tx,3)+' y: '+fmt(DCR_anch_Ty,3)]
@@ -1878,6 +1886,42 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca
   html += '<text x="'+(axX-3)+'" y="'+(axY-axLen-7)+'" text-anchor="middle" font-size="8" fill="#444" font-style="italic">y</text>';
 
   svg.innerHTML = html;
+}
+function saveInputs() {
+  var data = {};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el) {
+    if (el.type === 'radio') { if (el.checked) data[el.id] = el.value; }
+    else if (el.type === 'checkbox') data[el.id] = el.checked;
+    else data[el.id] = el.value;
+  });
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function loadInputs() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id) {
+          var el = document.getElementById(id); if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!data[id];
+          else el.value = data[id];
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          el.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+      } catch(err) { alert('Invalid or incompatible save file.'); }
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
 }
 </script>
 

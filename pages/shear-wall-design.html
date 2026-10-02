@@ -2145,6 +2145,8 @@ function rptHdr(std,m){
   var units=ul(m)?'in &middot; kip &middot; psi':'mm &middot; kN &middot; MPa';
   return '<div class="report-card"><div class="report-hdr"><h4>Calculation Report</h4>'
         +'<span class="rh-code">'+lbl+' &middot; '+units+'</span>'
+        +'<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>'
+        +'<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>'
         +'<button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>'
         +'</div></div>';
 }
@@ -3330,6 +3332,8 @@ function _pmRender(ctx,pts){
   html+='<div class="report-card">';
   html+='<div class="report-hdr"><h4>Calculation Report</h4>';
   html+='<span class="rh-code">'+codeLbl+' &middot; '+unitsTag+'</span>';
+  html+='<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>';
+  html+='<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>';
   html+='<button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>';
   html+='</div>';
   html+='<div class="report-body">';
@@ -3674,6 +3678,42 @@ document.addEventListener('DOMContentLoaded',function(){
     if(_sfInit){['aci','en','is','tbdy'].forEach(function(s){_sfInit(s);});}
   });
 });
+function saveInputs() {
+  var data = {};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el) {
+    if (el.type === 'radio') { if (el.checked) data[el.id] = el.value; }
+    else if (el.type === 'checkbox') data[el.id] = el.checked;
+    else data[el.id] = el.value;
+  });
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function loadInputs() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id) {
+          var el = document.getElementById(id); if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!data[id];
+          else el.value = data[id];
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          el.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+      } catch(err) { alert('Invalid or incompatible save file.'); }
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
+}
 </script>
 </body>
 </html>

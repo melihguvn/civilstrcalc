@@ -491,6 +491,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
         <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
         <span id="res-std-badge" style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">ASCE 7-22 · kN · m</span>
+        <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+        <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
         <button class="pdf-btn" onclick="printReport()" style="margin:0;flex-shrink:0;">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
           Print / PDF
@@ -800,6 +802,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
           <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
           <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">EN 1998-1 · kN · m</span>
+          <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+          <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
           <button class="pdf-btn" onclick="ec8PrintReport()" style="margin:0;flex-shrink:0;">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
             Print / PDF
@@ -1030,6 +1034,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
           <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
           <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">TSC 2018 · kN</span>
+          <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+          <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
           <button class="pdf-btn" onclick="tbdyPrintReport()" style="margin:0;flex-shrink:0;">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
             Print / PDF
@@ -1250,6 +1256,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <div style="background:#1a2332;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
           <span style="font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;white-space:nowrap;">Calculation Result</span>
           <span style="font-size:.68rem;font-weight:600;color:#9ca3af;letter-spacing:.04em;background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px;white-space:nowrap;">IS 1893:2016 · kN</span>
+          <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+          <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
           <button class="pdf-btn" onclick="isPrintReport()" style="margin:0;flex-shrink:0;">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 1h6l4 4v10H4V1z" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M6 9h4M6 11.5h4M6 6.5h2" stroke="#7dd3a8" stroke-width="1.2" stroke-linecap="round"/></svg>
             Print / PDF
@@ -2941,6 +2949,42 @@ function isPrintReport() {
   isUpdateTa();
   isCalc();
 })();
+function saveInputs() {
+  var data = {};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el) {
+    if (el.type === 'radio') { if (el.checked) data[el.id] = el.value; }
+    else if (el.type === 'checkbox') data[el.id] = el.checked;
+    else data[el.id] = el.value;
+  });
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function loadInputs() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id) {
+          var el = document.getElementById(id); if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!data[id];
+          else el.value = data[id];
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          el.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+      } catch(err) { alert('Invalid or incompatible save file.'); }
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
+}
 </script>
 <script src="../shell.js" defer></script>
 </body>

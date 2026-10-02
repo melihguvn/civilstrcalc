@@ -166,30 +166,30 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 @media print{
   @page{margin:6mm 8mm;size:A4}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body{background:white!important;font-size:7pt!important;padding:0!important}
+  body{background:white!important;font-size:8.5pt!important;padding:0!important}
   .no-print,.bg-section,.sub-tabs,.mod-tabs,.page-title,.unit-switcher{display:none!important}
   .print-only{display:flex!important}
-  .print-disclaimer{display:block!important;font-size:5pt!important}
+  .print-disclaimer{display:block!important;font-size:6pt!important}
   .print-footer{display:flex!important}
   .calc-layout{display:block!important}
   .results-col{gap:2px!important}
   .report-card{box-shadow:none!important;border:none!important}
-  .report-hdr{padding:3px 8px!important;background:#1a2332!important}
-  .report-hdr h4{font-size:6.5pt!important}
-  .rh-code{font-size:4.5pt!important}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important}
+  .report-hdr h4{font-size:9pt!important}
+  .rh-code{font-size:6pt!important}
   .print-btn{display:none!important}
-  .report-body{padding:3px 8px!important}
-  .fl-rb{margin-bottom:3px!important;background:#f0f5fb!important}
-  .fl-col{padding:2px 5px!important}
-  .fl-lbl{font-size:4.5pt!important}
-  .fl-val{font-size:.75rem!important}
-  .fl-unit{font-size:4pt!important}
-  .dcr-banner{padding:3px 7px!important;margin-bottom:3px!important}
-  .dcr-icon{font-size:.9rem!important}
-  .dcr-text strong{font-size:6pt!important}
-  .rpt-sec{margin-bottom:3px!important;padding-bottom:3px!important}
-  .rpt-sec-title{font-size:.48rem!important;padding:1px 5px!important;margin-bottom:2px!important}
-  .inp-tbl td,.res-tbl td{padding:1px 4px!important;font-size:6pt!important}
+  .report-body{padding:4px 10px!important}
+  .fl-rb{margin-bottom:4px!important;background:#f0f5fb!important}
+  .fl-col{padding:4px 8px!important}
+  .fl-lbl{font-size:6.5pt!important}
+  .fl-val{font-size:18pt!important}
+  .fl-unit{font-size:5.5pt!important}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important}
+  .dcr-icon{font-size:1rem!important}
+  .dcr-text strong{font-size:8pt!important}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
+  .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
+  .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
   #st-svg{display:none!important}
 }
 </style>
@@ -318,6 +318,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="report-hdr">
       <h4>Shear Tab Connection &mdash; AISC 360-22 Ch. J</h4>
       <span class="rh-code" id="rh-unit-lbl">kip &middot; in</span>
+      <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+      <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
       <button class="print-btn" onclick="window.print()" style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;padding:4px 12px;font-size:.72rem;cursor:pointer">&#128424; Print / PDF</button>
     </div>
     <div class="report-body">
@@ -781,7 +783,7 @@ function calc(){
   var Vu     = v('inp-Vu');
   var n      = parseInt((el('inp-n')||{}).value)||3;
   var boltGi = parseInt((el('inp-bolt-grade')||{}).value)||0;
-  var dbIdx  = parseInt((el('inp-db')||{}).value)||2;
+  var dbIdx  = el('inp-db') ? parseInt(el('inp-db').value) : (unit==='us'?2:1);
   var s      = v('inp-s');
   var ev     = v('inp-ev');
   var tp     = v('inp-tp');
@@ -1123,6 +1125,42 @@ function drawSVG(n, s, ev, eh, tp, bp, hp, db, Vu, unit){
   html += '<text x="'+(W/2)+'" y="16" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1a2332" font-family="sans-serif">Elevation — Single Bolt Row</text>';
 
   svg.innerHTML = html;
+}
+function saveInputs() {
+  var data = {};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el) {
+    if (el.type === 'radio') { if (el.checked) data[el.id] = el.value; }
+    else if (el.type === 'checkbox') data[el.id] = el.checked;
+    else data[el.id] = el.value;
+  });
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function loadInputs() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id) {
+          var el = document.getElementById(id); if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!data[id];
+          else el.value = data[id];
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          el.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+      } catch(err) { alert('Invalid or incompatible save file.'); }
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
 }
 </script>
 </body>

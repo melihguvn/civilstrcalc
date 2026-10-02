@@ -1055,6 +1055,8 @@ function calcEC2() {
   var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — EC2 §7.3.4</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
     +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">EC2 §7.3.4</span>'
+    +'<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>'
+    +'<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>'
     +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
     +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
@@ -1129,6 +1131,8 @@ function calcIS() {
   var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — IS 456:2000</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
     +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">IS 456:2000 Annex F</span>'
+    +'<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>'
+    +'<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>'
     +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
     +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
@@ -1304,6 +1308,8 @@ function calcACI() {
   /* ── Report ── */
   html += '<div class="report-card">'
     +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">ACI 224R / Frosch (1999)</span>'
+    +'<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>'
+    +'<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>'
     +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
     +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:Math.max(dc-phi/2,1),d:d,x:x,phi:phi,s:s,wk:wk_mm,wlim:wlim,nc:nc,phiC:phic})+'</div>'
@@ -1396,6 +1402,8 @@ function calcTS() {
   var html  = '<div class="print-only"><div><div class="ph-title">Crack Width — TS 500:2000</div><div class="ph-sub">civilstrcalc.com · mm · MPa</div></div><div class="ph-date">'+_date+'</div></div>';
   html += '<div class="report-card">'
     +'<div class="report-hdr"><h4>Calculation Steps</h4><span class="rh-code">TS 500:2000 §11.5</span>'
+    +'<button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>'
+    +'<button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>'
     +'<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button></div>'
     +'<div class="report-body">'
     +'<div class="cw-diagram">'+sectionSVG({b:b,h:h,cnom:cnom,d:d,x:x,phi:phi,s:s,wk:wk,wlim:wlim})+'</div>'
@@ -1467,6 +1475,42 @@ document.addEventListener('DOMContentLoaded', function() {
   /* Initial calculations */
   calcEC2(); calcIS(); calcACI(); calcTS();
 });
+function saveInputs() {
+  var data = {};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el) {
+    if (el.type === 'radio') { if (el.checked) data[el.id] = el.value; }
+    else if (el.type === 'checkbox') data[el.id] = el.checked;
+    else data[el.id] = el.value;
+  });
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function loadInputs() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id) {
+          var el = document.getElementById(id); if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!data[id];
+          else el.value = data[id];
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          el.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+      } catch(err) { alert('Invalid or incompatible save file.'); }
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
+}
 </script>
 <div class="adblock-notice" id="adblockNotice">
   <div class="adblock-notice-content">
