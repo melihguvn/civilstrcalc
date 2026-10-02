@@ -1613,7 +1613,7 @@ function bcReadInputs(){
   var lbYlbl={pp:'Pin–Pin',pf:'Pin–Fixed',ff:'Fixed–Fixed'}[bcYv];
   var lrx=Math.min(1,Math.max(0.05,parseFloat(document.getElementById('bc-lb-x').value)||1));
   var lry=Math.min(1,Math.max(0.05,parseFloat(document.getElementById('bc-lb-y').value)||1));
-  var Pu=Math.max(0,parseFloat(document.getElementById('bc-Pu').value)||0);
+  var Pu=parseFloat(document.getElementById('bc-Pu').value)||0;
   var Mux=Math.abs(parseFloat(document.getElementById('bc-Mux').value)||0);
   var Muy=Math.abs(parseFloat(document.getElementById('bc-Muy').value)||0);
   return{sr:sr,Fy:Fy,Lin:Lin,KX:KX,KY:KY,lbXlbl:lbXlbl,lbYlbl:lbYlbl,lrx:lrx,lry:lry,Pu:Pu,Mux:Mux,Muy:Muy};
@@ -1821,10 +1821,10 @@ function bcCalcIS800(i){
   var t2=Math.sqrt(1+Math.PI*Math.PI*E*Cw/(G*J*Lb_mm*Lb_mm));
   var Mcr_N=t1*t2,Mcr_kNm=Mcr_N/1e6;
   var lamLT=Math.sqrt(Zx*Fy/Mcr_N);
-  // Table 6b (rolled): h/b≤2 → curve a (α=0.21); h/b>2 → curve b (α=0.34)
-  var aLT=hb<=2?0.21:0.34,curveLT=hb<=2?'a (α=0.21)':'b (α=0.34)';
+  // Table 8.1 (LTB, rolled): h/b≤2 → curve c (α=0.49); h/b>2 → curve a (α=0.21)
+  var aLT=hb<=2?0.49:0.21,curveLT=hb<=2?'c (α=0.49)':'a (α=0.21)';
   var chiLT,ltbIS;
-  if(lamLT<=0.4){chiLT=1.0;ltbIS='No LTB (λ̄LT ≤ 0.4)';}
+  if(lamLT<=0.2){chiLT=1.0;ltbIS='No LTB (λ̄LT ≤ 0.2)';}
   else{
     var phiLT=0.5*(1+aLT*(lamLT-0.2)+lamLT*lamLT);
     chiLT=Math.min(1,1/(phiLT+Math.sqrt(Math.max(0,phiLT*phiLT-lamLT*lamLT))));

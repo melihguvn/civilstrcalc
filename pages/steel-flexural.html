@@ -1168,7 +1168,7 @@ function fdSecChange() {
     var zStr = zObj ? (zObj.val+' in³'+(zObj.est?' <em style="color:var(--text-dim)">(est.)</em>':'')) : '—';
     txt = 'd='+row[1]+'"  W='+row[cm.wt]+' lb/ft  Ix='+row[cm.I]+' in⁴  Zx='+zStr;
   } else {
-    txt = 'h='+row[1]+' mm  G='+row[cm.wt]+' kg/m  Iy='+row[cm.I]+' cm⁴  Wpl='+zObj.val+' cm³';
+    txt = 'h='+row[1]+' mm  G='+row[cm.wt]+' kg/m  Iy='+row[cm.I]+' cm⁴  Wpl='+(zObj?zObj.val:'—')+' cm³';
   }
   inf.innerHTML = txt;
   inf.style.display = '';
@@ -1255,7 +1255,7 @@ function fdCalc() {
   if (!zObj) { alert('Section data incomplete.'); return; }
 
   var isInclined = document.getElementById('fd-inclined').checked;
-  var theta  = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var theta  = isInclined ? (parseFloat(document.getElementById('fd-theta').value) || 15) : 0;
   var cosT   = Math.cos(theta * Math.PI / 180);
   var sinT   = Math.sin(theta * Math.PI / 180);
 
@@ -1266,7 +1266,7 @@ function fdCalc() {
     var Mu_y  = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
     var Mu_z  = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
     var phiMny = 0.9 * Fy * Zx / 12;
-    var DCR   = Mu_y / phiMny;
+    var DCR   = phiMny > 0 ? Mu_y / phiMny : 999;
     var _biaxOk = isInclined && !isDirect;
     var Zy = _biaxOk ? fdGetWplz(row) : null;
     var approxWeak = _biaxOk && cm.Sy !== undefined;
@@ -1296,7 +1296,7 @@ function fdCalc() {
     var Mu_y  = isDirect ? Mu_direct : wu * (isInclined ? cosT : 1) * L * L * Cm;
     var Mu_z  = (isDirect || !isInclined) ? 0 : wu * sinT * L * L * Cm;
     var phiMny = 0.9 * Fy * Wply / 1000;
-    var DCR   = Mu_y / phiMny;
+    var DCR   = phiMny > 0 ? Mu_y / phiMny : 999;
     var _biaxOk = isInclined && !isDirect;
     var Wplz = _biaxOk ? fdGetWplz(row) : null;
     var approxWeak = _biaxOk && cm.Welz !== undefined;
@@ -1393,7 +1393,7 @@ function fdRender(r) {
        + '<div style="font-family:var(--mono);font-size:.78rem;color:var(--text-mid);line-height:1.6">M<sub>u,z</sub> = '+fmt(r.Mu_z,2)+' '+r.uM+'<br>&phi;M<sub>n,z</sub> = '+fmt(r.phiMnz,2)+' '+r.uM+'</div>'
        + '<div class="fl-val" style="font-size:1.3rem;margin-top:6px">'+ratz+'</div>'
        + '</div>'
-       + '<div class="fl-col"><div class="fl-lbl">Biaxial D/C &mdash; AISC H2-1</div>'
+       + '<div class="fl-col"><div class="fl-lbl">Biaxial D/C &mdash; AISC H1-1b</div>'
        + '<div class="fl-val '+cls+'" style="font-size:1.5rem;margin-top:6px">'+fmt(r.biaxDCR,3)+'</div>'
        + '<div style="font-size:.72rem;color:var(--text-dim);margin-top:4px">'+raty+' + '+ratz+'</div>'
        + '<div class="fl-val '+cls+'" style="font-size:.9rem;margin-top:2px">'+(r.biaxDCR<=1.0?'&#10003; OK':'&#10007; NG')+'</div>'
@@ -1507,7 +1507,7 @@ function fdRender(r) {
         wplzFml,
         '&phi;M<sub>n,z</sub> = '+fmt(r.phiMnz,2)+' '+r.uM, !r.approxWeak);
       var biaxOk = r.biaxDCR <= 1.0;
-      h += step(6, 'Biaxial interaction check (AISC §H2-1)',
+      h += step(6, 'Biaxial interaction check (AISC §H1-1b)',
         'M<sub>u,y</sub>/&phi;M<sub>n,y</sub> + M<sub>u,z</sub>/&phi;M<sub>n,z</sub> = '+fmt(r.Mu_y/r.phiMny,3)+' + '+fmt(r.Mu_z/r.phiMnz,3),
         'D/C = '+fmt(r.biaxDCR,3), biaxOk);
     }
@@ -1760,7 +1760,7 @@ function fdCalcEC3() {
 
   // Inclined beam
   var isInclined = document.getElementById('fd-inclined').checked;
-  var theta = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var theta = isInclined ? (parseFloat(document.getElementById('fd-theta').value) || 15) : 0;
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
@@ -2183,7 +2183,7 @@ function fdCalcCYTHYE() {
   var bcCmStr = {pp:'1/8',fp:'9/128',ff:'1/12',cant:'1/2'}[bc];
 
   var isInclined = document.getElementById('fd-inclined').checked;
-  var theta = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var theta = isInclined ? (parseFloat(document.getElementById('fd-theta').value) || 15) : 0;
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
@@ -2552,7 +2552,7 @@ function fdCalcIS800() {
   var bcCmStr = {pp:'1/8',fp:'9/128',ff:'1/12',cant:'1/2'}[bc];
 
   var isInclined = document.getElementById('fd-inclined').checked;
-  var theta = isInclined ? (+document.getElementById('fd-theta').value || 15) : 0;
+  var theta = isInclined ? (parseFloat(document.getElementById('fd-theta').value) || 15) : 0;
   var cosT  = Math.cos(theta * Math.PI / 180);
   var sinT  = Math.sin(theta * Math.PI / 180);
 
@@ -2577,7 +2577,7 @@ function fdCalcIS800() {
     Md_y = Wely ? Wely * fyd / 1000 : Wply * fyd / 1000;
   }
 
-  var DCR = Mu_y / Md_y;
+  var DCR = Md_y > 0 ? Mu_y / Md_y : 999;
 
   var Md_z = null, biaxDCR = null, approxWeak = false;
   if (isInclined && !isDirect) {

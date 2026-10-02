@@ -807,7 +807,7 @@ function acSetLoadMode(mode) {
   acAutoCalc();
 }
 
-function fmt(v,d){ return (+v).toFixed(d); }
+function fmt(v,d){ var n=+v; return (isNaN(n)||!isFinite(n))?'—':n.toFixed(d); }
 
 function acSetUnit(unit, btn) {
   acUnit = unit;
@@ -972,6 +972,10 @@ function acCalc() {
   var wt_r = +row[2]; // lb/ft (US) or kg/m (SI)
   var rx_r = +row[3]; // in (US) or cm (SI)
   var ry_r = +row[4]; // in (US) or cm (SI)
+  // 2L/2ISA: col[3]=ryy (strong, gap axis), col[4]=rxx (weak) — swap so rx=weak, ry=strong
+  if (acSecType === '2L' || acSecType === '2L_US' || acSecType === '2ISA') {
+    var _t = rx_r; rx_r = ry_r; ry_r = _t;
+  }
 
   var E, Ag, rx, ry, sw, uF, uL, uSt;
   if (isUS) {
@@ -1059,7 +1063,7 @@ function acCalc() {
   // §D2 tension yielding (net fracture not checked — assumes Ae=Ag)
   var phiTn = isUS ? 0.90 * Fy * Ag : 0.90 * Fy * Ag / 1000;
   var phiCap = isTension ? phiTn : phiPn;
-  var DCR   = Pu_abs / phiCap;
+  var DCR   = phiCap > 0 ? Pu_abs / phiCap : 999;
   var slOk  = lMax <= 200;
 
   var gn   = document.getElementById('ac-grade').options[document.getElementById('ac-grade').selectedIndex].text;
@@ -1292,6 +1296,8 @@ function acCalcEC3() {
   var wt    = +row[2]; // kg/m
   var rx_mm = +row[3] * 10; // cm → mm
   var ry_mm = +row[4] * 10;
+  // 2L/2ISA: col[3]=ryy (strong), col[4]=rxx (weak) — swap so rx=weak, ry=strong
+  if (acSecType === '2L' || acSecType === '2ISA') { var _t2=rx_mm; rx_mm=ry_mm; ry_mm=_t2; }
 
   var Lmm   = Lval * 1000;
   var sw    = wt * Lval * 9.81 / 1000; // kN
@@ -1538,6 +1544,8 @@ function acCalcTSDS() {
   var wt    = +row[2];
   var rx_mm = +row[3] * 10;
   var ry_mm = +row[4] * 10;
+  // 2L/2ISA: col[3]=ryy (strong), col[4]=rxx (weak) — swap so rx=weak, ry=strong
+  if (acSecType === '2L' || acSecType === '2ISA') { var _t2=rx_mm; rx_mm=ry_mm; ry_mm=_t2; }
   var sw    = wt * Lval * 9.81 / 1000; // kN
 
   var KLrx = (Kx * lbRx * Lval * 1000) / rx_mm;
@@ -1777,6 +1785,8 @@ function acCalcIS800() {
   var wt    = +row[2];
   var rx_mm = +row[3] * 10;
   var ry_mm = +row[4] * 10;
+  // 2ISA: col[3]=ryy (strong), col[4]=rxx (weak) — swap so rx=weak, ry=strong
+  if (acSecType === '2ISA') { var _t2=rx_mm; rx_mm=ry_mm; ry_mm=_t2; }
   var sw    = wt * Lval * 9.81 / 1000; // kN
 
   var sType = acSecType;

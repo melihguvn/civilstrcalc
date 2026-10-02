@@ -1923,7 +1923,10 @@ function fmtDetVal(v, key, isEuro, unitMode) {
     } else if (/^(Ix|Iy|Iz|It|J)\b/.test(key) || /\(in⁴\)/.test(key)) {
       if (unitMode === 'mm') { converted = v * 41.62; unit = 'cm⁴'; }
       else { unit = 'in⁴'; }
-    } else if (/^(Sx|Sy|Zx|Zy|Ct|Cw)\b/.test(key) || /\(in³\)/.test(key)) {
+    } else if (/^Cw\b/.test(key) || /\(in⁶\)/.test(key)) {
+      if (unitMode === 'mm') { converted = v * Math.pow(2.54, 6); unit = 'cm⁶'; }
+      else { unit = 'in⁶'; }
+    } else if (/^(Sx|Sy|Zx|Zy|Ct)\b/.test(key) || /\(in³\)/.test(key)) {
       if (unitMode === 'mm') { converted = v * 16.387; unit = 'cm³'; }
       else { unit = 'in³'; }
     } else if (/^(rx|ry|rz|r[oxyz])\b/.test(key) || /\(in\)/.test(key)) {
@@ -1989,12 +1992,12 @@ function showDetail(name, type, panel) {
     let al = 0;
     if (shape === 'I' || shape === 'H') {
       const h=isEuro?row[1]:row[1]*25.4, b=isEuro?row[2]:row[2]*25.4;
-      const tw=isEuro?row[3]:row[4]*25.4;
-      al = (2*b + 2*h - 2*tw) / 1000;
+      const tf=isEuro?row[4]:row[3]*25.4; // flange thickness
+      al = (4*b + 2*(h - 2*tf)) / 1000;
     } else if (shape === 'C') {
       const h=isEuro?row[1]:row[1]*25.4, b=isEuro?row[2]:row[2]*25.4;
       const tw=isEuro?row[3]:row[4]*25.4;
-      al = (2*b + 2*h - tw) / 1000;
+      al = (4*b + 2*h - 2*tw) / 1000;
     } else {
       return null;
     }
@@ -2155,12 +2158,12 @@ function calcCustom() {
       const h=g('cc_h'), b=g('cc_b'), tf=g('cc_tf'), tw=g('cc_tw');
       const hw=h-2*tf;
       A=2*b*tf+hw*tw;
-      Iy=(tw*h*h*h+(2*b-tw)*hw*hw*hw)/12;
-      // centroid from web back
-      const xc=b*b*tf/A;
+      Iy=(b*h*h*h-(b-tw)*hw*hw*hw)/12;
+      // centroid from web back face
+      const xc=(b*b*tf+hw*tw*tw/2)/A;
       Iz=2*(tf*b*b*b/12+b*tf*(b/2-xc)**2)+(hw*tw*tw*tw/12+hw*tw*(xc-tw/2)**2);
       Wely=Iy/(h/2); Welz=Iz/Math.max(xc,b-xc);
-      Wply=(tw*h*h/4)+(2*b*tf*(h/2-tf/2));
+      Wply=(tw*hw*hw/4)+(2*b*tf*(h/2-tf/2));
       Wplz=0;
       iy=Math.sqrt(Iy/A); iz=Math.sqrt(Iz/A);
       // Open thin-walled: It = (1/3)*Σ(b_i*t_i³)
