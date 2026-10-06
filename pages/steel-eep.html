@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index, follow">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+
+<title>Extended End Plate Moment Connection | AISC 360-22 DG4 | CivilStrCalc</title>
+<meta name="description" content="Extended end plate moment connection calculator per AISC 360-22 and Design Guide 4. 4-bolt unstiffened, 4-bolt stiffened, and 8-bolt stiffened configurations. Bolt tension, end plate flexure, and column checks.">
+<meta name="keywords" content="extended end plate connection, moment connection, AISC 360-22, Design Guide 4, DG4, 4-bolt, 8-bolt, stiffened end plate, steel moment connection">
+<link rel="canonical" href="https://civilstrcalc.com/pages/steel-eep">
+
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://civilstrcalc.com/pages/steel-eep">
+<meta property="og:title"       content="Extended End Plate Moment Connection | CivilStrCalc">
+<meta property="og:description" content="AISC 360-22 / DG4 extended end plate moment connection — bolt tension, end plate flexure, column flange and web checks.">
+<meta property="og:image"       content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name"   content="CivilStrCalc">
+<meta property="og:locale"      content="en_US">
+
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:url"         content="https://civilstrcalc.com/pages/steel-eep">
+<meta name="twitter:title"       content="Extended End Plate Moment Connection | CivilStrCalc">
+<meta name="twitter:description" content="AISC 360-22 / DG4 bolt tension, end plate flexure, and column checks.">
+<meta name="twitter:image"       content="https://civilstrcalc.com/images/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"Extended End Plate Moment Connection — CivilStrCalc",
+  "description":"Extended end plate moment connection calculator per AISC 360-22 and Design Guide 4.",
+  "applicationCategory":"UtilityApplication",
+  "operatingSystem":"Web Browser",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+  "featureList":"AISC 360-22, Design Guide 4, 4-bolt, 8-bolt, bolt tension, end plate flexure, column checks"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {"@type":"ListItem","position":1,"name":"CivilStrCalc","item":"https://civilstrcalc.com"},
+    {"@type":"ListItem","position":2,"name":"Extended End Plate Connection","item":"https://civilstrcalc.com/pages/steel-eep"}
+  ]
+}
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2"  as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/svg+xml"           href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon"            href="../favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180"    href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+
+<script src="../shell.js" defer></script>
+<script src="../js/steel-profiles.js"></script>
+
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.calc-layout{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
+@media(max-width:1060px){.calc-layout{grid-template-columns:1fr}}
+.calc-layout>*{min-width:0}
+.results-col{display:flex;flex-direction:column;gap:14px}
+
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap}
+.unit-switcher label{font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--sans);font-size:.67rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent)}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600}
+
+.dcr-banner{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:7px;border:1.5px solid;margin-bottom:10px}
+.dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0}
+.dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a}
+.dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8}
+.dcr-banner.neu{background:var(--bg2);border-color:var(--border)}
+.dcr-icon{font-size:1.5rem}
+.dcr-text strong{font-size:.87rem;display:block;margin-bottom:2px}
+.dcr-text span{font-size:.73rem;color:var(--text-mid);font-family:var(--mono)}
+.dcr-banner.ok .dcr-text strong{color:var(--green)}
+.dcr-banner.warn .dcr-text strong{color:var(--orange)}
+.dcr-banner.err .dcr-text strong{color:var(--red)}
+.dcr-banner.neu .dcr-text strong{color:var(--text-dim)}
+
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.rpt-sec-title{font-family:var(--sans);font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 10px;margin-bottom:8px}
+
+.inp-tbl{width:100%;border-collapse:collapse}
+.inp-tbl tr{border-bottom:1px solid var(--border)}
+.inp-tbl tr:last-child{border-bottom:none}
+.inp-tbl td{padding:6px 8px;font-size:.80rem;font-family:var(--sans)}
+.inp-tbl td:first-child{color:var(--text-mid);width:55%}
+.inp-tbl td:last-child{font-weight:500;color:var(--text);text-align:right}
+
+.res-tbl{width:100%;border-collapse:collapse}
+.res-tbl tr{border-bottom:1px solid var(--border)}
+.res-tbl tr:last-child{border-bottom:none}
+.res-tbl td{padding:7px 8px;font-size:.79rem;font-family:var(--sans)}
+.res-tbl td:first-child{color:var(--text-mid);width:60%}
+.res-tbl td:last-child{font-weight:500;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.res-tbl td.ok{color:var(--green);font-weight:600}
+.res-tbl td.warn{color:var(--orange);font-weight:600}
+.res-tbl td.err{color:var(--red);font-weight:600}
+.res-tbl td.gov{background:rgba(26,109,181,.07);font-weight:700;color:var(--accent)}
+
+.fl-rb{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;margin-bottom:14px;overflow:hidden}
+.fl-col{padding:10px 14px;text-align:center;border-right:1px solid #b8d0eb}
+.fl-col:last-child{border-right:none}
+.fl-lbl{font-size:.63rem;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;font-family:var(--sans);font-weight:500}
+.fl-val{font-family:var(--mono);font-size:1.05rem;font-weight:600;color:var(--accent)}
+.fl-unit{font-size:.68rem;color:var(--text-dim);margin-top:2px;font-family:var(--sans)}
+
+.bp-sel{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer}
+
+.mb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.mb-grid{grid-template-columns:1fr}}
+.mb-grid>*{min-width:0}
+
+.mb-sub-lbl{font-size:.67rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;margin-bottom:8px;text-align:center}
+
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden}
+.bg-hdr{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 20px;cursor:pointer;user-select:none;font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--text)}
+.bg-hdr:hover{background:var(--bg)}
+.bg-arr{font-size:.8rem;color:var(--text-dim);transition:transform .2s}
+.bg-section.open .bg-arr{transform:rotate(180deg)}
+.bg-body{display:none;padding:18px 20px}
+.bg-section.open .bg-body{display:block}
+.bg-panel{margin-bottom:14px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.bg-panel:last-child{margin-bottom:0}
+.bg-panel-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 14px;font-family:var(--sans);font-size:.78rem;font-weight:700;color:var(--text)}
+.bg-panel .tb{padding:12px 14px;font-size:.82rem;color:var(--text);line-height:1.6}
+.bg-panel .tb p{margin:0 0 10px}
+.bg-panel .tb p:last-child{margin-bottom:0}
+
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans)}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
+.ph-date{font-size:.63rem;color:var(--text-dim);font-family:var(--mono)}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans)}
+
+.bp-diagram-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+
+@media(max-width:640px){
+  .form-row-2{grid-template-columns:1fr!important}
+  .fl-rb{grid-template-columns:1fr 1fr!important}
+  .fl-col:nth-child(3){grid-column:1/-1;border-right:none;border-top:1px solid #b8d0eb}
+}
+@media print{
+  @page{margin:6mm 8mm;size:A4}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:white!important;font-size:8.5pt!important;padding:0!important}
+  .no-print,.bg-section,.unit-switcher,.page-title{display:none!important}
+  .print-only{display:flex!important}
+  .print-disclaimer{display:block!important;font-size:6pt!important}
+  .print-footer{display:flex!important}
+  .calc-layout{display:block!important}
+  .results-col{gap:2px!important}
+  .report-card{box-shadow:none!important;border:none!important}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important}
+  .report-hdr h4{font-size:9pt!important}
+  .rh-code{font-size:6pt!important}
+  .print-btn{display:none!important}
+  .report-body{padding:4px 10px!important}
+  .fl-rb{margin-bottom:4px!important;background:#f0f5fb!important}
+  .fl-col{padding:4px 8px!important}
+  .fl-lbl{font-size:6.5pt!important}
+  .fl-val{font-size:18pt!important}
+  .fl-unit{font-size:5.5pt!important}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important}
+  .dcr-icon{font-size:1rem!important}
+  .dcr-text strong{font-size:8pt!important}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
+  .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
+  .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
+  #eep-svg{display:none!important}
+}
+</style>
+<style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
+</head>
+
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Extended End Plate Moment Connection</h1>
+  <p>4-bolt unstiffened &middot; 4-bolt stiffened &middot; 8-bolt stiffened &mdash; per <strong>AISC 360-22</strong> and <strong>Design Guide 4</strong></p>
+</div>
+
+<div class="unit-switcher no-print">
+  <label>Units:</label>
+  <div class="unit-btns">
+    <button class="unit-btn active" id="btn-us" onclick="setUnit('us')">US (kip &middot; ft &middot; in)</button>
+    <button class="unit-btn"        id="btn-si" onclick="setUnit('si')">SI (kN &middot; m &middot; mm)</button>
+  </div>
+</div>
+
+<div class="calc-layout">
+
+<!-- ══ LEFT: INPUTS ══════════════════════════════════════════════════ -->
+<div class="no-print">
+
+  <!-- Member Sections -->
+  <div class="form-div"><div class="form-div-lbl">Member Sections</div></div>
+  <div class="mb-grid">
+
+    <div>
+      <div class="mb-sub-lbl">Beam</div>
+      <div class="form-group">
+        <label>Section type</label>
+        <select id="beamType" class="bp-sel" onchange="onBeamTypeChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Profile</label>
+        <select id="beamProfile" class="bp-sel" onchange="onBeamProfileChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Material</label>
+        <select id="beamMaterial" class="bp-sel" onchange="calc()"></select>
+      </div>
+    </div>
+
+    <div>
+      <div class="mb-sub-lbl">Column</div>
+      <div class="form-group">
+        <label>Section type</label>
+        <select id="colType" class="bp-sel" onchange="onColTypeChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Profile</label>
+        <select id="colProfile" class="bp-sel" onchange="onColProfileChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Material</label>
+        <select id="colMaterial" class="bp-sel" onchange="calc()"></select>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Applied Loads -->
+  <div class="form-div"><div class="form-div-lbl">Applied Loads (LRFD)</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Moment M<sub>u</sub> <span class="unit-lbl" id="lbl-Mu">[kip&middot;ft]</span></label>
+      <div class="iw"><input type="number" id="inp-Mu" value="200" min="0" step="10" oninput="calc()"><span class="us" id="su-Mu">kip&middot;ft</span></div>
+    </div>
+    <div class="form-group">
+      <label>Shear V<sub>u</sub> <span class="unit-lbl" id="lbl-Vu">[kip]</span></label>
+      <div class="iw"><input type="number" id="inp-Vu" value="40" min="0" step="5" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
+    </div>
+  </div>
+
+  <!-- End Plate -->
+  <div class="form-div"><div class="form-div-lbl">End Plate</div></div>
+  <div class="form-group">
+    <label>Configuration</label>
+    <select id="eepConfig" class="bp-sel" onchange="onConfigChange()">
+      <option value="4E">4-bolt Extended Unstiffened (4E)</option>
+      <option value="4ES">4-bolt Extended Stiffened (4ES)</option>
+      <option value="8ES" selected>8-bolt Extended Stiffened (8ES)</option>
+    </select>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Thickness t<sub>p</sub> <span class="unit-lbl" id="lbl-tp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-tp" value="0.75" min="0.25" step="0.0625" oninput="calc()"><span class="us" id="su-tp">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Width b<sub>p</sub> <span class="unit-lbl" id="lbl-bp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-bp" value="7.0" min="3" step="0.25" oninput="calc()"><span class="us" id="su-bp">in</span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Plate material</label>
+    <select id="plateMaterial" class="bp-sel" onchange="calc()"></select>
+  </div>
+
+  <!-- Bolt Group -->
+  <div class="form-div"><div class="form-div-lbl">Bolt Group</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Bolt grade</label>
+      <select id="boltGrade" class="bp-sel" onchange="calc()"></select>
+    </div>
+    <div class="form-group">
+      <label>Diameter d<sub>b</sub> <span class="unit-lbl" id="lbl-db">[in]</span></label>
+      <select id="boltDia" class="bp-sel" onchange="calc()"></select>
+    </div>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Flange-to-bolt p<sub>f</sub> <span class="unit-lbl" id="lbl-pf">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-pf" value="1.75" min="0.75" step="0.125" oninput="calc()"><span class="us" id="su-pf">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Bolt gage g <span class="unit-lbl" id="lbl-g">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-g" value="5.5" min="2" step="0.25" oninput="calc()"><span class="us" id="su-g">in</span></div>
+    </div>
+  </div>
+  <div class="form-row-2" id="row-pb" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Row pitch p<sub>b</sub> <span class="unit-lbl" id="lbl-pb">[in]</span> <span style="color:var(--text-dim);font-size:.70rem">(8-bolt)</span></label>
+      <div class="iw"><input type="number" id="inp-pb" value="3.0" min="1.5" step="0.125" oninput="calc()"><span class="us" id="su-pb">in</span></div>
+    </div>
+    <div></div>
+  </div>
+
+  <!-- SVG Diagram -->
+  <div class="card no-print" style="margin-top:14px">
+    <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">End Plate &mdash; Face View (not to scale)</div>
+    <div class="card-body" style="padding:8px;text-align:center">
+      <svg id="eep-svg" viewBox="0 0 260 300" style="width:100%;max-width:280px"></svg>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ══ RIGHT: RESULTS ════════════════════════════════════════════════ -->
+<div class="results-col">
+
+  <div class="report-card" id="eep-card">
+    <div class="report-hdr">
+      <h4>End Plate Connection &mdash; AISC 360-22 / DG4</h4>
+      <span class="rh-code" id="rh-unit-lbl">kip &middot; ft</span>
+      <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+      <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
+      <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+    </div>
+    <div class="report-body">
+
+      <div class="print-only">
+        <div>
+          <div class="ph-title">Extended End Plate Moment Connection</div>
+          <div class="ph-sub">AISC 360-22 / Design Guide 4</div>
+        </div>
+        <div class="ph-date" id="ph-date"></div>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Bolt Tension</div>
+          <div class="fl-val" id="rv-bolt-dcr">—</div>
+          <div class="fl-unit" id="rv-bolt-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">End Plate</div>
+          <div class="fl-val" id="rv-plate-dcr">—</div>
+          <div class="fl-unit" id="rv-plate-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Column</div>
+          <div class="fl-val" id="rv-col-dcr">—</div>
+          <div class="fl-unit" id="rv-col-gov">—</div>
+        </div>
+      </div>
+
+      <!-- DCR Banner -->
+      <div class="dcr-banner neu" id="dcr-banner">
+        <div class="dcr-icon" id="dcr-icon">&#8212;</div>
+        <div class="dcr-text">
+          <strong id="dcr-text-main">Select profiles to begin</strong>
+          <span id="dcr-text-sub">Calculations will appear here</span>
+        </div>
+      </div>
+
+      <!-- Design Checks — placeholder until calc engine added -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Design Checks (AISC 360-22 / DG4)</div>
+        <table class="res-tbl">
+          <thead><tr>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">&phi;R<sub>n</sub></th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">DCR</th>
+          </tr></thead>
+          <tbody id="cap-tbl-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Connection Geometry -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Connection Geometry</div>
+        <table class="res-tbl"><tbody id="geo-body"></tbody></table>
+      </div>
+
+      <!-- Design Inputs -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Design Inputs</div>
+        <table class="inp-tbl"><tbody id="inp-body"></tbody></table>
+      </div>
+
+      <div class="print-disclaimer">
+        This output is for preliminary design only. Verify all results against current AISC 360-22, Design Guide 4, and project-specific requirements before use in construction documents.
+      </div>
+      <div class="print-footer">
+        <span>CivilStrCalc &mdash; civilstrcalc.com</span>
+        <span id="pf-date2"></span>
+      </div>
+
+    </div><!-- /report-body -->
+  </div><!-- /report-card -->
+
+</div><!-- /results-col -->
+</div><!-- /calc-layout -->
+
+<!-- ══ DESIGN BACKGROUND ═══════════════════════════════════════════════ -->
+<div class="bg-section open no-print">
+  <div class="bg-hdr" onclick="this.closest('.bg-section').classList.toggle('open')">
+    Design Background &mdash; Extended End Plate Connection (AISC 360-22 / DG4)
+    <span class="bg-arr">&#9662;</span>
+  </div>
+  <div class="bg-body">
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Overview &mdash; Extended End Plate Configurations</div>
+      <div class="tb">
+        <p>An extended end plate moment connection transfers both shear and moment from a beam to a column. The plate is shop-welded to the beam end (CJP or fillet welds at flanges and web) and field-bolted to the column flange. The plate extends beyond both beam flanges, placing tension bolts in the extended portions.</p>
+        <p>AISC Design Guide 4 covers three standard configurations:</p>
+        <table>
+          <tr><th>Config</th><th>Bolts</th><th>Plate</th><th>Typical use</th></tr>
+          <tr><td>4E</td><td>4 (2 per flange)</td><td>Unstiffened</td><td>Light to moderate moment</td></tr>
+          <tr><td>4ES</td><td>4 (2 per flange)</td><td>Stiffened</td><td>Moderate moment, thinner plate</td></tr>
+          <tr><td>8ES</td><td>8 (4 per flange)</td><td>Stiffened</td><td>Heavy moment connections, seismic</td></tr>
+        </table>
+        <p>Design checks include: bolt tension (with prying), end plate flexural yielding (yield line method), column flange flexural yielding, column web local yielding, column web local crippling, column web compression buckling, panel zone shear, and weld design.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Bolt Tension with Prying &mdash; DG4 §3</div>
+      <div class="tb">
+        <p>The tension force per bolt row is determined from the applied moment. For an 8ES configuration with 4 bolt rows (2 above top flange, 2 below bottom flange), DG4 uses a simplified model where each bolt row carries a tributary share of the flange force T<sub>f</sub> = M<sub>u</sub> / d<sub>eff</sub>.</p>
+        <p>Prying action amplifies the bolt tension. DG4 provides a yield line model for the end plate that gives the no-prying bolt force limit and the plate thickness required to preclude prying. When t<sub>p</sub> &ge; t<sub>p,req</sub> (no-prying condition), the bolt design force equals T<sub>f</sub>/n<sub>bolts per row</sub>.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">End Plate Flexure &mdash; Yield Line Method</div>
+      <div class="tb">
+        <p>The end plate is designed using a yield line model (DG4 §3.2). The virtual work method gives the required plate thickness based on the plastic moment capacity per unit length m<sub>p</sub> = F<sub>y</sub> t<sub>p</sub>&sup2; / 4. Each configuration has a specific yield line pattern that accounts for the bolt positions (p<sub>f</sub>, g, p<sub>b</sub>) and plate width b<sub>p</sub>.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Column-Side Checks &mdash; DG4 §4</div>
+      <div class="tb">
+        <p>The column must be checked for the concentrated flange force T<sub>f</sub> delivered by the beam top/bottom flanges through the plate. Limit states per AISC 360-22:</p>
+        <table>
+          <tr><th>Limit state</th><th>Section</th><th>&phi;</th></tr>
+          <tr><td>Flange local bending</td><td>§J10.1</td><td>0.90</td></tr>
+          <tr><td>Web local yielding</td><td>§J10.2</td><td>1.00</td></tr>
+          <tr><td>Web local crippling</td><td>§J10.3</td><td>0.75</td></tr>
+          <tr><td>Web compression buckling</td><td>§J10.5</td><td>0.90</td></tr>
+          <tr><td>Panel zone shear</td><td>§J10.6</td><td>0.90</td></tr>
+        </table>
+        <p>Doubler plates and/or continuity plates are required when column capacity is exceeded.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<script>
+var unit = 'us';
+var beam = {d:0, bf:0, tf:0, tw:0, k:0};
+var col  = {d:0, bf:0, tf:0, tw:0, k:0};
+
+var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482, KIPFT_TO_KNM = 1.3558;
+
+var BOLT_GRADES_US = [
+  ['A307',  27,  27],
+  ['A325',  48,  54],
+  ['A490',  60,  68]
+];
+var BOLT_GRADES_SI = [
+  ['4.6',   160, 180],
+  ['5.8',   208, 234],
+  ['8.8',   320, 360],
+  ['10.9',  400, 450]
+];
+var BOLT_DIA_US = [
+  ['3/4"',0.750],['7/8"',0.875],['1"',1.000],['1-1/8"',1.125],['1-1/4"',1.250]
+];
+var BOLT_DIA_SI = [
+  ['M20',20],['M22',22],['M24',24],['M27',27],['M30',30]
+];
+var PLATE_GRADES = [
+  ['A36',       36, 58, 250,400],
+  ['A572 Gr50', 50, 65, 345,450],
+  ['A572 Gr65', 65, 80, 450,550],
+  ['S235',      34, 54, 235,360],
+  ['S275',      40, 57, 275,390],
+  ['S355',      51, 66, 355,490]
+];
+var BEAM_TYPES_US = [{k:'W',lb:'W Shapes'},{k:'HP',lb:'HP Shapes'}];
+var BEAM_TYPES_SI = [
+  {k:'IPE',lb:'IPE'},{k:'HEA',lb:'HEA'},{k:'HEB',lb:'HEB'},{k:'HEM',lb:'HEM'}
+];
+
+function el(id){return document.getElementById(id);}
+function v(id){var e=el(id);return e?parseFloat(e.value)||0:0;}
+function set(id,val){var e=el(id);if(e)e.textContent=val;}
+function fmt(x,d){if(!isFinite(x)||isNaN(x))return'—';return x.toFixed(d===undefined?2:d);}
+
+document.addEventListener('DOMContentLoaded',function(){
+  buildAllDropdowns();
+  onBeamTypeChange();
+  onColTypeChange();
+  el('ph-date').textContent  = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  el('pf-date2').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+});
+
+/* ── Unit switching ── */
+function setUnit(u){
+  var old=unit; unit=u;
+  el('btn-us').classList.toggle('active',u==='us');
+  el('btn-si').classList.toggle('active',u==='si');
+  if(old!==u){
+    if(u==='si'){
+      el('inp-Mu').value='280';
+      el('inp-Vu').value='180';
+      el('inp-tp').value='20';
+      el('inp-bp').value='180';
+      el('inp-pf').value='45';
+      el('inp-g').value='140';
+      el('inp-pb').value='75';
+    } else {
+      el('inp-Mu').value='200';
+      el('inp-Vu').value='40';
+      el('inp-tp').value='0.75';
+      el('inp-bp').value='7.0';
+      el('inp-pf').value='1.75';
+      el('inp-g').value='5.5';
+      el('inp-pb').value='3.0';
+    }
+  }
+  var lu=u==='us'?'in':'mm';
+  var fu=u==='us'?'kip':'kN';
+  var mu=u==='us'?'kip·ft':'kN·m';
+  var lbls={'lbl-Mu':mu,'lbl-Vu':fu,'lbl-tp':lu,'lbl-bp':lu,'lbl-pf':lu,'lbl-g':lu,'lbl-pb':lu,'lbl-db':lu};
+  Object.keys(lbls).forEach(function(id){var e=el(id);if(e)e.textContent='['+lbls[id]+']';});
+  var spns={'su-Mu':mu,'su-Vu':fu,'su-tp':lu,'su-bp':lu,'su-pf':lu,'su-g':lu,'su-pb':lu};
+  Object.keys(spns).forEach(function(id){var e=el(id);if(e)e.textContent=spns[id];});
+  el('rh-unit-lbl').textContent=u==='us'?'kip · ft':'kN · m';
+  buildAllDropdowns();
+  onBeamTypeChange();
+  onColTypeChange();
+}
+
+/* ── Dropdown builders ── */
+function buildAllDropdowns(){
+  buildTypeDropdown('beamType', unit==='us'?BEAM_TYPES_US:BEAM_TYPES_SI);
+  buildTypeDropdown('colType',  unit==='us'?BEAM_TYPES_US:BEAM_TYPES_SI);
+  buildBoltDropdowns();
+  buildMaterialDropdown('plateMaterial', unit==='us'?[0,1,2]:[3,4,5], 1);
+  buildMaterialDropdown('beamMaterial',  unit==='us'?[0,1,2]:[3,4,5], unit==='us'?1:2);
+  buildMaterialDropdown('colMaterial',   unit==='us'?[0,1,2]:[3,4,5], unit==='us'?1:2);
+}
+function buildTypeDropdown(id, types){
+  var sel=el(id); if(!sel) return; sel.innerHTML='';
+  types.forEach(function(t){var o=document.createElement('option');o.value=t.k;o.textContent=t.lb;sel.appendChild(o);});
+}
+function buildBoltDropdowns(){
+  var gSel=el('boltGrade'); gSel.innerHTML='';
+  var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
+  gSel.selectedIndex=unit==='us'?1:2;
+  var dSel=el('boltDia'); dSel.innerHTML='';
+  var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  sizes.forEach(function(s,i){var o=document.createElement('option');o.value=i;o.textContent=s[0];dSel.appendChild(o);});
+  dSel.selectedIndex=unit==='us'?1:1;
+}
+function buildMaterialDropdown(id, idxs, defIdx){
+  var sel=el(id); if(!sel) return; sel.innerHTML='';
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=PLATE_GRADES[i][0];sel.appendChild(o);});
+  sel.selectedIndex=defIdx;
+}
+
+/* ── Profile change handlers ── */
+function onBeamTypeChange(){
+  fillProfileDropdown('beamType','beamProfile');
+  onBeamProfileChange();
+}
+function onColTypeChange(){
+  fillProfileDropdown('colType','colProfile');
+  onColProfileChange();
+}
+function fillProfileDropdown(typeId, profId){
+  var type=el(typeId).value;
+  var SP=window.SteelProfiles; if(!SP) return;
+  var dd=SP.getProfileDropdown(type);
+  var sel=el(profId); sel.innerHTML='';
+  dd.names.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  if(dd.names.length>0) sel.selectedIndex=Math.min(Math.floor(dd.names.length*0.35),dd.names.length-1);
+}
+function onBeamProfileChange(){
+  beam=readProfile('beamType','beamProfile');
+  calc();
+}
+function onColProfileChange(){
+  col=readProfile('colType','colProfile');
+  calc();
+}
+function readProfile(typeId, profId){
+  var type=el(typeId).value, name=el(profId).value;
+  var SP=window.SteelProfiles; if(!SP) return {d:0,bf:0,tf:0,tw:0,k:0};
+  var row=SP.getProfileProperties(type,name); if(!row) return {d:0,bf:0,tf:0,tw:0,k:0};
+  var d,bf,tf,tw,kdes;
+  if(type==='W'||type==='HP'){
+    d=row[1];bf=row[2];tf=row[3];tw=row[4];kdes=row[5]||0;
+  } else {
+    d=row[1];bf=row[2];tw=row[3];tf=row[4];kdes=0;
+  }
+  return {d:d,bf:bf,tf:tf,tw:tw,k:kdes};
+}
+
+/* ── Config change ── */
+function onConfigChange(){
+  var cfg=el('eepConfig').value;
+  var rowPb=el('row-pb');
+  if(rowPb) rowPb.style.display=(cfg==='8ES')?'grid':'none';
+  calc();
+}
+
+/* ── Main calculation ── */
+function calc(){
+  if(!beam.d || !col.d) return;
+
+  var cfg  = el('eepConfig').value;
+  var tp   = v('inp-tp');
+  var bp   = v('inp-bp');
+  var pf   = v('inp-pf');
+  var g    = v('inp-g');
+  var pb   = v('inp-pb');
+  var Mu   = v('inp-Mu');
+  var Vu   = v('inp-Vu');
+
+  /* plate material */
+  var pmIdx = parseInt(el('plateMaterial').value)||0;
+  var pm = PLATE_GRADES[pmIdx];
+  var Fy_p = unit==='us'?pm[1]:pm[3];
+  var Fu_p = unit==='us'?pm[2]:pm[4];
+
+  /* bolt */
+  var bgi   = parseInt(el('boltGrade').value)||0;
+  var bdiIdx= parseInt(el('boltDia').value)||0;
+  var grades= unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  var sizes = unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  var Fnv   = grades[bgi][1];
+  var db    = sizes[bdiIdx][1];
+
+  /* plate height */
+  var d_beam = beam.d;
+  var dp;
+  if(cfg==='8ES'){
+    dp = d_beam + 2*(pf + pb);
+  } else {
+    dp = d_beam + 2*pf;
+  }
+
+  /* flange force */
+  var d_eff = d_beam - beam.tf; // lever arm ≈ beam d - tf (flange-to-flange CL)
+  var Tf;
+  if(unit==='us'){
+    Tf = (d_eff > 0) ? (Mu*12) / d_eff : 0; // kip·ft → kip·in / in = kip
+  } else {
+    Tf = (d_eff > 0) ? (Mu*1000) / d_eff : 0; // kN·m → kN·mm / mm = kN
+  }
+
+  /* number of tension bolts per flange */
+  var nTens = cfg==='8ES' ? 4 : 2;
+  var Tu_bolt = nTens > 0 ? Tf / nTens : 0;
+
+  /* bolt tension capacity (no prying, DG4 simplified) */
+  var phi_t = 0.75;
+  var Fnt = unit==='us' ? 90 : 620; /* ksi or MPa — A325 */
+  var Ab  = Math.PI/4 * db * db;
+  var phi_Rnt = phi_t * Fnt * Ab; /* per bolt */
+
+  /* render geometry */
+  renderGeo(dp, d_eff, Tf, nTens, Tu_bolt);
+  renderInputs(cfg, db, Fnv, bp, tp, pf, g, pb, Mu, Vu);
+  drawSvg(cfg, beam, dp, bp, pf, pb, g, db);
+
+  /* checks placeholder rows — engine to be added */
+  var forU = unit==='us'?'kip':'kN';
+  var placeholder = [
+    'Bolt tension (no prying) §J3.6',
+    'End plate flexure — yield line §3',
+    'Column flange local bending §J10.1',
+    'Column web local yielding §J10.2',
+    'Column web local crippling §J10.3',
+    'Column web compression buckling §J10.5',
+    'Panel zone shear §J10.6',
+    'Beam flange weld'
+  ];
+  var tbody=el('cap-tbl-body'); tbody.innerHTML='';
+  placeholder.forEach(function(name){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-size:.78rem">'+name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono);color:var(--text-dim);font-style:italic">—</td>'
+      +'<td style="text-align:right;font-family:var(--mono);color:var(--text-dim);font-style:italic">—</td>';
+    tbody.appendChild(tr);
+  });
+
+  /* tiles */
+  set('rv-bolt-dcr','—'); set('rv-bolt-gov','—');
+  set('rv-plate-dcr','—'); set('rv-plate-gov','—');
+  set('rv-col-dcr','—'); set('rv-col-gov','—');
+
+  /* banner — show geometry is loaded */
+  var banner=el('dcr-banner');
+  banner.className='dcr-banner neu';
+  el('dcr-icon').textContent='i';
+  set('dcr-text-main','Geometry loaded — design checks coming');
+  set('dcr-text-sub', 'Beam: '+el('beamProfile').value+' | Col: '+el('colProfile').value+' | Config: '+cfg);
+}
+
+function renderGeo(dp, d_eff, Tf, nTens, Tu_bolt){
+  var lenU = unit==='us'?'in':'mm';
+  var forU = unit==='us'?'kip':'kN';
+  var tbody=el('geo-body'); tbody.innerHTML='';
+  var rows=[
+    ['End plate height d<sub>p</sub>', fmt(dp,3)+' '+lenU],
+    ['Beam depth d',                   fmt(beam.d,3)+' '+lenU],
+    ['Column depth d<sub>c</sub>',     fmt(col.d,3)+' '+lenU],
+    ['Lever arm d<sub>eff</sub>',      fmt(d_eff,3)+' '+lenU],
+    ['Flange force T<sub>f</sub>',     fmt(Tf,1)+' '+forU],
+    ['Tension bolts per flange',       nTens+' bolts'],
+    ['Force per bolt T<sub>u</sub>',   fmt(Tu_bolt,1)+' '+forU+'/bolt']
+  ];
+  rows.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r[0]+'</td><td style="text-align:right;font-family:var(--mono)">'+r[1]+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function renderInputs(cfg, db, Fnv, bp, tp, pf, g, pb, Mu, Vu){
+  var lenU = unit==='us'?'in':'mm';
+  var forU = unit==='us'?'kip':'kN';
+  var muU  = unit==='us'?'kip·ft':'kN·m';
+  var bmIdx= parseInt(el('beamMaterial').value)||0;
+  var cmIdx= parseInt(el('colMaterial').value)||0;
+  var pmIdx= parseInt(el('plateMaterial').value)||0;
+  var bgi  = parseInt(el('boltGrade').value)||0;
+  var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  var sizes =unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  var tbody=el('inp-body'); tbody.innerHTML='';
+  var rows=[
+    ['Beam',            el('beamProfile').value],
+    ['Beam material',   PLATE_GRADES[bmIdx][0]],
+    ['Column',          el('colProfile').value],
+    ['Column material', PLATE_GRADES[cmIdx][0]],
+    ['Config',          cfg],
+    ['M<sub>u</sub>',   fmt(Mu,0)+' '+muU],
+    ['V<sub>u</sub>',   fmt(Vu,0)+' '+forU],
+    ['Plate material',  PLATE_GRADES[pmIdx][0]],
+    ['t<sub>p</sub>',   fmt(tp,unit==='us'?4:1)+' '+lenU],
+    ['b<sub>p</sub>',   fmt(bp,unit==='us'?2:0)+' '+lenU],
+    ['Bolt grade',      grades[bgi][0]],
+    ['d<sub>b</sub>',   sizes[parseInt(el('boltDia').value)][0]],
+    ['p<sub>f</sub>',   fmt(pf,unit==='us'?3:0)+' '+lenU],
+    ['g',               fmt(g,unit==='us'?2:0)+' '+lenU]
+  ];
+  if(cfg==='8ES') rows.push(['p<sub>b</sub>', fmt(pb,unit==='us'?3:0)+' '+lenU]);
+  rows.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+/* ── SVG drawing ── */
+function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
+  var svg=el('eep-svg'); if(!svg) return;
+  var W=260, H=300;
+  var cx=W/2;
+
+  /* scale: fit beam depth + extensions into ~220px height */
+  var totalH = dp;
+  var scale  = Math.min(220/totalH, 14);
+  if(unit==='si') scale = Math.min(220/(totalH/25.4), 14) / 25.4;
+
+  var pxPerIn = (unit==='us') ? scale : scale;
+  if(unit==='si') pxPerIn = scale * 25.4;
+
+  var svgH_px = dp * pxPerIn;
+  var svgY0   = (H - svgH_px) / 2;
+
+  var plate_w = bp_in * pxPerIn;
+  var beam_d  = bm.d * pxPerIn;
+  var beam_tf = Math.max(bm.tf * pxPerIn, 3);
+  var beam_tw = Math.max(bm.tw * pxPerIn, 2);
+  var ext_top = (dp - bm.d) / 2 * pxPerIn; /* extension above top flange */
+
+  var plate_x0 = cx - plate_w/2;
+  var plate_x1 = cx + plate_w/2;
+  var gy0      = svgY0; /* top of plate */
+
+  /* bolt positions (in plate coord) */
+  var bolt_r   = Math.max(db * pxPerIn / 2, 3);
+  var g_px     = g * pxPerIn;
+  var pf_px    = pf * pxPerIn;
+  var pb_px    = (cfg==='8ES') ? pb * pxPerIn : 0;
+
+  /* bolt x positions */
+  var bx_L = cx - g_px/2;
+  var bx_R = cx + g_px/2;
+
+  /* bolt y positions (from top of plate) */
+  var bolts = [];
+  var y_topFlange = gy0 + ext_top; /* y of top of top beam flange */
+  var y_botFlange = y_topFlange + beam_d; /* y of bottom of bottom beam flange */
+
+  if(cfg==='8ES'){
+    /* outer row above top flange */
+    bolts.push({y: y_topFlange - pf_px - pb_px});
+    /* inner row above top flange */
+    bolts.push({y: y_topFlange - pf_px});
+    /* inner row below bottom flange */
+    bolts.push({y: y_botFlange + pf_px});
+    /* outer row below bottom flange */
+    bolts.push({y: y_botFlange + pf_px + pb_px});
+  } else {
+    /* single row above top flange */
+    bolts.push({y: y_topFlange - pf_px});
+    /* single row below bottom flange */
+    bolts.push({y: y_botFlange + pf_px});
+  }
+
+  var html = '';
+
+  /* plate outline */
+  html += '<rect x="'+plate_x0+'" y="'+gy0+'" width="'+plate_w+'" height="'+svgH_px
+    +'" fill="#e8f0f8" stroke="#1a4a7a" stroke-width="1.5"/>';
+
+  /* beam flange rectangles (dashed, behind plate) */
+  var beam_bf_px = Math.min(bm.bf * pxPerIn, plate_w - 4);
+  var bfx0 = cx - beam_bf_px/2;
+  html += '<rect x="'+bfx0+'" y="'+y_topFlange+'" width="'+beam_bf_px+'" height="'+beam_tf
+    +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
+  html += '<rect x="'+bfx0+'" y="'+(y_botFlange - beam_tf)+'" width="'+beam_bf_px+'" height="'+beam_tf
+    +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
+
+  /* beam web (dashed) */
+  var wh = beam_d - 2*beam_tf;
+  if(wh>0){
+    var wx0 = cx - beam_tw/2;
+    html += '<rect x="'+wx0+'" y="'+(y_topFlange+beam_tf)+'" width="'+beam_tw+'" height="'+wh
+      +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
+  }
+
+  /* stiffener lines for 4ES / 8ES */
+  if(cfg==='4ES'||cfg==='8ES'){
+    var stif_y_top = y_topFlange - 4;
+    html += '<line x1="'+(cx-plate_w/2+2)+'" y1="'+stif_y_top+'" x2="'+(cx+plate_w/2-2)+'" y2="'+stif_y_top
+      +'" stroke="#1a4a7a" stroke-width="1" stroke-dasharray="3,2"/>';
+    var stif_y_bot = y_botFlange + 4;
+    html += '<line x1="'+(cx-plate_w/2+2)+'" y1="'+stif_y_bot+'" x2="'+(cx+plate_w/2-2)+'" y2="'+stif_y_bot
+      +'" stroke="#1a4a7a" stroke-width="1" stroke-dasharray="3,2"/>';
+  }
+
+  /* bolts */
+  bolts.forEach(function(b){
+    [bx_L, bx_R].forEach(function(bx){
+      html += '<circle cx="'+bx+'" cy="'+b.y+'" r="'+bolt_r
+        +'" fill="white" stroke="#1a2332" stroke-width="1.5"/>';
+      /* hex head indicator */
+      html += '<circle cx="'+bx+'" cy="'+b.y+'" r="'+(bolt_r*0.45)
+        +'" fill="#1a2332"/>';
+    });
+  });
+
+  /* dimension annotation: bp */
+  var ann_y = gy0 - 12;
+  html += '<line x1="'+plate_x0+'" y1="'+(ann_y+4)+'" x2="'+plate_x0+'" y2="'+(ann_y-4)+'" stroke="#666" stroke-width="1"/>';
+  html += '<line x1="'+plate_x1+'" y1="'+(ann_y+4)+'" x2="'+plate_x1+'" y2="'+(ann_y-4)+'" stroke="#666" stroke-width="1"/>';
+  html += '<line x1="'+plate_x0+'" y1="'+ann_y+'" x2="'+plate_x1+'" y2="'+ann_y+'" stroke="#666" stroke-width="1"/>';
+  var lenLabel = (unit==='us') ? fmt(bp_in,2)+'″' : fmt(bp_in,0)+' mm';
+  html += '<text x="'+cx+'" y="'+(ann_y-3)+'" text-anchor="middle" font-size="9" fill="#1a2332" font-family="sans-serif">b&#x2099; = '+lenLabel+'</text>';
+
+  /* gage annotation */
+  var g_ann_y = gy0 + svgH_px + 14;
+  html += '<line x1="'+bx_L+'" y1="'+(g_ann_y-4)+'" x2="'+bx_L+'" y2="'+(g_ann_y+4)+'" stroke="#666" stroke-width="1"/>';
+  html += '<line x1="'+bx_R+'" y1="'+(g_ann_y-4)+'" x2="'+bx_R+'" y2="'+(g_ann_y+4)+'" stroke="#666" stroke-width="1"/>';
+  html += '<line x1="'+bx_L+'" y1="'+g_ann_y+'" x2="'+bx_R+'" y2="'+g_ann_y+'" stroke="#666" stroke-width="1"/>';
+  var gLabel = (unit==='us') ? fmt(g,2)+'″' : fmt(g,0)+' mm';
+  html += '<text x="'+cx+'" y="'+(g_ann_y+11)+'" text-anchor="middle" font-size="9" fill="#1a2332" font-family="sans-serif">g = '+gLabel+'</text>';
+
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.innerHTML=html;
+}
+
+/* ── Save / Load ── */
+function saveInputs(){
+  var ids=['eepConfig','beamType','beamProfile','beamMaterial','colType','colProfile','colMaterial',
+    'plateMaterial','boltGrade','boltDia','inp-Mu','inp-Vu','inp-tp','inp-bp','inp-pf','inp-g','inp-pb'];
+  var data={unit:unit};
+  ids.forEach(function(id){var e=el(id);if(e)data[id]=e.value;});
+  try{localStorage.setItem('eep_inputs',JSON.stringify(data));alert('Inputs saved.');}
+  catch(e){alert('Could not save.');}
+}
+function loadInputs(){
+  try{
+    var raw=localStorage.getItem('eep_inputs'); if(!raw){alert('No saved inputs found.');return;}
+    var data=JSON.parse(raw);
+    if(data.unit && data.unit!==unit) setUnit(data.unit);
+    var simple=['eepConfig','boltGrade','boltDia','inp-Mu','inp-Vu','inp-tp','inp-bp','inp-pf','inp-g','inp-pb','plateMaterial'];
+    simple.forEach(function(id){var e=el(id);if(e&&data[id]!==undefined)e.value=data[id];});
+    if(data['beamType']){el('beamType').value=data['beamType'];fillProfileDropdown('beamType','beamProfile');}
+    if(data['beamProfile']){el('beamProfile').value=data['beamProfile'];}
+    if(data['beamMaterial']){el('beamMaterial').value=data['beamMaterial'];}
+    if(data['colType']){el('colType').value=data['colType'];fillProfileDropdown('colType','colProfile');}
+    if(data['colProfile']){el('colProfile').value=data['colProfile'];}
+    if(data['colMaterial']){el('colMaterial').value=data['colMaterial'];}
+    beam=readProfile('beamType','beamProfile');
+    col =readProfile('colType','colProfile');
+    onConfigChange();
+  } catch(e){alert('Could not load.');}
+}
+</script>
+</body>
+</html>
