@@ -324,9 +324,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
   <!-- SVG Diagram -->
   <div class="card no-print" style="margin-top:14px">
-    <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">End Plate &mdash; Face View (not to scale)</div>
+    <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Connection &mdash; Side Elevation (not to scale)</div>
     <div class="card-body" style="padding:8px;text-align:center">
-      <svg id="eep-svg" viewBox="0 0 260 300" style="width:100%;max-width:280px"></svg>
+      <svg id="eep-svg" viewBox="0 0 280 300" style="width:100%;max-width:300px"></svg>
     </div>
   </div>
 
@@ -790,125 +790,147 @@ function renderInputs(cfg, db, Fnv, bp, tp, pf, g, pb, Mu, Vu){
   });
 }
 
-/* ── SVG drawing ── */
+/* ── SVG drawing — side elevation ── */
 function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var svg=el('eep-svg'); if(!svg) return;
-  var W=260, H=300;
-  var cx=W/2;
+  var tp = v('inp-tp');
+  var W=280, H=300, margin=18;
 
-  /* scale: fit beam depth + extensions into ~220px height */
-  var totalH = dp;
-  var scale  = Math.min(220/totalH, 14);
-  if(unit==='si') scale = Math.min(220/(totalH/25.4), 14) / 25.4;
+  /* px/in: scale so plate height fits in ~200px */
+  var ppi = (unit==='us') ? Math.min(200/dp, 13) : Math.min(200/(dp/25.4), 13)/25.4;
 
-  var pxPerIn = (unit==='us') ? scale : scale;
-  if(unit==='si') pxPerIn = scale * 25.4;
+  var dp_px   = dp   * ppi;
+  var bd_px   = bm.d * ppi;
+  var btf_px  = Math.max(bm.tf * ppi, 3);
+  var btw_px  = Math.max(bm.tw * ppi, 2);
+  var bbf_px  = Math.min(bm.bf * ppi, 58);
+  var tp_px   = Math.max(tp  * ppi, 5);
+  var pf_px   = pf  * ppi;
+  var pb_px   = pb  * ppi;
+  var bolt_r  = Math.max(db  * ppi / 2, 3.5);
 
-  var svgH_px = dp * pxPerIn;
-  var svgY0   = (H - svgH_px) / 2;
+  /* x layout */
+  var col_x0  = margin;
+  var col_w   = 22;
+  var col_x1  = col_x0 + col_w;
+  var ep_x0   = col_x1;
+  var ep_x1   = ep_x0 + tp_px;
+  var beam_x1 = Math.min(ep_x1 + 90, W - 60); /* beam right edge */
 
-  var plate_w = bp_in * pxPerIn;
-  var beam_d  = bm.d * pxPerIn;
-  var beam_tf = Math.max(bm.tf * pxPerIn, 3);
-  var beam_tw = Math.max(bm.tw * pxPerIn, 2);
-  var ext_top = (dp - bm.d) / 2 * pxPerIn; /* extension above top flange */
+  /* y layout: plate centered */
+  var yC       = H / 2;
+  var yPT      = yC - dp_px / 2;     /* plate top */
+  var yPB      = yC + dp_px / 2;     /* plate bottom */
+  var yBT      = yC - bd_px / 2;     /* beam top flange top */
+  var yBB      = yC + bd_px / 2;     /* beam bottom flange bottom */
+  var ext      = (dp - bm.d) / 2 * ppi; /* extension px above/below flanges */
 
-  var plate_x0 = cx - plate_w/2;
-  var plate_x1 = cx + plate_w/2;
-  var gy0      = svgY0; /* top of plate */
-
-  /* bolt positions (in plate coord) */
-  var bolt_r   = Math.max(db * pxPerIn / 2, 3);
-  var g_px     = g * pxPerIn;
-  var pf_px    = pf * pxPerIn;
-  var pb_px    = (cfg==='8ES') ? pb * pxPerIn : 0;
-
-  /* bolt x positions */
-  var bx_L = cx - g_px/2;
-  var bx_R = cx + g_px/2;
-
-  /* bolt y positions (from top of plate) */
+  /* bolt y positions */
   var bolts = [];
-  var y_topFlange = gy0 + ext_top; /* y of top of top beam flange */
-  var y_botFlange = y_topFlange + beam_d; /* y of bottom of bottom beam flange */
-
   if(cfg==='8ES'){
-    /* outer row above top flange */
-    bolts.push({y: y_topFlange - pf_px - pb_px});
-    /* inner row above top flange */
-    bolts.push({y: y_topFlange - pf_px});
-    /* inner row below bottom flange */
-    bolts.push({y: y_botFlange + pf_px});
-    /* outer row below bottom flange */
-    bolts.push({y: y_botFlange + pf_px + pb_px});
+    bolts=[yBT-pf_px-pb_px, yBT-pf_px, yBB+pf_px, yBB+pf_px+pb_px];
   } else {
-    /* single row above top flange */
-    bolts.push({y: y_topFlange - pf_px});
-    /* single row below bottom flange */
-    bolts.push({y: y_botFlange + pf_px});
+    bolts=[yBT-pf_px, yBB+pf_px];
   }
+  var bx_mid = ep_x0 + tp_px/2; /* bolt cx in plate */
 
-  var html = '';
+  var s='';
 
-  /* plate outline */
-  html += '<rect x="'+plate_x0+'" y="'+gy0+'" width="'+plate_w+'" height="'+svgH_px
-    +'" fill="#e8f0f8" stroke="#1a4a7a" stroke-width="1.5"/>';
+  /* ── Column flange ── */
+  s+='<rect x="'+col_x0+'" y="10" width="'+col_w+'" height="'+(H-20)
+    +'" fill="#d4e0ec" stroke="#1a4a7a" stroke-width="1.5"/>';
+  /* Column web hint */
+  s+='<line x1="'+col_x1+'" y1="'+(yC-5)+'" x2="'+(col_x1+8)+'" y2="'+(yC-5)
+    +'" stroke="#8ab" stroke-width="0.8" stroke-dasharray="2,2"/>';
+  s+='<text x="'+(col_x0+col_w/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="#1a4a7a" font-family="sans-serif" font-weight="600">COL</text>';
 
-  /* beam flange rectangles (dashed, behind plate) */
-  var beam_bf_px = Math.min(bm.bf * pxPerIn, plate_w - 4);
-  var bfx0 = cx - beam_bf_px/2;
-  html += '<rect x="'+bfx0+'" y="'+y_topFlange+'" width="'+beam_bf_px+'" height="'+beam_tf
-    +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
-  html += '<rect x="'+bfx0+'" y="'+(y_botFlange - beam_tf)+'" width="'+beam_bf_px+'" height="'+beam_tf
-    +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
+  /* ── End plate ── */
+  s+='<rect x="'+ep_x0+'" y="'+yPT+'" width="'+tp_px+'" height="'+dp_px
+    +'" fill="#b8cfe0" stroke="#1a2332" stroke-width="2"/>';
 
-  /* beam web (dashed) */
-  var wh = beam_d - 2*beam_tf;
+  /* ── Beam top flange ── */
+  s+='<rect x="'+ep_x1+'" y="'+yBT+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
+    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+  /* top flange overlap on plate (weld zone) */
+  s+='<rect x="'+ep_x0+'" y="'+yBT+'" width="'+tp_px+'" height="'+btf_px
+    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+
+  /* ── Beam web ── */
+  var wh = bd_px - 2*btf_px;
   if(wh>0){
-    var wx0 = cx - beam_tw/2;
-    html += '<rect x="'+wx0+'" y="'+(y_topFlange+beam_tf)+'" width="'+beam_tw+'" height="'+wh
-      +'" fill="#c8d8e8" stroke="#3a6a9a" stroke-width="1" stroke-dasharray="4,2"/>';
+    var wx = ep_x1 + (bbf_px - btw_px)/2;
+    if(bm.bf>0) wx = ep_x1;
+    s+='<rect x="'+(ep_x1+(bbf_px/2-btw_px/2))+'" y="'+(yBT+btf_px)+'" width="'+btw_px+'" height="'+wh
+      +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
   }
 
-  /* stiffener lines for 4ES / 8ES */
+  /* ── Beam bottom flange ── */
+  s+='<rect x="'+ep_x1+'" y="'+(yBB-btf_px)+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
+    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+  s+='<rect x="'+ep_x0+'" y="'+(yBB-btf_px)+'" width="'+tp_px+'" height="'+btf_px
+    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+
+  /* ── Beam label ── */
+  s+='<text x="'+(ep_x1+8)+'" y="'+(yBT-4)+'" font-size="8" fill="#2a5a8a" font-family="sans-serif" font-weight="600">'+el('beamProfile').value+'</text>';
+
+  /* ── Weld triangles at flanges ── */
+  var ws=4;
+  s+='<polygon points="'+ep_x1+','+(yBT+btf_px)+' '+(ep_x1+ws)+','+(yBT+btf_px)+' '+ep_x1+','+(yBT+btf_px-ws)+'" fill="#c00"/>';
+  s+='<polygon points="'+ep_x1+','+(yBB-btf_px)+' '+(ep_x1+ws)+','+(yBB-btf_px)+' '+ep_x1+','+(yBB-btf_px+ws)+'" fill="#c00"/>';
+
+  /* ── Stiffener marks for 4ES/8ES ── */
   if(cfg==='4ES'||cfg==='8ES'){
-    var stif_y_top = y_topFlange - 4;
-    html += '<line x1="'+(cx-plate_w/2+2)+'" y1="'+stif_y_top+'" x2="'+(cx+plate_w/2-2)+'" y2="'+stif_y_top
-      +'" stroke="#1a4a7a" stroke-width="1" stroke-dasharray="3,2"/>';
-    var stif_y_bot = y_botFlange + 4;
-    html += '<line x1="'+(cx-plate_w/2+2)+'" y1="'+stif_y_bot+'" x2="'+(cx+plate_w/2-2)+'" y2="'+stif_y_bot
-      +'" stroke="#1a4a7a" stroke-width="1" stroke-dasharray="3,2"/>';
+    s+='<line x1="'+ep_x0+'" y1="'+(yBT-3)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBT-3)+'" stroke="#e06600" stroke-width="2.5"/>';
+    s+='<line x1="'+ep_x0+'" y1="'+(yBB+3)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBB+3)+'" stroke="#e06600" stroke-width="2.5"/>';
   }
 
-  /* bolts */
-  bolts.forEach(function(b){
-    [bx_L, bx_R].forEach(function(bx){
-      html += '<circle cx="'+bx+'" cy="'+b.y+'" r="'+bolt_r
-        +'" fill="white" stroke="#1a2332" stroke-width="1.5"/>';
-      /* hex head indicator */
-      html += '<circle cx="'+bx+'" cy="'+b.y+'" r="'+(bolt_r*0.45)
-        +'" fill="#1a2332"/>';
-    });
+  /* ── Bolts (visible in side elevation, one column) ── */
+  bolts.forEach(function(by){
+    /* nut on column side */
+    s+='<rect x="'+(col_x1-5)+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
+    /* bolt body through plate */
+    s+='<rect x="'+ep_x0+'" y="'+(by-bolt_r*0.4)+'" width="'+tp_px+'" height="'+(bolt_r*0.8)+'" fill="#778" rx="1"/>';
+    /* bolt head (right side of plate) */
+    s+='<rect x="'+ep_x1+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
+    /* washer circle */
+    s+='<circle cx="'+bx_mid+'" cy="'+by+'" r="'+bolt_r+'" fill="none" stroke="#223" stroke-width="1.2"/>';
   });
 
-  /* dimension annotation: bp */
-  var ann_y = gy0 - 12;
-  html += '<line x1="'+plate_x0+'" y1="'+(ann_y+4)+'" x2="'+plate_x0+'" y2="'+(ann_y-4)+'" stroke="#666" stroke-width="1"/>';
-  html += '<line x1="'+plate_x1+'" y1="'+(ann_y+4)+'" x2="'+plate_x1+'" y2="'+(ann_y-4)+'" stroke="#666" stroke-width="1"/>';
-  html += '<line x1="'+plate_x0+'" y1="'+ann_y+'" x2="'+plate_x1+'" y2="'+ann_y+'" stroke="#666" stroke-width="1"/>';
-  var lenLabel = (unit==='us') ? fmt(bp_in,2)+'″' : fmt(bp_in,0)+' mm';
-  html += '<text x="'+cx+'" y="'+(ann_y-3)+'" text-anchor="middle" font-size="9" fill="#1a2332" font-family="sans-serif">b&#x2099; = '+lenLabel+'</text>';
+  /* ── Dimension: pf (right of beam) ── */
+  var dim_x = beam_x1 + 10;
+  function dimLine(y1,y2,lbl){
+    s+='<line x1="'+beam_x1+'" y1="'+y1+'" x2="'+(dim_x+12)+'" y2="'+y1+'" stroke="#888" stroke-width="0.7"/>';
+    s+='<line x1="'+beam_x1+'" y1="'+y2+'" x2="'+(dim_x+12)+'" y2="'+y2+'" stroke="#888" stroke-width="0.7"/>';
+    s+='<line x1="'+(dim_x+8)+'" y1="'+y1+'" x2="'+(dim_x+8)+'" y2="'+y2+'" stroke="#555" stroke-width="1"/>';
+    var arrow=3;
+    s+='<polygon points="'+(dim_x+8)+','+y1+' '+(dim_x+8-arrow)+','+(y1+arrow)+' '+(dim_x+8+arrow)+','+(y1+arrow)+'" fill="#555"/>';
+    s+='<polygon points="'+(dim_x+8)+','+y2+' '+(dim_x+8-arrow)+','+(y2-arrow)+' '+(dim_x+8+arrow)+','+(y2-arrow)+'" fill="#555"/>';
+    var mid=(y1+y2)/2;
+    s+='<text x="'+(dim_x+16)+'" y="'+(mid+3)+'" font-size="8" fill="#333" font-family="sans-serif">'+lbl+'</text>';
+  }
 
-  /* gage annotation */
-  var g_ann_y = gy0 + svgH_px + 14;
-  html += '<line x1="'+bx_L+'" y1="'+(g_ann_y-4)+'" x2="'+bx_L+'" y2="'+(g_ann_y+4)+'" stroke="#666" stroke-width="1"/>';
-  html += '<line x1="'+bx_R+'" y1="'+(g_ann_y-4)+'" x2="'+bx_R+'" y2="'+(g_ann_y+4)+'" stroke="#666" stroke-width="1"/>';
-  html += '<line x1="'+bx_L+'" y1="'+g_ann_y+'" x2="'+bx_R+'" y2="'+g_ann_y+'" stroke="#666" stroke-width="1"/>';
-  var gLabel = (unit==='us') ? fmt(g,2)+'″' : fmt(g,0)+' mm';
-  html += '<text x="'+cx+'" y="'+(g_ann_y+11)+'" text-anchor="middle" font-size="9" fill="#1a2332" font-family="sans-serif">g = '+gLabel+'</text>';
+  var lu = unit==='us'?'″':' mm';
+  /* pf: top flange top face to top bolt */
+  if(bolts.length>=1 && ext>4){
+    dimLine(yBT, bolts[0], 'pₙ='+fmt(pf, unit==='us'?2:0)+lu);
+  }
+  /* pb: inner to outer bolt (8ES only) */
+  if(cfg==='8ES' && bolts.length>=2){
+    dimLine(bolts[1], bolts[0], 'pᵇ='+fmt(pb, unit==='us'?2:0)+lu);
+  }
+
+  /* ── dp callout (left of plate) ── */
+  var lx = col_x0 - 2;
+  s+='<line x1="'+col_x0+'" y1="'+yPT+'" x2="'+(lx-10)+'" y2="'+yPT+'" stroke="#888" stroke-width="0.7"/>';
+  s+='<line x1="'+col_x0+'" y1="'+yPB+'" x2="'+(lx-10)+'" y2="'+yPB+'" stroke="#888" stroke-width="0.7"/>';
+  s+='<line x1="'+(lx-6)+'" y1="'+yPT+'" x2="'+(lx-6)+'" y2="'+yPB+'" stroke="#555" stroke-width="1"/>';
+  var ar2=3;
+  s+='<polygon points="'+(lx-6)+','+yPT+' '+(lx-6-ar2)+','+(yPT+ar2)+' '+(lx-6+ar2)+','+(yPT+ar2)+'" fill="#555"/>';
+  s+='<polygon points="'+(lx-6)+','+yPB+' '+(lx-6-ar2)+','+(yPB-ar2)+' '+(lx-6+ar2)+','+(yPB-ar2)+'" fill="#555"/>';
+  s+='<text x="'+(lx-8)+'" y="'+(yC+3)+'" text-anchor="middle" font-size="8" fill="#333" font-family="sans-serif" writing-mode="vertical-rl" transform="rotate(-90,'+(lx-8)+','+(yC)+')">dₚ='+fmt(dp, unit==='us'?2:0)+lu+'</text>';
 
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  svg.innerHTML=html;
+  svg.innerHTML=s;
 }
 
 /* ── Save / Load ── */
