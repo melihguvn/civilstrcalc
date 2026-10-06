@@ -387,7 +387,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         <table class="res-tbl">
           <thead><tr>
             <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
-            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">&phi;R<sub>n</sub></th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Capacity</th>
             <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">DCR</th>
           </tr></thead>
           <tbody id="cap-tbl-body"></tbody>
@@ -486,16 +486,17 @@ var col  = {d:0, bf:0, tf:0, tw:0, k:0};
 
 var IN_TO_MM = 25.4, KIP_TO_KN = 4.4482, KIPFT_TO_KNM = 1.3558;
 
+/* [label, Fnv_N, Fnv_X, Fnt] — AISC 360-22 Table J3.2 / J3.2M */
 var BOLT_GRADES_US = [
-  ['A307',  27,  27],
-  ['A325',  48,  54],
-  ['A490',  60,  68]
+  ['A307',  27,  27,  45],
+  ['A325',  48,  54,  90],
+  ['A490',  60,  68, 113]
 ];
 var BOLT_GRADES_SI = [
-  ['4.6',   160, 180],
-  ['5.8',   208, 234],
-  ['8.8',   320, 360],
-  ['10.9',  400, 450]
+  ['4.6',   160, 180, 310],
+  ['5.8',   208, 234, 370],
+  ['8.8',   320, 360, 620],
+  ['10.9',  400, 450, 780]
 ];
 var BOLT_DIA_US = [
   ['3/4"',0.750],['7/8"',0.875],['1"',1.000],['1-1/8"',1.125],['1-1/4"',1.250]
@@ -520,9 +521,12 @@ function el(id){return document.getElementById(id);}
 function v(id){var e=el(id);return e?parseFloat(e.value)||0:0;}
 function set(id,val){var e=el(id);if(e)e.textContent=val;}
 function fmt(x,d){if(!isFinite(x)||isNaN(x))return'—';return x.toFixed(d===undefined?2:d);}
+function dcrCls(dcr){return dcr<=0.9?'ok':dcr<=1.0?'warn':'err';}
+function setClass(id,cls){var e=el(id);if(!e)return;e.className=e.className.replace(/\b(ok|warn|err)\b/g,'').trim();if(cls)e.classList.add(cls);}
 
 document.addEventListener('DOMContentLoaded',function(){
   buildAllDropdowns();
+  onConfigChange();
   onBeamTypeChange();
   onColTypeChange();
   el('ph-date').textContent  = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
@@ -645,108 +649,197 @@ function onConfigChange(){
 function calc(){
   if(!beam.d || !col.d) return;
 
-  var cfg  = el('eepConfig').value;
-  var tp   = v('inp-tp');
-  var bp   = v('inp-bp');
-  var pf   = v('inp-pf');
-  var g    = v('inp-g');
-  var pb   = v('inp-pb');
-  var Mu   = v('inp-Mu');
-  var Vu   = v('inp-Vu');
+  var cfg = el('eepConfig').value;
+  var tp  = v('inp-tp');
+  var bp  = v('inp-bp');
+  var pf  = v('inp-pf');
+  var g   = v('inp-g');
+  var pb  = v('inp-pb');
+  var Mu  = v('inp-Mu');
+  var Vu  = v('inp-Vu');
 
-  /* plate material */
+  /* ── Materials ── */
   var pmIdx = parseInt(el('plateMaterial').value)||0;
-  var pm = PLATE_GRADES[pmIdx];
-  var Fy_p = unit==='us'?pm[1]:pm[3];
-  var Fu_p = unit==='us'?pm[2]:pm[4];
+  var cmIdx = parseInt(el('colMaterial').value)||0;
+  var pm = PLATE_GRADES[pmIdx], cm = PLATE_GRADES[cmIdx];
+  var Fy_p  = unit==='us'?pm[1]:pm[3];
+  var Fy_c  = unit==='us'?cm[1]:cm[3];
 
-  /* bolt */
-  var bgi   = parseInt(el('boltGrade').value)||0;
-  var bdiIdx= parseInt(el('boltDia').value)||0;
-  var grades= unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
-  var sizes = unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
-  var Fnv   = grades[bgi][1];
-  var db    = sizes[bdiIdx][1];
+  /* ── Bolts ── */
+  var bgi    = parseInt(el('boltGrade').value)||0;
+  var bdiIdx = parseInt(el('boltDia').value)||0;
+  var grades = unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  var sizes  = unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  var Fnt = grades[bgi][3];          /* tension strength, ksi or MPa */
+  var db  = sizes[bdiIdx][1];
+  var Ab  = Math.PI/4*db*db;
 
-  /* plate height */
-  var d_beam = beam.d;
-  var dp;
-  if(cfg==='8ES'){
-    dp = d_beam + 2*(pf + pb);
-  } else {
-    dp = d_beam + 2*pf;
-  }
+  var E = unit==='us' ? 29000 : 200000;  /* ksi or MPa */
 
-  /* flange force */
-  var d_eff = d_beam - beam.tf; // lever arm ≈ beam d - tf (flange-to-flange CL)
-  var Tf;
-  if(unit==='us'){
-    Tf = (d_eff > 0) ? (Mu*12) / d_eff : 0; // kip·ft → kip·in / in = kip
-  } else {
-    Tf = (d_eff > 0) ? (Mu*1000) / d_eff : 0; // kN·m → kN·mm / mm = kN
-  }
+  /* ── Plate height ── */
+  var dp = cfg==='8ES' ? beam.d+2*(pf+pb) : beam.d+2*pf;
 
-  /* number of tension bolts per flange */
-  var nTens = cfg==='8ES' ? 4 : 2;
-  var Tu_bolt = nTens > 0 ? Tf / nTens : 0;
+  /* ── Flange force (LRFD) ── */
+  /* Lever arm = d - tf (center-to-center of flanges, conservative) */
+  var d_eff = beam.d - beam.tf;
+  var Mu_in = unit==='us' ? Mu*12 : Mu*1000;  /* kip·in or kN·mm */
+  var Tf = d_eff>0 ? Mu_in/d_eff : 0;         /* kip or kN */
 
-  /* bolt tension capacity (no prying, DG4 simplified) */
-  var phi_t = 0.75;
-  var Fnt = unit==='us' ? 90 : 620; /* ksi or MPa — A325 */
-  var Ab  = Math.PI/4 * db * db;
-  var phi_Rnt = phi_t * Fnt * Ab; /* per bolt */
+  /* phi factors */
+  var phi_t   = 0.75;   /* bolt tension */
+  var phi_pl  = 0.90;   /* plate bending */
+  var phi_cfb = 0.90;   /* col. flange bending */
+  var phi_cwy = 1.00;   /* col. web local yielding */
+  var phi_cwc = 0.75;   /* col. web crippling */
+  var phi_cwb = 0.90;   /* col. web comp. buckling */
+  var phi_pz  = 0.90;   /* panel zone */
 
-  /* render geometry */
-  renderGeo(dp, d_eff, Tf, nTens, Tu_bolt);
-  renderInputs(cfg, db, Fnv, bp, tp, pf, g, pb, Mu, Vu);
-  drawSvg(cfg, beam, dp, bp, pf, pb, g, db);
+  /* ── 1. Bolt tension §J3.6 ── */
+  var n_tens        = cfg==='8ES' ? 4 : 2;          /* bolts per flange */
+  var phi_Rnt_bolt  = phi_t * Fnt * Ab;             /* N (SI) or kip (US) */
+  var phi_Rnt_total = phi_Rnt_bolt * n_tens;
+  if(unit==='si'){phi_Rnt_bolt/=1000; phi_Rnt_total/=1000;}  /* → kN */
+  var Tu_bolt  = n_tens>0 ? Tf/n_tens : 0;          /* kip or kN */
+  var DCR_bolt = phi_Rnt_total>0 ? Tf/phi_Rnt_total : Infinity;
 
-  /* checks placeholder rows — engine to be added */
+  /* ── 2. End plate — simplified no-prying (T-stub per §J3 / DG4) ──
+     Plate spans pf from flange face to inner bolt CL.
+     Capacity (per bolt column of width g):
+       φMn = φ × Fy × tp² × g / 4   [kip·in (US) or kN·mm (SI)]
+     Demand: Tf × pf   [kip·in (US) or kN·mm (SI)]
+     DCR = Mf_demand / φMn                                          */
+  var phi_Mn_pl = phi_pl * Fy_p * tp*tp * g / 4;  /* N·mm (SI) or kip·in (US) */
+  if(unit==='si') phi_Mn_pl /= 1000;              /* → kN·mm */
+  var Mf_demand = Tf * pf;                         /* kip·in (US) or kN·mm (SI) */
+  var DCR_plate = phi_Mn_pl>0 ? Mf_demand/phi_Mn_pl : Infinity;
+  /* required thickness: tp² = 4·Tf·pf / (φ·Fy·g); Tf must be in base force units */
+  var Tf_base = unit==='si' ? Tf*1000 : Tf;        /* N (SI) or kip (US) */
+  var tp_req  = g>0 ? Math.sqrt(4*Tf_base*pf/(phi_pl*Fy_p*g)) : 0;
+
+  /* ── 3. Column flange local bending §J10.1 ── */
+  /* Rn = 6.25 × tf_col² × Fyf  (one concentrated transverse force) */
+  var phi_Rn_cfb = phi_cfb * 6.25 * col.tf*col.tf * Fy_c;
+  /* SI: Rn comes out in N (MPa × mm²), convert to kN */
+  if(unit==='si') phi_Rn_cfb /= 1000;
+  var DCR_cfb = phi_Rn_cfb>0 ? Tf/phi_Rn_cfb : Infinity;
+
+  /* ── 4. Column web local yielding §J10.2 ── */
+  /* Bearing length lb = tf_beam + 2×tp (load spreads through plate) */
+  var lb    = beam.tf + 2*tp;
+  var k_col = col.k>0 ? col.k : col.tf + (unit==='us'?0.5:12);
+  var phi_Rn_cwy = phi_cwy * Fy_c * col.tw * (5*k_col + lb);
+  if(unit==='si') phi_Rn_cwy /= 1000;
+  var DCR_cwy = phi_Rn_cwy>0 ? Tf/phi_Rn_cwy : Infinity;
+
+  /* ── 5. Column web crippling §J10.3 (Eq. J10-4, interior load) ── */
+  var ratio_Nd = lb/col.d;
+  var cripFactor = ratio_Nd<=0.2
+    ? 1 + 3*ratio_Nd*Math.pow(col.tw/col.tf,1.5)
+    : 1 + (4*ratio_Nd-0.2)*Math.pow(col.tw/col.tf,1.5);
+  var phi_Rn_cwc = phi_cwc * 0.80 * col.tw*col.tw
+    * cripFactor
+    * Math.sqrt(E * Fy_c * col.tf / col.tw);
+  if(unit==='si') phi_Rn_cwc /= 1000;
+  var DCR_cwc = phi_Rn_cwc>0 ? Tf/phi_Rn_cwc : Infinity;
+
+  /* ── 6. Column web compression buckling §J10.5 (Eq. J10-8) ── */
+  var h_col = col.d - 2*col.tf;
+  var phi_Rn_cwb = h_col>0
+    ? phi_cwb * 24 * Math.pow(col.tw,3) * Math.sqrt(E*Fy_c) / h_col
+    : Infinity;
+  if(unit==='si' && isFinite(phi_Rn_cwb)) phi_Rn_cwb /= 1000;
+  var DCR_cwb = phi_Rn_cwb>0 ? Tf/phi_Rn_cwb : Infinity;
+
+  /* ── 7. Panel zone shear §J10.6 (Eq. J10-11, Pr ≤ 0.75Pc) ── */
+  /* Demand: Vr = Tf (one-sided, no story shear reduction — conservative) */
+  var Vr_pz = Tf;
+  var phi_Rv_pz = phi_pz * 0.60 * Fy_c * col.d * col.tw
+    * (1 + 3*col.bf*col.tf*col.tf / (beam.d * col.d * col.tw));
+  if(unit==='si') phi_Rv_pz /= 1000;
+  var DCR_pz = phi_Rv_pz>0 ? Vr_pz/phi_Rv_pz : Infinity;
+
+  /* ── Build checks array ── */
   var forU = unit==='us'?'kip':'kN';
-  var placeholder = [
-    'Bolt tension (no prying) §J3.6',
-    'End plate flexure — yield line §3',
-    'Column flange local bending §J10.1',
-    'Column web local yielding §J10.2',
-    'Column web local crippling §J10.3',
-    'Column web compression buckling §J10.5',
-    'Panel zone shear §J10.6',
-    'Beam flange weld'
+  var lenU = unit==='us'?'in':'mm';
+  var checks=[
+    {name:'Bolt tension §J3.6',               cap:phi_Rnt_total, DCR:DCR_bolt,  group:'bolt'},
+    {name:'End plate — no-prying (DG4)',       cap:phi_Mn_pl,     DCR:DCR_plate, group:'plate', isMom:true},
+    {name:'Col. flange local bending §J10.1',  cap:phi_Rn_cfb,   DCR:DCR_cfb,   group:'col'},
+    {name:'Col. web local yielding §J10.2',    cap:phi_Rn_cwy,   DCR:DCR_cwy,   group:'col'},
+    {name:'Col. web crippling §J10.3',         cap:phi_Rn_cwc,   DCR:DCR_cwc,   group:'col'},
+    {name:'Col. web comp. buckling §J10.5',    cap:phi_Rn_cwb,   DCR:DCR_cwb,   group:'col'},
+    {name:'Panel zone shear §J10.6',           cap:phi_Rv_pz,    DCR:DCR_pz,    group:'col'}
   ];
+
+  /* governing check */
+  var DCR_max=0, govIdx=0;
+  checks.forEach(function(c,i){if(isFinite(c.DCR)&&c.DCR>DCR_max){DCR_max=c.DCR;govIdx=i;}});
+
+  /* ── Checks table ── */
+  var mU = unit==='us'?'kip·in':'kN·mm';
   var tbody=el('cap-tbl-body'); tbody.innerHTML='';
-  placeholder.forEach(function(name){
+  checks.forEach(function(c,i){
+    var cls=dcrCls(c.DCR), isGov=(i===govIdx);
+    var capStr = c.isMom
+      ? fmt(c.cap,unit==='us'?1:0)+' '+mU
+      : fmt(c.cap,unit==='us'?1:0)+' '+forU;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td style="font-size:.78rem">'+name+'</td>'
-      +'<td style="text-align:right;font-family:var(--mono);color:var(--text-dim);font-style:italic">—</td>'
-      +'<td style="text-align:right;font-family:var(--mono);color:var(--text-dim);font-style:italic">—</td>';
+    tr.innerHTML='<td style="font-size:.78rem"'+(isGov?' class="gov"':'')+'>'
+      +c.name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)"'+(isGov?' class="gov"':'')+'>'
+      +capStr+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)" class="'+cls+(isGov?' gov':'')+'">'+fmt(c.DCR,3)+(isGov?' &#x25C4;':'')+'</td>';
     tbody.appendChild(tr);
   });
 
-  /* tiles */
-  set('rv-bolt-dcr','—'); set('rv-bolt-gov','—');
-  set('rv-plate-dcr','—'); set('rv-plate-gov','—');
-  set('rv-col-dcr','—'); set('rv-col-gov','—');
+  /* ── Group tiles ── */
+  var boltDCR  = DCR_bolt;
+  var plateDCR = DCR_plate;
+  var colPairs =[
+    {d:DCR_cfb, n:'Col. flange'},{d:DCR_cwy,n:'Web yield'},
+    {d:DCR_cwc, n:'Web crip.'},{d:DCR_cwb,n:'Web buck.'},
+    {d:DCR_pz,  n:'Panel zone'}
+  ];
+  var colDCR=0, colGov='—';
+  colPairs.forEach(function(x){if(isFinite(x.d)&&x.d>colDCR){colDCR=x.d;colGov=x.n;}});
+  function setTile(vId,gId,dcr,gov){
+    var ve=el(vId); if(ve){ve.textContent=(isFinite(dcr)&&dcr>0)?fmt(dcr,3):'—';ve.className='fl-val'+(dcr>0?' '+dcrCls(dcr):'');}
+    var ge=el(gId); if(ge) ge.textContent=gov;
+  }
+  setTile('rv-bolt-dcr', 'rv-bolt-gov', boltDCR,  'Bolt tension');
+  setTile('rv-plate-dcr','rv-plate-gov',plateDCR,  'End plate');
+  setTile('rv-col-dcr',  'rv-col-gov',  colDCR,   colGov);
 
-  /* banner — show geometry is loaded */
+  /* ── DCR Banner ── */
   var banner=el('dcr-banner');
-  banner.className='dcr-banner neu';
-  el('dcr-icon').textContent='i';
-  set('dcr-text-main','Geometry loaded — design checks coming');
-  set('dcr-text-sub', 'Beam: '+el('beamProfile').value+' | Col: '+el('colProfile').value+' | Config: '+cfg);
+  var bc=dcrCls(DCR_max);
+  banner.className='dcr-banner '+bc;
+  var icon=bc==='ok'?'&#x2714;':bc==='warn'?'&#x26A0;':'&#x2716;';
+  el('dcr-icon').innerHTML=icon;
+  set('dcr-text-main',bc==='ok'?'OK — Connection adequate':bc==='warn'?'Warning — Near capacity':'FAIL — Inadequate capacity');
+  set('dcr-text-sub', checks[govIdx].name.replace(/<[^>]+>/g,'')+' governs · DCR = '+fmt(DCR_max,3));
+
+  /* ── Render sub-tables ── */
+  renderGeo(dp, d_eff, Tf, n_tens, Tu_bolt, tp_req, Vr_pz, phi_Rv_pz);
+  renderInputs(cfg, db, Fnt, bp, tp, pf, g, pb, Mu, Vu);
+  drawSvg(cfg, beam, dp, bp, pf, pb, g, db);
 }
 
-function renderGeo(dp, d_eff, Tf, nTens, Tu_bolt){
-  var lenU = unit==='us'?'in':'mm';
-  var forU = unit==='us'?'kip':'kN';
+function renderGeo(dp, d_eff, Tf, nTens, Tu_bolt, tp_req, Vr_pz, phi_Rv_pz){
+  var lenU=unit==='us'?'in':'mm', forU=unit==='us'?'kip':'kN';
+  var mU=unit==='us'?'kip·in':'kN·mm';
   var tbody=el('geo-body'); tbody.innerHTML='';
   var rows=[
-    ['End plate height d<sub>p</sub>', fmt(dp,3)+' '+lenU],
-    ['Beam depth d',                   fmt(beam.d,3)+' '+lenU],
-    ['Column depth d<sub>c</sub>',     fmt(col.d,3)+' '+lenU],
-    ['Lever arm d<sub>eff</sub>',      fmt(d_eff,3)+' '+lenU],
-    ['Flange force T<sub>f</sub>',     fmt(Tf,1)+' '+forU],
-    ['Tension bolts per flange',       nTens+' bolts'],
-    ['Force per bolt T<sub>u</sub>',   fmt(Tu_bolt,1)+' '+forU+'/bolt']
+    ['End plate height d<sub>p</sub>',  fmt(dp,unit==='us'?3:1)+' '+lenU],
+    ['Beam depth d',                    fmt(beam.d,unit==='us'?3:1)+' '+lenU],
+    ['Column depth d<sub>c</sub>',      fmt(col.d,unit==='us'?3:1)+' '+lenU],
+    ['Lever arm d<sub>eff</sub>',       fmt(d_eff,unit==='us'?3:1)+' '+lenU],
+    ['Flange force T<sub>f</sub>',      fmt(Tf,unit==='us'?1:0)+' '+forU],
+    ['Tension bolts per flange',        nTens+' bolts'],
+    ['T<sub>u</sub> per bolt',          fmt(Tu_bolt,unit==='us'?1:0)+' '+forU+'/bolt'],
+    ['t<sub>p,req</sub> (no prying)',   fmt(tp_req,unit==='us'?4:2)+' '+lenU],
+    ['Panel zone demand V<sub>r</sub>', fmt(Vr_pz,unit==='us'?1:0)+' '+forU],
+    ['Panel zone φR<sub>v</sub>',  fmt(phi_Rv_pz,unit==='us'?1:0)+' '+forU]
   ];
   rows.forEach(function(r){
     var tr=document.createElement('tr');
