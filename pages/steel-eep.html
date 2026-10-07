@@ -880,24 +880,25 @@ function renderInputs(cfg, db, Fnv, bp, tp, pf, g, pb, Mu, Vu){
   });
 }
 
-/* ── SVG drawing — side elevation ── */
+/* ── SVG drawing — side elevation + plan view inset ── */
 function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var svg=el('eep-svg'); if(!svg) return;
   var tp = v('inp-tp');
-  var W=280, H=300, margin=18;
+  var W=300, H=330, margin=22;
+  var lu = unit==='us'?'"':' mm';
 
-  /* px/in: scale so plate height fits in ~200px */
-  var ppi = (unit==='us') ? Math.min(200/dp, 13) : Math.min(200/(dp/25.4), 13)/25.4;
+  /* scale: dp → max 185px */
+  var ppi = (unit==='us') ? Math.min(185/dp, 14) : Math.min(185/(dp/25.4), 14)/25.4;
 
-  var dp_px   = dp   * ppi;
-  var bd_px   = bm.d * ppi;
-  var btf_px  = Math.max(bm.tf * ppi, 3);
-  var btw_px  = Math.max(bm.tw * ppi, 2);
-  var bbf_px  = Math.min(bm.bf * ppi, 58);
-  var tp_px   = Math.max(tp  * ppi, 5);
-  var pf_px   = pf  * ppi;
-  var pb_px   = pb  * ppi;
-  var bolt_r  = Math.max(db  * ppi / 2, 3.5);
+  var dp_px  = dp   * ppi;
+  var bd_px  = bm.d * ppi;
+  var btf_px = Math.max(bm.tf * ppi, 3);
+  var btw_px = Math.max(bm.tw * ppi, 2);
+  var bbf_px = Math.min(bm.bf * ppi, 58);
+  var tp_px  = Math.max(tp   * ppi, 5);
+  var pf_px  = pf  * ppi;
+  var pb_px  = pb  * ppi;
+  var bolt_r = Math.max(db  * ppi / 2, 4);
 
   /* x layout */
   var col_x0  = margin;
@@ -905,119 +906,153 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var col_x1  = col_x0 + col_w;
   var ep_x0   = col_x1;
   var ep_x1   = ep_x0 + tp_px;
-  var beam_x1 = Math.min(ep_x1 + 90, W - 60); /* beam right edge */
+  var beam_x1 = Math.min(ep_x1 + 85, W - 72);
 
-  /* y layout: plate centered */
-  var yC       = H / 2;
-  var yPT      = yC - dp_px / 2;     /* plate top */
-  var yPB      = yC + dp_px / 2;     /* plate bottom */
-  var yBT      = yC - bd_px / 2;     /* beam top flange top */
-  var yBB      = yC + bd_px / 2;     /* beam bottom flange bottom */
-  var ext      = (dp - bm.d) / 2 * ppi; /* extension px above/below flanges */
+  /* y layout: center at yC=145 */
+  var yC  = 145;
+  var yPT = yC - dp_px / 2;
+  var yPB = yC + dp_px / 2;
+  var yBT = yC - bd_px / 2;
+  var yBB = yC + bd_px / 2;
 
   /* bolt y positions */
-  var bolts = [];
-  if(cfg==='8ES'){
-    bolts=[yBT-pf_px-pb_px, yBT-pf_px, yBB+pf_px, yBB+pf_px+pb_px];
-  } else {
-    bolts=[yBT-pf_px, yBB+pf_px];
-  }
-  var bx_mid = ep_x0 + tp_px/2; /* bolt cx in plate */
+  var bolts = cfg==='8ES'
+    ? [yBT-pf_px-pb_px, yBT-pf_px, yBB+pf_px, yBB+pf_px+pb_px]
+    : [yBT-pf_px, yBB+pf_px];
 
-  var s='';
+  /* plate visual rect — always contains bolts with clearance */
+  var yPT_v = Math.min(yPT, bolts[0] - bolt_r - 4);
+  var yPB_v = Math.max(yPB, bolts[bolts.length-1] + bolt_r + 4);
+
+  var bx_mid = ep_x0 + tp_px/2;
+  var s = '';
 
   /* ── Column flange ── */
-  s+='<rect x="'+col_x0+'" y="10" width="'+col_w+'" height="'+(H-20)
-    +'" fill="#d4e0ec" stroke="#1a4a7a" stroke-width="1.5"/>';
-  /* Column web hint */
-  s+='<line x1="'+col_x1+'" y1="'+(yC-5)+'" x2="'+(col_x1+8)+'" y2="'+(yC-5)
-    +'" stroke="#8ab" stroke-width="0.8" stroke-dasharray="2,2"/>';
-  s+='<text x="'+(col_x0+col_w/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="#1a4a7a" font-family="sans-serif" font-weight="600">COL</text>';
+  var col_bot = yPB_v + 16;
+  s += '<rect x="'+col_x0+'" y="10" width="'+col_w+'" height="'+(col_bot-10)
+     + '" fill="#d4e0ec" stroke="#1a4a7a" stroke-width="1.5"/>';
+  s += '<text x="'+(col_x0+col_w/2)+'" y="'+(col_bot+9)
+     + '" text-anchor="middle" font-size="7.5" fill="#1a4a7a" font-family="sans-serif" font-weight="600">COL</text>';
 
   /* ── End plate ── */
-  s+='<rect x="'+ep_x0+'" y="'+yPT+'" width="'+tp_px+'" height="'+dp_px
-    +'" fill="#b8cfe0" stroke="#1a2332" stroke-width="2"/>';
+  s += '<rect x="'+ep_x0+'" y="'+yPT_v+'" width="'+tp_px
+     + '" height="'+(yPB_v-yPT_v)+'" fill="#b8cfe0" stroke="#1a2332" stroke-width="1.5"/>';
 
-  /* ── Beam top flange ── */
-  s+='<rect x="'+ep_x1+'" y="'+yBT+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
-    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
-  /* top flange overlap on plate (weld zone) */
-  s+='<rect x="'+ep_x0+'" y="'+yBT+'" width="'+tp_px+'" height="'+btf_px
-    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
-
-  /* ── Beam web ── */
+  /* ── Beam flanges and web ── */
+  /* top flange */
+  s += '<rect x="'+ep_x0+'" y="'+yBT+'" width="'+tp_px+'" height="'+btf_px
+     + '" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="0.5" opacity="0.6"/>';
+  s += '<rect x="'+ep_x1+'" y="'+yBT+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
+     + '" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+  /* web */
   var wh = bd_px - 2*btf_px;
   if(wh>0){
-    var wx = ep_x1 + (bbf_px - btw_px)/2;
-    if(bm.bf>0) wx = ep_x1;
-    s+='<rect x="'+(ep_x1+(bbf_px/2-btw_px/2))+'" y="'+(yBT+btf_px)+'" width="'+btw_px+'" height="'+wh
-      +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+    s += '<rect x="'+(ep_x1+(bbf_px/2-btw_px/2))+'" y="'+(yBT+btf_px)+'" width="'+btw_px
+       + '" height="'+wh+'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
   }
-
-  /* ── Beam bottom flange ── */
-  s+='<rect x="'+ep_x1+'" y="'+(yBB-btf_px)+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
-    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
-  s+='<rect x="'+ep_x0+'" y="'+(yBB-btf_px)+'" width="'+tp_px+'" height="'+btf_px
-    +'" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
+  /* bottom flange */
+  s += '<rect x="'+ep_x0+'" y="'+(yBB-btf_px)+'" width="'+tp_px+'" height="'+btf_px
+     + '" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="0.5" opacity="0.6"/>';
+  s += '<rect x="'+ep_x1+'" y="'+(yBB-btf_px)+'" width="'+(beam_x1-ep_x1)+'" height="'+btf_px
+     + '" fill="#c2d4e4" stroke="#2a5a8a" stroke-width="1"/>';
 
   /* ── Beam label ── */
-  s+='<text x="'+(ep_x1+8)+'" y="'+(yBT-4)+'" font-size="8" fill="#2a5a8a" font-family="sans-serif" font-weight="600">'+el('beamProfile').value+'</text>';
+  s += '<text x="'+(ep_x1+5)+'" y="'+(yBT-5)
+     + '" font-size="8" fill="#2a5a8a" font-family="sans-serif" font-weight="600">'+el('beamProfile').value+'</text>';
 
-  /* ── Weld triangles at flanges ── */
+  /* ── Weld triangles ── */
   var ws=4;
-  s+='<polygon points="'+ep_x1+','+(yBT+btf_px)+' '+(ep_x1+ws)+','+(yBT+btf_px)+' '+ep_x1+','+(yBT+btf_px-ws)+'" fill="#c00"/>';
-  s+='<polygon points="'+ep_x1+','+(yBB-btf_px)+' '+(ep_x1+ws)+','+(yBB-btf_px)+' '+ep_x1+','+(yBB-btf_px+ws)+'" fill="#c00"/>';
+  s += '<polygon points="'+ep_x1+','+(yBT+btf_px)+' '+(ep_x1+ws)+','+(yBT+btf_px)
+     + ' '+ep_x1+','+(yBT+btf_px-ws)+'" fill="#c00"/>';
+  s += '<polygon points="'+ep_x1+','+(yBB-btf_px)+' '+(ep_x1+ws)+','+(yBB-btf_px)
+     + ' '+ep_x1+','+(yBB-btf_px+ws)+'" fill="#c00"/>';
 
-  /* ── Stiffener marks for 4ES/8ES ── */
+  /* ── Stiffener marks ── */
   if(cfg==='4ES'||cfg==='8ES'){
-    s+='<line x1="'+ep_x0+'" y1="'+(yBT-3)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBT-3)+'" stroke="#e06600" stroke-width="2.5"/>';
-    s+='<line x1="'+ep_x0+'" y1="'+(yBB+3)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBB+3)+'" stroke="#e06600" stroke-width="2.5"/>';
+    s += '<line x1="'+ep_x0+'" y1="'+(yBT-2)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBT-2)+'" stroke="#e06600" stroke-width="2.5"/>';
+    s += '<line x1="'+ep_x0+'" y1="'+(yBB+2)+'" x2="'+(ep_x0+tp_px)+'" y2="'+(yBB+2)+'" stroke="#e06600" stroke-width="2.5"/>';
   }
 
-  /* ── Bolts (visible in side elevation, one column) ── */
+  /* ── Bolts ── */
   bolts.forEach(function(by){
-    /* nut on column side */
-    s+='<rect x="'+(col_x1-5)+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
-    /* bolt body through plate */
-    s+='<rect x="'+ep_x0+'" y="'+(by-bolt_r*0.4)+'" width="'+tp_px+'" height="'+(bolt_r*0.8)+'" fill="#778" rx="1"/>';
-    /* bolt head (right side of plate) */
-    s+='<rect x="'+ep_x1+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
-    /* washer circle */
-    s+='<circle cx="'+bx_mid+'" cy="'+by+'" r="'+bolt_r+'" fill="none" stroke="#223" stroke-width="1.2"/>';
+    s += '<rect x="'+(col_x1-5)+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
+    s += '<rect x="'+ep_x0+'" y="'+(by-bolt_r*0.4)+'" width="'+tp_px+'" height="'+(bolt_r*0.8)+'" fill="#778" rx="1"/>';
+    s += '<rect x="'+ep_x1+'" y="'+(by-bolt_r*0.55)+'" width="5" height="'+(bolt_r*1.1)+'" fill="#445" rx="1"/>';
+    s += '<circle cx="'+bx_mid+'" cy="'+by+'" r="'+bolt_r+'" fill="none" stroke="#223" stroke-width="1.2"/>';
   });
 
-  /* ── Dimension: pf (right of beam) ── */
-  var dim_x = beam_x1 + 10;
+  /* ── Dimension lines (right side) ── */
+  var dim_lx = beam_x1 + 16;
   function dimLine(y1,y2,lbl){
-    s+='<line x1="'+beam_x1+'" y1="'+y1+'" x2="'+(dim_x+12)+'" y2="'+y1+'" stroke="#888" stroke-width="0.7"/>';
-    s+='<line x1="'+beam_x1+'" y1="'+y2+'" x2="'+(dim_x+12)+'" y2="'+y2+'" stroke="#888" stroke-width="0.7"/>';
-    s+='<line x1="'+(dim_x+8)+'" y1="'+y1+'" x2="'+(dim_x+8)+'" y2="'+y2+'" stroke="#555" stroke-width="1"/>';
-    var arrow=3;
-    s+='<polygon points="'+(dim_x+8)+','+y1+' '+(dim_x+8-arrow)+','+(y1+arrow)+' '+(dim_x+8+arrow)+','+(y1+arrow)+'" fill="#555"/>';
-    s+='<polygon points="'+(dim_x+8)+','+y2+' '+(dim_x+8-arrow)+','+(y2-arrow)+' '+(dim_x+8+arrow)+','+(y2-arrow)+'" fill="#555"/>';
-    var mid=(y1+y2)/2;
-    s+='<text x="'+(dim_x+16)+'" y="'+(mid+3)+'" font-size="8" fill="#333" font-family="sans-serif">'+lbl+'</text>';
+    s += '<line x1="'+beam_x1+'" y1="'+y1+'" x2="'+(dim_lx+4)+'" y2="'+y1+'" stroke="#aaa" stroke-width="0.6"/>';
+    s += '<line x1="'+beam_x1+'" y1="'+y2+'" x2="'+(dim_lx+4)+'" y2="'+y2+'" stroke="#aaa" stroke-width="0.6"/>';
+    s += '<line x1="'+dim_lx+'" y1="'+y1+'" x2="'+dim_lx+'" y2="'+y2+'" stroke="#555" stroke-width="1"/>';
+    var ar=3;
+    s += '<polygon points="'+dim_lx+','+y1+' '+(dim_lx-ar)+','+(y1+ar)+' '+(dim_lx+ar)+','+(y1+ar)+'" fill="#555"/>';
+    s += '<polygon points="'+dim_lx+','+y2+' '+(dim_lx-ar)+','+(y2-ar)+' '+(dim_lx+ar)+','+(y2-ar)+'" fill="#555"/>';
+    s += '<text x="'+(dim_lx+6)+'" y="'+((y1+y2)/2+4)+'" font-size="8.5" fill="#333" font-family="sans-serif">'+lbl+'</text>';
   }
 
-  var lu = unit==='us'?'″':' mm';
-  /* pf: top flange top face to top bolt */
-  if(bolts.length>=1 && ext>4){
-    dimLine(yBT, bolts[0], 'pₙ='+fmt(pf, unit==='us'?2:0)+lu);
+  /* pf */
+  if(bolts.length>=1){
+    dimLine(yBT, bolts[0],
+      'p<tspan dy="3" font-size="6">f</tspan><tspan dy="-3">='+fmt(pf,unit==='us'?2:0)+lu+'</tspan>');
   }
-  /* pb: inner to outer bolt (8ES only) */
-  if(cfg==='8ES' && bolts.length>=2){
-    dimLine(bolts[1], bolts[0], 'pᵇ='+fmt(pb, unit==='us'?2:0)+lu);
+  /* pb (8ES only) */
+  if(cfg==='8ES'&&bolts.length>=2){
+    dimLine(bolts[1], bolts[0],
+      'p<tspan dy="3" font-size="6">b</tspan><tspan dy="-3">='+fmt(pb,unit==='us'?2:0)+lu+'</tspan>');
   }
 
-  /* ── dp callout (left of plate) ── */
-  var lx = col_x0 - 2;
-  s+='<line x1="'+col_x0+'" y1="'+yPT+'" x2="'+(lx-10)+'" y2="'+yPT+'" stroke="#888" stroke-width="0.7"/>';
-  s+='<line x1="'+col_x0+'" y1="'+yPB+'" x2="'+(lx-10)+'" y2="'+yPB+'" stroke="#888" stroke-width="0.7"/>';
-  s+='<line x1="'+(lx-6)+'" y1="'+yPT+'" x2="'+(lx-6)+'" y2="'+yPB+'" stroke="#555" stroke-width="1"/>';
-  var ar2=3;
-  s+='<polygon points="'+(lx-6)+','+yPT+' '+(lx-6-ar2)+','+(yPT+ar2)+' '+(lx-6+ar2)+','+(yPT+ar2)+'" fill="#555"/>';
-  s+='<polygon points="'+(lx-6)+','+yPB+' '+(lx-6-ar2)+','+(yPB-ar2)+' '+(lx-6+ar2)+','+(yPB-ar2)+'" fill="#555"/>';
-  s+='<text x="'+(lx-8)+'" y="'+(yC+3)+'" text-anchor="middle" font-size="8" fill="#333" font-family="sans-serif" writing-mode="vertical-rl" transform="rotate(-90,'+(lx-8)+','+(yC)+')">dₚ='+fmt(dp, unit==='us'?2:0)+lu+'</text>';
+  /* ── dp callout (left) ── */
+  var lxl = col_x0 - 8;
+  s += '<line x1="'+col_x0+'" y1="'+yPT_v+'" x2="'+(lxl-4)+'" y2="'+yPT_v+'" stroke="#aaa" stroke-width="0.6"/>';
+  s += '<line x1="'+col_x0+'" y1="'+yPB_v+'" x2="'+(lxl-4)+'" y2="'+yPB_v+'" stroke="#aaa" stroke-width="0.6"/>';
+  s += '<line x1="'+lxl+'" y1="'+yPT_v+'" x2="'+lxl+'" y2="'+yPB_v+'" stroke="#555" stroke-width="1"/>';
+  s += '<polygon points="'+lxl+','+yPT_v+' '+(lxl-3)+','+(yPT_v+3)+' '+(lxl+3)+','+(yPT_v+3)+'" fill="#555"/>';
+  s += '<polygon points="'+lxl+','+yPB_v+' '+(lxl-3)+','+(yPB_v-3)+' '+(lxl+3)+','+(yPB_v-3)+'" fill="#555"/>';
+  s += '<text x="'+(lxl-3)+'" y="'+yC+'" text-anchor="middle" font-size="8.5" fill="#333" font-family="sans-serif"'
+     + ' transform="rotate(-90,'+(lxl-3)+','+yC+')">'
+     + 'd<tspan dy="3" font-size="6">p</tspan><tspan dy="-3">='+fmt(dp,unit==='us'?2:0)+lu+'</tspan></text>';
+
+  /* ── Plan view inset — bolt gage g ── */
+  var py0 = yPB_v + 22;
+  if(py0 + 58 > H) H = py0 + 62;
+  var pw = 115, ph = 50;
+  var px0 = col_x0;
+  var pcx = px0 + pw/2;
+
+  /* schematic: g shown as fixed 42px, bolt circles r=4 */
+  var ins_g = 42, ins_r = 4;
+  var bx_l  = pcx - ins_g/2;
+  var bx_r  = pcx + ins_g/2;
+  var by_p  = py0 + ph*0.62;
+  var gly   = py0 + 16;
+
+  s += '<rect x="'+px0+'" y="'+py0+'" width="'+pw+'" height="'+ph
+     + '" fill="#f4f7fb" stroke="#c5d0dc" stroke-width="1" rx="3"/>';
+  s += '<text x="'+(px0+5)+'" y="'+(py0+9)
+     + '" font-size="6.5" fill="#8898aa" font-family="sans-serif">Plan view — bolt gage</text>';
+
+  /* plate outline */
+  var pl_w = pw-12;
+  s += '<rect x="'+(pcx-pl_w/2)+'" y="'+(py0+12)+'" width="'+pl_w+'" height="'+(ph-16)
+     + '" fill="#cdd8e3" stroke="#334" stroke-width="0.8"/>';
+
+  /* beam web CL */
+  s += '<line x1="'+pcx+'" y1="'+(py0+13)+'" x2="'+pcx+'" y2="'+(py0+ph-4)
+     + '" stroke="#2a5a8a" stroke-width="1.5" stroke-dasharray="3,2"/>';
+
+  /* bolt circles */
+  s += '<circle cx="'+bx_l+'" cy="'+by_p+'" r="'+ins_r+'" fill="#e8eef4" stroke="#334" stroke-width="1"/>';
+  s += '<circle cx="'+bx_r+'" cy="'+by_p+'" r="'+ins_r+'" fill="#e8eef4" stroke="#334" stroke-width="1"/>';
+
+  /* g dimension arrow */
+  s += '<line x1="'+(bx_l+ins_r)+'" y1="'+gly+'" x2="'+(bx_r-ins_r)+'" y2="'+gly+'" stroke="#444" stroke-width="0.9"/>';
+  s += '<polygon points="'+(bx_l+ins_r)+','+gly+' '+(bx_l+ins_r+4)+','+(gly-2)+' '+(bx_l+ins_r+4)+','+(gly+2)+'" fill="#444"/>';
+  s += '<polygon points="'+(bx_r-ins_r)+','+gly+' '+(bx_r-ins_r-4)+','+(gly-2)+' '+(bx_r-ins_r-4)+','+(gly+2)+'" fill="#444"/>';
+  s += '<text x="'+pcx+'" y="'+(gly-2)+'" text-anchor="middle" font-size="8" fill="#222" font-family="sans-serif">'
+     + 'g<tspan dy="3" font-size="6">='+fmt(g,unit==='us'?2:0)+lu+'</tspan></text>';
 
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.innerHTML=s;
