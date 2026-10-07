@@ -147,6 +147,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .bg-panel .tb p{margin:0 0 10px}
 .bg-panel .tb p:last-child{margin-bottom:0}
 
+.geom-warn-box{display:none;margin:8px 0;border-radius:6px;overflow:hidden;border:1px solid transparent;}
+.geom-warn-box.visible{display:block;}
+.gw-item{display:flex;align-items:baseline;gap:8px;padding:6px 11px;font-size:.77rem;font-family:var(--sans);line-height:1.45;}
+.gw-item+.gw-item{border-top:1px solid rgba(0,0,0,.06);}
+.gw-error{background:#fff2f2;color:#8b1a1a;}
+.gw-warn{background:#fffbe6;color:#6b4c00;}
+.gw-icon{flex-shrink:0;font-size:.82rem;font-weight:700;}
+
 .print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px}
 .ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans)}
 .ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
@@ -380,6 +388,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <span id="dcr-text-sub">Calculations will appear here</span>
         </div>
       </div>
+
+      <!-- Geometry Warnings -->
+      <div class="geom-warn-box" id="geom-warn-box"></div>
 
       <!-- Design Checks — placeholder until calc engine added -->
       <div class="rpt-sec">
@@ -820,6 +831,54 @@ function calc(){
   set('dcr-text-sub', checks[govIdx].name.replace(/<[^>]+>/g,'')+' governs · DCR = '+fmt(DCR_max,3));
 
   /* ── Render sub-tables ── */
+  /* ── Geometry warnings ── */
+  var gwbox = el('geom-warn-box');
+  gwbox.innerHTML = '';
+  gwbox.className = 'geom-warn-box';
+  var gwLu = unit==='us' ? 'in' : 'mm';
+  var min_edge = 1.5 * db;
+  var min_sp   = 3.0 * db;
+  var gwItems  = [];
+
+  if(bp > col.bf)
+    gwItems.push({sev:'error', msg:'Plate width b<sub>p</sub>='+fmt(bp,unit==='us'?3:0)+' '+gwLu
+      +' exceeds column flange width b<sub>f,col</sub>='+fmt(col.bf,unit==='us'?3:0)+' '+gwLu
+      +'. Bolts will extend beyond the column flange.'});
+
+  if(bp < beam.bf)
+    gwItems.push({sev:'warn', msg:'Plate width b<sub>p</sub>='+fmt(bp,unit==='us'?3:0)+' '+gwLu
+      +' is less than beam flange b<sub>f,beam</sub>='+fmt(beam.bf,unit==='us'?3:0)+' '+gwLu
+      +'. Typically b<sub>p</sub> ≥ b<sub>f,beam</sub>.'});
+
+  if(g + 2*min_edge > bp)
+    gwItems.push({sev:'error', msg:'Bolt gage g='+fmt(g,unit==='us'?3:0)+' '+gwLu
+      +' leaves less than 1.5d<sub>b</sub>='+fmt(min_edge,unit==='us'?3:0)+' '+gwLu
+      +' edge distance each side. Increase b<sub>p</sub> or reduce g.'});
+
+  if(pf < min_edge)
+    gwItems.push({sev:'warn', msg:'p<sub>f</sub>='+fmt(pf,unit==='us'?3:0)+' '+gwLu
+      +' < 1.5d<sub>b</sub>='+fmt(min_edge,unit==='us'?3:0)+' '+gwLu
+      +'. Minimum edge distance (§J3.4) may not be satisfied.'});
+
+  if(cfg==='8ES' && pb < min_sp)
+    gwItems.push({sev:'warn', msg:'p<sub>b</sub>='+fmt(pb,unit==='us'?3:0)+' '+gwLu
+      +' < 3d<sub>b</sub>='+fmt(min_sp,unit==='us'?3:0)+' '+gwLu
+      +'. Minimum bolt spacing (§J3.3) may not be satisfied.'});
+
+  if(g < min_sp)
+    gwItems.push({sev:'warn', msg:'Bolt gage g='+fmt(g,unit==='us'?3:0)+' '+gwLu
+      +' < 3d<sub>b</sub>='+fmt(min_sp,unit==='us'?3:0)+' '+gwLu
+      +'. Minimum bolt spacing (§J3.3) may not be satisfied.'});
+
+  if(gwItems.length){
+    gwbox.className = 'geom-warn-box visible';
+    gwItems.forEach(function(w){
+      var icon = w.sev==='error' ? '✕' : '⚠';
+      gwbox.innerHTML += '<div class="gw-item gw-'+w.sev+'">'
+        +'<span class="gw-icon">'+icon+'</span><span>'+w.msg+'</span></div>';
+    });
+  }
+
   renderGeo(dp, d_eff, Tf, n_tens, Tu_bolt, tp_req, Vr_pz, phi_Rv_pz);
   renderInputs(cfg, db, Fnt, bp, tp, pf, g, pb, Mu, Vu);
   drawSvg(cfg, beam, dp, bp, pf, pb, g, db);
