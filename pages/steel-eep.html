@@ -702,19 +702,19 @@ function calc(){
   var Tu_bolt  = n_tens>0 ? Tf/n_tens : 0;          /* kip or kN */
   var DCR_bolt = phi_Rnt_total>0 ? Tf/phi_Rnt_total : Infinity;
 
-  /* ── 2. End plate — simplified no-prying (T-stub per §J3 / DG4) ──
-     Plate spans pf from flange face to inner bolt CL.
-     Capacity (per bolt column of width g):
-       φMn = φ × Fy × tp² × g / 4   [kip·in (US) or kN·mm (SI)]
-     Demand: Tf × pf   [kip·in (US) or kN·mm (SI)]
-     DCR = Mf_demand / φMn                                          */
-  var phi_Mn_pl = phi_pl * Fy_p * tp*tp * g / 4;  /* N·mm (SI) or kip·in (US) */
-  if(unit==='si') phi_Mn_pl /= 1000;              /* → kN·mm */
-  var Mf_demand = Tf * pf;                         /* kip·in (US) or kN·mm (SI) */
-  var DCR_plate = phi_Mn_pl>0 ? Mf_demand/phi_Mn_pl : Infinity;
-  /* required thickness: tp² = 4·Tf·pf / (φ·Fy·g); Tf must be in base force units */
-  var Tf_base = unit==='si' ? Tf*1000 : Tf;        /* N (SI) or kip (US) */
-  var tp_req  = g>0 ? Math.sqrt(4*Tf_base*pf/(phi_pl*Fy_p*g)) : 0;
+  /* ── 2. End plate — DG4 yield line (Table 3-1, 4E/4ES; 8ES outer-row approx.) ──
+     s   = √(bp·g) / 2
+     Yp  = (bp/2)·(1/pf + 1/s) + 2s/g − 0.5   [in⁻¹ or mm⁻¹]
+     φRn = φ·Fy·tp²·Yp   [kip (US) or N→kN (SI)]
+     DCR = Tf / φRn                                                  */
+  var s_pl      = 0.5 * Math.sqrt(bp * g);
+  var Yp        = (bp/2) * (1/pf + 1/s_pl) + 2*s_pl/g - 0.5;
+  var phi_Rn_pl = phi_pl * Fy_p * tp*tp * Yp;     /* N (SI) or kip (US) */
+  if(unit==='si') phi_Rn_pl /= 1000;              /* → kN */
+  var DCR_plate = phi_Rn_pl>0 ? Tf/phi_Rn_pl : Infinity;
+  /* tp_req: solve Tf = φ·Fy·tp²·Yp  →  tp = √(Tf_base / (φ·Fy·Yp)) */
+  var Tf_base   = unit==='si' ? Tf*1000 : Tf;      /* N (SI) or kip (US) */
+  var tp_req    = Yp>0 ? Math.sqrt(Tf_base/(phi_pl*Fy_p*Yp)) : 0;
 
   /* ── 3. Column flange local bending §J10.1 ── */
   /* Rn = 6.25 × tf_col² × Fyf  (one concentrated transverse force) */
@@ -763,7 +763,7 @@ function calc(){
   var lenU = unit==='us'?'in':'mm';
   var checks=[
     {name:'Bolt tension §J3.6',               cap:phi_Rnt_total, DCR:DCR_bolt,  group:'bolt'},
-    {name:'End plate — no-prying (DG4)',       cap:phi_Mn_pl,     DCR:DCR_plate, group:'plate', isMom:true},
+    {name:'End plate — no-prying (DG4)',       cap:phi_Rn_pl,     DCR:DCR_plate, group:'plate'},
     {name:'Col. flange local bending §J10.1',  cap:phi_Rn_cfb,   DCR:DCR_cfb,   group:'col'},
     {name:'Col. web local yielding §J10.2',    cap:phi_Rn_cwy,   DCR:DCR_cwy,   group:'col'},
     {name:'Col. web crippling §J10.3',         cap:phi_Rn_cwc,   DCR:DCR_cwc,   group:'col'},
@@ -776,13 +776,10 @@ function calc(){
   checks.forEach(function(c,i){if(isFinite(c.DCR)&&c.DCR>DCR_max){DCR_max=c.DCR;govIdx=i;}});
 
   /* ── Checks table ── */
-  var mU = unit==='us'?'kip·in':'kN·mm';
   var tbody=el('cap-tbl-body'); tbody.innerHTML='';
   checks.forEach(function(c,i){
     var cls=dcrCls(c.DCR), isGov=(i===govIdx);
-    var capStr = c.isMom
-      ? fmt(c.cap,unit==='us'?1:0)+' '+mU
-      : fmt(c.cap,unit==='us'?1:0)+' '+forU;
+    var capStr = fmt(c.cap,unit==='us'?1:0)+' '+forU;
     var tr=document.createElement('tr');
     tr.innerHTML='<td style="font-size:.78rem"'+(isGov?' class="gov"':'')+'>'
       +c.name+'</td>'
