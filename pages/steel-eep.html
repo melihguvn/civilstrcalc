@@ -280,7 +280,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <div class="form-group">
       <label>Thickness t<sub>p</sub> <span class="unit-lbl" id="lbl-tp">[in]</span></label>
-      <div class="iw"><input type="number" id="inp-tp" value="0.75" min="0.25" step="0.0625" oninput="calc()"><span class="us" id="su-tp">in</span></div>
+      <div class="iw"><input type="number" id="inp-tp" value="0.875" min="0.25" step="0.0625" oninput="calc()"><span class="us" id="su-tp">in</span></div>
     </div>
     <div class="form-group">
       <label>Width b<sub>p</sub> <span class="unit-lbl" id="lbl-bp">[in]</span></label>
@@ -542,7 +542,7 @@ function setUnit(u){
     if(u==='si'){
       el('inp-Mu').value='280';
       el('inp-Vu').value='180';
-      el('inp-tp').value='20';
+      el('inp-tp').value='22';
       el('inp-bp').value='180';
       el('inp-pf').value='45';
       el('inp-g').value='140';
@@ -550,7 +550,7 @@ function setUnit(u){
     } else {
       el('inp-Mu').value='200';
       el('inp-Vu').value='40';
-      el('inp-tp').value='0.75';
+      el('inp-tp').value='0.875';
       el('inp-bp').value='7.0';
       el('inp-pf').value='1.75';
       el('inp-g').value='5.5';
@@ -702,13 +702,16 @@ function calc(){
   var Tu_bolt  = n_tens>0 ? Tf/n_tens : 0;          /* kip or kN */
   var DCR_bolt = phi_Rnt_total>0 ? Tf/phi_Rnt_total : Infinity;
 
-  /* ── 2. End plate — DG4 yield line (Table 3-1, 4E/4ES; 8ES outer-row approx.) ──
+  /* ── 2. End plate — DG4 yield line (Table 3-1) ──
      s   = √(bp·g) / 2
-     Yp  = (bp/2)·(1/pf + 1/s) + 2s/g − 0.5   [in⁻¹ or mm⁻¹]
+     4E/4ES: Yp = (bp/2)·(1/pf + 1/s) + 2s/g − 0.5
+     8ES:    Yp = (bp/2)·(1/pf + 1/pb + 1/s) + 2s/g − 0.5  (adds inner-row term)
      φRn = φ·Fy·tp²·Yp   [kip (US) or N→kN (SI)]
      DCR = Tf / φRn                                                  */
   var s_pl      = 0.5 * Math.sqrt(bp * g);
-  var Yp        = (bp/2) * (1/pf + 1/s_pl) + 2*s_pl/g - 0.5;
+  var Yp        = cfg==='8ES'
+    ? (bp/2) * (1/pf + 1/pb + 1/s_pl) + 2*s_pl/g - 0.5
+    : (bp/2) * (1/pf         + 1/s_pl) + 2*s_pl/g - 0.5;
   var phi_Rn_pl = phi_pl * Fy_p * tp*tp * Yp;     /* N (SI) or kip (US) */
   if(unit==='si') phi_Rn_pl /= 1000;              /* → kN */
   var DCR_plate = phi_Rn_pl>0 ? Tf/phi_Rn_pl : Infinity;
