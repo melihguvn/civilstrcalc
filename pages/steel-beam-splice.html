@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index, follow">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPM6LCCWLN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-VPM6LCCWLN');</script>
+
+<title>Bolted Beam Splice Connection | AISC 360-22 Chapter J | CivilStrCalc</title>
+<meta name="description" content="Bolted beam splice calculator per AISC 360-22 Chapter J. Checks web plate bolt shear (double shear), bearing, shear yield/rupture, block shear, and flange plate tension/bearing for moment and shear transfer. US and SI units.">
+<meta name="keywords" content="beam splice connection, bolted splice, AISC 360 Chapter J, flange plate splice, web splice plate, moment splice, steel connection design">
+<link rel="canonical" href="https://civilstrcalc.com/pages/steel-beam-splice">
+
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://civilstrcalc.com/pages/steel-beam-splice">
+<meta property="og:title"       content="Bolted Beam Splice | CivilStrCalc">
+<meta property="og:description" content="AISC 360-22 Ch. J beam splice: web plates (double shear) + flange plates for moment transfer.">
+<meta property="og:image"       content="https://civilstrcalc.com/images/og-image.png">
+<meta property="og:site_name"   content="CivilStrCalc">
+<meta property="og:locale"      content="en_US">
+
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:url"         content="https://civilstrcalc.com/pages/steel-beam-splice">
+<meta name="twitter:title"       content="Bolted Beam Splice | CivilStrCalc">
+<meta name="twitter:description" content="AISC 360-22 Ch. J beam splice: web plates (double shear) + flange plates for moment transfer.">
+<meta name="twitter:image"       content="https://civilstrcalc.com/images/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"Bolted Beam Splice — CivilStrCalc",
+  "description":"Beam splice connection calculator per AISC 360-22 Chapter J. Web plates in double shear; flange plates for moment transfer.",
+  "applicationCategory":"UtilityApplication",
+  "operatingSystem":"Web Browser",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+  "featureList":"AISC 360-22 Chapter J, double-shear web plates, flange plates, bolt shear, bearing, block shear, US and SI units"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {"@type":"ListItem","position":1,"name":"CivilStrCalc","item":"https://civilstrcalc.com"},
+    {"@type":"ListItem","position":2,"name":"Bolted Beam Splice","item":"https://civilstrcalc.com/pages/steel-beam-splice"}
+  ]
+}
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7519835488454582" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-7519835488454582">
+
+<link rel="preload" href="../fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexSans-Medium.woff2"  as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/svg+xml"           href="../favicons/favicon.svg">
+<link rel="icon" type="image/x-icon"            href="../favicons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180"    href="../favicons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+
+<script src="../shell.js" defer></script>
+<script src="../js/steel-profiles.js"></script>
+
+<style>
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.calc-layout{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+@media(max-width:1000px){.calc-layout{grid-template-columns:1fr}}
+.calc-layout>*{min-width:0}
+.results-col{display:flex;flex-direction:column;gap:14px}
+
+.unit-switcher{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap}
+.unit-switcher label{font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+.unit-btns{display:flex;gap:3px;flex-wrap:wrap}
+.unit-btn{background:var(--white);border:1.5px solid var(--border2);border-radius:5px;color:var(--text-mid);font-family:var(--sans);font-size:.67rem;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.unit-btn:hover{border-color:var(--accent);color:var(--accent)}
+.unit-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600}
+
+.dcr-banner{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:7px;border:1.5px solid;margin-bottom:10px}
+.dcr-banner.ok{background:var(--green-bg);border-color:#a8e0c0}
+.dcr-banner.warn{background:var(--orange-bg);border-color:#f4c97a}
+.dcr-banner.err{background:var(--red-bg);border-color:#f4b0a8}
+.dcr-icon{font-size:1.5rem}
+.dcr-text strong{font-size:.87rem;display:block;margin-bottom:2px}
+.dcr-text span{font-size:.73rem;color:var(--text-mid);font-family:var(--mono)}
+.dcr-banner.ok .dcr-text strong{color:var(--green)}
+.dcr-banner.warn .dcr-text strong{color:var(--orange)}
+.dcr-banner.err .dcr-text strong{color:var(--red)}
+
+.rpt-sec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rpt-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.rpt-sec-title{font-family:var(--sans);font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:var(--bg);border-left:3px solid #1a2332;padding:3px 10px;margin-bottom:8px}
+
+.inp-tbl{width:100%;border-collapse:collapse}
+.inp-tbl tr{border-bottom:1px solid var(--border)}
+.inp-tbl tr:last-child{border-bottom:none}
+.inp-tbl td{padding:6px 8px;font-size:.80rem;font-family:var(--sans)}
+.inp-tbl td:first-child{color:var(--text-mid);width:55%}
+.inp-tbl td:last-child{font-weight:500;color:var(--text);text-align:right}
+
+.res-tbl{width:100%;border-collapse:collapse}
+.res-tbl tr{border-bottom:1px solid var(--border)}
+.res-tbl tr:last-child{border-bottom:none}
+.res-tbl td{padding:7px 8px;font-size:.79rem;font-family:var(--sans)}
+.res-tbl td:first-child{color:var(--text-mid);width:60%}
+.res-tbl td:last-child{font-weight:500;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.res-tbl td.ok{color:var(--green);font-weight:600}
+.res-tbl td.warn{color:var(--orange);font-weight:600}
+.res-tbl td.err{color:var(--red);font-weight:600}
+.res-tbl td.gov{background:rgba(26,109,181,.07);font-weight:700;color:var(--accent)}
+.res-tbl tr.grp-hdr td{background:var(--bg2);font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);padding:4px 8px;border-bottom:1px solid var(--border2)}
+
+.fl-rb{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:#f0f5fb;border:1.5px solid #b8d0eb;border-radius:8px;margin-bottom:14px;overflow:hidden}
+.fl-col{padding:10px 14px;text-align:center;border-right:1px solid #b8d0eb}
+.fl-col:last-child{border-right:none}
+.fl-lbl{font-size:.63rem;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;font-family:var(--sans);font-weight:500}
+.fl-val{font-family:var(--mono);font-size:1.05rem;font-weight:600;color:var(--accent)}
+.fl-unit{font-size:.68rem;color:var(--text-dim);margin-top:2px;font-family:var(--sans)}
+.report-hdr{position:relative;justify-content:center;}
+
+.print-only{display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:0 0 8px;border-bottom:2px solid #1a2332;margin-bottom:12px}
+.ph-title{font-size:.9rem;font-weight:700;color:#1a2332;font-family:var(--sans)}
+.ph-sub{font-size:.63rem;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
+.ph-date{font-size:.63rem;color:var(--text-dim);font-family:var(--mono)}
+.print-disclaimer{display:none;padding:5px 10px;background:#fff8ed;border:1px solid #f4c97a;border-radius:4px;font-size:.68rem;color:#7a5000;margin-top:8px;line-height:1.5}
+.print-footer{display:none;justify-content:space-between;padding:5px 0 0;border-top:1px solid var(--border);margin-top:12px;font-size:.62rem;color:var(--text-dim);font-family:var(--sans)}
+
+.bp-sel{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:5px;font-size:.82rem;background:var(--bg2);color:var(--text);font-family:var(--sans);cursor:pointer}
+.prof-info{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 12px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.prof-info-item{text-align:center}
+.pi-lbl{font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--sans);margin-bottom:3px;white-space:nowrap}
+.pi-val{font-size:.82rem;font-weight:600;font-family:var(--mono);color:var(--accent)}
+
+.bp-diagram-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+
+.bg-section{background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);margin-top:26px;overflow:hidden}
+.bg-hdr{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 20px;cursor:pointer;user-select:none;font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--text)}
+.bg-hdr:hover{background:var(--bg)}
+.bg-arr{font-size:.8rem;color:var(--text-dim);transition:transform .2s}
+.bg-section.open .bg-arr{transform:rotate(180deg)}
+.bg-body{display:none;padding:18px 20px}
+.bg-section.open .bg-body{display:block}
+.bg-panel{margin-bottom:18px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.bg-panel:last-child{margin-bottom:0}
+.bg-panel-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 14px;font-family:var(--sans);font-size:.78rem;font-weight:700;color:var(--text)}
+.bg-panel .tb{padding:12px 14px;font-size:.82rem;color:var(--text);line-height:1.6}
+.bg-panel .tb p{margin:0 0 10px}
+.bg-panel .tb p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .form-row-2{grid-template-columns:1fr!important}
+  .fl-rb{grid-template-columns:1fr 1fr!important}
+  .fl-col:nth-child(3){grid-column:1/-1;border-right:none;border-top:1px solid #b8d0eb}
+}
+@media print{
+  @page{margin:6mm 8mm;size:A4}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:white!important;font-size:8.5pt!important;padding:0!important}
+  .no-print,.bg-section,.sub-tabs,.mod-tabs,.page-title,.unit-switcher{display:none!important}
+  .print-only{display:flex!important}
+  .print-disclaimer{display:block!important;font-size:6pt!important}
+  .print-footer{display:flex!important}
+  .calc-layout{display:block!important}
+  .results-col{gap:2px!important}
+  .report-card{box-shadow:none!important;border:none!important}
+  .report-hdr{padding:5px 10px!important;background:#1a2332!important}
+  .report-hdr h4{font-size:9pt!important}
+  .rh-code{font-size:6pt!important}
+  .print-btn{display:none!important}
+  .report-body{padding:4px 10px!important}
+  .fl-rb{margin-bottom:4px!important;background:#f0f5fb!important}
+  .fl-col{padding:4px 8px!important}
+  .fl-lbl{font-size:6.5pt!important}
+  .fl-val{font-size:18pt!important}
+  .fl-unit{font-size:5.5pt!important}
+  .dcr-banner{padding:4px 8px!important;margin-bottom:4px!important}
+  .dcr-icon{font-size:1rem!important}
+  .dcr-text strong{font-size:8pt!important}
+  .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
+  .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
+  .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
+  #sp-svg{display:none!important}
+}
+</style>
+<style>html:not(.sh-ready) body{visibility:hidden;animation:sh-r 0s 2.5s forwards}@keyframes sh-r{to{visibility:visible}}</style>
+</head>
+
+<body style="display:block;background:var(--bg);">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" style="padding:clamp(14px,3.5vw,28px);">
+
+<div class="page-title no-print">
+  <h1>Bolted Beam Splice</h1>
+  <p>Web plates (double shear) + flange plates &mdash; shear and moment transfer per <strong>AISC 360-22 Chapter J</strong></p>
+</div>
+
+<div class="unit-switcher no-print">
+  <label>Units:</label>
+  <div class="unit-btns">
+    <button class="unit-btn active" id="btn-us" onclick="setUnit('us')">US (kip &middot; ft &middot; in)</button>
+    <button class="unit-btn"        id="btn-si" onclick="setUnit('si')">SI (kN &middot; m &middot; mm)</button>
+  </div>
+</div>
+
+<div class="calc-layout">
+
+<!-- ══ LEFT: INPUTS ══════════════════════════════════════════════════ -->
+<div class="no-print">
+
+  <!-- Beam Section -->
+  <div class="form-div"><div class="form-div-lbl">Beam Section (same both sides)</div></div>
+  <div class="form-group">
+    <label>Section Type</label>
+    <select id="beamType" class="bp-sel" onchange="onBeamTypeChange()"></select>
+  </div>
+  <div class="form-group">
+    <label>Profile</label>
+    <select id="beamProfile" class="bp-sel" onchange="onBeamProfileChange()"></select>
+  </div>
+  <div class="form-group">
+    <label>Beam material</label>
+    <select id="beamMaterial" class="bp-sel" onchange="calc()"></select>
+  </div>
+
+  <!-- Loads -->
+  <div class="form-div"><div class="form-div-lbl">Applied Loads (LRFD)</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Shear V<sub>u</sub> <span class="unit-lbl" id="lbl-Vu">[kip]</span></label>
+      <div class="iw"><input type="number" id="inp-Vu" value="40" min="0" step="1" oninput="calc()"><span class="us" id="su-Vu">kip</span></div>
+    </div>
+    <div class="form-group">
+      <label>Moment M<sub>u</sub> <span class="unit-lbl" id="lbl-Mu">[kip&middot;ft]</span></label>
+      <div class="iw"><input type="number" id="inp-Mu" value="100" min="0" step="10" oninput="calc()"><span class="us" id="su-Mu">kip&middot;ft</span></div>
+    </div>
+  </div>
+
+  <!-- Bolt Group -->
+  <div class="form-div"><div class="form-div-lbl">Bolt Group (web &amp; flange)</div></div>
+  <div class="form-group">
+    <label>Bolt grade</label>
+    <select id="inp-bolt-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
+  <div class="form-group" style="padding:6px 0 2px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem">
+      <input type="checkbox" id="inp-threads" checked onchange="calc()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)">
+      Threads in shear plane (N condition)
+    </label>
+  </div>
+  <div class="form-group">
+    <label>Diameter d<sub>b</sub> <span class="unit-lbl" id="lbl-db">[in]</span></label>
+    <select id="inp-db" class="bp-sel" onchange="calc()"></select>
+  </div>
+
+  <!-- Web Splice -->
+  <div class="form-div"><div class="form-div-lbl">Web Splice Plates (2 plates, one each side)</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>No. of bolts n<sub>w</sub></label>
+      <select id="inp-n" class="bp-sel" onchange="calc()">
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Thickness t<sub>w</sub> <span class="unit-lbl" id="lbl-tp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-tp" value="0.3125" min="0.125" step="0.0625" oninput="calc()"><span class="us" id="su-tp">in</span></div>
+    </div>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Spacing s<sub>w</sub> <span class="unit-lbl" id="lbl-s">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-s" value="3" min="1" step="0.25" oninput="calc()"><span class="us" id="su-s">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Vert. edge dist e<sub>v</sub> <span class="unit-lbl" id="lbl-ev">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-ev" value="1.25" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-ev">in</span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Eccentricity a<sub>w</sub> &mdash; splice CL to bolt row <span class="unit-lbl" id="lbl-a">[in]</span></label>
+    <div class="iw"><input type="number" id="inp-a" value="1.25" min="0" step="0.125" oninput="calc()"><span class="us" id="su-a">in</span></div>
+  </div>
+
+  <!-- Flange Splice -->
+  <div class="form-div"><div class="form-div-lbl">Flange Splice Plates (1 plate per flange, outside)</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>No. of bolts n<sub>f</sub> (per side)</label>
+      <select id="inp-nf" class="bp-sel" onchange="calc()">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Plate thickness t<sub>fp</sub> <span class="unit-lbl" id="lbl-tfp">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-tfp" value="0.5" min="0.125" step="0.0625" oninput="calc()"><span class="us" id="su-tfp">in</span></div>
+    </div>
+  </div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Spacing s<sub>f</sub> <span class="unit-lbl" id="lbl-sf">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-sf" value="3" min="1" step="0.25" oninput="calc()"><span class="us" id="su-sf">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>End dist e<sub>f</sub> <span class="unit-lbl" id="lbl-evf">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-evf" value="1.25" min="0.5" step="0.125" oninput="calc()"><span class="us" id="su-evf">in</span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Plate width b<sub>fp</sub> <span class="unit-lbl" id="lbl-bfp">[in]</span></label>
+    <div class="iw"><input type="number" id="inp-bfp" value="7.5" min="1" step="0.25" oninput="calc()"><span class="us" id="su-bfp">in</span></div>
+  </div>
+
+  <!-- Materials -->
+  <div class="form-div"><div class="form-div-lbl">Plate Material (web &amp; flange plates)</div></div>
+  <div class="form-group">
+    <label>Plate grade</label>
+    <select id="inp-plate-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
+
+  <!-- SVG -->
+  <div class="card no-print" style="margin-top:12px">
+    <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Splice Elevation (schematic)</div>
+    <div class="card-body" style="padding:8px;text-align:center">
+      <svg id="sp-svg" viewBox="0 0 320 240" style="width:100%;max-width:340px"></svg>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ══ RIGHT: RESULTS ════════════════════════════════════════════════ -->
+<div class="results-col">
+
+  <div class="report-card" id="sp-card">
+    <div class="report-hdr">
+      <h4>Beam Splice &mdash; AISC 360-22 Ch. J</h4>
+      <span class="rh-code" id="rh-unit-lbl">kip &middot; ft &middot; in</span>
+      <button class="print-btn no-print" onclick="saveInputs()">&#128190; Save</button>
+      <button class="print-btn no-print" onclick="loadInputs()">&#128196; Load</button>
+      <button class="print-btn no-print" onclick="window.print()">&#128424; Print / PDF</button>
+    </div>
+    <div class="report-body">
+
+      <div class="print-only">
+        <div>
+          <div class="ph-title">Bolted Beam Splice</div>
+          <div class="ph-sub">AISC 360-22 Chapter J &mdash; Web Plates (Double Shear) + Flange Plates</div>
+        </div>
+        <div class="ph-date" id="ph-date"></div>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="fl-rb">
+        <div class="fl-col">
+          <div class="fl-lbl">Web Bolts</div>
+          <div class="fl-val" id="rv-wbolt-dcr">—</div>
+          <div class="fl-unit" id="rv-wbolt-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Web / Beam</div>
+          <div class="fl-val" id="rv-web-dcr">—</div>
+          <div class="fl-unit" id="rv-web-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Flange Plate</div>
+          <div class="fl-val" id="rv-flange-dcr">—</div>
+          <div class="fl-unit" id="rv-flange-gov">—</div>
+        </div>
+      </div>
+
+      <!-- DCR Banner -->
+      <div class="dcr-banner ok" id="dcr-banner">
+        <div class="dcr-icon" id="dcr-icon">&#x2714;</div>
+        <div class="dcr-text">
+          <strong id="dcr-text-main">—</strong>
+          <span id="dcr-text-sub">—</span>
+        </div>
+      </div>
+
+      <!-- Capacity table -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Capacity Summary (AISC 360-22 Ch. J)</div>
+        <table class="res-tbl">
+          <thead><tr>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">&phi;R<sub>n</sub></th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">DCR</th>
+          </tr></thead>
+          <tbody id="cap-tbl-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Geometry checks -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Geometry &amp; Spacing Checks (AISC 360-22)</div>
+        <table class="res-tbl">
+          <thead><tr>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:left;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Check</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Actual</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Limit</th>
+            <th style="font-size:.63rem;color:var(--text-dim);padding:4px 8px;text-align:right;font-family:var(--sans);font-weight:600;letter-spacing:.06em;text-transform:uppercase">Status</th>
+          </tr></thead>
+          <tbody id="geo-tbl-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Inputs -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Design Inputs</div>
+        <table class="inp-tbl"><tbody id="inp-body"></tbody></table>
+      </div>
+
+      <!-- Detail -->
+      <div class="rpt-sec">
+        <div class="rpt-sec-title">Geometry &amp; Material Detail</div>
+        <table class="inp-tbl"><tbody id="detail-body"></tbody></table>
+      </div>
+
+      <div class="print-disclaimer">
+        This calculator is provided for informational purposes only. Results must be verified by a licensed structural engineer before use in any design or construction activity.
+      </div>
+      <div class="print-footer">
+        <span>CivilStrCalc &mdash; civilstrcalc.com</span>
+        <span id="pf-date2"></span>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /results-col -->
+</div><!-- /calc-layout -->
+
+<!-- Design Background -->
+<div class="bg-section" id="bg-sec">
+  <div class="bg-hdr" onclick="var s=document.getElementById('bg-sec');s.classList.toggle('open')">
+    <span>Design Background</span><span class="bg-arr">&#9660;</span>
+  </div>
+  <div class="bg-body">
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Web Splice Plates</div>
+      <div class="tb">
+        <p>Two identical plates are placed on opposite sides of the beam web (double-sided). The bolts pass through both plates and the web, putting each bolt in <strong>double shear</strong>: &phi;R<sub>n,bolt</sub> = &phi;F<sub>nv</sub>A<sub>b</sub> &times; 2 per bolt. Plate capacities (shear yield, shear rupture, block shear, bending) are computed for <strong>both plates combined</strong> (&times;2).</p>
+        <p>The eccentricity a<sub>w</sub> is the horizontal distance from the splice centerline to the bolt row centroid. It generates a secondary moment V<sub>u</sub>&middot;a<sub>w</sub> in the plates (plate bending §F11) and a horizontal force component at the critical bolt (elastic vector method).</p>
+      </div>
+    </div>
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Flange Splice Plates</div>
+      <div class="tb">
+        <p>One plate per flange (outside face), bolted in <strong>single shear</strong>. The flange force is computed as P<sub>f</sub> = M<sub>u</sub> / (d &minus; t<sub>f</sub>), where d &minus; t<sub>f</sub> is the moment arm between flange mid-planes.</p>
+        <p>Checks: bolt shear §J3.6, plate gross tension yield §J4.1 (&phi; = 0.90), plate net section rupture §J4.1 (&phi; = 0.75, one hole deducted in the critical cross-section width), bolt bearing on plate and beam flange §J3.10.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+var unit = 'us';
+var beamTw = 0, beamD = 0, beamTf = 0;
+
+var BOLT_GRADES_US = [
+  ['A307', 27, 27],
+  ['A325', 48, 54],
+  ['A490', 60, 68]
+];
+var BOLT_GRADES_SI = [
+  ['4.6',  160, 180],
+  ['4.8',  168, 189],
+  ['5.6',  200, 225],
+  ['5.8',  208, 234],
+  ['6.8',  240, 270],
+  ['8.8',  320, 360],
+  ['10.9', 400, 450]
+];
+
+var LE_MIN_US = {0.500:0.750,0.625:0.875,0.750:1.000,0.875:1.125,1.000:1.250,1.125:1.500,1.250:1.625};
+var LE_MIN_SI = {16:26,20:32,22:35,24:38,27:44,30:49};
+
+var BOLT_DIA_US = [
+  ['1/2"',0.500],['5/8"',0.625],['3/4"',0.750],['7/8"',0.875],
+  ['1"',1.000],['1-1/8"',1.125],['1-1/4"',1.250]
+];
+var BOLT_DIA_SI = [
+  ['M16',16],['M20',20],['M22',22],['M24',24],['M27',27],['M30',30]
+];
+
+var PLATE_GRADES = [
+  ['A36',       36, 58, 250,400],
+  ['A572 Gr50', 50, 65, 345,450],
+  ['A572 Gr65', 65, 80, 450,550],
+  ['S235',      34, 54, 235,360],
+  ['S275',      40, 57, 275,390],
+  ['S355',      51, 66, 355,490]
+];
+
+var BEAM_TYPES_US = [{k:'W',lb:'W Shapes'},{k:'HP',lb:'HP Shapes'}];
+var BEAM_TYPES_SI = [
+  {k:'IPE',lb:'IPE'},{k:'HEA',lb:'HEA'},{k:'HEB',lb:'HEB'},{k:'HEM',lb:'HEM'},
+  {k:'UPN',lb:'UPN (Channel)'},{k:'UPE',lb:'UPE (Channel)'}
+];
+
+function el(id){return document.getElementById(id);}
+function v(id){var e=el(id);return e?parseFloat(e.value)||0:0;}
+function set(id,val){var e=el(id);if(e)e.textContent=val;}
+function fmt(x,d){if(!isFinite(x)||isNaN(x))return'—';return x.toFixed(d===undefined?2:d);}
+function dcrCls(dcr){return dcr<=0.9?'ok':dcr<=1.0?'warn':'err';}
+
+document.addEventListener('DOMContentLoaded',function(){
+  buildBeamTypeDropdown();
+  buildBoltDropdowns();
+  buildPlateGradeDropdown();
+  buildBeamMaterialDropdown();
+  onBeamTypeChange();
+  el('beamProfile').value='W18\xD750';
+  onBeamProfileChange();
+  el('ph-date').textContent=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  el('pf-date2').textContent=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+});
+
+/* ── Unit switching ── */
+function setUnit(u){
+  var old=unit; unit=u;
+  el('btn-us').classList.toggle('active',u==='us');
+  el('btn-si').classList.toggle('active',u==='si');
+  if(old!==u){
+    if(u==='si'){
+      el('inp-Vu').value='180'; el('inp-Mu').value='135';
+      el('inp-s').value='76';  el('inp-ev').value='32'; el('inp-a').value='32';
+      el('inp-tp').value='8';
+      el('inp-sf').value='76'; el('inp-evf').value='32';
+      el('inp-tfp').value='12'; el('inp-bfp').value='190';
+    } else {
+      el('inp-Vu').value='40';  el('inp-Mu').value='100';
+      el('inp-s').value='3';   el('inp-ev').value='1.25'; el('inp-a').value='1.25';
+      el('inp-tp').value='0.3125';
+      el('inp-sf').value='3';  el('inp-evf').value='1.25';
+      el('inp-tfp').value='0.5'; el('inp-bfp').value='7.5';
+    }
+  }
+  var lu=u==='us'?'in':'mm', fu=u==='us'?'kip':'kN', mu=u==='us'?'kip\xB7ft':'kN\xB7m';
+  var lbls={
+    'lbl-Vu':fu,'lbl-Mu':mu,'lbl-db':lu,'lbl-tp':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-a':lu,
+    'lbl-sf':lu,'lbl-evf':lu,'lbl-tfp':lu,'lbl-bfp':lu
+  };
+  Object.keys(lbls).forEach(function(id){var e=el(id);if(e)e.textContent='['+lbls[id]+']';});
+  var spns={
+    'su-Vu':fu,'su-Mu':mu,'su-tp':lu,'su-s':lu,'su-ev':lu,'su-a':lu,
+    'su-sf':lu,'su-evf':lu,'su-tfp':lu,'su-bfp':lu
+  };
+  Object.keys(spns).forEach(function(id){var e=el(id);if(e)e.textContent=spns[id];});
+  el('rh-unit-lbl').textContent=u==='us'?'kip \xB7 ft \xB7 in':'kN \xB7 m \xB7 mm';
+  buildBeamTypeDropdown();
+  buildBoltDropdowns();
+  buildPlateGradeDropdown();
+  buildBeamMaterialDropdown();
+  if(u==='si') el('beamType').value='HEB';
+  onBeamTypeChange();
+  if(u==='si'){
+    el('beamProfile').value='HE300B'; onBeamProfileChange();
+  } else {
+    el('beamProfile').value='W18\xD750'; onBeamProfileChange();
+  }
+}
+
+/* ── Profile dropdowns ── */
+function buildBeamTypeDropdown(){
+  var sel=el('beamType'); sel.innerHTML='';
+  var types=unit==='us'?BEAM_TYPES_US:BEAM_TYPES_SI;
+  types.forEach(function(t){var o=document.createElement('option');o.value=t.k;o.textContent=t.lb;sel.appendChild(o);});
+}
+
+function onBeamTypeChange(){
+  var type=el('beamType').value;
+  var SP=window.SteelProfiles; if(!SP) return;
+  var dd=SP.getProfileDropdown(type);
+  var sel=el('beamProfile'); sel.innerHTML='';
+  dd.names.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  if(dd.names.length>0) sel.selectedIndex=Math.min(Math.floor(dd.names.length*0.35),dd.names.length-1);
+  onBeamProfileChange();
+}
+
+function onBeamProfileChange(){
+  var type=el('beamType').value, name=el('beamProfile').value;
+  var SP=window.SteelProfiles; if(!SP) return;
+  var row=SP.getProfileProperties(type,name); if(!row) return;
+  var d,tw,tf;
+  if(type==='W'||type==='HP'){
+    d=row[1]; tf=row[3]; tw=row[4];
+  } else if(type==='IPE'||type==='HEA'||type==='HEB'||type==='HEM'||type==='HD'){
+    d=row[1]; tf=row[4]; tw=row[3];
+  } else if(type==='UPN'||type==='UPE'){
+    d=row[1]; tf=row[4]; tw=row[3];
+  } else { return; }
+  beamD=d; beamTw=tw; beamTf=tf;
+  calc();
+}
+
+/* ── Bolt dropdowns ── */
+function buildBoltDropdowns(){
+  var gSel=el('inp-bolt-grade'); gSel.innerHTML='';
+  var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
+  gSel.selectedIndex=unit==='us'?1:6; // A325 or 10.9
+  var dSel=el('inp-db'); dSel.innerHTML='';
+  var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  sizes.forEach(function(s,i){var o=document.createElement('option');o.value=i;o.textContent=s[0];dSel.appendChild(o);});
+  dSel.selectedIndex=unit==='us'?3:3; // 7/8" or M24
+}
+
+/* ── Plate grade dropdown ── */
+function buildPlateGradeDropdown(){
+  var sel=el('inp-plate-grade'); sel.innerHTML='';
+  var idxs=unit==='us'?[0,1,2]:[3,4,5];
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=PLATE_GRADES[i][0];sel.appendChild(o);});
+  sel.selectedIndex=0;
+}
+
+/* ── Beam material dropdown ── */
+function buildBeamMaterialDropdown(){
+  var sel=el('beamMaterial'); sel.innerHTML='';
+  var idxs=unit==='us'?[0,1,2]:[3,4,5];
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=PLATE_GRADES[i][0];sel.appendChild(o);});
+  sel.selectedIndex=unit==='us'?1:2; // A572-50 or S355
+}
+
+/* ── Main calculation ── */
+function calc(){
+  if(!beamD||!beamTw||!beamTf) return;
+
+  var Vu     = v('inp-Vu');
+  var Mu_inp = v('inp-Mu');
+  var Mu     = unit==='us' ? Mu_inp*12 : Mu_inp*1000; // kip·in or kN·mm
+
+  var n      = parseInt((el('inp-n')||{}).value)||3;
+  var nf     = parseInt((el('inp-nf')||{}).value)||4;
+  var boltGi = parseInt((el('inp-bolt-grade')||{}).value)||0;
+  var dbIdx  = el('inp-db') ? parseInt(el('inp-db').value) : (unit==='us'?3:3);
+  var s      = v('inp-s');
+  var ev     = v('inp-ev');
+  var a_w    = v('inp-a');
+  var tp_w   = v('inp-tp');
+  var sf_f   = v('inp-sf');
+  var evf    = v('inp-evf');
+  var tfp    = v('inp-tfp');
+  var bfp    = v('inp-bfp');
+  var pgIdx  = parseInt((el('inp-plate-grade')||{}).value)||0;
+  var bmIdx  = parseInt((el('beamMaterial')||{}).value)||0;
+
+  var pg   = PLATE_GRADES[pgIdx];
+  var Fy_pl = unit==='us'?pg[1]:pg[3];
+  var Fu_pl = unit==='us'?pg[2]:pg[4];
+  var bm    = PLATE_GRADES[bmIdx];
+  var Fy_bm = unit==='us'?bm[1]:bm[3];
+  var Fu_bm = unit==='us'?bm[2]:bm[4];
+
+  var grades    = unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
+  var threadsIn = el('inp-threads')?el('inp-threads').checked:true;
+  var Fnv       = threadsIn?grades[boltGi][1]:grades[boltGi][2];
+  var sizes     = unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
+  var db   = sizes[dbIdx][1];
+  var tw   = beamTw;
+  var tf   = beamTf;
+  var d    = beamD;
+  var d_web = d - 2*tf;
+
+  var phi_bolt=0.75, phi_brg=0.75, phi_yield=1.00, phi_rupt=0.75, phi_bs=0.75, phi_ten=0.90;
+  var dh = unit==='us' ? db+1/16 : db+2;
+  var Ab = Math.PI/4*db*db;
+  var hp = (n-1)*s + 2*ev;
+  var eh_w = Math.max(a_w, 0.01); // bolt→splice-end dist for block shear tension area
+
+  /* ── WEB BOLT CHECKS (double shear) ── */
+  var phi_Rnv_w = phi_bolt*Fnv*Ab*n*2;
+
+  // Bolt group eccentricity
+  var phi_R1b_w = phi_Rnv_w/n;
+  var Ip=0;
+  for(var ii=0;ii<n;ii++){var yi=-(n-1)/2*s+ii*s; Ip+=yi*yi;}
+  var c_max = (n>1)?(n-1)/2*s:0;
+  var Vx_e = (Ip>0&&a_w>0)?Vu*a_w*c_max/Ip:0;
+  var Vy_d = Vu/Math.max(n,1);
+  var r_c  = Math.sqrt(Vy_d*Vy_d+Vx_e*Vx_e);
+  var phi_Rnv_ecc = (r_c>0&&Vu>0)?phi_R1b_w*Vu/r_c:phi_Rnv_w;
+
+  /* ── WEB PLATE + BEAM WEB CHECKS ── */
+  var phi_Rbrg_wpl = 2*brgCap(n,db,dh,s,ev,tp_w,Fu_pl,phi_brg);
+  var phi_Rbrg_web = brgCap(n,db,dh,s,ev,tw,Fu_bm,phi_brg);
+  var phi_Rwy      = phi_yield*0.60*Fy_bm*d_web*tw;
+  var phi_Rwr      = phi_rupt*0.60*Fu_bm*Math.max(hp-n*dh,0)*tw;
+  var phi_Rsy_w    = 2*phi_yield*0.60*Fy_pl*hp*tp_w;
+  var phi_Rsr_w    = 2*phi_rupt*0.60*Fu_pl*Math.max(hp-n*dh,0)*tp_w;
+  // Block shear (per plate)
+  var Agv_bs = ((n-1)*s+ev)*tp_w;
+  var Anv_bs = Math.max(Agv_bs-(n-0.5)*dh*tp_w,0);
+  var Ant_bs = Math.max((eh_w-dh/2)*tp_w,0);
+  var Rbs_a  = 0.60*Fu_pl*Anv_bs+Fu_pl*Ant_bs;
+  var Rbs_b  = 0.60*Fy_pl*Agv_bs+Fu_pl*Ant_bs;
+  var phi_Rbs_w = 2*phi_bs*Math.min(Rbs_a,Rbs_b);
+  // Web plate bending (both plates combined, Mu=Vu×a_w)
+  var phi_Mn_w = 2*0.90*Fy_pl*(tp_w*hp*hp/4); // N·mm or kip·in
+  var phi_Rn_bend_w = a_w>0 ? (unit==='si'?phi_Mn_w/1000/a_w:phi_Mn_w/a_w) : Infinity;
+
+  /* ── FLANGE FORCE ── */
+  var d_p = d - tf; // moment arm (d - tf)
+  var Pf  = d_p>0 ? Math.abs(Mu)/d_p : 0; // kip or kN
+
+  /* ── FLANGE PLATE CHECKS ── */
+  var phi_Rnf     = phi_bolt*Fnv*Ab*nf;                             // single shear
+  var phi_Rty_fp  = phi_ten*Fy_pl*bfp*tfp;                          // tension yield
+  var phi_Rtr_fp  = phi_rupt*Fu_pl*Math.max((bfp-dh)*tfp,0);        // net rupture (1 hole)
+  var phi_Rbrg_fp = brgCap(nf,db,dh,sf_f,evf,tfp,Fu_pl,phi_brg);   // bearing on plate
+  var phi_Rbrg_fl = brgCap(nf,db,dh,sf_f,evf,tf,Fu_bm,phi_brg);    // bearing on flange
+
+  /* ── UNIT CONVERSION (SI: N → kN) ── */
+  if(unit==='si'){
+    var cf=1/1000;
+    phi_Rnv_w*=cf; phi_Rnv_ecc*=cf;
+    phi_Rbrg_wpl*=cf; phi_Rbrg_web*=cf;
+    phi_Rwy*=cf; phi_Rwr*=cf;
+    phi_Rsy_w*=cf; phi_Rsr_w*=cf; phi_Rbs_w*=cf;
+    if(isFinite(phi_Rn_bend_w)) phi_Rn_bend_w*=cf;
+    phi_Rnf*=cf; phi_Rty_fp*=cf; phi_Rtr_fp*=cf;
+    phi_Rbrg_fp*=cf; phi_Rbrg_fl*=cf;
+    // Pf already in kN (Mu in kN·mm / d_p in mm = kN)
+  }
+
+  var forU=unit==='us'?'kip':'kN';
+  var lenU=unit==='us'?'in':'mm';
+
+  /* ── CHECKS ARRAY ── */
+  // dem = demand (Vu for web checks, Pf for flange checks)
+  var checks=[
+    {name:'Web bolt shear \xA7J3.6 (double shear)', cap:phi_Rnv_w,       dem:Vu,  grp:'wb'},
+    {name:'Web bolt eccentricity (elastic)',         cap:phi_Rnv_ecc,     dem:Vu,  grp:'wb'},
+    {name:'Bearing on web plates \xB72 \xA7J3.10',  cap:phi_Rbrg_wpl,    dem:Vu,  grp:'wp'},
+    {name:'Bearing on beam web \xA7J3.10',           cap:phi_Rbrg_web,    dem:Vu,  grp:'wp'},
+    {name:'Beam web shear yield \xA7J4.2',           cap:phi_Rwy,         dem:Vu,  grp:'wp'},
+    {name:'Beam web shear rupture \xA7J4.2',         cap:phi_Rwr,         dem:Vu,  grp:'wp'},
+    {name:'Web plate shear yield \xB72 \xA7J4.2',   cap:phi_Rsy_w,       dem:Vu,  grp:'wp'},
+    {name:'Web plate shear rupture \xB72 \xA7J4.2', cap:phi_Rsr_w,       dem:Vu,  grp:'wp'},
+    {name:'Web plate block shear \xB72 \xA7J4.3',   cap:phi_Rbs_w,       dem:Vu,  grp:'wp'},
+    {name:'Web plate bending \xA7F11 (Vu\xB7aᵤ)',cap:phi_Rn_bend_w,  dem:Vu,  grp:'wp'},
+    {name:'Flange bolt shear \xA7J3.6',              cap:phi_Rnf,         dem:Pf,  grp:'fp'},
+    {name:'Flange plate tension yield \xA7J4.1',     cap:phi_Rty_fp,      dem:Pf,  grp:'fp'},
+    {name:'Flange plate net rupture \xA7J4.1',       cap:phi_Rtr_fp,      dem:Pf,  grp:'fp'},
+    {name:'Bearing on flange plate \xA7J3.10',       cap:phi_Rbrg_fp,     dem:Pf,  grp:'fp'},
+    {name:'Bearing on beam flange \xA7J3.10',        cap:phi_Rbrg_fl,     dem:Pf,  grp:'fp'}
+  ];
+
+  checks.forEach(function(c){
+    c.isNA = !isFinite(c.cap);
+    c.DCR  = c.isNA?0 : (c.cap>0&&c.dem>=0 ? c.dem/c.cap : (c.dem>0?Infinity:0));
+  });
+
+  var govIdx=0, DCR_max=0;
+  checks.forEach(function(c,i){if(!c.isNA&&isFinite(c.DCR)&&c.DCR>DCR_max){DCR_max=c.DCR;govIdx=i;}});
+
+  /* ── Group tiles ── */
+  function grpMin(g){
+    var arr=checks.filter(function(c){return c.grp===g&&isFinite(c.cap);}).map(function(c){return c.cap;});
+    return arr.length?Math.min.apply(null,arr):Infinity;
+  }
+  function grpDCR(g,dem){var m=grpMin(g);return(dem>0&&m>0&&isFinite(m))?dem/m:0;}
+  function grpGov(g){
+    var best=null;
+    checks.forEach(function(c){if(c.grp===g&&isFinite(c.cap)&&(!best||c.cap<best.cap))best=c;});
+    return best?best.name.replace(' \xA7',' §').split(' \xA7')[0]:'—';
+  }
+  var gDCR_wb = grpDCR('wb',Vu);
+  var gDCR_wp = Math.max(grpDCR('wp',Vu));
+  var gDCR_fp = grpDCR('fp',Pf);
+
+  function setTile(vId,gId,dcr){
+    var ve=el(vId); if(ve){ve.textContent=dcr>0?fmt(dcr,3):'—';ve.className='fl-val'+(dcr>0?' '+dcrCls(dcr):'');}
+  }
+  setTile('rv-wbolt-dcr','rv-wbolt-gov',gDCR_wb);
+  setTile('rv-web-dcr',  'rv-web-gov',  gDCR_wp);
+  setTile('rv-flange-dcr','rv-flange-gov',gDCR_fp);
+  function govName(g,dem){
+    var best=null,bestDCR=0;
+    checks.forEach(function(c){if(c.grp===g&&!c.isNA){var r=c.dem>0&&c.cap>0?c.dem/c.cap:0;if(r>bestDCR){bestDCR=r;best=c;}}});
+    return best?best.name:'—';
+  }
+  var ge;
+  ge=el('rv-wbolt-gov'); if(ge)ge.textContent=gDCR_wb>0?govName('wb',Vu):'—';
+  ge=el('rv-web-gov');   if(ge)ge.textContent=gDCR_wp>0?govName('wp',Vu):'—';
+  ge=el('rv-flange-gov');if(ge)ge.textContent=gDCR_fp>0?govName('fp',Pf):'—';
+
+  /* ── DCR Banner ── */
+  var banner=el('dcr-banner');
+  var cls=dcrCls(DCR_max);
+  banner.className='dcr-banner '+cls;
+  var icon=cls==='ok'?'&#x2714;':cls==='warn'?'&#x26A0;':'&#x2716;';
+  el('dcr-icon').innerHTML=icon;
+  set('dcr-text-main',cls==='ok'?'OK — Splice adequate':cls==='warn'?'Warning — Near capacity':'FAIL — Inadequate capacity');
+  set('dcr-text-sub',checks[govIdx].name+' governs \xB7 DCR = '+fmt(DCR_max,3));
+
+  /* ── Capacity table ── */
+  var tbody=el('cap-tbl-body'); tbody.innerHTML='';
+  var lastGrp='';
+  var grpLabels={wb:'Web Bolts (double shear)',wp:'Web Plates & Beam Web',fp:'Flange Plates (Pᶠ = Mᶤ/ℓ₁)'};
+  checks.forEach(function(c,i){
+    if(c.grp!==lastGrp){
+      var htr=document.createElement('tr'); htr.className='grp-hdr';
+      htr.innerHTML='<td colspan="3">'+grpLabels[c.grp]+'</td>';
+      tbody.appendChild(htr); lastGrp=c.grp;
+    }
+    var isGov=(i===govIdx&&!c.isNA);
+    var dcr=c.DCR;
+    var cls2=c.isNA?'':dcrCls(dcr);
+    var capCell=c.isNA?'<span style="color:var(--text-dim);font-style:italic;font-size:.75rem">N/A (a=0)</span>'
+                      :fmt(c.cap,unit==='us'?1:0)+' '+forU;
+    var dcrCell=c.isNA?'<span style="color:var(--text-dim)">—</span>'
+                      :fmt(dcr,3)+(isGov?' &#x25C4;':'');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-size:.78rem"'+(isGov?' class="gov"':'')+'>'+c.name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)"'+(isGov?' class="gov"':'')+'>'+capCell+'</td>'
+      +'<td class="'+cls2+'" style="text-align:right">'+dcrCell+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  /* ── Geometry & Spacing Checks ── */
+  var Le_min = unit==='us'?(LE_MIN_US[db]||1.25*db):(LE_MIN_SI[db]||1.6*db);
+  var t_thin  = Math.min(tp_w, tw);
+  var Le_max  = Math.min(12*t_thin, unit==='us'?6:150);
+  var s_min   = 2.667*db;
+  var s_max   = Math.min(24*t_thin, unit==='us'?12:300);
+  var d2      = unit==='us'?2:1;
+  var geoRows=[
+    {name:'Web plate height hₚ ≤ clear web (d−2tᶠ)',actual:hp,   limit:d_web,  hi:false},
+    {name:'Web edge dist eᵥ ≥ Lᵉ,min (§J3.4)',          actual:ev,   limit:Le_min, hi:true },
+    {name:'Web edge dist eᵥ ≤ Lᵉ,max (§J3.5)',          actual:ev,   limit:Le_max, hi:false},
+    {name:'Web bolt spacing s ≥ 2.67dᵇ (§J3.3)',             actual:s,    limit:s_min,  hi:true },
+    {name:'Web bolt spacing s ≤ sₘₐˣ (§J3.5)',     actual:s,    limit:s_max,  hi:false},
+    {name:'Flange end dist eᶠ ≥ Lᵉ,min (§J3.4)',        actual:evf,  limit:Le_min, hi:true },
+    {name:'Flange bolt spacing sᶠ ≥ 2.67dᵇ (§J3.3)',    actual:sf_f, limit:s_min,  hi:true }
+  ];
+  var gbody=el('geo-tbl-body'); gbody.innerHTML='';
+  geoRows.forEach(function(r){
+    var ok=r.hi?r.actual>=r.limit:r.actual<=r.limit;
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-size:.78rem">'+r.name+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)">'+fmt(r.actual,d2)+' '+lenU+'</td>'
+      +'<td style="text-align:right;font-family:var(--mono)">'+fmt(r.limit,d2)+' '+lenU+'</td>'
+      +'<td class="'+(ok?'ok':'err')+'" style="text-align:right">'+(ok?'&#x2714;':'&#x2716;')+'</td>';
+    gbody.appendChild(tr);
+  });
+
+  /* ── Input Summary ── */
+  var ibody=el('inp-body'); ibody.innerHTML='';
+  var boltName=sizes[dbIdx][0], gradeName=grades[boltGi][0];
+  var muU=unit==='us'?'kip\xB7ft':'kN\xB7m';
+  var rows=[
+    ['Beam',           el('beamProfile').value+' ('+bm[0]+')'],
+    ['Vᵤ',        fmt(Vu,unit==='us'?1:0)+' '+forU],
+    ['Mᵤ',        fmt(Mu_inp,unit==='us'?1:0)+' '+muU],
+    ['Flange force Pᶠ', fmt(Pf,unit==='us'?1:0)+' '+forU],
+    ['Bolt',           gradeName+' '+boltName+(threadsIn?' (N)':' (X)')],
+    ['Web: nᵤ \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,d2)+' + 2\xD7'+fmt(ev,d2)+' = '+fmt(hp,d2)+' '+lenU],
+    ['Web plate tᵤ (each)', fmt(tp_w,d2)+' '+lenU],
+    ['Flange: nᶠ \xD7 sᶠ + 2eᶠ', nf+' \xD7 '+fmt(sf_f,d2)+' + 2\xD7'+fmt(evf,d2)+' '+lenU],
+    ['Flange plate tᶠ \xD7 bᶠ', fmt(tfp,d2)+' \xD7 '+fmt(bfp,d2)+' '+lenU],
+    ['Plate grade',    pg[0]]
+  ];
+  rows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';ibody.appendChild(tr);});
+
+  /* ── Detail ── */
+  var dbody=el('detail-body'); dbody.innerHTML='';
+  var areaU=unit==='us'?'in\xB2':'mm\xB2';
+  var drows=[
+    ['Hole diam. dʰ', fmt(dh,unit==='us'?4:1)+' '+lenU],
+    ['Bolt area Aᵇ', fmt(Ab,unit==='us'?4:0)+' '+areaU],
+    ['Fₙᵥ (bolt shear stress)', fmt(Fnv,0)+' '+(unit==='us'?'ksi':'MPa')],
+    ['Web plate hₚ (computed)', fmt(hp,d2)+' '+lenU],
+    ['Fᵧ / Fᵤ (plate)', fmt(Fy_pl,0)+' / '+fmt(Fu_pl,0)+' '+(unit==='us'?'ksi':'MPa')],
+    ['tᵂ / dʷᵉᵇ (beam web / d−2tᶠ)', fmt(tw,d2)+' / '+fmt(d_web,d2)+' '+lenU],
+    ['Fᵧ / Fᵤ (beam)', fmt(Fy_bm,0)+' / '+fmt(Fu_bm,0)+' '+(unit==='us'?'ksi':'MPa')],
+    ['tᶠ / bᶠ (flange plate)', fmt(tfp,d2)+' / '+fmt(bfp,d2)+' '+lenU],
+    ['tᶠ (beam flange)', fmt(tf,d2)+' '+lenU],
+    ['Moment arm d⁻ tᶠ', fmt(d_p,d2)+' '+lenU]
+  ];
+  drows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';dbody.appendChild(tr);});
+
+  drawSVG(n,s,ev,a_w,tp_w,hp,nf,sf_f,evf,tfp,bfp,db,unit);
+}
+
+/* ── Bearing capacity helper ── */
+function brgCap(n,db,dh,s,ev,t,Fu,phi){
+  var lc_end=ev-dh/2, lc_int=s-dh;
+  var Rn_end=Math.min(1.2*Math.max(lc_end,0)*t*Fu, 2.4*db*t*Fu);
+  var Rn_int=Math.min(1.2*Math.max(lc_int,0)*t*Fu, 2.4*db*t*Fu);
+  var nEnd=Math.min(n,2), nInt=n-nEnd;
+  return phi*(nEnd*Rn_end+nInt*Rn_int);
+}
+
+/* ── SVG elevation ── */
+function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit){
+  var svg=el('sp-svg'); if(!svg||!beamD) return;
+  var W=320, H=240;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+
+  var d=beamD, tf=beamTf, tw=beamTw;
+  var nomH=150;
+  var scl=Math.min(nomH/Math.max(d,1), unit==='us'?14:1.4);
+  var beamH=d*scl;
+  var flH=Math.max(tf*scl,5);
+  var wbH=Math.max(beamH-2*flH,8);
+  var beamTopY=(H-beamH)/2;
+  var webTopY=beamTopY+flH;
+  var botFlY=webTopY+wbH;
+
+  var fp_half=Math.max(((nf-1)*sf_f/2+evf_f)*scl, 28);
+  var fp_tk=Math.max(tfp_f*scl, 4);
+  var stubW=fp_half+28;
+
+  var wp_hpx=Math.max(hp_w*scl, 20);
+  var wp_centY=webTopY+wbH/2;
+  var wp_a=Math.max(a_w*scl, 8);
+  var wp_W=Math.max(wp_a+8, 16);
+
+  var br=Math.max(db*scl*0.38, 3.5);
+  var col_bm='#8898aa', col_wp='#4a7fb5', col_fp='#2a6090';
+  var col_bt='#1a2332', col_cl='#999', col_arr='#c03020';
+
+  var s='';
+  s+='<defs><marker id="arh2" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">'
+    +'<polygon points="0 0,7 2.5,0 5" fill="'+col_arr+'"/></marker></defs>';
+
+  // Title
+  s+='<text x="'+(W/2)+'" y="11" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1a2332" font-family="sans-serif">Splice Elevation</text>';
+
+  // CL splice
+  var splX=W/2;
+  s+='<line x1="'+splX+'" y1="16" x2="'+splX+'" y2="'+(H-8)+'" stroke="'+col_cl+'" stroke-width="0.9" stroke-dasharray="4,3"/>';
+  s+='<text x="'+splX+'" y="'+(H-1)+'" text-anchor="middle" font-size="7" fill="'+col_cl+'" font-family="sans-serif">CL splice</text>';
+
+  // Beam flanges (both sides)
+  s+='<rect x="'+(splX-stubW)+'" y="'+beamTopY+'" width="'+(stubW*2)+'" height="'+flH+'" fill="#c8d8e8" stroke="'+col_bm+'" stroke-width="1.2"/>';
+  s+='<rect x="'+(splX-stubW)+'" y="'+botFlY+'" width="'+(stubW*2)+'" height="'+flH+'" fill="#c8d8e8" stroke="'+col_bm+'" stroke-width="1.2"/>';
+
+  // Web
+  var wbpx=Math.max(tw*scl,4);
+  s+='<rect x="'+(splX-wbpx/2)+'" y="'+webTopY+'" width="'+wbpx+'" height="'+wbH+'" fill="#b8c8d8" stroke="'+col_bm+'" stroke-width="1"/>';
+
+  // Flange plates (top and bottom, both sides)
+  s+='<rect x="'+(splX-fp_half)+'" y="'+(beamTopY-fp_tk)+'" width="'+(fp_half*2)+'" height="'+fp_tk+'" fill="rgba(42,96,144,.22)" stroke="'+col_fp+'" stroke-width="1.5"/>';
+  s+='<rect x="'+(splX-fp_half)+'" y="'+(botFlY+flH)+'" width="'+(fp_half*2)+'" height="'+fp_tk+'" fill="rgba(42,96,144,.22)" stroke="'+col_fp+'" stroke-width="1.5"/>';
+
+  // Web splice plates (left and right of CL)
+  var wp_sY=wp_centY-wp_hpx/2;
+  s+='<rect x="'+(splX-wp_W)+'" y="'+wp_sY+'" width="'+wp_W+'" height="'+wp_hpx+'" fill="rgba(74,127,181,.22)" stroke="'+col_wp+'" stroke-width="1.5"/>';
+  s+='<rect x="'+splX+'" y="'+wp_sY+'" width="'+wp_W+'" height="'+wp_hpx+'" fill="rgba(74,127,181,.22)" stroke="'+col_wp+'" stroke-width="1.5"/>';
+
+  // Web bolts
+  var wb_xL=splX-wp_a, wb_xR=splX+wp_a;
+  var wb_xs=[wb_xL,wb_xR];
+  for(var i=0;i<n_w;i++){
+    var by=wp_centY+(-(n_w-1)/2+i)*s_w*scl;
+    for(var bi=0;bi<wb_xs.length;bi++){
+      var bx=wb_xs[bi];
+      s+='<circle cx="'+bx+'" cy="'+by+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.3"/>';
+      s+='<line x1="'+(bx-br)+'" y1="'+by+'" x2="'+(bx+br)+'" y2="'+by+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+      s+='<line x1="'+bx+'" y1="'+(by-br)+'" x2="'+bx+'" y2="'+(by+br)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+    }
+  }
+
+  // Flange bolts
+  var fb_yT=beamTopY-fp_tk/2, fb_yB=botFlY+flH+fp_tk/2;
+  var fb_ys=[fb_yT,fb_yB];
+  for(var k=0;k<nf;k++){
+    var fOff=(evf_f+k*sf_f)*scl;
+    var fx_dirs=[-1,1];
+    for(var fi=0;fi<fb_ys.length;fi++){
+      var fy=fb_ys[fi];
+      for(var di=0;di<fx_dirs.length;di++){
+        var fx=splX+fx_dirs[di]*fOff;
+        s+='<circle cx="'+fx+'" cy="'+fy+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.3"/>';
+        s+='<line x1="'+(fx-br)+'" y1="'+fy+'" x2="'+(fx+br)+'" y2="'+fy+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+        s+='<line x1="'+fx+'" y1="'+(fy-br)+'" x2="'+fx+'" y2="'+(fy+br)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+      }
+    }
+  }
+
+  // Load arrows (left end)
+  var lx=splX-stubW+14;
+  var mid=webTopY+wbH/2;
+  s+='<line x1="'+lx+'" y1="'+(mid-18)+'" x2="'+lx+'" y2="'+(mid+4)+'" stroke="'+col_arr+'" stroke-width="1.8" marker-end="url(#arh2)"/>';
+  s+='<text x="'+lx+'" y="'+(mid-21)+'" text-anchor="middle" font-size="8.5" fill="'+col_arr+'" font-family="sans-serif" font-weight="600">Vu</text>';
+  // Mu couple hint
+  s+='<text x="'+(lx+22)+'" y="'+(beamTopY+flH/2+3)+'" font-size="9" fill="'+col_arr+'" font-family="sans-serif">→</text>';
+  s+='<text x="'+(lx+22)+'" y="'+(botFlY+flH/2+3)+'" font-size="9" fill="'+col_arr+'" font-family="sans-serif">←</text>';
+  s+='<text x="'+(lx+22)+'" y="'+(beamTopY-3)+'" text-anchor="middle" font-size="7.5" fill="'+col_arr+'" font-family="sans-serif">Mu</text>';
+
+  // Labels
+  s+='<text x="'+(splX+stubW-4)+'" y="'+(beamTopY+flH/2+3)+'" text-anchor="end" font-size="7" fill="'+col_fp+'" font-family="sans-serif">flange pl.</text>';
+  s+='<text x="'+(splX+wp_W+4)+'" y="'+(wp_centY+3)+'" font-size="7" fill="'+col_wp+'" font-family="sans-serif">web pl.</text>';
+
+  svg.innerHTML=s;
+}
+
+function saveInputs(){
+  var data={};
+  document.querySelectorAll('input[id],select[id]').forEach(function(el){
+    if(el.type==='radio'){if(el.checked)data[el.id]=el.value;}
+    else if(el.type==='checkbox')data[el.id]=el.checked;
+    else data[el.id]=el.value;
+  });
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(document.title||'calc').replace(/[^\w]/g,'-').toLowerCase().replace(/-+/g,'-').replace(/^-|-$/g,'')+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function loadInputs(){
+  var inp=document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.addEventListener('change',function(e){
+    var file=e.target.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var data=JSON.parse(ev.target.result);
+        Object.keys(data).forEach(function(id){
+          var el=document.getElementById(id); if(!el) return;
+          if(el.type==='checkbox')el.checked=!!data[id];
+          else el.value=data[id];
+          el.dispatchEvent(new Event('change',{bubbles:true}));
+          el.dispatchEvent(new Event('input',{bubbles:true}));
+        });
+      }catch(err){alert('Invalid or incompatible save file.');}
+    };
+    reader.readAsText(file);
+  });
+  inp.click();
+}
+</script>
+</body>
+</html>
