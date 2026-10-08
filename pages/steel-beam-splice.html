@@ -973,10 +973,10 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit){
     s+='<rect x="'+(splX-fp_half)+'" y="'+(beamTopY-fp_tk)+'" width="'+(fp_half*2)+'" height="'+fp_tk+'" fill="rgba(42,96,144,.22)" stroke="'+col_fp+'" stroke-width="1.5"/>';
     s+='<rect x="'+(splX-fp_half)+'" y="'+(botFlY+flH)+'" width="'+(fp_half*2)+'" height="'+fp_tk+'" fill="rgba(42,96,144,.22)" stroke="'+col_fp+'" stroke-width="1.5"/>';
 
-    /* web splice plates (one each side of CL) */
+    /* web splice plates: two plates on web faces shown as one rect spanning both sides of CL */
+    var wp_half_W=Math.max((a_w+ev_w)*scl, 16);
     var wp_sY=wp_centY-wp_hpx/2;
-    s+='<rect x="'+(splX-wp_W)+'" y="'+wp_sY+'" width="'+wp_W+'" height="'+wp_hpx+'" fill="rgba(74,127,181,.22)" stroke="'+col_wp+'" stroke-width="1.5"/>';
-    s+='<rect x="'+splX+'" y="'+wp_sY+'" width="'+wp_W+'" height="'+wp_hpx+'" fill="rgba(74,127,181,.22)" stroke="'+col_wp+'" stroke-width="1.5"/>';
+    s+='<rect x="'+(splX-wp_half_W)+'" y="'+wp_sY+'" width="'+(wp_half_W*2)+'" height="'+wp_hpx+'" fill="rgba(74,127,181,.22)" stroke="'+col_wp+'" stroke-width="1.5"/>';
 
     /* web bolts: two columns at ±a_w from CL */
     var wb_xs=[splX-wp_a, splX+wp_a];
@@ -990,18 +990,19 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit){
       }
     }
 
-    /* flange bolts: evf_f, evf_f+sf_f, … from CL on each side */
-    var fb_yT=beamTopY-fp_tk/2, fb_yB=botFlY+flH+fp_tk/2;
+    /* flange bolts: vertical convention — bolt passes through horizontal plate,
+       shown as circle centered in flange with vertical line through plate+flange */
+    var fb_yT=beamTopY+flH/2, fb_yB=botFlY+flH/2;
     for(var k=0;k<nf;k++){
       var fOff=(evf_f+k*sf_f)*scl;
       for(var di=0;di<2;di++){
         var fx=splX+(di===0?-1:1)*fOff;
-        for(var yy=0;yy<2;yy++){
-          var fy=yy===0?fb_yT:fb_yB;
-          s+='<circle cx="'+fx+'" cy="'+fy+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.2"/>';
-          s+='<line x1="'+(fx-br)+'" y1="'+fy+'" x2="'+(fx+br)+'" y2="'+fy+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
-          s+='<line x1="'+fx+'" y1="'+(fy-br)+'" x2="'+fx+'" y2="'+(fy+br)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
-        }
+        /* top flange bolt */
+        s+='<line x1="'+fx+'" y1="'+(beamTopY-fp_tk)+'" x2="'+fx+'" y2="'+(beamTopY+flH)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+        s+='<circle cx="'+fx+'" cy="'+fb_yT+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.2"/>';
+        /* bottom flange bolt */
+        s+='<line x1="'+fx+'" y1="'+botFlY+'" x2="'+fx+'" y2="'+(botFlY+flH+fp_tk)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
+        s+='<circle cx="'+fx+'" cy="'+fb_yB+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.2"/>';
       }
     }
 
@@ -1016,7 +1017,7 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit){
 
     /* labels */
     s+='<text x="'+(splX+fp_half-2)+'" y="'+(beamTopY-fp_tk-2)+'" text-anchor="end" font-size="6.5" fill="'+col_fp+'" font-family="sans-serif">flange pl.</text>';
-    s+='<text x="'+(splX+wp_W+3)+'" y="'+(wp_centY+3)+'" font-size="6.5" fill="'+col_wp+'" font-family="sans-serif">web pl.</text>';
+    s+='<text x="'+(splX+wp_half_W+3)+'" y="'+(wp_centY+3)+'" font-size="6.5" fill="'+col_wp+'" font-family="sans-serif">web pl.</text>';
 
     svgEl.innerHTML=s;
   }
