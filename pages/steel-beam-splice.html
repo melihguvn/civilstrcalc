@@ -1051,73 +1051,62 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit,nc
     var lx=splX-stubW+12, mid=webTopY+wbH/2;
     s+='<line x1="'+lx+'" y1="'+(mid-16)+'" x2="'+lx+'" y2="'+(mid+3)+'" stroke="'+col_arr+'" stroke-width="1.8" marker-end="url(#arh2)"/>';
     s+='<text x="'+lx+'" y="'+(mid-19)+'" text-anchor="middle" font-size="8" fill="'+col_arr+'" font-family="sans-serif" font-weight="600">Vu</text>';
-    s+='<text x="'+(lx+18)+'" y="'+(beamTopY+flH/2+3)+'" font-size="8" fill="'+col_arr+'" font-family="sans-serif">→</text>';
-    s+='<text x="'+(lx+18)+'" y="'+(botFlY+flH/2+3)+'" font-size="8" fill="'+col_arr+'" font-family="sans-serif">←</text>';
-    /* Mu label — inside flange plate at right, away from CL label */
-    var muLblX=Math.min(splX+fp_half-4, W-4);
-    s+='<text x="'+muLblX+'" y="'+(beamTopY-fp_tk/2+2)+'" text-anchor="end" font-size="7" fill="'+col_arr+'" font-family="sans-serif">Mu</text>';
+    /* flange moment couple arrows (Mu) — left side only */
+    s+='<text x="'+(lx+16)+'" y="'+(beamTopY+flH/2+3)+'" font-size="8" fill="'+col_arr+'" font-family="sans-serif">→ Mu</text>';
+    s+='<text x="'+(lx+16)+'" y="'+(botFlY+flH/2+3)+'" font-size="8" fill="'+col_arr+'" font-family="sans-serif">←</text>';
 
-    /* element labels — clamped to prevent overflow */
-    var wpLblX=Math.min(splX+wp_half_W-3, W-34);
-    s+='<text x="'+wpLblX+'" y="'+(wp_centY-wp_hpx/2-3)+'" text-anchor="end" font-size="6.5" fill="'+col_wp+'" font-family="sans-serif">web pl.</text>';
-    var fpLblX=Math.min(splX+fp_half-3, W-38);
-    s+='<text x="'+fpLblX+'" y="'+(beamTopY-fp_tk-3)+'" text-anchor="end" font-size="6.5" fill="'+col_fp+'" font-family="sans-serif">flange pl.</text>';
+    /* element labels: positioned on clear left-side areas, anchor=start */
+    /* "flange pl." — left edge of flange plate, above bolt heads */
+    s+='<text x="'+(splX-fp_half+4)+'" y="'+(beamTopY-fp_tk-fnh-3)+'" text-anchor="start" font-size="6.5" fill="'+col_fp+'" font-family="sans-serif">flange pl.</text>';
+    /* "web pl." — left side of web plate, vertically centered, before any bolt column */
+    s+='<text x="'+(splX-wp_half_W+4)+'" y="'+(wp_centY+3)+'" text-anchor="start" font-size="6.5" fill="'+col_wp+'" font-family="sans-serif">web pl.</text>';
 
     /* ── dimension annotations ── */
-    /* beam depth d — right of beam */
-    var drx=splX+stubW+5;
-    if(drx<W-28){
-      s+='<line x1="'+drx+'" y1="'+beamTopY+'" x2="'+drx+'" y2="'+(beamTopY+beamH)+'" stroke="'+col_dim+'" stroke-width="0.8"/>';
-      s+='<line x1="'+(drx-3)+'" y1="'+beamTopY+'" x2="'+(drx+3)+'" y2="'+beamTopY+'" stroke="'+col_dim+'" stroke-width="0.8"/>';
-      s+='<line x1="'+(drx-3)+'" y1="'+(beamTopY+beamH)+'" x2="'+(drx+3)+'" y2="'+(beamTopY+beamH)+'" stroke="'+col_dim+'" stroke-width="0.8"/>';
-      s+='<text x="'+(drx+4)+'" y="'+(beamTopY+beamH/2+3)+'" font-size="6" fill="'+col_dim+'" font-family="sans-serif">d='+fmtV(d)+lenSfx+'</text>';
-    }
-
-    /* web plate height hp — right of web plate */
-    var hprx=Math.min(splX+wp_half_W+4, drx-2);
-    if(hprx<W-28 && wp_hpx>14){
-      s+='<line x1="'+hprx+'" y1="'+wp_sY+'" x2="'+hprx+'" y2="'+(wp_sY+wp_hpx)+'" stroke="'+col_wp+'" stroke-width="0.7" stroke-dasharray="2,2"/>';
-      s+='<line x1="'+(hprx-3)+'" y1="'+wp_sY+'" x2="'+(hprx+3)+'" y2="'+wp_sY+'" stroke="'+col_wp+'" stroke-width="0.7"/>';
-      s+='<line x1="'+(hprx-3)+'" y1="'+(wp_sY+wp_hpx)+'" x2="'+(hprx+3)+'" y2="'+(wp_sY+wp_hpx)+'" stroke="'+col_wp+'" stroke-width="0.7"/>';
+    /* hp bracket — right side of web plate, only if room to the left of beam edge */
+    var hprx=splX+wp_half_W+4;
+    var hprxMax=Math.min(splX+stubW-2, W-32);
+    if(hprx<hprxMax && wp_hpx>14){
+      s+='<line x1="'+hprx+'" y1="'+wp_sY+'" x2="'+hprx+'" y2="'+(wp_sY+wp_hpx)+'" stroke="'+col_wp+'" stroke-width="0.8" stroke-dasharray="2,2"/>';
+      s+='<line x1="'+(hprx-3)+'" y1="'+wp_sY+'" x2="'+(hprx+3)+'" y2="'+wp_sY+'" stroke="'+col_wp+'" stroke-width="0.8"/>';
+      s+='<line x1="'+(hprx-3)+'" y1="'+(wp_sY+wp_hpx)+'" x2="'+(hprx+3)+'" y2="'+(wp_sY+wp_hpx)+'" stroke="'+col_wp+'" stroke-width="0.8"/>';
       s+='<text x="'+(hprx+4)+'" y="'+(wp_centY+3)+'" font-size="6" fill="'+col_wp+'" font-family="sans-serif">hp='+fmtV(hp_w)+lenSfx+'</text>';
     }
 
-    /* bolt spacing s — between first two bolt rows on right column */
+    /* s bracket — left of inner-left bolt column, anchor=end → no right-side crowding */
     if(n_w>1){
-      var bColX=splX+(a_w+(nc_w-1)*g_w)*scl+br+3;
-      var by1r=wp_centY+(-(n_w-1)/2)*s_w*scl;
-      var by2r=by1r+s_w*scl;
-      if(bColX<W-24){
-        s+='<line x1="'+bColX+'" y1="'+by1r+'" x2="'+bColX+'" y2="'+by2r+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
-        s+='<line x1="'+(bColX-2)+'" y1="'+by1r+'" x2="'+(bColX+2)+'" y2="'+by1r+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
-        s+='<line x1="'+(bColX-2)+'" y1="'+by2r+'" x2="'+(bColX+2)+'" y2="'+by2r+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
-        s+='<text x="'+(bColX+3)+'" y="'+(by1r+(by2r-by1r)/2+3)+'" font-size="6" fill="'+col_dim+'" font-family="sans-serif">s='+fmtV(s_w)+lenSfx+'</text>';
+      var sLX=splX-a_w*scl-br-4;
+      var by1l=wp_centY+(-(n_w-1)/2)*s_w*scl;
+      var by2l=by1l+s_w*scl;
+      if(sLX>8){
+        s+='<line x1="'+sLX+'" y1="'+by1l+'" x2="'+sLX+'" y2="'+by2l+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
+        s+='<line x1="'+(sLX-2)+'" y1="'+by1l+'" x2="'+(sLX+2)+'" y2="'+by1l+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
+        s+='<line x1="'+(sLX-2)+'" y1="'+by2l+'" x2="'+(sLX+2)+'" y2="'+by2l+'" stroke="'+col_dim+'" stroke-width="0.7"/>';
+        s+='<text x="'+(sLX-3)+'" y="'+(by1l+(by2l-by1l)/2+3)+'" text-anchor="end" font-size="6" fill="'+col_dim+'" font-family="sans-serif">s='+fmtV(s_w)+lenSfx+'</text>';
       }
     }
 
-    /* a_w and g_w horizontal dimensions — bottom zone */
+    /* a_w and g_w horizontal dims — bottom zone, labels on RIGHT half only */
     var dimY=H+14;
-    /* left side */
-    var ax0=splX-a_w*scl, ax1=splX;
+    /* ticks both sides for a_w */
+    var ax0=splX-a_w*scl, ax1=splX, ax2=splX+a_w*scl;
     s+='<line x1="'+ax0+'" y1="'+dimY+'" x2="'+ax1+'" y2="'+dimY+'" stroke="'+col_arr+'" stroke-width="0.9"/>';
     s+='<line x1="'+ax0+'" y1="'+(dimY-3)+'" x2="'+ax0+'" y2="'+(dimY+3)+'" stroke="'+col_arr+'" stroke-width="0.9"/>';
     s+='<line x1="'+ax1+'" y1="'+(dimY-3)+'" x2="'+ax1+'" y2="'+(dimY+3)+'" stroke="'+col_arr+'" stroke-width="0.9"/>';
-    s+='<text x="'+((ax0+ax1)/2)+'" y="'+(dimY+9)+'" text-anchor="middle" font-size="6.5" fill="'+col_arr+'" font-family="sans-serif">a='+fmtV(a_w)+lenSfx+'</text>';
-    /* right side mirror */
-    var ax2=splX+a_w*scl;
     s+='<line x1="'+ax1+'" y1="'+dimY+'" x2="'+ax2+'" y2="'+dimY+'" stroke="'+col_arr+'" stroke-width="0.9"/>';
     s+='<line x1="'+ax2+'" y1="'+(dimY-3)+'" x2="'+ax2+'" y2="'+(dimY+3)+'" stroke="'+col_arr+'" stroke-width="0.9"/>';
+    /* label only on right half */
     s+='<text x="'+((ax1+ax2)/2)+'" y="'+(dimY+9)+'" text-anchor="middle" font-size="6.5" fill="'+col_arr+'" font-family="sans-serif">a='+fmtV(a_w)+lenSfx+'</text>';
 
     if(nc_w>1){
-      var gx1=splX+a_w*scl, gx2=splX+(a_w+g_w)*scl;
+      /* g_w ticks + label on right only */
+      var gx1=ax2, gx2=splX+(a_w+g_w)*scl;
       s+='<line x1="'+gx1+'" y1="'+dimY+'" x2="'+gx2+'" y2="'+dimY+'" stroke="'+col_dim+'" stroke-width="0.9"/>';
       s+='<line x1="'+gx2+'" y1="'+(dimY-3)+'" x2="'+gx2+'" y2="'+(dimY+3)+'" stroke="'+col_dim+'" stroke-width="0.9"/>';
       s+='<text x="'+((gx1+gx2)/2)+'" y="'+(dimY+9)+'" text-anchor="middle" font-size="6.5" fill="'+col_dim+'" font-family="sans-serif">g='+fmtV(g_w)+lenSfx+'</text>';
-      var lgx1=splX-a_w*scl, lgx2=splX-(a_w+g_w)*scl;
+      /* g_w ticks on left only (no label) */
+      var lgx1=ax0, lgx2=splX-(a_w+g_w)*scl;
       s+='<line x1="'+lgx2+'" y1="'+dimY+'" x2="'+lgx1+'" y2="'+dimY+'" stroke="'+col_dim+'" stroke-width="0.9"/>';
       s+='<line x1="'+lgx2+'" y1="'+(dimY-3)+'" x2="'+lgx2+'" y2="'+(dimY+3)+'" stroke="'+col_dim+'" stroke-width="0.9"/>';
-      s+='<text x="'+((lgx1+lgx2)/2)+'" y="'+(dimY+9)+'" text-anchor="middle" font-size="6.5" fill="'+col_dim+'" font-family="sans-serif">g='+fmtV(g_w)+lenSfx+'</text>';
     }
 
     svgEl.innerHTML=s;
