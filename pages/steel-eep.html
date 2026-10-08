@@ -560,13 +560,13 @@ function setUnit(u){
   el('btn-si').classList.toggle('active',u==='si');
   if(old!==u){
     if(u==='si'){
-      el('inp-Mu').value='280';
-      el('inp-Vu').value='180';
-      el('inp-tp').value='22';
-      el('inp-bp').value='180';
-      el('inp-pf').value='45';
-      el('inp-g').value='140';
-      el('inp-pb').value='75';
+      el('inp-Mu').value='300';
+      el('inp-Vu').value='150';
+      el('inp-tp').value='25';
+      el('inp-bp').value='300';
+      el('inp-pf').value='55';
+      el('inp-g').value='160';
+      el('inp-pb').value='90';
     } else {
       el('inp-Mu').value='200';
       el('inp-Vu').value='40';
@@ -586,8 +586,19 @@ function setUnit(u){
   Object.keys(spns).forEach(function(id){var e=el(id);if(e)e.textContent=spns[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · ft':'kN · m';
   buildAllDropdowns();
+  if(u==='si'){
+    el('beamType').value='HEB';
+    el('colType').value='HEB';
+  }
   onBeamTypeChange();
   onColTypeChange();
+  if(u==='si'){
+    el('beamProfile').value='HE300B';
+    beam=readProfile('beamType','beamProfile');
+    el('colProfile').value='HE400B';
+    col=readProfile('colType','colProfile');
+    calc();
+  }
 }
 
 /* ── Dropdown builders ── */
@@ -607,11 +618,11 @@ function buildBoltDropdowns(){
   var gSel=el('boltGrade'); gSel.innerHTML='';
   var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
   grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
-  gSel.selectedIndex=unit==='us'?1:2;
+  gSel.selectedIndex=unit==='us'?1:3;  /* SI default: 10.9 (idx 3) */
   var dSel=el('boltDia'); dSel.innerHTML='';
   var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
   sizes.forEach(function(s,i){var o=document.createElement('option');o.value=i;o.textContent=s[0];dSel.appendChild(o);});
-  dSel.selectedIndex=unit==='us'?1:1;
+  dSel.selectedIndex=unit==='us'?1:3;  /* SI default: M27 (idx 3) */
 }
 function buildMaterialDropdown(id, idxs, defIdx){
   var sel=el(id); if(!sel) return; sel.innerHTML='';
