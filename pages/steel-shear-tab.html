@@ -668,6 +668,8 @@ document.addEventListener('DOMContentLoaded',function(){
   buildPlateGradeDropdown();
   buildBeamMaterialDropdown();
   onBeamTypeChange();
+  el('beamProfile').value='W18\xD750';
+  onBeamProfileChange();
   el('ph-date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
   el('pf-date2').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 });
@@ -705,7 +707,15 @@ function setUnit(u){
   buildBoltDropdowns();
   buildPlateGradeDropdown();
   buildBeamMaterialDropdown();
+  if(u==='si') el('beamType').value='HEB';
   onBeamTypeChange();
+  if(u==='si'){
+    el('beamProfile').value='HE300B';
+    onBeamProfileChange();
+  } else {
+    el('beamProfile').value='W18\xD750';
+    onBeamProfileChange();
+  }
 }
 
 /* ── Profile dropdowns ── */
@@ -753,7 +763,7 @@ function buildBoltDropdowns(){
   var gSel=el('inp-bolt-grade'); gSel.innerHTML='';
   var grades=unit==='us'?BOLT_GRADES_US:BOLT_GRADES_SI;
   grades.forEach(function(g,i){var o=document.createElement('option');o.value=i;o.textContent=g[0];gSel.appendChild(o);});
-  gSel.selectedIndex=unit==='us'?1:5; // A325 for US, 8.8 for SI
+  gSel.selectedIndex=unit==='us'?1:6; // A325 for US, 10.9 for SI
   // Diameter
   var dSel=el('inp-db'); dSel.innerHTML='';
   var sizes=unit==='us'?BOLT_DIA_US:BOLT_DIA_SI;
