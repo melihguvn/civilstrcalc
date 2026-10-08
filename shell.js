@@ -259,9 +259,10 @@
       item('/pages/steel-ltb',         ic.st_ltb, 'LTB Check',              'steelltb') +
       item('/pages/truss-design',      ic.st_trs, 'Truss Design',           'steeltruss') +
       item('/pages/steel-base-plate',  ic.st_bp,  'Base Plate Design',      'steelbp') +
-      item('/pages/steel-shear-tab',   ic.st_bp,  'Shear Tab Connection',   'steelsheartab') +
-      item('/pages/steel-eep',         ic.st_bp,  'Ext. End Plate Connection', 'steeleep') +
-      item('/pages/steel-beam-splice', ic.st_bp,  'Beam Splice Connection',  'steelbeamsplice')) +
+      grp(ic.st_bp, 'Connection Design', ['steelsheartab','steeleep','steelbeamsplice'],
+        sub('/pages/steel-shear-tab',   'Shear Tab',                'steelsheartab') +
+        sub('/pages/steel-eep',         'Ext. End Plate (EEP)',     'steeleep') +
+        sub('/pages/steel-beam-splice', 'Beam Splice',              'steelbeamsplice'))) +
     '<div class=”sh-div”></div>' +
     sect('Composite Design', ['compbeam','cfstcol','srccol'],
       item('/pages/composite-beam',       ic.comp, 'Composite Beam Design', 'compbeam') +
