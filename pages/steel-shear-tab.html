@@ -191,10 +191,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
   .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
   .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
-  #st-svg-card{box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:8px!important;break-inside:avoid;page-break-inside:avoid}
-  #st-svg-card .card-hdr{background:#eef3fa!important;font-size:7pt!important;padding:3px 8px!important}
-  #st-svg-card .card-body{padding:5px 8px!important;text-align:center!important}
-  #st-svg{display:block!important;width:220px!important;max-width:220px!important;height:auto!important;margin:0 auto!important}
+  #print-st-svg-holder{display:block!important;margin-bottom:6px!important;break-inside:avoid;page-break-inside:avoid}
   thead{display:table-header-group}
   tr{page-break-inside:avoid;break-inside:avoid}
   .rpt-sec-title{break-after:avoid;page-break-after:avoid}
@@ -312,7 +309,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 </div><!-- /inputs-no-print -->
 
   <!-- SVG -->
-  <div class="card" id="st-svg-card" style="margin-top:12px">
+  <div class="card no-print" id="st-svg-card" style="margin-top:12px">
     <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Connection Elevation (not to scale)</div>
     <div class="card-body" style="padding:8px;text-align:center">
       <svg id="st-svg" viewBox="0 0 260 280" style="width:100%;max-width:280px"></svg>
@@ -368,6 +365,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <strong id="dcr-text-main">—</strong>
           <span id="dcr-text-sub">—</span>
         </div>
+      </div>
+
+      <!-- Connection sketch — populated by syncPrintSVG() before print -->
+      <div id="print-st-svg-holder" style="display:none;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid">
+        <div class="rpt-sec-title">Connection Sketch</div>
+        <div id="print-st-svg-inner" style="text-align:center"></div>
       </div>
 
       <!-- DCR Breakdown -->
@@ -1145,7 +1148,19 @@ function drawSVG(n, s, ev, eh, tp, bp, hp, db, Vu, unit){
   html += '<text x="'+(W/2)+'" y="16" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1a2332" font-family="sans-serif">Elevation — Single Bolt Row</text>';
 
   svg.innerHTML = html;
+  syncPrintSVG();
 }
+
+function syncPrintSVG(){
+  var holder=el('print-st-svg-inner'); if(!holder) return;
+  holder.innerHTML='';
+  var sv=el('st-svg'); if(!sv) return;
+  var clone=sv.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.style.cssText='display:block;width:220px;max-width:220px;height:auto;margin:0 auto';
+  holder.appendChild(clone);
+}
+
 function saveInputs() {
   var data = {};
   document.querySelectorAll('input[id],select[id]').forEach(function(el) {

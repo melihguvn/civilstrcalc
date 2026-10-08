@@ -200,10 +200,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
   .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
   .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
-  #eep-svg-card{box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:8px!important;break-inside:avoid;page-break-inside:avoid}
-  #eep-svg-card .card-hdr{background:#eef3fa!important;font-size:7pt!important;padding:3px 8px!important}
-  #eep-svg-card .card-body{padding:5px 8px!important;text-align:center!important}
-  #eep-svg{display:block!important;width:280px!important;max-width:280px!important;height:auto!important;margin:0 auto!important}
+  #print-eep-svg-holder{display:block!important;margin-bottom:6px!important;break-inside:avoid;page-break-inside:avoid}
   thead{display:table-header-group}
   tr{page-break-inside:avoid;break-inside:avoid}
   .rpt-sec-title{break-after:avoid;page-break-after:avoid}
@@ -349,7 +346,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 </div><!-- /inputs-no-print -->
 
   <!-- SVG Diagram -->
-  <div class="card" id="eep-svg-card" style="margin-top:14px">
+  <div class="card no-print" id="eep-svg-card" style="margin-top:14px">
     <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Connection &mdash; Side Elevation (not to scale)</div>
     <div class="card-body" style="padding:8px;text-align:center">
       <svg id="eep-svg" viewBox="0 0 360 280" style="width:100%;max-width:420px"></svg>
@@ -409,6 +406,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
       <!-- Geometry Warnings -->
       <div class="geom-warn-box" id="geom-warn-box"></div>
+
+      <!-- Connection sketch — populated by syncPrintSVG() before print -->
+      <div id="print-eep-svg-holder" style="display:none;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid">
+        <div class="rpt-sec-title">Connection Sketch</div>
+        <div id="print-eep-svg-inner" style="text-align:center"></div>
+      </div>
 
       <!-- Design Checks — placeholder until calc engine added -->
       <div class="rpt-sec">
@@ -1217,6 +1220,17 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
 
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.innerHTML=s;
+  syncPrintSVG();
+}
+
+function syncPrintSVG(){
+  var holder=el('print-eep-svg-inner'); if(!holder) return;
+  holder.innerHTML='';
+  var sv=el('eep-svg'); if(!sv) return;
+  var clone=sv.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.style.cssText='display:block;width:280px;max-width:280px;height:auto;margin:0 auto';
+  holder.appendChild(clone);
 }
 
 /* ── Save / Load ── */

@@ -186,11 +186,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .rpt-sec{margin-bottom:4px!important;padding-bottom:3px!important}
   .rpt-sec-title{font-size:7pt!important;padding:2px 6px!important;margin-bottom:2px!important}
   .inp-tbl td,.res-tbl td{padding:2px 5px!important;font-size:8pt!important}
-  #sp-svg-card{box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:8px!important;break-inside:avoid;page-break-inside:avoid}
-  #sp-svg-card .card-hdr{background:#eef3fa!important;font-size:7pt!important;padding:3px 8px!important}
-  #sp-svg-card .card-body{padding:5px 8px!important;display:flex!important;flex-wrap:wrap;gap:10px;align-items:flex-start}
-  #sp-svg{display:block!important;width:260px!important;max-width:260px!important;height:auto!important}
-  #sp-svg-plan{display:block!important;width:200px!important;max-width:200px!important;height:auto!important}
+  #print-svg-holder{display:block!important;margin-bottom:6px!important;break-inside:avoid;page-break-inside:avoid}
   thead{display:table-header-group}
   tr{page-break-inside:avoid;break-inside:avoid}
   .rpt-sec-title{break-after:avoid;page-break-after:avoid}
@@ -360,7 +356,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 </div><!-- /inputs-no-print -->
 
   <!-- SVG -->
-  <div class="card" id="sp-svg-card" style="margin-top:12px">
+  <div class="card no-print" id="sp-svg-card" style="margin-top:12px">
     <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Splice Views (schematic)</div>
     <div class="card-body" style="padding:8px">
       <div>
@@ -423,6 +419,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <strong id="dcr-text-main">—</strong>
           <span id="dcr-text-sub">—</span>
         </div>
+      </div>
+
+      <!-- Connection sketch — populated by syncPrintSVG() before print -->
+      <div id="print-svg-holder" style="display:none;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid">
+        <div class="rpt-sec-title">Connection Sketch</div>
+        <div id="print-svg-inner" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start"></div>
       </div>
 
       <!-- Capacity table -->
@@ -1190,6 +1192,23 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit,nc
 
     svgPlan.innerHTML=s2;
   }
+  syncPrintSVG();
+}
+
+function syncPrintSVG(){
+  var holder=el('print-svg-inner'); if(!holder) return;
+  holder.innerHTML='';
+  [['sp-svg','Elevation',260],['sp-svg-plan','Plan — Top Flange',200]].forEach(function(p){
+    var sv=el(p[0]); if(!sv) return;
+    var wrap=document.createElement('div');
+    var lbl=document.createElement('div');
+    lbl.style.cssText='font-size:.67rem;color:var(--text-dim);font-family:var(--sans);margin-bottom:2px';
+    lbl.textContent=p[1];
+    var clone=sv.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.style.cssText='display:block;width:'+p[2]+'px;max-width:'+p[2]+'px;height:auto';
+    wrap.appendChild(lbl); wrap.appendChild(clone); holder.appendChild(wrap);
+  });
 }
 
 function saveInputs(){
