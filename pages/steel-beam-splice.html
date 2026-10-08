@@ -990,19 +990,26 @@ function drawSVG(n_w,s_w,ev_w,a_w,tp_w,hp_w,nf,sf_f,evf_f,tfp_f,bfp_f,db,unit){
       }
     }
 
-    /* flange bolts: vertical convention — bolt passes through horizontal plate,
-       shown as circle centered in flange with vertical line through plate+flange */
-    var fb_yT=beamTopY+flH/2, fb_yB=botFlY+flH/2;
+    /* flange bolts: EEP-style symbol rotated 90° (bolt through horizontal plate)
+       head rect → shank through fp → shank through flange → nut rect, circle at flange center */
+    var fnh=Math.max(br*0.9,4);
+    var fsw=Math.max(br*0.65,2);
     for(var k=0;k<nf;k++){
       var fOff=(evf_f+k*sf_f)*scl;
       for(var di=0;di<2;di++){
         var fx=splX+(di===0?-1:1)*fOff;
-        /* top flange bolt */
-        s+='<line x1="'+fx+'" y1="'+(beamTopY-fp_tk)+'" x2="'+fx+'" y2="'+(beamTopY+flH)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
-        s+='<circle cx="'+fx+'" cy="'+fb_yT+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.2"/>';
-        /* bottom flange bolt */
-        s+='<line x1="'+fx+'" y1="'+botFlY+'" x2="'+fx+'" y2="'+(botFlY+flH+fp_tk)+'" stroke="'+col_bt+'" stroke-width="0.6"/>';
-        s+='<circle cx="'+fx+'" cy="'+fb_yB+'" r="'+br+'" fill="white" stroke="'+col_bt+'" stroke-width="1.2"/>';
+        /* top flange bolt (plate above, flange below plate) */
+        s+='<rect x="'+(fx-br*0.55)+'" y="'+(beamTopY-fp_tk-fnh)+'" width="'+(br*1.1)+'" height="'+fnh+'" fill="#445" rx="1"/>'; /* head */
+        s+='<rect x="'+(fx-fsw)+'" y="'+(beamTopY-fp_tk)+'" width="'+(fsw*2)+'" height="'+fp_tk+'" fill="#778" rx="1"/>';          /* shank/fp */
+        s+='<rect x="'+(fx-fsw)+'" y="'+beamTopY+'" width="'+(fsw*2)+'" height="'+flH+'" fill="#778" rx="1"/>';                    /* shank/fl */
+        s+='<rect x="'+(fx-br*0.55)+'" y="'+(beamTopY+flH)+'" width="'+(br*1.1)+'" height="'+fnh+'" fill="#445" rx="1"/>';         /* nut */
+        s+='<circle cx="'+fx+'" cy="'+(beamTopY+flH/2)+'" r="'+br+'" fill="none" stroke="#223" stroke-width="1.2"/>';
+        /* bottom flange bolt (flange above, plate below) */
+        s+='<rect x="'+(fx-br*0.55)+'" y="'+(botFlY-fnh)+'" width="'+(br*1.1)+'" height="'+fnh+'" fill="#445" rx="1"/>';           /* head */
+        s+='<rect x="'+(fx-fsw)+'" y="'+botFlY+'" width="'+(fsw*2)+'" height="'+flH+'" fill="#778" rx="1"/>';                      /* shank/fl */
+        s+='<rect x="'+(fx-fsw)+'" y="'+(botFlY+flH)+'" width="'+(fsw*2)+'" height="'+fp_tk+'" fill="#778" rx="1"/>';              /* shank/fp */
+        s+='<rect x="'+(fx-br*0.55)+'" y="'+(botFlY+flH+fp_tk)+'" width="'+(br*1.1)+'" height="'+fnh+'" fill="#445" rx="1"/>';     /* nut */
+        s+='<circle cx="'+fx+'" cy="'+(botFlY+flH/2)+'" r="'+br+'" fill="none" stroke="#223" stroke-width="1.2"/>';
       }
     }
 
