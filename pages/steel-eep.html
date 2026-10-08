@@ -968,6 +968,7 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var pxsc      = bp_px_raw > 108 ? 108 / bp_px_raw : 1;
   var bp_px_d   = bp_px_raw * pxsc;
   var g_px_d    = g * ppi * pxsc;
+  var cbf_px    = col.bf * ppi * pxsc;  /* col flange width, same scale as bp */
 
   /* ── y layout: top margin = 50 for bp dim + title ── */
   var yC  = 50 + dp_px/2;
@@ -993,17 +994,22 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var dim_lx   = beam_x1 + 12;
 
   /* ── x layout — PLAN VIEW ── */
-  var dim_end   = dim_lx + 64;       /* approx right edge of dim text  */
-  var pv_gap    = 14;
-  var pv_col_w  = 13;
-  var pv_x0     = dim_end + pv_gap;  /* column face left edge          */
-  var pv_pl_x0  = pv_x0 + pv_col_w; /* plate left edge                */
-  var pv_pcx    = pv_pl_x0 + bp_px_d/2;
-  var pv_pl_x1  = pv_pl_x0 + bp_px_d;
+  var dim_end  = dim_lx + 64;
+  var pv_gap   = 14;
+  /* shift right if col flange is wider than plate so cf_x0 stays inside SVG */
+  var pv_extra = Math.max(0, (cbf_px - bp_px_d) / 2);
+  var pv_x0    = dim_end + pv_gap + pv_extra;
+  var pv_pl_x0 = pv_x0;
+  var pv_pcx   = pv_pl_x0 + bp_px_d / 2;
+  var pv_pl_x1 = pv_pl_x0 + bp_px_d;
 
   /* bolt x cols in plan view */
   var bx_l_pv = pv_pcx - g_px_d/2;
   var bx_r_pv = pv_pcx + g_px_d/2;
+
+  /* column flange x extents in plan */
+  var cf_x0 = pv_pcx - cbf_px / 2;
+  var cf_x1 = pv_pcx + cbf_px / 2;
 
   /* bp dim (above plan view) */
   var bp_arr_y  = yPT_v - 12;
@@ -1013,9 +1019,13 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   var g_arr_y  = yPB_v + 12;
   var g_text_y = g_arr_y + 11;
 
+  /* bf,col dim (below g dim) */
+  var cbf_arr_y  = g_text_y + 9;
+  var cbf_text_y = cbf_arr_y + 11;
+
   /* SVG size */
-  var W = Math.max(pv_pl_x1 + 18, pv_pl_x1 + 18);
-  var H = Math.max(yPB_v + 32, g_text_y + 6);
+  var W = Math.max(pv_pl_x1 + 18, cf_x1 + 18);
+  var H = Math.max(yPB_v + 32, cbf_text_y + 6);
 
   var bx_mid = ep_x0 + tp_px/2;
   var s = '';
@@ -1109,13 +1119,13 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   /* ── PLAN VIEW (right side, same y scale) ── */
 
   /* title */
-  s += '<text x="'+pv_x0+'" y="'+(yPT_v-22)+'" font-size="7" fill="#8898aa" font-family="sans-serif">Plan view</text>';
+  s += '<text x="'+Math.min(cf_x0,pv_pl_x0)+'" y="'+(yPT_v-22)+'" font-size="7" fill="#8898aa" font-family="sans-serif">Plan view</text>';
 
-  /* column face */
-  s += '<rect x="'+pv_x0+'" y="'+yPT_v+'" width="'+pv_col_w+'" height="'+dp_v
+  /* column flange behind plate (centered on plate, col.bf wide) */
+  s += '<rect x="'+cf_x0+'" y="'+yPT_v+'" width="'+cbf_px+'" height="'+dp_v
      + '" fill="#d4e0ec" stroke="#1a4a7a" stroke-width="1.2"/>';
 
-  /* end plate — full bp × dp */
+  /* end plate on top — full bp × dp */
   s += '<rect x="'+pv_pl_x0+'" y="'+yPT_v+'" width="'+bp_px_d+'" height="'+dp_v
      + '" fill="#b8cfe0" stroke="#1a2332" stroke-width="1.2"/>';
 
@@ -1147,6 +1157,16 @@ function drawSvg(cfg, bm, dp, bp_in, pf, pb, g, db){
   s += '<polygon points="'+bx_r_pv+','+g_arr_y+' '+(bx_r_pv-ar2)+','+(g_arr_y-ar2)+' '+(bx_r_pv-ar2)+','+(g_arr_y+ar2)+'" fill="#555"/>';
   s += '<text x="'+pv_pcx+'" y="'+g_text_y+'" text-anchor="middle" font-size="8" fill="#222" font-family="sans-serif">'
      + 'g='+fmt(g,unit==='us'?2:0)+lu+'</text>';
+
+  /* bf,col dimension (column flange width, below g) */
+  var ar3=3;
+  s += '<line x1="'+cf_x0+'" y1="'+(g_arr_y+2)+'" x2="'+cf_x0+'" y2="'+(cbf_arr_y+3)+'" stroke="#aaa" stroke-width="0.6"/>';
+  s += '<line x1="'+cf_x1+'" y1="'+(g_arr_y+2)+'" x2="'+cf_x1+'" y2="'+(cbf_arr_y+3)+'" stroke="#aaa" stroke-width="0.6"/>';
+  s += '<line x1="'+cf_x0+'" y1="'+cbf_arr_y+'" x2="'+cf_x1+'" y2="'+cbf_arr_y+'" stroke="#1a4a7a" stroke-width="1"/>';
+  s += '<polygon points="'+cf_x0+','+cbf_arr_y+' '+(cf_x0+ar3)+','+(cbf_arr_y-ar3)+' '+(cf_x0+ar3)+','+(cbf_arr_y+ar3)+'" fill="#1a4a7a"/>';
+  s += '<polygon points="'+cf_x1+','+cbf_arr_y+' '+(cf_x1-ar3)+','+(cbf_arr_y-ar3)+' '+(cf_x1-ar3)+','+(cbf_arr_y+ar3)+'" fill="#1a4a7a"/>';
+  s += '<text x="'+pv_pcx+'" y="'+cbf_text_y+'" text-anchor="middle" font-size="8" fill="#1a4a7a" font-family="sans-serif">'
+     + 'b<tspan dy="3" font-size="6">f,col</tspan><tspan dy="-3">='+fmt(col.bf,unit==='us'?2:0)+lu+'</tspan></text>';
 
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.innerHTML=s;
