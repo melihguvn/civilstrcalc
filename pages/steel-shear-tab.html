@@ -307,6 +307,22 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Plate material</label>
     <select id="inp-plate-grade" class="bp-sel" onchange="calc()"></select>
   </div>
+  <!-- Weld to Support -->
+  <div class="form-div"><div class="form-div-lbl">Weld to Support</div></div>
+  <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="form-group">
+      <label>Fillet size w <span class="unit-lbl" id="lbl-weld">[in]</span></label>
+      <div class="iw"><input type="number" id="inp-weld-size" value="0.25" min="0.0625" step="0.0625" oninput="calc()"><span class="us" id="su-weld">in</span></div>
+    </div>
+    <div class="form-group">
+      <label>Electrode</label>
+      <select id="inp-electrode" class="bp-sel" onchange="calc()">
+        <option value="70">E70XX — 70 ksi</option>
+        <option value="80">E80XX — 80 ksi</option>
+        <option value="90">E90XX — 90 ksi</option>
+      </select>
+    </div>
+  </div>
 
 </div><!-- /inputs-no-print -->
 
@@ -357,6 +373,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="fl-lbl">Beam Web</div>
           <div class="fl-val" id="rv-web-dcr">—</div>
           <div class="fl-unit" id="rv-web-gov">—</div>
+        </div>
+        <div class="fl-col">
+          <div class="fl-lbl">Weld</div>
+          <div class="fl-val" id="rv-weld-dcr">—</div>
+          <div class="fl-unit" id="rv-weld-gov">—</div>
         </div>
       </div>
 
@@ -701,6 +722,7 @@ function setUnit(u){
       el('inp-tp').value='10';
       el('inp-bp').value='90';
       el('inp-a').value='75';
+      el('inp-weld-size').value='6';
     } else {
       el('inp-Vu').value='30';
       el('inp-s').value='3';
@@ -708,12 +730,13 @@ function setUnit(u){
       el('inp-tp').value='0.375';
       el('inp-bp').value='3.5';
       el('inp-a').value='3';
+      el('inp-weld-size').value='0.25';
     }
   }
   var lu=u==='us'?'in':'mm', fu=u==='us'?'kip':'kN';
-  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-tp':lu,'lbl-bp':lu,'lbl-a':lu};
+  var lblMap={'lbl-Vu':fu,'lbl-db':lu,'lbl-s':lu,'lbl-ev':lu,'lbl-tp':lu,'lbl-bp':lu,'lbl-a':lu,'lbl-weld':lu};
   Object.keys(lblMap).forEach(function(id){var e=el(id);if(e)e.textContent='['+lblMap[id]+']';});
-  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu,'su-a':lu};
+  var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu,'su-a':lu,'su-weld':lu};
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
   // rv-phi-rn-u removed (replaced by group DCR tiles)
@@ -917,6 +940,37 @@ function calc(){
     phi_Rn_bending = Infinity; // no moment, bending check N/A
   }
 
+  // 9. Plate-to-support fillet weld — two-sided vertical fillet (§J2.4)
+  // Elastic method: direct shear + bending moment about weld centroid
+  var w_weld = v('inp-weld-size');
+  var FEXX_ksi = el('inp-electrode') ? parseInt(el('inp-electrode').value)||70 : 70;
+  var FEXX = unit==='us' ? FEXX_ksi : FEXX_ksi*6.894757; // ksi → MPa
+  var phi_Rn_weld = Infinity;
+  var weld_str = '—';
+  if(w_weld > 0 && hp > 0){
+    // Per-unit-length forces on weld group (two sides, each length hp)
+    var fv_w = Vu / (2*hp);                                     // direct shear [kip/in or kN/mm]
+    var fh_w = (a_ecc>0) ? 3*Vu*a_ecc/(hp*hp) : 0;             // horizontal from M=Vu·a [kip/in or kN/mm]
+    var fu_w = Math.sqrt(fv_w*fv_w + fh_w*fh_w);               // resultant per unit length
+    var phi_rn_w = (unit==='us')                                 // weld capacity per unit length
+      ? 0.75*0.6*FEXX*0.707*w_weld                              // kip/in
+      : 0.75*0.6*FEXX*0.707*w_weld/1000;                        // kN/mm (FEXX MPa, w mm)
+    // Equivalent Vu capacity at DCR=1.0
+    phi_Rn_weld = (fu_w>0 && Vu>0) ? phi_rn_w*Vu/fu_w : phi_rn_w*2*hp;
+    weld_str = 'E'+FEXX_ksi+'XX · w='+fmt(w_weld,unit==='us'?3:0)+' '+lenU
+      +' · f_u='+fmt(fu_w,unit==='us'?3:2)+'/'+fmt(phi_rn_w,unit==='us'?3:2)+' '+forU+'/'+(unit==='us'?'in':'mm');
+  }
+
+  // Minimum weld size per §J2.2b Table J2.4 (based on thicker part = tp)
+  var w_min_weld, w_max_weld;
+  if(unit==='us'){
+    w_min_weld = tp<=0.25?0.125 : tp<=0.5?0.1875 : tp<=0.75?0.25 : 0.3125;
+    w_max_weld = tp>=0.25 ? tp-0.0625 : tp;
+  } else {
+    w_min_weld = tp<=6?3 : tp<=12?5 : tp<=20?6 : 8;
+    w_max_weld = tp>=6 ? tp-2 : tp;
+  }
+
   var checks = [
     {name:'Bolt shear §J3.6',                    phi_Rn: phi_Rnv          },
     {name:'Bolt group eccentricity (elastic)',    phi_Rn: phi_Rnv_ecc      },
@@ -927,7 +981,8 @@ function calc(){
     {name:'Plate shear yield §J4.2',             phi_Rn: phi_Rsy          },
     {name:'Plate shear rupture §J4.2',           phi_Rn: phi_Rsr          },
     {name:'Block shear §J4.3',                   phi_Rn: phi_Rbs          },
-    {name:'Plate bending §F11 (Mu = Vu\xB7a)',   phi_Rn: phi_Rn_bending   }
+    {name:'Plate bending §F11 (Mu = Vu\xB7a)',   phi_Rn: phi_Rn_bending   },
+    {name:'Weld to support §J2.4 (2-sided)',     phi_Rn: phi_Rn_weld      }
   ];
 
   var phi_Rn_min = Infinity, govIdx = 0;
@@ -944,14 +999,17 @@ function calc(){
   var boltPhis  = [phi_Rnv, phi_Rnv_ecc].filter(isFinite);
   var platePhis = [phi_Rbrg_pl, phi_Rsy, phi_Rsr, phi_Rbs, phi_Rn_bending].filter(isFinite);
   var webPhis   = [phi_Rbrg_web, phi_Rwy, phi_Rwr].filter(isFinite);
+  var weldPhis  = [phi_Rn_weld].filter(isFinite);
   function minPhi(arr){ return arr.length ? Math.min.apply(null,arr) : Infinity; }
   function grpDCR(m){ return (Vu>0 && m>0 && isFinite(m)) ? Vu/m : 0; }
   var gDCR_bolt  = grpDCR(minPhi(boltPhis));
   var gDCR_plate = grpDCR(minPhi(platePhis));
   var gDCR_web   = grpDCR(minPhi(webPhis));
+  var gDCR_weld  = grpDCR(minPhi(weldPhis));
   var boltPairs  = [{p:phi_Rnv,n:'Bolt shear'},{p:phi_Rnv_ecc,n:'Eccentricity'}];
   var platePairs = [{p:phi_Rbrg_pl,n:'Bearing'},{p:phi_Rsy,n:'Plate yield'},{p:phi_Rsr,n:'Plate rupture'},{p:phi_Rbs,n:'Block shear'},{p:phi_Rn_bending,n:'Plate bending'}];
   var webPairs   = [{p:phi_Rbrg_web,n:'Bearing on web'},{p:phi_Rwy,n:'Web yield'},{p:phi_Rwr,n:'Web rupture'}];
+  var weldPairs  = [{p:phi_Rn_weld,n:'Weld shear'}];
   function govLbl(pairs){ var b={p:Infinity,n:'—'}; pairs.forEach(function(x){if(isFinite(x.p)&&x.p<b.p)b=x;}); return b.n; }
   function setGrp(vId,gId,dcr,pairs){
     var ve=el(vId); if(ve){ve.textContent=dcr>0?fmt(dcr,3):'—';ve.className='fl-val'+(dcr>0?' '+dcrCls(dcr):'');}
@@ -960,6 +1018,7 @@ function calc(){
   setGrp('rv-bolt-dcr',  'rv-bolt-gov',  gDCR_bolt,  boltPairs);
   setGrp('rv-plate-dcr', 'rv-plate-gov', gDCR_plate, platePairs);
   setGrp('rv-web-dcr',   'rv-web-gov',   gDCR_web,   webPairs);
+  setGrp('rv-weld-dcr',  'rv-weld-gov',  gDCR_weld,  weldPairs);
 
   // DCR Banner
   var banner=el('dcr-banner');
@@ -1001,11 +1060,13 @@ function calc(){
   var s_max   = Math.min(24*t_thin, unit==='us'?12:300);    // §J3.5
   var d2      = unit==='us'?2:1;                             // decimal places
   var geoRows=[
-    {name:'Plate height hₚ ≤ clear web (d−2tᶠ)',   actual:hp,  limit:d_web,  hi:false},
-    {name:'Min. edge dist eᵥ ≥ Lₑ,min  (§J3.4)',   actual:ev,  limit:Le_min, hi:true },
-    {name:'Max. edge dist eᵥ ≤ Lₑ,max  (§J3.5)',   actual:ev,  limit:Le_max, hi:false},
-    {name:'Min. bolt spacing s ≥ 2.67dᵇ (§J3.3)',  actual:s,   limit:s_min,  hi:true },
-    {name:'Max. bolt spacing s ≤ sₘₐₓ   (§J3.5)',  actual:s,   limit:s_max,  hi:false}
+    {name:'Plate height hₚ ≤ clear web (d−2tᶠ)',         actual:hp,     limit:d_web,    hi:false},
+    {name:'Min. edge dist eᵥ ≥ Lₑ,min  (§J3.4)',         actual:ev,     limit:Le_min,   hi:true },
+    {name:'Max. edge dist eᵥ ≤ Lₑ,max  (§J3.5)',         actual:ev,     limit:Le_max,   hi:false},
+    {name:'Min. bolt spacing s ≥ 2.67dᵇ (§J3.3)',        actual:s,      limit:s_min,    hi:true },
+    {name:'Max. bolt spacing s ≤ sₘₐₓ   (§J3.5)',        actual:s,      limit:s_max,    hi:false},
+    {name:'Min. weld size w ≥ wₘᵢₙ (§J2.2b Tbl J2.4)', actual:w_weld, limit:w_min_weld,hi:true },
+    {name:'Max. weld size w ≤ tₚ − '+(unit==='us'?'1/16"':'2mm')+' (§J2.2b)', actual:w_weld, limit:w_max_weld, hi:false}
   ];
   var gbody=el('geo-tbl-body'); gbody.innerHTML='';
   geoRows.forEach(function(r){
@@ -1029,7 +1090,8 @@ function calc(){
     ['Bolt dᵇ', boltName+' ('+fmt(db,unit==='us'?3:0)+' '+lenU+')'],
     ['n \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,unit==='us'?3:0)+' + 2\xD7'+fmt(ev,unit==='us'?3:0)+' = '+fmt(hp,unit==='us'?3:0)+' '+lenU],
     ['Plate tₚ \xD7 bₚ', fmt(tp,unit==='us'?3:0)+' \xD7 '+fmt(bp,unit==='us'?3:0)+' '+lenU],
-    ['Plate grade', pg[0]]
+    ['Plate grade', pg[0]],
+    ['Weld to support', fmt(w_weld,unit==='us'?4:1)+' '+lenU+' fillet, E'+FEXX_ksi+'XX']
   ];
   rows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';ibody.appendChild(tr);});
 
