@@ -1,6 +1,6 @@
-﻿/* shell.js â€” inject navigation chrome when content pages are accessed directly
+﻿/* shell.js — inject navigation chrome when content pages are accessed directly
  * Runs only when window.top === window.self (direct URL, not inside the iframe shell).
- * Safe to add to every pages/*.html â€” has zero effect when loaded inside the iframe.
+ * Safe to add to every pages/*.html — has zero effect when loaded inside the iframe.
  */
 (function () {
   'use strict';
