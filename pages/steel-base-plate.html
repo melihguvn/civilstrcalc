@@ -375,7 +375,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </div>
 
   <!-- Stiffeners (Berkitme) -->
-  <div class="form-div"><div class="form-div-lbl">Stiffeners — Berkitme</div></div>
+  <div class="form-div"><div class="form-div-lbl">Stiffeners</div></div>
   <div class="form-group">
     <label>Configuration</label>
     <select id="inp-stiff-mode" class="bp-sel" onchange="onStiffModeChange();calc()">
@@ -1882,63 +1882,64 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca
     var stEnabled_N = true;
     var stEnabled_B = (stiffMode === '4pl') || isHSS;
     var hstPx = hst * scale;
-    var tstPx = Math.max((tst||0) * scale, 4); // min 4px for visibility
-    var stFill = '#b8d0f8', stStroke = '#3a5ea8', stOp = '0.85';
-
-    // For I-sections: 2 stiffeners per N-dir overhang (one each side of web)
-    // For HSS: 1 wide stiffener per face
-    var twScaled2 = Math.max(cW * 0.05, 1.5);
-    var stW_half = isHSS ? (cW - 2*twScaled2) * 0.6 : Math.max(cW * 0.18, 6);
+    var tstPx = Math.max((tst||0) * scale, 4);
+    var stFill = '#b8d0f8', stStroke = '#3a5ea8';
 
     function stRect(x, y, w, h){
-      var rx = Math.max(0, x), ry = Math.max(0, y);
-      var rw = Math.max(1, w), rh = Math.max(1, h);
-      html += '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'"'
+      if(w < 1 || h < 1) return;
+      html += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"'
             + ' fill="'+stFill+'" stroke="'+stStroke+'" stroke-width="0.8"'
-            + ' opacity="'+stOp+'" rx="0.5"/>';
+            + ' opacity="0.85" rx="0.5"/>';
     }
 
-    if(stEnabled_N){
-      var avTop = cy0 - py0;     // available space above column
-      var avBot = py0+pH - (cy0+cH); // available space below column
-      var hTop = Math.min(hstPx, avTop - 1);
-      var hBot = Math.min(hstPx, avBot - 1);
-      if(isHSS){
-        // HSS: one wide stiffener top and bottom
-        if(hTop > 0) stRect(cx0 + twScaled2, cy0 - hTop, cW - 2*twScaled2, hTop);
-        if(hBot > 0) stRect(cx0 + twScaled2, cy0 + cH, cW - 2*twScaled2, hBot);
-      } else {
-        // W-shape: two stiffeners (each side of web) top and bottom
-        var webCx = cx0 + cW/2;
-        if(hTop > 0){
-          stRect(webCx - twScaled2/2 - stW_half - tstPx, cy0 - hTop, tstPx, hTop);
-          stRect(webCx + twScaled2/2 + stW_half,         cy0 - hTop, tstPx, hTop);
+    var twS = Math.max(cW * 0.05, 1.5);  // web/wall thickness in px
+    var faceCX = cx0 + cW / 2;
+    var faceCY = cy0 + cH / 2;
+
+    if(isHSS){
+      // HSS: one centred stiffener per face, 60 % of face width — no corner overlap
+      var faceW = cW * 0.6;
+      var faceH = cH * 0.6;
+      var avTop = Math.min(hstPx, cy0 - py0 - 1);
+      var avBot = Math.min(hstPx, (py0 + pH) - (cy0 + cH) - 1);
+      var avLft = Math.min(hstPx, cx0 - px0 - 1);
+      var avRgt = Math.min(hstPx, (px0 + pW) - (cx0 + cW) - 1);
+      if(stEnabled_N){
+        if(avTop > 0) stRect(faceCX - faceW/2, cy0 - avTop, faceW, avTop);
+        if(avBot > 0) stRect(faceCX - faceW/2, cy0 + cH,    faceW, avBot);
+      }
+      if(stEnabled_B){
+        if(avLft > 0) stRect(cx0 - avLft, faceCY - faceH/2, avLft, faceH);
+        if(avRgt > 0) stRect(cx0 + cW,    faceCY - faceH/2, avRgt, faceH);
+      }
+    } else {
+      // W-shape N-dir: 2 stiffeners per overhang, at 1/4 and 3/4 of flange width
+      var avTop2 = Math.min(hstPx, cy0 - py0 - 1);
+      var avBot2 = Math.min(hstPx, (py0 + pH) - (cy0 + cH) - 1);
+      var q1x = cx0 + cW * 0.25 - tstPx / 2;
+      var q3x = cx0 + cW * 0.75 - tstPx / 2;
+      if(stEnabled_N){
+        if(avTop2 > 0){
+          stRect(q1x, cy0 - avTop2, tstPx, avTop2);
+          stRect(q3x, cy0 - avTop2, tstPx, avTop2);
         }
-        if(hBot > 0){
-          stRect(webCx - twScaled2/2 - stW_half - tstPx, cy0 + cH, tstPx, hBot);
-          stRect(webCx + twScaled2/2 + stW_half,         cy0 + cH, tstPx, hBot);
+        if(avBot2 > 0){
+          stRect(q1x, cy0 + cH, tstPx, avBot2);
+          stRect(q3x, cy0 + cH, tstPx, avBot2);
         }
       }
-    }
-
-    if(stEnabled_B){
-      var avLft = cx0 - px0;
-      var avRgt = px0+pW - (cx0+cW);
-      var hLft = Math.min(hstPx, avLft - 1);
-      var hRgt = Math.min(hstPx, avRgt - 1);
-      var tfScaled2 = Math.max(cH * 0.08, 1.5);
-      if(isHSS){
-        if(hLft > 0) stRect(cx0 - hLft, cy0 + twScaled2, hLft, cH - 2*twScaled2);
-        if(hRgt > 0) stRect(cx0 + cW,   cy0 + twScaled2, hRgt, cH - 2*twScaled2);
-      } else {
-        // W-shape B-dir: stiffeners at flange tips (top and bottom flange, each side)
-        if(hLft > 0){
-          stRect(cx0 - hLft, cy0,                    hLft, tstPx);
-          stRect(cx0 - hLft, cy0 + cH - tstPx,       hLft, tstPx);
+      // W-shape B-dir: stiffeners at flange tips (one per flange, each side)
+      var tfS = Math.max(cH * 0.08, 1.5);
+      var avLft2 = Math.min(hstPx, cx0 - px0 - 1);
+      var avRgt2 = Math.min(hstPx, (px0 + pW) - (cx0 + cW) - 1);
+      if(stEnabled_B){
+        if(avLft2 > 0){
+          stRect(cx0 - avLft2, cy0,              avLft2, tfS);
+          stRect(cx0 - avLft2, cy0 + cH - tfS,  avLft2, tfS);
         }
-        if(hRgt > 0){
-          stRect(cx0 + cW, cy0,                    hRgt, tstPx);
-          stRect(cx0 + cW, cy0 + cH - tstPx,       hRgt, tstPx);
+        if(avRgt2 > 0){
+          stRect(cx0 + cW, cy0,              avRgt2, tfS);
+          stRect(cx0 + cW, cy0 + cH - tfS,  avRgt2, tfS);
         }
       }
     }
