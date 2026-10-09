@@ -745,16 +745,17 @@ function setUnit(u){
     var curVal = selEl.value;
     if(u==='si'){
       selEl.innerHTML =
+        '<option value="480">480 MPa — S275/S355 standard</option>' +
         '<option value="500">Grade 42 (EN ISO 2560) — 500 MPa</option>' +
         '<option value="530">Grade 46 (EN ISO 2560) — 530 MPa</option>' +
         '<option value="560">Grade 50 (EN ISO 2560) — 560 MPa</option>';
-      selEl.value = (curVal==='80')?'530':(curVal==='90')?'560':'500';
+      selEl.value = (curVal==='80'||curVal==='530')?'530':(curVal==='90'||curVal==='560')?'560':(curVal==='500')?'500':'480';
     } else {
       selEl.innerHTML =
         '<option value="70">E70XX — 70 ksi</option>' +
         '<option value="80">E80XX — 80 ksi</option>' +
         '<option value="90">E90XX — 90 ksi</option>';
-      selEl.value = (curVal==='530')?'80':(curVal==='560')?'90':'70';
+      selEl.value = (curVal==='530'||curVal==='500')?'80':(curVal==='560')?'90':'70';
     }
   }
   // rv-phi-rn-u removed (replaced by group DCR tiles)
@@ -961,8 +962,8 @@ function calc(){
   // 9. Plate-to-support fillet weld — two-sided vertical fillet (§J2.4)
   // Elastic method: direct shear + bending moment about weld centroid
   var w_weld = v('inp-weld-size');
-  var elecRaw = el('inp-electrode') ? parseInt(el('inp-electrode').value)||70 : 70;
-  // US: option values are ksi (70/80/90); SI: option values are MPa directly (500/530/560)
+  var elecRaw = el('inp-electrode') ? parseInt(el('inp-electrode').value)||(unit==='us'?70:480) : (unit==='us'?70:480);
+  // US: option values are ksi (70/80/90); SI: option values are MPa directly (480/500/530/560)
   var FEXX = unit==='us' ? elecRaw : elecRaw;
   var FEXX_ksi = unit==='us' ? elecRaw : Math.round(elecRaw/6.894757); // for AWS label in weld_str
   var phi_Rn_weld = Infinity;
