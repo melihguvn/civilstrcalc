@@ -739,12 +739,24 @@ function setUnit(u){
   var spnMap={'su-Vu':fu,'su-s':lu,'su-ev':lu,'su-tp':lu,'su-bp':lu,'su-a':lu,'su-weld':lu};
   Object.keys(spnMap).forEach(function(id){var e=el(id);if(e)e.textContent=spnMap[id];});
   el('rh-unit-lbl').textContent=u==='us'?'kip · in':'kN · mm';
-  // Update electrode dropdown labels for current unit system
-  var electrodeLabels = u==='us'
-    ? [['70','E70XX — 70 ksi'],['80','E80XX — 80 ksi'],['90','E90XX — 90 ksi']]
-    : [['70','E70XX — 482 MPa'],['80','E80XX — 552 MPa'],['90','E90XX — 621 MPa']];
+  // Rebuild electrode dropdown for current unit system (US: AWS/AISC; SI: EN ISO 2560)
   var selEl = el('inp-electrode');
-  if(selEl){ var cur=selEl.value; electrodeLabels.forEach(function(p){var o=selEl.querySelector('option[value="'+p[0]+'"]');if(o)o.textContent=p[1];}); selEl.value=cur; }
+  if(selEl){
+    var curVal = selEl.value;
+    if(u==='si'){
+      selEl.innerHTML =
+        '<option value="500">Grade 42 (EN ISO 2560) — 500 MPa</option>' +
+        '<option value="530">Grade 46 (EN ISO 2560) — 530 MPa</option>' +
+        '<option value="560">Grade 50 (EN ISO 2560) — 560 MPa</option>';
+      selEl.value = (curVal==='80')?'530':(curVal==='90')?'560':'500';
+    } else {
+      selEl.innerHTML =
+        '<option value="70">E70XX — 70 ksi</option>' +
+        '<option value="80">E80XX — 80 ksi</option>' +
+        '<option value="90">E90XX — 90 ksi</option>';
+      selEl.value = (curVal==='530')?'80':(curVal==='560')?'90':'70';
+    }
+  }
   // rv-phi-rn-u removed (replaced by group DCR tiles)
   buildBeamTypeDropdown();
   buildBoltDropdowns();
@@ -949,8 +961,10 @@ function calc(){
   // 9. Plate-to-support fillet weld — two-sided vertical fillet (§J2.4)
   // Elastic method: direct shear + bending moment about weld centroid
   var w_weld = v('inp-weld-size');
-  var FEXX_ksi = el('inp-electrode') ? parseInt(el('inp-electrode').value)||70 : 70;
-  var FEXX = unit==='us' ? FEXX_ksi : FEXX_ksi*6.894757; // ksi → MPa
+  var elecRaw = el('inp-electrode') ? parseInt(el('inp-electrode').value)||70 : 70;
+  // US: option values are ksi (70/80/90); SI: option values are MPa directly (500/530/560)
+  var FEXX = unit==='us' ? elecRaw : elecRaw;
+  var FEXX_ksi = unit==='us' ? elecRaw : Math.round(elecRaw/6.894757); // for AWS label in weld_str
   var phi_Rn_weld = Infinity;
   var weld_str = '—';
   if(w_weld > 0 && hp > 0){
@@ -963,7 +977,8 @@ function calc(){
       : 0.75*0.6*FEXX*0.707*w_weld/1000;                        // kN/mm (FEXX MPa, w mm)
     // Equivalent Vu capacity at DCR=1.0
     phi_Rn_weld = (fu_w>0 && Vu>0) ? phi_rn_w*Vu/fu_w : phi_rn_w*2*hp;
-    weld_str = 'E'+FEXX_ksi+'XX · w='+fmt(w_weld,unit==='us'?3:0)+' '+lenU
+    var elecLbl = el('inp-electrode') ? el('inp-electrode').options[el('inp-electrode').selectedIndex].text.split('—')[0].trim() : '—';
+    weld_str = elecLbl+' · w='+fmt(w_weld,unit==='us'?3:0)+' '+lenU
       +' · f_u='+fmt(fu_w,unit==='us'?3:2)+'/'+fmt(phi_rn_w,unit==='us'?3:2)+' '+forU+'/'+(unit==='us'?'in':'mm');
   }
 
@@ -1097,7 +1112,7 @@ function calc(){
     ['n \xD7 s + 2eᵥ', n+' \xD7 '+fmt(s,unit==='us'?3:0)+' + 2\xD7'+fmt(ev,unit==='us'?3:0)+' = '+fmt(hp,unit==='us'?3:0)+' '+lenU],
     ['Plate tₚ \xD7 bₚ', fmt(tp,unit==='us'?3:0)+' \xD7 '+fmt(bp,unit==='us'?3:0)+' '+lenU],
     ['Plate grade', pg[0]],
-    ['Weld to support', fmt(w_weld,unit==='us'?4:1)+' '+lenU+' fillet, E'+FEXX_ksi+'XX']
+    ['Weld to support', fmt(w_weld,unit==='us'?4:1)+' '+lenU+' fillet, '+(el('inp-electrode')?el('inp-electrode').options[el('inp-electrode').selectedIndex].text.split('—')[0].trim():'—')]
   ];
   rows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td>';ibody.appendChild(tr);});
 
