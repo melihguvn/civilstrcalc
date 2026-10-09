@@ -258,8 +258,8 @@
       item('/pages/steel-combined',    ic.st_bc,  'Combined (Beam-Column)', 'steelbc') +
       item('/pages/steel-ltb',         ic.st_ltb, 'LTB Check',              'steelltb') +
       item('/pages/truss-design',      ic.st_trs, 'Truss Design',           'steeltruss') +
-      item('/pages/steel-base-plate',  ic.st_bp,  'Base Plate Design',      'steelbp') +
-      grp(ic.st_bp, 'Connection Design', ['steelsheartab','steeleep','steelbeamsplice'],
+      grp(ic.st_bp, 'Connection Design', ['steelbp','steelsheartab','steeleep','steelbeamsplice'],
+        sub('/pages/steel-base-plate',  'Base Plate Design',        'steelbp') +
         sub('/pages/steel-shear-tab',   'Shear Tab',                'steelsheartab') +
         sub('/pages/steel-eep',         'Ext. End Plate (EEP)',     'steeleep') +
         sub('/pages/steel-beam-splice', 'Beam Splice',              'steelbeamsplice'))) +
