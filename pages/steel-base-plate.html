@@ -1555,7 +1555,9 @@ function calc(){
   }
   var govVal = worstDCR;
   var govStr;
-  if(!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT && DCR_brg_val>=maxConcSh){
+  if(DCR_stiff > 0 && DCR_stiff >= Math.max(maxSh, maxAnchV, maxAnchT, maxConcSh, hasT?0:DCR_brg_val)){
+    govStr = 'Stiffener thickness DCR = '+fmt(DCR_stiff,3)+' (increase t_st to '+fmt(tst_req,unit==='us'?3:1)+' '+lenU+')';
+  } else if(!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT && DCR_brg_val>=maxConcSh){
     govStr = 'Bearing DCR = '+fmt(DCR_brg_val,3);
   } else if(DCR_interact>=maxSh && DCR_interact>=maxAnchT && DCR_interact>=DCR_pryout && DCR_interact>=DCR_vbrk && DCR_interact>0){
     govStr = 'T-V Interaction = '+fmt(DCR_interact,3);
@@ -1587,11 +1589,13 @@ function calc(){
   else { boltGov = 'Anchor shear'; }
 
   // When hasT, bearing fills to capacity by design (fp=φFp); exclude it from DCR tile
-  var DCR_plate = hasT ? Math.max(DCR_shear_x, DCR_shear_y)
-                       : Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y);
+  var DCR_plate = hasT ? Math.max(DCR_shear_x, DCR_shear_y, DCR_stiff)
+                       : Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y, DCR_stiff);
   var plateGov;
   if(DCR_plate <= 0){ plateGov = '—'; }
-  else if(!hasT && DCR_brg_val >= Math.max(DCR_shear_x, DCR_shear_y)){
+  else if(DCR_stiff > 0 && DCR_stiff >= Math.max(DCR_brg_val, DCR_shear_x, DCR_shear_y)){
+    plateGov = 'Stiffener thickness';
+  } else if(!hasT && DCR_brg_val >= Math.max(DCR_shear_x, DCR_shear_y)){
     plateGov = 'Bearing pressure';
   } else { plateGov = 'Shear friction'; }
 
