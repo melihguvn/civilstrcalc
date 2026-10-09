@@ -374,6 +374,30 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="iw"><input type="number" id="inp-ha" min="0" step="1" placeholder="—" oninput="calc()"><span class="us" id="su-ha">in</span></div>
   </div>
 
+  <!-- Stiffeners (Berkitme) -->
+  <div class="form-div"><div class="form-div-lbl">Stiffeners — Berkitme</div></div>
+  <div class="form-group">
+    <label>Configuration</label>
+    <select id="inp-stiff-mode" class="bp-sel" onchange="onStiffModeChange();calc()">
+      <option value="none">None — unstiffened</option>
+      <option value="2pl">2 plates — N-direction (reduces m)</option>
+      <option value="4pl">4 plates — both directions (reduces m &amp; n)</option>
+    </select>
+  </div>
+  <div id="stiff-inputs" style="display:none">
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Projection h<sub>st</sub> <span class="unit-lbl" id="lbl-hst">[in]</span></label>
+        <div class="iw"><input type="number" id="inp-hst" value="3" min="0.25" step="0.25" oninput="calc()"><span class="us" id="su-hst">in</span></div>
+      </div>
+      <div class="form-group">
+        <label>Thickness t<sub>st</sub> <span class="unit-lbl" id="lbl-tst">[in]</span></label>
+        <div class="iw"><input type="number" id="inp-tst" value="0.5" min="0.0625" step="0.0625" oninput="calc()"><span class="us" id="su-tst">in</span></div>
+      </div>
+    </div>
+    <div id="stiff-warn" style="display:none;padding:6px 10px;background:#fff3cd;border:1px solid #f0c040;border-radius:5px;font-size:.72rem;color:#8a6000;margin-bottom:8px;line-height:1.5"></div>
+  </div>
+
   <!-- SVG Plan Diagram -->
   <div class="card no-print" style="margin-top:12px">
     <div class="card-hdr" style="padding:6px 12px;font-size:.72rem">Plan View (not to scale)</div>
@@ -947,6 +971,19 @@ document.addEventListener('DOMContentLoaded', function(){
   el('pf-date2').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 });
 
+/* ═══ stiffener toggle ══════════════════════════════════════════════════ */
+function onStiffModeChange(){
+  var mode = (el('inp-stiff-mode')||{value:'none'}).value;
+  var si = el('stiff-inputs');
+  if(si) si.style.display = mode === 'none' ? 'none' : '';
+  // For HSS columns, force 4-plate if only 2-plate is selected (HSS has 4 faces)
+  var colType = (el('colType')||{value:''}).value;
+  var isHSS = (colType==='HSS_SQ_CHORD'||colType==='SHS_CHORD'||colType==='RHS_CHORD');
+  if(isHSS && mode === '2pl'){
+    var sel = el('inp-stiff-mode'); if(sel) sel.value = '4pl';
+  }
+}
+
 /* ═══ unit switching ════════════════════════════════════════════════════ */
 function setUnit(u){
   var oldUnit = unit;
@@ -976,6 +1013,10 @@ function setUnit(u){
       var eCa=el('inp-ca-min'); if(eCa&&eCa.value) eCa.value=Math.round(parseFloat(eCa.value)||0);
       cv('inp-ha', IN_TO_MM);
       var eHa=el('inp-ha'); if(eHa&&eHa.value) eHa.value=Math.round(parseFloat(eHa.value)||0);
+      cv('inp-hst', IN_TO_MM);
+      var eHst=el('inp-hst'); if(eHst) eHst.value=Math.round(parseFloat(eHst.value)||0);
+      cv('inp-tst', IN_TO_MM);
+      var eTst=el('inp-tst'); if(eTst) eTst.value=Math.round((parseFloat(eTst.value)||0)*10)/10;
     } else {
       cv('inp-Pu',  1/KIP_TO_KN);cv('inp-Vx',  1/KIP_TO_KN);cv('inp-Vy',  1/KIP_TO_KN);
       cv('inp-Mx',  1/KIN_TO_KNM);
@@ -989,6 +1030,10 @@ function setUnit(u){
       var eCa=el('inp-ca-min'); if(eCa&&eCa.value) eCa.value=(parseFloat(eCa.value)||0).toFixed(1);
       cv('inp-ha', 1/IN_TO_MM);
       var eHa2=el('inp-ha'); if(eHa2&&eHa2.value) eHa2.value=(parseFloat(eHa2.value)||0).toFixed(0);
+      cv('inp-hst', 1/IN_TO_MM);
+      var eHst2=el('inp-hst'); if(eHst2) eHst2.value=(parseFloat(eHst2.value)||0).toFixed(2);
+      cv('inp-tst', 1/IN_TO_MM);
+      var eTst2=el('inp-tst'); if(eTst2) eTst2.value=(parseFloat(eTst2.value)||0).toFixed(3);
       ['inp-Pu','inp-Vx','inp-Vy','inp-Mx','inp-My'].forEach(function(id){
         var e=el(id); if(e) e.value=(parseFloat(e.value)||0).toFixed(1);
       });
@@ -1007,7 +1052,8 @@ function setUnit(u){
     'lbl-B':lenU,
     'lbl-Pu':forU,'lbl-Vx':forU,'lbl-Vy':forU,'lbl-Mx':momU,'lbl-My':momU,
     'lbl-fc':strsU,
-    'lbl-hef':lenU,'lbl-da':lenU,'lbl-camin':lenU,'lbl-ha':lenU
+    'lbl-hef':lenU,'lbl-da':lenU,'lbl-camin':lenU,'lbl-ha':lenU,
+    'lbl-hst':lenU,'lbl-tst':lenU
   };
   Object.keys(labels).forEach(function(id){
     var e=el(id); if(e) e.textContent='['+labels[id]+']';
@@ -1016,7 +1062,8 @@ function setUnit(u){
     'su-B':lenU,
     'su-Pu':forU,'su-Vx':forU,'su-Vy':forU,'su-Mx':momU,'su-My':momU,
     'su-fc':strsU,
-    'su-hef':lenU,'su-camin':lenU,'su-ha':lenU
+    'su-hef':lenU,'su-camin':lenU,'su-ha':lenU,
+    'su-hst':lenU,'su-tst':lenU
   };
   Object.keys(spans).forEach(function(id){
     var e=el(id); if(e) e.textContent=spans[id];
@@ -1219,6 +1266,12 @@ function calc(){
   var fya    = unit==='us' ? grRow[1] : grRow[3];
 
   var isHSS  = (type==='HSS_SQ_CHORD'||type==='SHS_CHORD'||type==='RHS_CHORD');
+  var stiffMode = (el('inp-stiff-mode')||{value:'none'}).value;
+  var stiffEnabled = stiffMode !== 'none';
+  var hst = stiffEnabled ? (parseFloat((el('inp-hst')||{}).value)||0) : 0;
+  var tst = stiffEnabled ? (parseFloat((el('inp-tst')||{}).value)||0) : 0;
+  var stiff_N = stiffEnabled;
+  var stiff_B = stiffMode === '4pl' || isHSS;
   var mCoeff = 0.95;
   var nCoeff = isHSS ? 0.95 : 0.80;
 
@@ -1316,7 +1369,9 @@ function calc(){
   X = Math.min(Math.max(X,0),1.0);
   lam = X>0 ? 2*Math.sqrt(X)/(1+Math.sqrt(1-X)) : 0;
   lam = Math.min(1.0, lam);
-  ell = Math.max(m, n, lam*nprime);
+  var m_eff = (stiff_N && hst > 0) ? m - hst : m;
+  var n_eff = (stiff_B && hst > 0) ? n - hst : n;
+  ell = Math.max(Math.max(m_eff, 0), Math.max(n_eff, 0), lam*nprime);
   // tp = ell·√(2·fp_max / (φ·Fy))   [dimensionally consistent in both unit systems]
   tp  = ell * Math.sqrt(2*fp_max / (phi_pl*Fy));
 
@@ -1324,6 +1379,13 @@ function calc(){
   phi_Vn_fric = phi_pl*0.55*Pu;
   DCR_shear_x = Vx / Math.max(phi_Vn_fric, 1e-9);
   DCR_shear_y = Vy / Math.max(phi_Vn_fric, 1e-9);
+
+  /* ── Stiffener plate thickness check ── */
+  var tst_req = 0, DCR_stiff = 0;
+  if(stiffEnabled && hst > 0 && tst > 0 && fp_max > 0){
+    tst_req = hst * Math.sqrt(2 * fp_max / (phi_pl * Fy));
+    DCR_stiff = tst_req / tst;
+  }
 
   /* ── Anchor rod capacities (ACI 318-25 §17) ── */
   // ANc cone projection: limited to ca_min when edge is close (ACI 318-25 §17.6.2.1)
@@ -1422,6 +1484,19 @@ function calc(){
   var strsU = unit==='us'?'ksi':'MPa';
   var areaU = unit==='us'?'in²':'mm²';
 
+  // ── Stiffener geometric warnings ──
+  (function(){
+    var sw = el('stiff-warn'); if(!sw) return;
+    if(!stiffEnabled){ sw.style.display='none'; return; }
+    var msgs = [], dp2 = unit==='us'?2:0;
+    if(hst <= 0) msgs.push('h_st must be > 0');
+    if(tst <= 0) msgs.push('t_st must be > 0');
+    if(stiff_N && hst > 0 && hst >= m) msgs.push('h_st ('+fmt(hst,dp2)+' '+lenU+') ≥ m ('+fmt(m,dp2)+' '+lenU+') — stiffener extends beyond plate edge in N-direction');
+    if(stiff_B && hst > 0 && hst >= n) msgs.push('h_st ('+fmt(hst,dp2)+' '+lenU+') ≥ n ('+fmt(n,dp2)+' '+lenU+') — stiffener extends beyond plate edge in B-direction');
+    if(msgs.length){ sw.innerHTML='⚠ '+msgs.join('<br>⚠ '); sw.style.display='block'; }
+    else sw.style.display='none';
+  })();
+
   // ── Update result cards ──
   function setFV(id, val, dcr){
     var e=el(id); if(!e) return;
@@ -1448,6 +1523,7 @@ function calc(){
   if(phi_Vcbg_sv!==null&&Vua>0) dcrRows2.push(['Shear breakout §17.7.2',fmt(DCR_vbrk,3),DCR_vbrk,'V / φVcbg = '+fmt(phi_Vcbg_sv,1)+' '+forU]);
   if(DCR_interact>0) dcrRows2.push(['T-V interaction §17.8',fmt(DCR_interact,3),DCR_interact,'(N/φN)<sup>5/3</sup> + (V/φV)<sup>5/3</sup>']);
   if(Nua_pull>0) dcrRows2.push(['Pullout §17.6.3',fmt(DCR_pullout,3),DCR_pullout,'T / φNpn·n = '+fmt(phi_Npn_grp,unit==='us'?1:0)+' '+forU]);
+  if(stiffEnabled && DCR_stiff > 0) dcrRows2.push(['Stiffener thickness',fmt(DCR_stiff,3),DCR_stiff,'t_st,req/t_st = '+fmt(tst_req,unit==='us'?3:1)+'/'+fmt(tst,unit==='us'?3:1)+' '+lenU]);
   var dtb=el('dcr-tbl-body'),dcrSec=el('dcr-breakdown-sec');
   if(dtb&&dcrSec){
     dcrSec.style.display=dcrRows2.length?'':'none';
@@ -1463,8 +1539,8 @@ function calc(){
   var maxAnchT = Math.max(DCR_anch_Tx, DCR_anch_Ty);
   var maxConcSh = Math.max(DCR_pryout, DCR_vbrk, DCR_interact);
   var worstDCR = hasT
-    ? Math.max(maxSh, maxAnchV, maxAnchT, maxConcSh)
-    : Math.max(DCR_brg_val, maxSh, maxAnchV, maxAnchT, maxConcSh);
+    ? Math.max(maxSh, maxAnchV, maxAnchT, maxConcSh, DCR_stiff)
+    : Math.max(DCR_brg_val, maxSh, maxAnchV, maxAnchT, maxConcSh, DCR_stiff);
   var bnr = el('dcr-banner');
   bnr.className = 'dcr-banner ' + dcrCls(worstDCR);
   var icon = el('dcr-icon')||bnr.querySelector('.dcr-icon');
@@ -1588,7 +1664,26 @@ function calc(){
      desc:'Required plate thickness',
      form:'tp = ℓ·√(2·fp_max/(φ·Fy))',
      val: 'tp = '+fmt(tp,unit==='us'?3:1)+' '+lenU,
-     chk: ''},
+     chk: ''}
+  );
+  if(stiffEnabled && hst > 0){
+    var dp3 = unit==='us'?3:1;
+    var effDesc = (stiff_N?'m_eff = m − h_st = '+fmt(m_eff,dp3)+' '+lenU:'')
+                +(stiff_N&&stiff_B?' | ':'')
+                +(stiff_B?'n_eff = n − h_st = '+fmt(n_eff,dp3)+' '+lenU:'')
+                +' → ℓ = '+fmt(ell,dp3)+' '+lenU;
+    rows.push({num:0,
+     desc:'Stiffener projection — revised ℓ',
+     form:'ℓ = max('+(stiff_N?'m−h_st':'m')+', '+(stiff_B?'n−h_st':'n')+', λn\')',
+     val: effDesc,
+     chk: ''});
+    if(DCR_stiff > 0) rows.push({num:0,
+     desc:'Stiffener plate thickness (bending cantilever)',
+     form:'t_st,req = h_st · √(2·fp_max / (φ·Fy))',
+     val: 't_st,req = '+fmt(tst_req,dp3)+' '+lenU+' | t_st = '+fmt(tst,dp3)+' '+lenU+' | DCR = '+fmt(DCR_stiff,3),
+     chk: DCR_stiff});
+  }
+  rows.push(
     {num:0,
      desc:'Shear friction',
      form:'φVn = φ·μ·Pu (μ=0.55, φ=0.90)',
@@ -1689,8 +1784,11 @@ function calc(){
     ['A2/A1',           fmt(a2a1,1)],
     ['Anchors',         nAnch+'×'+daRow[0]+' '+grRow[0]],
     ['hef',             fmt(hef,unit==='us'?1:0)+' '+lenU],
-    ['Edge dist (auto)',fmt(edgeDist,unit==='us'?2:0)+' '+lenU]
-  ];
+    ['Edge dist (auto)',fmt(edgeDist,unit==='us'?2:0)+' '+lenU],
+    stiffEnabled ? ['Stiffeners', stiffMode==='4pl'?'4 plates':'2 plates (N-dir)'
+      +' | h_st='+fmt(hst,unit==='us'?2:0)+' '+lenU
+      +' | t_st='+fmt(tst,unit==='us'?3:1)+' '+lenU] : null
+  ].filter(Boolean);
   var ipBody = el('inp-body-print');
   if(ipBody){
     ipBody.innerHTML = inpRows.map(function(r){
@@ -1699,13 +1797,13 @@ function calc(){
   }
 
   // ── Draw SVG ──
-  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw);
+  drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw, stiffMode, hst, tst);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    SVG PLAN DIAGRAM
    ═════════════════════════════════════════════════════════════════════ */
-function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw){
+function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca_min_raw, stiffMode, hst, tst){
   var svg = el('bp-svg');
   if(!svg) return;
 
@@ -1777,6 +1875,73 @@ function drawSVG(d, bf, B, N, m, n, ell, nAnch, edgeDist, ex_ecc, ey_ecc, sa, ca
     // Web
     var webX = cx0 + (cW-twScaled)/2;
     html += '<rect x="'+webX+'" y="'+cy0+'" width="'+twScaled+'" height="'+cH+'" fill="#1a2332"/>';
+  }
+
+  // ── Stiffener plates in plan view ──
+  if(stiffMode && stiffMode !== 'none' && hst > 0){
+    var stEnabled_N = true;
+    var stEnabled_B = (stiffMode === '4pl') || isHSS;
+    var hstPx = hst * scale;
+    var tstPx = Math.max((tst||0) * scale, 4); // min 4px for visibility
+    var stFill = '#b8d0f8', stStroke = '#3a5ea8', stOp = '0.85';
+
+    // For I-sections: 2 stiffeners per N-dir overhang (one each side of web)
+    // For HSS: 1 wide stiffener per face
+    var twScaled2 = Math.max(cW * 0.05, 1.5);
+    var stW_half = isHSS ? (cW - 2*twScaled2) * 0.6 : Math.max(cW * 0.18, 6);
+
+    function stRect(x, y, w, h){
+      var rx = Math.max(0, x), ry = Math.max(0, y);
+      var rw = Math.max(1, w), rh = Math.max(1, h);
+      html += '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'"'
+            + ' fill="'+stFill+'" stroke="'+stStroke+'" stroke-width="0.8"'
+            + ' opacity="'+stOp+'" rx="0.5"/>';
+    }
+
+    if(stEnabled_N){
+      var avTop = cy0 - py0;     // available space above column
+      var avBot = py0+pH - (cy0+cH); // available space below column
+      var hTop = Math.min(hstPx, avTop - 1);
+      var hBot = Math.min(hstPx, avBot - 1);
+      if(isHSS){
+        // HSS: one wide stiffener top and bottom
+        if(hTop > 0) stRect(cx0 + twScaled2, cy0 - hTop, cW - 2*twScaled2, hTop);
+        if(hBot > 0) stRect(cx0 + twScaled2, cy0 + cH, cW - 2*twScaled2, hBot);
+      } else {
+        // W-shape: two stiffeners (each side of web) top and bottom
+        var webCx = cx0 + cW/2;
+        if(hTop > 0){
+          stRect(webCx - twScaled2/2 - stW_half - tstPx, cy0 - hTop, tstPx, hTop);
+          stRect(webCx + twScaled2/2 + stW_half,         cy0 - hTop, tstPx, hTop);
+        }
+        if(hBot > 0){
+          stRect(webCx - twScaled2/2 - stW_half - tstPx, cy0 + cH, tstPx, hBot);
+          stRect(webCx + twScaled2/2 + stW_half,         cy0 + cH, tstPx, hBot);
+        }
+      }
+    }
+
+    if(stEnabled_B){
+      var avLft = cx0 - px0;
+      var avRgt = px0+pW - (cx0+cW);
+      var hLft = Math.min(hstPx, avLft - 1);
+      var hRgt = Math.min(hstPx, avRgt - 1);
+      var tfScaled2 = Math.max(cH * 0.08, 1.5);
+      if(isHSS){
+        if(hLft > 0) stRect(cx0 - hLft, cy0 + twScaled2, hLft, cH - 2*twScaled2);
+        if(hRgt > 0) stRect(cx0 + cW,   cy0 + twScaled2, hRgt, cH - 2*twScaled2);
+      } else {
+        // W-shape B-dir: stiffeners at flange tips (top and bottom flange, each side)
+        if(hLft > 0){
+          stRect(cx0 - hLft, cy0,                    hLft, tstPx);
+          stRect(cx0 - hLft, cy0 + cH - tstPx,       hLft, tstPx);
+        }
+        if(hRgt > 0){
+          stRect(cx0 + cW, cy0,                    hRgt, tstPx);
+          stRect(cx0 + cW, cy0 + cH - tstPx,       hRgt, tstPx);
+        }
+      }
+    }
   }
 
   // Anchor rods — standard structural symbol: outer circle + crosshair + center dot
