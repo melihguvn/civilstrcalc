@@ -314,6 +314,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="form-group">
       <label>Fillet size w <span class="unit-lbl" id="lbl-weld">[in]</span></label>
       <div class="iw"><input type="number" id="inp-weld-size" value="0.25" min="0.0625" step="0.0625" oninput="calc()"><span class="us" id="su-weld">in</span></div>
+      <div id="weld-size-hint" style="font-size:.70rem;margin-top:4px;font-family:var(--mono);color:var(--text-dim)"></div>
     </div>
     <div class="form-group">
       <label>Electrode</label>
@@ -992,6 +993,14 @@ function calc(){
   } else {
     w_min_weld = tp<=6?3 : tp<=12?5 : tp<=20?6 : 8;
     w_max_weld = tp>=6 ? tp-2 : tp;
+  }
+
+  var weldHint = el('weld-size-hint');
+  if(weldHint){
+    var fmtW = unit==='us' ? 4 : 1;
+    var weldInRange = w_weld >= w_min_weld && w_weld <= w_max_weld;
+    weldHint.textContent = 'J2.2b: '+fmt(w_min_weld,fmtW)+'–'+fmt(w_max_weld,fmtW)+' '+lenU;
+    weldHint.style.color = weldInRange ? 'var(--text-dim)' : 'var(--red)';
   }
 
   var checks = [
