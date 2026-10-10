@@ -794,23 +794,34 @@ function calc(){
   }
 
   /* ── 4. Column web local yielding §J10.2 ── */
-  /* Bearing length lb = tf_beam + 2×tp (load spreads through plate) */
+  /* Commentary §J10.2: balanced double-sided forces cancel → net web force = 0 → N/A */
   var lb    = beam.tf + 2*tp;
   var k_col = col.k>0 ? col.k : col.tf + (unit==='us'?0.5:12);
-  var phi_Rn_cwy = phi_cwy * Fy_c * col.tw * (5*k_col + lb);
-  if(unit==='si') phi_Rn_cwy /= 1000;
-  var DCR_cwy = phi_Rn_cwy>0 ? Tf/phi_Rn_cwy : Infinity;
+  var phi_Rn_cwy, DCR_cwy;
+  if(doubleSided){
+    phi_Rn_cwy = Infinity; DCR_cwy = 0;
+  } else {
+    phi_Rn_cwy = phi_cwy * Fy_c * col.tw * (5*k_col + lb);
+    if(unit==='si') phi_Rn_cwy /= 1000;
+    DCR_cwy = phi_Rn_cwy>0 ? Tf/phi_Rn_cwy : Infinity;
+  }
 
   /* ── 5. Column web crippling §J10.3 (Eq. J10-4, interior load) ── */
+  /* Commentary §J10.3: balanced double-sided forces cancel → N/A */
   var ratio_Nd = lb/col.d;
   var cripFactor = ratio_Nd<=0.2
     ? 1 + 3*ratio_Nd*Math.pow(col.tw/col.tf,1.5)
     : 1 + (4*ratio_Nd-0.2)*Math.pow(col.tw/col.tf,1.5);
-  var phi_Rn_cwc = phi_cwc * 0.80 * col.tw*col.tw
-    * cripFactor
-    * Math.sqrt(E * Fy_c * col.tf / col.tw);
-  if(unit==='si') phi_Rn_cwc /= 1000;
-  var DCR_cwc = phi_Rn_cwc>0 ? Tf/phi_Rn_cwc : Infinity;
+  var phi_Rn_cwc, DCR_cwc;
+  if(doubleSided){
+    phi_Rn_cwc = Infinity; DCR_cwc = 0;
+  } else {
+    phi_Rn_cwc = phi_cwc * 0.80 * col.tw*col.tw
+      * cripFactor
+      * Math.sqrt(E * Fy_c * col.tf / col.tw);
+    if(unit==='si') phi_Rn_cwc /= 1000;
+    DCR_cwc = phi_Rn_cwc>0 ? Tf/phi_Rn_cwc : Infinity;
+  }
 
   /* ── 6. Column web compression buckling §J10.5 (Eq. J10-8) ── */
   var h_col = col.d - 2*col.tf;
@@ -840,8 +851,8 @@ function calc(){
     {name:'Bolt tension §J3.6',               cap:phi_Rnt_total, DCR:DCR_bolt,  group:'bolt'},
     {name:'End plate — no-prying (DG4)',       cap:phi_Rn_pl,     DCR:DCR_plate, group:'plate'},
     {name:'Col. flange local bending §J10.1',  cap:phi_Rn_cfb,   DCR:DCR_cfb,   group:'col', na:doubleSided},
-    {name:'Col. web local yielding §J10.2',    cap:phi_Rn_cwy,   DCR:DCR_cwy,   group:'col'},
-    {name:'Col. web crippling §J10.3',         cap:phi_Rn_cwc,   DCR:DCR_cwc,   group:'col'},
+    {name:'Col. web local yielding §J10.2',    cap:phi_Rn_cwy,   DCR:DCR_cwy,   group:'col', na:doubleSided},
+    {name:'Col. web crippling §J10.3',         cap:phi_Rn_cwc,   DCR:DCR_cwc,   group:'col', na:doubleSided},
     {name:'Col. web comp. buckling §J10.5',    cap:phi_Rn_cwb,   DCR:DCR_cwb,   group:'col', na:doubleSided},
     {name:'Panel zone shear §J10.6',           cap:phi_Rv_pz,    DCR:DCR_pz,    group:'col'}
   ];
