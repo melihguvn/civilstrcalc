@@ -361,7 +361,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <optgroup label="Braced Frames">
               <option value="6,0.02,0.0488,0.75">Special steel CBF (R=6)</option>
               <option value="3.25,0.02,0.0488,0.75">Ordinary steel CBF (R=3.25)</option>
-              <option value="8,0.02,0.0488,0.75">Special steel EBF / BRBF (R=8)</option>
+              <option value="8,0.03,0.0731,0.75">Special steel EBF / BRBF (R=8)</option>
             </optgroup>
             <optgroup label="Dual Systems">
               <option value="7,0.02,0.0488,0.75">Dual: Spec. RC SW + spec. RC MF (R=7)</option>
@@ -1371,7 +1371,7 @@ var FA_TBL = { A:[0.8,0.8,0.8,0.8,0.8,0.8], B:[0.9,0.9,0.9,0.9,0.9,0.9],
 // ── ASCE 7-22 Table 11.4-2: Fv ───────────────────────────────────────────────
 var FV_S1  = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60];
 var FV_TBL = { A:[0.8,0.8,0.8,0.8,0.8,0.8], B:[0.8,0.8,0.8,0.8,0.8,0.8],
-               C:[1.5,1.5,1.5,1.5,1.5,1.4], D:[2.4,2.2,2.0,1.9,1.8,1.7],
+               C:[1.5,1.5,1.5,1.5,1.5,1.4], D:[2.4,2.4,2.4,1.9,1.8,1.7],
                E:[4.2,3.3,2.8,2.2,1.7,1.4] };
 
 function tableInterp(x, xs, ys) {
@@ -1406,7 +1406,11 @@ function updateGM() {
   document.getElementById('out-SM1').textContent=f(SM1,3);
   document.getElementById('out-SDS').textContent=f(SDS,3);
   document.getElementById('out-SD1').textContent=f(SD1,3);
-  if (sc==='E'&&SS>=1.0){warnLine.textContent='⚠ Site E + SS ≥ 1.0 g — site-specific analysis may be required (§20.2.1).';warnLine.style.display='block';}
+  var siteWarn=[];
+  if(sc==='E'&&SS>=1.0) siteWarn.push('Site E + Sₛ ≥ 1.0 g: Fa is site-specific (Table 11.4-1 Note a, §20.2.1)');
+  if((sc==='D'||sc==='E')&&S1>=0.4) siteWarn.push('Site '+(sc==='D'?'D':'E')+' + S₁ ≥ 0.4 g: Fv requires site-specific analysis (Table 11.4-2 Note b)');
+  if(siteWarn.length){warnLine.textContent='⚠ '+siteWarn.join(' | ');warnLine.style.display='block';}
+  else{warnLine.style.display='none';}
 }
 
 // ── Live period cap display ───────────────────────────────────────────────────
@@ -2098,9 +2102,9 @@ function ec8GetP() {
 }
 
 function ec8Sd(T, ag, p, q, eta, beta) {
-  var plateau = ag * p.S * 2.5 / q * eta;
+  var plateau = ag * p.S * 2.5 / q;          // EN 1998-1 §3.2.2.5: η not applied to design spectrum
   if (T <= 0)    return ag * p.S * (2/3);
-  if (T < p.TB)  return ag * p.S * (2/3 + T/p.TB * (2.5/q*eta - 2/3));
+  if (T < p.TB)  return ag * p.S * (2/3 + T/p.TB * (2.5/q - 2/3));
   if (T < p.TC)  return plateau;
   if (T < p.TD)  return Math.max(plateau * p.TC/T,    beta*ag);
   return               Math.max(plateau * p.TC*p.TD/(T*T), beta*ag);
@@ -2440,9 +2444,9 @@ function tbdySae(T, SDS, SD1, TA, TB, TL) {
 }
 
 function tbdyRa(T, R, I, D, TB) {
-  var RoI = R / I;
-  if (T >= TB) return RoI;
-  return D + (RoI - D) * (T / TB);
+  var RoD = R / D;
+  if (T >= TB) return RoD;
+  return D + (RoD - D) * (T / TB);
 }
 
 function tbdyDrawSpectrum(SDS, SD1, TA, TB, TL, T1x, T1y, SaRx, SaRy, fixedCanvas) {
@@ -2588,7 +2592,7 @@ function tbdyCalc() {
   vH+=row3('S<sub>aR</sub>(T) (g)', f(dx.SaR,4), f(dy.SaR,4));
   vH+=row3('W (kN)', f(W,1), f(W,1));
   vH+=row3('V<sub>t,raw</sub> = W·S<sub>aR</sub> (kN)', f(VtxRaw,1), f(VtyRaw,1));
-  vH+=row3('V<sub>t,min</sub> = 0.04·I·S<sub>DS</sub>·W (kN)', f(VtxMin,1), f(VtyMin,1));
+  vH+=row3('V<sub>t,min</sub> = 0.04·I·W (kN)', f(VtxMin,1), f(VtyMin,1));
   var govX3=VtxRaw>=VtxMin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
   var govY3=VtyRaw>=VtyMin?badge('Computed','gov-green'):badge('Min governs','gov-yellow');
   vH+=row3('<b>V<sub>t</sub> (kN)</b>',

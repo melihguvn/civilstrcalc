@@ -909,7 +909,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <tbody id="en-zone-body"></tbody>
       </table>
       <div style="padding:4px 2px 2px;font-size:.63rem;color:var(--text-dim);">
-        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · "—" = no net outward pressure (basınç) case; zone governed entirely by suction (emme)
+        w⁺ = q<sub>p</sub>×(c<sub>pe,max</sub> − c<sub>pi,min</sub>) · w⁻ = q<sub>p</sub>×(c<sub>pe,min</sub> − c<sub>pi,max</sub>) · "—" = no net outward pressure (compression) case; zone governed entirely by suction
       </div>
     </div>
   </div>
@@ -1982,9 +1982,9 @@ function geolocateWind() {
 
 // Exposure params: [alpha, zg_ft, zmin_ft, c, l_ft, eps, bbar, ahat]
 var EXPO = {
-  B: [7.0,  1200, 30, 0.30, 320, 1/3.5,  0.45, 1/4.0 ],
+  B: [7.0,  1200, 15, 0.30, 320, 1/3.5,  0.45, 1/4.0 ],
   C: [9.5,   900, 15, 0.20, 500, 1/5.0,  0.65, 1/6.5 ],
-  D: [11.5,  700,  7, 0.15, 650, 1/8.0,  0.80, 1/9.0 ]
+  D: [11.5,  700, 15, 0.15, 650, 1/8.0,  0.80, 1/9.0 ]
 };
 
 // ─── Ch.28 GCpf table (Fig. 28.3-1) ─────────────────────
@@ -2488,15 +2488,16 @@ function computeGf(h_ft,B_ft,L_ft,n1,beta,expo,V_mph) {
   var c=e[3], l=e[4], eps=e[5], bbar=e[6], ahat=e[7];
   var Izbar=c*Math.pow(33/zbar, 1/6);
   var Lzbar=l*Math.pow(zbar/33, eps); // ft
-  var Q=Math.sqrt(1/(1+0.63*Math.pow((B_ft+h_ft)/Lzbar, 0.63)));
+  // ASCE 7-22 §26.11: B=crosswind dimension, L=along-wind dimension
+  var Q=Math.sqrt(1/(1+0.63*Math.pow((L_ft+h_ft)/Lzbar, 0.63)));
   // Mean wind speed at zbar (ft/s)
   var Vzbar=bbar*Math.pow(zbar/33, ahat)*V_mph*1.46667;
   var N1=n1*Lzbar/Vzbar;
   var Rn=7.47*N1/Math.pow(1+10.3*N1, 5/3);
   function Rfunc(eta) { if (eta<1e-8) return 1; return 1/eta - 1/(2*eta*eta)*(1-Math.exp(-2*eta)); }
   var Rh=Rfunc(4.6*n1*h_ft/Vzbar);
-  var RB=Rfunc(4.6*n1*B_ft/Vzbar);
-  var RL=Rfunc(15.4*n1*L_ft/Vzbar);
+  var RB=Rfunc(4.6*n1*L_ft/Vzbar);   // crosswind
+  var RL=Rfunc(15.4*n1*B_ft/Vzbar);  // along-wind
   var R2=(1/beta)*Rn*Rh*RB*(0.53+0.47*RL);
   var R=Math.sqrt(R2>0?R2:0);
   var Gf=0.925*(1+1.7*Izbar*Math.sqrt(gQ*gQ*Q*Q+gR*gR*R*R))/(1+1.7*gv*Izbar);
@@ -2509,14 +2510,16 @@ function computeGf(h_ft,B_ft,L_ft,n1,beta,expo,V_mph) {
 function calcCh30(h_ft,B_ft,L_ft,V_mph,Kzt,Ke,expo,GCpi,encl,h_raw,B_raw,L_raw,V_raw,theta) {
   var Kh=calcKz(h_ft,expo);
   var qh=isUS?calcQh_US(Kh,Kzt,Ke,V_mph):calcQh_SI(Kh,Kzt,Ke,V_raw);
-  var a_ft=Math.min(0.1*B_ft,0.4*h_ft);
-  a_ft=Math.max(a_ft,Math.max(0.04*B_ft,3));
+  var dim_min=Math.min(B_ft,L_ft);   // ASCE 7-22 §26.2: least horizontal dimension
+  var a_ft=Math.min(0.1*dim_min,0.4*h_ft);
+  a_ft=Math.max(a_ft,Math.max(0.04*dim_min,3));
   var a=isUS?a_ft:a_ft*0.3048;
   var Aeff_raw=parseFloat(document.getElementById('inp-Aeff').value)||20;
   var Aeff_ft2=isUS?Aeff_raw:Aeff_raw*10.7639;
   var surface=document.getElementById('inp-cc-surface').value;
   var d=CC_DATA[surface];
-  var minP=isUS?16:0.766;
+  var isRoofZone=surface.startsWith('roof');
+  var minP=isUS?(isRoofZone?8:16):(isRoofZone?0.383:0.766); // ASCE 7-22 §30.3.4: 8 psf roof, 16 psf walls
   var u=isUS?'psf':'kPa', hu=isUS?'ft':'m', Au=isUS?'ft²':'m²';
 
   var anchCh30=[{A:10,label:'10'},{A:Aeff_ft2,label:f(Aeff_raw,1)},{A:500,label:'500'}];
