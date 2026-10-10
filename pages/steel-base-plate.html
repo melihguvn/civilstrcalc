@@ -288,7 +288,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <label>Profile</label>
     <select id="colProfile" class="bp-sel" onchange="onProfileChange()"></select>
   </div>
-
+  <div class="form-group">
+    <label>Column Steel Grade</label>
+    <select id="inp-col-grade" class="bp-sel" onchange="calc()"></select>
+  </div>
 
   <!-- Loads -->
   <div class="form-div"><div class="form-div-lbl">Factored Loads (LRFD)</div></div>
@@ -309,7 +312,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="form-row-2">
     <div class="form-group">
       <label>M<sub>x</sub> strong-axis <span class="unit-lbl" id="lbl-Mx">[kip·in]</span></label>
-      <div class="iw"><input type="number" id="inp-Mx" value="0" min="0" step="10" oninput="calc()"><span class="us" id="su-Mx">kip·in</span></div>
+      <div class="iw"><input type="number" id="inp-Mx" value="300" min="0" step="10" oninput="calc()"><span class="us" id="su-Mx">kip·in</span></div>
     </div>
     <div class="form-group">
       <label>M<sub>y</sub> weak-axis <span class="unit-lbl" id="lbl-My">[kip·in]</span></label>
@@ -938,6 +941,18 @@ var PLATE_GRADES_SI = [
   ['S460', 66.7, 460]
 ];
 
+// Column steel grades: [label, Fy_ksi, Fy_MPa]  (US) / [label, Fy_MPa] (SI)
+var COL_GRADES_US = [
+  ['A36',       36,  248],
+  ['A572 Gr50', 50,  345],
+  ['A992',      50,  345]
+];
+var COL_GRADES_SI = [
+  ['S235', 235],
+  ['S275', 275],
+  ['S355', 355]
+];
+
 // Column type definitions: [key, label, isHSS, isSI]
 var COL_TYPES_US = [
   {k:'W',           lb:'W Shapes',   hss:false},
@@ -963,6 +978,7 @@ function dcrCls(dcr){return dcr<=0.9?'ok':dcr<=1.0?'warn':'err';}
 /* ═══ init ═════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function(){
   buildTypeDropdown();
+  buildColGradeDropdown();
   buildPlateGradeDropdown();
   buildAnchorDropdowns();
   onColTypeChange();
@@ -992,14 +1008,14 @@ function setUnit(u){
     function cv(id, factor){ var e=el(id); if(e){e.value=(parseFloat(e.value)||0)*factor;} }
     if(toSI){
       // Use fixed SI defaults instead of converting
-      var ePu=el('inp-Pu'); if(ePu) ePu.value='100.0';
+      var ePu=el('inp-Pu'); if(ePu) ePu.value='800.0';
       var eVx=el('inp-Vx'); if(eVx) eVx.value='0.0';
       var eVy=el('inp-Vy'); if(eVy) eVy.value='0.0';
-      var eMx=el('inp-Mx'); if(eMx) eMx.value='0.0';
+      var eMx=el('inp-Mx'); if(eMx) eMx.value='50.0';
       var eMy=el('inp-My'); if(eMy) eMy.value='0.0';
       cv('inp-B',   IN_TO_MM);
-      var efc=el('inp-fc'); if(efc) efc.value='30';
-      cv('inp-hef', IN_TO_MM);
+      var efc=el('inp-fc'); if(efc) efc.value='25';
+      var eHef=el('inp-hef'); if(eHef) eHef.value='300';
       cv('inp-ca-min', IN_TO_MM);
       var eB=el('inp-B'); if(eB) eB.value=Math.round(parseFloat(eB.value)||0);
       var eH=el('inp-hef'); if(eH) eH.value=Math.round(parseFloat(eH.value)||0);
@@ -1066,10 +1082,28 @@ function setUnit(u){
   el('rh-unit-lbl').textContent = u==='us'?'kip · in':'kN · mm';
 
   buildTypeDropdown();
+  buildColGradeDropdown();
   buildPlateGradeDropdown();
   buildAnchorDropdowns();
   onColTypeChange();
   calc();
+}
+
+/* ═══ column grade dropdown ═════════════════════════════════════════════ */
+function buildColGradeDropdown(){
+  var sel = el('inp-col-grade');
+  if(!sel) return;
+  var grades = unit==='us' ? COL_GRADES_US : COL_GRADES_SI;
+  var defIdx = unit==='us' ? 2 : 1; // default A992 (US) or S275 (SI)
+  var prevLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  sel.innerHTML = '';
+  var matchIdx = defIdx;
+  grades.forEach(function(g, i){
+    var o = document.createElement('option');
+    o.value = i; o.textContent = g[0]; sel.appendChild(o);
+    if(g[0] === prevLabel) matchIdx = i;
+  });
+  sel.selectedIndex = (prevLabel && matchIdx !== defIdx) ? matchIdx : defIdx;
 }
 
 /* ═══ profile dropdowns ════════════════════════════════════════════════ */
@@ -1770,8 +1804,14 @@ function calc(){
 
   // ── Input summary for print ──
   var profName = el('colProfile') ? el('colProfile').value : '';
+  var colGrIdx = el('inp-col-grade') ? parseInt(el('inp-col-grade').value)||0 : 0;
+  var colGrArr = unit==='us' ? COL_GRADES_US : COL_GRADES_SI;
+  var colGrRow = colGrArr[Math.min(colGrIdx, colGrArr.length-1)];
+  var colGrLabel = colGrRow ? colGrRow[0]+' (Fy='+(unit==='us'?colGrRow[1]+' ksi':colGrRow[1]+' MPa')+')' : '—';
+
   var inpRows = [
     ['Profile',         profName || 'Manual'],
+    ['Column grade',    colGrLabel],
     ['Plate B = N',     fmt(B,unit==='us'?1:0)+' '+lenU],
     ['Pu',              fmt(Pu,1)+' '+forU],
     ['Vx / Vy',         fmt(Vx,1)+' / '+fmt(Vy,1)+' '+forU],
