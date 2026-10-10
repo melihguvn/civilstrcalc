@@ -838,9 +838,9 @@ function calc(){
   var phi_Rbrg_wpl = 2*nc_w*brgCap(n,db,dh,s,ev,tp_w,Fu_pl,phi_brg);
   var phi_Rbrg_web = nc_w*brgCap(n,db,dh,s,ev,tw,Fu_bm,phi_brg);
   var phi_Rwy      = phi_yield*0.60*Fy_bm*d_web*tw;
-  var phi_Rwr      = nc_w*phi_rupt*0.60*Fu_bm*Math.max(hp-n*dh,0)*tw;
+  var phi_Rwr      = phi_rupt*0.60*Fu_bm*Math.max(hp-nc_w*n*dh,0)*tw;
   var phi_Rsy_w    = 2*phi_yield*0.60*Fy_pl*hp*tp_w;
-  var phi_Rsr_w    = 2*nc_w*phi_rupt*0.60*Fu_pl*Math.max(hp-n*dh,0)*tp_w;
+  var phi_Rsr_w    = 2*phi_rupt*0.60*Fu_pl*Math.max(hp-nc_w*n*dh,0)*tp_w;
   // Block shear (per plate)
   var Agv_bs = ((n-1)*s+ev)*tp_w;
   var Anv_bs = Math.max(Agv_bs-(n-0.5)*dh*tp_w,0);
@@ -862,6 +862,11 @@ function calc(){
   var phi_Rtr_fp  = phi_rupt*Fu_pl*Math.max((bfp-dh)*tfp,0);        // net rupture (1 hole)
   var phi_Rbrg_fp = brgCap(nf,db,dh,sf_f,evf,tfp,Fu_pl,phi_brg);   // bearing on plate
   var phi_Rbrg_fl = brgCap(nf,db,dh,sf_f,evf,tf,Fu_bm,phi_brg);    // bearing on flange
+  // Block shear - flange plate §J4.3 (single row along load axis)
+  var Agv_bs_f = ((nf-1)*sf_f+evf)*tfp;
+  var Anv_bs_f = Math.max(Agv_bs_f-(nf-0.5)*dh*tfp,0);
+  var Ant_bs_f = Math.max((bfp/2-dh/2)*tfp,0);
+  var phi_Rbs_f = phi_bs*Math.min(0.60*Fu_pl*Anv_bs_f+Fu_pl*Ant_bs_f, 0.60*Fy_pl*Agv_bs_f+Fu_pl*Ant_bs_f);
 
   /* ── UNIT CONVERSION (SI: N → kN) ── */
   if(unit==='si'){
@@ -872,7 +877,7 @@ function calc(){
     phi_Rsy_w*=cf; phi_Rsr_w*=cf; phi_Rbs_w*=cf;
     if(isFinite(phi_Rn_bend_w)) phi_Rn_bend_w*=cf;
     phi_Rnf*=cf; phi_Rty_fp*=cf; phi_Rtr_fp*=cf;
-    phi_Rbrg_fp*=cf; phi_Rbrg_fl*=cf;
+    phi_Rbrg_fp*=cf; phi_Rbrg_fl*=cf; phi_Rbs_f*=cf;
     // Pf already in kN (Mu in kN·mm / d_p in mm = kN)
   }
 
@@ -896,7 +901,8 @@ function calc(){
     {name:'Flange plate tension yield \xA7J4.1',     cap:phi_Rty_fp,      dem:Pf,  grp:'fp'},
     {name:'Flange plate net rupture \xA7J4.1',       cap:phi_Rtr_fp,      dem:Pf,  grp:'fp'},
     {name:'Bearing on flange plate \xA7J3.10',       cap:phi_Rbrg_fp,     dem:Pf,  grp:'fp'},
-    {name:'Bearing on beam flange \xA7J3.10',        cap:phi_Rbrg_fl,     dem:Pf,  grp:'fp'}
+    {name:'Bearing on beam flange \xA7J3.10',        cap:phi_Rbrg_fl,     dem:Pf,  grp:'fp'},
+    {name:'Flange plate block shear \xA7J4.3',       cap:phi_Rbs_f,       dem:Pf,  grp:'fp'}
   ];
 
   checks.forEach(function(c){
