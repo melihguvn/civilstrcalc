@@ -1719,7 +1719,7 @@ function calcEP(p){
     var th=Math.atan(kh/(1-kv)), ct=Math.cos(th), cpd=Math.cos(phi-th);
     /* M-O with backfill slope β (valid when φ-θ > β) */
     var moArg=cpd*cpd, sqMO=Math.sqrt(Math.max(0,Math.sin(phi)*Math.sin(phi-th-beta_r)/(ct*cosB)));
-    var KAE=moArg/(ct*Math.pow(1+sqMO,2));
+    var KAE=moArg/(ct*ct*Math.pow(1+sqMO,2));
     DPAE=Math.max(0,0.5*(1-kv)*gs_eff*H*H*KAE-Pt);
   }
   return {Ka:Ka,Kp:Kp,Pa:Pa,Pa_h:Pa_h,Pa_v:Pa_v,Pt:Pt,Ps:Ps,Pw:Pw,arm:arm,DPAE:DPAE,kh:kh,kv:kv,He:He,H:H,beta_r:beta_r};
@@ -1741,15 +1741,19 @@ function calcStability(p,ep){
     W1=W1L+W1U; x1=(W1L*x1L+W1U*x1U)/W1;
   }
   var W2=gc*B*p.tf,      x2=B/2;
-  var W3=p.gs*p.Lh*p.H,  x3=p.Lt+p.ts+p.Lh/2;
+  var br=ep.beta_r||0;
+  var W3_rect=p.gs*p.Lh*p.H,         x3_rect=p.Lt+p.ts+p.Lh/2;
+  var W3_tri =(br>1e-6)?0.5*p.gs*p.Lh*p.Lh*Math.tan(br):0, x3_tri=p.Lt+p.ts+2*p.Lh/3;
+  var W3=W3_rect+W3_tri;
+  var x3=W3>0?(W3_rect*x3_rect+W3_tri*x3_tri)/W3:(p.Lt+p.ts+p.Lh/2);
   var W4=(p.Lt>0&&p.htoe>p.tf)?p.gs*p.Lt*(p.htoe-p.tf):0, x4=p.Lt/2;
   var W5=p.surch?p.q*p.Lh:0, x5=p.Lt+p.ts+p.Lh/2;
   var V=W1+W2+W3+W4+W5;   /* concrete + soil weight only */
 
   /* Sloped backfill vertical component: Pa_v acts downward at back of stem
      → adds to effective vertical load and to resisting moment */
-  var Pv=ep.Pa_v||0;        /* downward vertical at x = Lt+ts from toe */
-  var xPv=p.Lt+p.ts;
+  var Pv=ep.Pa_v||0;        /* downward vertical at back of heel (virtual back plane) */
+  var xPv=p.Lt+p.ts+p.Lh;
 
   var hp=p.htoe;
   var Fp_base=0.5*ep.Kp*p.gs*hp*hp, Fp_key=0;

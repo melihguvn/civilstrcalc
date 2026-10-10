@@ -3351,7 +3351,7 @@ function calcEC2(){
   const eta=fck<=50?1.0:1.0-(fck-50)/200;
   const Es=200000, ecu=0.0035;
   const d=h-cv-dbar/2;
-  const K=MEd/(b*d*d*fcd), Kl=0.167;
+  const K=MEd/(b*d*d*fck), Kl=0.167; // K against fck per UK convention (1.134 factor bakes in αcc=0.85)
 
   // Compression steel inputs
   const hasDbl=document.getElementById('dbl_ec2').checked;
@@ -3417,7 +3417,7 @@ function calcEC2(){
       null,
       [{desc:'f<sub>cd</sub> / f<sub>yd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub> · f<sub>yk</sub>/γ<sub>s</sub>',val:`${fcd.toFixed(2)} / ${fyd.toFixed(2)} MPa`},
        {desc:'Effective depth d',formula:'h − c<sub>nom</sub> − d<sub>bar</sub>/2',val:fmtLen(d)},
-       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:K>Kl?'err':'ok',
+       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>ck</sub>)',val:K.toFixed(4),cls:K>Kl?'err':'ok',
          check:K>Kl?{type:'err',label:"K > K' ✗"}:{type:'ok',label:"K ≤ K' ✓"}},
        {desc:"Limiting coefficient K'",formula:'0.167 (δ = 1.0)',val:'0.167'},
        {desc:'Lever arm z',formula:'d·[0.5+√(0.25−K/1.134)] ≤ 0.95d',val:fmtLen(z)},
@@ -3443,7 +3443,7 @@ function calcEC2(){
     const fsc_eff=fsc-eta*fcd; // net effective stress (deduct displaced concrete)
 
     // Extra moment beyond K' limit
-    const deltaM=MEd-Kl*b*d*d*fcd;
+    const deltaM=MEd-Kl*b*d*d*fck;
 
     // Required compression steel
     const lever_comp=d-dprime;
@@ -3453,7 +3453,7 @@ function calcEC2(){
 
     // Tension steel
     // Part 1: singly-reinforced at K' moment
-    const As1=Kl*b*d*d*fcd/(fyd*z_lim);
+    const As1=Kl*b*d*d*fck/(fyd*z_lim);
     // Part 2: extra tension to balance the required compression force (based on deltaM, not Asp_prov)
     // Using Asp_prov here would cause As_req to grow when excess compression steel is added — incorrect.
     const deltaAs=deltaM/(fyd*lever_comp);   // = Asp_req·fsc_eff/fyd
@@ -3507,7 +3507,7 @@ function calcEC2(){
       null,
       [{desc:'f<sub>cd</sub> / f<sub>yd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub> · f<sub>yk</sub>/γ<sub>s</sub>',val:`${fcd.toFixed(2)} / ${fyd.toFixed(2)} MPa`},
        {desc:'Effective depth d',formula:'h − c<sub>nom</sub> − d<sub>bar</sub>/2',val:fmtLen(d)},
-       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:'err',
+       {desc:'Normalised moment K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>ck</sub>)',val:K.toFixed(4),cls:'err',
          check:{type:'err',label:"K > K' — doubly reinforced"}},
        {desc:"Limiting coefficient K'",formula:'0.167 (δ = 1.0)',val:'0.167'},
        {desc:'Lever arm at limit z<sub>lim</sub>',formula:'d·[0.5+√(0.25−K\'/1.134)]',val:fmtLen(z_lim)},
@@ -4132,7 +4132,8 @@ function calcTorACI(){
 
   // Longitudinal torsion steel required §22.7.6.1
   const Al_req = At_s * Ph * fy/fyl * cot_theta*cot_theta;
-  const Al_min = Math.max(0.42*Math.sqrt(fc)*Acp/fyl - At_s*Ph*fy/fyl, 0);
+  const At_s_floor = 0.175*bw/fyt; // ACI §22.7.6.1(b): At/s shall not be taken < 0.175bw/fyt
+  const Al_min = Math.max(0.42*Math.sqrt(fc)*Acp/fyl - Math.max(At_s,At_s_floor)*Ph*fy/fyl, 0);
   const Al_prov = nl * Math.PI/4 * dl*dl;
   const dc_tor_s = At_prov > 0 ? At_s/At_prov : (At_s > 0 ? Infinity : 0);
   const dc_combined_stir = combined_prov > 0 ? combined_req/combined_prov : (combined_req > 0 ? Infinity : 0);

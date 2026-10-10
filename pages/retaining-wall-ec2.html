@@ -1687,12 +1687,12 @@ function readRWInputs(){
    Vertical wall (α=90°), inclined backfill β.
    Ka = cos²β · [1/(1 + √(sin(φ-β)·sinφ/cos²β))]² for β<φ (Rankine). */
 function kaRankine(phi, beta){
-  var sp=Math.sin(phi), cb=Math.cos(beta), sb=Math.sin(beta);
+  var sp=Math.sin(phi), cb=Math.cos(beta), sb=Math.sin(beta), cphi=Math.cos(phi);
   if(beta>=phi-1e-6) beta=Math.max(0,phi-0.001);
   cb=Math.cos(beta); sb=Math.sin(beta);
   var sq=Math.sqrt(Math.max(0,(Math.sin(phi)*Math.sin(phi-beta))/(cb*cb)));
   var denom=(1+sq)*(1+sq);
-  return cb*cb/denom;
+  return cphi*cphi/denom;
 }
 
 /* Rankine Kp — passive coefficient.
@@ -1965,15 +1965,15 @@ function calcStability(p,ep){
 function calcReinf(p,st,ep){
   var fc=p.fc, fy=p.fy;
   /* EC2 EN 1992-1-1: design strengths */
-  var fcd=fc/1.5;          // γc = 1.5  (EC2 Table 2.1N)
+  var fcd=0.85*fc/1.5;     // αcc=0.85, γc=1.5  (EC2 §3.1.6 + Table 2.1N)
   var fyd=fy/1.15;         // γs = 1.15 (EC2 Table 2.1N)
   function effD(h){return h-p.cover-8;}
   function fxD(Mu,h){
     var d=effD(h), MN=Math.abs(Mu)*1e6;
-    /* EC2 §3.1.7(3): normalized moment μ = MEd/(b·d²·fcd); then ξ, As */
-    var mu=MN/(1000*d*d*fcd);
-    var xi=(mu<0.5)?1-Math.sqrt(Math.max(0,1-2*mu)):1;  // lever arm factor ≈
-    var z=d*(1-0.4*xi);  // z = d·(1−0.4·ξ), simplified; use 0.8ξ·fcd block
+    /* EC2 §3.1.7: K = MEd/(b·d²·fck); z = d·[0.5+√(0.25−K/1.134)] ≤ 0.95d */
+    var K=MN/(1000*d*d*fc);
+    var z=d*(0.5+Math.sqrt(Math.max(0,0.25-K/1.134)));
+    z=Math.min(z,0.95*d);
     if(z<=0||isNaN(z)) z=0.9*d;
     var Ar=(MN>0)?MN/(fyd*z):0;
     /* EC2 §9.2.1.1 minimum steel */

@@ -2295,6 +2295,7 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, 
   const isTS500 = code === 'ts500';
   const ecu = (isEC2 || isIS456) ? 0.0035 : 0.003;
   const fy_use = (isEC2 || isIS456 || isTS500) ? fyd : fy;
+  const ey = fy_use / Es; // yield strain — ACI 318-25 Table 21.2.2 lower transition at εt=εy
   const R = D/2;
   let lam, fc_eff;
   if(isIS456){
@@ -2364,8 +2365,8 @@ function buildCurveCirc(D, cover, dbar, n, fc, fy, Es, code, fcd, fyd, phi_min, 
       const et = dt_depth>0 ? ecu*(dt_depth/c - 1) : 0.01;
       let phi;
       if(et>=0.005) phi=0.90;
-      else if(et<=0.002) phi=phi_c;
-      else phi=phi_c+(et-0.002)*(0.90-phi_c)/0.003;
+      else if(et<=ey) phi=phi_c;
+      else phi=phi_c+(et-ey)*(0.90-phi_c)/(0.005-ey);
       P_des=phi*P_nom; M_des=phi*M_nom;
     }
     if(P_des>P0_cap) continue;
@@ -2553,6 +2554,7 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis)
   const isTS500 = code === 'ts500';
   const ecu    = (isEC2 || isIS456) ? 0.0035 : 0.003;
   const fy_use = (isEC2 || isIS456 || isTS500) ? fyd : fy;
+  const ey     = fy_use / Es; // ACI 318-25 Table 21.2.2: lower transition at εt=εy
 
   // Stress block
   let lam, fc_eff;
@@ -2636,8 +2638,8 @@ function buildCurve(b,h,cover,dbar,nb,nh, fc,fy,Es, code,fcd,fyd, phi_min, axis)
       const et  = dt > 0 ? ecu*(dt/c - 1) : 0.01;
       let phi;
       if(et >= 0.005)      phi = 0.90;
-      else if(et <= 0.002) phi = phi_min;
-      else                 phi = phi_min + (et-0.002)*(0.90-phi_min)/0.003;
+      else if(et <= ey)    phi = phi_min;
+      else                 phi = phi_min + (et-ey)*(0.90-phi_min)/(0.005-ey);
       P_des = phi * P_nom;
       M_des = phi * M_nom;
     }
@@ -2852,7 +2854,7 @@ function calcCol(code){
   let dcr_bi=0;
   if(M0x>0&&M0y>0){
     const pRatio=Math.max(0,Math.min(1,Pu/P0));
-    const alpha=1+pRatio;
+    const alpha=Math.max(1.5,1+pRatio); // Bresler exponent; floor at 1.5 per Parme/SP-17
     dcr_bi=Math.pow(Math.abs(Mx/M0x),alpha)+Math.pow(Math.abs(My/M0y),alpha);
   } else if(M0x>0){ dcr_bi=Math.abs(Mx/M0x); }
   else if(M0y>0){ dcr_bi=Math.abs(My/M0y); }

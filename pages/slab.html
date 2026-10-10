@@ -2332,8 +2332,8 @@ function calcDesEC2(){
   const d=h-cv-db/2;
   if(d<=0){showErr('des_ec2','Effective depth d ≤ 0. Check cover vs total depth.');return;}
   const fcd=fck/gc, fyd=fyk/gs;
-  const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+fck/10+8);
-  const K=Mu/(b*d*d*fcd);
+  const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
+  const K=Mu/(b*d*d*fck); // K against fck; Kl=0.167 and z=d[0.5+√(0.25-K/1.134)] consistent with this convention
   const K_max=0.167; // Kmax for singly reinforced (no redistribution)
   const s_max=Math.min(3*h,400);
   const rho_min=Math.max(0.26*fctm/fyk,0.0013);
@@ -2348,8 +2348,8 @@ function calcDesEC2(){
     const dp=cv+6; // d' = cover + db/2 (Ø12 → 6 mm)
     // Singly-reinforced limit at K_max
     const z1=Math.min(d*(0.5+Math.sqrt(Math.max(0,0.25-K_max/1.134))),0.95*d);
-    const As1=K_max*fcd*b*d*d/(fyd*z1);
-    const MRd1=K_max*fcd*b*d*d; // N·mm
+    const As1=K_max*fck*b*d*d/(fyd*z1);
+    const MRd1=K_max*fck*b*d*d; // N·mm
     const M2=Mu-MRd1;
     const xu1=As1*fyd/(0.8*fcd*b);
     const esc=Math.max(0, 0.0035*(xu1-dp)/xu1);
@@ -2362,11 +2362,11 @@ function calcDesEC2(){
       {desc:'Design concrete strength f<sub>cd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub>',val:`${fFc(fcd)} ${_uFc()}`},
       {desc:'Design steel strength f<sub>yd</sub>',formula:'f<sub>yk</sub>/γ<sub>s</sub>',val:`${fFc(fyd)} ${_uFc()}`},
       {desc:'Mean tensile strength f<sub>ctm</sub>',formula:'0.30·f<sub>ck</sub><sup>2/3</sup>',val:`${fFc(fctm)} ${_uFc()}`},
-      {desc:'Flexural coefficient K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:'err',check:{t:'err',l:`> K<sub>max</sub> = ${K_max}`}},
+      {desc:'Flexural coefficient K',formula:'M<sub>Ed</sub> / (b·d²·f<sub>ck</sub>)',val:K.toFixed(4),cls:'err',check:{t:'err',l:`> K<sub>max</sub> = ${K_max}`}},
       {desc:'Compression steel depth d\'',formula:'c<sub>nom</sub> + d<sub>b</sub>/2',val:`${fH(dp)} ${_uH()}`},
       {desc:'Singly-reinforced lever arm z₁ at K<sub>max</sub>',formula:'d·[0.5+√(0.25−K<sub>max</sub>/1.134)]',val:`${fH(z1)} ${_uH()}`},
-      {desc:'Singly-reinforced steel As₁',formula:'K<sub>max</sub>·f<sub>cd</sub>·b·d² / (f<sub>yd</sub>·z₁)',val:`${fAs(As1)} ${_uAs()}`},
-      {desc:'Singly-reinforced capacity M<sub>Rd,1</sub>',formula:'K<sub>max</sub>·f<sub>cd</sub>·b·d²',val:`${fMn(MRd1)} ${_uMu()}`},
+      {desc:'Singly-reinforced steel As₁',formula:'K<sub>max</sub>·f<sub>ck</sub>·b·d² / (f<sub>yd</sub>·z₁)',val:`${fAs(As1)} ${_uAs()}`},
+      {desc:'Singly-reinforced capacity M<sub>Rd,1</sub>',formula:'K<sub>max</sub>·f<sub>ck</sub>·b·d²',val:`${fMn(MRd1)} ${_uMu()}`},
       {desc:'Residual moment M₂',formula:'M<sub>Ed</sub> − M<sub>Rd,1</sub>',val:`${fMn(M2)} ${_uMu()}`},
       {desc:'Neutral axis at limit x<sub>u,1</sub>',formula:'A<sub>s1</sub>·f<sub>yd</sub> / (0.8·f<sub>cd</sub>·b)',val:`${fH(xu1)} ${_uH()}`},
       {desc:'Compression steel strain ε<sub>sc</sub>',formula:'0.0035·(x<sub>u,1</sub> − d\') / x<sub>u,1</sub>',val:esc.toFixed(5),cls:fsc>=fyd?'ok':'warn',check:fsc>=fyd?{t:'ok',l:'yields ✓'}:{t:'warn',l:'partial yield'}},
@@ -2403,7 +2403,7 @@ function calcDesEC2(){
     {desc:'Design concrete strength f<sub>cd</sub>',formula:'f<sub>ck</sub>/γ<sub>c</sub>',val:`${fFc(fcd)} ${_uFc()}`},
     {desc:'Design steel strength f<sub>yd</sub>',formula:'f<sub>yk</sub>/γ<sub>s</sub>',val:`${fFc(fyd)} ${_uFc()}`},
     {desc:'Mean tensile strength f<sub>ctm</sub>',formula:'0.30·f<sub>ck</sub><sup>2/3</sup>',val:`${fFc(fctm)} ${_uFc()}`},
-    {desc:'Flexural coefficient K',formula:'K = M<sub>Ed</sub> / (b·d²·f<sub>cd</sub>)',val:K.toFixed(4),cls:K>K_max?'err':'',
+    {desc:'Flexural coefficient K',formula:'K = M<sub>Ed</sub> / (b·d²·f<sub>ck</sub>)',val:K.toFixed(4),cls:K>K_max?'err':'',
       check:K>K_max?{t:'err',l:'exceeded K_max'}:{t:'ok',l:`≤ ${K_max} ✓`}},
     {desc:'Lever arm z',formula:'d·[0.5+√(0.25−K/1.134)] ≤ 0.95d',val:`${fH(z)} ${_uH()}`},
     {desc:'Required steel A<sub>s,req</sub>',formula:'M<sub>Ed</sub> / (f<sub>yd</sub>·z)',val:`${fAs(As_req)} ${_uAs()}`},
@@ -2611,7 +2611,7 @@ function calcCapEC2(){
   const d=h-cv-db/2;
   if(d<=0){showErr('cap_ec2','Effective depth d ≤ 0. Check inputs.');return;}
   const fcd=fck/gc, fyd=fyk/gs;
-  const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+fck/10+8);
+  const fctm=fck<=50?0.30*Math.pow(fck,2/3):2.12*Math.log(1+(fck+8)/10);
   const Ab=Math.PI/4*db*db;
   const As_prov=Ab/s*b;
   // Additional reinforcement (optional)
