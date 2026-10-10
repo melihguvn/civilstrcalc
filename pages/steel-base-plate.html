@@ -1583,7 +1583,7 @@ function calc(){
   var govVal = worstDCR;
   var govStr;
   if(DCR_stiff > 0 && DCR_stiff >= Math.max(maxSh, maxAnchV, maxAnchT, maxConcSh, hasT?0:DCR_brg_val)){
-    govStr = 'Stiffener thickness DCR = '+fmt(DCR_stiff,3)+' (increase t_st to '+fmt(tst_req,unit==='us'?3:1)+' '+lenU+')';
+    govStr = 'Stiffener thickness DCR = '+fmt(DCR_stiff,3)+(DCR_stiff>1.0?' (increase t_st to '+fmt(tst_req,unit==='us'?3:1)+' '+lenU+')':'');
   } else if(!hasT && DCR_brg_val>=maxSh && DCR_brg_val>=maxAnchT && DCR_brg_val>=maxConcSh){
     govStr = 'Bearing DCR = '+fmt(DCR_brg_val,3);
   } else if(DCR_interact>=maxSh && DCR_interact>=maxAnchT && DCR_interact>=DCR_pryout && DCR_interact>=DCR_vbrk && DCR_interact>0){
@@ -1645,16 +1645,16 @@ function calc(){
   var momLabel = unit==='us'?'kip·in':'kN·m';
   var dp = unit==='us'?2:0;
   var hasMx = ex_ecc > 0, hasMy = ey_ecc > 0;
-  var bearDesc = bearCase==='centric' ? 'fp = Pu/A₁'
-               : bearCase==='full_comp' ? 'Biaxial kern (ex≤N/6, ey≤B/6): fp = (Pu/A₁)·(1+6ex/N+6ey/B)'
+  var bearDesc = bearCase==='centric' ? 'f<sub>p</sub> = P<sub>u</sub>/A₁'
+               : bearCase==='full_comp' ? 'Biaxial kern (e<sub>x</sub>≤N/6, e<sub>y</sub>≤B/6): f<sub>p</sub> = (P<sub>u</sub>/A₁)·(1+6e<sub>x</sub>/N+6e<sub>y</sub>/B)'
                : 'Partial bearing (outside kern): independent uniaxial per axis';
   var bearForm = bearCase==='centric' ? 'A₁ = B·N; fp = Pu/A₁'
                : bearCase==='full_comp' ? 'ex='+fmt(ex_ecc,dp)+' '+lenU+(hasMy?'; ey='+fmt(ey_ecc,dp)+' '+lenU:'')
                : 'ex='+fmt(ex_ecc,dp)+(hasMy?'; ey='+fmt(ey_ecc,dp):'')+' '+lenU+'; Y='+fmt(Y_bear,dp)+' '+lenU;
-  var eccFormStr = 'A₁ = B·N'+(hasMx?'; ex=Mx/Pu='+fmt(ex_ecc,dp)+' '+lenU:'')+(hasMy?'; ey=My/Pu='+fmt(ey_ecc,dp)+' '+lenU:'');
+  var eccFormStr = 'A₁ = B·N'+(hasMx?'; e<sub>x</sub>=M<sub>x</sub>/P<sub>u</sub>='+fmt(ex_ecc,dp)+' '+lenU:'')+(hasMy?'; e<sub>y</sub>=M<sub>y</sub>/P<sub>u</sub>='+fmt(ey_ecc,dp)+' '+lenU:'');
   var eccValStr  = 'A₁ = '+fmt(A1,unit==='us'?1:0)+' '+areaU
-                 +(hasMx?' | ex='+fmt(ex_ecc,dp)+' '+lenU:'')
-                 +(hasMy?' | ey='+fmt(ey_ecc,dp)+' '+lenU:'')
+                 +(hasMx?' | e<sub>x</sub>='+fmt(ex_ecc,dp)+' '+lenU:'')
+                 +(hasMy?' | e<sub>y</sub>='+fmt(ey_ecc,dp)+' '+lenU:'')
                  +((hasMx||hasMy)?' ('+(bearCase==='full_comp'?'kern':'partial')+')':'');
   var tAnchMax = Math.max(T_anch_x, T_anch_y);
   var hasT = tAnchMax > 0;
@@ -1669,8 +1669,8 @@ function calc(){
      desc:'Bearing capacity check',
      form:bearDesc,
      val: hasT
-          ? 'fp = φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | Y = '+fmt(Y_bear,dp)+' '+lenU+' (at capacity — anchor tension governs)'
-          : 'fp_max = '+fmt(fp_max,unit==='us'?4:2)+' '+strsU+' | φFp = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
+          ? 'f<sub>p</sub> = φF<sub>p</sub> = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | Y = '+fmt(Y_bear,dp)+' '+lenU+' (at capacity — anchor tension governs)'
+          : 'f<sub>p,max</sub> = '+fmt(fp_max,unit==='us'?4:2)+' '+strsU+' | φF<sub>p</sub> = '+fmt(phi_Fp,unit==='us'?3:1)+' '+strsU+' | DCR = '+fmt(DCR_brg,3),
      chk: hasT ? '' : DCR_brg}
   ];
   if(hasT){
@@ -1693,25 +1693,25 @@ function calc(){
      chk: ''},
     {num:0,
      desc:'Required plate thickness',
-     form:'tp = ℓ·√(2·fp_max/(φ·Fy))',
-     val: 'tp = '+fmt(tp,unit==='us'?3:1)+' '+lenU,
+     form:'t<sub>p</sub> = ℓ·√(2·f<sub>p,max</sub>/(φ·F<sub>y</sub>))',
+     val: 't<sub>p</sub> = '+fmt(tp,unit==='us'?3:1)+' '+lenU,
      chk: ''}
   );
   if(stiffEnabled && hst > 0){
     var dp3 = unit==='us'?3:1;
-    var effDesc = (stiff_N?'m_eff = m − h_st = '+fmt(m_eff,dp3)+' '+lenU:'')
+    var effDesc = (stiff_N?'m<sub>eff</sub> = m − h<sub>st</sub> = '+fmt(m_eff,dp3)+' '+lenU:'')
                 +(stiff_N&&stiff_B?' | ':'')
-                +(stiff_B?'n_eff = n − h_st = '+fmt(n_eff,dp3)+' '+lenU:'')
+                +(stiff_B?'n<sub>eff</sub> = n − h<sub>st</sub> = '+fmt(n_eff,dp3)+' '+lenU:'')
                 +' → ℓ = '+fmt(ell,dp3)+' '+lenU;
     rows.push({num:0,
      desc:'Stiffener projection — revised ℓ',
-     form:'ℓ = max('+(stiff_N?'m−h_st':'m')+', '+(stiff_B?'n−h_st':'n')+', λn\')',
+     form:'ℓ = max('+(stiff_N?'m−h<sub>st</sub>':'m')+', '+(stiff_B?'n−h<sub>st</sub>':'n')+', λn\')',
      val: effDesc,
      chk: ''});
     if(DCR_stiff > 0) rows.push({num:0,
      desc:'Stiffener plate thickness (bending cantilever)',
-     form:'t_st,req = h_st · √(2·fp_max / (φ·Fy))',
-     val: 't_st,req = '+fmt(tst_req,dp3)+' '+lenU+' | t_st = '+fmt(tst,dp3)+' '+lenU+' | DCR = '+fmt(DCR_stiff,3),
+     form:'t<sub>st,req</sub> = h<sub>st</sub> · √(2·f<sub>p,max</sub> / (φ·F<sub>y</sub>))',
+     val: 't<sub>st,req</sub> = '+fmt(tst_req,dp3)+' '+lenU+' | t<sub>st</sub> = '+fmt(tst,dp3)+' '+lenU+' | DCR = '+fmt(DCR_stiff,3),
      chk: DCR_stiff});
   }
   rows.push(
