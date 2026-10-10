@@ -392,6 +392,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
         </div>
       </div>
 
+      <!-- Weld size warning -->
+      <div id="weld-warn-banner" style="display:none;align-items:center;gap:10px;padding:9px 14px;border-radius:7px;border:1.5px solid #f4c97a;background:var(--orange-bg);margin-bottom:10px">
+        <span style="font-size:1.1rem">&#x26A0;</span>
+        <span id="weld-warn-text" style="font-size:.82rem;color:var(--orange);font-weight:600"></span>
+      </div>
+
       <!-- Connection sketch — populated by syncPrintSVG() before print -->
       <div id="print-st-svg-holder" style="display:none;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid">
         <div class="rpt-sec-title">Connection Sketch</div>
@@ -995,12 +1001,27 @@ function calc(){
     w_max_weld = tp>=6 ? tp-2 : tp;
   }
 
+  var fmtW = unit==='us' ? 4 : 1;
+  var weldTooSmall = w_weld < w_min_weld;
+  var weldTooLarge = w_weld > w_max_weld;
+  var weldInRange  = !weldTooSmall && !weldTooLarge;
   var weldHint = el('weld-size-hint');
   if(weldHint){
-    var fmtW = unit==='us' ? 4 : 1;
-    var weldInRange = w_weld >= w_min_weld && w_weld <= w_max_weld;
     weldHint.textContent = 'J2.2b: '+fmt(w_min_weld,fmtW)+'–'+fmt(w_max_weld,fmtW)+' '+lenU;
     weldHint.style.color = weldInRange ? 'var(--text-dim)' : 'var(--red)';
+  }
+  var weldWarn = el('weld-warn-banner');
+  var weldWarnTxt = el('weld-warn-text');
+  if(weldWarn && weldWarnTxt){
+    if(!weldInRange){
+      var msg = weldTooSmall
+        ? '⚠ Weld too small — J2.2b min: '+fmt(w_min_weld,fmtW)+' '+lenU+' (increase w)'
+        : '⚠ Weld too large — J2.2b max: '+fmt(w_max_weld,fmtW)+' '+lenU+' (reduce w or increase tₚ)';
+      weldWarnTxt.textContent = msg;
+      weldWarn.style.display = 'flex';
+    } else {
+      weldWarn.style.display = 'none';
+    }
   }
 
   var checks = [
