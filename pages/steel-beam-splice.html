@@ -485,23 +485,104 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 <!-- Design Background -->
 <div class="bg-section open no-print" id="bg-sec">
   <div class="bg-hdr" onclick="var s=document.getElementById('bg-sec');s.classList.toggle('open')">
-    <span>Design Background</span><span class="bg-arr">&#9660;</span>
+    <span>Design Background &mdash; Bolted Beam Splice (AISC 360-22 Chapter J)</span><span class="bg-arr">&#9660;</span>
   </div>
   <div class="bg-body">
+
     <div class="bg-panel">
-      <div class="bg-panel-hdr">Web Splice Plates</div>
+      <div class="bg-panel-hdr">Overview &mdash; Beam Splice Connection</div>
       <div class="tb">
-        <p>Two identical plates are placed on opposite sides of the beam web (double-sided). The bolts pass through both plates and the web, putting each bolt in <strong>double shear</strong>: &phi;R<sub>n,bolt</sub> = &phi;F<sub>nv</sub>A<sub>b</sub> &times; 2 per bolt. Plate capacities (shear yield, shear rupture, block shear, bending) are computed for <strong>both plates combined</strong> (&times;2).</p>
-        <p>The eccentricity a<sub>w</sub> is the horizontal distance from the splice centerline to the bolt row centroid. It generates a secondary moment V<sub>u</sub>&middot;a<sub>w</sub> in the plates (plate bending §F11) and a horizontal force component at the critical bolt (elastic vector method).</p>
+        <p>A bolted beam splice joins two beam segments at a field location where a continuous member cannot be delivered or erected as a single piece. The splice must transfer the full factored shear V<sub>u</sub> and moment M<sub>u</sub> across the joint. In most cases the splice is designed as a <strong>fully restrained (FR) moment connection</strong>, meaning it is intended to transfer the same moment and shear as would occur in a continuous beam at that cross-section.</p>
+        <p>The load path is divided into two sub-systems:</p>
+        <table>
+          <tr><th>Sub-system</th><th>Force transferred</th><th>Shear plane</th></tr>
+          <tr><td>Web splice plates (2 plates)</td><td>Shear V<sub>u</sub> + moment web component M<sub>w</sub></td><td>Double shear (2 planes per bolt)</td></tr>
+          <tr><td>Flange splice plates (1 per flange)</td><td>Flange force P<sub>f</sub> = M<sub>u</sub> / (d &minus; t<sub>f</sub>)</td><td>Single shear</td></tr>
+        </table>
+        <p>The moment is typically assumed to be resisted entirely by the flange plates (flange-force model), while the web plates carry only the shear. This simplification is conservative and widely used in practice. Alternatively, a more refined approach distributes moment between the web plates and flange plates in proportion to the web and flange contributions to the section modulus, but DG9 and common practice favor the flange-force approach for its simplicity.</p>
       </div>
     </div>
+
     <div class="bg-panel">
-      <div class="bg-panel-hdr">Flange Splice Plates</div>
+      <div class="bg-panel-hdr">Web Splice Plates &mdash; Double Shear and Eccentricity</div>
       <div class="tb">
-        <p>One plate per flange (outside face), bolted in <strong>single shear</strong>. The flange force is computed as P<sub>f</sub> = M<sub>u</sub> / (d &minus; t<sub>f</sub>), where d &minus; t<sub>f</sub> is the moment arm between flange mid-planes.</p>
-        <p>Checks: bolt shear §J3.6, plate gross tension yield §J4.1 (&phi; = 0.90), plate net section rupture §J4.1 (&phi; = 0.75, one hole deducted in the critical cross-section width), bolt bearing on plate and beam flange §J3.10.</p>
+        <p>Two identical plates are placed symmetrically on opposite sides of the beam web. Each bolt passes through both plates and the web, engaging <strong>two shear planes</strong>, so the bolt shear capacity is doubled relative to single shear: &phi;R<sub>n,bolt</sub> = 2 &times; &phi;F<sub>nv</sub>A<sub>b</sub>. Plate capacities (shear yield, shear rupture, block shear, bending) are summed for <strong>both plates combined</strong>.</p>
+        <p><strong>Eccentricity effect:</strong> the bolt group centroid is offset horizontally by the eccentricity a<sub>w</sub> from the splice centerline. This offset creates a secondary moment M<sub>e</sub> = V<sub>u</sub> &times; a<sub>w</sub> that must be distributed among the bolts in addition to the direct shear. The <strong>elastic vector method</strong> (instantaneous center method, elastic assumption) resolves this: each bolt resists a direct shear component V<sub>d</sub> = V<sub>u</sub>/n and a torsional component proportional to its distance from the bolt group centroid. The critical bolt is the one with the largest resultant force.</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">r<sub>crit</sub> = &radic;((V<sub>direct</sub> + V<sub>torsion,x</sub>)&sup2; + V<sub>torsion,y</sub>&sup2;) &le; &phi;R<sub>n,bolt</sub></p>
+        <p>The plate must also be checked for <strong>out-of-plane bending</strong> due to the eccentric shear (§F11 for plates in bending). The moment in each web plate is M<sub>plate</sub> = V<sub>u</sub> &times; a<sub>w</sub> / 2 (half to each plate), and the plastic section modulus Z = t<sub>p</sub>h<sub>p</sub>&sup2;/4.</p>
       </div>
     </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Flange Splice Plates &mdash; Tension and Compression</div>
+      <div class="tb">
+        <p>One plate is placed on the outside face of each beam flange and bolted through the flange. The flange force at the splice is:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">P<sub>f</sub> = M<sub>u</sub> / (d &minus; t<sub>f</sub>)</p>
+        <p>where d &minus; t<sub>f</sub> is the distance between flange mid-planes (moment arm). Each plate must be adequate in both tension (top flange in negative moment, bottom flange in positive moment) and compression, since the moment direction can reverse depending on the load combination.</p>
+        <p>Design checks for the flange plate in tension (AISC 360-22 Chapter J):</p>
+        <table>
+          <tr><th>Limit state</th><th>Section</th><th>&phi;</th><th>Expression</th></tr>
+          <tr><td>Bolt shear (n<sub>f</sub> bolts)</td><td>§J3.6</td><td>0.75</td><td>&phi;F<sub>nv</sub>A<sub>b</sub> &times; n<sub>f</sub></td></tr>
+          <tr><td>Plate tension yield (gross section)</td><td>§J4.1</td><td>0.90</td><td>&phi;F<sub>y</sub> b<sub>fp</sub> t<sub>fp</sub></td></tr>
+          <tr><td>Plate net section rupture</td><td>§J4.1</td><td>0.75</td><td>&phi;F<sub>u</sub> (b<sub>fp</sub> &minus; d<sub>h</sub>) t<sub>fp</sub></td></tr>
+          <tr><td>Bolt bearing on plate</td><td>§J3.10</td><td>0.75</td><td>Based on clear distance, F<sub>u</sub>, d<sub>b</sub></td></tr>
+          <tr><td>Bolt bearing on beam flange</td><td>§J3.10</td><td>0.75</td><td>Based on flange t<sub>f</sub> and F<sub>u,beam</sub></td></tr>
+        </table>
+        <p>One bolt hole is deducted from the net section for rupture because the critical cross-section (at the outermost bolt nearest the splice) has only one row of holes transverse to the force direction in a single-row configuration. For wider plates with two rows of bolts, both holes would be deducted.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Bolt Bearing &mdash; §J3.10</div>
+      <div class="tb">
+        <p>Bearing strength accounts for the plate material being compressed and deformed by the bolt shank. AISC 360-22 §J3.10 gives two equations based on the clear distance l<sub>c</sub> between bolt holes (or between the hole and the plate edge):</p>
+        <table>
+          <tr><th>Condition</th><th>Nominal bearing strength R<sub>n</sub></th></tr>
+          <tr><td>Deformation at bolt hole is a design consideration</td><td>1.2 l<sub>c</sub> t F<sub>u</sub> &le; 2.4 d<sub>b</sub> t F<sub>u</sub></td></tr>
+          <tr><td>Deformation is not a design consideration</td><td>1.5 l<sub>c</sub> t F<sub>u</sub> &le; 3.0 d<sub>b</sub> t F<sub>u</sub></td></tr>
+        </table>
+        <p>The total bearing capacity of the bolt group equals the sum of individual bolt bearing capacities. End bolts (nearest the plate edge) have smaller clear distances l<sub>c</sub> = e<sub>v</sub> &minus; d<sub>h</sub>/2 and govern when edge distances are small. Interior bolts have l<sub>c</sub> = s &minus; d<sub>h</sub> where s is the bolt pitch. This calculator uses the deformation-controlled equation (1.2 l<sub>c</sub> cap) as the standard design approach, applied separately to the web plate, beam web, flange plate, and beam flange.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Block Shear &mdash; §J4.3</div>
+      <div class="tb">
+        <p>Block shear is a combined failure mode in which a block of material tears out along a shear plane through the bolt holes and a tension plane perpendicular to the load. It is often the governing limit state for web plates with short edge distances or few bolt rows. The nominal strength is:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">R<sub>n</sub> = min(0.6F<sub>u</sub>A<sub>nv</sub> + F<sub>u</sub>A<sub>nt</sub> , 0.6F<sub>y</sub>A<sub>gv</sub> + F<sub>u</sub>A<sub>nt</sub>)</p>
+        <p>where A<sub>gv</sub> = gross shear area = (n&minus;1)s + e<sub>v</sub>) &times; t<sub>p</sub>; A<sub>nv</sub> = net shear area (holes deducted); and A<sub>nt</sub> = net tension area = (e<sub>h</sub> &minus; d<sub>h</sub>/2) &times; t<sub>p</sub>. The &phi; factor for block shear is 0.75. For web splice plates, the computation is performed on one plate and doubled (both plates carry equal load). The horizontal edge distance e<sub>h</sub> from the bolt centerline to the free (non-loaded) edge of the plate defines A<sub>nt</sub>.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Bolt Grades and Thread Condition</div>
+      <div class="tb">
+        <p>The nominal shear stress F<sub>nv</sub> depends on the bolt grade and whether threads are included in the shear plane (N) or excluded (X). AISC Table J3.2 values:</p>
+        <table>
+          <tr><th>Grade</th><th>F<sub>nv</sub> threads included (N) [ksi / MPa]</th><th>F<sub>nv</sub> threads excluded (X) [ksi / MPa]</th></tr>
+          <tr><td>A307 / 4.6</td><td>27 / 160</td><td>27 / 180</td></tr>
+          <tr><td>A325 / 8.8</td><td>48 / 320</td><td>54 / 360</td></tr>
+          <tr><td>A490 / 10.9</td><td>60 / 400</td><td>68 / 450</td></tr>
+        </table>
+        <p>Snug-tight bearing-type connections (most common for splice plates) allow threads in the shear plane (N condition). Fully pretensioned connections or slip-critical connections are required by some codes for seismic or fatigue applications but are not typically required for gravity splice plates. Threads are excluded (X condition) only when the bolt is carefully positioned so the thread run-out does not enter the shear plane — this is difficult to control in the field and the N condition is the standard assumption.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Practical Design Guidance</div>
+      <div class="tb">
+        <p>Successful beam splice design involves balancing several competing requirements. A few practical rules of thumb:</p>
+        <ul style="margin:0;padding-left:18px;line-height:1.8">
+          <li>Place the splice at a point of contraflexure (zero moment) where possible, minimizing flange plate size. In continuous beams this is roughly 20–25 % of the span from an interior support.</li>
+          <li>Use the same bolt diameter throughout the connection — mixing sizes complicates shop fabrication and field inspection.</li>
+          <li>Web plate height h<sub>p</sub> should be at least 0.6d<sub>beam</sub> to provide adequate shear area and avoid large eccentricity moments in the plates.</li>
+          <li>Minimum web plate thickness is typically 5/16 in (8 mm) for weldability and handling; maximum is limited by bearing ratio requirements.</li>
+          <li>Flange plate width should match or exceed the beam flange width to keep the bolt edge distances manageable and to simplify the field layout.</li>
+          <li>For seismic SMF splices, AISC 341 requires the splice to develop the full plastic moment of the beam, which typically controls over the demand-based design used here.</li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 </div>
 

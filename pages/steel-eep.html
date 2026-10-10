@@ -470,47 +470,95 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="bg-panel">
       <div class="bg-panel-hdr">Overview &mdash; Extended End Plate Configurations</div>
       <div class="tb">
-        <p>An extended end plate moment connection transfers both shear and moment from a beam to a column. The plate is shop-welded to the beam end (CJP or fillet welds at flanges and web) and field-bolted to the column flange. The plate extends beyond both beam flanges, placing tension bolts in the extended portions.</p>
-        <p>AISC Design Guide 4 covers three standard configurations:</p>
+        <p>An extended end plate (EEP) moment connection transfers both shear and moment from a beam to a column. The end plate is shop-welded to the beam end using complete-joint-penetration (CJP) groove welds at the flanges and fillet welds along the web. It is then field-bolted to the column flange. Because the plate extends beyond both the top and bottom beam flanges, the tension bolts are placed in the extended portions, maximizing the lever arm and reducing required bolt size.</p>
+        <p>AISC Design Guide 4 (2nd edition) covers three standard configurations. The choice depends on the required moment capacity and whether a stiffer plate or more bolts is preferred:</p>
         <table>
-          <tr><th>Config</th><th>Bolts</th><th>Plate</th><th>Typical use</th></tr>
-          <tr><td>4E</td><td>4 (2 per flange)</td><td>Unstiffened</td><td>Light to moderate moment</td></tr>
-          <tr><td>4ES</td><td>4 (2 per flange)</td><td>Stiffened</td><td>Moderate moment, thinner plate</td></tr>
-          <tr><td>8ES</td><td>8 (4 per flange)</td><td>Stiffened</td><td>Heavy moment connections, seismic</td></tr>
+          <tr><th>Config</th><th>Bolts total</th><th>Plate stiffener</th><th>Typical application</th></tr>
+          <tr><td>4E</td><td>4 (2 per flange)</td><td>None</td><td>Light to moderate moment, gravity frames</td></tr>
+          <tr><td>4ES</td><td>4 (2 per flange)</td><td>Triangular rib at each flange</td><td>Moderate moment with reduced plate thickness</td></tr>
+          <tr><td>8ES</td><td>8 (4 per flange)</td><td>Triangular rib at each flange</td><td>Heavy moment, moment frames, seismic SMF/IMF</td></tr>
         </table>
-        <p>Design checks include: bolt tension (with prying), end plate flexural yielding (yield line method), column flange flexural yielding, column web local yielding, column web local crippling, column web compression buckling, panel zone shear, and weld design.</p>
+        <p>End plate connections are favored in pre-engineered metal buildings and moment frames because the bolted field splice speeds erection and the shop-welded plate allows tight quality control on the CJP welds. Design checks span the full load path: bolt tension including prying action, end plate flexural yielding (yield line method), and five local limit states at the column web and flanges per AISC 360-22 §J10.</p>
       </div>
     </div>
 
     <div class="bg-panel">
-      <div class="bg-panel-hdr">Bolt Tension with Prying &mdash; DG4 §3</div>
+      <div class="bg-panel-hdr">Flange Force and Bolt Tension &mdash; DG4 §3</div>
       <div class="tb">
-        <p>The tension force per bolt row is determined from the applied moment. For an 8ES configuration with 4 bolt rows (2 above top flange, 2 below bottom flange), DG4 uses a simplified model where each bolt row carries a tributary share of the flange force T<sub>f</sub> = M<sub>u</sub> / d<sub>eff</sub>.</p>
-        <p>Prying action amplifies the bolt tension. DG4 provides a yield line model for the end plate that gives the no-prying bolt force limit and the plate thickness required to preclude prying. When t<sub>p</sub> &ge; t<sub>p,req</sub> (no-prying condition), the bolt design force equals T<sub>f</sub>/n<sub>bolts per row</sub>.</p>
+        <p>The factored flange force is T<sub>f</sub> = M<sub>u</sub> / d<sub>eff</sub>, where d<sub>eff</sub> is the center-to-center distance between the top and bottom bolt rows (or an effective depth for 4E/4ES configurations). For the 8ES configuration, DG4 distributes T<sub>f</sub> equally among the four bolt rows (two inner, two outer), giving T<sub>bolt</sub> = T<sub>f</sub> / 4 per bolt.</p>
+        <p><strong>No-prying design philosophy:</strong> DG4 uses the &ldquo;no-prying&rdquo; approach — the end plate is made thick enough so that prying forces are negligible. The required plate thickness is:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">t<sub>p,req</sub> = &radic;(T<sub>f</sub> / (&phi; &middot; F<sub>y</sub> &middot; Y<sub>p</sub>))</p>
+        <p>When the provided plate thickness t<sub>p</sub> &ge; t<sub>p,req</sub>, each bolt is designed for T<sub>bolt</sub> alone, without any prying amplification. If t<sub>p</sub> &lt; t<sub>p,req</sub> the actual prying force must be calculated and added to T<sub>bolt</sub> before checking bolt tension &phi;F<sub>nt</sub>A<sub>b</sub> per §J3.6. This calculator uses the no-prying model and flags when the provided thickness falls below the required value.</p>
+        <p>The bolt design strength in tension is &phi;R<sub>n</sub> = &phi;F<sub>nt</sub>A<sub>b</sub> with &phi; = 0.75. For high-strength bolts the nominal tensile stress F<sub>nt</sub> is taken from AISC Table J3.2 (e.g. 90 ksi / 620 MPa for A325/8.8). For combined shear and tension, F<sub>nt</sub> must be reduced, but shear demand on end plate bolts is typically small relative to the tension capacity.</p>
       </div>
     </div>
 
     <div class="bg-panel">
-      <div class="bg-panel-hdr">End Plate Flexure &mdash; Yield Line Method</div>
+      <div class="bg-panel-hdr">End Plate Flexure &mdash; Yield Line Method (DG4 §3.2)</div>
       <div class="tb">
-        <p>The end plate is designed using a yield line model (DG4 §3.2). The virtual work method gives the required plate thickness based on the plastic moment capacity per unit length m<sub>p</sub> = F<sub>y</sub> t<sub>p</sub>&sup2; / 4. Each configuration has a specific yield line pattern that accounts for the bolt positions (p<sub>f</sub>, g, p<sub>b</sub>) and plate width b<sub>p</sub>.</p>
+        <p>The end plate is modeled as a plate bending element using the virtual work (yield line) method. A compatible pattern of yield lines — straight lines across which the plate forms plastic hinges — is assumed, and internal virtual work equated to external work to solve for the plate strength. The result is a yield line parameter Y<sub>p</sub> that depends on the bolt gage g, bolt pitch p<sub>f</sub>, inner bolt pitch p<sub>b</sub>, and plate width b<sub>p</sub>.</p>
+        <p>The design strength of the end plate against flexural yielding is:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">&phi;R<sub>n</sub> = &phi; &middot; F<sub>y</sub> &middot; t<sub>p</sub>&sup2; &middot; Y<sub>p</sub> &nbsp;(&phi; = 0.90)</p>
+        <p>For the 4E and 4ES configurations (DG4 Table 3-1):</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">s = &radic;(b<sub>p</sub> &middot; g) / 2<br>Y<sub>p</sub> = (b<sub>p</sub>/2) &middot; (1/p<sub>f</sub> + 1/s) + 2s/g &minus; 0.5</p>
+        <p>For 8ES, an additional inner-row term 1/p<sub>b</sub> is added inside the parenthesis. A larger plate width b<sub>p</sub> increases Y<sub>p</sub>, reducing the required plate thickness. The plate stiffener in 4ES/8ES configurations does not directly enter the yield line formula but controls plate behavior by preventing out-of-plane buckling near the compression flange.</p>
       </div>
     </div>
 
     <div class="bg-panel">
       <div class="bg-panel-hdr">Column-Side Checks &mdash; AISC 360-22 §J10</div>
       <div class="tb">
-        <p>The column must be checked for the concentrated flange force T<sub>f</sub> delivered by the beam flanges through the end plate. Limit states and applicability:</p>
+        <p>The concentrated force T<sub>f</sub> delivered by the beam flange to the column must be checked against five local limit states. Each applies to the column section near the beam flange level:</p>
         <table>
-          <tr><th>Limit state</th><th>Section</th><th>&phi;</th><th>Waived when</th></tr>
-          <tr><td>Flange local bending</td><td>§J10.1</td><td>0.90</td><td>Column stiffeners provided</td></tr>
-          <tr><td>Web local yielding</td><td>§J10.2</td><td>1.00</td><td>Double-sided or stiffeners</td></tr>
-          <tr><td>Web local crippling</td><td>§J10.3</td><td>0.75</td><td>Double-sided or stiffeners</td></tr>
-          <tr><td>Web compression buckling</td><td>§J10.5</td><td>0.90</td><td>Double-sided or stiffeners</td></tr>
-          <tr><td>Panel zone shear</td><td>§J10.6</td><td>0.90</td><td>Always checked</td></tr>
+          <tr><th>Limit state</th><th>Section</th><th>&phi;</th><th>Formula (simplified)</th><th>Waived when</th></tr>
+          <tr><td>Flange local bending</td><td>§J10.1</td><td>0.90</td><td>6.25 t<sub>f,col</sub>&sup2; F<sub>y,col</sub></td><td>Column stiffeners provided</td></tr>
+          <tr><td>Web local yielding</td><td>§J10.2</td><td>1.00</td><td>F<sub>y,col</sub> t<sub>w,col</sub>(5k + l<sub>b</sub>)</td><td>Double-sided or stiffeners</td></tr>
+          <tr><td>Web local crippling</td><td>§J10.3</td><td>0.75</td><td>0.80 t<sub>w</sub>&sup2; [1 + 3(l<sub>b</sub>/d)(t<sub>w</sub>/t<sub>f</sub>)<sup>1.5</sup>] &radic;(EF<sub>y</sub>t<sub>f</sub>/t<sub>w</sub>)</td><td>Double-sided or stiffeners</td></tr>
+          <tr><td>Web compression buckling</td><td>§J10.5</td><td>0.90</td><td>24 t<sub>w</sub>&sup3; &radic;(EF<sub>y</sub>) / h</td><td>Double-sided or stiffeners</td></tr>
+          <tr><td>Panel zone shear</td><td>§J10.6</td><td>0.90</td><td>0.60 F<sub>y,col</sub> d<sub>col</sub> t<sub>w,col</sub> (1 + 3b<sub>cf</sub>t<sub>cf</sub>&sup2;/d<sub>b</sub>d<sub>col</sub>t<sub>w</sub>)</td><td>Always checked</td></tr>
         </table>
-        <p><strong>Double-sided connection</strong> (beams framing both sides of the column, strong axis): the web receives equal and opposite compression forces that cancel, so §J10.2/J10.3/J10.5 need not be checked. However, each column flange is pulled outward independently by its own beam — there is no direct load path between the two flanges — so §J10.1 still applies.</p>
-        <p><strong>Column stiffeners (continuity plates)</strong> at beam flange level connect the two column flanges directly, creating a load path that bypasses the column web and flanges. With stiffeners, all §J10.1–J10.5 checks are waived. Doubler plates address panel zone shear (§J10.6) independently.</p>
+        <p><strong>Double-sided connection:</strong> when beams frame into both sides of an I-shaped column on the strong axis with equal and opposite moments, the web receives balanced compressive forces at the beam compression flange level. The net web force is zero, so §J10.2 (web local yielding), §J10.3 (web crippling), and §J10.5 (web compression buckling) need not be checked. However, the tension flanges of each beam pull their respective column flanges outward on opposite sides — these are separate flanges with no direct load path between them, so §J10.1 (column flange local bending) still governs and must be checked for each flange independently.</p>
+        <p><strong>Column stiffeners (continuity plates)</strong> welded at beam flange level bridge the two column flanges directly. This creates a direct load path across the column depth, preventing flange bending deformation and distributing the concentrated force into the web over a larger length. When continuity plates are provided, all §J10.1–J10.5 checks are waived. The plate thickness is typically t<sub>st</sub> &ge; t<sub>f,beam</sub>/2, and they are usually fillet-welded to the flanges and CJP-welded to the web.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Panel Zone Shear &mdash; §J10.6</div>
+      <div class="tb">
+        <p>The panel zone is the column web panel bounded by the column flanges and the continuity plates (or beam flange levels). It resists the horizontal shear force induced by the difference in beam flange forces on each side of the column. For a single-sided connection the panel zone shear demand is approximately:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">V<sub>u,pz</sub> = T<sub>f</sub> &minus; V<sub>col</sub> &asymp; M<sub>u</sub>/d<sub>b</sub> &minus; V<sub>col</sub></p>
+        <p>The AISC 360-22 §J10.6 panel zone shear strength accounts for strain hardening of the column flanges through a term involving the column flange geometry (b<sub>cf</sub>, t<sub>cf</sub>):</p>
+        <p style="font-family:var(--mono);font-size:.82rem;padding:6px 10px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--accent)">&phi;R<sub>n</sub> = 0.90 &times; 0.60 F<sub>y,col</sub> d<sub>col</sub> t<sub>w,col</sub> (1 + 3b<sub>cf</sub>t<sub>cf</sub>&sup2;/(d<sub>b</sub>d<sub>col</sub>t<sub>w</sub>))</p>
+        <p>When the panel zone is inadequate, doubler plates welded to the column web increase the effective web thickness. Doubler plates are distinct from continuity plates: continuity plates address flange bending (§J10.1), while doubler plates address panel zone shear (§J10.6). Both may be required simultaneously in heavily loaded moment connections.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Weld Design &mdash; Beam-to-Plate Welds</div>
+      <div class="tb">
+        <p>The end plate is shop-welded to the beam. AISC DG4 specifies weld requirements based on the load path:</p>
+        <table>
+          <tr><th>Location</th><th>Weld type</th><th>Design basis</th></tr>
+          <tr><td>Beam tension flange to plate</td><td>CJP groove weld</td><td>Full flange force T<sub>f</sub> = F<sub>y</sub>b<sub>f</sub>t<sub>f</sub></td></tr>
+          <tr><td>Beam compression flange to plate</td><td>CJP groove weld</td><td>Full flange force (compression)</td></tr>
+          <tr><td>Beam web to plate (moment zone)</td><td>Fillet, both sides</td><td>Shear demand V<sub>u</sub> / (2 × effective length)</td></tr>
+          <tr><td>Beam web to plate (shear zone)</td><td>Fillet, both sides</td><td>Remaining web shear</td></tr>
+        </table>
+        <p>CJP welds at the flanges must be made with backing bars and are typically inspected by ultrasonic testing (UT) for seismic applications. The fillet welds along the web transfer the shear reaction V<sub>u</sub> uniformly. The minimum fillet weld size is governed by the thicker of the two connected parts per AISC Table J2.4, and the maximum size along an edge equals the plate thickness minus 1/16 in (2 mm) for plates 1/4 in (6 mm) or thicker.</p>
+      </div>
+    </div>
+
+    <div class="bg-panel">
+      <div class="bg-panel-hdr">Geometry Requirements &mdash; Bolt Spacing and Edge Distance</div>
+      <div class="tb">
+        <p>AISC 360-22 §J3 governs bolt spacing and edge distances in the end plate and column flange. Key requirements:</p>
+        <table>
+          <tr><th>Parameter</th><th>Minimum</th><th>Maximum</th></tr>
+          <tr><td>Center-to-center spacing s</td><td>2⅔ d<sub>b</sub> (preferred 3d<sub>b</sub>)</td><td>Lesser of 24t or 12 in (300 mm)</td></tr>
+          <tr><td>Edge distance e<sub>v</sub>, e<sub>h</sub></td><td>1.25 d<sub>b</sub> (preferred 1.5d<sub>b</sub>)</td><td>Lesser of 12t or 6 in (150 mm)</td></tr>
+          <tr><td>Plate width b<sub>p</sub></td><td>g + 2 × (1.5 d<sub>b</sub>)</td><td>Beam flange width + 1 in (25 mm)</td></tr>
+        </table>
+        <p>The bolt gage g is typically matched to the column flange gage table (AISC Steel Construction Manual Part 1) for a given column series. For W14 columns g &asymp; 5.5 in (140 mm); for W10–W12 g is often 4–4.5 in (100–115 mm). Using the standard gage allows the column to be drilled in the shop without requiring special setups. The plate width b<sub>p</sub> should be at least the beam flange width, and it must provide adequate edge distance on both sides of the bolt gage.</p>
       </div>
     </div>
 
