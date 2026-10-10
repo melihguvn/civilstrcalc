@@ -393,7 +393,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <p>This is the nominal compressive strength without length effects (pure squash). The 0.85 factor reflects that concrete in columns is less fully stressed than in pure compression tests (sustained load, imperfections).</p>
       <h4>Effective Stiffness EI<sub>eff</sub> — §I2.1b</h4>
       <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
-        EI<sub>eff</sub> = E<sub>s</sub>I<sub>s</sub> + E<sub>s</sub>I<sub>r</sub> + C<sub>1</sub>E<sub>c</sub>I<sub>c</sub><br>
+        EI<sub>eff</sub> = E<sub>s</sub>I<sub>s</sub> + 0.5E<sub>s</sub>I<sub>r</sub> + C<sub>1</sub>E<sub>c</sub>I<sub>c</sub><br>
         C<sub>1</sub> = min(0.25 + 3(A<sub>s</sub>+A<sub>r</sub>)/A<sub>g</sub>, &nbsp;0.7)
       </div>
       <p>C<sub>1</sub> accounts for creep and sustained loading effects on concrete stiffness. A higher steel ratio increases C<sub>1</sub>, raising the effective stiffness. The cap of 0.70 limits unconservative overestimation for very steel-heavy sections.</p>
@@ -459,12 +459,12 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <tr><td>I<sub>s,x</sub> (W10×49)</td><td>= 272 in⁴</td></tr>
         <tr><td>I<sub>r,x</sub> = Σ A<sub>bar</sub>×y<sub>i</sub>²</td><td>≈ 620 in⁴</td></tr>
         <tr><td>I<sub>c,x</sub> = 24⁴/12 − I<sub>s,x</sub> − I<sub>r,x</sub></td><td>≈ 26,700 in⁴</td></tr>
-        <tr><td>EI<sub>eff,x</sub> = 29000×272 + 29000×620 + 0.358×4074×26700</td><td>≈ 64,900,000 kip·in²</td></tr>
+        <tr><td>EI<sub>eff,x</sub> = 29000×272 + 0.5×29000×620 + 0.358×4074×26700</td><td>≈ 55,820,000 kip·in²</td></tr>
         <tr><td>KL = 0.65 × 14 × 12</td><td>= 109.2 in</td></tr>
-        <tr><td>P<sub>e,x</sub> = π²×64,900,000/109.2²</td><td>≈ 53,600 kips</td></tr>
-        <tr><td>P<sub>no</sub>/P<sub>e</sub> = 3459/53600</td><td>= 0.065 &lt; 2.25</td></tr>
-        <tr><td>P<sub>n</sub> = 3459 × 0.658<sup>0.065</sup></td><td>≈ <b>3341 kips</b></td></tr>
-        <tr><td>&phi;<sub>c</sub>P<sub>n</sub> = 0.75 × 3341</td><td>= <b>2506 kips</b></td></tr>
+        <tr><td>P<sub>e,x</sub> = π²×55,820,000/109.2²</td><td>≈ 46,200 kips</td></tr>
+        <tr><td>P<sub>no</sub>/P<sub>e</sub> = 3459/46200</td><td>= 0.075 &lt; 2.25</td></tr>
+        <tr><td>P<sub>n</sub> = 3459 × 0.658<sup>0.075</sup></td><td>≈ <b>3352 kips</b></td></tr>
+        <tr><td>&phi;<sub>c</sub>P<sub>n</sub> = 0.75 × 3352</td><td>= <b>2514 kips</b></td></tr>
       </table>
       <p>P-M interaction via PSDM: demand P<sub>u</sub> = 500 kips, M<sub>ux</sub> = 150 kip-ft → DCR ≈ 0.36 (OK).</p>
     </div>
@@ -1185,8 +1185,8 @@ function srcCalc() {
   const Ir_y = bars.reduce((s,r) => s + r.A*r.x*r.x, 0);
   const Ic_x = B*Math.pow(H,3)/12 - ws.Ix - Ir_x;
   const Ic_y = H*Math.pow(B,3)/12 - ws.Iy - Ir_y;
-  const EIeff_x = Es*ws.Ix + Es*Ir_x + C1*Ec*Math.max(0,Ic_x);
-  const EIeff_y = Es*ws.Iy + Es*Ir_y + C1*Ec*Math.max(0,Ic_y);
+  const EIeff_x = Es*ws.Ix + 0.5*Es*Ir_x + C1*Ec*Math.max(0,Ic_x);
+  const EIeff_y = Es*ws.Iy + 0.5*Es*Ir_y + C1*Ec*Math.max(0,Ic_y);
 
   // Column buckling
   const KL = SRC_K * Lv * cfac;
@@ -1373,7 +1373,7 @@ function srcCalc() {
   // ── Strength table ──
   const strengthHTML =
     `<div class="rpt-sec">` +
-    `<div class="rpt-sec-title">&sect; I2.2 / &sect;I3.4 &mdash; Axial &amp; Flexural Strength</div>` +
+    `<div class="rpt-sec-title">&sect; I2.1 / &sect;I3.4 &mdash; Axial &amp; Flexural Strength</div>` +
     `<table class="res-tbl">` +
     r2('P<sub>no</sub> (squash)',       `${fmt0(pPnoU)} ${fU}`) +
     r2('KL = K &times; L',             `${fmt(SRC_K*Lv,2)} ${Lunit}`) +

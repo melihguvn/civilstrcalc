@@ -248,7 +248,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:3px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:400;cursor:pointer;">
             <input type="radio" name="cb-stud-pos" id="cb-pos-unfav" value="unfav" checked onchange="cbAutoCalc()">
-            Unfavorable &mdash; R<sub>p</sub> = 0.625
+            Unfavorable &mdash; R<sub>p</sub> = 0.60
           </label>
           <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:400;cursor:pointer;">
             <input type="radio" name="cb-stud-pos" id="cb-pos-fav" value="fav" onchange="cbAutoCalc()">
@@ -836,14 +836,15 @@ function cbMnFull(d, bf, tf, tw, Fy, Cc, Cs, fpc, beff, hr, tc, isUS) {
     return isUS ? Cs * arm / 12 : Cs * 1000 * arm / 1e6;
   }
   // PNA in steel: plastic stress distribution (Cc < Cs)
-  var Fcomp = (Cs - Cc) / 2;       // compression force in steel
+  var Fcomp = (Cs - Cc) / 2;       // compression force in steel (kips US / kN SI)
   var d_c   = hr + tc / 2;         // concrete resultant above top of steel
-  var Ff = Fy * bf * tf;
-  var Fw = Fy * tw * (d - 2 * tf);
+  var sc = isUS ? 1 : 1/1000;      // N→kN so Ff/Fw match Fcomp units
+  var Ff = Fy * bf * tf * sc;
+  var Fw = Fy * tw * (d - 2 * tf) * sc;
   var py;
-  if      (Fcomp <= Ff)       py = Fcomp / (Fy * bf);
-  else if (Fcomp <= Ff + Fw)  py = tf + (Fcomp - Ff) / (Fy * tw);
-  else                         py = Math.min(d, d - tf + (Fcomp - Ff - Fw) / (Fy * bf));
+  if      (Fcomp <= Ff)       py = Fcomp / (Fy * bf * sc);
+  else if (Fcomp <= Ff + Fw)  py = tf + (Fcomp - Ff) / (Fy * tw * sc);
+  else                         py = Math.min(d, d - tf + (Fcomp - Ff - Fw) / (Fy * bf * sc));
   var Zpna = cbZpna(d, bf, tf, tw, py);
   if (isUS) return (Fy * Zpna + Cc * (d_c + py)) / 12;
   return (Fy * Zpna + Cc * 1000 * (d_c + py)) / 1e6;
@@ -1009,7 +1010,7 @@ function cbCalc() {
   var max_per_rib   = (rib_allows2 && bf_allows2) ? 2 : 1;
   var double_row    = (max_per_rib === 2);
   var Rg  = double_row ? 0.85 : 1.0;
-  var Rp  = document.getElementById('cb-pos-fav').checked ? 0.75 : 0.625; // AISC §I8.2a Table C-I8.2a
+  var Rp  = document.getElementById('cb-pos-fav').checked ? 0.75 : 0.60; // AISC 360-22 §I8.2a Table C-I8.2a
   var Qn_basic = isUS
     ? 0.5 * Asa * Math.sqrt(fpc * Ec)
     : 0.5 * Asa * Math.sqrt(fpc * Ec) / 1000;
@@ -1031,7 +1032,7 @@ function cbCalc() {
   var N_half_need = N_half_str;   // before spacing check
 
   // 2. §I8.2c max spacing → minimum count from equal-division spacing
-  var max_stud_spc    = isUS ? Math.min(8*(tc+hr), 36) : Math.min(8*(tc+hr), 900);
+  var max_stud_spc    = isUS ? Math.min(8*(tc+hr), 36) : Math.min(8*(tc+hr), 915);
   var N_half_spc      = eta_in > 0 ? Math.ceil(half_span / max_stud_spc) : 0;
   var spacing_governs = eta_in > 0 && N_half_spc > N_half_str;
   if (spacing_governs) N_half_need = N_half_spc;
@@ -1229,7 +1230,7 @@ function cbCalc() {
      + '<tr><td>Beam spacing s</td><td>'+s+(isUS?' ft':' m')+'</td></tr>'
      + '<tr><td>t<sub>c</sub> / h<sub>r</sub></td><td>'+tc+' / '+hr+uL+'</td></tr>'
      + '<tr><td>w<sub>r</sub> / rib pitch</td><td>'+wr+' / '+deck_pitch+uL+'</td></tr>'
-     + '<tr><td>Stud position</td><td>'+(Rp===0.75?'Favorable (e<sub>mid</sub>) &mdash; R<sub>p</sub> = 0.75':'Unfavorable &mdash; R<sub>p</sub> = 0.625')+'</td></tr>'
+     + '<tr><td>Stud position</td><td>'+(Rp===0.75?'Favorable (e<sub>mid</sub>) &mdash; R<sub>p</sub> = 0.75':'Unfavorable &mdash; R<sub>p</sub> = 0.60')+'</td></tr>'
      + '<tr><td>f\'<sub>c</sub></td><td>'+fpc+(isUS?' ksi':' MPa')+'</td></tr>'
      + '<tr><td>&eta; input</td><td>'+fmt(eta_in*100,0)+'%</td></tr>'
      + '<tr><td>Constr. live L<sub>c</sub></td><td>'+fmt(Lc_line,3)+(isUS?' kip/ft':' kN/m')+'</td></tr>'
@@ -1339,7 +1340,7 @@ function cbCalc() {
        + '<tr><td>Layout</td><td>' + layout_str + layout_badge + '</td></tr>'
        + '<tr><td>Total studs (full span)</td><td>' + (N_half*2) + ' &nbsp;<span style="color:var(--text-dim);font-size:.70rem">(' + N_half + ' per half)</span>' + (!stud_ok ? ' &nbsp;<span style="font-size:.70rem;color:var(--text-dim)">— max achievable &eta; = '+fmt(eta_max*100,1)+'%</span>' : '') + '</td></tr>'
        + '<tr><td>Stud spacing (equal)</td><td>' + (N_half>0 ? '(L/2)/N = '+fmt(half_span,isUS?1:0)+'/'+N_half+' = '+fmt(stud_spacing_val,isUS?1:0)+uL+' c/c' : '&mdash;') + (spacing_governs ? ' &nbsp;<span style="font-size:.70rem;color:var(--accent);font-weight:600;">&sect;I8.2c governs</span>' : '') + (!min_spc_ok ? ' &nbsp;<span style="font-size:.70rem;color:#c0392b;font-weight:600;">s &lt; s<sub>min</sub></span>' : '') + '</td></tr>'
-       + '<tr><td>Max spacing §I8.2c</td><td>' + fmt(max_stud_spc,isUS?1:0)+uL + ' = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'900 mm')+')</td></tr>'
+       + '<tr><td>Max spacing §I8.2c</td><td>' + fmt(max_stud_spc,isUS?1:0)+uL + ' = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'915 mm')+')</td></tr>'
        + '<tr><td>Min spacing §I8.2b</td><td>6&times;d<sub>s</sub> = 6&times;'+fmt(ds,isUS?3:0)+(isUS?' in':' mm')+' = '+fmt(s_min,isUS?2:0)+uL + (min_spc_ok ? '' : ' &nbsp;<span style="font-size:.70rem;color:#c0392b;font-weight:600;">NOT OK</span>') + '</td></tr>'
        + '<tr><td>Ribs per half-span</td><td>' + N_ribs_half + ' (deck pitch = '+deck_pitch+(isUS?' in':' mm')+')</td></tr>'
        + '<tr><td>Max studs per rib</td><td>' + max_per_rib + ' &nbsp;<span style="font-size:.70rem;color:var(--text-dim)">(' + (double_row ? 'double-row permitted: w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&ge;1.5, b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&ge;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm') : 'single-row only: ' + (!rib_allows2 ? 'w<sub>r</sub>/h<sub>r</sub>=' + fmt(wr_hr_ratio,2) + '&lt;1.5' : 'b<sub>f</sub>=' + fmt(bf,isUS?2:0) + (isUS?' in':' mm') + '&lt;' + fmt(bf_min_2studs,isUS?2:0) + (isUS?' in':' mm'))) + ')</span></td></tr>'
@@ -1415,7 +1416,7 @@ function cbCalc() {
     var stepJ_fml = '&eta; = '+fmt(eta_in*100,0)+'% &rarr; &Sigma;Q<sub>n,req</sub> = '+fmt(SQn_req,1)+uF
       + '<br>N<sub>str</sub> = &lceil;&Sigma;Q<sub>n,req</sub>/Q<sub>n</sub>&rceil; = &lceil;'+fmt(SQn_req/Qn,2)+'&rceil; = '+N_half_str+' (strength)';
     if (spacing_governs) {
-      stepJ_fml += '<br>s<sub>max</sub> = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'900 mm')+') = '+fmt(max_stud_spc,isUS?1:0)+uL
+      stepJ_fml += '<br>s<sub>max</sub> = min(8&times;(t<sub>c</sub>+h<sub>r</sub>), '+(isUS?'36 in':'915 mm')+') = '+fmt(max_stud_spc,isUS?1:0)+uL
                + '<br>N<sub>spc</sub> = &lceil;(L/2) / s<sub>max</sub>&rceil; = &lceil;'+fmt(half_span,isUS?1:0)+'/'+fmt(max_stud_spc,isUS?1:0)+'&rceil; = '+N_half_spc+' <strong>(&sect;I8.2c governs)</strong>';
     }
     if (!stud_ok) {
@@ -1437,7 +1438,7 @@ function cbCalc() {
 
   h += step('L','Shear Capacity &sect;I4.2 + &sect;G2.1',
     'h/t<sub>w</sub> = '+fmt(h_tw,1)+(h_tw<=lim_htw?' &le; ':' &gt; ')+fmt(lim_htw,1)+' &rarr; C<sub>v1</sub> = '+fmt(Cv1,2)
-    +'<br>&phi;V<sub>n</sub> = 1.0&times;0.6F<sub>y</sub>A<sub>w</sub>C<sub>v1</sub>',
+    +'<br>&phi;V<sub>n</sub> = '+fmt(phi_v,2)+'&times;0.6F<sub>y</sub>A<sub>w</sub>C<sub>v1</sub>',
     fmt(phi_Vn,1)+uV);
 
   h += step('M','Lower-Bound Moment of Inertia &sect;C-I3',
