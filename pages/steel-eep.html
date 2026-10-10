@@ -776,12 +776,22 @@ function calc(){
   var Tf_base   = unit==='si' ? Tf*1000 : Tf;      /* N (SI) or kip (US) */
   var tp_req    = Yp>0 ? Math.sqrt(Tf_base/(phi_pl*Fy_p*Yp)) : 0;
 
+  /* Double-sided flag — used by §J10.1 and §J10.5 */
+  /* AISC 360-22 Commentary §J10.1: balanced double-sided forces → §J10.1 N/A */
+  /* AISC 360-22 Commentary §J10.5: balanced double-sided forces → §J10.5 N/A */
+  var doubleSided = !!(el('chk-double-sided') && el('chk-double-sided').checked);
+
   /* ── 3. Column flange local bending §J10.1 ── */
   /* Rn = 6.25 × tf_col² × Fyf  (one concentrated transverse force) */
-  var phi_Rn_cfb = phi_cfb * 6.25 * col.tf*col.tf * Fy_c;
-  /* SI: Rn comes out in N (MPa × mm²), convert to kN */
-  if(unit==='si') phi_Rn_cfb /= 1000;
-  var DCR_cfb = phi_Rn_cfb>0 ? Tf/phi_Rn_cfb : Infinity;
+  /* N/A for balanced double-sided connections (Commentary §J10.1) */
+  var phi_Rn_cfb, DCR_cfb;
+  if(doubleSided){
+    phi_Rn_cfb = Infinity; DCR_cfb = 0;
+  } else {
+    phi_Rn_cfb = phi_cfb * 6.25 * col.tf*col.tf * Fy_c;
+    if(unit==='si') phi_Rn_cfb /= 1000;
+    DCR_cfb = phi_Rn_cfb>0 ? Tf/phi_Rn_cfb : Infinity;
+  }
 
   /* ── 4. Column web local yielding §J10.2 ── */
   /* Bearing length lb = tf_beam + 2×tp (load spreads through plate) */
@@ -803,8 +813,6 @@ function calc(){
   var DCR_cwc = phi_Rn_cwc>0 ? Tf/phi_Rn_cwc : Infinity;
 
   /* ── 6. Column web compression buckling §J10.5 (Eq. J10-8) ── */
-  /* Double-sided (interior column): forces may be balanced — user can skip this check */
-  var doubleSided = !!(el('chk-double-sided') && el('chk-double-sided').checked);
   var h_col = col.d - 2*col.tf;
   var phi_Rn_cwb, DCR_cwb;
   if(doubleSided){
@@ -831,7 +839,7 @@ function calc(){
   var checks=[
     {name:'Bolt tension §J3.6',               cap:phi_Rnt_total, DCR:DCR_bolt,  group:'bolt'},
     {name:'End plate — no-prying (DG4)',       cap:phi_Rn_pl,     DCR:DCR_plate, group:'plate'},
-    {name:'Col. flange local bending §J10.1',  cap:phi_Rn_cfb,   DCR:DCR_cfb,   group:'col'},
+    {name:'Col. flange local bending §J10.1',  cap:phi_Rn_cfb,   DCR:DCR_cfb,   group:'col', na:doubleSided},
     {name:'Col. web local yielding §J10.2',    cap:phi_Rn_cwy,   DCR:DCR_cwy,   group:'col'},
     {name:'Col. web crippling §J10.3',         cap:phi_Rn_cwc,   DCR:DCR_cwc,   group:'col'},
     {name:'Col. web comp. buckling §J10.5',    cap:phi_Rn_cwb,   DCR:DCR_cwb,   group:'col', na:doubleSided},
