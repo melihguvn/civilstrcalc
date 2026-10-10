@@ -662,7 +662,7 @@ var BOLT_GRADES_SI = [
   ['5.6',   200, 225],   // fub=500 MPa
   ['5.8',   208, 234],   // fub=520 MPa
   ['6.8',   240, 270],   // fub=600 MPa
-  ['8.8',   330, 372],   // Group A — AISC 360-22 Table J3.2M
+  ['8.8',   320, 372],   // Group A — AISC 360-22 Table J3.2M
   ['10.9',  414, 469]    // Group B — AISC 360-22 Table J3.2M
 ];
 
@@ -889,8 +889,10 @@ function calc(){
   var phi_rupt  = 0.75;
   var phi_bs    = 0.75;
 
-  // Standard hole diameter
+  // Standard hole diameter (for bolt spacing / bearing checks)
   var dh = unit==='us' ? db + 1/16 : db + 2;
+  // Net area hole deduction per AISC 360-22 §B4.3b: nominal hole + 1/16" damage = db + 1/8" (US) / db + 4 mm (SI)
+  var dh_net = unit==='us' ? db + 1/8 : db + 4;
   var Ab = Math.PI/4 * db * db;
   var hp = (n-1)*s + 2*ev;
 
@@ -907,21 +909,21 @@ function calc(){
   var phi_Rwy = phi_yield * 0.60 * Fy_web * d_web * tw;
 
   // 3b. Web shear rupture — net section within bolt-group height hp
-  // Holes exist only in the hp zone; net area = (hp - n*dh)*tw
-  var Anv_web = Math.max(hp - n*dh, 0) * tw;
+  // Holes exist only in the hp zone; net area = (hp - n*dh_net)*tw
+  var Anv_web = Math.max(hp - n*dh_net, 0) * tw;
   var phi_Rwr = phi_rupt * 0.60 * Fu_web * Anv_web;
 
   // 4. Plate shear yielding
   var phi_Rsy = phi_yield * 0.60 * Fy_pl * hp * tp;
 
   // 5. Plate shear rupture
-  var Anv_rupt = (hp - n*dh) * tp;
+  var Anv_rupt = (hp - n*dh_net) * tp;
   var phi_Rsr  = phi_rupt * 0.60 * Fu_pl * Math.max(Anv_rupt, 0);
 
   // 6. Block shear on plate
   var Agv_bs = ((n-1)*s + ev) * tp;
-  var Anv_bs = Math.max(Agv_bs - (n-0.5)*dh*tp, 0);
-  var Ant_bs = Math.max((eh - dh/2) * tp, 0);
+  var Anv_bs = Math.max(Agv_bs - (n-0.5)*dh_net*tp, 0);
+  var Ant_bs = Math.max((eh - dh_net/2) * tp, 0);
   var Ubs = 1.0;
   var Rbs_a = 0.60*Fu_pl*Anv_bs + Ubs*Fu_pl*Ant_bs;
   var Rbs_b = 0.60*Fy_pl*Agv_bs + Ubs*Fu_pl*Ant_bs;

@@ -1709,7 +1709,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
       <h4>Minimum Reinforcement — Table 7.6.1.1</h4>
       <div class="fml-blk">
         <div class="ft">ACI 318-25 §7.6.1.1</div>
-        <b>ρ<sub>min</sub> = max(0.0018 × 420 / f<sub>y</sub> , 0.0014)</b> for deformed bars<br>
+        <b>ρ<sub>min</sub> = 0.0020</b> for deformed bars, f<sub>y</sub> &lt; 420 MPa<br>
+        <b>ρ<sub>min</sub> = max(0.0018 × 420 / f<sub>y</sub> , 0.0014)</b> for deformed bars, f<sub>y</sub> ≥ 420 MPa<br>
         <b>A<sub>s,min</sub> = ρ<sub>min</sub> · b · h</b> (uses gross depth h, not d)
       </div>
       <h4>Maximum Bar Spacing — §7.7.2.3</h4>
@@ -1849,7 +1850,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
   <section id="bg-ts500">
     <div class="bg-panel-hdr"><span>TS 500:2000</span><a class="bg-top-btn" href="#" onclick="this.closest('.design-background').scrollIntoView({behavior:'smooth'});return false;">&#8593; Top</a></div>
     <div class="tb">
-      <h4><span class="rtag">TS 500:2000 §7 + §13.3</span> Döşeme Eğilme Tasarımı (Slab Flexural Design)</h4>
+      <h4><span class="rtag">TS 500:2000 §7 + §13.3</span> Slab Flexural Design</h4>
       <p>TS 500 §13.3 governs one-way solid slab design. The flexural model follows the same rectangular stress block approach as §7 (beam flexure), applied per unit width (b = 1 m strip).</p>
       <div class="fml-blk">
         <div class="ft">Flexural capacity per unit width — §7.4</div>
@@ -1930,7 +1931,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
         <li><span class="ref-num">[4]</span><div><strong>Wight, J.K. &amp; MacGregor, J.G.</strong> — Reinforced Concrete: Mechanics and Design, 7th Ed. Pearson, 2016. Chapter 13 (One-Way Slabs).</div></li>
         <li><span class="ref-num">[5]</span><div><strong>Mosley, W.H., Bungey, J.H. &amp; Hulse, R.</strong> — Reinforced Concrete Design to Eurocode 2, 7th Ed. Palgrave Macmillan, 2012. Chapter 8 (Slabs).</div></li>
         <li><span class="ref-num">[6]</span><div><strong>Pillai, S.U. &amp; Menon, D.</strong> — Reinforced Concrete Design, 3rd Ed. Tata McGraw-Hill, 2009. Chapter 11 (Design of One-Way Slabs).</div></li>
-        <li><span class="ref-num">[7]</span><div><strong>TS 500:2000</strong> — Betonarme Yapıların Tasarım ve Yapım Kuralları. Türk Standardları Enstitüsü, Ankara. §7.4 (Rectangular stress block), §7.5.4 (x<sub>u</sub>/d ≤ 0.45 ductility limit), §13.3 (One-way slab design — A<sub>st,min</sub> = 0.002bh, s<sub>max</sub> = min(2h, 400 mm)).</div></li>
+        <li><span class="ref-num">[7]</span><div><strong>TS 500:2000</strong> — Design and Construction Rules for Reinforced Concrete Structures. Turkish Standards Institute (TSE), Ankara. §7.4 (Rectangular stress block), §7.5.4 (x<sub>u</sub>/d ≤ 0.45 ductility limit), §13.3 (One-way slab design — A<sub>st,min</sub> = 0.002bh, s<sub>max</sub> = min(2h, 400 mm)).</div></li>
       </ul>
       <div style="background:var(--orange-bg);border:1px solid #f4c97a;border-radius:6px;padding:10px 13px;font-size:.78rem;color:var(--text-mid);margin-top:14px;line-height:1.7;">
         <strong>Disclaimer:</strong> For educational and preliminary design only. Verify all results with a licensed structural engineer.
@@ -2236,7 +2237,7 @@ function calcDesACI(){
   const b1=fc<=28?0.85:Math.max(0.65,0.85-0.05*(fc-28)/7);
   const Rn=Mu/(phi*b*d*d);
   const disc=1-2*Rn/(0.85*fc);
-  const rho_min=Math.max(0.0018*420/fy, 0.0014);
+  const rho_min=fy<420?0.0020:Math.max(0.0018*420/fy, 0.0014);
   const As_min=rho_min*b*h;
   const rho_max=0.75*0.85*b1*(fc/fy)*(600/(600+fy));
   const s_max=Math.min(3*h,450);
@@ -2299,7 +2300,7 @@ function calcDesACI(){
     {desc:'Effective depth',formula:'d = h − c<sub>cover</sub> − d<sub>b</sub>/2',val:`${fH(d)} ${_uH()}`},
     {desc:'Stress block factor β₁',formula:'0.85 for f\'c ≤ 28 MPa; decreases 0.05 per 7 MPa above 28',val:b1.toFixed(3)},
     {desc:'Flexural coefficient R<sub>n</sub>',formula:'R<sub>n</sub> = M<sub>u</sub> / (φ·b·d²)',val:`${fFc(Rn)} ${_uFc()}`},
-    {desc:'Minimum reinforcement ratio ρ<sub>min</sub>',formula:'max(0.0018×420/f<sub>y</sub> , 0.0014) — Table 7.6.1.1',val:rho_min.toFixed(5),check:minGov?{t:'warn',l:'governs'}:null},
+    {desc:'Minimum reinforcement ratio ρ<sub>min</sub>',formula:(fy<420?'0.0020':'max(0.0018×420/f<sub>y</sub>,0.0014)')+' — Table 7.6.1.1',val:rho_min.toFixed(5),check:minGov?{t:'warn',l:'governs'}:null},
     {desc:'Maximum reinforcement ratio ρ<sub>max</sub>',formula:'0.75·ρ<sub>bal</sub>',val:rho_max.toFixed(5),check:over?{t:'err',l:'exceeded'}:{t:'ok',l:'OK'}},
     {desc:'Required reinforcement ratio ρ',formula:'ρ = (0.85f\'c/f<sub>y</sub>)·[1−√(1−2R<sub>n</sub>/0.85f\'c)]',val:rho_req.toFixed(5),cls:over?'err':minGov?'warn':''},
     {desc:'Required steel A<sub>s,req</sub> = max(ρ·b·d , A<sub>s,min</sub>)',formula:'',val:`${fAs(As_req)} ${_uAs()}`,cls:'hl'},
@@ -2552,7 +2553,7 @@ function calcCapACI(){
   const phiMn_Nmm=phi*As_total*fy*(d-a/2);
   const phiMn=phiMn_Nmm/1e6;
   const Mu_knm=Mu/1e6;
-  const rho_min=Math.max(0.0018*420/fy,0.0014);
+  const rho_min=fy<420?0.0020:Math.max(0.0018*420/fy,0.0014);
   const As_min=rho_min*b*h;
   const s_max=Math.min(3*h,450);
   const notation=document.getElementById('cap_notation_aci').textContent;
@@ -2569,7 +2570,7 @@ function calcCapACI(){
       {desc:'Additional steel A<sub>s,2</sub>',formula:'A<sub>b2</sub>/s<sub>2</sub> × 1000',val:`${fAs(As_add)} ${_uAs()}`},
       {desc:'Total steel A<sub>s,total</sub>',formula:'A<sub>s,1</sub> + A<sub>s,2</sub>',val:`${fAs(As_total)} ${_uAs()}`,cls:'hl'},
     ]:[]),
-    {desc:'Minimum steel A<sub>s,min</sub>',formula:'max(0.0018×420/f<sub>y</sub>,0.0014)·b·h',val:`${fAs(As_min)} ${_uAs()}`,check:As_total>=As_min?{t:'ok',l:'satisfied ✓'}:{t:'err',l:'NOT SATISFIED'}},
+    {desc:'Minimum steel A<sub>s,min</sub>',formula:(fy<420?'0.0020':'max(0.0018×420/f<sub>y</sub>,0.0014)')+'·b·h',val:`${fAs(As_min)} ${_uAs()}`,check:As_total>=As_min?{t:'ok',l:'satisfied ✓'}:{t:'err',l:'NOT SATISFIED'}},
     {desc:'Stress block depth a',formula:'A<sub>s</sub>·f<sub>y</sub>/(0.85·f\'c·b)',val:`${fH(a)} ${_uH()}`},
     {desc:'Net tensile strain ε<sub>t</sub>',formula:'0.003·(d−c)/c',val:et.toFixed(4),cls:et>=0.005?'ok':et>=0.004?'warn':'err',
       check:et>=0.005?{t:'ok',l:'tension-controlled ✓'}:et>=0.004?{t:'warn',l:'transition zone'}:{t:'err',l:'comp.-controlled'}},

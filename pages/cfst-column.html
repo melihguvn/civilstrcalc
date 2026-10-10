@@ -412,7 +412,7 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
       <div class="formula-block" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:var(--mono);margin:6px 0 12px;">
         EI<sub>eff</sub> = E<sub>s</sub>I<sub>s</sub> + E<sub>s</sub>I<sub>sr</sub> + C<sub>3</sub>E<sub>c</sub>I<sub>c</sub>
       </div>
-      <p>For filled members (no rebar, I<sub>sr</sub> = 0): C<sub>3</sub> = 0.45 + 3(A<sub>s</sub>/A<sub>g</sub>), capped at 0.9. EI<sub>eff</sub> replaces EI in the classic Euler/AISC flexural buckling equations.</p>
+      <p>For filled members (no rebar, I<sub>sr</sub> = 0): C<sub>3</sub> = 0.45 + A<sub>s</sub>/A<sub>g</sub>, capped at 0.9 (round HSS) or 0.7 (rectangular HSS) per AISC 360-22 Table I2.2a/b. EI<sub>eff</sub> replaces EI in the classic Euler/AISC flexural buckling equations.</p>
 
       <h4>Column Strength P<sub>n</sub> — §I2.2 / §E3</h4>
       <p>The length-dependent compressive strength P<sub>n</sub> follows the same slenderness curves as Chapter E, but uses P<sub>no</sub> in place of F<sub>y</sub>A<sub>g</sub> and EI<sub>eff</sub> in place of EI:</p>
@@ -503,13 +503,13 @@ select.bc-sel{width:100%;padding:7px 8px;border:1px solid var(--border2);border-
         <tr><td>I<sub>s</sub> (HSS 10×10×½)</td><td>≈ 170 in⁴ (4 plates about centroid)</td></tr>
         <tr><td>I<sub>c</sub> = 9⁴/12 = 6561/12</td><td>≈ 547 in⁴</td></tr>
         <tr><td>E<sub>c</sub> = 33×w<sub>c</sub><sup>1.5</sup>√f'c ≈ 33×145<sup>1.5</sup>×√5</td><td>≈ 4074 ksi</td></tr>
-        <tr><td>C<sub>3</sub> = 0.45 + 3×(19/100) = 0.45+0.57</td><td>= 0.90 (capped)</td></tr>
-        <tr><td>EI<sub>eff</sub> = 29000×170 + 0.90×4074×547</td><td>≈ 6,930,000 kip·in²</td></tr>
+        <tr><td>C<sub>3</sub> = 0.45 + 19/100 = 0.45 + 0.19</td><td>= 0.64 (≤ 0.70 cap, not capped)</td></tr>
+        <tr><td>EI<sub>eff</sub> = 29000×170 + 0.64×4074×547</td><td>≈ 6,357,000 kip·in²</td></tr>
         <tr><td>KL = 0.65 × 14 × 12 = 109.2 in</td><td></td></tr>
-        <tr><td>P<sub>e</sub> = π²×EI<sub>eff</sub>/(KL)²</td><td>≈ 5,715 kips</td></tr>
-        <tr><td>P<sub>no</sub>/P<sub>e</sub> = 1218/5715</td><td>= 0.213 &lt; 2.25 → inelastic</td></tr>
-        <tr><td>P<sub>n</sub> = 1218 × 0.658<sup>0.213</sup></td><td>≈ <b>1104 kips</b></td></tr>
-        <tr><td>φ<sub>c</sub>P<sub>n</sub> = 0.75 × 1104</td><td>= <b>828 kips</b></td></tr>
+        <tr><td>P<sub>e</sub> = π²×EI<sub>eff</sub>/(KL)²</td><td>≈ 5,261 kips</td></tr>
+        <tr><td>P<sub>no</sub>/P<sub>e</sub> = 1218/5261</td><td>= 0.232 &lt; 2.25 → inelastic</td></tr>
+        <tr><td>P<sub>n</sub> = 1218 × 0.658<sup>0.232</sup></td><td>≈ <b>1105 kips</b></td></tr>
+        <tr><td>φ<sub>c</sub>P<sub>n</sub> = 0.75 × 1105</td><td>= <b>829 kips</b></td></tr>
       </table>
 
       <h4>Step 5 — P-M Interaction (PSDM §I3.4a)</h4>
@@ -914,7 +914,8 @@ function calc() {
     }
   } else { Pno = 0; }
 
-  const C3 = Math.min(0.90, 0.45 + 3*As/Ag);
+  const C3cap = (shape === 'round') ? 0.90 : 0.70;
+  const C3 = Math.min(C3cap, 0.45 + As/Ag);
   const EIeff_x = Es*Is_x + C3*Ec*Ic_x;
   const EIeff_y = Es*Is_y + C3*Ec*Ic_y;
   const Pe_x = Math.PI*Math.PI*EIeff_x / (KLx*KLx);
@@ -1128,7 +1129,7 @@ function calc() {
        r2('KL<sub>x</sub> (K<sub>x</sub> = 0.65, Fixed&ndash;Fixed)', `${fmt(KLx/(isUS?12:1000),2)} ${Lunit}`) +
        (shape==='rect' ? r2('KL<sub>y</sub> (K<sub>y</sub> = 0.65, Fixed&ndash;Fixed)', `${fmt(KLy/(isUS?12:1000),2)} ${Lunit}`) : '') +
        r2('E<sub>c</sub> (concrete)', `${fmt(Ec,0)} ${k2U}`) +
-       r2('C<sub>3</sub> = min(0.90, 0.45 + 3&rho;<sub>s</sub>)', fmt(C3,3)) +
+       r2('C<sub>3</sub> = min('+(shape==='round'?'0.90':'0.70')+', 0.45 + &rho;<sub>s</sub>)', fmt(C3,3)) +
        r2('EI<sub>eff,x</sub>', `${sciE(EIeff_x*EIscale)} ${EIU}`) +
        (shape==='rect' ? r2('EI<sub>eff,y</sub>', `${sciE(EIeff_y*EIscale)} ${EIU}`) : '') +
        r2('P<sub>e,x</sub> = &pi;²EI<sub>eff,x</sub>/(KL<sub>x</sub>)²', `${fmt(Pe_x*uS,1)} ${fU}`) +
