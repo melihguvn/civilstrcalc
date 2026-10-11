@@ -106,6 +106,7 @@
     '     padding-bottom:env(safe-area-inset-bottom,0px)!important;',
     '     overflow-x:hidden!important;height:auto!important;min-height:100vh!important;min-height:100dvh!important}',
     '@media(max-width:1024px){body{padding-left:0!important}}',
+    '@media(max-width:1024px){#main-content{padding-left:max(20px,env(safe-area-inset-left,0px))!important;padding-right:max(20px,env(safe-area-inset-right,0px))!important}}',
     /* header */
     '.sh-hdr{position:fixed;top:0;left:0;right:0;height:var(--sh-h);background:#1a2332;',
     '  display:flex;align-items:center;z-index:1000;border-bottom:2px solid #2a3a52;overflow:hidden}',
